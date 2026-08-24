@@ -1,0 +1,107 @@
+import { TableSchema } from '../../types/database';
+
+export const DATABASE_SCHEMAS: Record<string, TableSchema> = {
+  categories: {
+    name: 'categories',
+    displayName: 'Categories',
+    description: 'Product categorization groups',
+    columns: [
+      { name: 'category_id', type: 'number', primaryKey: true, description: 'Unique category identifier' },
+      { name: 'name', type: 'string', description: 'Category name (e.g. Electronics, Office Supplies)' },
+    ],
+  },
+  suppliers: {
+    name: 'suppliers',
+    displayName: 'Suppliers',
+    description: 'Third-party vendors and item suppliers',
+    columns: [
+      { name: 'supplier_id', type: 'number', primaryKey: true, description: 'Unique supplier identifier' },
+      { name: 'name', type: 'string', description: 'Company or supplier business name' },
+      { name: 'contact_email', type: 'string', nullable: true, description: 'Primary contact email address' },
+    ],
+  },
+  products: {
+    name: 'products',
+    displayName: 'Products',
+    description: 'Catalog items with stock levels, reorder thresholds, and pricing',
+    columns: [
+      { name: 'product_id', type: 'number', primaryKey: true, description: 'Unique product identifier' },
+      { name: 'name', type: 'string', description: 'Product title / model' },
+      { name: 'category_id', type: 'number', foreignKey: { table: 'categories', column: 'category_id' } },
+      { name: 'supplier_id', type: 'number', foreignKey: { table: 'suppliers', column: 'supplier_id' } },
+      { name: 'price', type: 'decimal', description: 'Retail unit price in USD' },
+      { name: 'quantity_in_stock', type: 'number', description: 'Current warehouse inventory count' },
+      { name: 'reorder_level', type: 'number', description: 'Minimum stock count before reordering' },
+    ],
+  },
+  customers: {
+    name: 'customers',
+    displayName: 'Customers',
+    description: 'Registered users with geographic location and join dates',
+    columns: [
+      { name: 'customer_id', type: 'number', primaryKey: true, description: 'Unique customer identifier' },
+      { name: 'name', type: 'string', description: 'Full customer name' },
+      { name: 'email', type: 'string', nullable: true, description: 'Customer email address' },
+      { name: 'city', type: 'string', description: 'Primary residential city' },
+      { name: 'signup_date', type: 'date', description: 'Date the account was created (YYYY-MM-DD)' },
+    ],
+  },
+  orders: {
+    name: 'orders',
+    displayName: 'Orders',
+    description: 'Purchase orders placed by customers',
+    columns: [
+      { name: 'order_id', type: 'number', primaryKey: true, description: 'Unique order identifier' },
+      { name: 'customer_id', type: 'number', foreignKey: { table: 'customers', column: 'customer_id' } },
+      { name: 'order_date', type: 'date', description: 'Date of order placement' },
+      { name: 'status', type: 'string', description: 'Order status: pending, shipped, cancelled, delivered' },
+    ],
+  },
+  order_items: {
+    name: 'order_items',
+    displayName: 'Order Items',
+    description: 'Line items within each order specifying quantity and price at purchase',
+    columns: [
+      { name: 'order_item_id', type: 'number', primaryKey: true, description: 'Unique line item identifier' },
+      { name: 'order_id', type: 'number', foreignKey: { table: 'orders', column: 'order_id' } },
+      { name: 'product_id', type: 'number', foreignKey: { table: 'products', column: 'product_id' } },
+      { name: 'quantity', type: 'number', description: 'Number of units purchased' },
+      { name: 'unit_price', type: 'decimal', description: 'Price per unit at order time' },
+    ],
+  },
+  payments: {
+    name: 'payments',
+    displayName: 'Payments',
+    description: 'Financial transactions recorded for orders',
+    columns: [
+      { name: 'payment_id', type: 'number', primaryKey: true, description: 'Unique payment identifier' },
+      { name: 'order_id', type: 'number', foreignKey: { table: 'orders', column: 'order_id' } },
+      { name: 'amount', type: 'decimal', description: 'Payment amount received' },
+      { name: 'payment_date', type: 'date', description: 'Transaction date' },
+      { name: 'method', type: 'string', description: 'Payment method (Credit Card, PayPal, Wire, Stripe)' },
+    ],
+  },
+  students: {
+    name: 'students',
+    displayName: 'Students',
+    description: 'Enrolled university students dataset',
+    columns: [
+      { name: 'id', type: 'number', primaryKey: true, description: 'Unique student identification number' },
+      { name: 'name', type: 'string', description: 'Full name of the student' },
+      { name: 'age', type: 'number', description: 'Age in years' },
+      { name: 'department', type: 'string', description: 'Academic department (e.g. CSE, EEE, BBA)' },
+      { name: 'city', type: 'string', description: 'Home town / city' },
+    ],
+  },
+  student_records: {
+    name: 'student_records',
+    displayName: 'Student Records',
+    description: 'Legacy raw database table with abbreviated technical columns',
+    columns: [
+      { name: 'std_id', type: 'number', primaryKey: true, description: 'Legacy raw ID column' },
+      { name: 'std_nm', type: 'string', description: 'Legacy raw name column' },
+      { name: 'std_age', type: 'number', description: 'Legacy raw age column' },
+      { name: 'dept', type: 'string', description: 'Legacy raw department column' },
+    ],
+  },
+};
