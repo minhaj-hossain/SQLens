@@ -51,13 +51,12 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   return (
     <div
       id="database-explorer-container"
-      className={`flex flex-col bg-[#18181b] rounded-xl border border-zinc-800 overflow-hidden shadow-lg ${className}`}
+      className={`flex flex-col bg-[#11171e] rounded-xl border border-zinc-700/60 overflow-hidden shadow-lg ${className}`}
     >
-      {/* Unified Compact Header: Table Context, Quiet Tabs, and Inline Search */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#121215] border-b border-zinc-800">
-        {/* Left: Table selector + metadata */}
+      {/* Header & Table Selector */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3.5 bg-[#0e141a] border-b border-zinc-700/60">
         <div className="flex items-center gap-2">
-          <Database className="w-3.5 h-3.5 text-zinc-300" />
+          <Database className="w-4 h-4 text-cyan-400" />
           <div className="relative inline-block">
             <select
               id="database-table-selector"
@@ -66,52 +65,31 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                 setActiveTable(e.target.value);
                 setSearchFilter('');
               }}
-              className="appearance-none font-mono text-xs font-semibold text-white bg-[#222226] border border-zinc-700 rounded-md pl-2.5 pr-6 py-1 focus:outline-none focus:border-zinc-400 transition cursor-pointer"
+              className="appearance-none font-mono text-xs font-bold text-zinc-100 bg-[#19212a] border border-zinc-600/80 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-cyan-400 transition cursor-pointer"
             >
               {allTableNames.map((tName) => (
-                <option key={tName} value={tName} className="bg-[#222226] text-zinc-100">
+                <option key={tName} value={tName} className="bg-[#19212a] text-zinc-200">
                   {tName} ({INITIAL_TABLES[tName]?.length || 0} rows)
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3 h-3 text-zinc-400 absolute right-1.5 top-2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400 absolute right-2 top-2.5 pointer-events-none" />
           </div>
-          <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">
+          <span className="text-[11px] font-mono text-zinc-400 hidden sm:inline">
             {schema.columns.length} cols
           </span>
         </div>
 
-        {/* Right: Inline Filter (when in preview) & Quiet Segmented Tabs */}
+        {/* Right: Tabs */}
         <div className="flex items-center gap-2">
-          {activeTab === 'preview' && (
-            <div className="relative flex items-center">
-              <Search className="w-3 h-3 text-zinc-500 absolute left-2 pointer-events-none" />
-              <input
-                type="text"
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-                placeholder="Filter rows..."
-                className="h-6.5 w-28 sm:w-36 pl-6 pr-5 text-[11px] font-mono text-white bg-[#18181b] border border-zinc-700/80 rounded focus:outline-none focus:border-zinc-400 placeholder:text-zinc-500"
-              />
-              {searchFilter && (
-                <button
-                  onClick={() => setSearchFilter('')}
-                  className="absolute right-1.5 text-zinc-400 hover:text-white text-[10px]"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Quiet Segmented Tabs */}
-          <div className="flex items-center bg-[#141417] p-0.5 rounded-md border border-zinc-800 text-[11px] font-mono">
+          {/* Segmented Tabs */}
+          <div className="flex items-center bg-[#18212b] p-0.5 rounded-lg border border-zinc-700/70 text-[11px] font-mono">
             <button
               id="tab-data-preview-btn"
               onClick={() => setActiveTab('preview')}
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded transition cursor-pointer ${
                 activeTab === 'preview'
-                  ? 'bg-zinc-800 text-white font-semibold border border-zinc-700/60'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -123,7 +101,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
               onClick={() => setActiveTab('schema')}
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded transition cursor-pointer ${
                 activeTab === 'schema'
-                  ? 'bg-zinc-800 text-white font-semibold border border-zinc-700/60'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -135,7 +113,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
               onClick={() => setActiveTab('graph')}
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded transition cursor-pointer ${
                 activeTab === 'graph'
-                  ? 'bg-zinc-800 text-white font-semibold border border-zinc-700/60'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -148,10 +126,13 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
 
       {/* Main Body Grid */}
       <div className="relative">
-        <div className="overflow-auto max-h-[300px] min-h-[160px] bg-[#0c0c0e] scrollbar-thin text-xs">
+        <div className="sm:hidden px-3 py-1 bg-[#151c24] text-[10px] font-mono text-zinc-400 border-b border-zinc-800 flex items-center justify-between">
+          <span>← Swipe horizontally to view all columns →</span>
+        </div>
+        <div className="overflow-auto max-h-[320px] min-h-[160px] bg-[#0c1117] scrollbar-thin text-xs">
           {activeTab === 'preview' ? (
             <table className="min-w-full text-left font-mono border-collapse">
-              <thead className="sticky top-0 z-10 bg-[#151518] border-b border-zinc-800">
+            <thead className="sticky top-0 z-10 bg-[#161e27] border-b border-zinc-700/70">
                 <tr>
                   {schema.columns.map((col) => {
                     const isHighlighted = highlightedColumns.some(
@@ -161,32 +142,30 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                       <th
                         key={col.name}
                         onClick={() => handleCopyColName(col.name)}
-                        className={`px-3 py-1.5 text-[11px] font-medium select-none cursor-pointer group transition border-r border-zinc-800/50 last:border-r-0 ${
+                        className={`px-3 py-2 text-[11px] font-semibold select-none cursor-pointer group transition ${
                           isHighlighted
-                            ? 'bg-zinc-800/80 text-white border-b-2 border-white'
-                            : 'text-zinc-300 hover:bg-zinc-800/50'
+                            ? 'bg-cyan-950/40 text-cyan-300 border-b-2 border-cyan-400'
+                            : 'text-zinc-300 hover:bg-zinc-800'
                         }`}
                         title="Click to copy / insert column name"
                       >
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-zinc-100 group-hover:text-white">
-                            {col.name}
-                          </span>
+                          <span className="group-hover:text-cyan-300">{col.name}</span>
                           {col.primaryKey && (
-                            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-200 border border-zinc-700">
+                            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-cyan-900/60 text-cyan-300 border border-cyan-700/50">
                               PK
                             </span>
                           )}
                           {col.foreignKey && (
-                            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-amber-900/60 text-amber-300 border border-amber-700/50">
                               FK
                             </span>
                           )}
                           {copiedCol === col.name && (
-                            <Check className="w-3 h-3 text-emerald-400 ml-0.5" />
+                            <Check className="w-3 h-3 text-emerald-400 ml-1" />
                           )}
                         </div>
-                        <span className="text-[9.5px] font-normal text-zinc-500 block leading-tight">
+                        <span className="text-[9px] font-normal text-zinc-400 block mt-0.5">
                           {col.type}
                         </span>
                       </th>
@@ -194,10 +173,10 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                   })}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60 text-[11.5px] text-zinc-200">
+            <tbody className="divide-y divide-zinc-800/60 text-[11.5px] text-zinc-300">
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={schema.columns.length} className="py-8 text-center text-zinc-500">
+                    <td colSpan={schema.columns.length} className="py-8 text-center text-zinc-400">
                       No records found matching "{searchFilter}"
                     </td>
                   </tr>
@@ -214,14 +193,14 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                         return (
                           <td
                             key={col.name}
-                            className={`px-3 py-1.5 whitespace-nowrap border-r border-zinc-800/40 last:border-r-0 ${
-                              isHighlighted ? 'bg-zinc-800/50 text-white font-medium' : ''
+                            className={`px-3 py-1.5 whitespace-nowrap ${
+                              isHighlighted ? 'bg-cyan-950/20 text-cyan-200 font-medium' : ''
                             }`}
                           >
                             {row[col.name] !== null && row[col.name] !== undefined ? (
                               String(row[col.name])
                             ) : (
-                              <span className="text-zinc-600 italic">NULL</span>
+                              <span className="text-zinc-400 italic">NULL</span>
                             )}
                           </td>
                         );

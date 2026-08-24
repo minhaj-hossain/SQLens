@@ -49,15 +49,15 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   return (
     <div
       id="task-instructions-container"
-      className="flex flex-col bg-[#18181b] rounded-xl border border-zinc-800 p-4 sm:p-5 shadow-lg relative text-zinc-100"
+      className="flex flex-col bg-[#11171e] rounded-xl border border-zinc-700/60 p-4 sm:p-5 shadow-lg relative text-zinc-100"
     >
       {/* Top Header: Muted Secondary Metadata & Lesson Link */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800 text-xs">
+      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800/80 text-xs">
         <div className="flex items-center gap-1.5 font-mono text-zinc-400">
-          <span className="text-white font-bold tracking-wider">
+          <span className="text-cyan-400 font-bold tracking-wider">
             TASK {taskIndex + 1}/{totalTasks}
           </span>
-          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-500">•</span>
           <span className="truncate max-w-[180px] sm:max-w-xs">{concept.title}</span>
         </div>
 
@@ -84,31 +84,31 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
 
       {/* Main Single Task Statement (Prominent Visual Focus) */}
       <div className="py-3.5">
-        <h2 className="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
+        <h2 className="text-base sm:text-lg font-bold text-zinc-100 leading-snug tracking-tight">
           {taskStatement}
         </h2>
       </div>
 
       {/* Compact Secondary Reference Chips */}
       <div className="flex flex-wrap items-center gap-2 pb-3 pt-1 text-xs font-mono">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">
-          <span className="text-zinc-500">table:</span>
-          <span className="text-white font-semibold">{task.primaryTable}</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/60 text-zinc-300">
+          <span className="text-zinc-400">table:</span>
+          <span className="text-cyan-300 font-semibold">{task.primaryTable}</span>
         </span>
 
         {task.validation.requiredColumns && task.validation.requiredColumns.length > 0 && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">
-            <span className="text-zinc-500">cols:</span>
-            <span className="text-zinc-200 font-semibold">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/60 text-zinc-300">
+            <span className="text-zinc-400">cols:</span>
+            <span className="text-amber-300 font-semibold">
               {task.validation.requiredColumns.join(', ')}
             </span>
           </span>
         )}
 
         {task.validation.expectedRowCount !== undefined && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300">
-            <span className="text-zinc-500">expected rows:</span>
-            <span className="text-zinc-200 font-semibold">{String(task.validation.expectedRowCount)}</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/60 text-zinc-300">
+            <span className="text-zinc-400">expected rows:</span>
+            <span className="text-emerald-300 font-semibold">{String(task.validation.expectedRowCount)}</span>
           </span>
         )}
       </div>
@@ -176,9 +176,9 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
 
             {/* Inline Solution Display */}
             {showSolution && (
-              <div className="mt-2 p-3 rounded-lg bg-[#0c0c0e] border border-zinc-700 relative text-xs">
+              <div className="mt-2 p-3 rounded-lg bg-[#0c1117] border border-zinc-700/80 relative text-xs">
                 <div className="flex items-center justify-between mb-1.5 text-zinc-400 text-[11px]">
-                  <span className="font-bold text-zinc-300 flex items-center gap-1">
+                  <span className="font-bold text-cyan-400 flex items-center gap-1">
                     <Code className="w-3 h-3" /> Solution SQL:
                   </span>
                   <button
@@ -194,7 +194,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
                     <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <pre className="text-zinc-200 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                <pre className="text-cyan-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
                   {task.solutionSql}
                 </pre>
                 {task.solutionExplanation && (
@@ -210,4 +210,3 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
     </div>
   );
 };
-

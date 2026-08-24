@@ -5,8 +5,7 @@ import { DATABASE_SCHEMAS } from '../../content/database/schema';
 interface SQLEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onRun: (sql: string) => void;
-  onSubmit: (sql: string) => void;
+  onRunAndCheck: (sql: string) => void;
   tableName?: string;
   evaluationState?: 'idle' | 'wrong' | 'correct';
   nextActionLabel?: string;
@@ -26,8 +25,7 @@ const SQL_KEYWORDS = [
 export const SQLEditor: React.FC<SQLEditorProps> = ({
   value,
   onChange,
-  onRun,
-  onSubmit,
+  onRunAndCheck,
   tableName = 'products',
   evaluationState = 'idle',
   nextActionLabel = 'Next Task',
@@ -158,7 +156,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         setSelectedSuggestionIdx(prev => (prev - 1 + suggestions.length) % suggestions.length);
         return;
       }
-      if (e.key === 'Tab' || e.key === 'Enter') {
+      if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) {
         e.preventDefault();
         applySuggestion(suggestions[selectedSuggestionIdx]);
         return;
@@ -169,13 +167,14 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       }
     }
 
-    // Ctrl+Enter or Cmd+Enter -> Run query or submit
+    // Ctrl+Enter or Cmd+Enter -> Run & Check (or go Next if already correct)
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
+      setShowSuggestions(false); // always dismiss autocomplete first
       if (evaluationState === 'correct' && onNextAction) {
         onNextAction();
       } else {
-        onSubmit(value);
+        onRunAndCheck(value);
       }
       return;
     }
@@ -208,17 +207,17 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     // 1. Stash comments with placeholders
     const tokens: { placeholder: string; html: string }[] = [];
     escaped = escaped.replace(/(--[^\n]*)/g, (match) => {
-      const ph = `___COMMENT_TOKEN_${tokens.length}___`;
+      const ph = `___TOKEN_${tokens.length}___`;
       tokens.push({
         placeholder: ph,
-        html: `<span class="text-zinc-500 opacity-50 italic">${match}</span>`,
+        html: `<span class="text-zinc-400 italic">${match}</span>`,
       });
       return ph;
     });
 
-    // 2. Stash strings with placeholders
+    // 2. Stash string literals with placeholders
     escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
-      const ph = `___STRING_TOKEN_${tokens.length}___`;
+      const ph = `___TOKEN_${tokens.length}___`;
       tokens.push({
         placeholder: ph,
         html: `<span class="text-emerald-400 font-medium">${match}</span>`,
@@ -226,18 +225,31 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       return ph;
     });
 
-    // 3. SQL Keywords
-    SQL_KEYWORDS.forEach(kw => {
-      const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
-      escaped = escaped.replace(regex, (match) => {
-        return `<span class="text-cyan-400 font-bold">${match.toUpperCase()}</span>`;
+    // 3. SQL Keywords — single-pass combined regex to prevent HTML attribute corruption
+    // Sort longest first so multi-word keywords (e.g. "LEFT JOIN") match before sub-words
+    const sortedKws = [...SQL_KEYWORDS].sort((a, b) => b.length - a.length);
+    const kwPattern = sortedKws.map(kw => kw.replace(/\s+/g, '\\s+')).join('|');
+    const kwRegex = new RegExp(`\\b(${kwPattern})\\b`, 'gi');
+    escaped = escaped.replace(kwRegex, (match) => {
+      const ph = `___TOKEN_${tokens.length}___`;
+      tokens.push({
+        placeholder: ph,
+        html: `<span class="text-cyan-400 font-bold">${match.toUpperCase()}</span>`,
       });
+      return ph;
     });
 
-    // 4. Numbers
-    escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="text-amber-300 font-semibold">$1</span>');
+    // 4. Numbers — also stash to avoid being re-touched
+    escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
+      const ph = `___TOKEN_${tokens.length}___`;
+      tokens.push({
+        placeholder: ph,
+        html: `<span class="text-amber-300 font-semibold">${match}</span>`,
+      });
+      return ph;
+    });
 
-    // 5. Restore stashed tokens
+    // 5. Restore all stashed tokens in a single pass
     tokens.forEach(t => {
       escaped = escaped.replace(t.placeholder, t.html);
     });
@@ -301,19 +313,19 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
-    <div id="sql-editor-container" className="flex flex-col bg-[#18181b] rounded-xl border border-zinc-800 shadow-xl text-zinc-100 relative">
+    <div id="sql-editor-container" className="flex flex-col bg-[#121820] rounded-xl border border-zinc-700/60 shadow-xl text-zinc-100 relative">
       {/* Editor Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#121215] border-b border-zinc-800 select-none rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#0d1217] border-b border-zinc-700/60 select-none rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 mr-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700 inline-block"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700 inline-block"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700 inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
           </div>
-          <span className="text-[11px] font-mono text-white font-semibold tracking-wide">
+          <span className="text-[11px] font-mono text-cyan-400 font-semibold tracking-wide">
             query.sql
           </span>
-          <span className="text-[10px] text-zinc-400 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
+          <span className="text-[10px] text-zinc-400 px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50">
             Active: {tableName}
           </span>
         </div>
@@ -361,14 +373,14 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Code Editor Surface */}
-      <div className="relative min-h-[160px] max-h-[280px] flex font-mono text-[13px] leading-[22px] bg-[#0c0c0e]">
+      <div className="relative min-h-[160px] max-h-[280px] flex font-mono text-[13px] leading-[22px] bg-[#0e141b]">
         {/* Line Numbers Gutter */}
-        <div className="w-11 select-none py-3 bg-[#101013] text-zinc-600 text-right pr-3 font-mono border-r border-zinc-800 flex flex-col shrink-0">
+        <div className="w-11 select-none py-3 bg-[#0d1217] text-zinc-500 text-right pr-3 font-mono border-r border-zinc-800/80 flex flex-col shrink-0">
           {lines.map((ln) => (
             <div
               key={ln}
               className={`h-[22px] text-[11px] font-medium transition-colors ${
-                ln === activeLine ? 'text-white font-bold bg-zinc-800/80 -mr-3 pr-3' : ''
+                ln === activeLine ? 'text-cyan-400 font-bold bg-cyan-950/40 -mr-3 pr-3' : ''
               }`}
             >
               {ln}
@@ -400,6 +412,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             onKeyUp={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
             onClick={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
             onKeyDown={handleKeyDown}
+            onBlur={() => {
+              // Small delay so autocomplete item mousedown can fire before we close it
+              setTimeout(() => setShowSuggestions(false), 100);
+            }}
             placeholder={`-- Type your SQL query here\nSELECT * FROM ${tableName};`}
             spellCheck={false}
             autoCapitalize="none"
@@ -434,8 +450,8 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
                   }}
                   className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
                     idx === selectedSuggestionIdx
-                      ? 'bg-zinc-800 text-white font-bold border-l-2 border-white'
-                      : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-white'
+                      ? 'bg-cyan-500/30 text-cyan-200 font-bold'
+                      : 'text-zinc-200 hover:bg-zinc-800/80 hover:text-white'
                   }`}
                 >
                   <span className="font-semibold">{sug}</span>
@@ -450,7 +466,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Helper Quick Chips */}
-      <div className="flex items-center gap-1.5 px-3 py-2 bg-[#121215] border-t border-zinc-800 overflow-x-auto text-xs scrollbar-none">
+      <div className="flex items-center gap-1.5 px-3 py-2 bg-[#0d1217] border-t border-zinc-800/80 overflow-x-auto text-xs scrollbar-none">
         <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mr-1 shrink-0">
           Quick:
         </span>
@@ -463,7 +479,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               onChange(appended);
               if (textareaRef.current) textareaRef.current.focus();
             }}
-            className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-[11px] font-mono border border-zinc-700 transition shrink-0 cursor-pointer"
+            className="px-2 py-0.5 rounded bg-zinc-800/90 hover:bg-cyan-950/60 hover:text-cyan-300 text-zinc-300 text-[11px] font-mono border border-zinc-700/60 transition shrink-0 cursor-pointer"
           >
             {chip}
           </button>
@@ -471,52 +487,39 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Bottom Action Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[#121215] border-t border-zinc-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[#11171f] border-t border-zinc-800">
         <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
           <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px]">
             Ctrl + Enter
           </kbd>
-          <span className="hidden sm:inline">to execute</span>
+          <span className="hidden sm:inline">to run &amp; check</span>
         </div>
 
-        {/* Dual Actions: Run Query (Preview) & Submit / Next Action */}
+        {/* Single Smart Button: Run → Check → Next */}
         <div className="flex items-center gap-2.5">
-          {/* Run Preview Button */}
-          <button
-            id="run-query-btn"
-            type="button"
-            onClick={() => onRun(value)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold font-mono bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 transition cursor-pointer active:scale-95"
-            title="Execute query and inspect results table"
-          >
-            <Play className="w-3.5 h-3.5 text-zinc-300 fill-zinc-300/20" />
-            <span>Run Preview</span>
-          </button>
-
-          {/* Stateful Submit / Next Button */}
           {evaluationState === 'correct' && onNextAction ? (
             <button
               id="next-task-btn"
               type="button"
               onClick={onNextAction}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 transition cursor-pointer animate-pulse active:scale-95"
             >
               <span>{nextActionLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           ) : (
             <button
-              id="submit-answer-btn"
+              id="run-check-btn"
               type="button"
-              onClick={() => onSubmit(value)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono transition cursor-pointer shadow-md active:scale-95 ${
+              onClick={() => onRunAndCheck(value)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono text-white transition cursor-pointer shadow-md active:scale-95 ${
                 evaluationState === 'wrong'
-                  ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                  : 'bg-white hover:bg-zinc-200 text-zinc-950 font-extrabold'
+                  ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-950/40'
+                  : 'bg-cyan-600 hover:bg-cyan-500 shadow-cyan-950/40'
               }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{evaluationState === 'wrong' ? 'Re-Evaluate' : 'Submit Answer'}</span>
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>{evaluationState === 'wrong' ? 'Try Again' : 'Run & Check'}</span>
             </button>
           )}
         </div>

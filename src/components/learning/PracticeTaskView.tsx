@@ -162,8 +162,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
                   setValidationMessage(null);
                 }
               }}
-              onRun={handleRunPreview}
-              onSubmit={handleSubmitAndValidate}
+              onRunAndCheck={handleSubmitAndValidate}
               evaluationState={evaluationState}
               nextActionLabel={nextActionLabel}
               onNextAction={onNextTask}

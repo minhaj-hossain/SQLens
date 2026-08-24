@@ -426,7 +426,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                 onClick={onStartPractice}
                 className="bg-primary-container hover:brightness-110 active:scale-95 transition-all text-on-primary-container text-xs font-bold px-4 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
               >
-                <span>Next ({tasksCount} {tasksCount === 1 ? 'Task' : 'Tasks'})</span>
+                <span>Next</span>
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </button>
             </div>
@@ -521,9 +521,40 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                   </div>
 
                   <div className="p-4 space-y-3">
-                    <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-                      {step.explanation}
-                    </p>
+                    {/* Smart explanation renderer:
+                        Multi-line row evaluations → pill grid; single line → plain paragraph */}
+                    {step.explanation.includes('\n') ? (
+                      <div className="flex flex-col gap-1.5">
+                        {step.explanation.split('\n').filter(Boolean).map((line, lIdx) => {
+                          const isTrue = line.includes('TRUE') || line.includes('✅');
+                          const isFalse = line.includes('FALSE') || line.includes('❌');
+                          return (
+                            <div
+                              key={lIdx}
+                              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-mono border ${
+                                isTrue
+                                  ? 'bg-emerald-950/30 border-emerald-700/40 text-emerald-200'
+                                  : isFalse
+                                  ? 'bg-zinc-800/60 border-zinc-700/40 text-zinc-400'
+                                  : 'bg-surface-container/40 border-outline-variant/30 text-on-surface-variant'
+                              }`}
+                            >
+                              <span className={`shrink-0 text-base leading-none ${isTrue ? 'text-emerald-400' : isFalse ? 'text-zinc-500' : ''}`}>
+                                {isTrue ? '✅' : isFalse ? '✗' : '•'}
+                              </span>
+                              <span className="leading-snug">
+                                {/* Strip the emoji from the line since we render it separately */}
+                                {line.replace('✅', '').replace('❌', '').trim()}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+                        {step.explanation}
+                      </p>
+                    )}
 
                     {step.tableData && (
                       <div className="overflow-x-auto rounded-lg border border-outline-variant/50 bg-surface-dim">
@@ -859,7 +890,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
               onClick={onStartPractice}
               className="bg-primary-container hover:brightness-110 active:brightness-90 transition-all font-headline-sm text-xs sm:text-sm px-6 py-2.5 rounded-lg font-bold text-on-primary-container shadow-md shadow-primary-container/20 flex items-center gap-2 cursor-pointer"
             >
-              <span>Next ({tasksCount} {tasksCount === 1 ? 'Task' : 'Tasks'})</span>
+              <span>Next</span>
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </div>

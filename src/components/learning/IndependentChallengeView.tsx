@@ -84,6 +84,64 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
   const [activeLine, setActiveLine] = useState<number>(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  // Autocomplete
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(0);
+  const [suggestionWord, setSuggestionWord] = useState('');
+
+  // Column names for the current task's table
+  const columnNames = useMemo(() => {
+    const schema = DATABASE_SCHEMAS[currentTask.primaryTable?.toLowerCase() || 'products'];
+    return schema ? schema.columns.map((c) => c.name) : [];
+  }, [currentTask.primaryTable]);
+
+  // Syntax highlight (single-pass tokenizer)
+  const highlightedCode = useMemo(() => {
+    if (!currentSql) return '';
+    let escaped = currentSql
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    const tokens: { placeholder: string; html: string }[] = [];
+
+    // 1. Comments
+    escaped = escaped.replace(/(--[^\n]*)/g, (match) => {
+      const ph = `___TOKEN_${tokens.length}___`;
+      tokens.push({ placeholder: ph, html: `<span class="text-zinc-400 italic">${match}</span>` });
+      return ph;
+    });
+
+    // 2. String literals
+    escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
+      const ph = `___TOKEN_${tokens.length}___`;
+      tokens.push({ placeholder: ph, html: `<span class="text-emerald-400 font-medium">${match}</span>` });
+      return ph;
+    });
+
+    // 3. Numbers
+    escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
+      const ph = `___TOKEN_${tokens.length}___`;
+      tokens.push({ placeholder: ph, html: `<span class="text-amber-300 font-semibold">${match}</span>` });
+      return ph;
+    });
+
+    // 4. SQL Keywords (single combined regex pass)
+    const kwPattern = new RegExp(`\\b(${SQL_KEYWORDS.map((k) => k.replace(/ /g, '\\s+')).join('|')})\\b`, 'gi');
+    escaped = escaped.replace(kwPattern, (match) =>
+      `<span class="text-cyan-400 font-bold">${match.toUpperCase()}</span>`
+    );
+
+    // 5. Restore tokens
+    tokens.forEach(({ placeholder, html }) => {
+      escaped = escaped.replace(placeholder, html);
+    });
+
+    return escaped;
+  }, [currentSql]);
 
   // Sync state when selected task changes
   useEffect(() => {
@@ -158,6 +216,40 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     setActiveLine(textBeforeCursor.split('\n').length);
   };
 
+  const updateCursorAndSuggestions = (text: string, selectionStart: number) => {
+    updateCursor(text, selectionStart);
+    const textBefore = text.slice(0, selectionStart);
+    const wordMatch = textBefore.match(/[\w]+$/);
+    const word = wordMatch ? wordMatch[0].toUpperCase() : '';
+    if (word.length >= 2) {
+      const allTerms = [...SQL_KEYWORDS, ...columnNames];
+      const matches = allTerms.filter(
+        (t) => t.toUpperCase().startsWith(word) && t.toUpperCase() !== word
+      );
+      setSuggestions(matches.slice(0, 8));
+      setSuggestionWord(word);
+      setShowSuggestions(matches.length > 0);
+      setSelectedSuggestionIdx(0);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const applySuggestion = (sug: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const pos = ta.selectionStart;
+    const before = currentSql.slice(0, pos);
+    const after = currentSql.slice(pos);
+    const wordMatch = before.match(/[\w]+$/);
+    const wordLen = wordMatch ? wordMatch[0].length : 0;
+    const newSql = before.slice(0, before.length - wordLen) + sug + ' ' + after;
+    handleTextChange(newSql);
+    setShowSuggestions(false);
+    const newPos = pos - wordLen + sug.length + 1;
+    setTimeout(() => { if (ta) { ta.selectionStart = ta.selectionEnd = newPos; ta.focus(); } }, 0);
+  };
+
   // Execute and Validate Query
   const handleRunQuery = () => {
     const trimmed = currentSql.trim();
@@ -214,13 +306,18 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Autocomplete navigation
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedSuggestionIdx(p => (p + 1) % suggestions.length); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedSuggestionIdx(p => (p - 1 + suggestions.length) % suggestions.length); return; }
+      if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) { e.preventDefault(); applySuggestion(suggestions[selectedSuggestionIdx]); return; }
+      if (e.key === 'Escape') { setShowSuggestions(false); return; }
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
-      if (taskPassed) {
-        handleNextAction();
-      } else {
-        handleRunQuery();
-      }
+      setShowSuggestions(false);
+      if (taskPassed) { handleNextAction(); } else { handleRunQuery(); }
       return;
     }
 
@@ -229,13 +326,20 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       const start = e.currentTarget.selectionStart;
       const end = e.currentTarget.selectionEnd;
       const newSql = currentSql.substring(0, start) + '  ' + currentSql.substring(end);
-      setCurrentSql(newSql);
-      setTaskSqlCache((prev) => ({ ...prev, [currentTask.id]: newSql }));
+      handleTextChange(newSql);
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
         }
       }, 0);
+    }
+  };
+
+  // Sync scroll between textarea and highlight overlay
+  const handleScroll = () => {
+    if (textareaRef.current && highlightRef.current) {
+      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
     }
   };
 
@@ -375,15 +479,15 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         {/* Code Editor Surface */}
         <div
           onClick={() => textareaRef.current?.focus()}
-          className="relative min-h-[160px] flex font-mono text-[13.5px] leading-[22px] bg-[#1a1c1c] cursor-text"
+          className="relative min-h-[160px] flex font-mono text-[13px] leading-[22px] bg-[#0e141b] cursor-text"
         >
           {/* Line Numbers Gutter */}
-          <div className="w-10 select-none py-3 bg-[#0c0f0f] text-[#9BA4B4] text-right pr-3 font-mono border-r border-[#3c494a]/40 flex flex-col shrink-0">
+          <div className="w-11 select-none py-3 bg-[#0d1217] text-zinc-500 text-right pr-3 font-mono border-r border-zinc-800/80 flex flex-col shrink-0">
             {lines.map((ln) => (
               <div
                 key={ln}
                 className={`h-[22px] text-[11px] font-medium transition-colors ${
-                  ln === activeLine ? 'text-[#55d8e1] font-bold' : ''
+                  ln === activeLine ? 'text-cyan-400 font-bold bg-cyan-950/40 -mr-3 pr-3' : ''
                 }`}
               >
                 {ln}
@@ -391,26 +495,72 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             ))}
           </div>
 
-          {/* Editable Textarea */}
-          <div className="relative flex-1 w-full p-0">
+          {/* Syntax Highlight + Textarea */}
+          <div className="relative flex-1 min-h-[160px]">
+            {/* Highlight overlay */}
+            <div
+              ref={highlightRef}
+              aria-hidden="true"
+              className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-zinc-100 z-0"
+              dangerouslySetInnerHTML={{ __html: highlightedCode + (currentSql.endsWith('\n') ? '<br />&nbsp;' : '') }}
+            />
+
+            {/* Editable Textarea */}
             <textarea
               id="challenge-sql-textarea"
               ref={textareaRef}
               value={currentSql}
+              onScroll={handleScroll}
               onChange={(e) => {
                 handleTextChange(e.target.value);
-                updateCursor(e.target.value, e.target.selectionStart);
+                updateCursorAndSuggestions(e.target.value, e.target.selectionStart);
               }}
-              onKeyUp={(e) => updateCursor(currentSql, e.currentTarget.selectionStart)}
-              onClick={(e) => updateCursor(currentSql, e.currentTarget.selectionStart)}
+              onKeyUp={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
+              onClick={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
               onKeyDown={handleKeyDown}
-              placeholder={`-- Type your SQL query here\nSELECT name, price, quantity_in_stock\nFROM ${currentTask.primaryTable};`}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+              placeholder={`-- Type your SQL query here\nSELECT name, price\nFROM ${currentTask.primaryTable};`}
               spellCheck={false}
               autoCapitalize="none"
               autoComplete="off"
               autoCorrect="off"
-              className="w-full h-full min-h-[160px] p-3 bg-transparent text-[#e2e2e2] placeholder:text-[#4F5864] caret-[#55d8e1] font-mono text-[13.5px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block"
+              style={{
+                tabSize: 2,
+                color: 'transparent',
+                caretColor: '#22d3ee',
+                WebkitTextFillColor: 'transparent',
+              }}
+              className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-zinc-500 placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-cyan-500/30 whitespace-pre-wrap break-words z-10"
             />
+
+            {/* Autocomplete Popup */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div
+                id="challenge-autocomplete-dropdown"
+                className="absolute z-50 bg-[#1c2128] border border-zinc-700 rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px]"
+                style={{ top: `${(activeLine) * 22 + 8}px`, left: '12px' }}
+              >
+                <div className="px-2 py-0.5 text-[9px] font-mono text-zinc-500 border-b border-zinc-800 uppercase tracking-wider">
+                  Suggestions
+                </div>
+                {suggestions.map((sug, idx) => (
+                  <div
+                    key={sug}
+                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(sug); }}
+                    className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
+                      idx === selectedSuggestionIdx
+                        ? 'bg-cyan-500/30 text-cyan-200 font-bold'
+                        : 'text-zinc-200 hover:bg-zinc-800/80 hover:text-white'
+                    }`}
+                  >
+                    <span className="font-semibold">{sug}</span>
+                    <span className="text-[9px] text-zinc-400 px-1.5 rounded bg-zinc-800/80 border border-zinc-700/40">
+                      {SQL_KEYWORDS.includes(sug.toUpperCase()) ? 'SQL' : 'COL'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
