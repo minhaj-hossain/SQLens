@@ -127,7 +127,7 @@ export const DAY_01_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: 'SELECT name\nFROM students;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name FROM students;',
           solutionExplanation: '`SELECT name FROM students;` retrieves the name column for every row.',
           hints: [
@@ -258,7 +258,7 @@ export const DAY_01_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: 'SELECT name, \nFROM students;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name, department FROM students;',
           solutionExplanation: '`SELECT name, department FROM students;` extracts both columns.',
           hints: [
@@ -388,7 +388,7 @@ export const DAY_01_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: 'SELECT \nFROM students;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT * FROM students;',
           solutionExplanation: '`SELECT * FROM students;` dumps all columns.',
           hints: [
@@ -525,7 +525,7 @@ export const DAY_01_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: 'SELECT name AS \nFROM students;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name AS student_name FROM students;',
           solutionExplanation: '`SELECT name AS student_name FROM students;` assigns the output alias.',
           hints: [

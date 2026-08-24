@@ -156,7 +156,7 @@ export const DAY_03_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: "SELECT name, age, department\nFROM students\nWHERE department = 'CSE' AND age = ;",
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: "SELECT name, age, department FROM students WHERE department = 'CSE' AND age = 21;",
           solutionExplanation: "Returns Rahim and Tanvir (both in CSE and 21 years old).",
           hints: [
@@ -322,7 +322,7 @@ export const DAY_03_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: 'SELECT name, price\nFROM products\nWHERE price BETWEEN 25.00 AND ;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name, price FROM products WHERE price BETWEEN 25.00 AND 100.00;',
           solutionExplanation: '`BETWEEN 25.00 AND 100.00` captures all mid-tier products (8 items).',
           hints: [
@@ -487,7 +487,7 @@ export const DAY_03_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: "SELECT name, price\nFROM products\nWHERE name LIKE '%Mouse%';",
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: "SELECT name, price FROM products WHERE name LIKE '%Mouse%';",
           solutionExplanation: "Matches Wireless Mouse, Gaming Mousepad XL, and Ergonomic Vertical Mouse.",
           hints: [

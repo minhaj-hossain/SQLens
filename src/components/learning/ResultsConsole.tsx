@@ -166,47 +166,53 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
         </div>
       )}
 
-      {/* Main Console Content */}
-      <div className="min-h-[160px] max-h-[300px] overflow-auto bg-[#0c1117] scrollbar-thin">
-        {activeTab === 'explain' ? (
-          <div className="p-4 space-y-3 font-mono text-xs">
-            <div className="text-zinc-300 flex items-center gap-2 font-bold">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span>Query Execution Breakdown</span>
+      {/* Main Console Content with Mobile Scroll Indicator */}
+      <div className="relative">
+        {result && !result.error && totalRows > 0 && activeTab === 'results' && (
+          <div className="sm:hidden px-3 py-1 bg-[#151c24] text-[10px] font-mono text-zinc-400 border-b border-zinc-800 flex items-center justify-between">
+            <span>← Swipe horizontally to view all columns →</span>
+          </div>
+        )}
+        <div className="min-h-[160px] max-h-[300px] overflow-auto bg-[#0c1117] scrollbar-thin">
+          {activeTab === 'explain' ? (
+            <div className="p-4 space-y-3 font-mono text-xs">
+              <div className="text-zinc-300 flex items-center gap-2 font-bold">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span>Query Execution Breakdown</span>
+              </div>
+              <p className="p-3 bg-[#131b24] rounded-lg border border-zinc-800 text-zinc-200 leading-relaxed font-normal">
+                {getQueryExplanation(sqlQuery)}
+              </p>
+              <div className="text-[11px] text-zinc-400">
+                Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-cyan-300">EXPLAIN</code> keyword shows the query execution plan and table scans.
+              </div>
             </div>
-            <p className="p-3 bg-[#131b24] rounded-lg border border-zinc-800 text-zinc-200 leading-relaxed font-normal">
-              {getQueryExplanation(sqlQuery)}
-            </p>
-            <div className="text-[11px] text-zinc-400">
-              Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-cyan-300">EXPLAIN</code> keyword shows the query execution plan and table scans.
+          ) : !result ? (
+            /* Empty / Initial State */
+            <div className="flex flex-col items-center justify-center py-12 text-center text-zinc-400 space-y-2">
+              <Terminal className="w-8 h-8 text-zinc-400" />
+              <p className="text-xs font-mono">Run your query to preview rows and inspect execution output.</p>
             </div>
-          </div>
-        ) : !result ? (
-          /* Empty / Initial State */
-          <div className="flex flex-col items-center justify-center py-12 text-center text-zinc-400 space-y-2">
-            <Terminal className="w-8 h-8 text-zinc-400" />
-            <p className="text-xs font-mono">Run your query to preview rows and inspect execution output.</p>
-          </div>
-        ) : result.error ? (
-          /* Error Display */
-          <div className="p-4 bg-red-950/20 text-red-300 font-mono text-xs space-y-2">
-            <div className="flex items-center gap-2 font-bold text-red-400">
-              <AlertCircle className="w-4 h-4" />
-              <span>SQL Execution Error</span>
+          ) : result.error ? (
+            /* Error Display */
+            <div className="p-4 bg-red-950/20 text-red-300 font-mono text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-red-400">
+                <AlertCircle className="w-4 h-4" />
+                <span>SQL Execution Error</span>
+              </div>
+              <p className="p-3 bg-red-950/40 rounded border border-red-800/60 leading-relaxed">
+                {result.error}
+              </p>
             </div>
-            <p className="p-3 bg-red-950/40 rounded border border-red-800/60 leading-relaxed">
-              {result.error}
-            </p>
-          </div>
-        ) : totalRows === 0 ? (
-          /* Zero rows matched */
-          <div className="p-8 text-center text-zinc-400 font-mono text-xs space-y-1">
-            <p className="text-zinc-300 font-semibold">Query executed successfully, but returned 0 rows.</p>
-            <p className="text-zinc-400 text-[11px]">Check your WHERE filter conditions or table records.</p>
-          </div>
-        ) : (
-          /* Results Table Grid */
-          <table className="w-full text-left font-mono border-collapse text-xs">
+          ) : totalRows === 0 ? (
+            /* Zero rows matched */
+            <div className="p-8 text-center text-zinc-400 font-mono text-xs space-y-1">
+              <p className="text-zinc-300 font-semibold">Query executed successfully, but returned 0 rows.</p>
+              <p className="text-zinc-400 text-[11px]">Check your WHERE filter conditions or table records.</p>
+            </div>
+          ) : (
+            /* Results Table Grid */
+            <table className="min-w-full text-left font-mono border-collapse text-xs">
             <thead className="sticky top-0 z-10 bg-[#161e27] border-b border-zinc-700/70 text-zinc-200">
               <tr>
                 {result.fields?.map((field) => (
@@ -233,6 +239,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             </tbody>
           </table>
         )}
+        </div>
       </div>
 
       {/* Pagination Footer (if more than 8 rows) */}

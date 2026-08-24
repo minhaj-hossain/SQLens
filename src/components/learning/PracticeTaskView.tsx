@@ -113,71 +113,78 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.2 }}
-      className="w-full max-w-7xl mx-auto space-y-5"
+      className="w-full max-w-7xl mx-auto space-y-4 px-2 sm:px-4"
     >
-      {/* SECTION 1 & 2: Top Row - What do I need to do (Task) & What data do I have (Explorer) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Left Pane (5 cols): Task Instructions */}
-        <div className="lg:col-span-5 flex flex-col">
-          <TaskInstructions
-            task={task}
-            taskIndex={taskIndex}
-            totalTasks={totalTasks}
-            concept={concept}
-            isCompleted={taskPassed || isCompleted}
-            onBackToLesson={onBackToLesson}
-            onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
-            onViewSolution={() => setViewedSolution(true)}
-          />
+      {/* UNIFIED 4-PANEL RESPONSIVE GRID 
+          Desktop (lg: 2-column balanced pairs)
+          Tablet (md: stacked 2-column)
+          Mobile: Prioritized linear stream: Task (1) -> Editor (2) -> Results (3) -> Data Explorer (4)
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        {/* LEFT COLUMN (Desktop): Task Instructions + Database Explorer */}
+        <div className="flex flex-col gap-4">
+          {/* Order 1 on Mobile: Task Instructions */}
+          <div className="order-1">
+            <TaskInstructions
+              task={task}
+              taskIndex={taskIndex}
+              totalTasks={totalTasks}
+              concept={concept}
+              isCompleted={taskPassed || isCompleted}
+              onBackToLesson={onBackToLesson}
+              onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
+              onViewSolution={() => setViewedSolution(true)}
+            />
+          </div>
+
+          {/* Order 4 on Mobile (or below task on desktop): Database Explorer */}
+          <div className="order-4 lg:order-2">
+            <DatabaseExplorer
+              initialTableName={task.primaryTable}
+              highlightedColumns={task.validation.requiredColumns}
+              onSelectColumn={(colName) => {
+                // Click column helper
+              }}
+            />
+          </div>
         </div>
 
-        {/* Right Pane (7 cols): Database Explorer */}
-        <div className="lg:col-span-7 flex flex-col">
-          <DatabaseExplorer
-            initialTableName={task.primaryTable}
-            highlightedColumns={task.validation.requiredColumns}
-            onSelectColumn={(colName) => {
-              // Quick helper: if user clicks a column, optionally insert it or show feedback
-            }}
-          />
-        </div>
-      </div>
+        {/* RIGHT COLUMN (Desktop): SQL Editor + Results Console */}
+        <div className="flex flex-col gap-4">
+          {/* Order 2 on Mobile: SQL Code Editor */}
+          <div className="order-2 lg:order-1">
+            <SQLEditor
+              value={currentSql}
+              tableName={task.primaryTable}
+              onChange={(newVal) => {
+                setCurrentSql(newVal);
+                if (evaluationState === 'wrong') {
+                  setValidationMessage(null);
+                }
+              }}
+              onRun={handleRunPreview}
+              onSubmit={handleSubmitAndValidate}
+              evaluationState={evaluationState}
+              nextActionLabel={nextActionLabel}
+              onNextAction={onNextTask}
+            />
+          </div>
 
-      {/* SECTION 3 & 4: Bottom Row - What do I write (Editor) & Did I get it right (Results) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Left Pane (6 cols): SQL Code Editor */}
-        <div className="lg:col-span-6 flex flex-col">
-          <SQLEditor
-            value={currentSql}
-            tableName={task.primaryTable}
-            onChange={(newVal) => {
-              setCurrentSql(newVal);
-              if (evaluationState === 'wrong') {
-                setValidationMessage(null);
-              }
-            }}
-            onRun={handleRunPreview}
-            onSubmit={handleSubmitAndValidate}
-            evaluationState={evaluationState}
-            nextActionLabel={nextActionLabel}
-            onNextAction={onNextTask}
-          />
-        </div>
-
-        {/* Right Pane (6 cols): Results & Validation Console */}
-        <div className="lg:col-span-6 flex flex-col">
-          <ResultsConsole
-            result={executionResult}
-            evaluationState={evaluationState}
-            validationFeedback={validationMessage}
-            sqlQuery={currentSql}
-          />
+          {/* Order 3 on Mobile: Results Console */}
+          <div className="order-3 lg:order-2">
+            <ResultsConsole
+              result={executionResult}
+              evaluationState={evaluationState}
+              validationFeedback={validationMessage}
+              sqlQuery={currentSql}
+            />
+          </div>
         </div>
       </div>
 
       {/* Navigation Controls Bar */}
       {onPreviousTask && canGoBack && (
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-1">
           <button
             onClick={onPreviousTask}
             className="flex items-center gap-1.5 text-xs font-mono font-medium text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 transition cursor-pointer"

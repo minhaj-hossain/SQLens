@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Database, Key, Search, ChevronDown, Check, Info } from 'lucide-react';
+import { Table, Database, Key, Search, ChevronDown, Check, Info, Network, ArrowRight } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { TableRow } from '../../types/database';
@@ -18,7 +18,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   className = '',
 }) => {
   const [activeTable, setActiveTable] = useState<string>(initialTableName);
-  const [activeTab, setActiveTab] = useState<'preview' | 'schema'>('preview');
+  const [activeTab, setActiveTab] = useState<'preview' | 'schema' | 'graph'>('preview');
   const [searchFilter, setSearchFilter] = useState('');
   const [copiedCol, setCopiedCol] = useState<string | null>(null);
 
@@ -104,6 +104,18 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
             <Key className="w-3 h-3" />
             <span>Schema & Types</span>
           </button>
+          <button
+            id="tab-schema-graph-btn"
+            onClick={() => setActiveTab('graph')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
+              activeTab === 'graph'
+                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <Network className="w-3 h-3" />
+            <span>ER Relationships</span>
+          </button>
         </div>
       </div>
 
@@ -133,18 +145,30 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
               Showing {filteredRows.length} of {rawRows.length}
             </span>
           </div>
-        ) : (
+        ) : activeTab === 'schema' ? (
           <div className="flex items-center gap-2 text-zinc-300 text-xs font-mono">
             <Info className="w-3.5 h-3.5 text-cyan-400" />
             <span>{schema.description || 'Database entity schema metadata'}</span>
           </div>
+        ) : (
+          <div className="flex items-center justify-between w-full text-zinc-300 text-xs font-mono">
+            <div className="flex items-center gap-2">
+              <Network className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Interactive Entity-Relationship Graph & Foreign Key Network</span>
+            </div>
+            <span className="text-[10px] text-zinc-400">Click any entity to inspect</span>
+          </div>
         )}
       </div>
 
-      {/* Body View Content */}
-      <div className="overflow-auto max-h-[300px] min-h-[160px] bg-[#0c1117] scrollbar-thin text-xs">
-        {activeTab === 'preview' ? (
-          <table className="w-full text-left font-mono border-collapse">
+      {/* Body View Content with Mobile Scroll Indicator */}
+      <div className="relative">
+        <div className="sm:hidden px-3 py-1 bg-[#151c24] text-[10px] font-mono text-zinc-400 border-b border-zinc-800 flex items-center justify-between">
+          <span>← Swipe horizontally to view all columns →</span>
+        </div>
+        <div className="overflow-auto max-h-[320px] min-h-[160px] bg-[#0c1117] scrollbar-thin text-xs">
+          {activeTab === 'preview' ? (
+            <table className="min-w-full text-left font-mono border-collapse">
             <thead className="sticky top-0 z-10 bg-[#161e27] border-b border-zinc-700/70">
               <tr>
                 {schema.columns.map((col) => {
@@ -223,7 +247,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
               )}
             </tbody>
           </table>
-        ) : (
+        ) : activeTab === 'schema' ? (
           /* Schema & Types List View */
           <div className="p-3 divide-y divide-zinc-800/70">
             {schema.columns.map((col) => {
@@ -268,8 +292,71 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
               );
             })}
           </div>
+        ) : (
+          /* Interactive ER Graph / Network View */
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {allTableNames.map((tblKey) => {
+              const tblSchema = DATABASE_SCHEMAS[tblKey];
+              const isSelected = activeTable.toLowerCase() === tblKey.toLowerCase();
+              const fks = tblSchema.columns.filter((c) => c.foreignKey);
+              const pks = tblSchema.columns.filter((c) => c.primaryKey);
+
+              return (
+                <div
+                  key={tblKey}
+                  onClick={() => setActiveTable(tblKey)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#15202b] border-cyan-400 shadow-md shadow-cyan-950/40 ring-1 ring-cyan-400/40'
+                      : 'bg-[#10161d] border-zinc-800 hover:border-zinc-600 hover:bg-[#141b24]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Table className={`w-3.5 h-3.5 ${isSelected ? 'text-cyan-400' : 'text-zinc-400'}`} />
+                      <span className="font-mono text-xs font-bold text-zinc-100">{tblKey}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded">
+                      {INITIAL_TABLES[tblKey]?.length || 0} rows
+                    </span>
+                  </div>
+
+                  {/* Primary Key Summary */}
+                  {pks.length > 0 && (
+                    <div className="mb-2 text-[10px] font-mono text-cyan-300 flex items-center gap-1">
+                      <span className="px-1 py-0.2 rounded bg-cyan-950/80 border border-cyan-800/60 font-bold">PK</span>
+                      <span>{pks.map((p) => p.name).join(', ')}</span>
+                    </div>
+                  )}
+
+                  {/* Foreign Key Links */}
+                  <div className="space-y-1 mt-2 pt-2 border-t border-zinc-800/60">
+                    <div className="text-[9px] uppercase tracking-wider font-mono text-zinc-400">
+                      Relationships ({fks.length})
+                    </div>
+                    {fks.length === 0 ? (
+                      <span className="text-[10px] font-mono text-zinc-400 italic">Root Entity (No FKs)</span>
+                    ) : (
+                      fks.map((fk) => (
+                        <div
+                          key={fk.name}
+                          className="flex items-center gap-1 text-[10px] font-mono text-amber-300/90"
+                        >
+                          <span className="text-zinc-300">{fk.name}</span>
+                          <ArrowRight className="w-2.5 h-2.5 text-zinc-400" />
+                          <span className="text-amber-400 font-semibold">{fk.foreignKey?.table}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
+        </div>
       </div>
     </div>
   );
 };
+

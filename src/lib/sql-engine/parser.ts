@@ -5,6 +5,12 @@ export interface ParsedSelectColumn {
   aggregate?: 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX';
   aggregateArg?: string;
   isDistinct?: boolean;
+  windowFunction?: {
+    type: 'ROW_NUMBER' | 'RANK' | 'DENSE_RANK';
+    partitionBy?: string;
+    orderBy?: string;
+    direction?: 'ASC' | 'DESC';
+  };
 }
 
 export interface ParsedJoin {
@@ -21,7 +27,7 @@ export interface ParsedOrderBy {
 }
 
 export interface ParsedSqlQuery {
-  type: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'TRANSACTION' | 'UNKNOWN';
+  type: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'TRANSACTION' | 'CTE' | 'EXPLAIN' | 'DDL' | 'UNKNOWN';
   raw: string;
   normalized: string;
   isDistinct?: boolean;
@@ -41,6 +47,11 @@ export interface ParsedSqlQuery {
   updateSet?: Record<string, any>;
   deleteTable?: string;
   transactionCommand?: 'BEGIN' | 'COMMIT' | 'ROLLBACK';
+  cteName?: string;
+  cteQuery?: string;
+  mainQuery?: string;
+  explainTarget?: string;
+  ddlCommand?: string;
   error?: string;
 }
 
@@ -110,6 +121,40 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'ROLLBACK' };
   }
 
+  // CTE (WITH cte_name AS (...) SELECT ...)
+  const cteMatch = sql.match(/^WITH\s+([a-zA-Z0-9_]+)\s+AS\s*\(([\s\S]+?)\)\s*(SELECT[\s\S]+)$/i);
+  if (cteMatch) {
+    return {
+      type: 'CTE',
+      raw: rawSql,
+      normalized: sql,
+      cteName: cteMatch[1].trim(),
+      cteQuery: cteMatch[2].trim(),
+      mainQuery: cteMatch[3].trim(),
+    };
+  }
+
+  // EXPLAIN query
+  if (/^EXPLAIN\s+/i.test(sql)) {
+    const targetQuery = sql.replace(/^EXPLAIN\s+/i, '').trim();
+    return {
+      type: 'EXPLAIN',
+      raw: rawSql,
+      normalized: sql,
+      explainTarget: targetQuery,
+    };
+  }
+
+  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX)
+  if (/^(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(UNIQUE\s+)?INDEX)/i.test(sql)) {
+    return {
+      type: 'DDL',
+      raw: rawSql,
+      normalized: sql,
+      ddlCommand: sql,
+    };
+  }
+
   // Handle SELECT
   if (/^SELECT\b/i.test(sql)) {
     return parseSelect(sql, rawSql);
@@ -133,6 +178,32 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
   return { type: 'UNKNOWN', raw: rawSql, normalized: sql, error: 'Unsupported or unparseable SQL statement' };
 }
 
+function findTopLevelKeyword(sql: string, keyword: string): number {
+  let parenDepth = 0;
+  let inQuote: string | null = null;
+  const upperSql = sql.toUpperCase();
+  const kw = keyword.toUpperCase();
+
+  for (let i = 0; i <= sql.length - kw.length; i++) {
+    const char = sql[i];
+    if ((char === "'" || char === '"' || char === '`') && (i === 0 || sql[i - 1] !== '\\')) {
+      if (!inQuote) inQuote = char;
+      else if (inQuote === char) inQuote = null;
+    } else if (!inQuote) {
+      if (char === '(') parenDepth++;
+      else if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+      else if (parenDepth === 0) {
+        const isWordStart = i === 0 || /[\s,;()]/.test(sql[i - 1]);
+        const isWordEnd = i + kw.length === sql.length || /[\s,;()]/.test(sql[i + kw.length]);
+        if (isWordStart && isWordEnd && upperSql.substring(i, i + kw.length) === kw) {
+          return i;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
 function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
   const query: ParsedSqlQuery = {
     type: 'SELECT',
@@ -147,58 +218,64 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
   try {
     let remaining = sql;
 
-    // Extract LIMIT & OFFSET from tail
-    const limitMatch = remaining.match(/\bLIMIT\s+(\d+)(?:\s+OFFSET\s+(\d+))?$/i);
-    if (limitMatch) {
-      query.limit = parseInt(limitMatch[1], 10);
-      if (limitMatch[2]) {
-        query.offset = parseInt(limitMatch[2], 10);
+    // Extract LIMIT & OFFSET from tail (at top level)
+    const limitIdx = findTopLevelKeyword(remaining, 'LIMIT');
+    if (limitIdx !== -1) {
+      const limitSection = remaining.substring(limitIdx).trim();
+      const limitMatch = limitSection.match(/^LIMIT\s+(\d+)(?:\s+OFFSET\s+(\d+))?$/i);
+      if (limitMatch) {
+        query.limit = parseInt(limitMatch[1], 10);
+        if (limitMatch[2]) {
+          query.offset = parseInt(limitMatch[2], 10);
+        }
+        remaining = remaining.substring(0, limitIdx).trim();
       }
-      remaining = remaining.substring(0, limitMatch.index).trim();
     }
 
-    // Extract ORDER BY
-    const orderMatch = remaining.match(/\bORDER\s+BY\s+([\s\S]+)$/i);
-    if (orderMatch) {
-      const orderExprs = orderMatch[1].split(',').map((s) => s.trim());
+    // Extract ORDER BY (at top level)
+    const orderIdx = findTopLevelKeyword(remaining, 'ORDER BY');
+    if (orderIdx !== -1) {
+      const orderSection = remaining.substring(orderIdx).replace(/^ORDER\s+BY\s+/i, '').trim();
+      const orderExprs = orderSection.split(',').map((s) => s.trim());
       for (const expr of orderExprs) {
         const parts = expr.split(/\s+/);
         const col = parts[0].replace(/[`"']/g, '');
         const dir = parts[1] && parts[1].toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         query.orderBy?.push({ column: col, direction: dir });
       }
-      remaining = remaining.substring(0, orderMatch.index).trim();
+      remaining = remaining.substring(0, orderIdx).trim();
     }
 
-    // Extract HAVING
-    const havingMatch = remaining.match(/\bHAVING\s+([\s\S]+)$/i);
-    if (havingMatch) {
-      query.havingClause = havingMatch[1].trim();
-      remaining = remaining.substring(0, havingMatch.index).trim();
+    // Extract HAVING (at top level)
+    const havingIdx = findTopLevelKeyword(remaining, 'HAVING');
+    if (havingIdx !== -1) {
+      query.havingClause = remaining.substring(havingIdx).replace(/^HAVING\s+/i, '').trim();
+      remaining = remaining.substring(0, havingIdx).trim();
     }
 
-    // Extract GROUP BY
-    const groupMatch = remaining.match(/\bGROUP\s+BY\s+([\s\S]+)$/i);
-    if (groupMatch) {
-      query.groupBy = groupMatch[1].split(',').map((s) => s.trim().replace(/[`"']/g, ''));
-      remaining = remaining.substring(0, groupMatch.index).trim();
+    // Extract GROUP BY (at top level)
+    const groupIdx = findTopLevelKeyword(remaining, 'GROUP BY');
+    if (groupIdx !== -1) {
+      const groupSection = remaining.substring(groupIdx).replace(/^GROUP\s+BY\s+/i, '').trim();
+      query.groupBy = groupSection.split(',').map((s) => s.trim().replace(/[`"']/g, ''));
+      remaining = remaining.substring(0, groupIdx).trim();
     }
 
-    // Extract WHERE
-    const whereMatch = remaining.match(/\bWHERE\s+([\s\S]+)$/i);
-    if (whereMatch) {
-      query.whereClause = whereMatch[1].trim();
-      remaining = remaining.substring(0, whereMatch.index).trim();
+    // Extract WHERE (at top level)
+    const whereIdx = findTopLevelKeyword(remaining, 'WHERE');
+    if (whereIdx !== -1) {
+      query.whereClause = remaining.substring(whereIdx).replace(/^WHERE\s+/i, '').trim();
+      remaining = remaining.substring(0, whereIdx).trim();
     }
 
-    // Extract FROM & JOINs
-    const fromMatch = remaining.match(/\bFROM\s+([\s\S]+)$/i);
-    if (!fromMatch) {
+    // Extract FROM & JOINs (at top level)
+    const fromIdx = findTopLevelKeyword(remaining, 'FROM');
+    if (fromIdx === -1) {
       return { ...query, error: 'Missing FROM clause in SELECT query' };
     }
 
-    const fromSection = fromMatch[1].trim();
-    const selectSection = remaining.substring(0, fromMatch.index).replace(/^SELECT\s+/i, '').trim();
+    const selectSection = remaining.substring(0, fromIdx).replace(/^SELECT\s+/i, '').trim();
+    const fromSection = remaining.substring(fromIdx).replace(/^FROM\s+/i, '').trim();
 
     // Check DISTINCT
     if (/^DISTINCT\s+/i.test(selectSection)) {
@@ -220,7 +297,7 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
 
 function parseColumnList(str: string): ParsedSelectColumn[] {
   const cols: ParsedSelectColumn[] = [];
-  // Split columns safely respecting commas inside parentheses (like COUNT(*), SUM(x * y))
+  // Split columns safely respecting commas inside parentheses
   const parts: string[] = [];
   let current = '';
   let parenDepth = 0;
@@ -247,6 +324,28 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
       raw: cleanPart,
       expression: cleanPart.replace(/^[`"']|[`"']$/g, ''),
     };
+
+    // Check window function: ROW_NUMBER() OVER (PARTITION BY cat ORDER BY price DESC) AS rank
+    const windowMatch = cleanPart.match(/^(ROW_NUMBER|RANK|DENSE_RANK)\s*\(\)\s*OVER\s*\(([\s\S]*?)\)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?$/i);
+    if (windowMatch) {
+      const funcType = windowMatch[1].toUpperCase() as any;
+      const overBody = windowMatch[2].trim();
+      const alias = windowMatch[3]?.replace(/[`"']/g, '').trim() || `${funcType.toLowerCase()}_result`;
+
+      const partMatch = overBody.match(/PARTITION\s+BY\s+([`"']?[\w_.]+[`"']?)/i);
+      const orderMatch = overBody.match(/ORDER\s+BY\s+([`"']?[\w_.]+[`"']?)(?:\s+(ASC|DESC))?/i);
+
+      col.expression = alias;
+      col.alias = alias;
+      col.windowFunction = {
+        type: funcType,
+        partitionBy: partMatch ? partMatch[1].replace(/[`"']/g, '').trim() : undefined,
+        orderBy: orderMatch ? orderMatch[1].replace(/[`"']/g, '').trim() : undefined,
+        direction: orderMatch && orderMatch[2] && orderMatch[2].toUpperCase() === 'ASC' ? 'ASC' : 'DESC',
+      };
+      cols.push(col);
+      continue;
+    }
 
     // Check alias AS or whitespace
     const asMatch = cleanPart.match(/^([\s\S]+?)\s+(?:AS\s+)?([`"']?[\w_]+[`"']?)$/i);

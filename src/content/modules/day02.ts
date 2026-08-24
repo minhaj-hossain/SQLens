@@ -158,7 +158,7 @@ export const DAY_02_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: 'SELECT name, age\nFROM students\nWHERE age = ;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name, age FROM students WHERE age = 22;',
           solutionExplanation: '`WHERE age = 22` isolates Karim (the only student who is 22).',
           hints: [
@@ -341,7 +341,7 @@ export const DAY_02_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: 'SELECT name, price\nFROM products\nWHERE price >= ;',
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name, price FROM products WHERE price >= 100.00;',
           solutionExplanation: '`WHERE price >= 100.00` extracts all items costing $100 or higher (6 items in full inventory).',
           hints: [
@@ -523,7 +523,7 @@ export const DAY_02_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: "SELECT name, city\nFROM students\nWHERE city = '",
+          initialSql: '-- Write your SQL query here\n',
           solutionSql: "SELECT name, city FROM students WHERE city = 'Dhaka';",
           solutionExplanation: "`WHERE city = 'Dhaka'` retrieves all students whose city is Dhaka (Rahim and Ayesha).",
           hints: [

@@ -91,7 +91,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       const currentWord = match[1].toUpperCase();
       const matched = autocompleteList
         .filter(item => item.text.toUpperCase().startsWith(currentWord) && item.text.toUpperCase() !== currentWord)
-        .slice(0, 6)
+        .slice(0, 5)
         .map(i => i.text);
 
       if (matched.length > 0) {
@@ -99,13 +99,22 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         setSelectedSuggestionIdx(0);
         setShowSuggestions(true);
         
-        // Approximate position
+        // Calculate safe position inside editor
         const lines = textBeforeCursor.split('\n');
         const currLineIdx = lines.length - 1;
         const colIdx = lines[currLineIdx].length;
+        
+        // If cursor is at line 3 or lower, position dropdown above line to avoid clipping
+        const dropdownHeight = matched.length * 30 + 36;
+        const isNearBottom = currLineIdx >= 3;
+        const topPos = isNearBottom
+          ? Math.max(8, currLineIdx * 22 - dropdownHeight)
+          : currLineIdx * 22 + 30;
+        const leftPos = Math.min(Math.max(colIdx * 8 + 12, 12), 220);
+
         setSuggestionCoords({
-          top: Math.min(currLineIdx * 22 + 28, 140),
-          left: Math.min(colIdx * 8.5 + 48, 280),
+          top: topPos,
+          left: leftPos,
         });
         return;
       }
@@ -186,7 +195,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     }
   };
 
-  // Syntax highlighting builder
+  // Syntax highlighting with dimmed comments
   const highlightedCode = useMemo(() => {
     if (!value) return '';
 
@@ -196,20 +205,19 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    // Highlight comments (-- comment)
-    let processed = escaped.replace(/(--[^\n]*)/g, '<span class="text-zinc-500 italic">$1</span>');
+    // 1. Comments have reduced opacity (text-zinc-500 opacity-45 italic)
+    let processed = escaped.replace(/(--[^\n]*)/g, '<span class="text-zinc-500 opacity-45 italic">$1</span>');
 
-    // Highlight strings ('string')
-    processed = processed.replace(/('(?:[^'\\]|\\.)*')/g, '<span class="text-emerald-400">$1</span>');
+    // 2. Strings
+    processed = processed.replace(/('(?:[^'\\]|\\.)*')/g, '<span class="text-emerald-400 font-medium">$1</span>');
 
-    // Highlight numbers
+    // 3. Numbers
     processed = processed.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="text-amber-300 font-semibold">$1</span>');
 
-    // Highlight SQL Keywords (case-insensitive word boundary)
+    // 4. SQL Keywords
     SQL_KEYWORDS.forEach(kw => {
       const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
       processed = processed.replace(regex, (match) => {
-        // don't replace inside span tags
         return `<span class="text-cyan-400 font-bold">${match.toUpperCase()}</span>`;
       });
     });
@@ -224,28 +232,58 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   };
 
   const handleFormat = () => {
+    if (!value.trim()) return;
+
     let formatted = value;
-    SQL_KEYWORDS.forEach(kw => {
+    
+    // Protect string literals
+    const stringLiterals: string[] = [];
+    formatted = formatted.replace(/'(?:[^'\\]|\\.)*'/g, (match) => {
+      stringLiterals.push(match);
+      return `__STR_LITERAL_${stringLiterals.length - 1}__`;
+    });
+
+    // Uppercase keywords
+    SQL_KEYWORDS.forEach((kw) => {
       const regex = new RegExp(`\\b${kw}\\b`, 'gi');
       formatted = formatted.replace(regex, kw);
     });
-    onChange(formatted);
-  };
 
-  const handleQuickSnippet = (snippet: string) => {
-    onChange(snippet);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
+    // Format major clause starts on new lines if currently on one line
+    const majorClauses = [
+      'SELECT', 'FROM', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'JOIN',
+      'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'UNION', 'WITH'
+    ];
+
+    majorClauses.forEach((clause) => {
+      const regex = new RegExp(`(?<!\\n)\\b${clause}\\b`, 'g');
+      formatted = formatted.replace(regex, (match, offset) => {
+        return offset === 0 ? match : `\n${match}`;
+      });
+    });
+
+    // Restore string literals
+    formatted = formatted.replace(/__STR_LITERAL_(\d+)__/g, (_, idx) => {
+      return stringLiterals[Number(idx)] || '';
+    });
+
+    // Normalize spacing
+    formatted = formatted
+      .split('\n')
+      .map(line => line.trim())
+      .filter((line, i, arr) => line.length > 0 || (i > 0 && arr[i - 1].length > 0))
+      .join('\n');
+
+    onChange(formatted);
   };
 
   const lineCount = Math.max(value.split('\n').length, 4);
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
-    <div id="sql-editor-container" className="flex flex-col bg-[#121820] rounded-xl border border-zinc-700/60 overflow-hidden shadow-xl text-zinc-100">
+    <div id="sql-editor-container" className="flex flex-col bg-[#121820] rounded-xl border border-zinc-700/60 shadow-xl text-zinc-100 relative">
       {/* Editor Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#0d1217] border-b border-zinc-700/60 select-none">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#0d1217] border-b border-zinc-700/60 select-none rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 mr-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block"></span>
@@ -303,9 +341,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Code Editor Surface */}
-      <div className="relative min-h-[140px] max-h-[260px] flex font-mono text-[13.5px] leading-[22px] bg-[#0e141b] overflow-hidden">
+      <div className="relative min-h-[160px] max-h-[280px] flex font-mono text-[13px] leading-[22px] bg-[#0e141b]">
         {/* Line Numbers Gutter */}
-        <div className="w-11 select-none py-3 bg-[#0d1217] text-zinc-400 text-right pr-3 font-mono border-r border-zinc-800/80 flex flex-col shrink-0">
+        <div className="w-11 select-none py-3 bg-[#0d1217] text-zinc-500 text-right pr-3 font-mono border-r border-zinc-800/80 flex flex-col shrink-0">
           {lines.map((ln) => (
             <div
               key={ln}
@@ -318,22 +356,23 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           ))}
         </div>
 
-        {/* Textarea & Syntax Overlay Container */}
-        <div className="relative flex-1 h-full overflow-hidden">
-          {/* Syntax Highlight Overlay */}
+        {/* Textarea & Syntax Highlight Layer Surface */}
+        <div className="relative flex-1 h-full min-h-[160px]">
+          {/* Syntax Highlight Overlay (renders dimmed comments, colored keywords & strings) */}
           <div
             ref={highlightRef}
             aria-hidden="true"
-            className="absolute inset-0 p-3 pointer-events-none whitespace-pre-wrap break-words overflow-hidden text-zinc-100 font-mono text-[13.5px] leading-[22px] select-none"
-            dangerouslySetInnerHTML={{ __html: highlightedCode + '\n' }}
+            className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-zinc-100 z-0"
+            dangerouslySetInnerHTML={{ __html: highlightedCode + (value.endsWith('\n') ? '<br />&nbsp;' : '') }}
           />
 
-          {/* Actual Editable Textarea */}
+          {/* Interactive Native Textarea */}
           <textarea
             id="sql-query-textarea"
             ref={textareaRef}
             value={value}
             disabled={readOnly}
+            onScroll={handleScroll}
             onChange={(e) => {
               onChange(e.target.value);
               updateCursorAndSuggestions(e.target.value, e.target.selectionStart);
@@ -341,38 +380,47 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             onKeyUp={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
             onClick={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
             onKeyDown={handleKeyDown}
-            onScroll={handleScroll}
             placeholder={`-- Type your SQL query here\nSELECT * FROM ${tableName};`}
             spellCheck={false}
             autoCapitalize="none"
             autoComplete="off"
             autoCorrect="off"
-            className="absolute inset-0 w-full h-full p-3 bg-transparent text-zinc-100 caret-cyan-400 font-mono text-[13.5px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none"
+            style={{
+              tabSize: 2,
+              color: 'transparent',
+              caretColor: '#22d3ee',
+              WebkitTextFillColor: 'transparent',
+            }}
+            className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-zinc-500 placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-cyan-500/30 whitespace-pre-wrap break-words z-10"
           />
 
-          {/* Autocomplete Popup */}
+          {/* Autocomplete Popup: fully visible, sharp, opaque, never cut off */}
           {showSuggestions && suggestions.length > 0 && (
             <div
               id="autocomplete-dropdown"
-              className="absolute z-30 bg-[#1e2733] border border-cyan-500/40 rounded-lg shadow-2xl overflow-hidden py-1 min-w-[140px]"
+              className="absolute z-50 bg-[#151e2b] border border-cyan-500/70 rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px] backdrop-blur-none"
               style={{ top: `${suggestionCoords.top}px`, left: `${suggestionCoords.left}px` }}
             >
-              <div className="px-2 py-0.5 text-[9px] uppercase tracking-wider text-zinc-300 font-bold bg-zinc-900/60 border-b border-zinc-700/50">
-                Suggestions (Tab ⇥)
+              <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-cyan-400 font-bold bg-[#0d141e] border-b border-zinc-700/60 flex items-center justify-between">
+                <span>Suggestions</span>
+                <span className="text-[9px] text-zinc-400 font-normal">Tab ⇥</span>
               </div>
               {suggestions.map((sug, idx) => (
                 <div
                   key={sug}
-                  onClick={() => applySuggestion(sug)}
-                  className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between ${
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applySuggestion(sug);
+                  }}
+                  className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
                     idx === selectedSuggestionIdx
-                      ? 'bg-cyan-600/30 text-cyan-300 font-bold'
-                      : 'text-zinc-300 hover:bg-zinc-700/50'
+                      ? 'bg-cyan-500/30 text-cyan-200 font-bold'
+                      : 'text-zinc-200 hover:bg-zinc-800/80 hover:text-white'
                   }`}
                 >
-                  <span>{sug}</span>
-                  <span className="text-[10px] text-zinc-300">
-                    {SQL_KEYWORDS.includes(sug.toUpperCase()) ? 'keyword' : 'column'}
+                  <span className="font-semibold">{sug}</span>
+                  <span className="text-[9px] text-zinc-400 px-1.5 py-0.2 rounded bg-zinc-800/80 border border-zinc-700/40">
+                    {SQL_KEYWORDS.includes(sug.toUpperCase()) ? 'SQL' : 'COL'}
                   </span>
                 </div>
               ))}

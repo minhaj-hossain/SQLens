@@ -27,8 +27,8 @@ export const DATABASE_SCHEMAS: Record<string, TableSchema> = {
     columns: [
       { name: 'product_id', type: 'number', primaryKey: true, description: 'Unique product identifier' },
       { name: 'name', type: 'string', description: 'Product title / model' },
-      { name: 'category_id', type: 'number', foreignKey: { table: 'categories', column: 'category_id' } },
-      { name: 'supplier_id', type: 'number', foreignKey: { table: 'suppliers', column: 'supplier_id' } },
+      { name: 'category_id', type: 'number', nullable: true, foreignKey: { table: 'categories', column: 'category_id' } },
+      { name: 'supplier_id', type: 'number', nullable: true, foreignKey: { table: 'suppliers', column: 'supplier_id' } },
       { name: 'price', type: 'decimal', description: 'Retail unit price in USD' },
       { name: 'quantity_in_stock', type: 'number', description: 'Current warehouse inventory count' },
       { name: 'reorder_level', type: 'number', description: 'Minimum stock count before reordering' },
@@ -102,6 +102,19 @@ export const DATABASE_SCHEMAS: Record<string, TableSchema> = {
       { name: 'std_nm', type: 'string', description: 'Legacy raw name column' },
       { name: 'std_age', type: 'number', description: 'Legacy raw age column' },
       { name: 'dept', type: 'string', description: 'Legacy raw department column' },
+    ],
+  },
+  reviews: {
+    name: 'reviews',
+    displayName: 'Reviews',
+    description: 'Customer product ratings and feedback reviews',
+    columns: [
+      { name: 'review_id', type: 'number', primaryKey: true, description: 'Unique review identifier' },
+      { name: 'product_id', type: 'number', foreignKey: { table: 'products', column: 'product_id' } },
+      { name: 'customer_id', type: 'number', foreignKey: { table: 'customers', column: 'customer_id' } },
+      { name: 'rating', type: 'number', description: 'Score rating from 1 to 5' },
+      { name: 'comment', type: 'string', nullable: true, description: 'Customer written review text' },
+      { name: 'created_at', type: 'date', description: 'Date review was submitted' },
     ],
   },
 };
