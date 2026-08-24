@@ -178,7 +178,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
             {showSolution && (
               <div className="mt-2 p-3 rounded-lg bg-[#0c0c0e] border border-zinc-700 relative text-xs">
                 <div className="flex items-center justify-between mb-1.5 text-zinc-400 text-[11px]">
-                  <span className="font-bold text-cyan-400 flex items-center gap-1">
+                  <span className="font-bold text-zinc-300 flex items-center gap-1">
                     <Code className="w-3 h-3" /> Solution SQL:
                   </span>
                   <button
@@ -194,7 +194,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
                     <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <pre className="text-cyan-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                <pre className="text-zinc-200 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
                   {task.solutionSql}
                 </pre>
                 {task.solutionExplanation && (
