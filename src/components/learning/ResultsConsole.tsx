@@ -88,13 +88,13 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   return (
     <div
       id="results-console-container"
-      className={`flex flex-col bg-[#11171e] rounded-xl border border-zinc-700/60 overflow-hidden shadow-lg ${className}`}
+      className={`flex flex-col bg-[#18181b] rounded-xl border border-zinc-800 overflow-hidden shadow-lg ${className}`}
     >
       {/* Console Header & Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 bg-[#0e141a] border-b border-zinc-700/60">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 bg-[#121215] border-b border-zinc-800">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-cyan-400" />
-          <span className="font-mono text-xs font-bold text-zinc-100 uppercase tracking-wider">
+          <Terminal className="w-4 h-4 text-zinc-300" />
+          <span className="font-mono text-xs font-bold text-white uppercase tracking-wider">
             Query Results
           </span>
 
@@ -107,7 +107,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono border border-zinc-700">
                 {result.fields?.length || 0} cols
               </span>
-              <span className="px-2 py-0.5 rounded bg-zinc-800 text-cyan-300 text-[10px] font-mono border border-zinc-700">
+              <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-200 text-[10px] font-mono border border-zinc-700">
                 {result.executionTimeMs?.toFixed(1) || '1.2'}ms
               </span>
             </div>
@@ -115,13 +115,13 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
         </div>
 
         {/* Console View Tabs */}
-        <div className="flex items-center bg-[#18212b] p-0.5 rounded-lg border border-zinc-700/70 text-xs">
+        <div className="flex items-center bg-[#141417] p-0.5 rounded-lg border border-zinc-800 text-xs">
           <button
             id="tab-result-table-btn"
             onClick={() => setActiveTab('results')}
             className={`px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
               activeTab === 'results'
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+                ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
@@ -132,11 +132,11 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             onClick={() => setActiveTab('explain')}
             className={`flex items-center gap-1 px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
               activeTab === 'explain'
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+                ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <Sparkles className="w-3 h-3 text-zinc-300" />
             <span>Explain Query</span>
           </button>
         </div>
@@ -169,28 +169,28 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
       {/* Main Console Content with Mobile Scroll Indicator */}
       <div className="relative">
         {result && !result.error && totalRows > 0 && activeTab === 'results' && (
-          <div className="sm:hidden px-3 py-1 bg-[#151c24] text-[10px] font-mono text-zinc-400 border-b border-zinc-800 flex items-center justify-between">
+          <div className="sm:hidden px-3 py-1 bg-[#151518] text-[10px] font-mono text-zinc-400 border-b border-zinc-800 flex items-center justify-between">
             <span>← Swipe horizontally to view all columns →</span>
           </div>
         )}
-        <div className="min-h-[160px] max-h-[300px] overflow-auto bg-[#0c1117] scrollbar-thin">
+        <div className="min-h-[160px] max-h-[300px] overflow-auto bg-[#0c0c0e] scrollbar-thin">
           {activeTab === 'explain' ? (
             <div className="p-4 space-y-3 font-mono text-xs">
-              <div className="text-zinc-300 flex items-center gap-2 font-bold">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
+              <div className="text-zinc-200 flex items-center gap-2 font-bold">
+                <Sparkles className="w-4 h-4 text-zinc-300" />
                 <span>Query Execution Breakdown</span>
               </div>
-              <p className="p-3 bg-[#131b24] rounded-lg border border-zinc-800 text-zinc-200 leading-relaxed font-normal">
+              <p className="p-3 bg-[#151518] rounded-lg border border-zinc-800 text-zinc-200 leading-relaxed font-normal">
                 {getQueryExplanation(sqlQuery)}
               </p>
               <div className="text-[11px] text-zinc-400">
-                Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-cyan-300">EXPLAIN</code> keyword shows the query execution plan and table scans.
+                Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-white font-bold">EXPLAIN</code> keyword shows the query execution plan and table scans.
               </div>
             </div>
           ) : !result ? (
             /* Empty / Initial State */
             <div className="flex flex-col items-center justify-center py-12 text-center text-zinc-400 space-y-2">
-              <Terminal className="w-8 h-8 text-zinc-400" />
+              <Terminal className="w-8 h-8 text-zinc-500" />
               <p className="text-xs font-mono">Run your query to preview rows and inspect execution output.</p>
             </div>
           ) : result.error ? (
@@ -207,30 +207,30 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
           ) : totalRows === 0 ? (
             /* Zero rows matched */
             <div className="p-8 text-center text-zinc-400 font-mono text-xs space-y-1">
-              <p className="text-zinc-300 font-semibold">Query executed successfully, but returned 0 rows.</p>
-              <p className="text-zinc-400 text-[11px]">Check your WHERE filter conditions or table records.</p>
+              <p className="text-zinc-200 font-semibold">Query executed successfully, but returned 0 rows.</p>
+              <p className="text-zinc-500 text-[11px]">Check your WHERE filter conditions or table records.</p>
             </div>
           ) : (
             /* Results Table Grid */
             <table className="min-w-full text-left font-mono border-collapse text-xs">
-            <thead className="sticky top-0 z-10 bg-[#161e27] border-b border-zinc-700/70 text-zinc-200">
+            <thead className="sticky top-0 z-10 bg-[#151518] border-b border-zinc-800 text-zinc-200">
               <tr>
                 {result.fields?.map((field) => (
-                  <th key={field} className="px-3 py-2 text-[11px] font-bold select-none whitespace-nowrap bg-[#161e27]">
+                  <th key={field} className="px-3 py-2 text-[11px] font-bold select-none whitespace-nowrap bg-[#151518]">
                     {field}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/60 text-[11.5px] text-zinc-300">
+            <tbody className="divide-y divide-zinc-800/60 text-[11.5px] text-zinc-200">
               {displayedRows.map((row, rIdx) => (
-                <tr key={rIdx} className="hover:bg-zinc-800/30 transition-colors">
+                <tr key={rIdx} className="hover:bg-zinc-800/40 transition-colors">
                   {result.fields?.map((field) => (
-                    <td key={field} className="px-3 py-1.5 whitespace-nowrap">
+                    <td key={field} className="px-3 py-1.5 whitespace-nowrap border-r border-zinc-800/40 last:border-r-0">
                       {row[field] !== null && row[field] !== undefined ? (
                         String(row[field])
                       ) : (
-                        <span className="text-zinc-400 italic">NULL</span>
+                        <span className="text-zinc-600 italic">NULL</span>
                       )}
                     </td>
                   ))}
@@ -244,7 +244,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
 
       {/* Pagination Footer (if more than 8 rows) */}
       {result && totalRows > pageSize && activeTab === 'results' && (
-        <div className="flex items-center justify-between px-3 py-2 bg-[#0e141a] border-t border-zinc-800 text-xs text-zinc-400 font-mono">
+        <div className="flex items-center justify-between px-3 py-2 bg-[#121215] border-t border-zinc-800 text-xs text-zinc-400 font-mono">
           <span>
             Page {page + 1} of {totalPages} ({totalRows} total records)
           </span>

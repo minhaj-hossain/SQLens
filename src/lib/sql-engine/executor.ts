@@ -19,6 +19,83 @@ function getRowValue(row: TableRow, colExpr: string): any {
   return undefined;
 }
 
+function splitLogicalClauses(expr: string, operator: 'OR' | 'AND'): string[] {
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inString = false;
+  let stringChar = '';
+  let inBetween = false;
+
+  const len = expr.length;
+  for (let i = 0; i < len; i++) {
+    const ch = expr[i];
+
+    if ((ch === "'" || ch === '"') && (i === 0 || expr[i - 1] !== '\\')) {
+      if (!inString) {
+        inString = true;
+        stringChar = ch;
+      } else if (stringChar === ch) {
+        inString = false;
+      }
+      current += ch;
+      continue;
+    }
+
+    if (inString) {
+      current += ch;
+      continue;
+    }
+
+    if (ch === '(') {
+      depth++;
+      current += ch;
+      continue;
+    }
+    if (ch === ')') {
+      depth--;
+      current += ch;
+      continue;
+    }
+
+    if (depth === 0) {
+      const rest = expr.slice(i);
+      if (/^\bBETWEEN\b/i.test(rest)) {
+        inBetween = true;
+      }
+
+      if (inBetween && /^\bAND\b/i.test(rest)) {
+        inBetween = false;
+        current += rest.slice(0, 3);
+        i += 2;
+        continue;
+      }
+
+      if (operator === 'OR' && /^\bOR\b/i.test(rest)) {
+        parts.push(current.trim());
+        current = '';
+        i += 1;
+        continue;
+      }
+
+      if (operator === 'AND' && /^\bAND\b/i.test(rest)) {
+        parts.push(current.trim());
+        current = '';
+        i += 2;
+        continue;
+      }
+    }
+
+    current += ch;
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts;
+}
+
 export class SqlExecutor {
   private db: DatabaseState;
   private transactionBackup: DatabaseState | null = null;
@@ -554,18 +631,36 @@ export class SqlExecutor {
   }
 
   private evaluateWhere(whereExpr: string, row: TableRow): boolean {
-    const trimmed = whereExpr.trim();
+    let trimmed = whereExpr.trim();
+
+    while (trimmed.startsWith('(') && trimmed.endsWith(')')) {
+      let depth = 0;
+      let wrapsAll = true;
+      for (let i = 0; i < trimmed.length - 1; i++) {
+        if (trimmed[i] === '(') depth++;
+        else if (trimmed[i] === ')') depth--;
+        if (depth === 0) {
+          wrapsAll = false;
+          break;
+        }
+      }
+      if (wrapsAll) {
+        trimmed = trimmed.slice(1, -1).trim();
+      } else {
+        break;
+      }
+    }
 
     // Handle OR expressions
-    if (/\bOR\b/i.test(trimmed)) {
-      const orParts = trimmed.split(/\bOR\b/i);
-      return orParts.some(part => this.evaluateWhere(part.trim(), row));
+    const orParts = splitLogicalClauses(trimmed, 'OR');
+    if (orParts.length > 1) {
+      return orParts.some(part => this.evaluateWhere(part, row));
     }
 
     // Handle AND expressions
-    if (/\bAND\b/i.test(trimmed)) {
-      const andParts = trimmed.split(/\bAND\b/i);
-      return andParts.every(part => this.evaluateWhere(part.trim(), row));
+    const andParts = splitLogicalClauses(trimmed, 'AND');
+    if (andParts.length > 1) {
+      return andParts.every(part => this.evaluateWhere(part, row));
     }
 
     // IS NULL / IS NOT NULL

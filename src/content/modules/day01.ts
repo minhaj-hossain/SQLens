@@ -458,6 +458,43 @@ export const DAY_01_MODULE: ModuleData = {
           '### 4. Aliases with Spaces\n\nSuppose you want `Student Name` instead of `student_name`. You can write:\n\n```sql\nSELECT name AS "Student Name"\nFROM students;\n```\n\nBecause `"Student Name"` contains a space.',
           '### Important Concept\n\nAt this stage, we are not removing rows.\n\nFor example:\n\n```sql\nSELECT name\nFROM students;\n```\n\nWe still have all 5 students. We only removed unnecessary columns from the output.\n\n• Original: 5 rows × 5 columns\n• Result: 5 rows × 1 column\n\nSo remember: **SELECT controls columns. Later, WHERE will control rows.**',
         ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: FROM students',
+            sqlSnippet: 'FROM students',
+            explanation: 'SQL visits the students table with all 5 records.',
+            tableData: {
+              tableName: 'students',
+              columns: ['id', 'name', 'age', 'department', 'city'],
+              rows: [
+                [1, 'Rahim', 21, 'CSE', 'Dhaka'],
+                [2, 'Karim', 22, 'EEE', 'Gazipur'],
+                [3, 'Ayesha', 20, 'CSE', 'Dhaka'],
+                [4, 'Sumaiya', 23, 'BBA', 'Chattogram'],
+                [5, 'Tanvir', 21, 'CSE', 'Rajshahi'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT name AS student_name, age AS student_age',
+            sqlSnippet: 'SELECT name AS student_name, age AS student_age',
+            explanation: 'Extracts the columns and assigns the presentation aliases.',
+            tableData: {
+              tableName: 'Result',
+              columns: ['student_name', 'student_age'],
+              highlightedColumns: ['student_name', 'student_age'],
+              rows: [
+                ['Rahim', 21],
+                ['Karim', 22],
+                ['Ayesha', 20],
+                ['Sumaiya', 23],
+                ['Tanvir', 21],
+              ],
+            },
+          },
+        ],
         syntaxBlocks: [
           {
             title: 'Column Aliasing Syntax',
@@ -658,7 +695,7 @@ export const DAY_01_MODULE: ModuleData = {
         validation: {
           targetTable: 'products',
           requiredColumns: ['name', 'price', 'quantity_in_stock'],
-          expectedRowCount: 20,
+          expectedRowCount: 28,
         },
         successMessage: 'Task 1 completed! Product columns displayed.',
       },
@@ -705,7 +742,7 @@ export const DAY_01_MODULE: ModuleData = {
           targetTable: 'products',
           requiredColumns: ['product_name', 'unit_price', 'stock'],
           requiredAliases: { name: 'product_name', price: 'unit_price', quantity_in_stock: 'stock' },
-          expectedRowCount: 20,
+          expectedRowCount: 28,
         },
         successMessage: 'Task 3 completed! Columns cleanly aliased.',
       },
