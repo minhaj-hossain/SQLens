@@ -904,34 +904,34 @@ export const DAY_09_MODULE: ModuleData = {
 };
 
 // =============================================================================
-// DAY 10: Practice Day: Reporting
+// DAY 10: Guided Practice: Reporting & Aggregation (Mode 2)
 // =============================================================================
 export const DAY_10_MODULE: ModuleData = {
   id: 'day-10',
   slug: 'practice-reporting',
   day: 10,
-  title: 'Day 10 — Practice Day: Reporting',
-  shortTitle: 'Practice: Reporting',
+  title: 'Day 10 — Guided Practice: Reporting & Aggregation',
+  shortTitle: 'Practice: Reporting & Aggregation',
   type: 'practice_day',
   milestoneId: 'milestone-2',
-  description: 'Build practical multi-clause reporting widgets combining GROUP BY, multiple aggregate functions, HAVING filters, and multi-column sorting.',
+  description: 'Construct multi-metric reporting widgets and dashboards combining COUNT, SUM, AVG, GROUP BY, and HAVING post-aggregation thresholds.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Build multi-metric category and inventory summary reports unaided',
-    'Combine COUNT, AVG, MIN, and MAX in a single reporting query',
-    'Apply post-aggregation thresholds using HAVING',
+    'Construct multi-metric category and inventory summary reports combining multiple aggregates in a single SELECT',
+    'Differentiate between row-level WHERE filters and group-level HAVING filters in the same query',
+    'Apply post-aggregation thresholds using HAVING to isolate high-volume categories',
   ],
   concepts: [
     {
       id: 'reporting-widgets',
       order: 1,
-      title: '1. Multi-Metric Reporting Queries',
-      shortDescription: 'Combine multiple aggregates into business dashboards.',
+      title: '1. Multi-Metric Reporting Queries & Dashboards',
+      shortDescription: 'Combine multiple aggregates into business summary widgets.',
       theory: {
-        summary: 'Reporting queries combine multiple aggregates (counts, averages, minimums, maximums) with group-level filtering and sorting to power executive dashboards.',
+        summary: 'Reporting queries combine multiple aggregate calculations (counts, totals, averages) with group-level filtering (HAVING) and sorting to power executive dashboards.',
         introTable: {
           tableName: 'products',
-          description: 'Inventory metrics snapshot',
+          description: 'Inventory metrics snapshot per category',
           columns: ['category_id', 'COUNT(*)', 'AVG(price)', 'SUM(quantity_in_stock)'],
           rows: [
             [1, 6, 31.79, 88],
@@ -942,22 +942,29 @@ export const DAY_10_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          '### 1. Dashboard Widget Pattern',
-          'A single query can compute product count, average price, min price, and total inventory simultaneously:',
-          '```sql\nSELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price, SUM(quantity_in_stock) AS total_units\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 30\nORDER BY product_count DESC;\n```',
+          '### 1. The Multi-Metric Dashboard Pattern',
+          'A single SQL query can compute item count, average price, and total stock volume simultaneously:',
+          '```sql\nSELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price, SUM(quantity_in_stock) AS total_units\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 25\nORDER BY product_count DESC;\n```',
+          '### 2. The Dual-Filter Rule (WHERE vs HAVING)',
+          '• **`WHERE`** filters individual rows *before* grouping (e.g. `WHERE quantity_in_stock > 0`).',
+          '• **`HAVING`** filters aggregated group metrics *after* grouping (e.g. `HAVING COUNT(*) >= 5`).',
+          'QUESTION_BLOCK::Multi-Metric Efficiency::Combining multiple aggregates in one query calculates all statistics in a single table pass rather than running separate queries.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
             stepTitle: 'Step 1: Multi-Metric Category Audit',
-            sqlSnippet: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price, SUM(quantity_in_stock) AS total_units\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 30\nORDER BY avg_price DESC;',
-            explanation: 'Aggregates multiple metrics per category and keeps categories with average price > $30.',
+            sqlSnippet: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price, SUM(quantity_in_stock) AS total_units\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 15\nORDER BY product_count DESC;',
+            explanation: 'Aggregates metrics per category, filters categories with avg price > $15, and sorts by item count.',
             tableData: {
               tableName: 'Category Audit Report',
               columns: ['category_id', 'product_count', 'avg_price', 'total_units'],
               rows: [
-                [3, 5, 47.15, 187],
                 [1, 6, 31.79, 88],
+                [5, 6, 20.62, 137],
+                [2, 5, 28.56, 102],
+                [3, 5, 47.15, 187],
+                [4, 5, 29.10, 102],
               ],
             },
           },
@@ -976,8 +983,13 @@ export const DAY_10_MODULE: ModuleData = {
         liveDemoNotes: 'Displays category overview report.',
         mcqs: [
           {
-            question: 'Can you use multiple aggregate functions like COUNT and AVG in the same SELECT statement?',
-            options: ['A. No, only one aggregate function per query', 'B. Yes, you can calculate multiple metrics simultaneously', 'C. Only if using subqueries', 'D. Only in MySQL 8.0+'],
+            question: 'Can you use multiple aggregate functions like COUNT, AVG, and SUM in the same SELECT statement?',
+            options: [
+              'A. No, only one aggregate function per query',
+              'B. Yes, you can calculate multiple metrics simultaneously',
+              'C. Only if using subqueries',
+              'D. Only in MySQL 8.0+',
+            ],
             correctIndex: 1,
             explanation: 'SQL allows multiple aggregate expressions in a single query.',
           },
@@ -987,10 +999,11 @@ export const DAY_10_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day10-c1-t1',
-          title: 'Task 1: Category Overview Widget',
-          description: 'Calculate product count and average price per category, for categories averaging above $15, sorted by product count descending.',
+          title: 'Task 1 (High Guidance): Category Overview Widget',
+          description: 'Calculate product count and average price per category for categories averaging above $15, sorted by product count descending.',
           instructions: [
-            'Select `category_id`, `COUNT(*) AS product_count`, `AVG(price) AS avg_price` from `products`.',
+            'Query the `products` table.',
+            'Select `category_id`, `COUNT(*) AS product_count`, and `AVG(price) AS avg_price`.',
             'Group by `category_id`.',
             'Filter with `HAVING AVG(price) > 15`.',
             'Sort by `product_count DESC`.',
@@ -998,10 +1011,13 @@ export const DAY_10_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Task 1: High Guidance - Category overview widget\nSELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 15\nORDER BY product_count DESC;',
           solutionSql: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 15 ORDER BY product_count DESC;',
           solutionExplanation: 'Computes metrics, filters categories averaging > $15, and sorts by count descending.',
-          hints: [{ level: 1, text: 'Use `GROUP BY category_id HAVING AVG(price) > 15 ORDER BY product_count DESC;`' }],
+          hints: [
+            { level: 1, text: 'Use `GROUP BY category_id` to aggregate per category.' },
+            { level: 2, text: 'Add `HAVING AVG(price) > 15 ORDER BY product_count DESC;`.' },
+          ],
           validation: {
             targetTable: 'products',
             requireGroupBy: true,
@@ -1009,11 +1025,11 @@ export const DAY_10_MODULE: ModuleData = {
             requireOrderBy: [{ column: 'product_count', direction: 'DESC' }],
             expectedRowCount: 5,
           },
-          successMessage: 'Category overview report generated!',
+          successMessage: 'Task 1 completed! Category overview report generated.',
         },
         {
           id: 'day10-c1-t2',
-          title: 'Task 2: Order Status Breakdown',
+          title: 'Task 2 (Partial Guidance): Order Status Breakdown',
           description: 'Count the total number of orders for each status in the orders table, sorted by count descending.',
           instructions: [
             'Query the `orders` table.',
@@ -1023,10 +1039,13 @@ export const DAY_10_MODULE: ModuleData = {
           ],
           type: 'independent',
           primaryTable: 'orders',
-          initialSql: '-- Order status metrics\n',
+          initialSql: '-- Task 2: Partial Guidance - Order status metrics\n',
           solutionSql: 'SELECT status, COUNT(*) AS order_count FROM orders GROUP BY status ORDER BY order_count DESC;',
           solutionExplanation: 'Groups orders by status and calculates counts.',
-          hints: [{ level: 1, text: 'Use `GROUP BY status ORDER BY order_count DESC;`' }],
+          hints: [
+            { level: 1, text: 'Select `status` and `COUNT(*) AS order_count`.' },
+            { level: 2, text: 'Use `GROUP BY status ORDER BY order_count DESC;`.' },
+          ],
           validation: {
             targetTable: 'orders',
             requiredColumns: ['status', 'order_count'],
@@ -1034,23 +1053,52 @@ export const DAY_10_MODULE: ModuleData = {
             requireOrderBy: [{ column: 'order_count', direction: 'DESC' }],
             expectedRowCount: 4,
           },
-          successMessage: 'Perfect! Order status breakdown generated.',
+          successMessage: 'Task 2 completed! Order status breakdown generated.',
+        },
+        {
+          id: 'day10-c1-t3',
+          title: 'Task 3 (Goal Only): In-Stock Category Inventory Audit',
+          description: 'Count in-stock products per category where quantity_in_stock > 0, for categories having at least 4 in-stock products, sorted highest first.',
+          instructions: [
+            'Select `category_id` and `COUNT(*) AS in_stock_count` from `products`.',
+            'Filter rows with `WHERE quantity_in_stock > 0` before grouping.',
+            'Group by `category_id`.',
+            'Filter groups with `HAVING COUNT(*) >= 4`.',
+            'Order by `in_stock_count DESC`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Task 3: Goal Only - In-stock category inventory audit\n',
+          solutionSql: 'SELECT category_id, COUNT(*) AS in_stock_count FROM products WHERE quantity_in_stock > 0 GROUP BY category_id HAVING COUNT(*) >= 4 ORDER BY in_stock_count DESC;',
+          solutionExplanation: 'Combines row-level WHERE with group-level HAVING filter.',
+          hints: [
+            { level: 1, text: 'Use `WHERE quantity_in_stock > 0` before `GROUP BY category_id`.' },
+            { level: 2, text: 'Add `HAVING COUNT(*) >= 4 ORDER BY in_stock_count DESC;`.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            requireGroupBy: true,
+            requireHaving: true,
+            expectedRowCount: 5,
+          },
+          successMessage: 'Task 3 completed! In-stock category inventory audit generated.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 10 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 10 CHALLENGE: BUILD AN EXECUTIVE DASHBOARD WIDGET (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-10-homework',
-    title: 'Day 10 — Practice Day: Reporting (Homework)',
-    scenario: 'Build the Category Overview dashboard widget independently:',
+    title: 'Day 10 — Build an Executive Dashboard Widget (Ending Activity)',
+    scenario: 'Build the Category Overview dashboard widget independently (business requirements only):',
     tasks: [
       {
         id: 'day10-hw-1',
-        title: 'Task 1: "Category Overview" dashboard widget',
+        title: 'Task 1: "Category Overview" Dashboard Widget',
         description: '"Category Overview" dashboard widget — product count and average price per category, only categories averaging above $15, sorted by product count descending.',
         instructions: [
           'Select `category_id`, `COUNT(*) AS product_count`, `AVG(price) AS avg_price` from `products` grouped by `category_id` having `AVG(price) > 15` order by `product_count DESC`.',
@@ -1058,7 +1106,7 @@ export const DAY_10_MODULE: ModuleData = {
         ],
         type: 'challenge',
         primaryTable: 'products',
-        initialSql: '-- Task 1: Category Overview dashboard widget\n',
+        initialSql: '-- Challenge: Category Overview dashboard widget\n',
         solutionSql: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 15 ORDER BY product_count DESC;',
         solutionExplanation: 'Constructs the full multi-clause category overview report.',
         hints: [{ level: 1, text: 'Use `SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 15 ORDER BY product_count DESC;`' }],
@@ -1069,7 +1117,7 @@ export const DAY_10_MODULE: ModuleData = {
           requireOrderBy: [{ column: 'product_count', direction: 'DESC' }],
           expectedRowCount: 5,
         },
-        successMessage: 'Task 1 completed! Category Overview widget verified.',
+        successMessage: 'Challenge completed! Category Overview widget verified.',
       },
     ],
   },
@@ -1337,10 +1385,10 @@ export const DAY_11_MODULE: ModuleData = {
           validation: {
             targetTable: 'suppliers',
             requireJoin: true,
-            requireGroupBy: true,
-            expectedRowCount: 6,
+            requiredColumns: ['supplier_name', 'product_name'],
+            expectedRowCount: 27,
           },
-          successMessage: 'Perfect! All suppliers preserved with product counts.',
+          successMessage: 'Perfect! All suppliers preserved with product names.',
         },
       ],
     },
@@ -1405,63 +1453,68 @@ export const DAY_11_MODULE: ModuleData = {
 };
 
 // =============================================================================
-// DAY 12: Practice Day: JOINs + Aggregates
+// DAY 12: Debugging Lab: Multi-Table Aggregations & Fan-Out (Mode 3)
 // =============================================================================
 export const DAY_12_MODULE: ModuleData = {
   id: 'day-12',
   slug: 'practice-joins-aggregates',
   day: 12,
-  title: 'Day 12 — Practice Day: JOINs + Aggregates',
-  shortTitle: 'Practice: JOINs + Aggregates & Fan-Out',
+  title: 'Day 12 — Debugging Lab: Multi-Table Aggregation & Fan-Out',
+  shortTitle: 'Debug: Fan-Out & Aggregations',
   type: 'practice_day',
   milestoneId: 'milestone-2',
-  description: 'Master multi-table aggregations, COUNT(DISTINCT), and understand how cartesian row multiplication (fan-out) can corrupt aggregate calculations.',
+  description: 'Diagnose and fix cartesian fan-out row multiplication bugs when joining one-to-many tables, and master COUNT(DISTINCT) for safe multi-table aggregations.',
   estimatedMinutes: 75,
   completionLearnings: [
-    'Calculate per-customer order counts and spend totals across multiple joins',
-    'Understand why COUNT(o.order_id) overcounts when joining order_items and how COUNT(DISTINCT o.order_id) fixes it',
-    'Demonstrate fan-out overcounting when combining multiple one-to-many relationships',
+    'Diagnose cartesian fan-out row multiplication when joining one-to-many parent and child tables',
+    'Understand why COUNT(o.order_id) overcounts and how COUNT(DISTINCT o.order_id) guarantees accurate metrics',
+    'Calculate per-customer order counts and financial spend totals across 3 joined tables',
   ],
   concepts: [
     {
       id: 'fan-out-and-distinct-counts',
       order: 1,
-      title: '1. Multi-Table Aggregation & Fan-Out Prevention',
+      title: '1. Diagnosing Row Multiplication & Fan-Out Bugs',
       shortDescription: 'Why joining multiple one-to-many tables duplicates rows.',
       theory: {
-        summary: 'When you join `customers → orders → order_items`, each order row is duplicated for every line item it contains. Running `COUNT(o.order_id)` counts rows in the joined result set, overcounting orders! Fix: `COUNT(DISTINCT o.order_id)` correctly counts distinct orders.',
+        summary: 'When you join customers → orders → order_items, each order row is duplicated for every line item it contains. Running COUNT(o.order_id) counts joined result rows, inflating order counts! Fix: COUNT(DISTINCT o.order_id) counts distinct orders accurately.',
         introTable: {
-          tableName: 'orders & order_items',
-          description: 'Joined rows showing row duplication across items',
-          columns: ['o.order_id', 'o.customer_id', 'oi.product_id', 'oi.quantity', 'oi.unit_price'],
+          tableName: 'orders & order_items (Joined Output)',
+          description: 'Row duplication across line items',
+          columns: ['c.name', 'o.order_id', 'oi.order_item_id', 'oi.quantity', 'oi.unit_price'],
           rows: [
-            [101, 1, 1, 2, 25.00],
-            [101, 1, 3, 1, 12.50],
-            [103, 3, 6, 1, 349.99],
-            [103, 3, 10, 1, 65.00],
+            ['Rahim Chowdhury', 1, 1, 2, 15.99],
+            ['Rahim Chowdhury', 1, 2, 1, 65.00],
+            ['Rahim Chowdhury', 14, 22, 1, 45.50],
+            ['Rahim Chowdhury', 14, 23, 1, 55.00],
+            ['Rahim Chowdhury', 14, 24, 1, 65.00],
           ],
         },
         explanation: [
-          '### 1. Row Duplication in Multi-Table Joins',
-          'Before JOIN: Order 101 (1 row)',
-          'After JOIN with order_items (2 items):',
-          '• Order 101 | Item 1 ($50.00)\n• Order 101 | Item 3 ($12.50)',
-          'QUESTION_BLOCK::The Fan-Out Rule::`COUNT(o.order_id)` yields 2! You must use `COUNT(DISTINCT o.order_id)` to count 1 order.',
+          '### 1. 🚨 The Production Bug: Expected 2 Orders, Query Returned 5!',
+          'Look at Rahim\'s orders in the joined output above:',
+          '• Rahim placed **2 orders** (Order #1 and Order #14).',
+          '• Order #1 has 2 line items $\\rightarrow$ creates 2 rows.',
+          '• Order #14 has 3 line items $\\rightarrow$ creates 3 rows.',
+          '• Running `COUNT(o.order_id)` returns **5** ❌ (it counts duplicate joined rows!).',
+          '### 2. The Solution: COUNT(DISTINCT o.order_id)',
+          '`COUNT(DISTINCT o.order_id)` ignores duplicate order IDs and returns **2** ✅.',
+          'QUESTION_BLOCK::The Fan-Out Rule::Whenever you aggregate parent entities while joining down a one-to-many relationship, ALWAYS use `COUNT(DISTINCT parent_pk)`.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
             stepTitle: 'Step 1: Multi-Table Spend Calculation',
             sqlSnippet: 'SELECT c.customer_id, c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY c.customer_id, c.name;',
-            explanation: 'Computes distinct order count and total money spent per customer.',
+            explanation: 'Computes distinct order count and total money spent per customer without overcounting.',
             tableData: {
-              tableName: 'Customer Spend Report',
+              tableName: 'Accurate Customer Spend',
               columns: ['customer_id', 'name', 'order_count', 'total_spent'],
               rows: [
-                [1, 'Rahim Chowdhury', 2, 252.50],
-                [2, 'Karim Ahmed', 1, 89.99],
-                [3, 'Ayesha Siddika', 2, 464.99],
-                [6, 'David Miller', 1, 284.00],
+                [1, 'Rafiul Islam', 2, 262.48],
+                [2, 'Priya Akter', 1, 55.00],
+                [3, 'Tanvir Ahmed', 2, 94.79],
+                [4, 'Nusrat Jahan', 1, 56.97],
               ],
             },
           },
@@ -1470,25 +1523,25 @@ export const DAY_12_MODULE: ModuleData = {
           {
             title: 'Accurate multi-table aggregation',
             sql: 'SELECT c.customer_id, c.name,\n       COUNT(DISTINCT o.order_id) AS order_count,\n       SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY c.customer_id, c.name\nORDER BY total_spent DESC;',
-            description: 'Accurate customer spending report.',
+            description: 'Accurate customer spend with fan-out prevention.',
           },
         ],
-        keyTakeaway: 'Use COUNT(DISTINCT) when joining down a one-to-many relationship to avoid overcounting parent entities.',
+        keyTakeaway: 'Use COUNT(DISTINCT) when joining one-to-many relationships to avoid overcounting parent entities.',
         exampleQuery: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name;',
         exampleQueryExplanation: 'Accurately calculates order count and spend per customer.',
-        liveDemoSql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name;',
-        liveDemoNotes: 'Displays customer spend metrics.',
+        liveDemoSql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name LIMIT 5;',
+        liveDemoNotes: 'Displays customer spend metrics with fan-out prevention.',
         mcqs: [
           {
             question: 'Why does COUNT(o.order_id) overcount when joining orders with order_items?',
             options: [
-              'A. Because SQL adds an extra row for headers',
+              'A. Because SQL adds an extra row for table headers',
               'B. Because each order row is duplicated for every line item in order_items',
               'C. Because order_items has no primary key',
               'D. Because COUNT requires single quotes',
             ],
             correctIndex: 1,
-            explanation: 'Joining a one-to-many relationship multiplies the parent rows by the number of children.',
+            explanation: 'Joining a one-to-many relationship multiplies parent rows by the number of children.',
           },
         ],
         masteryPoints: ['Use COUNT(DISTINCT) to prevent fan-out overcounting'],
@@ -1496,8 +1549,8 @@ export const DAY_12_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day12-c1-t1',
-          title: 'Task 1: Total Spend Per Customer',
-          description: 'Calculate total money spent and distinct order count per customer.',
+          title: 'Task 1 (Guided Fix): Fix Customer Order Count & Spend',
+          description: 'Calculate distinct order count and total money spent per customer across 3 joined tables.',
           instructions: [
             'Query `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
             'Select `c.name`, `COUNT(DISTINCT o.order_id) AS order_count`, and `SUM(oi.quantity * oi.unit_price) AS total_spent`.',
@@ -1507,21 +1560,24 @@ export const DAY_12_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders', 'order_items'],
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Fix the overcounting query below\nSELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY c.customer_id, c.name;',
           solutionSql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name;',
-          solutionExplanation: 'Multi-table join calculating customer order totals.',
-          hints: [{ level: 1, text: 'Use `COUNT(DISTINCT o.order_id)` and `SUM(oi.quantity * oi.unit_price)`.' }],
+          solutionExplanation: 'Multi-table join calculating accurate customer order totals using COUNT(DISTINCT).',
+          hints: [
+            { level: 1, text: 'Use `COUNT(DISTINCT o.order_id)` to avoid counting duplicate order line items.' },
+            { level: 2, text: 'Use `SUM(oi.quantity * oi.unit_price)` to compute total financial spend.' },
+          ],
           validation: {
             targetTable: 'customers',
             requireJoin: true,
             requireGroupBy: true,
             expectedRowCount: 12,
           },
-          successMessage: 'Customer spend and order count accurately calculated!',
+          successMessage: 'Task 1 completed! Customer spend and order counts accurately calculated.',
         },
         {
           id: 'day12-c1-t2',
-          title: 'Task 2: Category Product Inventory Valuation',
+          title: 'Task 2 (Transfer): Category Product Inventory Valuation',
           description: 'Join categories with products to calculate total inventory units and average product price per category.',
           instructions: [
             'Query `categories c` JOIN `products p` ON `c.category_id = p.category_id`.',
@@ -1533,32 +1589,35 @@ export const DAY_12_MODULE: ModuleData = {
           secondaryTables: ['products'],
           initialSql: '-- Category inventory metrics\n',
           solutionSql: 'SELECT c.name AS category_name, SUM(p.quantity_in_stock) AS total_units, AVG(p.price) AS avg_price FROM categories c JOIN products p ON c.category_id = p.category_id GROUP BY c.category_id, c.name;',
-          solutionExplanation: 'Aggregates stock units and average price per category.',
-          hints: [{ level: 1, text: 'Use `FROM categories c JOIN products p ON c.category_id = p.category_id GROUP BY c.category_id, c.name;`' }],
+          solutionExplanation: 'Aggregates stock units and average price per category across joined tables.',
+          hints: [
+            { level: 1, text: 'Join `categories c` with `products p` on `c.category_id = p.category_id`.' },
+            { level: 2, text: 'Group by `c.category_id, c.name`.' },
+          ],
           validation: {
             targetTable: 'categories',
             requireJoin: true,
             requireGroupBy: true,
             expectedRowCount: 5,
           },
-          successMessage: 'Perfect! Category metrics aggregated across tables.',
+          successMessage: 'Task 2 completed! Category inventory valuation generated.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 12 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 12 CHALLENGE: DEBUG THE PRODUCTION OVERCOUNTING BUG (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-12-homework',
-    title: 'Day 12 — Practice Day: JOINs + Aggregates (Homework)',
-    scenario: 'Solve these 4 multi-table reporting queries with fan-out prevention:',
+    title: 'Day 12 — Debug the Production Overcounting Bug (Ending Activity)',
+    scenario: 'Solve these multi-table reporting queries with fan-out prevention:',
     tasks: [
       {
         id: 'day12-hw-1',
         title: 'Task 1: Per-customer order counts and spend totals across multiple joins',
-        description: 'Per-customer order counts and spend totals across multiple joins.',
+        description: 'Per-customer distinct order counts and spend totals across customers, orders, and order_items.',
         instructions: [
           'Select `c.name`, `COUNT(DISTINCT o.order_id) AS order_count`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name`.',
           'End with a semicolon (;).',
@@ -1566,9 +1625,9 @@ export const DAY_12_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'customers',
         secondaryTables: ['orders', 'order_items'],
-        initialSql: '-- Task 1: Per-customer order counts and spend totals\n',
+        initialSql: '-- Challenge: Per-customer spend totals with fan-out prevention\n',
         solutionSql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name;',
-        solutionExplanation: 'Multi-table join calculating customer spend.',
+        solutionExplanation: 'Multi-table join calculating customer spend with distinct order counts.',
         hints: [{ level: 1, text: 'Use `COUNT(DISTINCT o.order_id)` and `SUM(oi.quantity * oi.unit_price)`.' }],
         validation: {
           targetTable: 'customers',
@@ -1576,58 +1635,58 @@ export const DAY_12_MODULE: ModuleData = {
           requireGroupBy: true,
           expectedRowCount: 12,
         },
-        successMessage: 'Task 1 completed! Multi-table customer spend computed.',
+        successMessage: 'Challenge completed! Multi-table customer spend computed accurately.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 13: Conceptual Session: Relational Thinking + Logical Order (Expanded)
+// DAY 13: Visual Concept Lab: Relational Architecture & 7-Stage Pipeline (Mode 1)
 // =============================================================================
 export const DAY_13_MODULE: ModuleData = {
   id: 'day-13',
   slug: 'relational-thinking-logical-order-expanded',
   day: 13,
-  title: 'Day 13 — Conceptual Session: Relational Thinking + Logical Query Processing Order (Expanded)',
+  title: 'Day 13 — Visual Concept Lab: Relational Architecture & 7-Stage Pipeline',
   shortTitle: 'Relational Thinking & Full Execution Order',
   type: 'conceptual_session',
   milestoneId: 'milestone-2',
-  description: 'Understand the full 7-step logical query processing order (FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT) and connect SQL relational design to document models.',
+  description: 'Master the full 7-step logical query processing order (FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT) and understand relational schema architecture.',
   estimatedMinutes: 45,
   completionLearnings: [
-    'Master the expanded 7-step logical query processing order',
-    'Trace multi-table queries through all 7 stages',
-    'Compare SQL relational PK/FK relationships to document database embedding/refs',
+    'Master the expanded 7-step logical query processing order across all SQL clauses',
+    'Trace multi-table queries through all 7 stages to eliminate clause ordering bugs',
+    'Distinguish standard logical visibility rules from database-specific convenience extensions (such as MySQL)',
   ],
   concepts: [
     {
       id: 'expanded-logical-order',
       order: 1,
-      title: '1. The Full 7-Step Logical Query Processing Order',
-      shortDescription: 'FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.',
+      title: '1. The Full 7-Step Logical Execution Lifecycle',
+      shortDescription: 'FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.',
       theory: {
-        summary: 'Now that JOINs, GROUP BY, and HAVING exist in our toolkit, we revisit logical query processing with the full 7-step model. This model defines which clause "sees" what data.',
+        summary: 'Now that JOINs, GROUP BY, and HAVING are in our toolkit, we integrate all 7 clauses into a single unified execution model. Understanding this lifecycle ensures you know when data is created, filtered, and sorted.',
         introTable: {
           tableName: 'customers & orders',
           description: 'Sample data for 7-stage query tracing',
           columns: ['c.name', 'o.order_id', 'o.status'],
           rows: [
-            ['Rahim Chowdhury', 101, 'delivered'],
-            ['Rahim Chowdhury', 104, 'pending'],
-            ['Elena Rostova', 106, 'cancelled'],
+            ['Rafiul Islam', 1, 'delivered'],
+            ['Rafiul Islam', 14, 'delivered'],
+            ['Kamal Hossain', 6, 'cancelled'],
           ],
         },
         explanation: [
-          '### 1. The Full 7-Step Logical Pipeline',
-          '1. **FROM & JOIN**: Line up tables and produce intermediate dataset.',
-          '2. **WHERE**: Filter individual rows before grouping.',
-          '3. **GROUP BY**: Collapse rows into buckets.',
-          '4. **HAVING**: Filter aggregated groups.',
-          '5. **SELECT**: Compute projections, aggregates, and assign aliases.',
-          '6. **ORDER BY**: Sort the resulting rows (can see SELECT aliases!).',
-          '7. **LIMIT / OFFSET**: Slice the final sorted output.',
-          'QUESTION_BLOCK::Relational vs Document Thinking::In document databases (like MongoDB), related items are often embedded inside a single document. In relational SQL, entities are normalized into separate tables and linked dynamically with foreign keys.',
+          '### 1. The Definitive 7-Step Logical Pipeline',
+          '1. **`FROM & JOIN`** (Step 1): Tables are joined to produce the intermediate dataset.',
+          '2. **`WHERE`** (Step 2): Individual rows are filtered *before* any grouping.',
+          '3. **`GROUP BY`** (Step 3): Remaining rows are collapsed into category buckets.',
+          '4. **`HAVING`** (Step 4): Aggregated group metrics are filtered.',
+          '5. **`SELECT`** (Step 5): Columns are computed, aggregated, and assigned aliases.',
+          '6. **`ORDER BY`** (Step 6): The resulting rows are sorted (can see `SELECT` aliases!).',
+          '7. **`LIMIT / OFFSET`** (Step 7): The final sorted output is sliced.',
+          'QUESTION_BLOCK::Logical Model vs Database Extensions::The 7-step logical processing order defines when expressions conceptually exist. However, some databases (including MySQL) provide convenience extensions that permit aliases in HAVING. We learn the logical model to write reliable, portable SQL everywhere.',
         ],
         stepBreakdowns: [
           {
@@ -1640,7 +1699,7 @@ export const DAY_13_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: 'Step 2: WHERE',
             sqlSnippet: 'WHERE o.status != \'cancelled\'',
-            explanation: 'Filters out cancelled orders.',
+            explanation: 'Filters out cancelled orders before any grouping occurs.',
           },
           {
             stepNumber: 3,
@@ -1657,14 +1716,14 @@ export const DAY_13_MODULE: ModuleData = {
           {
             stepNumber: 5,
             stepTitle: 'Step 5: SELECT',
-            sqlSnippet: 'SELECT c.name, COUNT(o.order_id) AS total_orders',
-            explanation: 'Projects name and assigns the total_orders alias.',
+            sqlSnippet: 'SELECT c.name, COUNT(o.order_id) AS valid_orders',
+            explanation: 'Projects name and assigns the valid_orders alias.',
           },
           {
             stepNumber: 6,
             stepTitle: 'Step 6: ORDER BY',
-            sqlSnippet: 'ORDER BY total_orders DESC',
-            explanation: 'Sorts using the total_orders alias created in SELECT.',
+            sqlSnippet: 'ORDER BY valid_orders DESC',
+            explanation: 'Sorts using the valid_orders alias created in SELECT.',
           },
           {
             stepNumber: 7,
@@ -1680,14 +1739,14 @@ export const DAY_13_MODULE: ModuleData = {
             description: 'The definitive logical execution order of SQL.',
           },
         ],
-        keyTakeaway: 'Understanding the 7-step logical processing order prevents alias errors and logic bugs.',
-        exampleQuery: 'SELECT c.name, COUNT(o.order_id) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY order_count DESC LIMIT 5;',
+        keyTakeaway: 'Understanding the 7-step logical processing order prevents alias errors and logic bugs across multi-clause queries.',
+        exampleQuery: 'SELECT c.name, COUNT(o.order_id) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY order_count DESC LIMIT 5;',
         exampleQueryExplanation: 'Full 7-clause query pipeline in action.',
-        liveDemoSql: 'SELECT c.name, COUNT(o.order_id) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY order_count DESC LIMIT 5;',
+        liveDemoSql: 'SELECT c.name, COUNT(o.order_id) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY order_count DESC LIMIT 5;',
         liveDemoNotes: 'Displays top customers by active order count.',
         mcqs: [
           {
-            question: 'In the expanded 7-step order, when does HAVING execute relative to SELECT?',
+            question: 'In the standard 7-step order, when does HAVING execute relative to SELECT?',
             options: [
               'A. After SELECT',
               'B. Before SELECT (Step 4 vs Step 5)',
@@ -1703,7 +1762,7 @@ export const DAY_13_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day13-c1-t1',
-          title: 'Task 1: Trace Multi-Table 7-Step Query',
+          title: 'Task 1 (Guided): Trace Multi-Table 7-Step Query',
           description: 'Construct a multi-table query using WHERE, GROUP BY, HAVING, and ORDER BY with aliases.',
           instructions: [
             'Select `c.name`, `COUNT(o.order_id) AS valid_orders` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id`.',
@@ -1716,10 +1775,13 @@ export const DAY_13_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders'],
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Task 1: Complete 7-clause query pipeline\nSELECT c.name, COUNT(o.order_id) AS valid_orders\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nWHERE o.status != \'cancelled\'\nGROUP BY c.customer_id, c.name\nHAVING COUNT(o.order_id) >= 1\nORDER BY valid_orders DESC\nLIMIT 5;',
           solutionSql: 'SELECT c.name, COUNT(o.order_id) AS valid_orders FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY valid_orders DESC LIMIT 5;',
           solutionExplanation: 'Demonstrates the complete 7-clause logical pipeline.',
-          hints: [{ level: 1, text: 'Use `WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY valid_orders DESC LIMIT 5;`' }],
+          hints: [
+            { level: 1, text: 'Filter pre-grouping with `WHERE o.status != \'cancelled\'`.' },
+            { level: 2, text: 'Group by customer and filter groups with `HAVING COUNT(o.order_id) >= 1`.' },
+          ],
           validation: {
             targetTable: 'customers',
             requireJoin: true,
@@ -1729,11 +1791,11 @@ export const DAY_13_MODULE: ModuleData = {
             requireLimit: 5,
             expectedRowCount: 5,
           },
-          successMessage: 'Full 7-step logical query executed!',
+          successMessage: 'Task 1 completed! Full 7-step logical query executed.',
         },
         {
           id: 'day13-c1-t2',
-          title: 'Task 2: Category Product Sales Filter',
+          title: 'Task 2 (Transfer): Category Product Sales Filter',
           description: 'Join categories with products to count in-stock items per category, keeping categories with at least 2 items, ordered by category name.',
           instructions: [
             'Query `categories c` JOIN `products p` ON `c.category_id = p.category_id`.',
@@ -1746,10 +1808,13 @@ export const DAY_13_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'categories',
           secondaryTables: ['products'],
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- 7-clause category filter\n',
           solutionSql: 'SELECT c.name AS category_name, COUNT(p.product_id) AS item_count FROM categories c JOIN products p ON c.category_id = p.category_id WHERE p.quantity_in_stock > 0 GROUP BY c.category_id, c.name HAVING COUNT(p.product_id) >= 2 ORDER BY category_name ASC;',
           solutionExplanation: 'Demonstrates WHERE (in-stock) -> GROUP BY (category) -> HAVING (item_count >= 2) -> ORDER BY (alias).',
-          hints: [{ level: 1, text: 'Use `WHERE p.quantity_in_stock > 0 GROUP BY c.category_id, c.name HAVING COUNT(p.product_id) >= 2 ORDER BY category_name ASC;`' }],
+          hints: [
+            { level: 1, text: 'Use `WHERE p.quantity_in_stock > 0` before grouping.' },
+            { level: 2, text: 'Add `HAVING COUNT(p.product_id) >= 2 ORDER BY category_name ASC;`.' },
+          ],
           validation: {
             targetTable: 'categories',
             requireJoin: true,
@@ -1759,18 +1824,18 @@ export const DAY_13_MODULE: ModuleData = {
             requiredColumns: ['category_name', 'item_count'],
             expectedRowCount: 5,
           },
-          successMessage: 'Spot on! You constructed an end-to-end 7-clause analytical query.',
+          successMessage: 'Task 2 completed! End-to-end 7-clause analytical query verified.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 13 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 13 CHALLENGE: FULL 7-CLAUSE PIPELINE ASSEMBLY (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-13-homework',
-    title: 'Day 13 — Conceptual Session: Relational Thinking (Homework)',
+    title: 'Day 13 — Full 7-Clause Pipeline Assembly (Ending Activity)',
     scenario: 'Solidify your mastery of relational design and query execution order:',
     tasks: [
       {
@@ -1784,7 +1849,7 @@ export const DAY_13_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'customers',
         secondaryTables: ['orders'],
-        initialSql: '-- Write your SQL query here\n',
+        initialSql: '-- Challenge: Complete 7-clause SQL pipeline\n',
         solutionSql: 'SELECT c.name, COUNT(o.order_id) AS active_orders FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY active_orders DESC LIMIT 5;',
         solutionExplanation: 'Executes the complete 7-clause SQL pipeline.',
         hints: [{ level: 1, text: 'Use `WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY active_orders DESC LIMIT 5;`' }],
@@ -1797,24 +1862,24 @@ export const DAY_13_MODULE: ModuleData = {
           requireLimit: 5,
           expectedRowCount: 5,
         },
-        successMessage: 'Task 1 completed! Full execution pipeline verified.',
+        successMessage: 'Challenge completed! Full execution pipeline verified.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 14: Project Part 2: Multi-Table Reporting
+// DAY 14: Applied Project: Business Intelligence Reporting Suite (Mode 4)
 // =============================================================================
 export const DAY_14_MODULE: ModuleData = {
   id: 'day-14',
   slug: 'project-part-2-multi-table-reporting',
   day: 14,
-  title: 'Day 14 — Project Part 2: Multi-Table Reporting',
-  shortTitle: 'Project Part 2: Multi-Table Reports',
+  title: 'Day 14 — Applied Project: Business Intelligence Reporting Suite',
+  shortTitle: 'Project: BI Reporting Suite',
   type: 'project_part',
   milestoneId: 'milestone-2',
-  description: 'Build production-ready multi-table reports: product unit sales rankings, top customer spenders, and identifying products that have never been ordered using LEFT JOIN + IS NULL.',
+  description: 'As a BI Analyst, build production-ready analytics reports: product sales volume rankings, VIP customer leaderboard, and discover unpurchased inventory via anti-joins.',
   estimatedMinutes: 90,
   completionLearnings: [
     'Aggregate line-item sales across products and order_items',
@@ -1828,22 +1893,22 @@ export const DAY_14_MODULE: ModuleData = {
       title: '1. Multi-Table Business Analytics & Anti-Joins',
       shortDescription: 'Sales volume, revenue rankings, and unpurchased item discovery.',
       theory: {
-        summary: 'Today is an application day. You build three key business reports: units sold by product, top spending customers, and finding products that have never been ordered using `LEFT JOIN ... WHERE right_table.key IS NULL`.',
+        summary: 'Welcome to the Business Intelligence (BI) team! Today you build three key executive reports: sales volume by product, top spending VIP customers, and identifying catalog items that have never been ordered using anti-joins.',
         introTable: {
           tableName: 'products & order_items',
           description: 'Product catalog joined with order line items',
           columns: ['p.product_id', 'p.name', 'oi.quantity', 'oi.unit_price'],
           rows: [
-            [1, 'Wireless Mouse', 2, 25.00],
-            [2, 'Mechanical Keyboard', 1, 89.99],
-            [3, 'USB-C Cable (2m)', 3, 12.50],
-            [4, 'Ergonomic Desk Chair', null, null],
+            [1, 'Wireless Mouse', 2, 15.99],
+            [2, 'Bluetooth Speaker', 1, 45.50],
+            [4, 'Mechanical Keyboard', 2, 65.00],
+            [28, 'Clearance Item', null, null],
           ],
         },
         explanation: [
           '### 1. The Anti-Join Pattern (Never Ordered)',
-          'To find items that have never been purchased, LEFT JOIN `order_items` onto `products` and filter with `WHERE oi.order_item_id IS NULL`.',
-          'Any product that has no matching row in `order_items` will have NULL for `oi.order_item_id`.',
+          'To find items that have never been purchased, `LEFT JOIN order_items` onto `products` and filter with `WHERE oi.order_item_id IS NULL`.',
+          'Any product that has no matching row in `order_items` will have `NULL` for `oi.order_item_id`.',
         ],
         stepBreakdowns: [
           {
@@ -1855,9 +1920,9 @@ export const DAY_14_MODULE: ModuleData = {
               tableName: 'Product Sales Volume',
               columns: ['name', 'total_units_sold'],
               rows: [
-                ['USB-C Cable (2m)', 5],
-                ['Wireless Mouse', 4],
-                ['Mechanical Keyboard', 2],
+                ['Wireless Mouse', 7],
+                ['Mechanical Keyboard', 4],
+                ['USB-C Cable', 4],
               ],
             },
           },
@@ -1892,7 +1957,7 @@ export const DAY_14_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day14-c1-t1',
-          title: 'Task 1: Products with Total Units Sold',
+          title: 'Mission 1 (Guided): Product Sales Volume Ranking',
           description: 'List products with their total units sold, sorted highest first.',
           instructions: [
             'Select `p.name`, `SUM(oi.quantity) AS total_units_sold` from `products p` JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -1903,7 +1968,7 @@ export const DAY_14_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'products',
           secondaryTables: ['order_items'],
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Mission 1: Product units sold ranking\n',
           solutionSql: 'SELECT p.name, SUM(oi.quantity) AS total_units_sold FROM products p JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;',
           solutionExplanation: 'Sums item quantities per product and sorts descending.',
           hints: [{ level: 1, text: 'Use `GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;`' }],
@@ -1914,11 +1979,11 @@ export const DAY_14_MODULE: ModuleData = {
             requireOrderBy: [{ column: 'total_units_sold', direction: 'DESC' }],
             expectedRowCount: 22,
           },
-          successMessage: 'Product unit sales ranked!',
+          successMessage: 'Mission 1 complete! Product unit sales ranked.',
         },
         {
           id: 'day14-c1-t2',
-          title: 'Task 2: Unpurchased Products (Anti-Join)',
+          title: 'Mission 2 (Independent): Unpurchased Products Discovery',
           description: 'Identify all products that have never appeared in any order using a LEFT JOIN and IS NULL filter.',
           instructions: [
             'Query `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -1928,7 +1993,7 @@ export const DAY_14_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'products',
           secondaryTables: ['order_items'],
-          initialSql: '-- Anti-join for unpurchased products\n',
+          initialSql: '-- Mission 2: Anti-join for unpurchased products\n',
           solutionSql: 'SELECT p.product_id, p.name FROM products p LEFT JOIN order_items oi ON p.product_id = oi.product_id WHERE oi.order_item_id IS NULL;',
           solutionExplanation: 'Finds products with 0 recorded purchases.',
           hints: [{ level: 1, text: 'Use `WHERE oi.order_item_id IS NULL;`' }],
@@ -1939,23 +2004,23 @@ export const DAY_14_MODULE: ModuleData = {
             whereContainsTerms: ['IS NULL'],
             expectedRowCount: 6,
           },
-          successMessage: 'Spot on! You mastered the anti-join pattern.',
+          successMessage: 'Mission 2 complete! Unpurchased inventory identified.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 14 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 14 CHALLENGE: DELIVER THE 3-PART EXECUTIVE BI REPORTING SUITE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-14-homework',
-    title: 'Day 14 — Project Part 2: Multi-Table Reporting (Homework)',
+    title: 'Day 14 — Deliver the 3-Part Executive BI Reporting Suite (Ending Activity)',
     scenario: 'Construct all 3 core multi-table reports independently:',
     tasks: [
       {
         id: 'day14-hw-1',
-        title: 'Task 1: Products with total units sold, highest first',
+        title: 'Report 1: Product Sales Volume Ranking',
         description: 'Products with total units sold, highest first.',
         instructions: [
           'Select `p.name`, `SUM(oi.quantity) AS total_units_sold` from `products p` JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `p.product_id`, `p.name` ORDER BY `total_units_sold DESC`.',
@@ -1964,7 +2029,7 @@ export const DAY_14_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'products',
         secondaryTables: ['order_items'],
-        initialSql: '-- Task 1: Products with total units sold, highest first\n',
+        initialSql: '-- Report 1: Products with total units sold\n',
         solutionSql: 'SELECT p.name, SUM(oi.quantity) AS total_units_sold FROM products p JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;',
         solutionExplanation: 'Calculates total units sold for each product.',
         hints: [{ level: 1, text: 'Use `GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;`' }],
@@ -1975,12 +2040,12 @@ export const DAY_14_MODULE: ModuleData = {
           requireOrderBy: [{ column: 'total_units_sold', direction: 'DESC' }],
           expectedRowCount: 22,
         },
-        successMessage: 'Task 1 completed! Unit sales report verified.',
+        successMessage: 'Report 1 verified! Product sales volume calculated.',
       },
       {
         id: 'day14-hw-2',
-        title: 'Task 2: Top 5 customers by total spend',
-        description: 'Top 5 customers by total spend.',
+        title: 'Report 2: Top 5 VIP Spenders Leaderboard',
+        description: 'Top 5 customers by total monetary spend.',
         instructions: [
           'Select `c.customer_id`, `c.name`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name` ORDER BY `total_spent DESC` LIMIT 5.',
           'End with a semicolon (;).',
@@ -1988,7 +2053,7 @@ export const DAY_14_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'customers',
         secondaryTables: ['orders', 'order_items'],
-        initialSql: '-- Task 2: Top 5 customers by total spend\n',
+        initialSql: '-- Report 2: Top 5 VIP customers by spend\n',
         solutionSql: 'SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name ORDER BY total_spent DESC LIMIT 5;',
         solutionExplanation: 'Joins customers -> orders -> order_items, sums spending, and returns top 5.',
         hints: [{ level: 1, text: 'Use `GROUP BY c.customer_id, c.name ORDER BY total_spent DESC LIMIT 5;`' }],
@@ -2000,11 +2065,11 @@ export const DAY_14_MODULE: ModuleData = {
           requireLimit: 5,
           expectedRowCount: 5,
         },
-        successMessage: 'Task 2 completed! Top spending customers identified.',
+        successMessage: 'Report 2 verified! Top VIP customers identified.',
       },
       {
         id: 'day14-hw-3',
-        title: 'Task 3: Products that have never been ordered (LEFT JOIN + IS NULL)',
+        title: 'Report 3: Unpurchased Products (Anti-Join)',
         description: 'Products that have never been ordered (LEFT JOIN + IS NULL anti-join).',
         instructions: [
           'Select `p.product_id`, `p.name` from `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id` WHERE `oi.order_item_id IS NULL`.',
@@ -2013,7 +2078,7 @@ export const DAY_14_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'products',
         secondaryTables: ['order_items'],
-        initialSql: '-- Task 3: Products that have never been ordered (LEFT JOIN + IS NULL)\n',
+        initialSql: '-- Report 3: Products that have never been ordered\n',
         solutionSql: 'SELECT p.product_id, p.name FROM products p LEFT JOIN order_items oi ON p.product_id = oi.product_id WHERE oi.order_item_id IS NULL;',
         solutionExplanation: 'Anti-join with `WHERE oi.order_item_id IS NULL` finds products that have never appeared in any order.',
         hints: [{ level: 1, text: 'Use `WHERE oi.order_item_id IS NULL;`' }],
@@ -2024,66 +2089,66 @@ export const DAY_14_MODULE: ModuleData = {
           whereContainsTerms: ['IS NULL'],
           expectedRowCount: 6,
         },
-        successMessage: 'Task 3 completed! Unordered products identified.',
+        successMessage: 'Report 3 verified! Unpurchased inventory identified.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 15: Independent Work / Debug Day
+// DAY 15: Debugging Lab: Query Hardening & Temporal Filters (Mode 3)
 // =============================================================================
 export const DAY_15_MODULE: ModuleData = {
   id: 'day-15',
   slug: 'independent-work-debug',
   day: 15,
-  title: 'Day 15 — Independent Work / Debug Day',
-  shortTitle: 'Debug & Independent Polish',
+  title: 'Day 15 — Debugging Lab: Query Hardening & Temporal Filters',
+  shortTitle: 'Debug: Temporal Filters & Audits',
   type: 'practice_day',
   milestoneId: 'milestone-2',
-  description: 'Polish multi-table reporting queries, debug joins, add extra date range filters, and ensure total query comprehension before the Milestone 2 assessment.',
+  description: 'Harden multi-table queries with date range boundaries and audit inactive customer accounts before Milestone 2 assessment.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Debug and optimize complex multi-table queries',
-    'Add date-range constraints to joined reporting queries',
-    'Verify data accuracy and check for potential fan-out issues',
+    'Add date-range constraints to multi-table joined reporting queries',
+    'Audit inactive zero-order customer accounts using LEFT JOIN and HAVING',
+    'Harden query logic against data edge cases before assessment checkpoints',
   ],
   concepts: [
     {
       id: 'query-debugging-polish',
       order: 1,
-      title: '1. Query Debugging & Date Range Extensions',
+      title: '1. Query Hardening & Date Range Constraints',
       shortDescription: 'Refine multi-table queries and add temporal filters.',
       theory: {
-        summary: 'Debug day: review and polish your multi-table queries. Add temporal filters (e.g. orders placed in the last 60 days) to verify that your JOIN logic remains robust.',
+        summary: 'Production queries frequently require temporal constraints (such as orders placed in the last 60 days) and inactive account audits. Today we harden existing queries against these real-world requirements.',
         introTable: {
           tableName: 'customers & orders',
           description: 'Multi-table customer orders with timestamps',
           columns: ['c.name', 'o.order_id', 'o.order_date', 'o.status'],
           rows: [
-            ['Rahim Chowdhury', 101, '2026-08-01', 'delivered'],
-            ['Rahim Chowdhury', 104, '2026-08-15', 'pending'],
-            ['Ayesha Siddika', 103, '2026-08-10', 'delivered'],
+            ['Rafiul Islam', 1, '2026-06-10', 'delivered'],
+            ['Rafiul Islam', 14, '2026-08-02', 'delivered'],
+            ['Tanvir Ahmed', 3, '2026-05-15', 'delivered'],
           ],
         },
         explanation: [
-          '### 1. Extending Multi-Table Reports with Date Filters',
+          '### 1. Adding Temporal Filters to Multi-Table Queries',
           'Combine JOINs, WHERE date filters, and GROUP BY:',
-          '```sql\nSELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= CURDATE() - INTERVAL 60 DAY\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;\n```',
+          '```sql\nSELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;\n```',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
             stepTitle: 'Step 1: Multi-Table Spend with Date Boundaries',
-            sqlSnippet: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= CURDATE() - INTERVAL 60 DAY\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;',
+            sqlSnippet: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;',
             explanation: 'Filters recent orders, aggregates total spend per customer, and sorts descending.',
             tableData: {
               tableName: 'Recent Spend Breakdown',
               columns: ['name', 'recent_spend'],
               rows: [
-                ['Ayesha Siddika', 464.99],
-                ['David Miller', 284.00],
-                ['Rahim Chowdhury', 252.50],
+                ['Rafiul Islam', 165.50],
+                ['Farhana Rahman', 144.97],
+                ['Priya Akter', 55.00],
               ],
             },
           },
@@ -2091,7 +2156,7 @@ export const DAY_15_MODULE: ModuleData = {
         syntaxBlocks: [
           {
             title: 'Filtered multi-table report',
-            sql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= CURDATE() - INTERVAL 60 DAY\nGROUP BY c.customer_id, c.name\nORDER BY total_spent DESC;',
+            sql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY total_spent DESC;',
             description: 'Combines multi-table joins with date constraints.',
           },
         ],
@@ -2113,16 +2178,16 @@ export const DAY_15_MODULE: ModuleData = {
             explanation: 'Filtering raw order records by date occurs in the WHERE clause before aggregation.',
           },
         ],
-        masteryPoints: ['Debug multi-table queries and add temporal constraints'],
+        masteryPoints: ['Harden multi-table queries with temporal boundaries'],
       },
       tasks: [
         {
           id: 'day15-c1-t1',
-          title: 'Task 1: Recent Customer Spending (Last 60 Days)',
-          description: 'Calculate customer spend for orders placed in the last 60 days.',
+          title: 'Task 1 (Guided): Recent Customer Spending (Last 60 Days)',
+          description: 'Calculate customer spend for orders placed on or after 2026-06-25 (last 60 days).',
           instructions: [
             'Select `c.name`, `SUM(oi.quantity * oi.unit_price) AS recent_spend` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
-            'Where `o.order_date >= CURDATE() - INTERVAL 60 DAY` (or `o.order_date >= \'2026-06-25\'`).',
+            'Where `o.order_date >= \'2026-06-25\'` (or `CURDATE() - INTERVAL 60 DAY`).',
             'Group by `c.customer_id`, `c.name`.',
             'Order by `recent_spend DESC`.',
             'End with a semicolon (;).',
@@ -2130,22 +2195,25 @@ export const DAY_15_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders', 'order_items'],
-          initialSql: '-- Write your SQL query here\n',
-          solutionSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= CURDATE() - INTERVAL 60 DAY GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;',
+          initialSql: '-- Task 1: Recent customer spend with date filter\nSELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;',
+          solutionSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;',
           solutionExplanation: 'Filters by date range, joins line items, and sums total spend per customer.',
-          hints: [{ level: 1, text: 'Use `WHERE o.order_date >= CURDATE() - INTERVAL 60 DAY GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;`' }],
+          hints: [
+            { level: 1, text: 'Use `WHERE o.order_date >= \'2026-06-25\'` before GROUP BY.' },
+            { level: 2, text: 'Group by `c.customer_id, c.name ORDER BY recent_spend DESC;`.' },
+          ],
           validation: {
             targetTable: 'customers',
             requireJoin: true,
             requireWhere: true,
             requireGroupBy: true,
-            expectedRowCount: 12,
+            expectedRowCount: 9,
           },
-          successMessage: 'Recent spend query verified!',
+          successMessage: 'Task 1 completed! Recent spend query verified.',
         },
         {
           id: 'day15-c1-t2',
-          title: 'Task 2: Inactive Customer Audit',
+          title: 'Task 2 (Independent): Inactive Customer Audit',
           description: 'Identify customers who have placed 0 orders by grouping with a LEFT JOIN and filtering with HAVING.',
           instructions: [
             'Query `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`.',
@@ -2167,92 +2235,91 @@ export const DAY_15_MODULE: ModuleData = {
             requireHaving: true,
             expectedRowCount: 3,
           },
-          successMessage: 'Perfect! Zero-order accounts identified.',
+          successMessage: 'Task 2 completed! Zero-order accounts identified.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 15 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 15 CHALLENGE: FIX BROKEN & DATE-CONSTRAINED QUERIES (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-15-homework',
-    title: 'Day 15 — Independent Work / Debug Day (Homework)',
+    title: 'Day 15 — Fix Broken & Date-Constrained Queries (Ending Activity)',
     scenario: 'Polish and refine your multi-table reporting queries:',
     tasks: [
       {
         id: 'day15-hw-1',
-        title: 'Task 1: Polish Project Part 2 multi-table reports',
+        title: 'Task 1: Polish multi-table customer spend report with date range',
         description: 'Verify and run the multi-table customer spend report with date range constraints.',
         instructions: [
-          'Select `c.name`, `SUM(oi.quantity * oi.unit_price) AS recent_spend` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` WHERE `o.order_date >= CURDATE() - INTERVAL 60 DAY` GROUP BY `c.customer_id`, `c.name` ORDER BY `recent_spend DESC`.',
+          'Select `c.name`, `SUM(oi.quantity * oi.unit_price) AS recent_spend` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` WHERE `o.order_date >= \'2026-06-25\'` GROUP BY `c.customer_id`, `c.name` ORDER BY `recent_spend DESC`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
         primaryTable: 'customers',
         secondaryTables: ['orders', 'order_items'],
-        initialSql: '-- Task 1: Polish multi-table customer spend report\n',
-        solutionSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= CURDATE() - INTERVAL 60 DAY GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;',
-        solutionExplanation: 'Multi-table customer spend report with 60-day date interval filter.',
-        hints: [{ level: 1, text: 'Use `WHERE o.order_date >= CURDATE() - INTERVAL 60 DAY GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;`' }],
+        initialSql: '-- Challenge: Multi-table customer spend with date filter\n',
+        solutionSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;',
+        solutionExplanation: 'Multi-table customer spend report with date interval filter.',
+        hints: [{ level: 1, text: 'Use `WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;`' }],
         validation: {
           targetTable: 'customers',
           requireJoin: true,
           requireWhere: true,
           requireGroupBy: true,
-          expectedRowCount: 12,
+          expectedRowCount: 9,
         },
-        successMessage: 'Task 1 completed! Polished multi-table report verified.',
+        successMessage: 'Challenge completed! Polished multi-table report verified.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 16: Milestone Assignment 2 (Checkpoint)
+// DAY 16: Milestone 2: Relational Mastery Checkpoint (Mode 5)
 // =============================================================================
 export const DAY_16_MODULE: ModuleData = {
   id: 'day-16',
   slug: 'milestone-2-assessment',
   day: 16,
-  title: 'Day 16 — Milestone Assignment 2 (Checkpoint)',
-  shortTitle: 'Milestone 2 Assessment',
+  title: 'Day 16 — Milestone 2: Relational Mastery Checkpoint',
+  shortTitle: 'Milestone 2 Checkpoint',
   type: 'assignment',
   milestoneId: 'milestone-2',
-  description: 'Independent assessment for Milestone 2: prove proficiency in working with multiple related tables, answering real business questions using JOINs and aggregations, and checking results for red flags.',
+  description: 'Independent competency verification for Milestone 2: prove proficiency in multi-table relational queries, financial aggregations, and anti-joins.',
   estimatedMinutes: 90,
   completionLearnings: [
     'Calculate total database revenue across order line items',
     'Aggregate multi-table revenue breakdowns by product category',
-    'Filter high-value customers with spend thresholds',
+    'Filter high-value customers with spend thresholds using HAVING',
     'Discover suppliers whose products have never been ordered using anti-joins',
   ],
   concepts: [
     {
       id: 'milestone-2-eval',
       order: 1,
-      title: '1. Milestone 2 Core Competency Assessment',
-      shortDescription: 'Independent multi-table evaluation.',
+      title: '1. Milestone 2 Core Competency Verification',
+      shortDescription: 'Independent multi-table skill verification across Days 9–15.',
       theory: {
-        summary: 'Milestone 2 Checkpoint: "Can work with multiple related tables and answer real business questions using JOINs and aggregations, and checks results for red flags."',
+        summary: 'Milestone 2 Skill Verification: Prove your ability to independently answer real-world business questions using multi-table JOINs, financial aggregations, and anti-joins without templates or assistance.',
         introTable: {
           tableName: 'order_items',
           description: 'Line item financial transactions',
           columns: ['order_item_id', 'order_id', 'product_id', 'quantity', 'unit_price'],
           rows: [
-            [1, 101, 1, 2, 25.00],
-            [2, 101, 3, 1, 12.50],
-            [3, 102, 2, 1, 89.99],
-            [4, 103, 6, 1, 349.99],
+            [1, 1, 1, 2, 15.99],
+            [2, 1, 4, 1, 65.00],
+            [3, 2, 6, 1, 55.00],
           ],
         },
         explanation: [
-          '### 1. Assessment Deliverables',
-          '1. Total revenue (SUM across order_items).',
-          '2. Revenue by category (products → categories → order_items).',
-          '3. Customers who\'ve spent more than $200.',
-          '4. Suppliers whose products have never been ordered (the seed data has exactly one: Unity Traders BD).',
+          '### 1. Milestone 2 Verification Objectives',
+          '• **Core Skill**: Total database revenue calculation across all order line items.',
+          '• **Combination**: Multi-table revenue breakdown by product category (`categories` $\\rightarrow$ `products` $\\rightarrow$ `order_items`).',
+          '• **Transfer**: High-value customers filtering with post-aggregation thresholds (`HAVING total_spent > 200`).',
+          '• **Hard Problem**: Anti-join discovery of suppliers with zero ordered products (find Unity Traders BD).',
         ],
         stepBreakdowns: [
           {
@@ -2264,10 +2331,9 @@ export const DAY_16_MODULE: ModuleData = {
               tableName: 'Category Revenue Summary',
               columns: ['name', 'category_revenue'],
               rows: [
-                ['Electronics', 734.97],
-                ['Office Furniture', 420.00],
-                ['Accessories', 157.48],
-                ['Audio & Video', 89.50],
+                ['Electronics', 448.47],
+                ['Office Furniture', 209.99],
+                ['Accessories', 161.42],
               ],
             },
           },
@@ -2287,25 +2353,25 @@ export const DAY_16_MODULE: ModuleData = {
         mcqs: [
           {
             question: 'Which supplier in the seed dataset has products that have never been ordered?',
-            options: ['A. Dhaka Tech Supplies', 'B. Unity Traders BD', 'C. Apex Logistics', 'D. Bengal Components'],
+            options: ['A. LogiTech Direct', 'B. Unity Traders BD', 'C. KeyChron Components', 'D. SoundWave Acoustic'],
             correctIndex: 1,
             explanation: 'Unity Traders BD has products in the catalog, but none have ever been referenced in order_items.',
           },
         ],
-        masteryPoints: ['Pass all 4 Milestone 2 independent assessment tasks'],
+        masteryPoints: ['Pass all 4 Milestone 2 independent verification deliverables'],
       },
       tasks: [
         {
           id: 'day16-c1-t1',
-          title: 'Task 1: Total Revenue Calculation',
-          description: 'Calculate the total grand revenue across all order items.',
+          title: 'Warmup 1: Total Revenue Calculation',
+          description: 'Calculate the grand total revenue across all order line items.',
           instructions: [
             'Select `SUM(quantity * unit_price) AS total_revenue` from `order_items`.',
             'End with a semicolon (;).',
           ],
           type: 'guided',
           primaryTable: 'order_items',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Warmup 1: Grand total revenue\n',
           solutionSql: 'SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;',
           solutionExplanation: 'Calculates the sum product of quantity and unit_price for all order items.',
           hints: [{ level: 1, text: 'Use `SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;`' }],
@@ -2313,11 +2379,11 @@ export const DAY_16_MODULE: ModuleData = {
             targetTable: 'order_items',
             expectedRowCount: 1,
           },
-          successMessage: 'Total revenue calculated!',
+          successMessage: 'Warmup 1 completed! Total revenue calculated.',
         },
         {
           id: 'day16-c1-t2',
-          title: 'Task 2: Category Revenue Breakdown',
+          title: 'Warmup 2: Category Revenue Breakdown',
           description: 'Join categories, products, and order_items to compute total revenue generated per category, sorted highest first.',
           instructions: [
             'Query `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -2328,7 +2394,7 @@ export const DAY_16_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'categories',
           secondaryTables: ['products', 'order_items'],
-          initialSql: '-- Revenue by category\n',
+          initialSql: '-- Warmup 2: Revenue by category\n',
           solutionSql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;',
           solutionExplanation: 'Joins 3 tables and computes revenue per category.',
           hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;`' }],
@@ -2339,23 +2405,23 @@ export const DAY_16_MODULE: ModuleData = {
             requireOrderBy: [{ column: 'category_revenue', direction: 'DESC' }],
             expectedRowCount: 5,
           },
-          successMessage: 'Spot on! Category revenue breakdown calculated.',
+          successMessage: 'Warmup 2 completed! Category revenue breakdown calculated.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 16 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 16 CHALLENGE: MILESTONE 2 MASTERY CHECKPOINT (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-16-homework',
-    title: 'Day 16 — Milestone Assignment 2 (Assessment)',
-    scenario: 'Complete all 4 deliverables independently to clear Milestone 2:',
+    title: 'Day 16 — Milestone 2 Mastery Checkpoint (Ending Activity)',
+    scenario: 'Complete all 4 deliverables independently to verify Milestone 2 relational mastery:',
     tasks: [
       {
         id: 'day16-hw-1',
-        title: 'Task 1: Total revenue (SUM across order_items)',
+        title: 'Deliverable 1 (Core): Grand total revenue across all orders',
         description: 'Total revenue (SUM across order_items).',
         instructions: [
           'Select `SUM(quantity * unit_price) AS total_revenue` from `order_items`.',
@@ -2363,7 +2429,7 @@ export const DAY_16_MODULE: ModuleData = {
         ],
         type: 'challenge',
         primaryTable: 'order_items',
-        initialSql: '-- Task 1: Total revenue\n',
+        initialSql: '-- Deliverable 1: Total revenue\n',
         solutionSql: 'SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;',
         solutionExplanation: 'Calculates grand total revenue across all order line items.',
         hints: [{ level: 1, text: 'Use `SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;`' }],
@@ -2371,12 +2437,12 @@ export const DAY_16_MODULE: ModuleData = {
           targetTable: 'order_items',
           expectedRowCount: 1,
         },
-        successMessage: 'Task 1 completed! Grand total revenue verified.',
+        successMessage: 'Deliverable 1 verified! Grand total revenue calculated.',
       },
       {
         id: 'day16-hw-2',
-        title: 'Task 2: Revenue by category (products -> categories -> order_items)',
-        description: 'Revenue by category (products → categories → order_items).',
+        title: 'Deliverable 2 (Combination): Revenue by product category',
+        description: 'Revenue by category (categories → products → order_items).',
         instructions: [
           'Select `cat.name`, `SUM(oi.quantity * oi.unit_price) AS category_revenue` from `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `cat.category_id`, `cat.name` ORDER BY `category_revenue DESC`.',
           'End with a semicolon (;).',
@@ -2384,7 +2450,7 @@ export const DAY_16_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'categories',
         secondaryTables: ['products', 'order_items'],
-        initialSql: '-- Task 2: Revenue by category\n',
+        initialSql: '-- Deliverable 2: Revenue by category\n',
         solutionSql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;',
         solutionExplanation: 'Joins categories -> products -> order_items and sums revenue per category.',
         hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;`' }],
@@ -2394,11 +2460,11 @@ export const DAY_16_MODULE: ModuleData = {
           requireGroupBy: true,
           expectedRowCount: 5,
         },
-        successMessage: 'Task 2 completed! Revenue by category calculated.',
+        successMessage: 'Deliverable 2 verified! Revenue by category calculated.',
       },
       {
         id: 'day16-hw-3',
-        title: 'Task 3: Customers who\'ve spent more than $200',
+        title: 'Deliverable 3 (Transfer): High-value customers who spent more than $200',
         description: 'Customers who\'ve spent more than $200.',
         instructions: [
           'Select `c.customer_id`, `c.name`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name` HAVING `SUM(oi.quantity * oi.unit_price) > 200` ORDER BY `total_spent DESC`.',
@@ -2407,7 +2473,7 @@ export const DAY_16_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'customers',
         secondaryTables: ['orders', 'order_items'],
-        initialSql: '-- Task 3: Customers who\'ve spent more than $200\n',
+        initialSql: '-- Deliverable 3: Customers who spent more than $200\n',
         solutionSql: 'SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name HAVING SUM(oi.quantity * oi.unit_price) > 200 ORDER BY total_spent DESC;',
         solutionExplanation: 'Filters aggregated customer spending with `HAVING SUM(...) > 200`.',
         hints: [{ level: 1, text: 'Use `HAVING SUM(oi.quantity * oi.unit_price) > 200 ORDER BY total_spent DESC;`' }],
@@ -2418,11 +2484,11 @@ export const DAY_16_MODULE: ModuleData = {
           requireHaving: true,
           expectedRowCount: 1,
         },
-        successMessage: 'Task 3 completed! High value customers identified.',
+        successMessage: 'Deliverable 3 verified! High-value customers identified.',
       },
       {
         id: 'day16-hw-4',
-        title: 'Task 4: Suppliers whose products have never been ordered',
+        title: 'Deliverable 4 (Hard Problem): Suppliers whose products have never been ordered',
         description: 'Suppliers whose products have never been ordered (find Unity Traders BD via anti-join).',
         instructions: [
           'Select `s.supplier_id`, `s.name` from `suppliers s` LEFT JOIN `products p` ON `s.supplier_id = p.supplier_id` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `s.supplier_id`, `s.name` HAVING `COUNT(oi.order_item_id) = 0`.',
@@ -2431,7 +2497,7 @@ export const DAY_16_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'suppliers',
         secondaryTables: ['products', 'order_items'],
-        initialSql: '-- Task 4: Suppliers whose products have never been ordered\n',
+        initialSql: '-- Deliverable 4: Suppliers whose products have never been ordered\n',
         solutionSql: 'SELECT s.supplier_id, s.name FROM suppliers s LEFT JOIN products p ON s.supplier_id = p.supplier_id LEFT JOIN order_items oi ON p.product_id = oi.product_id GROUP BY s.supplier_id, s.name HAVING COUNT(oi.order_item_id) = 0;',
         solutionExplanation: 'Anti-join identifying suppliers with zero order item records (Unity Traders BD).',
         hints: [{ level: 1, text: 'Use `GROUP BY s.supplier_id, s.name HAVING COUNT(oi.order_item_id) = 0;`' }],
@@ -2441,7 +2507,7 @@ export const DAY_16_MODULE: ModuleData = {
           requireGroupBy: true,
           expectedRowCount: 1,
         },
-        successMessage: 'Task 4 completed! Unordered supplier Unity Traders BD found.',
+        successMessage: 'Deliverable 4 verified! Unordered supplier Unity Traders BD found.',
       },
     ],
   },

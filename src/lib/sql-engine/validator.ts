@@ -45,10 +45,10 @@ export function validateTaskSolution(
   }
 
   // Check Common Aggregate in WHERE Trap (only within the WHERE clause and not part of a subquery or HAVING)
-  const whereClauseOnly = cleanSql.match(/\bWHERE\b([\s\S]*?)(?:\bGROUP\s+BY\b|\bHAVING\b|\bORDER\s+BY\b|\bLIMIT\b|;|$)/i);
-  if (whereClauseOnly && whereClauseOnly[1]) {
-    const whereText = whereClauseOnly[1];
-    if (/(?:(?!\bSELECT\b)[^;])*\b(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(whereText) && !/\(SELECT[\s\S]+\)/i.test(whereText)) {
+  const whereMatch = cleanSql.match(/\bWHERE\b((?:(?!\bSELECT\b)[\s\S])*?)(?:\bGROUP\s+BY\b|\bHAVING\b|\bORDER\s+BY\b|\bLIMIT\b|\)|;|$)/i);
+  if (whereMatch && whereMatch[1]) {
+    const whereText = whereMatch[1];
+    if (/\b(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(whereText)) {
       return {
         passed: false,
         feedback: `⚠️ Syntax Trap: Aggregate functions like COUNT() or SUM() cannot be used directly in a WHERE clause. Filter aggregates using the HAVING clause after GROUP BY instead.`,

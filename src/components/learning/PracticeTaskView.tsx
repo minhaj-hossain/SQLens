@@ -186,7 +186,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
         <div className="flex items-center justify-between pt-1">
           <button
             onClick={onPreviousTask}
-            className="flex items-center gap-1.5 text-xs font-mono font-medium text-zinc-400 hover:text-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-mono font-medium text-text-dim hover:text-text px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border transition cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Previous Task</span>

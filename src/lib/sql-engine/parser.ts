@@ -124,13 +124,18 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
   // CTE (WITH cte_name AS (...) SELECT ...)
   const cteMatch = sql.match(/^WITH\s+([a-zA-Z0-9_]+)\s+AS\s*\(([\s\S]+?)\)\s*(SELECT[\s\S]+)$/i);
   if (cteMatch) {
+    const cteName = cteMatch[1].trim();
+    const cteQuery = cteMatch[2].trim();
+    const mainQuery = cteMatch[3].trim();
+    const mainParsed = parseSelect(mainQuery, rawSql);
     return {
+      ...mainParsed,
       type: 'CTE',
       raw: rawSql,
       normalized: sql,
-      cteName: cteMatch[1].trim(),
-      cteQuery: cteMatch[2].trim(),
-      mainQuery: cteMatch[3].trim(),
+      cteName,
+      cteQuery,
+      mainQuery,
     };
   }
 

@@ -401,12 +401,146 @@ export const DAY_17_MODULE: ModuleData = {
     },
 
     // =========================================================================
-    // CONCEPT 2: Common Table Expressions (WITH syntax)
+    // CONCEPT 4: Correlated Subqueries (Per-Row Dynamic Benchmarks)
+    // =========================================================================
+    {
+      id: 'subqueries-correlated',
+      order: 4,
+      title: '4. Correlated Subqueries (Per-Row Dynamic Benchmarks)',
+      shortDescription: 'Compare each row dynamically against its own category or parent benchmark.',
+      theory: {
+        summary: 'Unlike an independent subquery that runs once, a correlated subquery references a column from the outer query table. It re-evaluates dynamically for every single row of the outer query.',
+        introTable: {
+          tableName: 'products (p1 vs p2)',
+          description: 'Comparing product price against category-specific average',
+          columns: ['p1.name', 'p1.category_id', 'p1.price', 'category_avg_price'],
+          rows: [
+            ['Ergonomic Desk Chair', 3, 249.00, 219.50],
+            ['Wireless Mouse', 2, 25.00, 39.37],
+            ['Mechanical Keyboard', 1, 89.99, 114.99],
+          ],
+        },
+        explanation: [
+          '### 1. The Anatomy of a Correlated Subquery',
+          '```sql\nSELECT p1.name, p1.price, p1.category_id\nFROM products p1\nWHERE p1.price > (\n  SELECT AVG(p2.price)\n  FROM products p2\n  WHERE p2.category_id = p1.category_id\n);\n```',
+          '• **Outer Query (`products p1`)**: Iterates through each product row one by one.',
+          '• **Correlation Condition (`p2.category_id = p1.category_id`)**: Links the inner calculation specifically to `p1`\'s category.',
+          '• **Inner Query (`products p2`)**: Calculates the average price only for products in that specific category.',
+          'QUESTION_BLOCK::Repeated Execution Model::A regular subquery runs once for the whole query. A correlated subquery runs once for each outer row, comparing each item against its localized peer group.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Outer Query Inspects Product Row',
+            sqlSnippet: '-- Inspecting Product: "Office Chair" (Category 3, Price $120.00)',
+            explanation: 'Outer query provides p1.category_id = 3 to the inner query.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Inner Query Computes Category 3 Average',
+            sqlSnippet: 'SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = 3;',
+            explanation: 'Inner query evaluates to $47.15 (Category 3 average).',
+            tableData: {
+              tableName: 'Category 3 Benchmark',
+              columns: ['AVG(price)'],
+              rows: [[47.15]],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: WHERE Condition Evaluates',
+            sqlSnippet: '-- 120.00 > 47.15 -> TRUE (Office Chair is kept in result)',
+            explanation: 'Product is kept because its price exceeds its category average.',
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Correlated subquery pattern',
+            sql: 'SELECT p1.name, p1.price, p1.category_id\nFROM products p1\nWHERE p1.price > (\n  SELECT AVG(p2.price)\n  FROM products p2\n  WHERE p2.category_id = p1.category_id\n);',
+            description: 'Compares each row dynamically to its category average.',
+          },
+        ],
+        keyTakeaway: 'Correlated subqueries use outer table aliases to calculate localized, row-specific benchmarks.',
+        exampleQuery: 'SELECT name, price, category_id FROM products p1 WHERE price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
+        exampleQueryExplanation: 'Products priced above their specific category average.',
+        liveDemoSql: 'SELECT name, price, category_id FROM products p1 WHERE price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id) LIMIT 5;',
+        liveDemoNotes: 'Displays products above their category average.',
+        mcqs: [
+          {
+            question: 'How does a correlated subquery differ from an independent scalar subquery?',
+            options: [
+              'A. It runs in a separate database process',
+              'B. It references a column from the outer query and evaluates once per outer row',
+              'C. It requires single quotes around all table names',
+              'D. It can only execute in MySQL 8.0+',
+            ],
+            correctIndex: 1,
+            explanation: 'Correlated subqueries depend on values from the outer query row and execute repeatedly.',
+          },
+        ],
+        masteryPoints: ['Write correlated subqueries using table aliases', 'Compare rows against localized category benchmarks'],
+      },
+      tasks: [
+        {
+          id: 'day17-c1d-t1',
+          title: 'Task 1: Products Above Category Average',
+          description: 'Find name, price, and category_id for products priced higher than the average price within their own category.',
+          instructions: [
+            'Query `products p1`.',
+            'Select `p1.name`, `p1.price`, and `p1.category_id`.',
+            'Filter where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Products above their own category average\nSELECT p1.name, p1.price, p1.category_id\nFROM products p1\nWHERE p1.price > (\n  SELECT AVG(p2.price)\n  FROM products p2\n  WHERE p2.category_id = p1.category_id\n);',
+          solutionSql: 'SELECT p1.name, p1.price, p1.category_id FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
+          solutionExplanation: 'Correlated subquery compares each product against its own category average price.',
+          hints: [
+            { level: 1, text: 'Use table aliases `p1` for the outer query and `p2` for the inner subquery.' },
+            { level: 2, text: 'Correlate with `WHERE p2.category_id = p1.category_id` inside the AVG subquery.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            requiredColumns: ['name', 'price', 'category_id'],
+            expectedRowCount: 12,
+          },
+          successMessage: 'Task 1 completed! Above-category-average products retrieved via correlated subquery.',
+        },
+        {
+          id: 'day17-c1d-t2',
+          title: 'Task 2: Products with Above-Average Stock in Category',
+          description: 'Select name, quantity_in_stock, and category_id for products having stock strictly greater than their category average stock.',
+          instructions: [
+            'Query `products p1`.',
+            'Select `p1.name`, `p1.quantity_in_stock`, and `p1.category_id`.',
+            'Filter where `p1.quantity_in_stock > (SELECT AVG(p2.quantity_in_stock) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Products with stock above category average\n',
+          solutionSql: 'SELECT p1.name, p1.quantity_in_stock, p1.category_id FROM products p1 WHERE p1.quantity_in_stock > (SELECT AVG(p2.quantity_in_stock) FROM products p2 WHERE p2.category_id = p1.category_id);',
+          solutionExplanation: 'Calculates category-specific stock averages and filters high-inventory products.',
+          hints: [{ level: 1, text: 'Use `WHERE p1.quantity_in_stock > (SELECT AVG(p2.quantity_in_stock) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            requiredColumns: ['name', 'quantity_in_stock', 'category_id'],
+            expectedRowCount: 13,
+          },
+          successMessage: 'Task 2 completed! Correlated inventory benchmark verified.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 5: Common Table Expressions (WITH syntax)
     // =========================================================================
     {
       id: 'common-table-expressions-cte',
-      order: 4,
-      title: '4. Common Table Expressions (WITH syntax)',
+      order: 5,
+      title: '5. Common Table Expressions (WITH syntax)',
       shortDescription: 'Readable, modular multi-stage query architecture.',
       theory: {
         summary: 'A Common Table Expression (CTE) defined with `WITH name AS (...)` provides a named, readable temporary result set that exists for the duration of a single query.',
@@ -415,9 +549,9 @@ export const DAY_17_MODULE: ModuleData = {
           description: 'CTE pipeline input data',
           columns: ['customer_id', 'name', 'order_count'],
           rows: [
-            [1, 'Rahim Chowdhury', 2],
-            [2, 'Karim Ahmed', 1],
-            [3, 'Ayesha Siddika', 2],
+            [1, 'Rafiul Islam', 2],
+            [2, 'Priya Akter', 1],
+            [3, 'Tanvir Ahmed', 2],
           ],
         },
         explanation: [
@@ -435,9 +569,9 @@ export const DAY_17_MODULE: ModuleData = {
               tableName: 'CTE Output',
               columns: ['customer_id', 'name'],
               rows: [
-                [1, 'Rahim Chowdhury'],
-                [2, 'Karim Ahmed'],
-                [3, 'Ayesha Siddika'],
+                [1, 'Rafiul Islam'],
+                [2, 'Priya Akter'],
+                [3, 'Tanvir Ahmed'],
               ],
             },
           },
@@ -526,10 +660,10 @@ export const DAY_17_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day17-hw-1',
-        title: 'Task 1: Products priced higher than the category average',
-        description: 'Products priced higher than the category average for their own category.',
+        title: 'Task 1: Products priced higher than the overall average',
+        description: 'Products priced higher than the catalog-wide average product price.',
         instructions: [
-          'Select `p1.name`, `p1.category_id`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
+          'Select `name`, `price` from `products` where `price > (SELECT AVG(price) FROM products)`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
@@ -568,15 +702,36 @@ export const DAY_17_MODULE: ModuleData = {
       },
       {
         id: 'day17-hw-3',
-        title: 'Task 3: Rewrite previous query as a CTE',
-        description: 'Rewrite the customer order query using a WITH cte AS (...) clause.',
+        title: 'Task 3: Products priced above their own category average (Correlated Subquery)',
+        description: 'Products priced higher than their own category average using a correlated subquery.',
+        instructions: [
+          'Select `p1.name`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
+          'End with a semicolon (;).',
+        ],
+        type: 'challenge',
+        primaryTable: 'products',
+        initialSql: '-- Task 3: Correlated subquery per category\n',
+        solutionSql: 'SELECT p1.name, p1.price FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
+        solutionExplanation: 'Uses a correlated subquery to dynamically calculate the average for each product\'s category.',
+        hints: [{ level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
+        validation: {
+          targetTable: 'products',
+          requireWhere: true,
+          expectedRowCount: 12,
+        },
+        successMessage: 'Task 3 completed! Correlated category query verified.',
+      },
+      {
+        id: 'day17-hw-4',
+        title: 'Task 4: Customer Order CTE',
+        description: 'Rewrite the active customer order query using a WITH cte AS (...) clause.',
         instructions: [
           'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) SELECT c.customer_id, c.name FROM customers c JOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
         primaryTable: 'customers',
-        initialSql: '-- Task 3: Customer order query rewritten as CTE\n',
+        initialSql: '-- Task 4: Customer order query rewritten as CTE\n',
         solutionSql: 'WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) SELECT c.customer_id, c.name FROM customers c JOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;',
         solutionExplanation: 'Uses a Common Table Expression to define active customer IDs.',
         hints: [{ level: 1, text: 'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) ...`' }],
@@ -584,37 +739,38 @@ export const DAY_17_MODULE: ModuleData = {
           targetTable: 'customers',
           expectedRowCount: 12,
         },
-        successMessage: 'Task 3 completed! CTE query verified.',
+        successMessage: 'Task 4 completed! CTE query verified.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 18: Practice Day: Subqueries & CTEs
+// DAY 18: Guided Practice: Advanced Subqueries & CTEs (Mode 2)
 // =============================================================================
 export const DAY_18_MODULE: ModuleData = {
   id: 'day-18',
   slug: 'practice-subqueries-ctes',
   day: 18,
-  title: 'Day 18 — Practice Day: Subqueries & CTEs',
+  title: 'Day 18 — Guided Practice: Advanced Subqueries & CTEs',
   shortTitle: 'Practice: Correlated Subqueries & CTEs',
   type: 'practice_day',
   milestoneId: 'milestone-3',
-  description: 'Write correlated subqueries comparing rows against category averages and build multi-stage CTE aggregations for customer spend tiering.',
+  description: 'Practice writing correlated subqueries, multi-stage CTE aggregations, and refactoring nested subqueries into clean Common Table Expressions.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Write correlated subqueries linking inner and outer table references',
-    'Calculate customer spend in a CTE and query high-value tiers above $150',
+    'Write correlated subqueries linking inner and outer table references with table aliases',
+    'Calculate customer financial spend inside a CTE and extract tier segments',
+    'Refactor nested subqueries into maintainable, staged Common Table Expressions',
   ],
   concepts: [
     {
       id: 'correlated-and-staged-ctes',
       order: 1,
-      title: '1. Correlated Subqueries & Staged CTEs',
+      title: '1. Correlated Subqueries & CTE Refactoring',
       shortDescription: 'Category benchmarks and tiered spend CTEs.',
       theory: {
-        summary: 'A correlated subquery references columns from the outer query (e.g. `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`). It computes a unique benchmark for each row.',
+        summary: 'Reinforce advanced subqueries and CTEs: compare items against localized category averages using correlated subqueries, build tiered analytical customer segments, and refactor nested queries into clean CTEs.',
         introTable: {
           tableName: 'products (p1 vs p2)',
           description: 'Comparing product price against category-specific average',
@@ -626,10 +782,12 @@ export const DAY_18_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          '### 1. Correlated Subquery Pattern',
-          'For each product `p1`, compute the average price of products in that same category `p1.category_id`.',
+          '### 1. Correlated Subquery Scaffolding',
+          'Remember: For each product row `p1`, the inner query runs `SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id`.',
           '### 2. Multi-Stage CTE Reporting',
           '```sql\nWITH CustomerSpend AS (\n  SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent\n  FROM customers c\n  JOIN orders o ON c.customer_id = o.customer_id\n  JOIN order_items oi ON o.order_id = oi.order_id\n  GROUP BY c.customer_id, c.name\n)\nSELECT * FROM CustomerSpend WHERE total_spent > 150 ORDER BY total_spent DESC;\n```',
+          '### 3. CTE Refactoring Pattern',
+          'When queries require multi-step aggregation (e.g. finding customers whose spending exceeds the average customer spend), CTEs allow you to stage the metrics cleanly without deep nesting.',
         ],
         stepBreakdowns: [
           {
@@ -641,9 +799,9 @@ export const DAY_18_MODULE: ModuleData = {
               tableName: 'Above-Category-Average Items',
               columns: ['name', 'price', 'category_id'],
               rows: [
-                ['Ergonomic Desk Chair', 249.00, 3],
-                ['4K UltraHD Monitor (27-inch)', 349.99, 1],
-                ['Thunderbolt 4 Docking Station', 185.00, 1],
+                ['Mechanical Keyboard', 65.00, 1],
+                ['Gaming Headset', 55.00, 1],
+                ['Office Chair', 120.00, 3],
               ],
             },
           },
@@ -673,34 +831,37 @@ export const DAY_18_MODULE: ModuleData = {
             explanation: 'Correlated subqueries depend on values from the outer query row.',
           },
         ],
-        masteryPoints: ['Write correlated subqueries', 'Write staged analytical CTEs'],
+        masteryPoints: ['Write correlated subqueries', 'Write staged analytical CTEs', 'Refactor nested subqueries into CTEs'],
       },
       tasks: [
         {
           id: 'day18-c1-t1',
-          title: 'Task 1: Products Above Category Average',
+          title: 'Task 1 (High Guidance): Products Above Category Average',
           description: 'Find products priced higher than the average price within their own category.',
           instructions: [
-            'Select `name`, `price`, `category_id` from `products p1`.',
-            'Where `price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
+            'Query `products p1`.',
+            'Select `p1.name`, `p1.price`, and `p1.category_id`.',
+            'Where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
             'End with a semicolon (;).',
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
-          solutionSql: 'SELECT name, price, category_id FROM products p1 WHERE price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
+          initialSql: '-- Task 1: High Guidance - Products above category average\nSELECT p1.name, p1.price, p1.category_id\nFROM products p1\nWHERE p1.price > (\n  SELECT AVG(p2.price)\n  FROM products p2\n  WHERE p2.category_id = p1.category_id\n);',
+          solutionSql: 'SELECT p1.name, p1.price, p1.category_id FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
           solutionExplanation: 'Correlated subquery compares each product against its own category average.',
-          hints: [{ level: 1, text: 'Use `WHERE price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
+          hints: [
+            { level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' },
+          ],
           validation: {
             targetTable: 'products',
             requireWhere: true,
             expectedRowCount: 12,
           },
-          successMessage: 'Products above category average found!',
+          successMessage: 'Task 1 completed! Products above category average found.',
         },
         {
           id: 'day18-c1-t2',
-          title: 'Task 2: High Spenders Tier CTE (> $150)',
+          title: 'Task 2 (Partial Guidance): High Spenders Tier CTE (> $150)',
           description: 'Build a CTE named CustomerSpend to calculate total spend per customer, then query customers who spent more than $150.',
           instructions: [
             'Define `WITH CustomerSpend AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name)`.',
@@ -709,26 +870,58 @@ export const DAY_18_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'customers',
           secondaryTables: ['orders', 'order_items'],
-          initialSql: '-- Staged CTE for high-spend tier\n',
+          initialSql: '-- Task 2: Partial Guidance - Staged CTE for high-spend tier\n',
           solutionSql: 'WITH CustomerSpend AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerSpend WHERE total_spent > 150 ORDER BY total_spent DESC;',
           solutionExplanation: 'Calculates customer spend inside CTE and extracts customers above $150.',
-          hints: [{ level: 1, text: 'Use `WHERE total_spent > 150 ORDER BY total_spent DESC;`' }],
+          hints: [
+            { level: 1, text: 'Define the CTE at the top with `WITH CustomerSpend AS (...)`.' },
+            { level: 2, text: 'Query `SELECT * FROM CustomerSpend WHERE total_spent > 150 ORDER BY total_spent DESC;`.' },
+          ],
           validation: {
             targetTable: 'customers',
             expectedRowCount: 2,
           },
-          successMessage: 'Spot on! High-spend customer tier analyzed with CTE.',
+          successMessage: 'Task 2 completed! High-spend customer tier analyzed with CTE.',
+        },
+        {
+          id: 'day18-c1-t3',
+          title: 'Task 3 (Goal Only): CTE Refactoring Challenge',
+          description: 'Create a CTE named HighValueOrders that selects order_id and order_date from orders having status = "delivered", then join it with order_items to sum total revenue per order for delivered orders.',
+          instructions: [
+            'Define `WITH DeliveredOrders AS (SELECT order_id, order_date FROM orders WHERE status = \'delivered\')`.',
+            'Select `d.order_id`, `d.order_date`, `SUM(oi.quantity * oi.unit_price) AS order_total` from `DeliveredOrders d` JOIN `order_items oi` ON `d.order_id = oi.order_id`.',
+            'Group by `d.order_id`, `d.order_date`.',
+            'Order by `order_total DESC`.',
+          ],
+          type: 'independent',
+          primaryTable: 'orders',
+          secondaryTables: ['order_items'],
+          initialSql: '-- Task 3: Goal Only - CTE Refactoring Challenge\n',
+          solutionSql: 'WITH DeliveredOrders AS (SELECT order_id, order_date FROM orders WHERE status = \'delivered\') SELECT d.order_id, d.order_date, SUM(oi.quantity * oi.unit_price) AS order_total FROM DeliveredOrders d JOIN order_items oi ON d.order_id = oi.order_id GROUP BY d.order_id, d.order_date ORDER BY order_total DESC;',
+          solutionExplanation: 'Refactors delivered order filtering into a clean CTE, joined with order items.',
+          hints: [
+            { level: 1, text: 'Stage delivered orders in `WITH DeliveredOrders AS (...)`.' },
+            { level: 2, text: 'Join `DeliveredOrders d` with `order_items oi` on `d.order_id = oi.order_id`.' },
+          ],
+          validation: {
+            targetTable: 'orders',
+            requireJoin: true,
+            requireGroupBy: true,
+            requireOrderBy: [{ column: 'order_total', direction: 'DESC' }],
+            expectedRowCount: 11,
+          },
+          successMessage: 'Task 3 completed! Nested pipeline refactored into a clean CTE.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 18 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 18 CHALLENGE: SUBQUERIES & CTES PIPELINE CHALLENGE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-18-homework',
-    title: 'Day 18 — Practice Day: Subqueries & CTEs (Homework)',
+    title: 'Day 18 — Subqueries & CTEs Pipeline Challenge (Ending Activity)',
     scenario: 'Complete these 2 analytical challenges independently:',
     tasks: [
       {
@@ -736,15 +929,15 @@ export const DAY_18_MODULE: ModuleData = {
         title: 'Task 1: Products priced above their own category average',
         description: 'Products priced above their own category average (correlated subquery).',
         instructions: [
-          'Select `name`, `price` from `products p1` where `price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
+          'Select `p1.name`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
         primaryTable: 'products',
         initialSql: '-- Task 1: Products priced above their own category average\n',
-        solutionSql: 'SELECT name, price FROM products p1 WHERE price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
+        solutionSql: 'SELECT p1.name, p1.price FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
         solutionExplanation: 'Executes a correlated subquery per category.',
-        hints: [{ level: 1, text: 'Use `WHERE price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
+        hints: [{ level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
         validation: {
           targetTable: 'products',
           requireWhere: true,
@@ -2361,51 +2554,55 @@ export const DAY_20_MODULE: ModuleData = {
 };
 
 // =============================================================================
-// DAY 21: Conceptual Session: Indexing, Transactions & Real-World SQL
+// DAY 21: Visual Concept Lab: Performance, Indexing & Safety (Mode 1)
 // =============================================================================
 export const DAY_21_MODULE: ModuleData = {
   id: 'day-21',
   slug: 'indexing-transactions-real-world',
   day: 21,
-  title: 'Day 21 — Conceptual Session: Indexing, Transactions & Real-World SQL',
-  shortTitle: 'Indexing, ACID & ORM vs SQL',
+  title: 'Day 21 — Visual Concept Lab: Performance, Indexing & Safety',
+  shortTitle: 'Performance, Indexing & Safety',
   type: 'conceptual_session',
   milestoneId: 'milestone-3',
-  description: 'Understand B-tree indexing mechanics, read EXPLAIN plans, master ACID transaction guarantees, and understand when ORMs create N+1 performance issues.',
+  description: 'Understand B-tree indexing mechanics, read EXPLAIN query plans, master ACID transaction guarantees, and understand how single relational queries prevent N+1 performance bottlenecks.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Understand how B-Tree indexes speed up lookups (index vs table scan)',
+    'Understand how B-Tree indexes speed up lookups (index scan vs full table scan)',
     'Interpret EXPLAIN query plans (type: ALL vs type: ref/const)',
-    'Explain the ACID transaction model in operational systems',
-    'Recognize ORM pitfalls such as the N+1 query problem',
+    'Explain the ACID transaction model for operational database integrity',
+    'Recognize application pitfalls such as the N+1 query problem and solve them with relational queries',
   ],
   concepts: [
     {
       id: 'indexes-acid-and-explain',
       order: 1,
-      title: '1. B-Trees, EXPLAIN & ACID Guarantees',
-      shortDescription: 'Performance optimization and transaction safety.',
+      title: '1. B-Trees, EXPLAIN & Operational Query Efficiency',
+      shortDescription: 'Performance optimization and query safety.',
       theory: {
-        summary: 'An index is a B-tree data structure that allows the database to find rows in $O(\\log N)$ time rather than scanning every row ($O(N)$). Using `EXPLAIN` reveals whether a query performs a fast index lookup (`type: const` / `ref`) or an expensive full table scan (`type: ALL`).',
+        summary: 'An index is a B-tree data structure that allows the database to find rows in logarithmic time rather than scanning every row sequentially. Using `EXPLAIN` reveals whether a query performs a fast index lookup (`type: const` / `ref`) or an expensive full table scan (`type: ALL`).',
         introTable: {
           tableName: 'products (Indexed on price)',
           description: 'B-Tree index structure visualization',
           columns: ['B-Tree Key (price)', 'Row Pointer', 'product_name'],
           rows: [
-            ['$12.50', 'Row 3', 'USB-C Cable (2m)'],
-            ['$25.00', 'Row 1', 'Wireless Mouse'],
-            ['$89.99', 'Row 2', 'Mechanical Keyboard'],
+            ['$4.99', 'Row 28', 'Miscellaneous Clearance Item'],
+            ['$15.99', 'Row 1', 'Wireless Mouse'],
+            ['$65.00', 'Row 4', 'Mechanical Keyboard'],
+            ['$120.00', 'Row 14', 'Office Chair'],
           ],
         },
         explanation: [
           '### 1. B-Tree Index Analogy',
-          'Think of the index at the back of a textbook: instead of reading all 500 pages (Table Scan), you look up "PostgreSQL" on page 501 and jump straight to page 142.',
+          'Think of the index at the back of a textbook: instead of reading all 500 pages (Table Scan), you look up "PostgreSQL" on page 501 and jump directly to page 142.',
           '### 2. ACID Properties',
-          '• **Atomicity**: All operations succeed, or all are rolled back.',
+          '• **Atomicity**: All operations in a transaction succeed, or all are completely rolled back.',
           '• **Consistency**: Database transitions only between valid constraint states.',
-          '• **Isolation**: Concurrent transactions do not corrupt each other.',
-          '• **Durability**: Committed data survives power failure.',
-          'QUESTION_BLOCK::ORM vs Raw SQL::ORMs (like Prisma/Drizzle) are convenient, but careless loops cause N+1 query disasters (1 query to get 50 orders, plus 50 separate queries to get each order\'s items). A single SQL JOIN solves this in 1 fast query.',
+          '• **Isolation**: Concurrent transactions do not corrupt or interfere with each other.',
+          '• **Durability**: Committed transactions are permanently saved and survive system reboots.',
+          '### 3. Application Efficiency (N+1 Problem vs Single Relational Query)',
+          '• **Approach A (Loop of queries)**: 1 query to get 50 orders, plus 50 separate round-trip queries to get line items (51 network requests).',
+          '• **Approach B (Single SQL JOIN)**: 1 well-designed relational query fetching all data in a single network round trip.',
+          'QUESTION_BLOCK::Efficiency Principle::Reducing unnecessary database round trips can significantly improve performance across production backend applications.',
         ],
         stepBreakdowns: [
           {
@@ -2417,7 +2614,7 @@ export const DAY_21_MODULE: ModuleData = {
               tableName: 'EXPLAIN Output',
               columns: ['id', 'select_type', 'table', 'type', 'rows', 'Extra'],
               rows: [
-                [1, 'SIMPLE', 'products', 'ALL', 20, 'Using where'],
+                [1, 'SIMPLE', 'products', 'ALL', 28, 'Using where'],
               ],
             },
           },
@@ -2425,21 +2622,21 @@ export const DAY_21_MODULE: ModuleData = {
         syntaxBlocks: [
           {
             title: 'Query plan inspection and indexing',
-            sql: '-- Inspect query execution plan\nEXPLAIN SELECT * FROM products WHERE price > 100;\n\n-- Create index on frequently filtered column\nCREATE INDEX idx_products_price ON products(price);',
+            sql: '-- Inspect query execution plan\nEXPLAIN SELECT * FROM products WHERE price > 50;\n\n-- Create index on frequently filtered column\nCREATE INDEX idx_products_price ON products(price);',
             description: 'EXPLAIN output inspection and index creation.',
           },
         ],
-        keyTakeaway: 'Indexes convert slow table scans into fast logarithmic searches; EXPLAIN shows you what the database is doing.',
+        keyTakeaway: 'Indexes convert slow table scans into fast logarithmic lookups; EXPLAIN reveals how the database executes your SQL.',
         exampleQuery: 'EXPLAIN SELECT * FROM products WHERE supplier_id = 1;',
         exampleQueryExplanation: 'Inspects execution plan for supplier_id lookup.',
         liveDemoSql: 'EXPLAIN SELECT * FROM products WHERE supplier_id = 1;',
         liveDemoNotes: 'Displays query execution plan.',
         mcqs: [
           {
-            question: 'In MySQL EXPLAIN output, what does `type: ALL` indicate?',
+            question: 'In database EXPLAIN output, what does `type: ALL` indicate?',
             options: [
               'A. All indexes were utilized',
-              'B. A full table scan occurred, checking every row in the table',
+              'B. A full table scan occurred, sequentially checking every row in the table',
               'C. The query ran in 0 milliseconds',
               'D. All columns were indexed',
             ],
@@ -2447,12 +2644,12 @@ export const DAY_21_MODULE: ModuleData = {
             explanation: '`type: ALL` signifies a full table scan without index acceleration.',
           },
         ],
-        masteryPoints: ['Read EXPLAIN plans', 'Explain ACID transaction properties', 'Identify N+1 query patterns'],
+        masteryPoints: ['Read EXPLAIN plans', 'Explain ACID transaction properties', 'Identify N+1 query patterns and solve them with JOINs'],
       },
       tasks: [
         {
           id: 'day21-c1-t1',
-          title: 'Task 1: Inspect Query Execution with EXPLAIN',
+          title: 'Task 1 (Guided): Inspect Query Execution with EXPLAIN',
           description: 'Run EXPLAIN on a filtered query on the `products` table.',
           instructions: [
             'Run `EXPLAIN SELECT * FROM products WHERE price > 50;`.',
@@ -2460,19 +2657,19 @@ export const DAY_21_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Task 1: Inspect query execution plan\nEXPLAIN SELECT * FROM products WHERE price > 50;\n',
           solutionSql: 'EXPLAIN SELECT * FROM products WHERE price > 50;',
-          solutionExplanation: 'Inspects the query execution plan.',
+          solutionExplanation: 'Inspects the query execution plan for a price filter.',
           hints: [{ level: 1, text: 'Use `EXPLAIN SELECT * FROM products WHERE price > 50;`' }],
           validation: {
             targetTable: 'products',
             expectedRowCount: 1,
           },
-          successMessage: 'EXPLAIN plan analyzed!',
+          successMessage: 'Task 1 completed! EXPLAIN plan analyzed.',
         },
         {
           id: 'day21-c1-t2',
-          title: 'Task 2: Supplier Lookup Plan Inspection',
+          title: 'Task 2 (Independent): Supplier Lookup Plan Inspection',
           description: 'Inspect the query execution plan for finding products from supplier_id = 2.',
           instructions: [
             'Run `EXPLAIN SELECT * FROM products WHERE supplier_id = 2;`.',
@@ -2488,23 +2685,23 @@ export const DAY_21_MODULE: ModuleData = {
             targetTable: 'products',
             expectedRowCount: 1,
           },
-          successMessage: 'Spot on! Execution plan generated.',
+          successMessage: 'Task 2 completed! Execution plan generated.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 21 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 21 CHALLENGE: PERFORMANCE & INDEXING LAB (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-21-homework',
-    title: 'Day 21 — Conceptual Session: Indexing & ACID (Homework)',
+    title: 'Day 21 — Performance & Indexing Lab (Ending Activity)',
     scenario: 'Demonstrate your understanding of indexing and query plans:',
     tasks: [
       {
         id: 'day21-hw-1',
-        title: 'Task 1: Run EXPLAIN on a product query',
+        title: 'Task 1: Run EXPLAIN on a product supplier query',
         description: 'Run EXPLAIN on `SELECT * FROM products WHERE supplier_id = 2;`.',
         instructions: [
           'Run `EXPLAIN SELECT * FROM products WHERE supplier_id = 2;`.',
@@ -2512,7 +2709,7 @@ export const DAY_21_MODULE: ModuleData = {
         ],
         type: 'challenge',
         primaryTable: 'products',
-        initialSql: '-- Task 1: Run EXPLAIN on supplier query\n',
+        initialSql: '-- Challenge: Run EXPLAIN on supplier query\n',
         solutionSql: 'EXPLAIN SELECT * FROM products WHERE supplier_id = 2;',
         solutionExplanation: 'Inspects index usage for supplier_id lookup.',
         hints: [{ level: 1, text: 'Use `EXPLAIN SELECT * FROM products WHERE supplier_id = 2;`' }],
@@ -2520,52 +2717,54 @@ export const DAY_21_MODULE: ModuleData = {
           targetTable: 'products',
           expectedRowCount: 1,
         },
-        successMessage: 'Task 1 completed! Query plan verified.',
+        successMessage: 'Challenge completed! Query execution plan verified.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 22: Project Part 3: Full-Stack Integration Queries
+// DAY 22: Applied Project: Full-Stack Backend Integration Queries (Mode 4)
 // =============================================================================
 export const DAY_22_MODULE: ModuleData = {
   id: 'day-22',
   slug: 'project-part-3-integration-queries',
   day: 22,
-  title: 'Day 22 — Project Part 3: Full-Stack Integration Queries',
-  shortTitle: 'Project Part 3: Full-Stack Queries',
+  title: 'Day 22 — Applied Project: Full-Stack Backend Integration Queries',
+  shortTitle: 'Project: Backend API Queries',
   type: 'project_part',
   milestoneId: 'milestone-3',
-  description: 'Write production-ready full-stack backend queries: Product Detail Page view, placing orders atomically, and multi-metric executive dashboard KPI summaries.',
+  description: 'As a Backend API Engineer, write production-ready integration queries: product detail view payload, customer profile order history, and executive dashboard KPIs in single round trips.',
   estimatedMinutes: 120,
   completionLearnings: [
-    'Build a complete Product Detail Page query joining 4 entities',
-    'Structure atomic order placement workflows',
-    'Generate single-query executive KPI dashboard metrics',
+    'Build a single-payload Product Detail Page query joining products, categories, and suppliers',
+    'Hydrate customer profile screens with distinct order counts and monetary spend',
+    'Generate single-query executive KPI dashboard metrics to eliminate API round-trip latency',
   ],
   concepts: [
     {
       id: 'full-stack-query-patterns',
       order: 1,
       title: '1. Production Backend API Query Patterns',
-      shortDescription: 'Product detail pages, order placement, and executive KPIs.',
+      shortDescription: 'Product detail pages, customer profiles, and executive KPIs.',
       theory: {
-        summary: 'In real full-stack web applications, backend route handlers issue rich SQL queries to hydrate entire UI screens in a single database round trip.',
+        summary: 'In real full-stack web applications, backend route handlers issue rich SQL queries to hydrate entire UI screens in a single database round trip, avoiding chatty network calls.',
         introTable: {
           tableName: 'products & categories & suppliers',
           description: 'Data sources for single-payload Product Detail View',
           columns: ['p.name', 'p.price', 'c.name (Category)', 's.name (Supplier)'],
           rows: [
-            ['Wireless Mouse', 25.00, 'Electronics', 'Dhaka Tech Supplies'],
-            ['Mechanical Keyboard', 89.99, 'Electronics', 'Dhaka Tech Supplies'],
+            ['Wireless Mouse', 15.99, 'Accessories', 'LogiTech Direct'],
+            ['Mechanical Keyboard', 65.00, 'Electronics', 'KeyChron Components'],
           ],
         },
         explanation: [
-          '### 1. Product Detail Page Query',
-          'Joins product, category, and supplier into a single comprehensive record.',
-          '### 2. Executive Dashboard KPI Query',
-          'Aggregates total revenue, order count, and customer metrics.',
+          '### 1. The Single-Payload Product Detail View (`GET /api/products/:id`)',
+          'Instead of 3 separate queries, join `products` $\\rightarrow$ `categories` $\\rightarrow$ `suppliers` in one query.',
+          '### 2. The Customer Profile Endpoint (`GET /api/customers/:id`)',
+          'Combines customer attributes with distinct order counts and lifetime spend totals.',
+          '### 3. The Executive Dashboard KPI Endpoint (`GET /api/admin/dashboard`)',
+          'Aggregates total distinct orders and grand total revenue in a single pass.',
         ],
         stepBreakdowns: [
           {
@@ -2577,7 +2776,7 @@ export const DAY_22_MODULE: ModuleData = {
               tableName: 'Hydrated View Payload',
               columns: ['product_id', 'name', 'price', 'category_name', 'supplier_name'],
               rows: [
-                [1, 'Wireless Mouse', 25.00, 'Electronics', 'Dhaka Tech Supplies'],
+                [1, 'Wireless Mouse', 15.99, 'Accessories', 'LogiTech Direct'],
               ],
             },
           },
@@ -2596,7 +2795,7 @@ export const DAY_22_MODULE: ModuleData = {
         liveDemoNotes: 'Displays product detail payload.',
         mcqs: [
           {
-            question: 'Why is it preferable to fetch all product page details in a single joined query rather than 4 separate queries?',
+            question: 'Why is it preferable to fetch all product page details in a single joined query rather than multiple separate queries?',
             options: [
               'A. It minimizes network latency and round trips between backend API and database',
               'B. SQL only allows 1 query per hour',
@@ -2612,7 +2811,7 @@ export const DAY_22_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day22-c1-t1',
-          title: 'Task 1: Product Detail Page Query',
+          title: 'Mission 1 (Guided): Product Detail View Endpoint Query',
           description: 'Retrieve product information with category name and supplier name for `product_id = 1`.',
           instructions: [
             'Select `p.product_id`, `p.name`, `p.price`, `c.name AS category_name`, `s.name AS supplier_name` from `products p` JOIN `categories c` ON `p.category_id = c.category_id` JOIN `suppliers s` ON `p.supplier_id = s.supplier_id` WHERE `p.product_id = 1`.',
@@ -2621,9 +2820,9 @@ export const DAY_22_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'products',
           secondaryTables: ['categories', 'suppliers'],
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Mission 1: Product detail page query\n',
           solutionSql: 'SELECT p.product_id, p.name, p.price, c.name AS category_name, s.name AS supplier_name FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.product_id = 1;',
-          solutionExplanation: 'Hydrates the product detail view across 3 joined tables.',
+          solutionExplanation: 'Hydrates the product detail view across 3 joined tables in one round trip.',
           hints: [{ level: 1, text: 'Use `WHERE p.product_id = 1;`' }],
           validation: {
             targetTable: 'products',
@@ -2631,11 +2830,11 @@ export const DAY_22_MODULE: ModuleData = {
             requireWhere: true,
             expectedRowCount: 1,
           },
-          successMessage: 'Product detail query verified!',
+          successMessage: 'Mission 1 complete! Product detail endpoint query verified.',
         },
         {
           id: 'day22-c1-t2',
-          title: 'Task 2: Executive Dashboard Summary Query',
+          title: 'Mission 2 (Independent): Executive Dashboard KPI Summary Query',
           description: 'Calculate overall total distinct orders and grand total revenue in a single query.',
           instructions: [
             'Query `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
@@ -2646,31 +2845,31 @@ export const DAY_22_MODULE: ModuleData = {
           secondaryTables: ['order_items'],
           initialSql: '-- Executive dashboard summary\n',
           solutionSql: 'SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;',
-          solutionExplanation: 'Calculates high-level executive KPI metrics.',
+          solutionExplanation: 'Calculates high-level executive KPI metrics in a single pass.',
           hints: [{ level: 1, text: 'Use `SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;`' }],
           validation: {
             targetTable: 'orders',
             requireJoin: true,
             expectedRowCount: 1,
           },
-          successMessage: 'Spot on! Dashboard metrics calculated.',
+          successMessage: 'Mission 2 complete! Executive dashboard KPI query verified.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 22 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 22 CHALLENGE: DELIVER THE BACKEND API ENDPOINT QUERY SUITE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-22-homework',
-    title: 'Day 22 — Project Part 3: Integration Queries (Homework)',
-    scenario: 'Construct the backend integration queries:',
+    title: 'Day 22 — Deliver the Backend API Endpoint Query Suite (Ending Activity)',
+    scenario: 'Construct the production backend integration queries independently:',
     tasks: [
       {
         id: 'day22-hw-1',
-        title: 'Task 1: "Get Product Detail Page" query',
-        description: '"Get Product Detail Page": product info + category name + supplier name for product 1.',
+        title: 'Endpoint 1: "Get Product Detail Page" Query',
+        description: 'Product info + category name + supplier name for product 1.',
         instructions: [
           'Select `p.product_id`, `p.name`, `p.price`, `c.name AS category_name`, `s.name AS supplier_name` from `products p` JOIN `categories c` ON `p.category_id = c.category_id` JOIN `suppliers s` ON `p.supplier_id = s.supplier_id` WHERE `p.product_id = 1`.',
           'End with a semicolon (;).',
@@ -2678,7 +2877,7 @@ export const DAY_22_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'products',
         secondaryTables: ['categories', 'suppliers'],
-        initialSql: '-- Task 1: Product Detail Page query\n',
+        initialSql: '-- Endpoint 1: Product Detail Page query\n',
         solutionSql: 'SELECT p.product_id, p.name, p.price, c.name AS category_name, s.name AS supplier_name FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.product_id = 1;',
         solutionExplanation: 'Multi-table join hydrating the full product page payload.',
         hints: [{ level: 1, text: 'Use `WHERE p.product_id = 1;`' }],
@@ -2688,12 +2887,12 @@ export const DAY_22_MODULE: ModuleData = {
           requireWhere: true,
           expectedRowCount: 1,
         },
-        successMessage: 'Task 1 completed! Product detail page query verified.',
+        successMessage: 'Endpoint 1 verified! Product detail query active.',
       },
       {
         id: 'day22-hw-2',
-        title: 'Task 2: "Dashboard KPI Query" (Total Revenue and Total Orders)',
-        description: 'Dashboard KPI query: calculate total revenue and total order count.',
+        title: 'Endpoint 2: "Executive Dashboard KPI Query" (Revenue & Orders)',
+        description: 'Calculate grand total revenue and total distinct order count in a single query.',
         instructions: [
           'Select `COUNT(DISTINCT o.order_id) AS total_orders`, `SUM(oi.quantity * oi.unit_price) AS total_revenue` from `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
           'End with a semicolon (;).',
@@ -2701,7 +2900,7 @@ export const DAY_22_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'orders',
         secondaryTables: ['order_items'],
-        initialSql: '-- Task 2: Dashboard KPI Query\n',
+        initialSql: '-- Endpoint 2: Executive Dashboard KPI Query\n',
         solutionSql: 'SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;',
         solutionExplanation: 'Computes high-level KPI metrics in a single query.',
         hints: [{ level: 1, text: 'Use `SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;`' }],
@@ -2710,132 +2909,116 @@ export const DAY_22_MODULE: ModuleData = {
           requireJoin: true,
           expectedRowCount: 1,
         },
-        successMessage: 'Task 2 completed! Executive KPI metrics verified.',
+        successMessage: 'Endpoint 2 verified! Executive KPI summary verified.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 23: Project Part 4: Polish, Edge Cases & Performance
+// DAY 23: Debugging Lab & Project Polish: Zero-State Hardening (Mode 3/4)
 // =============================================================================
 export const DAY_23_MODULE: ModuleData = {
   id: 'day-23',
   slug: 'project-part-4-edge-cases-performance',
   day: 23,
-  title: 'Day 23 — Project Part 4: Polish, Edge Cases & Performance',
-  shortTitle: 'Project Part 4: Edge Cases & Performance',
+  title: 'Day 23 — Debugging Lab & Polish: Zero-State Hardening & Edge Cases',
+  shortTitle: 'Debug: Zero-State Hardening',
   type: 'project_part',
   milestoneId: 'milestone-3',
-  description: 'Audit query execution with EXPLAIN, handle zero-value edge cases with LEFT JOIN and COALESCE, and create targeted indexes for high-traffic query paths.',
+  description: 'Harden production queries against zero-state edge cases: preserve inactive customers and unpurchased products using LEFT JOIN and understand when COALESCE is needed for SUM aggregates.',
   estimatedMinutes: 90,
   completionLearnings: [
-    'Audit query execution plans using EXPLAIN to spot table scans',
-    'Handle 0-review and 0-order edge cases using LEFT JOIN and COALESCE',
-    'Create composite and single-column indexes on high-frequency filters',
+    'Handle 0-order customer edge cases using LEFT JOIN so inactive accounts remain in audits',
+    'Understand COUNT() natural 0-behavior vs SUM() NULL-behavior and when to use COALESCE(SUM(...), 0)',
+    'Harden analytical reporting pipelines against zero-record edge cases across the canonical 6-table schema',
   ],
   concepts: [
     {
       id: 'performance-and-edge-cases',
       order: 1,
-      title: '1. Edge Case Handling & Index Optimization',
-      shortDescription: 'COALESCE, LEFT JOIN, and performance indexing.',
+      title: '1. Zero-State Hardening & NULL-Safe Aggregates',
+      shortDescription: 'LEFT JOIN, COUNT natural 0s, and COALESCE with SUM.',
       theory: {
-        summary: 'Production queries must handle edge cases gracefully: products with 0 reviews must display 0 rather than vanishing, and high-frequency search columns must have indexes.',
+        summary: 'Production queries must handle zero-state edge cases gracefully: customers with 0 orders and products never ordered must not vanish from business reports. We master LEFT JOIN and understand the crucial difference between COUNT() and SUM() NULL behavior.',
         introTable: {
-          tableName: 'products & reviews (with Nulls)',
-          description: 'Catalog items with and without reviews',
-          columns: ['p.name', 'r.rating', 'COALESCE(r.rating, 0)'],
+          tableName: 'customers & orders (Canonical Schema)',
+          description: 'Customer records with and without orders',
+          columns: ['c.name', 'COUNT(o.order_id)', 'SUM(quantity * unit_price)'],
           rows: [
-            ['Wireless Mouse', 5, 5],
-            ['Ergonomic Desk Chair', null, 0],
+            ['Rafiul Islam', 2, 262.48],
+            ['Arif Chowdhury (0 orders)', 0, 'NULL -> COALESCE(..., 0) = $0.00'],
           ],
         },
         explanation: [
-          '### 1. Graceful Edge Case Handling with COALESCE',
-          '`COALESCE(AVG(r.rating), 0)` ensures that if a product has no reviews, the rating displays as 0.0 instead of NULL.',
-          '### 2. Index Creation',
-          '`CREATE INDEX idx_orders_customer_id ON orders(customer_id);` ensures instant lookups during customer history queries.',
+          '### 1. COUNT() vs SUM() Zero-State Rule',
+          '• **`COUNT(o.order_id)`**: Naturally returns **`0`** when no matching rows exist in a `LEFT JOIN`. You do **NOT** need `COALESCE(COUNT(...), 0)`.',
+          '• **`SUM(oi.quantity)`**: Returns **`NULL`** when there are no matching rows to sum. You **MUST** use `COALESCE(SUM(oi.quantity), 0)` to display `0`.',
+          '### 2. Preserving Zero-Order Customers',
+          '`SELECT c.customer_id, c.name, COUNT(o.order_id) AS order_count FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`',
+          'QUESTION_BLOCK::Zero-State Rule::INNER JOIN silently drops inactive entities (e.g. customers with 0 orders). Always use LEFT JOIN when reporting rosters require 100% entity coverage.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Preserving Zero-Review Products with LEFT JOIN',
-            sqlSnippet: 'SELECT p.product_id, p.name, COUNT(r.review_id) AS review_count\nFROM products p\nLEFT JOIN reviews r ON p.product_id = r.product_id\nGROUP BY p.product_id, p.name;',
-            explanation: 'Preserves all 20 catalog products regardless of review counts.',
+            stepTitle: 'Step 1: Preserving Inactive Customers with LEFT JOIN',
+            sqlSnippet: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS order_count\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;',
+            explanation: 'Preserves all 15 customers including zero-order accounts.',
             tableData: {
-              tableName: 'Zero-Safe Review Counts',
-              columns: ['product_id', 'name', 'review_count'],
+              tableName: 'Zero-Safe Customer Order Volume',
+              columns: ['customer_id', 'name', 'order_count'],
               rows: [
-                [1, 'Wireless Mouse', 2],
-                [4, 'Ergonomic Desk Chair', 0],
-                [6, '4K UltraHD Monitor (27-inch)', 0],
+                [1, 'Rafiul Islam', 2],
+                [13, 'Arif Chowdhury', 0],
+                [14, 'Nadia Islam', 0],
               ],
             },
           },
         ],
         syntaxBlocks: [
           {
-            title: 'Robust edge-case query',
-            sql: 'SELECT p.product_id, p.name,\n       COALESCE(COUNT(r.review_id), 0) AS review_count,\n       COALESCE(AVG(r.rating), 0) AS avg_rating\nFROM products p\nLEFT JOIN reviews r ON p.product_id = r.product_id\nGROUP BY p.product_id, p.name;',
-            description: 'Preserves unreviewed products with clean 0 defaults.',
+            title: 'Null-safe aggregate query',
+            sql: 'SELECT p.product_id, p.name,\n       COUNT(oi.order_item_id) AS times_ordered,\n       COALESCE(SUM(oi.quantity), 0) AS total_units_sold\nFROM products p\nLEFT JOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.product_id, p.name;',
+            description: 'Preserves unpurchased products with clean zero counts and COALESCE(SUM, 0).',
           },
         ],
-        keyTakeaway: 'Use LEFT JOIN with COALESCE to prevent zero-state records from vanishing.',
-        exampleQuery: 'SELECT p.name, COALESCE(COUNT(r.review_id), 0) AS reviews FROM products p LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;',
-        exampleQueryExplanation: 'Lists all products with safe review counts.',
-        liveDemoSql: 'SELECT p.name, COALESCE(COUNT(r.review_id), 0) AS reviews FROM products p LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name LIMIT 5;',
-        liveDemoNotes: 'Displays products with 0 reviews preserved.',
+        keyTakeaway: 'Use LEFT JOIN to preserve zero-activity entities, and use COALESCE(SUM(...), 0) for null-safe financial totals.',
+        exampleQuery: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;',
+        exampleQueryExplanation: 'Lists all customers with zero-order accounts preserved.',
+        liveDemoSql: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name LIMIT 5;',
+        liveDemoNotes: 'Displays customer order volume with 0s preserved.',
         mcqs: [
           {
-            question: 'What does `COALESCE(value, 0)` do when `value` is NULL?',
-            options: ['A. Throws an error', 'B. Returns 0', 'C. Returns NULL', 'D. Deletes the row'],
-            correctIndex: 1,
-            explanation: 'COALESCE returns the first non-null argument in its list.',
+            question: 'Why does `SUM()` need `COALESCE(SUM(...), 0)` while `COUNT()` does not in a LEFT JOIN when 0 rows match?',
+            options: [
+              'A. Because COUNT() naturally counts 0 non-null values, while SUM() over an empty set evaluates to NULL',
+              'B. Because SUM only works on integers',
+              'C. Because COUNT is an ORM keyword',
+              'D. Because SQL deletes null counts',
+            ],
+            correctIndex: 0,
+            explanation: 'COUNT(col) returns 0 when all values are NULL, whereas SUM(col) returns NULL.',
           },
         ],
-        masteryPoints: ['Use COALESCE for null-safety', 'Design targeted indexes'],
+        masteryPoints: ['Use LEFT JOIN for zero-state preservation', 'Apply COALESCE(SUM(...), 0) appropriately'],
       },
       tasks: [
         {
           id: 'day23-c1-t1',
-          title: 'Task 1: Null-Safe Product Review Summary',
-          description: 'List all products with review count, using LEFT JOIN so products with 0 reviews remain in the list.',
-          instructions: [
-            'Select `p.product_id`, `p.name`, `COUNT(r.review_id) AS review_count` from `products p` LEFT JOIN `reviews r` ON `p.product_id = r.product_id`.',
-            'Group by `p.product_id`, `p.name`.',
-            'End with a semicolon (;).',
-          ],
-          type: 'guided',
-          primaryTable: 'products',
-          secondaryTables: ['reviews'],
-          initialSql: '-- Write your SQL query here\n',
-          solutionSql: 'SELECT p.product_id, p.name, COUNT(r.review_id) AS review_count FROM products p LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;',
-          solutionExplanation: 'LEFT JOIN keeps all products with 0 review counts.',
-          hints: [{ level: 1, text: 'Use `LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;`' }],
-          validation: {
-            targetTable: 'products',
-            requireJoin: true,
-            requireGroupBy: true,
-            expectedRowCount: 28,
-          },
-          successMessage: 'Null-safe review report verified!',
-        },
-        {
-          id: 'day23-c1-t2',
-          title: 'Task 2: Customer Order Volume Audit',
+          title: 'Task 1 (Guided Fix): Customer Order Volume Audit',
           description: 'List all customers with their order count, using LEFT JOIN so customers with 0 orders are preserved.',
           instructions: [
             'Query `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`.',
-            'Select `c.customer_id`, `c.name`, and `COALESCE(COUNT(o.order_id), 0) AS total_orders`.',
+            'Select `c.customer_id`, `c.name`, and `COUNT(o.order_id) AS total_orders`.',
             'Group by `c.customer_id`, `c.name`.',
+            'End with a semicolon (;).',
           ],
-          type: 'independent',
+          type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders'],
-          initialSql: '-- Null-safe customer order audit\n',
-          solutionSql: 'SELECT c.customer_id, c.name, COALESCE(COUNT(o.order_id), 0) AS total_orders FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;',
-          solutionExplanation: 'Preserves all customers with LEFT JOIN and COALESCE.',
+          initialSql: '-- Null-safe customer order audit\nSELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;',
+          solutionSql: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;',
+          solutionExplanation: 'Preserves all 15 customers with clean 0 counts for inactive accounts.',
           hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],
           validation: {
             targetTable: 'customers',
@@ -2843,92 +3026,114 @@ export const DAY_23_MODULE: ModuleData = {
             requireGroupBy: true,
             expectedRowCount: 15,
           },
-          successMessage: 'Spot on! All customer records preserved with clean zero counts.',
+          successMessage: 'Task 1 completed! All customer accounts preserved with accurate zero counts.',
+        },
+        {
+          id: 'day23-c1-t2',
+          title: 'Task 2 (Transfer): Catalog Sales Volume Audit with COALESCE',
+          description: 'List all products with total units sold using LEFT JOIN and COALESCE(SUM(oi.quantity), 0) so unpurchased products show 0 units.',
+          instructions: [
+            'Query `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
+            'Select `p.product_id`, `p.name`, and `COALESCE(SUM(oi.quantity), 0) AS total_units_sold`.',
+            'Group by `p.product_id`, `p.name`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          secondaryTables: ['order_items'],
+          initialSql: '-- Catalog sales volume with COALESCE\n',
+          solutionSql: 'SELECT p.product_id, p.name, COALESCE(SUM(oi.quantity), 0) AS total_units_sold FROM products p LEFT JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.product_id, p.name;',
+          solutionExplanation: 'Preserves all 28 products with null-safe COALESCE on SUM.',
+          hints: [{ level: 1, text: 'Use `COALESCE(SUM(oi.quantity), 0) AS total_units_sold`' }],
+          validation: {
+            targetTable: 'products',
+            requireJoin: true,
+            requireGroupBy: true,
+            expectedRowCount: 28,
+          },
+          successMessage: 'Task 2 completed! Catalog sales audit hardened against NULL sums.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 23 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 23 CHALLENGE: ZERO-STATE HARDENING CHALLENGE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-23-homework',
-    title: 'Day 23 — Project Part 4: Edge Cases (Homework)',
-    scenario: 'Handle edge cases and create database indexes:',
+    title: 'Day 23 — Zero-State Hardening Challenge (Ending Activity)',
+    scenario: 'Harden analytical reporting queries against zero-state edge cases:',
     tasks: [
       {
         id: 'day23-hw-1',
-        title: 'Task 1: Handle edge cases: products with 0 reviews (LEFT JOIN)',
-        description: 'Products with 0 reviews (should show 0, not disappear — LEFT JOIN).',
+        title: 'Task 1: Customer order roster with 0-order preservation',
+        description: 'Customer order roster preserving all customers (LEFT JOIN).',
         instructions: [
-          'Select `p.product_id`, `p.name`, `COUNT(r.review_id) AS total_reviews` from `products p` LEFT JOIN `reviews r` ON `p.product_id = r.product_id` GROUP BY `p.product_id`, `p.name`.',
+          'Select `c.customer_id`, `c.name`, `COUNT(o.order_id) AS total_orders` from `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id` GROUP BY `c.customer_id`, `c.name`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
-        primaryTable: 'products',
-        secondaryTables: ['reviews'],
-        initialSql: '-- Task 1: Handle 0-review edge case with LEFT JOIN\n',
-        solutionSql: 'SELECT p.product_id, p.name, COUNT(r.review_id) AS total_reviews FROM products p LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;',
-        solutionExplanation: 'Preserves all products using LEFT JOIN and counts reviews accurately.',
-        hints: [{ level: 1, text: 'Use `LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;`' }],
+        primaryTable: 'customers',
+        secondaryTables: ['orders'],
+        initialSql: '-- Challenge: Customer order audit with 0-order preservation\n',
+        solutionSql: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;',
+        solutionExplanation: 'Preserves all customer accounts using LEFT JOIN.',
+        hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],
         validation: {
-          targetTable: 'products',
+          targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,
-          expectedRowCount: 28,
+          expectedRowCount: 15,
         },
-        successMessage: 'Task 1 completed! Zero-review edge cases handled.',
+        successMessage: 'Challenge completed! Zero-order accounts preserved.',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 24: Milestone Assignment 3: Comprehensive Final Assessment
+// DAY 24: Milestone 3: Comprehensive Final Assessment (Mode 5)
 // =============================================================================
 export const DAY_24_MODULE: ModuleData = {
   id: 'day-24',
   slug: 'milestone-3-final-assessment',
   day: 24,
-  title: 'Day 24 — Milestone Assignment 3: Comprehensive Final Assessment',
+  title: 'Day 24 — Milestone 3: Comprehensive Final Assessment',
   shortTitle: 'Milestone 3 Final Assessment',
   type: 'assignment',
   milestoneId: 'milestone-3',
-  description: 'Comprehensive capstone assessment covering advanced multi-table CTEs, correlated benchmarks, safe data mutations, schema alterations, and query optimization.',
+  description: 'Comprehensive capstone assessment covering advanced multi-table CTEs, correlated subqueries, schema DDL modifications, index creation, and DML data integrity.',
   estimatedMinutes: 120,
   completionLearnings: [
-    'Write top-category revenue rankings with CTEs and multi-table joins',
-    'Calculate correlated customer spend benchmarks against table-wide averages',
-    'Safely update inventory stock batches',
-    'Alter tables and add column defaults',
-    'Identify slow queries and write CREATE INDEX fixes',
+    'Write top-category revenue rankings with multi-table joins',
+    'Calculate correlated customer spend benchmarks using Common Table Expressions',
+    'Execute schema DDL alterations (ALTER TABLE with column defaults)',
+    'Create targeted performance B-tree indexes for query optimization',
   ],
   concepts: [
     {
       id: 'capstone-evaluation',
       order: 1,
-      title: '1. Milestone 3 Capstone Evaluation',
-      shortDescription: 'Final comprehensive SQL certification assessment.',
+      title: '1. Milestone 3 Capstone Skill Verification',
+      shortDescription: 'Final comprehensive SQL certification assessment across all 24 days.',
       theory: {
-        summary: 'Milestone 3 Capstone: "Can write advanced multi-table CTEs, correlated subqueries, manage schema and mutations safely, and optimize execution with indexes."',
+        summary: 'Milestone 3 Capstone: Prove full database engineering proficiency across multi-table JOINs, subqueries, Common Table Expressions, schema architecture, and query optimization.',
         introTable: {
           tableName: 'categories & products & order_items',
           description: 'Multi-table revenue aggregation pipeline',
           columns: ['cat.name', 'p.name', 'oi.quantity', 'oi.unit_price'],
           rows: [
-            ['Electronics', 'Wireless Mouse', 2, 25.00],
-            ['Electronics', 'Mechanical Keyboard', 1, 89.99],
-            ['Office Furniture', 'Ergonomic Desk Chair', 1, 249.00],
+            ['Electronics', 'Wireless Mouse', 2, 15.99],
+            ['Electronics', 'Mechanical Keyboard', 1, 65.00],
+            ['Office Furniture', 'Office Chair', 1, 120.00],
           ],
         },
         explanation: [
           '### 1. Final Assessment Deliverables',
-          '1. **Complex Retrieval**: Top categories by revenue with product count and order value.',
-          '2. **Correlated / CTE Query**: Customers whose average order spend exceeds the overall average.',
-          '3. **Safe Mutation**: Stock level adjustments.',
-          '4. **Schema Modification**: Adding status column with default.',
-          '5. **Optimization**: Index creation for query acceleration.',
+          '• **Deliverable 1 (Complex Retrieval)**: Top 3 product categories by total sales revenue.',
+          '• **Deliverable 2 (CTE Analysis)**: Customers with above-average total spending.',
+          '• **Deliverable 3 (Schema DDL)**: Add a `status` column with a default value to `products`.',
+          '• **Deliverable 4 (Index DDL)**: Create an index on `orders(customer_id)` for lookup acceleration.',
         ],
         stepBreakdowns: [
           {
@@ -2940,9 +3145,9 @@ export const DAY_24_MODULE: ModuleData = {
               tableName: 'Top 3 Revenue Categories',
               columns: ['name', 'category_revenue'],
               rows: [
-                ['Electronics', 734.97],
-                ['Office Furniture', 420.00],
-                ['Accessories', 157.48],
+                ['Electronics', 448.47],
+                ['Office Furniture', 209.99],
+                ['Accessories', 161.42],
               ],
             },
           },
@@ -2972,12 +3177,12 @@ export const DAY_24_MODULE: ModuleData = {
             explanation: 'Targeted indexes, normalization, and precise joins provide maximum efficiency.',
           },
         ],
-        masteryPoints: ['Complete all Milestone 3 Capstone tasks'],
+        masteryPoints: ['Complete all Milestone 3 Capstone deliverables'],
       },
       tasks: [
         {
           id: 'day24-c1-t1',
-          title: 'Task 1: Top 3 Categories by Revenue',
+          title: 'Warmup 1: Top 3 Categories by Revenue',
           description: 'Calculate top 3 categories by total revenue generated across order items.',
           instructions: [
             'Select `cat.name`, `SUM(oi.quantity * oi.unit_price) AS category_revenue` from `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -2988,7 +3193,7 @@ export const DAY_24_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'categories',
           secondaryTables: ['products', 'order_items'],
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Warmup 1: Top 3 categories by revenue\n',
           solutionSql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC LIMIT 3;',
           solutionExplanation: 'Ranks top 3 categories by revenue.',
           hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC LIMIT 3;`' }],
@@ -3000,11 +3205,11 @@ export const DAY_24_MODULE: ModuleData = {
             requireLimit: 3,
             expectedRowCount: 3,
           },
-          successMessage: 'Top 3 revenue categories calculated!',
+          successMessage: 'Warmup 1 completed! Top 3 revenue categories calculated.',
         },
         {
           id: 'day24-c1-t2',
-          title: 'Task 2: Above-Average Customer Spenders',
+          title: 'Warmup 2: Above-Average Customer Spenders (CTE)',
           description: 'Find customers whose total spend is higher than the overall average customer spend using a CTE.',
           instructions: [
             'Define `WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name)`.',
@@ -3021,23 +3226,23 @@ export const DAY_24_MODULE: ModuleData = {
             targetTable: 'customers',
             expectedRowCount: 5,
           },
-          successMessage: 'Spot on! Above-average spenders filtered with CTE benchmark.',
+          successMessage: 'Warmup 2 completed! Above-average spenders filtered with CTE benchmark.',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 24 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 24 CHALLENGE: MILESTONE 3 CAPSTONE ASSESSMENT (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-24-homework',
-    title: 'Day 24 — Milestone Assignment 3: Final Assessment',
-    scenario: 'Complete the comprehensive capstone assessment deliverables:',
+    title: 'Day 24 — Milestone 3 Capstone Assessment (Ending Activity)',
+    scenario: 'Complete all 4 capstone deliverables independently to achieve SQL certification:',
     tasks: [
       {
         id: 'day24-hw-1',
-        title: 'Task 1: Top 3 categories by revenue',
+        title: 'Deliverable 1 (Complex Retrieval): Top 3 categories by revenue',
         description: 'Top 3 categories by revenue (categories → products → order_items).',
         instructions: [
           'Select `cat.name`, `SUM(oi.quantity * oi.unit_price) AS category_revenue` from `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `cat.category_id`, `cat.name` ORDER BY `category_revenue DESC` LIMIT 3.',
@@ -3046,7 +3251,7 @@ export const DAY_24_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'categories',
         secondaryTables: ['products', 'order_items'],
-        initialSql: '-- Task 1: Top 3 categories by revenue\n',
+        initialSql: '-- Deliverable 1: Top 3 categories by revenue\n',
         solutionSql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC LIMIT 3;',
         solutionExplanation: 'Joins across 3 tables and sums revenue per category.',
         hints: [{ level: 1, text: 'Use `ORDER BY category_revenue DESC LIMIT 3;`' }],
@@ -3058,11 +3263,11 @@ export const DAY_24_MODULE: ModuleData = {
           requireLimit: 3,
           expectedRowCount: 3,
         },
-        successMessage: 'Task 1 completed! Top 3 revenue categories verified.',
+        successMessage: 'Deliverable 1 verified! Top 3 revenue categories calculated.',
       },
       {
         id: 'day24-hw-2',
-        title: 'Task 2: Correlated / CTE query: Customers with above-average total spend',
+        title: 'Deliverable 2 (CTE Analysis): Customers with above-average total spend',
         description: 'Find customers whose total spend is higher than the overall average customer spend.',
         instructions: [
           'Use `WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;`.',
@@ -3071,7 +3276,7 @@ export const DAY_24_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'customers',
         secondaryTables: ['orders', 'order_items'],
-        initialSql: '-- Task 2: Customers with above-average total spend\n',
+        initialSql: '-- Deliverable 2: Customers with above-average total spend\n',
         solutionSql: 'WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;',
         solutionExplanation: 'Uses CTE with subquery benchmark to filter high-spending accounts.',
         hints: [{ level: 1, text: 'Use `WITH CustomerTotals AS (...) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals);`' }],
@@ -3079,11 +3284,11 @@ export const DAY_24_MODULE: ModuleData = {
           targetTable: 'customers',
           expectedRowCount: 5,
         },
-        successMessage: 'Task 2 completed! High-value customer benchmark verified.',
+        successMessage: 'Deliverable 2 verified! High-value customer benchmark verified.',
       },
       {
         id: 'day24-hw-3',
-        title: 'Task 3: Schema modification (ALTER TABLE products ADD COLUMN status)',
+        title: 'Deliverable 3 (Schema DDL): Add status column to products with default',
         description: 'Add a status column to products: `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`.',
         instructions: [
           'Execute `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`.',
@@ -3091,7 +3296,7 @@ export const DAY_24_MODULE: ModuleData = {
         ],
         type: 'challenge',
         primaryTable: 'products',
-        initialSql: '-- Task 3: Alter table products add status column\n',
+        initialSql: '-- Deliverable 3: Alter table products add status column\n',
         solutionSql: 'ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';',
         solutionExplanation: 'Alters products table schema by appending the status column with default value.',
         hints: [{ level: 1, text: 'Use `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`' }],
@@ -3099,54 +3304,78 @@ export const DAY_24_MODULE: ModuleData = {
           targetTable: 'products',
           expectedRowCount: 1,
         },
-        successMessage: 'Task 3 completed! Schema altered with status column.',
+        successMessage: 'Deliverable 3 verified! Schema altered with status column.',
+      },
+      {
+        id: 'day24-hw-4',
+        title: 'Deliverable 4 (Index Optimization): Create index on orders(customer_id)',
+        description: 'Create an index named idx_orders_customer_id on orders(customer_id).',
+        instructions: [
+          'Execute `CREATE INDEX idx_orders_customer_id ON orders(customer_id);`.',
+          'End with a semicolon (;).',
+        ],
+        type: 'challenge',
+        primaryTable: 'orders',
+        initialSql: '-- Deliverable 4: Create index on orders(customer_id)\n',
+        solutionSql: 'CREATE INDEX idx_orders_customer_id ON orders(customer_id);',
+        solutionExplanation: 'Creates a B-tree index on orders foreign key customer_id.',
+        hints: [{ level: 1, text: 'Use `CREATE INDEX idx_orders_customer_id ON orders(customer_id);`' }],
+        validation: {
+          targetTable: 'orders',
+          expectedRowCount: 1,
+        },
+        successMessage: 'Deliverable 4 verified! Index created on orders(customer_id).',
       },
     ],
   },
 };
 
 // =============================================================================
-// DAY 25: Graduation & Real-World Bridge
+// DAY 25: Beyond the Course: Window Functions Preview & Graduation Bridge
 // =============================================================================
 export const DAY_25_MODULE: ModuleData = {
   id: 'day-25',
   slug: 'graduation-real-world-bridge',
   day: 25,
-  title: 'Day 25 — Graduation & Real-World Bridge',
+  title: 'Day 25 — Beyond the Course: Window Functions Preview & Graduation',
   shortTitle: 'Graduation & Window Functions',
   type: 'project_part',
   milestoneId: 'milestone-3',
-  description: 'Celebrate your 25-day SQL journey, learn modern Window Functions (ROW_NUMBER OVER PARTITION BY), and bridge your skills to Node.js/TypeScript backend production development.',
+  description: 'Celebrate your 25-day SQL journey! Preview advanced Window Functions (ROW_NUMBER OVER PARTITION BY) and bridge your skills to Node.js/TypeScript backend production development.',
   estimatedMinutes: 60,
   completionLearnings: [
+    'Understand the difference between GROUP BY (collapses rows) and Window Functions (preserves all rows while appending analytical ranks)',
     'Write modern Window Functions using ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)',
     'Bridge SQL skills to backend Node.js / TypeScript libraries (Drizzle, Prisma, pg, mysql2)',
-    'Review the complete progression from Day 1 table basics to Day 25 full database engineering',
+    'Review the complete progression from Day 1 table basics to Day 25 full relational engineering',
   ],
   concepts: [
     {
       id: 'window-functions-and-future',
       order: 1,
-      title: '1. Window Functions (OVER & PARTITION BY)',
-      shortDescription: 'Calculate running metrics without collapsing rows.',
+      title: '1. Beyond the Course: Window Functions Preview',
+      shortDescription: 'Calculate analytical ranks and running metrics without collapsing rows.',
       theory: {
-        summary: 'Window functions perform calculations across a set of table rows related to the current row without collapsing them into a single summary row. `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC)` assigns ranks to products within each category.',
+        summary: 'Congratulations on reaching Day 25! Today is a celebration and a bridge to advanced SQL: preview Window Functions, which calculate rankings and running totals across rows while keeping every individual row visible in the result.',
         introTable: {
           tableName: 'products (Ranked in Category)',
           description: 'Window function category partition output',
           columns: ['name', 'category_id', 'price', 'rank_in_category'],
           rows: [
-            ['Mechanical Keyboard', 1, 89.99, 1],
-            ['Wireless Mouse', 1, 25.00, 2],
-            ['Ergonomic Desk Chair', 3, 249.00, 1],
+            ['Mechanical Keyboard', 1, 65.00, 1],
+            ['Gaming Headset', 1, 55.00, 2],
+            ['Office Chair', 3, 120.00, 1],
           ],
         },
         explanation: [
-          '### 1. The Power of Window Functions',
-          'Unlike `GROUP BY` which collapses rows into buckets, a Window Function keeps all rows while adding analytical ranking or running totals:',
+          '### 1. The Core Difference: GROUP BY vs Window Functions',
+          '• **`GROUP BY`**: **Collapses** multiple rows into a single summary bucket row.',
+          '• **`Window Function (OVER / PARTITION BY)`**: **Preserves** all original rows and appends an analytical rank or running calculation alongside each row.',
           '```sql\nSELECT name, category_id, price,\n       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank\nFROM products;\n```',
-          '### 2. Congratulations on Completing the 25-Day SQL Master Curriculum!',
-          'From Day 1 "What is a table?" to Day 25 "Multi-table CTEs, schema architecture, and window functions" — you have built genuine relational database mastery.',
+          '### 2. Bridging SQL to Full-Stack Production Development',
+          'In modern TypeScript/Node.js stacks, your SQL mastery translates directly into production database workflows using tools like **Drizzle ORM**, **Prisma**, **Kysely**, and raw drivers like **pg** and **mysql2**.',
+          '### 3. Graduation Celebration 🎓',
+          'You have progressed through 25 comprehensive days: from single-table retrieval and filtering, to multi-table joins, relational aggregation, subqueries, CTEs, DML mutations, DDL schema architecture, and performance indexing!',
         ],
         stepBreakdowns: [
           {
@@ -3158,9 +3387,9 @@ export const DAY_25_MODULE: ModuleData = {
               tableName: 'Partitioned Product Rankings',
               columns: ['name', 'category_id', 'price', 'category_rank'],
               rows: [
-                ['4K UltraHD Monitor (27-inch)', 1, 349.99, 1],
-                ['Thunderbolt 4 Docking Station', 1, 185.00, 2],
-                ['Mechanical Keyboard', 1, 89.99, 3],
+                ['Mechanical Keyboard', 1, 65.00, 1],
+                ['Gaming Headset', 1, 55.00, 2],
+                ['Wireless Mouse', 1, 15.99, 3],
               ],
             },
           },
@@ -3169,7 +3398,7 @@ export const DAY_25_MODULE: ModuleData = {
           {
             title: 'Window function syntax',
             sql: 'SELECT name, category_id, price,\n       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS rank_in_category\nFROM products;',
-            description: 'Ranks items inside each partition.',
+            description: 'Ranks items inside each partition while preserving all rows.',
           },
         ],
         keyTakeaway: 'Window functions calculate partition rankings and running aggregates without collapsing individual rows.',
@@ -3179,23 +3408,23 @@ export const DAY_25_MODULE: ModuleData = {
         liveDemoNotes: 'Displays window function category rankings.',
         mcqs: [
           {
-            question: 'What is the main difference between GROUP BY and a Window Function with PARTITION BY?',
+            question: 'What is the main conceptual difference between GROUP BY and a Window Function with PARTITION BY?',
             options: [
               'A. GROUP BY collapses rows into a single summary row per group; Window Functions retain individual rows and append calculated metrics',
               'B. Window Functions only work on strings',
               'C. GROUP BY is deprecated',
-              'D. Window Functions delete duplicates',
+              'D. Window Functions delete duplicate records',
             ],
             correctIndex: 0,
             explanation: 'Window functions compute partition metrics while preserving all individual rows.',
           },
         ],
-        masteryPoints: ['Write Window Functions using PARTITION BY and ORDER BY', 'Graduate with full 25-day SQL mastery'],
+        masteryPoints: ['Write Window Functions using PARTITION BY and ORDER BY', 'Graduate with full 25-day SQL relational mastery'],
       },
       tasks: [
         {
           id: 'day25-c1-t1',
-          title: 'Task 1: Rank Products within Categories',
+          title: 'Exploration 1: Rank Products within Categories',
           description: 'Use ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) to rank products in each category.',
           instructions: [
             'Select `name`, `category_id`, `price`, `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank` from `products`.',
@@ -3203,7 +3432,7 @@ export const DAY_25_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Exploration 1: Rank products inside categories\nSELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank\nFROM products;\n',
           solutionSql: 'SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank FROM products;',
           solutionExplanation: 'Ranks products by price within each category.',
           hints: [{ level: 1, text: 'Use `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank`' }],
@@ -3212,11 +3441,11 @@ export const DAY_25_MODULE: ModuleData = {
             requiredColumns: ['name', 'category_id', 'price', 'category_rank'],
             expectedRowCount: 28,
           },
-          successMessage: 'Window function ranking verified!',
+          successMessage: 'Exploration 1 verified! Window function ranking calculated.',
         },
         {
           id: 'day25-c1-t2',
-          title: 'Task 2: Top 2 Products per Category via CTE',
+          title: 'Exploration 2: Top 2 Products per Category via CTE',
           description: 'Combine a Window Function with a CTE to extract only the top 2 highest priced products per category.',
           instructions: [
             'Define `WITH RankedProducts AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS rank_num FROM products)`.',
@@ -3239,16 +3468,16 @@ export const DAY_25_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 25 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 25: OPTIONAL EXPLORATION SANDBOX (GRADUATION)
   // ===========================================================================
   challenge: {
     id: 'day-25-homework',
-    title: 'Day 25 — Graduation & Real-World Bridge (Homework)',
-    scenario: 'Complete the final Window Function challenge to earn your graduation certification:',
+    title: 'Day 25 — Optional Exploration Sandbox (Graduation)',
+    scenario: 'Optional Exploration: Run the final Window Function query to complete your graduation portfolio:',
     tasks: [
       {
         id: 'day25-hw-1',
-        title: 'Task 1: Top 2 most expensive products in each category (Window Function + CTE)',
+        title: 'Graduation Milestone: Top 2 Most Expensive Products in Each Category',
         description: 'Find the top 2 most expensive products in each category using ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC).',
         instructions: [
           'Use `WITH RankedProducts AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS rank_num FROM products) SELECT * FROM RankedProducts WHERE rank_num <= 2;`.',
@@ -3257,7 +3486,7 @@ export const DAY_25_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'products',
         secondaryTables: ['categories'],
-        initialSql: '-- Task 1: Top 2 products in each category using Window Function\n',
+        initialSql: '-- Graduation Milestone: Top 2 products in each category using Window Function\n',
         solutionSql: 'WITH RankedProducts AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS rank_num FROM products) SELECT * FROM RankedProducts WHERE rank_num <= 2;',
         solutionExplanation: 'Combines a Window Function inside a CTE to slice the top 2 products per category.',
         hints: [{ level: 1, text: 'Use `WITH RankedProducts AS (...) SELECT * FROM RankedProducts WHERE rank_num <= 2;`' }],
@@ -3265,7 +3494,7 @@ export const DAY_25_MODULE: ModuleData = {
           targetTable: 'products',
           expectedRowCount: 11,
         },
-        successMessage: 'Task 1 completed! Congratulations on graduating the 25-Day SQL Master Curriculum!',
+        successMessage: 'Congratulations on graduating the 25-Day SQL Master Curriculum! 🎓',
       },
     ],
   },

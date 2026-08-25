@@ -18,6 +18,31 @@ interface LearningPathViewProps {
   onOpenSchema: () => void;
 }
 
+function getPedagogicalModeInfo(module: ModuleData) {
+  switch (module.type) {
+    case 'practice_day':
+      if (module.title.toLowerCase().includes('debug')) {
+        return { label: 'DEBUGGING LAB', icon: 'bug_report' };
+      }
+      return { label: 'GUIDED PRACTICE', icon: 'bolt' };
+    case 'conceptual_session':
+      return { label: 'CONCEPT LAB', icon: 'science' };
+    case 'project_part':
+      if (module.day === 25) {
+        return { label: 'GRADUATION', icon: 'workspace_premium' };
+      }
+      if (module.title.toLowerCase().includes('debug')) {
+        return { label: 'DEBUGGING LAB', icon: 'bug_report' };
+      }
+      return { label: 'APPLIED PROJECT', icon: 'rocket_launch' };
+    case 'assignment':
+      return { label: 'MASTERY CHECKPOINT', icon: 'verified' };
+    case 'module':
+    default:
+      return { label: 'CORE MODULE', icon: 'school' };
+  }
+}
+
 export const LearningPathView: React.FC<LearningPathViewProps> = ({
   userState,
   currentModuleId,
@@ -38,24 +63,35 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   const completedDaysCount = Object.keys(userState.completedModules).length;
   const overallPercent = Math.round((completedDaysCount / totalDays) * 100);
 
+  // Active module & first incomplete concept
+  const activeModule = ALL_MODULES.find((m) => m.id === currentModuleId) || ALL_MODULES[0];
+  const activeFirstIncompleteConceptIdx = activeModule.concepts.findIndex(
+    (c) => !isConceptCompleted(c, activeModule.id, userState)
+  );
+  const activeTargetConceptIdx = activeFirstIncompleteConceptIdx >= 0 ? activeFirstIncompleteConceptIdx : 0;
+
+  // SVG Circular progress ring calculations (r=27, circumference = 2 * PI * 27 = 169.646)
+  const ringCircumference = 169.65;
+  const ringOffset = ringCircumference - (overallPercent / 100) * ringCircumference;
+
   return (
     <div className="flex flex-col w-full pb-32">
       {/* Locked Notice Banner if clicked */}
       {lockedAlert && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
-          <div className="bg-surface-container border border-amber-500/50 shadow-2xl rounded-xl p-4 flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-3 duration-200">
-            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400 shrink-0">
+          <div className="bg-surface border border-string/50 shadow-2xl rounded-xl p-4 flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-3 duration-200">
+            <div className="p-2 rounded-lg bg-string/20 text-string shrink-0">
               <span className="material-symbols-outlined text-[20px]">lock</span>
             </div>
             <div className="flex-1 space-y-1">
-              <h4 className="font-headline-sm text-sm font-bold text-on-surface">
+              <h4 className="font-display text-sm font-bold text-text">
                 {lockedAlert.title}
               </h4>
-              <p className="text-xs text-text-muted leading-relaxed font-body-md">
+              <p className="text-xs text-text-dim leading-relaxed font-body">
                 {lockedAlert.message}
               </p>
               {lockedAlert.targetModuleId && (
-                <div className="pt-1.5 flex items-center gap-2">
+                <div className="pt-2 flex items-center gap-2">
                   <button
                     onClick={() => {
                       onSelectModuleAndConcept(
@@ -65,13 +101,13 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                       );
                       setLockedAlert(null);
                     }}
-                    className="px-3 py-1 bg-primary-container text-on-primary-container font-label-sm text-xs font-semibold rounded hover:brightness-110 transition cursor-pointer"
+                    className="px-3 py-1.5 bg-func text-ink font-body text-xs font-bold rounded-lg hover:brightness-110 transition cursor-pointer"
                   >
-                    {lockedAlert.actionLabel || 'Go to Current Lesson'}
+                    {lockedAlert.actionLabel || 'Go to Lesson'}
                   </button>
                   <button
                     onClick={() => setLockedAlert(null)}
-                    className="px-2.5 py-1 text-xs text-text-muted hover:text-on-surface font-label-sm transition cursor-pointer"
+                    className="px-2.5 py-1.5 text-xs text-text-dim hover:text-text font-body transition cursor-pointer"
                   >
                     Dismiss
                   </button>
@@ -80,7 +116,8 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             </div>
             <button
               onClick={() => setLockedAlert(null)}
-              className="text-text-muted hover:text-on-surface p-1 cursor-pointer"
+              className="text-text-dim hover:text-text p-1 cursor-pointer"
+              aria-label="Close alert"
             >
               <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
@@ -88,115 +125,174 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         </div>
       )}
 
-      {/* Top Overview & Progress Header */}
-      <div className="px-margin-mobile pt-4 pb-2 max-w-4xl mx-auto w-full">
-        <div className="bg-surface-container rounded-xl border border-outline-variant/70 p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[20px]">
-                  route
-                </span>
-                <span className="font-label-sm text-xs font-semibold uppercase tracking-wider text-primary">
-                  Curriculum Roadmap
-                </span>
-              </div>
-              <h1 className="font-headline-sm text-xl font-bold text-on-surface">
-                25-Day SQL Mastery Journey
-              </h1>
-              <p className="text-xs text-text-muted font-body-md">
-                3 structured milestones taking you from single-table querying to production backend relational architecture.
-              </p>
-            </div>
+      {/* ============ HERO SECTION ============ */}
+      <section className="max-w-[840px] mx-auto w-full px-4 sm:px-6 pt-10 sm:pt-14 pb-8 sm:pb-10">
+        <div className="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-func uppercase mb-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-func shadow-[0_0_8px_#48D8C8] shrink-0" />
+          <span>SQLens · Curriculum Roadmap</span>
+        </div>
 
-            <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 border-outline-variant/40 pt-3 sm:pt-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-muted font-label-sm">Overall Progress:</span>
-                <span className="font-mono text-sm font-bold text-primary">
-                  {completedDaysCount}/{totalDays} Days ({overallPercent}%)
-                </span>
-              </div>
-              <div className="w-36 h-2 rounded-full bg-surface-dim overflow-hidden border border-outline-variant/40">
-                <div
-                  style={{ width: `${overallPercent}%` }}
-                  className="h-full bg-primary-container rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(0,173,181,0.4)]"
-                />
-              </div>
+        <h1 className="font-display font-semibold text-3xl sm:text-4xl lg:text-[44px] leading-tight tracking-tight text-text max-w-xl mb-4">
+          Master SQL, one query at a time.
+        </h1>
+        <p className="text-text-dim text-sm sm:text-base max-w-lg mb-7">
+          25 days, 3 milestones — from single-table querying to production-ready relational architecture.
+        </p>
+
+        {/* Query Box with Syntax Highlighting */}
+        <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 mb-7 font-mono text-xs sm:text-sm shadow-2xl overflow-x-auto">
+          <div className="flex gap-2 mb-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block" />
+          </div>
+          <div className="text-text space-y-1">
+            <div><span className="text-keyword font-bold">SELECT</span> skill</div>
+            <div><span className="text-keyword font-bold">FROM</span> you</div>
+            <div><span className="text-keyword font-bold">WHERE</span> consistency = <span className="text-string">'daily'</span>;</div>
+          </div>
+        </div>
+
+        {/* Hero Actions */}
+        <div className="flex items-center gap-5 flex-wrap row-gap-4">
+          <button
+            onClick={() => {
+              onSelectModuleAndConcept(activeModule.id, activeTargetConceptIdx, 'lesson');
+            }}
+            className="bg-func text-ink font-body font-bold text-sm px-6 py-3 rounded-full inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(72,216,200,0.5)] transition duration-150 cursor-pointer"
+          >
+            <span>Continue Day {activeModule.day}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-3 font-mono text-xs sm:text-[12.5px] text-text-dim">
+            <div className="w-28 h-1.5 bg-surface-3 rounded-full overflow-hidden shrink-0">
+              <div
+                style={{ width: `${overallPercent}%` }}
+                className="h-full bg-func rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(72,216,200,0.5)]"
+              />
+            </div>
+            <span>{completedDaysCount} / {totalDays} days · {overallPercent}%</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ ROADMAP OVERVIEW CARD ============ */}
+      <section className="max-w-[840px] mx-auto w-full px-4 sm:px-6 py-6">
+        <div className="bg-surface border border-border rounded-2xl p-6 sm:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 font-mono text-xs text-func uppercase tracking-wider mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-func" />
+              <span>Curriculum Roadmap</span>
+            </div>
+            <h2 className="font-display font-semibold text-lg sm:text-xl text-text">
+              25-Day SQL Mastery Journey
+            </h2>
+            <p className="text-text-dim text-xs sm:text-sm max-w-md">
+              3 structured milestones taking you from single-table querying to production backend relational architecture.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 shrink-0">
+            <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
+              <circle cx="32" cy="32" r="27" fill="none" stroke="var(--surface-3)" strokeWidth="6" />
+              <circle
+                cx="32"
+                cy="32"
+                r="27"
+                fill="none"
+                stroke="var(--func)"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={ringCircumference}
+                strokeDashoffset={ringOffset}
+                className="transition-all duration-700 ease-out"
+              />
+            </svg>
+            <div className="font-mono">
+              <span className="block text-sm sm:text-base text-text font-semibold">
+                {completedDaysCount}/{totalDays} days
+              </span>
+              <span className="block text-xs text-text-dim mt-0.5">
+                {overallPercent}% complete
+              </span>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Grouped Milestone Sections */}
-      <div className="px-margin-mobile py-6 flex flex-col gap-10 max-w-4xl mx-auto w-full">
+      {/* ============ MILESTONES & TIMELINE ============ */}
+      <div className="max-w-[840px] mx-auto w-full px-4 sm:px-6 py-4 flex flex-col gap-12" id="roadmap">
         {ROADMAP_MILESTONES.map((milestone, milestoneIdx) => {
-          // Get all modules belonging to this milestone
           const milestoneModules: ModuleData[] = ALL_MODULES.filter((m) =>
             milestone.moduleIds.includes(m.id)
           );
 
-          // Calculate milestone progress
           const completedInMilestone = milestoneModules.filter(
             (m) => !!userState.completedModules[m.id]
           ).length;
           const isMilestoneCompleted = completedInMilestone === milestoneModules.length;
           const isMilestoneActive = milestoneModules.some((m) => m.id === currentModuleId);
-          const milestonePercent = Math.round(
-            (completedInMilestone / milestoneModules.length) * 100
-          );
+          const isMilestoneLocked = milestoneIdx > 0 && !ROADMAP_MILESTONES[milestoneIdx - 1].moduleIds.every((id) => !!userState.completedModules[id]);
+
+          // If milestone is locked teaser
+          if (isMilestoneLocked && completedInMilestone === 0) {
+            return (
+              <div
+                key={milestone.id}
+                className="flex items-center gap-4 bg-surface border border-dashed border-border rounded-2xl p-6 opacity-70"
+              >
+                <div className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0 text-text-faint">
+                  <span className="material-symbols-outlined text-[20px]">lock</span>
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-text-dim mb-1">
+                    {milestone.title} — {milestone.subtitle}
+                  </h3>
+                  <p className="font-mono text-xs text-text-faint">
+                    Unlocks after {ROADMAP_MILESTONES[milestoneIdx - 1].title} · {milestone.daysRange}
+                  </p>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <section
               key={milestone.id}
-              className="flex flex-col gap-5 relative"
+              className="flex flex-col gap-5"
               aria-label={milestone.title}
             >
-              {/* Milestone Banner Header */}
-              <div className="rounded-xl border border-outline-variant/80 bg-surface-container overflow-hidden shadow-sm">
-                <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-surface-container via-surface-container to-surface-variant/30">
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-label-sm text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-primary-container/20 text-primary border border-primary-container/30">
-                        {milestone.title} · {milestone.daysRange}
-                      </span>
-                      {isMilestoneCompleted ? (
-                        <span className="font-label-sm text-[11px] font-medium text-primary flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                          Completed
-                        </span>
-                      ) : isMilestoneActive ? (
-                        <span className="font-label-sm text-[11px] font-medium text-on-surface flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px] text-primary">play_circle</span>
-                          In Progress
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <h2 className="font-headline-sm text-lg font-bold text-on-surface">
-                      {milestone.subtitle}
-                    </h2>
-                    <p className="text-xs text-text-muted font-body-md max-w-2xl leading-relaxed">
-                      {milestone.description}
-                    </p>
-                  </div>
-
-                  {/* Milestone Progress Metric */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 border-t sm:border-t-0 border-outline-variant/40 pt-2.5 sm:pt-0">
-                    <span className="font-label-sm text-xs text-text-muted">
-                      {completedInMilestone}/{milestoneModules.length} Days Done
+              {/* Milestone Head */}
+              <div className="mb-2">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <span className="font-mono text-xs tracking-wider text-string bg-string/10 border border-string/30 px-2.5 py-1 rounded-full whitespace-nowrap uppercase">
+                    {milestone.title} · {milestone.daysRange}
+                  </span>
+                  <span className="flex items-center gap-1.5 font-mono text-xs text-text-dim">
+                    <span className="material-symbols-outlined text-[14px] text-string">
+                      {isMilestoneCompleted ? 'check_circle' : isMilestoneActive ? 'play_circle' : 'schedule'}
                     </span>
-                    <div className="w-28 h-1.5 rounded-full bg-surface-dim overflow-hidden border border-outline-variant/40">
-                      <div
-                        style={{ width: `${milestonePercent}%` }}
-                        className="h-full bg-primary rounded-full transition-all duration-300"
-                      />
-                    </div>
-                  </div>
+                    <span>
+                      {isMilestoneCompleted
+                        ? 'Completed'
+                        : `In progress · ${completedInMilestone}/${milestoneModules.length} days done`}
+                    </span>
+                  </span>
                 </div>
+
+                <h3 className="font-display font-semibold text-lg sm:text-xl text-text mb-1">
+                  {milestone.subtitle}
+                </h3>
+                <p className="text-text-dim text-xs sm:text-sm max-w-2xl">
+                  {milestone.description}
+                </p>
               </div>
 
-              {/* Modules List inside this Milestone */}
-              <div className="flex flex-col gap-6 pl-0 sm:pl-2">
+              {/* ER-Style Timeline Rail */}
+              <ol className="timeline-container">
                 {milestoneModules.map((module) => {
                   const unlockStatus = getModuleUnlockStatus(module, ALL_MODULES, userState);
                   const isCurrent = module.id === currentModuleId;
@@ -207,241 +303,254 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   const completedConceptsCount = module.concepts.filter((c) =>
                     isConceptCompleted(c, module.id, userState)
                   ).length;
-                  const areConceptsComplete = isModuleConceptsCompleted(module, userState);
 
                   const challengeStatus = isModuleChallengeUnlocked(module, ALL_MODULES, userState);
                   const isChallengeUnlocked = challengeStatus.isUnlocked;
                   const isChallengeCompleted = challengeStatus.isCompleted;
 
-                  // Find first incomplete concept index
                   const firstIncompleteConceptIdx = module.concepts.findIndex(
                     (c) => !isConceptCompleted(c, module.id, userState)
                   );
+                  const targetConceptIdx = firstIncompleteConceptIdx >= 0 ? firstIncompleteConceptIdx : 0;
 
-                  // Status label
-                  let statusText = `${completedConceptsCount}/${totalConcepts}`;
-                  if (isCompleted) {
-                    statusText = 'Completed';
-                  } else if (isCurrent) {
-                    statusText = `${completedConceptsCount > 0 ? completedConceptsCount : 1} started`;
-                  } else if (!isUnlocked) {
-                    statusText = unlockStatus.countdownFormatted
-                      ? `Unlocks in ${unlockStatus.countdownFormatted.split(' ')[0]}`
-                      : 'Locked';
-                  }
+                  const modeInfo = getPedagogicalModeInfo(module);
+
+                  // Day node state class
+                  const nodeStateClass = isCompleted
+                    ? 'day-node-done'
+                    : isCurrent
+                    ? 'day-node-active'
+                    : isUnlocked
+                    ? 'day-node-unlocked'
+                    : 'day-node-locked';
 
                   return (
-                    <div
+                    <li
                       key={module.id}
-                      className={`bg-surface-container rounded-xl border p-card-padding relative overflow-hidden transition-colors duration-300 hover:bg-surface-variant group ${
-                        isCurrent ? 'border-outline-variant' : 'border-outline-variant/60'
-                      } ${!isUnlocked ? 'opacity-70' : ''}`}
+                      className={`relative mb-6 ${nodeStateClass}`}
                     >
-                      {/* Active Border Highlight if this is the active module */}
-                      {isCurrent && (
-                        <div className="absolute inset-0 border border-primary-container rounded-xl pointer-events-none opacity-100 transition-opacity duration-300" />
-                      )}
+                      {/* Left Rail Connector Dot */}
+                      <span
+                        className="node-dot-connector"
+                        aria-hidden="true"
+                      >
+                        {isCompleted ? (
+                          <span className="material-symbols-outlined text-[14px]">check</span>
+                        ) : !isUnlocked ? (
+                          <span className="material-symbols-outlined text-[14px]">lock</span>
+                        ) : (
+                          module.day
+                        )}
+                      </span>
 
-                      {/* Module Header */}
-                      <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-headline-sm text-headline-sm text-on-surface font-semibold">
-                            {module.shortTitle || module.title}
-                          </h3>
-                          <span className="font-label-sm text-label-sm bg-surface-variant text-text-muted px-2 py-1 rounded">
-                            {statusText}
-                          </span>
-                        </div>
-
-                        <button
-                          disabled={!isUnlocked}
-                          onClick={() => {
-                            if (isUnlocked) {
-                              const targetIdx = firstIncompleteConceptIdx >= 0 ? firstIncompleteConceptIdx : 0;
-                              onSelectModuleAndConcept(module.id, targetIdx, 'lesson');
-                            } else {
-                              setLockedAlert({
-                                title: `Day ${module.day} is Locked`,
-                                message: unlockStatus.reason || 'Complete previous modules to unlock.',
-                              });
-                            }
-                          }}
-                          className={`font-label-sm text-label-sm border px-3 py-1.5 rounded transition-all active:scale-95 cursor-pointer ${
-                            isUnlocked
-                              ? 'border-primary-container text-primary-container bg-transparent hover:bg-primary-container hover:text-on-primary-container'
-                              : 'border-outline-variant text-outline-variant opacity-40 cursor-not-allowed'
-                          }`}
-                        >
-                          {isCompleted ? 'Review' : 'Practice'}
-                        </button>
-                      </div>
-
-                      {/* Node Grid */}
-                      <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4">
-                        {module.concepts.map((concept: Concept, idx: number) => {
-                          const isConceptDone = isConceptCompleted(concept, module.id, userState);
-                          const isConceptActive = isCurrent && currentConceptIndex === idx && !isCompleted;
-
-                          // Format short label with line breaks if multi-word
-                          const words = concept.title.split(' ');
-                          let label = concept.title;
-                          if (words.length > 2) {
-                            label = `${words.slice(0, 2).join(' ')}\n${words.slice(2).join(' ')}`;
-                          }
-
-                          if (isConceptDone) {
-                            return (
-                              <div
-                                key={concept.id}
-                                onClick={() => onSelectModuleAndConcept(module.id, idx, 'lesson')}
-                                className={`flex flex-col items-center gap-2 cursor-pointer transition-opacity ${
-                                  idx >= 4 ? 'col-start-1 mt-4' : ''
-                                }`}
-                                title={`Concept ${idx + 1}: ${concept.title} (Completed)`}
-                              >
-                                <div className="w-12 h-12 rounded-full border-2 border-primary-container bg-primary-container/20 flex items-center justify-center transition-transform hover:scale-105 shadow-[0_0_8px_rgba(0,173,181,0.2)]">
-                                  <span className="material-symbols-outlined text-primary-container text-[20px]">
-                                    check
-                                  </span>
-                                </div>
-                                <span className="font-label-md text-label-md text-on-surface text-center leading-tight whitespace-pre-line">
-                                  {label}
-                                </span>
-                              </div>
-                            );
-                          }
-
-                          if (isConceptActive || (isUnlocked && !isConceptDone && idx === completedConceptsCount)) {
-                            return (
-                              <div
-                                key={concept.id}
-                                onClick={() => onSelectModuleAndConcept(module.id, idx, 'lesson')}
-                                className={`flex flex-col items-center gap-2 cursor-pointer ${
-                                  idx >= 4 ? 'col-start-1 mt-4' : ''
-                                }`}
-                                title={`Concept ${idx + 1}: ${concept.title} (Current)`}
-                              >
-                                <div className="w-12 h-12 rounded-full border-2 border-primary-container flex items-center justify-center bg-transparent transition-transform hover:scale-105 shadow-[0_0_8px_rgba(0,173,181,0.2)]">
-                                  <span className="material-symbols-outlined text-primary-container text-[20px] transition-opacity">
-                                    play_arrow
-                                  </span>
-                                </div>
-                                <span className="font-label-md text-label-md text-on-surface text-center leading-tight whitespace-pre-line">
-                                  {label}
-                                </span>
-                              </div>
-                            );
-                          }
-
-                          // Locked node
-                          return (
-                            <div
-                              key={concept.id}
-                              onClick={() => {
-                                if (isUnlocked) {
-                                  onSelectModuleAndConcept(module.id, idx, 'lesson');
-                                } else {
-                                  setLockedAlert({
-                                    title: `Day ${module.day} is Locked`,
-                                    message: unlockStatus.reason || 'Complete previous days to unlock.',
-                                  });
-                                }
-                              }}
-                              className={`flex flex-col items-center gap-2 transition-opacity ${
-                                isUnlocked
-                                  ? 'cursor-pointer opacity-70 hover:opacity-100'
-                                  : 'cursor-not-allowed opacity-50 hover:opacity-100'
-                              } ${idx >= 4 ? 'col-start-1 mt-4' : ''}`}
-                              title={`Concept ${idx + 1}: ${concept.title} (Locked)`}
-                            >
-                              <div className="w-12 h-12 rounded-full border-2 border-outline-variant flex items-center justify-center bg-transparent">
-                                <span className="material-symbols-outlined text-outline-variant text-[18px]">
-                                  lock
-                                </span>
-                              </div>
-                              <span className="font-label-md text-label-md text-on-surface-variant text-center leading-tight whitespace-pre-line">
-                                {label}
+                      {/* Day Card */}
+                      <div
+                        className={`rounded-xl border p-5 sm:p-6 transition-all duration-200 ${
+                          !isUnlocked
+                            ? 'bg-ink border-border-soft opacity-75'
+                            : isCurrent
+                            ? 'bg-surface border-string/40 shadow-[0_0_16px_rgba(240,168,96,0.12)]'
+                            : 'bg-surface border-border hover:border-border/80'
+                        }`}
+                      >
+                        {/* Day Card Header */}
+                        <div className="flex items-start justify-between gap-3 mb-5">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-comment font-mono text-[10.5px] uppercase tracking-wider">
+                              <span className="material-symbols-outlined text-[14px]">
+                                {modeInfo.icon}
                               </span>
+                              <span>{modeInfo.label}</span>
                             </div>
-                          );
-                        })}
-
-                        {/* Independent Challenge Node if module has challenge */}
-                        {module.challenge && (
-                          <div
-                            onClick={() => {
-                              if (isChallengeUnlocked) {
-                                // Direct navigation to the main Independent Challenge of the module
-                                onSelectModuleAndConcept(module.id, 0, 'challenge');
-                              } else {
-                                // Challenge is locked - prevent jumping to challenge and provide helpful guidance
-                                const targetIdx = firstIncompleteConceptIdx >= 0 ? firstIncompleteConceptIdx : 0;
-                                setLockedAlert({
-                                  title: `Day ${module.day} Challenge Locked`,
-                                  message:
-                                    challengeStatus.reason ||
-                                    `You must complete all ${totalConcepts} concept lessons and practice tasks in Day ${module.day} before unlocking the Independent Challenge.`,
-                                  targetModuleId: isUnlocked ? module.id : undefined,
-                                  targetConceptIdx: targetIdx,
-                                  actionLabel: `Start Concept ${targetIdx + 1}`,
-                                });
-                              }
-                            }}
-                            className={`flex flex-col items-center gap-2 transition-all ${
-                              isChallengeUnlocked
-                                ? 'cursor-pointer hover:opacity-100 hover:scale-105'
-                                : 'cursor-not-allowed opacity-55 hover:opacity-80'
-                            } ${module.concepts.length % 4 === 0 ? 'col-start-1 mt-4' : ''}`}
-                            title={
-                              isChallengeUnlocked
-                                ? `Day ${module.day} Challenge: ${module.challenge.title} (Ready to Start)`
-                                : `Day ${module.day} Challenge (Locked - Complete all ${totalConcepts} concepts first)`
-                            }
-                          >
-                            <div
-                              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
-                                isChallengeCompleted
-                                  ? 'border-primary-container bg-primary-container/20 text-primary-container shadow-[0_0_8px_rgba(0,173,181,0.25)]'
-                                  : isChallengeUnlocked
-                                  ? 'border-primary-container bg-primary-container/10 text-primary-container shadow-[0_0_12px_rgba(0,173,181,0.35)] ring-2 ring-primary-container/30'
-                                  : 'border-outline-variant bg-surface-dim/40 text-outline-variant'
+                            <h4
+                              className={`font-display text-base font-semibold ${
+                                !isUnlocked ? 'text-text-faint' : 'text-text'
                               }`}
                             >
-                              <span className="material-symbols-outlined text-[18px]">
-                                {isChallengeCompleted ? 'workspace_premium' : isChallengeUnlocked ? 'terminal' : 'lock'}
-                              </span>
-                            </div>
-                            <span
-                              className={`font-label-md text-label-md text-center leading-tight ${
-                                isChallengeUnlocked ? 'text-primary-container font-semibold' : 'text-on-surface-variant'
-                              }`}
-                            >
-                              Day {module.day} Challenge
-                            </span>
-                            {!isChallengeUnlocked && (
-                              <span className="text-[10px] text-text-muted font-mono -mt-1">
-                                {completedConceptsCount}/{totalConcepts} done
+                              Day {module.day} — {module.shortTitle || module.title}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            {isCompleted ? (
+                              <>
+                                <span className="font-mono text-[10.5px] px-2 py-0.5 rounded bg-func/10 text-func border border-func/25 uppercase">
+                                  COMPLETED
+                                </span>
+                                <button
+                                  onClick={() => onSelectModuleAndConcept(module.id, 0, 'lesson')}
+                                  className="font-mono text-xs text-func border border-func/30 px-3 py-1 rounded-lg hover:bg-func/10 transition cursor-pointer"
+                                >
+                                  Review
+                                </button>
+                              </>
+                            ) : isCurrent ? (
+                              <>
+                                <span className="font-mono text-[10.5px] px-2 py-0.5 rounded bg-string/10 text-string border border-string/25 uppercase">
+                                  IN PROGRESS
+                                </span>
+                                <button
+                                  onClick={() => onSelectModuleAndConcept(module.id, targetConceptIdx, 'lesson')}
+                                  className="font-mono text-xs text-ink bg-func font-bold px-3 py-1 rounded-lg hover:brightness-110 transition cursor-pointer"
+                                >
+                                  Continue →
+                                </button>
+                              </>
+                            ) : isUnlocked ? (
+                              <button
+                                onClick={() => onSelectModuleAndConcept(module.id, 0, 'lesson')}
+                                className="font-mono text-xs text-text-dim border border-border px-3 py-1 rounded-lg hover:text-text hover:border-text-dim transition cursor-pointer"
+                              >
+                                Start
+                              </button>
+                            ) : (
+                              <span className="font-mono text-[11px] text-text-faint">
+                                Locked
                               </span>
                             )}
                           </div>
-                        )}
+                        </div>
+
+                        {/* Concept Grid (Multi-Column Auto-Flow) */}
+                        <div
+                          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-3 gap-y-4 items-start"
+                        >
+                          {module.concepts.map((concept: Concept, idx: number) => {
+                            const isConceptDone = isConceptCompleted(concept, module.id, userState);
+                            const isConceptActive = isCurrent && currentConceptIndex === idx && !isCompleted;
+                            const isConceptUnlocked = isUnlocked && (isConceptDone || idx === completedConceptsCount);
+
+                            return (
+                              <div
+                                key={concept.id}
+                                onClick={() => {
+                                  if (isUnlocked) {
+                                    onSelectModuleAndConcept(module.id, idx, 'lesson');
+                                  } else {
+                                    setLockedAlert({
+                                      title: `Day ${module.day} is Locked`,
+                                      message: unlockStatus.reason || 'Complete previous days to unlock.',
+                                    });
+                                  }
+                                }}
+                                className={`flex flex-col items-center text-center gap-2 group cursor-pointer transition-all ${
+                                  !isUnlocked ? 'cursor-not-allowed opacity-50' : 'hover:scale-105'
+                                }`}
+                                aria-label={`Concept ${idx + 1}: ${concept.title} - ${
+                                  isConceptDone ? 'Completed' : isConceptActive ? 'Current lesson' : isUnlocked ? 'Unlocked' : 'Locked'
+                                }`}
+                                aria-disabled={!isUnlocked}
+                              >
+                                {/* Concept Icon Bubble (42px x 42px) */}
+                                <div
+                                  className={`w-[42px] h-[42px] rounded-full flex items-center justify-center transition-all ${
+                                    isConceptDone
+                                      ? 'bg-func/10 border-1.5 border-func text-func shadow-[0_0_8px_rgba(72,216,200,0.25)]'
+                                      : isConceptActive
+                                      ? 'bg-string/10 border-1.5 border-string text-string shadow-[0_0_8px_rgba(240,168,96,0.3)] ring-2 ring-string/20'
+                                      : isConceptUnlocked
+                                      ? 'bg-surface-2 border-1.5 border-border text-text hover:border-func/50'
+                                      : 'bg-surface-2 border-1.5 border-border text-text-faint'
+                                  }`}
+                                >
+                                  {isConceptDone ? (
+                                    <span className="material-symbols-outlined text-[16px]">check</span>
+                                  ) : isConceptActive ? (
+                                    <span className="material-symbols-outlined text-[18px]">play_arrow</span>
+                                  ) : !isUnlocked ? (
+                                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                                  ) : (
+                                    <span className="font-mono text-xs font-semibold">{idx + 1}</span>
+                                  )}
+                                </div>
+
+                                {/* Concept Title with Clean 2-Line Clamp */}
+                                <span
+                                  className={`concept-label-clamp ${
+                                    isConceptDone
+                                      ? 'text-text font-medium'
+                                      : isConceptActive
+                                      ? 'text-string font-semibold'
+                                      : isUnlocked
+                                      ? 'text-text-dim group-hover:text-text'
+                                      : 'text-text-faint'
+                                  }`}
+                                >
+                                  {concept.title}
+                                </span>
+                              </div>
+                            );
+                          })}
+
+                          {/* Dedicated Full-Width Challenge Strip */}
+                          {module.challenge && (
+                            <div
+                              onClick={() => {
+                                if (isChallengeUnlocked) {
+                                  onSelectModuleAndConcept(module.id, 0, 'challenge');
+                                } else {
+                                  const targetIdx = firstIncompleteConceptIdx >= 0 ? firstIncompleteConceptIdx : 0;
+                                  setLockedAlert({
+                                    title: `Day ${module.day} Challenge Locked`,
+                                    message:
+                                      challengeStatus.reason ||
+                                      `You must complete all ${totalConcepts} concept lessons and practice tasks in Day ${module.day} before unlocking the Independent Challenge.`,
+                                    targetModuleId: isUnlocked ? module.id : undefined,
+                                    targetConceptIdx: targetIdx,
+                                    actionLabel: `Start Concept ${targetIdx + 1}`,
+                                  });
+                                }
+                              }}
+                              className={`col-span-full flex items-center justify-between gap-3 pt-3.5 mt-1 border-t border-dashed border-border-soft cursor-pointer transition-colors ${
+                                isChallengeUnlocked
+                                  ? 'text-text hover:text-func'
+                                  : 'text-text-faint hover:text-text-dim'
+                              }`}
+                              aria-label={`Day ${module.day} Challenge: ${module.challenge.title} - ${
+                                isChallengeCompleted ? 'Completed' : isChallengeUnlocked ? 'Unlocked' : 'Locked'
+                              }`}
+                              aria-disabled={!isChallengeUnlocked}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <span
+                                  className={`material-symbols-outlined text-[18px] ${
+                                    isChallengeCompleted
+                                      ? 'text-func'
+                                      : isChallengeUnlocked
+                                      ? 'text-string'
+                                      : 'text-text-faint'
+                                  }`}
+                                >
+                                  {isChallengeCompleted
+                                    ? 'workspace_premium'
+                                    : isChallengeUnlocked
+                                    ? 'terminal'
+                                    : 'lock'}
+                                </span>
+                                <span
+                                  className={`font-mono text-xs ${
+                                    isChallengeUnlocked ? 'font-semibold text-text' : 'text-text-dim'
+                                  }`}
+                                >
+                                  Day {module.day} Challenge
+                                </span>
+                              </div>
+
+                              <span className="font-mono text-[11px] text-text-faint">
+                                {isChallengeCompleted
+                                  ? `${module.challenge.tasks.length}/${module.challenge.tasks.length} done`
+                                  : isChallengeUnlocked
+                                  ? 'Ready to Start →'
+                                  : `${completedConceptsCount}/${totalConcepts} concepts done`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </li>
                   );
                 })}
-              </div>
-
-              {/* Milestone Separator if not last */}
-              {milestoneIdx < ROADMAP_MILESTONES.length - 1 && (
-                <div className="flex items-center justify-center my-4">
-                  <div className="flex-1 h-px bg-outline-variant/40" />
-                  <div className="flex items-center gap-1.5 px-4 py-1 rounded-full bg-surface-container border border-outline-variant/60 font-label-sm text-[11px] text-text-muted">
-                    <span className="material-symbols-outlined text-[14px] text-primary">arrow_downward</span>
-                    <span>Next: {ROADMAP_MILESTONES[milestoneIdx + 1].title} ({ROADMAP_MILESTONES[milestoneIdx + 1].daysRange})</span>
-                  </div>
-                  <div className="flex-1 h-px bg-outline-variant/40" />
-                </div>
-              )}
+              </ol>
             </section>
           );
         })}

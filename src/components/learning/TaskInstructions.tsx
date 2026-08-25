@@ -49,22 +49,22 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   return (
     <div
       id="task-instructions-container"
-      className="flex flex-col bg-[#11171e] rounded-xl border border-zinc-700/60 p-4 sm:p-5 shadow-lg relative text-zinc-100"
+      className="flex flex-col bg-surface rounded-xl border border-border p-4 sm:p-5 shadow-lg relative text-text"
     >
       {/* Top Header: Muted Secondary Metadata & Lesson Link */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800/80 text-xs">
-        <div className="flex items-center gap-1.5 font-mono text-zinc-400">
-          <span className="text-cyan-400 font-bold tracking-wider">
+      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-border-soft text-xs">
+        <div className="flex items-center gap-1.5 font-mono text-text-dim">
+          <span className="text-func font-bold tracking-wider">
             TASK {taskIndex + 1}/{totalTasks}
           </span>
-          <span className="text-zinc-500">•</span>
+          <span className="text-text-faint">•</span>
           <span className="truncate max-w-[180px] sm:max-w-xs">{concept.title}</span>
         </div>
 
         <div className="flex items-center gap-2">
           {isCompleted && (
-            <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-700/40">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <div className="flex items-center gap-1 text-[11px] font-medium text-func bg-func/10 px-2 py-0.5 rounded-full border border-func/30">
+              <CheckCircle2 className="w-3 h-3 text-func" />
               <span>Done</span>
             </div>
           )}
@@ -72,10 +72,10 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
           {onBackToLesson && (
             <button
               onClick={onBackToLesson}
-              className="flex items-center gap-1 text-zinc-400 hover:text-cyan-300 text-[11px] font-mono px-2 py-0.5 rounded hover:bg-zinc-800 transition cursor-pointer"
+              className="flex items-center gap-1 text-text-dim hover:text-func text-[11px] font-mono px-2 py-0.5 rounded hover:bg-surface-2 transition cursor-pointer"
               title="Review concept lesson"
             >
-              <BookOpen className="w-3 h-3 text-cyan-400" />
+              <BookOpen className="w-3 h-3 text-func" />
               <span>Lesson</span>
             </button>
           )}
@@ -84,37 +84,37 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
 
       {/* Main Single Task Statement (Prominent Visual Focus) */}
       <div className="py-3.5">
-        <h2 className="text-base sm:text-lg font-bold text-zinc-100 leading-snug tracking-tight">
+        <h2 className="font-display text-base sm:text-lg font-bold text-text leading-snug tracking-tight">
           {taskStatement}
         </h2>
       </div>
 
       {/* Compact Secondary Reference Chips */}
       <div className="flex flex-wrap items-center gap-2 pb-3 pt-1 text-xs font-mono">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/60 text-zinc-300">
-          <span className="text-zinc-400">table:</span>
-          <span className="text-cyan-300 font-semibold">{task.primaryTable}</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-text-dim">
+          <span className="text-text-faint">table:</span>
+          <span className="text-keyword font-semibold">{task.primaryTable}</span>
         </span>
 
         {task.validation.requiredColumns && task.validation.requiredColumns.length > 0 && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/60 text-zinc-300">
-            <span className="text-zinc-400">cols:</span>
-            <span className="text-amber-300 font-semibold">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-text-dim">
+            <span className="text-text-faint">cols:</span>
+            <span className="text-string font-semibold">
               {task.validation.requiredColumns.join(', ')}
             </span>
           </span>
         )}
 
         {task.validation.expectedRowCount !== undefined && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-800/70 border border-zinc-700/60 text-zinc-300">
-            <span className="text-zinc-400">expected rows:</span>
-            <span className="text-emerald-300 font-semibold">{String(task.validation.expectedRowCount)}</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-text-dim">
+            <span className="text-text-faint">expected rows:</span>
+            <span className="text-func font-semibold">{String(task.validation.expectedRowCount)}</span>
           </span>
         )}
       </div>
 
       {/* Single Unified "Need Help?" Progressive Disclosure Section */}
-      <div className="mt-1 pt-2.5 border-t border-zinc-800/80">
+      <div className="mt-1 pt-2.5 border-t border-border-soft">
         <button
           id="toggle-help-btn"
           onClick={() => {
@@ -124,10 +124,10 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
               if (onUseHint) onUseHint(1);
             }
           }}
-          className="flex items-center justify-between w-full text-xs font-mono text-zinc-400 hover:text-amber-300 transition py-1 cursor-pointer"
+          className="flex items-center justify-between w-full text-xs font-mono text-text-dim hover:text-string transition py-1 cursor-pointer"
         >
           <div className="flex items-center gap-1.5">
-            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+            <HelpCircle className="w-3.5 h-3.5 text-string" />
             <span className="font-medium">Need help with this query?</span>
           </div>
           {isHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -139,9 +139,9 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
             {task.hints.slice(0, hintLevel).map((hint, idx) => (
               <div
                 key={idx}
-                className="p-2.5 rounded-lg bg-amber-950/20 border border-amber-500/30 text-amber-200 text-xs leading-relaxed"
+                className="p-2.5 rounded-lg bg-string/10 border border-string/30 text-text text-xs leading-relaxed"
               >
-                <span className="font-bold text-amber-400 mr-1.5">Hint {idx + 1}:</span>
+                <span className="font-bold text-string mr-1.5">Hint {idx + 1}:</span>
                 <span>{hint.text}</span>
               </div>
             ))}
@@ -152,12 +152,12 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
                 <button
                   id="next-hint-btn"
                   onClick={handleNextHint}
-                  className="px-2.5 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-semibold transition cursor-pointer"
+                  className="px-2.5 py-1 rounded bg-string/15 hover:bg-string/25 text-string border border-string/30 text-[11px] font-semibold transition cursor-pointer"
                 >
                   Next Hint ({hintLevel + 1}/{task.hints.length})
                 </button>
               ) : (
-                <span className="text-[11px] text-zinc-500 italic">All hints revealed</span>
+                <span className="text-[11px] text-text-faint italic">All hints revealed</span>
               )}
 
               {!showSolution ? (
@@ -167,7 +167,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
                     setShowSolution(true);
                     if (onViewSolution) onViewSolution();
                   }}
-                  className="text-[11px] text-zinc-400 hover:text-cyan-300 underline underline-offset-2 transition cursor-pointer"
+                  className="text-[11px] text-text-dim hover:text-func underline underline-offset-2 transition cursor-pointer"
                 >
                   View Solution
                 </button>
@@ -176,29 +176,29 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
 
             {/* Inline Solution Display */}
             {showSolution && (
-              <div className="mt-2 p-3 rounded-lg bg-[#0c1117] border border-zinc-700/80 relative text-xs">
-                <div className="flex items-center justify-between mb-1.5 text-zinc-400 text-[11px]">
-                  <span className="font-bold text-cyan-400 flex items-center gap-1">
+              <div className="mt-2 p-3 rounded-lg bg-ink border border-border relative text-xs">
+                <div className="flex items-center justify-between mb-1.5 text-text-dim text-[11px]">
+                  <span className="font-bold text-func flex items-center gap-1">
                     <Code className="w-3 h-3" /> Solution SQL:
                   </span>
                   <button
                     onClick={handleCopySolution}
-                    className="flex items-center gap-1 text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                    className="flex items-center gap-1 text-text-dim hover:text-text cursor-pointer"
                     title="Copy Solution"
                   >
                     {copiedSolution ? (
-                      <Check className="w-3 h-3 text-emerald-400" />
+                      <Check className="w-3 h-3 text-func" />
                     ) : (
                       <Copy className="w-3 h-3" />
                     )}
                     <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
-                <pre className="text-cyan-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                <pre className="text-func font-mono text-xs overflow-x-auto whitespace-pre-wrap">
                   {task.solutionSql}
                 </pre>
                 {task.solutionExplanation && (
-                  <p className="mt-2 pt-2 border-t border-zinc-800 text-zinc-300 text-[11px] font-sans leading-relaxed">
+                  <p className="mt-2 pt-2 border-t border-border text-text-dim text-[11px] font-body leading-relaxed">
                     {task.solutionExplanation}
                   </p>
                 )}

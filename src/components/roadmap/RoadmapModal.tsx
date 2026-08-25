@@ -23,20 +23,20 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-base/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/80 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.15 }}
-        className="w-full max-w-5xl rounded-xl border border-outline-variant/80 bg-surface-container shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
+        className="w-full max-w-5xl rounded-xl border border-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-outline-variant/60 bg-surface-base/80 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-border-soft bg-ink px-5 py-3">
           <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-[20px] text-primary-container">map</span>
+            <span className="material-symbols-outlined text-[20px] text-string">map</span>
             <div>
-              <h2 className="font-label-sm text-xs font-semibold uppercase tracking-wider text-on-surface">
+              <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-text">
                 25-Day Curriculum Map
               </h2>
             </div>
@@ -44,14 +44,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
 
           <button
             onClick={onClose}
-            className="rounded p-1 text-text-muted hover:bg-surface-variant hover:text-on-surface transition cursor-pointer"
+            className="rounded p-1 text-text-dim hover:bg-surface-2 hover:text-text transition cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
 
         {/* Roadmap Milestones */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-surface-base">
+        <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-ink">
           {ROADMAP_MILESTONES.map((milestone) => {
             const milestoneModules = ALL_MODULES.filter((m) => milestone.moduleIds.includes(m.id));
             const completedCount = milestoneModules.filter((m) => !!userState.completedModules[m.id]).length;
@@ -60,22 +60,22 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
             return (
               <div
                 key={milestone.id}
-                className="rounded-xl border border-outline-variant/70 bg-surface-container p-4 space-y-3 shadow-sm"
+                className="rounded-xl border border-border bg-surface p-4 space-y-3 shadow-sm"
               >
                 {/* Milestone Header */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant/60 pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-headline-sm text-xs font-semibold text-on-surface">
+                    <span className="font-display text-xs font-semibold text-text">
                       {milestone.title}
                     </span>
-                    <span className="text-xs text-text-muted font-body-md">({milestone.subtitle})</span>
+                    <span className="text-xs text-text-dim font-body">({milestone.subtitle})</span>
                     {isMilestoneDone && (
-                      <span className="font-label-sm text-[11px] text-primary font-medium">
+                      <span className="font-mono text-[11px] text-func font-medium">
                         [Complete]
                       </span>
                     )}
                   </div>
-                  <span className="font-label-sm text-xs text-text-muted">
+                  <span className="font-mono text-xs text-text-faint">
                     {completedCount}/{milestoneModules.length} Days Done
                   </span>
                 </div>
@@ -98,33 +98,33 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                         }}
                         className={`flex flex-col justify-between rounded-lg p-2.5 text-left transition border ${
                           isCurrent
-                            ? 'border-primary-container bg-surface-dim text-on-surface font-medium'
+                            ? 'border-string bg-string/10 text-text font-medium'
                             : isCompleted
-                            ? 'border-outline-variant/60 bg-surface-dim/70 text-on-surface hover:border-primary-container/60 cursor-pointer'
+                            ? 'border-func/40 bg-surface-2 text-text hover:border-func cursor-pointer'
                             : isUnlocked
-                            ? 'border-outline-variant/60 bg-surface-dim/40 text-on-surface hover:border-primary-container/40 cursor-pointer'
-                            : 'border-outline-variant/40 bg-surface-dim/20 text-text-muted/40 cursor-not-allowed'
+                            ? 'border-border bg-surface-2/50 text-text-dim hover:border-keyword/40 cursor-pointer'
+                            : 'border-border-soft bg-surface/20 text-text-faint cursor-not-allowed'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full mb-1">
-                          <span className="font-label-sm text-[11px] font-medium text-text-muted">
+                          <span className="font-mono text-[11px] font-medium text-text-faint">
                             Day {module.day}
                           </span>
                           {isCompleted ? (
-                            <span className="material-symbols-outlined text-[14px] text-primary">
+                            <span className="material-symbols-outlined text-[14px] text-func">
                               check_circle
                             </span>
                           ) : isUnlocked ? (
-                            <span className="material-symbols-outlined text-[14px] text-primary-container">
+                            <span className="material-symbols-outlined text-[14px] text-keyword">
                               play_circle
                             </span>
                           ) : (
-                            <span className="material-symbols-outlined text-[14px] text-text-muted/50">
+                            <span className="material-symbols-outlined text-[14px] text-text-faint">
                               lock
                             </span>
                           )}
                         </div>
-                        <span className="font-label-sm text-xs line-clamp-1 text-on-surface">
+                        <span className="font-mono text-xs line-clamp-1 text-text">
                           {module.shortTitle}
                         </span>
                       </button>
