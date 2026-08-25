@@ -141,6 +141,13 @@
   }
 }
 
+/* Hide raw ligature text while the Material Symbols font is still loading.
+   The inline script in index.html adds .icons-loading on boot and removes it
+   once document.fonts.ready resolves (or after a 3s failsafe). */
+html.icons-loading .material-symbols-outlined {
+  visibility: hidden;
+}
+
 /* ============ ER-STYLE TIMELINE & NODE STYLES ============ */
 .timeline-container {
   --rail: 15px;

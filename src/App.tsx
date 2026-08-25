@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Header } from './components/layout/Header';
-import { BottomNav, NavTab } from './components/layout/BottomNav';
 import { LearningPathView } from './components/roadmap/LearningPathView';
 import { ConceptLessonView } from './components/learning/ConceptLessonView';
 import { PracticeTaskView } from './components/learning/PracticeTaskView';
@@ -24,6 +23,11 @@ import {
 } from './lib/progress/unlock-calculator';
 
 type LearningStage = 'lesson' | 'practice' | 'concept_complete' | 'challenge' | 'day_complete';
+// Active app view. The bottom navigation bar was removed; 'learning-path' is the
+// landing view, 'practice' is entered by selecting a module. 'settings'/'home'
+// are retained on the type for backward compatibility with saved state but are
+// no longer directly navigable.
+export type NavTab = 'home' | 'learning-path' | 'practice' | 'schema' | 'settings';
 
 export default function App() {
   const [userState, setUserState] = useState<UserLearningState>(loadUserState);
@@ -352,14 +356,6 @@ export default function App() {
     }
   };
 
-  const handleTabChange = (tab: NavTab) => {
-    if (tab === 'schema') {
-      setIsSchemaModalOpen(true);
-    } else {
-      setActiveTab(tab);
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased selection:bg-primary-container/30 selection:text-primary">
       {/* Top Application Header matching HTML */}
@@ -374,8 +370,8 @@ export default function App() {
         activeViewTitle={activeTab === 'practice' ? `Day ${currentModule.day}: ${currentModule.shortTitle}` : 'Learning Path'}
       />
 
-      {/* Main Content Area */}
-      <main className="relative w-full pt-16 bg-surface-base min-h-screen">
+      {/* Main Content Area — header is sticky (in flow), so no top offset needed */}
+      <main className="relative w-full bg-surface-base min-h-screen">
         {activeTab === 'learning-path' || activeTab === 'home' ? (
           <LearningPathView
             userState={userState}
@@ -385,7 +381,7 @@ export default function App() {
             onOpenSchema={() => setIsSchemaModalOpen(true)}
           />
         ) : (
-          <div className="flex flex-col w-full pb-32 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+          <div className="flex flex-col w-full pb-8 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
             {/* Breadcrumb Header in Practice View */}
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/40">
               <button
@@ -500,9 +496,6 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* Bottom Navigation matching HTML design */}
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Global Modals */}
       <SuccessModal

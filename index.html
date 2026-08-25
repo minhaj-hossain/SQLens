@@ -8,7 +8,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <script>
+      // Prevent the "flash of unstyled icon text" (FOUT): Material Symbols are
+      // ligature icons — until the icon font loads, browsers show the literal
+      // ligature text (e.g. "database", "arrow_back"). Add a short guard class
+      // that hides icon glyphs, then remove it the moment the font is ready.
+      (function () {
+        try {
+          document.documentElement.classList.add('icons-loading');
+          // Failsafe: if the font promise never resolves, stop hiding after 3s.
+          setTimeout(function () {
+            document.documentElement.classList.remove('icons-loading');
+          }, 3000);
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () {
+              document.documentElement.classList.remove('icons-loading');
+            });
+          }
+        } catch (e) {
+          document.documentElement.classList.remove('icons-loading');
+        }
+      })();
+    </script>
   </head>
   <body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
     <div id="root"></div>

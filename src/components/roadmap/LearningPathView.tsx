@@ -84,7 +84,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   const ringOffset = ringCircumference - (overallPercent / 100) * ringCircumference;
 
   return (
-    <div className="flex flex-col w-full pb-32">
+    <div className="flex flex-col w-full pb-12">
       {/* Locked Notice Banner if clicked */}
       {lockedAlert && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
@@ -135,7 +135,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       )}
 
       {/* ============ HERO SECTION ============ */}
-      <section className="max-w-[840px] mx-auto w-full px-4 sm:px-6 pt-10 sm:pt-14 pb-8 sm:pb-10">
+      <section className="max-w-[840px] mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-8 pb-8 sm:pb-10">
         <div className="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-func uppercase mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-func shadow-[0_0_8px_rgba(56,189,248,0.6)] shrink-0" />
           <span>SQLens · Curriculum Roadmap</span>
