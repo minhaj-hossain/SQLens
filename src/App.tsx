@@ -145,7 +145,12 @@ export default function App() {
   // Step 1: User finishes reading Concept Lesson -> Move to Guided Practice
   const handleStartPractice = () => {
     if (currentTasks.length > 0) {
-      setCurrentTaskIndex(0);
+      // Retain currentTaskIndex if already valid within the current concept; otherwise start at 0
+      const validIndex =
+        currentTaskIndex >= 0 && currentTaskIndex < currentTasks.length
+          ? currentTaskIndex
+          : 0;
+      setCurrentTaskIndex(validIndex);
       setStage('practice');
     } else {
       handleCompleteConcept();
@@ -401,6 +406,7 @@ export default function App() {
                   onPrevious={() => {
                     if (currentConceptIndex > 0) {
                       setCurrentConceptIndex((prev) => prev - 1);
+                      setCurrentTaskIndex(0);
                     }
                   }}
                   canGoBack={currentConceptIndex > 0}

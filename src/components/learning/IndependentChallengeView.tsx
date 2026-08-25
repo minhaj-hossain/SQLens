@@ -143,7 +143,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     return escaped;
   }, [currentSql]);
 
-  // Sync state when selected task changes
+  // Sync state when selected task changes (tracked by currentTask.id)
   useEffect(() => {
     const isDone = completedTaskIds.includes(currentTask.id);
     const existingSql = taskSqlCache[currentTask.id] ?? (isDone && currentTask.solutionSql ? currentTask.solutionSql : (currentTask.initialSql || ''));
@@ -155,7 +155,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     setRevealedHintLevel(0);
     setFailedAttemptsCount(0);
     setInspectTable(currentTask.primaryTable || 'products');
-  }, [currentTask.id, currentTask.primaryTable, completedTaskIds]);
+  }, [currentTask.id]);
 
   const isLastTask = selectedTaskIdx >= challenge.tasks.length - 1;
 

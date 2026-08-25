@@ -52,14 +52,14 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   const [taskPassed, setTaskPassed] = useState<boolean>(isCompleted);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
-  // Re-sync when task changes
+  // Re-sync when switching tasks (tracked by task.id)
   useEffect(() => {
     const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : task.initialSql;
     setCurrentSql(codeToSet);
     setExecutionResult(null);
     setTaskPassed(isCompleted);
     setValidationMessage(null);
-  }, [task.id, task.initialSql, savedSql, isCompleted]);
+  }, [task.id]);
 
   // Run Preview (no grading / validation, purely executes and shows results)
   const handleRunPreview = (sqlToRun: string = currentSql) => {
