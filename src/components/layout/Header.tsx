@@ -137,7 +137,7 @@ export const Header: React.FC<HeaderProps> = ({
 
                 <div className="space-y-3 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-text">Bypass 6:00 PM Lock</span>
+                    <span className="text-text">Bypass Unlock Gates</span>
                     <input
                       type="checkbox"
                       checked={userState.bypassDailyLock}
@@ -148,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                     />
                   </div>
                   <p className="text-[11px] text-text-dim leading-relaxed">
-                    Allows instant access to upcoming modules without waiting for the 6:00 PM daily unlock.
+                    Bypasses all unlock gates: the 6:00 PM daily lock <em>and</em> any scheduled publish dates. Previous module must still be completed.
                   </p>
 
                   <div className="border-t border-border/60 pt-2">

@@ -1,4 +1,5 @@
 import { ModuleData } from '../types/curriculum';
+import { MODULE_PUBLISH_SCHEDULE } from '../config/curriculum-schedule';
 import { DAY_01_MODULE } from './modules/day01';
 import { DAY_02_MODULE } from './modules/day02';
 import { DAY_03_MODULE } from './modules/day03';
@@ -31,7 +32,8 @@ import {
   DAY_25_MODULE,
 } from './modules/day17to25';
 
-export const ALL_MODULES: ModuleData[] = [
+/** Raw module definitions before schedule overrides are applied. */
+const RAW_MODULES: ModuleData[] = [
   DAY_01_MODULE,
   DAY_02_MODULE,
   DAY_03_MODULE,
@@ -58,6 +60,16 @@ export const ALL_MODULES: ModuleData[] = [
   DAY_24_MODULE,
   DAY_25_MODULE,
 ];
+
+/**
+ * All modules with publish-schedule overrides merged in.
+ * Entries in MODULE_PUBLISH_SCHEDULE take precedence over any
+ * `scheduledPublishDate` field defined inside a module's content file.
+ */
+export const ALL_MODULES: ModuleData[] = RAW_MODULES.map((m) => ({
+  ...m,
+  scheduledPublishDate: MODULE_PUBLISH_SCHEDULE[m.id] ?? m.scheduledPublishDate,
+}));
 
 export function getModuleById(id: string): ModuleData | undefined {
   return ALL_MODULES.find(m => m.id === id);

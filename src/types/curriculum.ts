@@ -152,6 +152,15 @@ export interface ModuleData {
   concepts: Concept[];
   challenge?: IndependentChallenge;
   completionLearnings: string[];
+  /**
+   * Optional ISO datetime string (e.g. "2024-11-01T18:00:00") for manually
+   * scheduling this module's earliest availability. If set, the module will NOT
+   * unlock before this date even if the user has completed the previous module
+   * and waited the standard 24-hour period. Useful for cohort-based launches.
+   * Can be set per-module in the content file OR via curriculum-schedule.ts
+   * (which takes precedence).
+   */
+  scheduledPublishDate?: string;
 }
 
 export interface MilestoneData {

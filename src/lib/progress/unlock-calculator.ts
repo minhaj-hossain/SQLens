@@ -138,6 +138,33 @@ export function isModuleConceptsCompleted(
 }
 
 /**
+ * Checks whether a module is considered FULLY complete.
+ * A module is fully complete when:
+ *  - All concept lessons (and their practice tasks) are done, AND
+ *  - If the module has an independent challenge, it has also been completed.
+ *
+ * This is the stricter gate used for unlocking the *next* module.
+ */
+export function isModuleFullyComplete(
+  module: ModuleData,
+  state: UserLearningState
+): boolean {
+  const record = state.completedModules?.[module.id];
+  // No completion record at all → definitely not done
+  if (!record) return false;
+
+  // All concept lessons must be done
+  if (!isModuleConceptsCompleted(module, state)) return false;
+
+  // If the module has a challenge, it must also be completed
+  if (module.challenge && !record.challengeCompleted && !record.completedAt) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Determines whether the Independent Challenge for a module is unlocked.
  * A challenge is unlocked ONLY IF:
  * 1. The module itself is unlocked (or completed).
@@ -186,13 +213,20 @@ export function isModuleChallengeUnlocked(
 
 /**
  * Determines unlock status for a specific module based on progression rules.
+ *
+ * Gate order (all must pass):
+ *  1. Day 1 is always unlocked.
+ *  2. Previous module must exist and have a completion record.
+ *  3. Previous module must be FULLY complete (concepts + challenge).
+ *  4. If this module has a `scheduledPublishDate`, it must have passed.
+ *  5. The 6 PM learning-cycle gate: must be in a new cycle or past next 6 PM.
  */
 export function getModuleUnlockStatus(
   module: ModuleData,
   allModules: ModuleData[],
   state: UserLearningState
 ): UnlockStatus {
-  // Day 1 is always unlocked
+  // Gate 0 — Day 1 is always unlocked
   if (module.day === 1 || module.id === 'day-01') {
     const isCompleted = !!state.completedModules[module.id];
     return {
@@ -211,7 +245,7 @@ export function getModuleUnlockStatus(
     };
   }
 
-  // If bypass daily lock is enabled (for previewing / testing)
+  // Bypass mode — skip all time/schedule gates; only require previous completion
   if (state.bypassDailyLock) {
     const prevModule = allModules.find(m => m.day === module.day - 1);
     const prevCompleted = prevModule ? !!state.completedModules[prevModule.id] : true;
@@ -223,12 +257,13 @@ export function getModuleUnlockStatus(
     };
   }
 
-  // Find previous module
+  // Gate 1 — Find previous module
   const prevModule = allModules.find(m => m.day === module.day - 1);
   if (!prevModule) {
     return { isUnlocked: true, isCompleted: false, isCurrent: false };
   }
 
+  // Gate 2 — Previous module must have a completion record
   const prevCompletionRecord = state.completedModules[prevModule.id];
   if (!prevCompletionRecord) {
     return {
@@ -239,14 +274,46 @@ export function getModuleUnlockStatus(
     };
   }
 
+  // Gate 3 — Previous module must be FULLY complete (concepts + challenge)
+  if (!isModuleFullyComplete(prevModule, state)) {
+    const totalConcepts = prevModule.concepts?.length ?? 0;
+    const completedCount = prevModule.concepts?.filter((c) =>
+      isConceptCompleted(c, prevModule.id, state)
+    ).length ?? 0;
+    const challengePending = prevModule.challenge && !prevCompletionRecord.challengeCompleted;
+    const reason = challengePending
+      ? `Finish the Day ${prevModule.day} Independent Challenge to unlock Day ${module.day}.`
+      : `Finish all Day ${prevModule.day} concept lessons first (${completedCount}/${totalConcepts} done).`;
+    return {
+      isUnlocked: false,
+      isCompleted: false,
+      isCurrent: false,
+      reason,
+    };
+  }
+
   const now = getEffectiveNow(state.simulatedTimeOffsetHours);
   const prevCompletedDate = new Date(prevCompletionRecord.completedAt);
   const nextUnlockDate = getNextUnlockTime(prevCompletedDate);
 
+  // Gate 4 — Respect scheduledPublishDate if set on this module
+  if (module.scheduledPublishDate) {
+    const publishDate = new Date(module.scheduledPublishDate);
+    if (!isNaN(publishDate.getTime()) && now.getTime() < publishDate.getTime()) {
+      return {
+        isUnlocked: false,
+        isCompleted: false,
+        isCurrent: false,
+        unlockTime: publishDate,
+        countdownFormatted: formatTimeRemaining(publishDate, now),
+        reason: `Scheduled for release on ${publishDate.toLocaleDateString()} at ${publishDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${formatTimeRemaining(publishDate, now)} remaining).`,
+      };
+    }
+  }
+
+  // Gate 5 — 6 PM learning-cycle gate
   const prevCycle = prevCompletionRecord.learningDayCycleId;
   const currentCycle = getLearningCycleId(now);
-
-  // Condition 1: Must be in a new learning cycle OR now >= nextUnlockDate
   const isPastUnlockTime = now.getTime() >= nextUnlockDate.getTime();
   const isDifferentCycle = prevCycle !== currentCycle;
 

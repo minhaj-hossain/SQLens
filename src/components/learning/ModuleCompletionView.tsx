@@ -24,7 +24,16 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
   onContinueNextDay,
 }) => {
   const completedDate = userState.completedModules[module.id]?.completedAt || new Date().toISOString();
-  const nextUnlockDate = getNextUnlockTime(completedDate);
+  const baseUnlockDate = getNextUnlockTime(completedDate);
+  // If the next module has a scheduledPublishDate that is later than the standard
+  // 6 PM gate, we show a countdown to that later date instead.
+  const scheduledDate =
+    nextModule?.scheduledPublishDate ? new Date(nextModule.scheduledPublishDate) : null;
+  const nextUnlockDate =
+    scheduledDate && !isNaN(scheduledDate.getTime()) && scheduledDate > baseUnlockDate
+      ? scheduledDate
+      : baseUnlockDate;
+
   const [countdown, setCountdown] = useState(() =>
     formatTimeRemaining(nextUnlockDate, userState.simulatedTimeOffsetHours)
   );
