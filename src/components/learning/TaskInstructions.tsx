@@ -52,16 +52,16 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
       className="flex flex-col bg-surface rounded-xl border border-border p-4 sm:p-5 shadow-lg relative text-text"
     >
       {/* Top Header: Muted Secondary Metadata & Lesson Link */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-border-soft text-xs">
-        <div className="flex items-center gap-1.5 font-mono text-text-dim">
-          <span className="text-func font-bold tracking-wider">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pb-2.5 border-b border-border-soft text-xs">
+        <div className="flex items-center gap-1.5 font-mono text-text-dim min-w-0">
+          <span className="text-func font-bold tracking-wider shrink-0">
             TASK {taskIndex + 1}/{totalTasks}
           </span>
-          <span className="text-text-faint">•</span>
-          <span className="truncate max-w-[180px] sm:max-w-xs">{concept.title}</span>
+          <span className="text-text-faint shrink-0">•</span>
+          <span className="truncate">{concept.title}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {isCompleted && (
             <div className="flex items-center gap-1 text-[11px] font-medium text-func bg-func/10 px-2 py-0.5 rounded-full border border-func/30">
               <CheckCircle2 className="w-3 h-3 text-func" />

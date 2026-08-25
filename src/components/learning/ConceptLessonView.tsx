@@ -411,20 +411,20 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
 
         <div className="p-6 sm:p-8 flex flex-col gap-6">
           {/* Top Breadcrumb & Status + Corner Next Button */}
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-outline-variant/60 pb-4">
-            <div className="flex items-center gap-2 font-label-md text-xs sm:text-sm text-text-muted min-w-0 flex-1">
-              <span className="text-primary font-bold whitespace-nowrap">SQL Lesson {conceptIndex + 1}</span>
-              <span>/</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-2.5 gap-x-3 border-b border-outline-variant/60 pb-4">
+            <div className="flex items-center gap-2 font-label-md text-xs sm:text-sm text-text-muted min-w-0 w-full sm:w-auto">
+              <span className="text-primary font-bold whitespace-nowrap shrink-0">SQL Lesson {conceptIndex + 1}</span>
+              <span className="shrink-0">/</span>
               <span className="text-on-surface font-semibold truncate">{concept.title}</span>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="bg-primary-container/15 text-primary px-3 py-1 rounded-full text-xs font-label-sm font-semibold border border-primary-container/30">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <span className="bg-primary-container/15 text-primary px-3 py-1 rounded-full text-xs font-label-sm font-semibold border border-primary-container/30 whitespace-nowrap">
                 Concept {conceptIndex + 1} of {totalConcepts}
               </span>
               <button
                 onClick={onStartPractice}
-                className="bg-primary-container hover:brightness-110 active:scale-95 transition-all text-on-primary-container text-xs font-bold px-4 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
+                className="bg-primary-container hover:brightness-110 active:scale-95 transition-all text-on-primary-container text-xs font-bold px-4 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
                 <span>Next</span>
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -456,10 +456,10 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           {/* Intro Visual Table (e.g. students table preview) */}
           {theory.introTable && (
             <div className="flex flex-col gap-2 rounded-xl bg-surface-base border border-outline-variant/70 overflow-hidden shadow-sm">
-              <div className="px-4 py-2.5 bg-surface-dim border-b border-outline-variant/60 flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-primary flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">table_chart</span>
-                  <span>{theory.introTable.tableName}</span>
+              <div className="px-4 py-2.5 bg-surface-dim border-b border-outline-variant/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                <span className="font-mono text-xs font-bold text-primary flex items-center gap-1.5 min-w-0">
+                  <span className="material-symbols-outlined text-[16px] shrink-0">table_chart</span>
+                  <span className="truncate">{theory.introTable.tableName}</span>
                 </span>
                 {theory.introTable.description && (
                   <span className="text-[11px] text-text-muted italic">
@@ -503,10 +503,10 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           {/* Target Query Hero (Query we'll break down) */}
           {theory.targetQuery && (
             <div className="rounded-xl bg-surface border border-string/40 overflow-hidden shadow-md my-4">
-              <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-string uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-string">schema</span>
-                  <span>{theory.targetQuery.badge || "The query we're going to break down"}</span>
+              <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                <span className="font-mono text-xs font-bold text-string uppercase tracking-wider flex items-center gap-1.5 min-w-0">
+                  <span className="material-symbols-outlined text-[16px] text-string shrink-0">schema</span>
+                  <span className="truncate">{theory.targetQuery.badge || "The query we're going to break down"}</span>
                 </span>
                 <button
                   onClick={() => {
