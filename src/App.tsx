@@ -58,6 +58,15 @@ export default function App() {
   // In-memory SQL Executor instance
   const sqlExecutor = useMemo(() => new SqlExecutor(), []);
 
+  // Reset the in-memory DB whenever the active module/concept/task/stage changes.
+  // This prevents DML/DDL mutations from one task (e.g. DELETE FROM products;
+  // or CREATE TABLE) from leaking into later lessons, which would cause
+  // misleading "returned X rows, expected Y rows" mismatches down the course.
+  useEffect(() => {
+    sqlExecutor.resetDatabase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage]);
+
   // Sync state with localStorage
   useEffect(() => {
     saveUserState(userState);

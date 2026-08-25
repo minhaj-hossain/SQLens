@@ -1415,7 +1415,7 @@ export const DAY_19_MODULE: ModuleData = {
           ],
           type: 'independent',
           primaryTable: 'products',
-          initialSql: 'DELETE FROM products;\n',
+          initialSql: '-- Warning: DELETE FROM products; wipes the whole catalog.\n-- Now write the SAME delete but ONLY for quantity_in_stock = 0\n',
           solutionSql: 'DELETE FROM products WHERE quantity_in_stock = 0;',
           solutionExplanation: 'Adds a WHERE condition to only delete items with 0 stock (3 items).',
           hints: [{ level: 1, text: 'Add `WHERE quantity_in_stock = 0;`' }],
