@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
+import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 
 interface SchemaModalProps {
   isOpen: boolean;
@@ -10,6 +11,10 @@ interface SchemaModalProps {
 
 export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => {
   const [selectedTable, setSelectedTable] = useState<string>('products');
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking/tapping anywhere outside the modal panel.
+  useCloseOnOutside(panelRef, isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -23,6 +28,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
       onClick={onClose}
     >
       <motion.div
+        ref={panelRef}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}

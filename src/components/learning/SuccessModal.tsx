@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -22,6 +23,11 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   onContinue,
   onClose,
 }) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking/tapping anywhere outside the modal panel.
+  useCloseOnOutside(panelRef, isOpen, onClose);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -30,6 +36,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
           onClick={onClose}
         >
           <motion.div
+            ref={panelRef}
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, TableRow } from '../../types/database';
 import { validateTaskSolution } from '../../lib/sql-engine/validator';
+import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import {
@@ -76,6 +77,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
   // Database Inspector Modal / Drawer
   const [showDatabaseModal, setShowDatabaseModal] = useState<boolean>(false);
+  const dbModalRef = useRef<HTMLDivElement>(null);
+
+  // Close the database inspector when clicking/tapping outside its panel.
+  useCloseOnOutside(dbModalRef, showDatabaseModal, () => setShowDatabaseModal(false));
+
   const [inspectTable, setInspectTable] = useState<string>(currentTask.primaryTable || 'products');
   const [dbSearchFilter, setDbSearchFilter] = useState<string>('');
   const [copiedColumn, setCopiedColumn] = useState<string | null>(null);
@@ -713,6 +719,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           onClick={() => setShowDatabaseModal(false)}
         >
           <div
+            ref={dbModalRef}
             className="bg-surface border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-text flex flex-col max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >

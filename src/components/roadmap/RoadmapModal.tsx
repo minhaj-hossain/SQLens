@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { UserLearningState } from '../../types/progress';
 import { getModuleUnlockStatus, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
+import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 
 interface RoadmapModalProps {
   isOpen: boolean;
@@ -20,6 +21,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
   onSelectModule,
   onClose,
 }) => {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking/tapping anywhere outside the modal panel.
+  useCloseOnOutside(panelRef, isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
@@ -28,6 +34,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
       onClick={onClose}
     >
       <motion.div
+        ref={panelRef}
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
