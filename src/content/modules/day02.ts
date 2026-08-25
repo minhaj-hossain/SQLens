@@ -736,7 +736,7 @@ export const DAY_02_MODULE: ModuleData = {
             requiredColumns: ['name', 'price', 'quantity_in_stock'],
             requireWhere: true,
             whereContainsTerms: ['quantity_in_stock', '<=', '15'],
-            expectedRowCount: 18,
+            expectedRowCount: 16,
           },
           successMessage: 'Spot on! You verified that boundary values are included by <=.',
         },
