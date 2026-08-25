@@ -228,7 +228,9 @@ export function getModuleUnlockStatus(
 ): UnlockStatus {
   // Gate 0 — Day 1 is always unlocked
   if (module.day === 1 || module.id === 'day-01') {
-    const isCompleted = !!state.completedModules[module.id];
+    // A day only counts as "completed" when every concept AND the final
+    // challenge (if any) is finished — never for a partial progress record.
+    const isCompleted = isModuleFullyComplete(module, state);
     return {
       isUnlocked: true,
       isCompleted,
@@ -236,11 +238,13 @@ export function getModuleUnlockStatus(
     };
   }
 
-  const isCompleted = !!state.completedModules[module.id];
-  if (isCompleted) {
+  const hasRecord = !!state.completedModules[module.id];
+  if (hasRecord) {
+    // Keep the module unlocked so learners can always return and continue, but
+    // only report "completed" once all concepts AND the challenge are done.
     return {
       isUnlocked: true,
-      isCompleted: true,
+      isCompleted: isModuleFullyComplete(module, state),
       isCurrent: state.currentModuleId === module.id,
     };
   }

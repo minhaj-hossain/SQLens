@@ -9,6 +9,7 @@ interface SuccessModalProps {
   conceptProgressText?: string;
   progressPercent?: number;
   onContinue: () => void;
+  onClose: () => void;
 }
 
 export const SuccessModal: React.FC<SuccessModalProps> = ({
@@ -19,17 +20,22 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   conceptProgressText,
   progressPercent = 100,
   onContinue,
+  onClose,
 }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-base/80 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-base/80 backdrop-blur-md"
+          onClick={onClose}
+        >
           <motion.div
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.2 }}
             className="relative w-full max-w-lg rounded-xl bg-surface-container border border-outline-variant/80 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Top Green Accent Border */}
             <div className="absolute top-0 left-0 w-full h-1 bg-[#10B981]" />

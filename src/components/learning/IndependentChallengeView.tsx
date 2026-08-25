@@ -708,8 +708,14 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
       {/* 5. MINIMALIST DATABASE INSPECTOR MODAL / DRAWER */}
       {showDatabaseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-surface border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-text flex flex-col max-h-[85vh]">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setShowDatabaseModal(false)}
+        >
+          <div
+            className="bg-surface border border-border rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden text-text flex flex-col max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 bg-ink border-b border-border">
               <div className="flex items-center gap-2">

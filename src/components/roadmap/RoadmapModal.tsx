@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { UserLearningState } from '../../types/progress';
-import { getModuleUnlockStatus } from '../../lib/progress/unlock-calculator';
+import { getModuleUnlockStatus, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
 
 interface RoadmapModalProps {
   isOpen: boolean;
@@ -23,13 +23,17 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/80 backdrop-blur-md">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/80 backdrop-blur-md"
+      onClick={onClose}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.15 }}
         className="w-full max-w-5xl rounded-xl border border-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-soft bg-ink px-5 py-3">
@@ -54,7 +58,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
         <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-ink">
           {ROADMAP_MILESTONES.map((milestone) => {
             const milestoneModules = ALL_MODULES.filter((m) => milestone.moduleIds.includes(m.id));
-            const completedCount = milestoneModules.filter((m) => !!userState.completedModules[m.id]).length;
+            const completedCount = milestoneModules.filter((m) => isModuleFullyComplete(m, userState)).length;
             const isMilestoneDone = completedCount === milestoneModules.length;
 
             return (

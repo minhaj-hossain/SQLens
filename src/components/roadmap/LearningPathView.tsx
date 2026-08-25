@@ -8,6 +8,7 @@ import {
   isConceptCompleted,
   isModuleConceptsCompleted,
   isModuleChallengeUnlocked,
+  isModuleFullyComplete,
 } from '../../lib/progress/unlock-calculator';
 
 interface LearningPathViewProps {
@@ -280,11 +281,14 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
           );
 
           const completedInMilestone = milestoneModules.filter(
-            (m) => !!userState.completedModules[m.id]
+            (m) => isModuleFullyComplete(m, userState)
           ).length;
           const isMilestoneCompleted = completedInMilestone === milestoneModules.length;
           const isMilestoneActive = milestoneModules.some((m) => m.id === currentModuleId);
-          const isMilestoneLocked = milestoneIdx > 0 && !ROADMAP_MILESTONES[milestoneIdx - 1].moduleIds.every((id) => !!userState.completedModules[id]);
+          const isMilestoneLocked = milestoneIdx > 0 && !ROADMAP_MILESTONES[milestoneIdx - 1].moduleIds.every((id) => {
+            const mod = ALL_MODULES.find((mm) => mm.id === id);
+            return mod ? isModuleFullyComplete(mod, userState) : false;
+          });
 
           // If milestone is locked teaser
           if (isMilestoneLocked && completedInMilestone === 0) {
@@ -345,7 +349,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 {milestoneModules.map((module) => {
                   const unlockStatus = getModuleUnlockStatus(module, ALL_MODULES, userState);
                   const isCurrent = module.id === currentModuleId;
-                  const isCompleted = !!userState.completedModules[module.id];
+                  const isCompleted = isModuleFullyComplete(module, userState);
                   const isUnlocked = unlockStatus.isUnlocked || isCompleted;
 
                   const totalConcepts = module.concepts.length;

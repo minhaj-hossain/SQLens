@@ -18,13 +18,17 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
   const currentRows = INITIAL_TABLES[selectedTable] || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/80 backdrop-blur-md">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/80 backdrop-blur-md"
+      onClick={onClose}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.15 }}
         className="w-full max-w-4xl rounded-xl border border-border bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-soft bg-ink px-4 py-3">

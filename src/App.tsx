@@ -506,6 +506,7 @@ export default function App() {
         conceptProgressText={successModalData.progressText}
         progressPercent={successModalData.progressPercent}
         onContinue={successModalData.onContinue}
+        onClose={() => setSuccessModalData((d) => ({ ...d, isOpen: false }))}
       />
 
       <SchemaModal

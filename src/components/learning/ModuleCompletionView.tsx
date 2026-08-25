@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ModuleData } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
-import { getNextUnlockTime, formatTimeRemaining, getEffectiveNow } from '../../lib/progress/unlock-calculator';
+import { getNextUnlockTime, formatTimeRemaining, getEffectiveNow, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
 
@@ -60,7 +60,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
   const currentMilestone =
     ROADMAP_MILESTONES.find((m) => m.id === module.milestoneId) || ROADMAP_MILESTONES[0];
   const milestoneModules = ALL_MODULES.filter((m) => currentMilestone.moduleIds.includes(m.id));
-  const completedInMilestone = milestoneModules.filter((m) => !!userState.completedModules[m.id]).length;
+  const completedInMilestone = milestoneModules.filter((m) => isModuleFullyComplete(m, userState)).length;
   const milestonePercent = Math.round((completedInMilestone / milestoneModules.length) * 100);
 
   return (

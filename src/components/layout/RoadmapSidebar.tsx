@@ -3,7 +3,7 @@ import { Check, Lock, ChevronRight } from 'lucide-react';
 import { UserLearningState } from '../../types/progress';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
-import { getModuleUnlockStatus } from '../../lib/progress/unlock-calculator';
+import { getModuleUnlockStatus, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
 
 interface RoadmapSidebarProps {
   currentModuleId: string;
@@ -43,7 +43,7 @@ export const RoadmapSidebar: React.FC<RoadmapSidebarProps> = ({
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         {ROADMAP_MILESTONES.map((milestone) => {
           const milestoneModules = ALL_MODULES.filter(m => milestone.moduleIds.includes(m.id));
-          const completedInMilestone = milestoneModules.filter(m => !!userState.completedModules[m.id]).length;
+          const completedInMilestone = milestoneModules.filter(m => isModuleFullyComplete(m, userState)).length;
 
           return (
             <div key={milestone.id} className="space-y-2">
