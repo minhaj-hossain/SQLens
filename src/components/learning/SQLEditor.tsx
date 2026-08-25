@@ -325,7 +325,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <span className="text-[11px] font-mono text-cyan-400 font-semibold tracking-wide">
             query.sql
           </span>
-          <span className="text-[10px] text-zinc-400 px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50">
+          <span className="hidden sm:inline-block text-[10px] text-zinc-400 px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50">
             Active: {tableName}
           </span>
         </div>
