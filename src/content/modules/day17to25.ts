@@ -20,114 +20,221 @@ export const DAY_17_MODULE: ModuleData = {
   ],
   concepts: [
     // =========================================================================
-    // CONCEPT 1: Scalar & IN Subqueries
+    // CONCEPT 1a: Scalar Subqueries (Single-Value Comparison)
     // =========================================================================
     {
-      id: 'scalar-and-in-subqueries',
+      id: 'subqueries-scalar',
       order: 1,
-      title: '1. Scalar Subqueries & Dynamic IN Lists',
-      shortDescription: 'Nested queries that return single values or column lists.',
+      title: '1. Scalar Subqueries (Single-Value Comparison)',
+      shortDescription: 'Compare individual rows dynamically against whole-table aggregates.',
       theory: {
-        summary: 'A subquery is a query nested inside another SQL statement. A scalar subquery returns a single value (e.g. `(SELECT AVG(price) FROM products)`). An IN subquery returns a list of values for filtering.',
+        summary: 'A subquery is a query nested inside another SQL statement. A scalar subquery returns exactly one value (one row and one column), allowing you to use it wherever a constant or literal value is expected.',
         introTable: {
           tableName: 'products',
           description: 'Comparing items against table-wide average price.',
           columns: ['product_id', 'name', 'price'],
           rows: [
-            [1, 'Wireless Mouse', 25.00],
-            [2, 'Mechanical Keyboard', 89.99],
-            [4, 'Ergonomic Desk Chair', 249.00],
-            [6, '4K UltraHD Monitor', 349.99],
+            [1, 'Wireless Mouse', 15.99],
+            [4, 'Mechanical Keyboard', 65.00],
+            [14, 'Office Chair', 120.00],
+            [15, 'Filing Cabinet', 89.99],
           ],
         },
         explanation: [
-          '### 1. Scalar Subqueries',
-          '`WHERE price > (SELECT AVG(price) FROM products)` dynamically calculates the table average ($114.62) and filters products priced above it.',
-          '### 2. Multi-Row IN Subqueries',
-          '`WHERE customer_id IN (SELECT customer_id FROM orders)` dynamically extracts customer IDs who have at least one recorded order.',
+          '### 1. The Dynamic Comparison Pattern',
+          'Instead of hardcoding a magic number like `WHERE price > 30.00`, a scalar subquery computes the threshold dynamically:\n```sql\nSELECT name, price\nFROM products\nWHERE price > (SELECT AVG(price) FROM products);\n```',
+          '### 2. Execution Order',
+          '1. The database evaluates the inner query `(SELECT AVG(price) FROM products)` first to get the scalar value ($30.13).\n2. The outer query then filters rows where `price > 30.13`.',
+          'QUESTION_BLOCK::Scalar Rule::A scalar subquery MUST return exactly one row and one column. If it returns multiple rows or columns, SQL will halt with an error.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Comparing with Table Average via Subquery',
-            sqlSnippet: 'SELECT name, price\nFROM products\nWHERE price > (SELECT AVG(price) FROM products);',
-            explanation: 'The inner subquery evaluates the average price once, and the outer query filters for items above that average.',
+            stepTitle: 'Step 1: Inner Query Computes Average',
+            sqlSnippet: 'SELECT AVG(price) FROM products;',
+            explanation: 'Computes overall catalog average price ($30.13).',
             tableData: {
-              tableName: 'Above Average Products',
+              tableName: 'Inner Result',
+              columns: ['AVG(price)'],
+              rows: [[30.13]],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Outer Query Filters for price > $30.13',
+            sqlSnippet: 'SELECT name, price FROM products WHERE price > 30.13;',
+            explanation: 'Retains only items priced above the average.',
+            tableData: {
+              tableName: 'Above Average Items',
               columns: ['name', 'price'],
               rows: [
-                ['Ergonomic Desk Chair', 249.00],
-                ['4K UltraHD Monitor (27-inch)', 349.99],
-                ['Adjustable Standing Desk', 420.00],
+                ['Bluetooth Speaker', 45.50],
+                ['Mechanical Keyboard', 65.00],
+                ['Office Chair', 120.00],
               ],
             },
           },
         ],
         syntaxBlocks: [
           {
-            title: 'Scalar and IN subqueries',
-            sql: '-- Scalar subquery\nSELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);\n\n-- IN subquery\nSELECT name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders);',
-            description: 'Subquery filtering patterns.',
+            title: 'Scalar subquery syntax',
+            sql: 'SELECT name, price\nFROM products\nWHERE price > (SELECT AVG(price) FROM products);',
+            description: 'Compares price against table-wide average price dynamically.',
           },
         ],
-        keyTakeaway: 'Use subqueries to compute dynamic criteria without hardcoding magic numbers.',
+        keyTakeaway: 'A scalar subquery evaluates to a single value, enabling dynamic comparisons.',
         exampleQuery: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);',
         exampleQueryExplanation: 'Finds products priced above the overall average.',
-        liveDemoSql: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);',
+        liveDemoSql: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products) LIMIT 5;',
         liveDemoNotes: 'Displays above-average priced products.',
         mcqs: [
           {
-            question: 'What is a scalar subquery?',
+            question: 'What is a scalar subquery in SQL?',
             options: [
-              'A. A subquery that returns a full table',
-              'B. A subquery that returns exactly one row and one column (a single value)',
-              'C. A query with multiple joins',
-              'D. A subquery that only works in MySQL',
+              'A. A subquery that returns a full multi-column table',
+              'B. A subquery that returns exactly one row and one column (a single atomic value)',
+              'C. A query containing multiple JOINs',
+              'D. A subquery that executes in a background thread',
             ],
             correctIndex: 1,
             explanation: 'Scalar subqueries evaluate to a single atomic value.',
           },
         ],
-        masteryPoints: ['Write scalar and IN subqueries'],
+        masteryPoints: ['Write scalar subqueries in WHERE clauses', 'Compare rows against dynamic aggregates'],
       },
       tasks: [
         {
-          id: 'day17-c1-t1',
-          title: 'Task 1: Products Priced Above Overall Average',
-          description: 'Select products priced higher than the overall average product price.',
+          id: 'day17-c1a-t1',
+          title: 'Task 1: Products Priced Above Average',
+          description: 'Select name and price for all products priced higher than the overall average product price.',
           instructions: [
             'Select `name` and `price` from `products`.',
-            'Where `price > (SELECT AVG(price) FROM products)`.',
+            'Filter with `WHERE price > (SELECT AVG(price) FROM products)`.',
             'End with a semicolon (;).',
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Products above average price\n',
           solutionSql: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);',
-          solutionExplanation: 'Uses a scalar subquery in the WHERE clause.',
+          solutionExplanation: 'Uses a scalar subquery `(SELECT AVG(price) FROM products)` to dynamically filter products.',
           hints: [{ level: 1, text: 'Use `WHERE price > (SELECT AVG(price) FROM products);`' }],
           validation: {
             targetTable: 'products',
             requireWhere: true,
+            requiredColumns: ['name', 'price'],
             expectedRowCount: 10,
           },
           successMessage: 'Above-average products retrieved!',
         },
         {
-          id: 'day17-c1-t2',
-          title: 'Task 2: Customers with Recorded Orders (IN)',
+          id: 'day17-c1a-t2',
+          title: 'Task 2: Students Older Than Average Student Age',
+          description: 'Select name and age for students who are strictly older than the student average age.',
+          instructions: [
+            'Query the `students` table.',
+            'Select `name` and `age`.',
+            'Filter where `age > (SELECT AVG(age) FROM students)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'students',
+          initialSql: '-- Students older than average\n',
+          solutionSql: 'SELECT name, age FROM students WHERE age > (SELECT AVG(age) FROM students);',
+          solutionExplanation: 'The average student age is 21.4; only Karim (22) and Sumaiya (23) are older.',
+          hints: [{ level: 1, text: 'Use `WHERE age > (SELECT AVG(age) FROM students);`' }],
+          validation: {
+            targetTable: 'students',
+            requireWhere: true,
+            requiredColumns: ['name', 'age'],
+            expectedRowCount: 2,
+          },
+          successMessage: 'Perfect! Above-average age students identified.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 1b: Set Membership Subqueries with IN
+    // =========================================================================
+    {
+      id: 'subqueries-in-set',
+      order: 2,
+      title: '2. Set Membership Subqueries with IN',
+      shortDescription: 'Filter rows against dynamic lists produced by inner queries.',
+      theory: {
+        summary: 'When a subquery returns a column of multiple values, you can use `IN` to check if a row\'s column matches any value in that dynamic list.',
+        introTable: {
+          tableName: 'customers & orders',
+          description: 'Identifying customers with active orders',
+          columns: ['customer_id', 'name', 'city'],
+          rows: [
+            [1, 'Rafiul Islam', 'Dhaka'],
+            [2, 'Priya Akter', 'Dhaka'],
+            [13, 'Arif Chowdhury', 'Rajshahi'],
+          ],
+        },
+        explanation: [
+          '### 1. The Dynamic IN Subquery',
+          'Instead of hardcoding customer IDs `IN (1, 2, 3, 4...)`, the subquery supplies the list dynamically:\n```sql\nSELECT customer_id, name\nFROM customers\nWHERE customer_id IN (SELECT customer_id FROM orders);\n```',
+          '### 2. How SQL Evaluates It',
+          '1. The inner query produces a distinct set of customer IDs from `orders`.\n2. The outer query matches customer records against that set.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Inner Query Generates Customer ID List',
+            sqlSnippet: 'SELECT customer_id FROM orders;',
+            explanation: 'Produces list: (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).',
+            tableData: {
+              tableName: 'Order Placer IDs',
+              columns: ['customer_id'],
+              rows: [[1], [2], [3], [4], [5]],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'IN subquery syntax',
+            sql: 'SELECT customer_id, name\nFROM customers\nWHERE customer_id IN (SELECT customer_id FROM orders);',
+            description: 'Returns rows whose key matches any item in the subquery result.',
+          },
+        ],
+        keyTakeaway: 'Use IN (SELECT ...) to match values against a dynamically generated list.',
+        exampleQuery: 'SELECT customer_id, name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders);',
+        exampleQueryExplanation: 'Finds all customers who have placed at least one order.',
+        liveDemoSql: 'SELECT customer_id, name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders);',
+        liveDemoNotes: 'Returns all 12 ordering customers.',
+        mcqs: [
+          {
+            question: 'What type of result does an `IN (SELECT ...)` subquery expect?',
+            options: [
+              'A. Exactly one row and multiple columns',
+              'B. A single column containing zero, one, or many rows',
+              'C. A JSON object',
+              'D. A table with at least 5 columns',
+            ],
+            correctIndex: 1,
+            explanation: 'IN subqueries test a single column against a list of single-column values.',
+          },
+        ],
+        masteryPoints: ['Write multi-row IN subqueries', 'Relate tables without writing explicit JOINs'],
+      },
+      tasks: [
+        {
+          id: 'day17-c1b-t1',
+          title: 'Task 1: Customers with Recorded Orders (IN)',
           description: 'Retrieve customer_id and name for customers who have placed at least one order using an IN subquery.',
           instructions: [
             'Query the `customers` table.',
             'Select `customer_id` and `name`.',
-            'Where `customer_id IN (SELECT customer_id FROM orders)`.',
+            'Filter where `customer_id IN (SELECT customer_id FROM orders)`.',
+            'End with a semicolon (;).',
           ],
-          type: 'independent',
+          type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders'],
           initialSql: '-- Customers with orders via IN subquery\n',
           solutionSql: 'SELECT customer_id, name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders);',
-          solutionExplanation: 'Filters customers using an IN subquery against orders.',
+          solutionExplanation: 'Retrieves all 12 customers who have records in the orders table.',
           hints: [{ level: 1, text: 'Use `WHERE customer_id IN (SELECT customer_id FROM orders);`' }],
           validation: {
             targetTable: 'customers',
@@ -135,7 +242,160 @@ export const DAY_17_MODULE: ModuleData = {
             requireWhere: true,
             expectedRowCount: 12,
           },
-          successMessage: 'Perfect! Active customers identified via IN subquery.',
+          successMessage: 'Active customers identified via IN subquery!',
+        },
+        {
+          id: 'day17-c1b-t2',
+          title: 'Task 2: Products in Large Categories',
+          description: 'Select name, category_id, and price for products belonging to categories that contain 5 or more products.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `name`, `category_id`, and `price`.',
+            'Filter where `category_id IN (SELECT category_id FROM products GROUP BY category_id HAVING COUNT(*) >= 5)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Products in large categories (>= 5 items)\n',
+          solutionSql: 'SELECT name, category_id, price FROM products WHERE category_id IN (SELECT category_id FROM products GROUP BY category_id HAVING COUNT(*) >= 5);',
+          solutionExplanation: 'Categories 1, 2, 3, 4, 5 each have at least 5 products (27 items total).',
+          hints: [{ level: 1, text: 'Use `WHERE category_id IN (SELECT category_id FROM products GROUP BY category_id HAVING COUNT(*) >= 5);`' }],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'category_id', 'price'],
+            requireWhere: true,
+            expectedRowCount: 27,
+          },
+          successMessage: 'Spot on! Products in large categories selected dynamically.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 1c: Exclusion Subqueries with NOT IN & The NULL Trap
+    // =========================================================================
+    {
+      id: 'subqueries-not-in-null-trap',
+      order: 3,
+      title: '3. Exclusion Subqueries with NOT IN & The NULL Trap',
+      shortDescription: 'Exclude matching rows safely and avoid the three-valued logic NULL trap.',
+      theory: {
+        summary: '`NOT IN` excludes rows that match values in a subquery. However, if the subquery returns even a single NULL value, the entire NOT IN condition collapses to UNKNOWN and returns 0 rows!',
+        introTable: {
+          tableName: 'products & order_items',
+          description: 'Products checking for presence in order items',
+          columns: ['product_id', 'name', 'price'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99],
+            [3, 'USB-C Charging Cable (0 orders)', 9.99],
+            [9, 'Cutting Board Set (0 orders)', 18.00],
+          ],
+        },
+        explanation: [
+          '### 1. How NOT IN Evaluates Logically',
+          '`WHERE product_id NOT IN (1, 2, NULL)` expands internally in SQL to chained inequality checks:\n```text\nproduct_id != 1 AND product_id != 2 AND product_id != NULL\n```',
+          '### 2. The Three-Valued Logic NULL Trap',
+          '1. In SQL three-valued logic, `product_id != NULL` evaluates to **UNKNOWN**.\n2. In boolean algebra: `TRUE AND UNKNOWN` evaluates to **UNKNOWN**.\n3. Because `WHERE` only retains rows evaluating to `TRUE`, the query **silently drops ALL rows and returns 0 results!**',
+          '### 3. The Safe Pattern: Always Filter Out NULLs in Inner Queries',
+          '```sql\n-- ✅ Always include WHERE col IS NOT NULL in subqueries used with NOT IN:\nSELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);\n```',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Finding Unordered Products Safely',
+            sqlSnippet: 'SELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);',
+            explanation: 'Isolates the 6 products that have never been ordered.',
+            tableData: {
+              tableName: 'Unordered Products',
+              columns: ['name', 'price'],
+              rows: [
+                ['USB-C Charging Cable', 9.99],
+                ['Cutting Board Set', 18.00],
+                ['Football', 16.50],
+                ['Wireless Doorbell', 38.00],
+                ['Portable Charger', 21.99],
+                ['Miscellaneous Clearance Item', 4.99],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Safe NOT IN subquery syntax',
+            sql: 'SELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);',
+            description: 'Safely excludes ordered products by guaranteeing no NULL values in the inner list.',
+          },
+        ],
+        keyTakeaway: 'Always add WHERE column IS NOT NULL inside a NOT IN subquery to prevent the three-valued logic NULL trap.',
+        exampleQuery: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+        exampleQueryExplanation: 'Finds products that have never been ordered.',
+        liveDemoSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+        liveDemoNotes: 'Displays the 6 products with zero sales history.',
+        mcqs: [
+          {
+            question: 'Why does `WHERE id NOT IN (1, 2, NULL)` return 0 rows even for id = 5?',
+            options: [
+              'A. Because SQL syntax requires quotes around NULL',
+              'B. Because id != NULL evaluates to UNKNOWN, and TRUE AND UNKNOWN is UNKNOWN, which WHERE drops',
+              'C. Because NULL is treated as 0',
+              'D. Because the query has an invalid table alias',
+            ],
+            correctIndex: 1,
+            explanation: 'Any equality or inequality comparison with NULL evaluates to UNKNOWN, causing NOT IN with NULL to never evaluate to TRUE.',
+          },
+        ],
+        masteryPoints: [
+          'Understand how three-valued logic affects NOT IN',
+          'Always add WHERE col IS NOT NULL to subqueries used in NOT IN',
+        ],
+      },
+      tasks: [
+        {
+          id: 'day17-c1c-t1',
+          title: 'Task 1: Products Never Ordered (Safe NOT IN)',
+          description: 'Find the name and price of all products that have never been ordered using a safe NOT IN subquery with `WHERE product_id IS NOT NULL`.',
+          instructions: [
+            'Select `name` and `price` from `products`.',
+            'Where `product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL)`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          secondaryTables: ['order_items'],
+          initialSql: '-- Safe NOT IN subquery\n',
+          solutionSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+          solutionExplanation: 'Safely finds the 6 products that have zero order records.',
+          hints: [{ level: 1, text: 'Use `WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);`' }],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            requiredColumns: ['name', 'price'],
+            expectedRowCount: 6,
+          },
+          successMessage: 'Unordered products identified safely with NOT IN!',
+        },
+        {
+          id: 'day17-c1c-t2',
+          title: 'Task 2: Fix the Broken NOT IN Subquery',
+          description: 'A developer wrote a query that returned 0 rows because of the NULL trap. Fix it by ensuring the subquery filters out NULL product IDs.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `name` and `price`.',
+            'Fix the subquery filter: `WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          secondaryTables: ['order_items'],
+          initialSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);\n',
+          solutionSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+          solutionExplanation: 'Adding `WHERE product_id IS NOT NULL` prevents NULL values from destroying the NOT IN logic.',
+          hints: [{ level: 1, text: 'Add `WHERE product_id IS NOT NULL` inside the inner subquery.' }],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            requiredColumns: ['name', 'price'],
+            expectedRowCount: 6,
+          },
+          successMessage: 'Spot on! You defeated the classic three-valued logic NOT IN NULL trap.',
         },
       ],
     },
@@ -145,8 +405,8 @@ export const DAY_17_MODULE: ModuleData = {
     // =========================================================================
     {
       id: 'common-table-expressions-cte',
-      order: 2,
-      title: '2. Common Table Expressions (WITH syntax)',
+      order: 4,
+      title: '4. Common Table Expressions (WITH syntax)',
       shortDescription: 'Readable, modular multi-stage query architecture.',
       theory: {
         summary: 'A Common Table Expression (CTE) defined with `WITH name AS (...)` provides a named, readable temporary result set that exists for the duration of a single query.',
@@ -250,7 +510,7 @@ export const DAY_17_MODULE: ModuleData = {
             targetTable: 'products',
             expectedRowCount: 4,
           },
-          successMessage: 'Spot on! Category stats filtered via CTE.',
+          successMessage: 'Category stats CTE created and filtered!',
         },
       ],
     },
@@ -262,14 +522,14 @@ export const DAY_17_MODULE: ModuleData = {
   challenge: {
     id: 'day-17-homework',
     title: 'Day 17 — Subqueries & CTEs (Homework)',
-    scenario: 'Solve these analytical tasks using subqueries and CTEs:',
+    scenario: 'Solve these complex analytical queries using subqueries and CTEs:',
     tasks: [
       {
         id: 'day17-hw-1',
-        title: 'Task 1: Products priced above the overall average price',
-        description: 'Products priced above the overall average price.',
+        title: 'Task 1: Products priced higher than the category average',
+        description: 'Products priced higher than the category average for their own category.',
         instructions: [
-          'Select `name`, `price` from `products` where `price > (SELECT AVG(price) FROM products)`.',
+          'Select `p1.name`, `p1.category_id`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
@@ -528,81 +788,79 @@ export const DAY_19_MODULE: ModuleData = {
   shortTitle: 'DML (Data Modification)',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Learn safe data modification commands (INSERT, UPDATE, DELETE), transaction atomicity with BEGIN/COMMIT/ROLLBACK, and foreign key constraints.',
+  description: 'Learn safe data modification commands (INSERT, UPDATE, DELETE), the critical danger of missing WHERE clauses, and transaction safety.',
   estimatedMinutes: 75,
   completionLearnings: [
     'Insert single and multi-row records using INSERT INTO',
-    'Safely update records using UPDATE ... SET ... WHERE',
-    'Safely delete records using DELETE FROM ... WHERE and understand foreign key cascade/restrict rules',
-    'Understand transaction atomicity with BEGIN, COMMIT, and ROLLBACK',
+    'Safely modify records using UPDATE ... SET ... WHERE',
+    'Safely delete records using DELETE FROM ... WHERE',
+    'Recognize and prevent catastrophic unbounded table mutations',
   ],
   concepts: [
+    // =========================================================================
+    // CONCEPT 1: Inserting New Records with INSERT INTO
+    // =========================================================================
     {
-      id: 'safe-dml-operations',
+      id: 'dml-insert-into',
       order: 1,
-      title: '1. Safe Data Modification & Transactions',
-      shortDescription: 'INSERT, UPDATE, DELETE and transaction safety.',
+      title: '1. Inserting New Records with INSERT INTO',
+      shortDescription: 'Add new rows of data into existing database tables.',
       theory: {
-        summary: 'DML modifies database state. Safe mutation rule: always run `SELECT * FROM table WHERE condition` first to see what you will affect before executing UPDATE or DELETE. In production, an UPDATE or DELETE without WHERE modifies or deletes EVERY row in the table.',
+        summary: '`INSERT INTO table (col1, col2) VALUES (val1, val2)` appends new records into a database table.',
         introTable: {
-          tableName: 'products',
-          description: 'Inventory table before mutation',
+          tableName: 'products (before insert)',
+          description: 'Products table before appending new record',
           columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
           rows: [
-            [1, 'Wireless Mouse', 25.00, 42],
-            [2, 'Mechanical Keyboard', 89.99, 15],
+            [1, 'Wireless Mouse', 15.99, 40],
+            [2, 'Bluetooth Speaker', 45.50, 3],
           ],
         },
         explanation: [
-          '### 1. INSERT INTO',
-          '`INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES (\'Mechanical Keyboard\', 1, 1, 129.99, 50, 10);`',
-          '### 2. UPDATE ... SET ... WHERE',
-          '`UPDATE products SET price = price * 1.10 WHERE product_id = 1;`',
-          '### 3. DELETE FROM ... WHERE',
-          '`DELETE FROM customers WHERE customer_id = 999;` (Foreign keys protect records in active use!).',
-          'QUESTION_BLOCK::Transaction Atomicity::`BEGIN; ... COMMIT;` or `ROLLBACK;` ensures all steps succeed together or none take effect.',
+          '### 1. INSERT INTO Syntax',
+          'Specify the target table, the column names in parentheses, followed by `VALUES (...)` with the matching data:',
+          '```sql\nINSERT INTO products (\n  name, supplier_id, category_id, price, quantity_in_stock, reorder_level\n) VALUES (\n  \'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20\n);\n```',
+          'QUESTION_BLOCK::Auto-Increment IDs::You typically omit the primary key column (e.g. `product_id`) if the database is configured to generate sequential auto-increment IDs automatically.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Targeted Update with WHERE',
-            sqlSnippet: 'UPDATE products\nSET price = price * 1.10\nWHERE product_id = 1;',
-            explanation: 'Selectively updates only product 1 without altering the rest of the catalog.',
+            stepTitle: 'Step 1: Appending New Record',
+            sqlSnippet: 'INSERT INTO products (name, price) VALUES (\'Precision Stylus Pen\', 29.99);',
+            explanation: 'Creates a new row in the products table with the specified attributes.',
             tableData: {
-              tableName: 'Updated Row',
-              columns: ['product_id', 'name', 'price'],
-              rows: [
-                [1, 'Wireless Mouse', 27.50],
-              ],
+              tableName: 'Newly Inserted Row',
+              columns: ['name', 'price'],
+              rows: [['Precision Stylus Pen', 29.99]],
             },
           },
         ],
         syntaxBlocks: [
           {
-            title: 'DML operations',
-            sql: '-- Insert\nINSERT INTO products (name, price) VALUES (\'Widget\', 19.99);\n\n-- Safe Update\nUPDATE products SET price = 24.99 WHERE product_id = 1;\n\n-- Safe Delete\nDELETE FROM products WHERE product_id = 999;',
-            description: 'Core data modification commands.',
+            title: 'INSERT INTO syntax',
+            sql: 'INSERT INTO table_name (column1, column2)\nVALUES (value1, value2);',
+            description: 'Inserts a new record into table_name.',
           },
         ],
-        keyTakeaway: 'Always verify WHERE conditions before executing UPDATE or DELETE.',
-        exampleQuery: 'UPDATE products SET price = price * 1.10 WHERE product_id = 1;',
-        exampleQueryExplanation: 'Safely increases product 1 price by 10%.',
-        liveDemoSql: 'SELECT * FROM products WHERE product_id = 1;',
-        liveDemoNotes: 'Displays product before modification.',
+        keyTakeaway: 'INSERT INTO adds new rows. Match the order of values to the specified column list.',
+        exampleQuery: 'INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES (\'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20);',
+        exampleQueryExplanation: 'Appends a new mouse record to the catalog.',
+        liveDemoSql: 'SELECT * FROM products ORDER BY product_id DESC LIMIT 1;',
+        liveDemoNotes: 'Displays the most recently added product.',
         mcqs: [
           {
-            question: 'What happens if you execute `UPDATE products SET price = 0;` without a WHERE clause?',
+            question: 'What happens if the number of columns in the column list does not match the number of values in VALUES?',
             options: [
-              'A. Only the first row is updated',
-              'B. SQL asks for confirmation',
-              'C. Every single product in the table has its price changed to 0',
-              'D. The database throws a syntax error',
+              'A. SQL fills missing columns with 0',
+              'B. SQL throws a column count mismatch syntax error',
+              'C. SQL inserts a blank row',
+              'D. SQL ignores the extra values',
             ],
-            correctIndex: 2,
-            explanation: 'Without a WHERE clause, UPDATE modifies all rows in the table.',
+            correctIndex: 1,
+            explanation: 'The number of specified columns and provided values must match exactly.',
           },
         ],
-        masteryPoints: ['Write safe INSERT, UPDATE, DELETE statements', 'Explain transaction atomicity'],
+        masteryPoints: ['Write well-formed INSERT INTO statements with explicit column lists'],
       },
       tasks: [
         {
@@ -615,7 +873,7 @@ export const DAY_19_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Insert a new product\n',
           solutionSql: 'INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES (\'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20);',
           solutionExplanation: 'Inserts a new product record.',
           hints: [{ level: 1, text: 'Use `INSERT INTO products (...) VALUES (...);`' }],
@@ -627,14 +885,104 @@ export const DAY_19_MODULE: ModuleData = {
         },
         {
           id: 'day19-c1-t2',
-          title: 'Task 2: Targeted Price Increase',
+          title: 'Task 2: Insert a New Customer',
+          description: 'Insert a new customer profile into the `customers` table.',
+          instructions: [
+            'Insert into `customers (name, email, city, signup_date)`.',
+            'Values: `(\'Sultana Begum\', \'sultana@example.com\', \'Dhaka\', \'2026-08-25\')`.',
+          ],
+          type: 'independent',
+          primaryTable: 'customers',
+          initialSql: '-- Insert new customer\n',
+          solutionSql: 'INSERT INTO customers (name, email, city, signup_date) VALUES (\'Sultana Begum\', \'sultana@example.com\', \'Dhaka\', \'2026-08-25\');',
+          solutionExplanation: 'Appends Sultana Begum to the customer roster.',
+          hints: [{ level: 1, text: 'Use `INSERT INTO customers (name, email, city, signup_date) VALUES (\'Sultana Begum\', \'sultana@example.com\', \'Dhaka\', \'2026-08-25\');`' }],
+          validation: {
+            targetTable: 'customers',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Well done! New customer record inserted.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 2a: Modifying Rows Safely with UPDATE ... SET ... WHERE
+    // =========================================================================
+    {
+      id: 'dml-safe-update',
+      order: 2,
+      title: '2. Modifying Rows Safely with UPDATE ... SET ... WHERE',
+      shortDescription: 'Update specific records and avoid unintended table-wide modifications.',
+      theory: {
+        summary: '`UPDATE table SET col = new_value WHERE condition` modifies existing data. Always verify the WHERE condition first, because omitting WHERE mutates EVERY row in the entire table!',
+        introTable: {
+          tableName: 'products (before update)',
+          description: 'Product 1 before targeted price change',
+          columns: ['product_id', 'name', 'price'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99],
+            [2, 'Bluetooth Speaker', 45.50],
+          ],
+        },
+        explanation: [
+          '### 1. The Anatomy of an UPDATE',
+          '```sql\nUPDATE products\nSET price = 19.99\nWHERE product_id = 1;\n```',
+          '### 2. The Danger of Missing WHERE',
+          'QUESTION_BLOCK::Critical Warning::If you accidentally run `UPDATE products SET price = 19.99;` without a `WHERE` clause, **every product in the catalog will be set to $19.99**! Always write your `WHERE` clause first.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Targeted Update with WHERE',
+            sqlSnippet: 'UPDATE products\nSET price = price * 1.10\nWHERE product_id = 1;',
+            explanation: 'Selectively increases product 1 price by 10% without altering other products.',
+            tableData: {
+              tableName: 'Updated Row',
+              columns: ['product_id', 'name', 'price'],
+              rows: [[1, 'Wireless Mouse', 17.59]],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'UPDATE syntax',
+            sql: 'UPDATE products\nSET price = 24.99\nWHERE product_id = 1;',
+            description: 'Modifies specific rows matching the WHERE criteria.',
+          },
+        ],
+        keyTakeaway: 'Always include a WHERE clause with UPDATE to prevent table-wide data overwrite.',
+        exampleQuery: 'UPDATE products SET price = price * 1.10 WHERE product_id = 1;',
+        exampleQueryExplanation: 'Safely increases product 1 price by 10%.',
+        liveDemoSql: 'SELECT * FROM products WHERE product_id = 1;',
+        liveDemoNotes: 'Displays product record.',
+        mcqs: [
+          {
+            question: 'What happens if you run `UPDATE products SET price = 0;` without a WHERE clause?',
+            options: [
+              'A. Only the first row is updated',
+              'B. SQL asks for user confirmation',
+              'C. Every single product in the table has its price changed to 0',
+              'D. The database throws an error',
+            ],
+            correctIndex: 2,
+            explanation: 'Without a WHERE clause, UPDATE modifies all rows in the table.',
+          },
+        ],
+        masteryPoints: ['Write targeted UPDATE statements', 'Prevent accidental full-table overwrites'],
+      },
+      tasks: [
+        {
+          id: 'day19-c2a-t1',
+          title: 'Task 1: Targeted Price Increase',
           description: 'Safely update the price of product_id 1 by 10% (price = price * 1.10).',
           instructions: [
             'Update `products`.',
             'Set `price = price * 1.10`.',
             'Where `product_id = 1`.',
+            'End with a semicolon (;).',
           ],
-          type: 'independent',
+          type: 'guided',
           primaryTable: 'products',
           initialSql: '-- Targeted price update\n',
           solutionSql: 'UPDATE products SET price = price * 1.10 WHERE product_id = 1;',
@@ -645,7 +993,141 @@ export const DAY_19_MODULE: ModuleData = {
             requireWhere: true,
             expectedRowCount: 1,
           },
-          successMessage: 'Spot on! Product price updated safely with WHERE.',
+          successMessage: 'Product price updated safely with WHERE!',
+        },
+        {
+          id: 'day19-c2a-t2',
+          title: 'Task 2: Restock Category 1 Products',
+          description: 'Increase quantity_in_stock by 20 for all products belonging to category_id 1 (Electronics).',
+          instructions: [
+            'Update `products`.',
+            'Set `quantity_in_stock = quantity_in_stock + 20`.',
+            'Where `category_id = 1`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Restock category 1 products\n',
+          solutionSql: 'UPDATE products SET quantity_in_stock = quantity_in_stock + 20 WHERE category_id = 1;',
+          solutionExplanation: 'Updates all products in category 1.',
+          hints: [{ level: 1, text: 'Use `UPDATE products SET quantity_in_stock = quantity_in_stock + 20 WHERE category_id = 1;`' }],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            expectedRowCount: 6,
+          },
+          successMessage: 'Well done! Batch category update executed safely.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 2b: Removing Rows Safely with DELETE FROM ... WHERE
+    // =========================================================================
+    {
+      id: 'dml-safe-delete',
+      order: 3,
+      title: '3. Removing Rows Safely with DELETE FROM ... WHERE',
+      shortDescription: 'Remove specific rows and prevent accidental table wipes.',
+      theory: {
+        summary: '`DELETE FROM table WHERE condition` removes targeted rows. Omitting WHERE wipes all data in the table.',
+        introTable: {
+          tableName: 'orders (before deletion)',
+          description: 'Orders table with temporary test order 18',
+          columns: ['order_id', 'customer_id', 'status'],
+          rows: [
+            [17, 3, 'delivered'],
+            [18, 1, 'pending'],
+          ],
+        },
+        explanation: [
+          '### 1. The Anatomy of a DELETE',
+          '```sql\nDELETE FROM orders\nWHERE order_id = 18;\n```',
+          '### 2. The Danger of Missing WHERE',
+          'QUESTION_BLOCK::Catastrophic Data Loss::Executing `DELETE FROM orders;` without a `WHERE` clause deletes **every single row** in the table! Always specify the exact primary key or condition to delete.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Targeted Row Deletion',
+            sqlSnippet: 'DELETE FROM orders WHERE order_id = 18;',
+            explanation: 'Removes order #18 cleanly from the database.',
+            tableData: {
+              tableName: 'Surviving Orders',
+              columns: ['order_id', 'status'],
+              rows: [[17, 'delivered']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'DELETE syntax',
+            sql: 'DELETE FROM table_name\nWHERE condition;',
+            description: 'Deletes rows matching the condition.',
+          },
+        ],
+        keyTakeaway: 'Always verify your WHERE clause before executing DELETE to avoid wiping entire tables.',
+        exampleQuery: 'DELETE FROM orders WHERE order_id = 18;',
+        exampleQueryExplanation: 'Deletes order #18.',
+        liveDemoSql: 'SELECT * FROM orders WHERE order_id = 18;',
+        liveDemoNotes: 'Displays order before deletion.',
+        mcqs: [
+          {
+            question: 'What does `DELETE FROM customers;` do?',
+            options: [
+              'A. Deletes only inactive customers',
+              'B. Drops the customer table schema',
+              'C. Deletes every single row in the customers table',
+              'D. Prompts for confirmation',
+            ],
+            correctIndex: 2,
+            explanation: 'DELETE without WHERE deletes all rows from the table.',
+          },
+        ],
+        masteryPoints: ['Write targeted DELETE statements', 'Guard against unbounded table deletion'],
+      },
+      tasks: [
+        {
+          id: 'day19-c2b-t1',
+          title: 'Task 1: Delete Disposable Test Order',
+          description: 'Delete the test order with order_id 18 from the orders table.',
+          instructions: [
+            'Delete from `orders`.',
+            'Where `order_id = 18`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'orders',
+          initialSql: '-- Delete order 18\n',
+          solutionSql: 'DELETE FROM orders WHERE order_id = 18;',
+          solutionExplanation: 'Safely removes order record 18.',
+          hints: [{ level: 1, text: 'Use `DELETE FROM orders WHERE order_id = 18;`' }],
+          validation: {
+            targetTable: 'orders',
+            requireWhere: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Order 18 safely deleted!',
+        },
+        {
+          id: 'day19-c2b-t2',
+          title: 'Task 2: Guard an Unbounded Delete',
+          description: 'A junior script has a dangerous query: `DELETE FROM products;`. Fix it so it only removes obsolete products that are completely out of stock (`quantity_in_stock = 0`).',
+          instructions: [
+            'Delete from `products`.',
+            'Add the safeguard filter: `WHERE quantity_in_stock = 0`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: 'DELETE FROM products;\n',
+          solutionSql: 'DELETE FROM products WHERE quantity_in_stock = 0;',
+          solutionExplanation: 'Adds a WHERE condition to only delete items with 0 stock (3 items).',
+          hints: [{ level: 1, text: 'Add `WHERE quantity_in_stock = 0;`' }],
+          validation: {
+            targetTable: 'products',
+            requireWhere: true,
+            expectedRowCount: 3,
+          },
+          successMessage: 'Spot on! You guarded against an unbounded table wipe.',
         },
       ],
     },
@@ -715,121 +1197,1109 @@ export const DAY_20_MODULE: ModuleData = {
   shortTitle: 'DDL (Schema Design)',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Design robust table schemas with primary keys, foreign key references, data types, constraints (NOT NULL, UNIQUE, DEFAULT, CHECK), and alter existing tables.',
+  description: 'Deeply master Data Definition Language: CREATE TABLE, column data types, integrity constraints (PK, NOT NULL, UNIQUE, DEFAULT, CHECK), ALTER TABLE schema modifications, FOREIGN KEY relations, and DROP TABLE.',
   estimatedMinutes: 90,
   completionLearnings: [
-    'Create normalized tables with PRIMARY KEY and AUTO_INCREMENT',
-    'Enforce relational integrity using FOREIGN KEY ... REFERENCES',
-    'Apply column constraints (NOT NULL, DEFAULT, CHECK)',
-    'Alter tables using ADD COLUMN and DROP TABLE',
+    'Create structured tables with CREATE TABLE',
+    'Choose appropriate column data types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN)',
+    'Enforce entity identity with PRIMARY KEY and AUTO_INCREMENT',
+    'Apply data integrity constraints: NOT NULL, UNIQUE, DEFAULT, and CHECK',
+    'Modify existing table schemas using ALTER TABLE ... ADD COLUMN',
+    'Establish relational foreign key constraints using ALTER TABLE ... ADD FOREIGN KEY',
+    'Safely tear down temporary schemas using DROP TABLE IF EXISTS',
   ],
   concepts: [
+    // =========================================================================
+    // CONCEPT 1: Creating a Table with CREATE TABLE
+    // =========================================================================
     {
-      id: 'ddl-schema-definitions',
+      id: 'ddl-create-table',
       order: 1,
-      title: '1. DDL & Relational Schema Design',
-      shortDescription: 'CREATE TABLE, constraints, and ALTER TABLE.',
+      title: '1. Creating a Table with CREATE TABLE',
+      shortDescription: 'Define table structure and allocate new database entities.',
       theory: {
-        summary: 'Data Definition Language (DDL) creates and modifies the structure of tables, indexes, and constraints. Choosing appropriate data types (`INT`, `VARCHAR(255)`, `DECIMAL(10,2)`, `DATETIME`) and constraints ensures database integrity.',
+        summary: '`CREATE TABLE table_name (col1 type, col2 type)` creates a new empty table structure in your database.',
         introTable: {
-          tableName: 'reviews (target schema)',
-          description: 'Blueprint for customer product reviews',
-          columns: ['review_id (PK)', 'product_id (FK)', 'customer_id (FK)', 'rating (1-5)', 'comment'],
+          tableName: 'product_tags (blueprint)',
+          description: 'Blueprint for tagging inventory items',
+          columns: ['tag_id', 'tag_name'],
           rows: [
-            [1, 1, 1, 5, 'Great build quality!'],
-            [2, 1, 2, 4, 'Solid keyboard.'],
-            [3, 2, 3, 5, 'Best mouse I have used.'],
+            [1, 'bestseller'],
+            [2, 'clearance'],
           ],
         },
         explanation: [
-          '### 1. Creating a Table with Constraints',
-          '```sql\nCREATE TABLE reviews (\n  review_id INT AUTO_INCREMENT PRIMARY KEY,\n  product_id INT NOT NULL,\n  customer_id INT NOT NULL,\n  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),\n  comment TEXT,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (product_id) REFERENCES products(product_id),\n  FOREIGN KEY (customer_id) REFERENCES customers(customer_id)\n);\n```',
+          '### 1. The Core CREATE TABLE Syntax',
+          '```sql\nCREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);\n```',
+          'QUESTION_BLOCK::Table Names::Table names should be lowercase, descriptive, and pluralized by convention (e.g. `products`, `orders`, `tags`).',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Defining Schema with Primary and Foreign Keys',
-            sqlSnippet: 'CREATE TABLE reviews (\n  review_id INT AUTO_INCREMENT PRIMARY KEY,\n  product_id INT NOT NULL,\n  customer_id INT NOT NULL,\n  rating INT NOT NULL,\n  comment TEXT,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);',
-            explanation: 'Allocates structured table with auto-increment ID and constraint protections.',
+            stepTitle: 'Step 1: Creating Table',
+            sqlSnippet: 'CREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);',
+            explanation: 'Allocates storage structure with two columns: tag_id and tag_name.',
             tableData: {
-              tableName: 'Created reviews Schema',
-              columns: ['Column', 'Type', 'Constraint'],
+              tableName: 'Created Structure',
+              columns: ['Column Name', 'Type'],
               rows: [
-                ['review_id', 'INT', 'PRIMARY KEY AUTO_INCREMENT'],
-                ['product_id', 'INT', 'NOT NULL FK'],
-                ['rating', 'INT', 'NOT NULL'],
-                ['created_at', 'DATETIME', 'DEFAULT CURRENT_TIMESTAMP'],
+                ['tag_id', 'INT'],
+                ['tag_name', 'VARCHAR(50)'],
               ],
             },
           },
         ],
         syntaxBlocks: [
           {
-            title: 'DDL schema syntax',
-            sql: 'CREATE TABLE reviews (\n  review_id INT AUTO_INCREMENT PRIMARY KEY,\n  product_id INT NOT NULL,\n  rating INT CHECK (rating BETWEEN 1 AND 5),\n  comment TEXT,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);',
-            description: 'Defines schema with constraints and defaults.',
+            title: 'CREATE TABLE syntax',
+            sql: 'CREATE TABLE table_name (\n  column1 datatype,\n  column2 datatype\n);',
+            description: 'Creates a new table schema.',
           },
         ],
-        keyTakeaway: 'Use rigorous constraints (PK, FK, NOT NULL, CHECK) to protect data integrity at the database layer.',
-        exampleQuery: 'SELECT * FROM categories;',
-        exampleQueryExplanation: 'Inspects existing category structure.',
-        liveDemoSql: 'SELECT * FROM categories;',
-        liveDemoNotes: 'Displays existing category table.',
+        keyTakeaway: 'CREATE TABLE defines the column blueprint for your database entity.',
+        exampleQuery: 'CREATE TABLE product_tags ( tag_id INT, tag_name VARCHAR(50) );',
+        exampleQueryExplanation: 'Creates a simple tag table.',
+        liveDemoSql: 'SELECT * FROM categories LIMIT 1;',
+        liveDemoNotes: 'Displays existing table structure.',
         mcqs: [
           {
-            question: 'What constraint prevents a column from storing NULL values?',
-            options: ['A. UNIQUE', 'B. DEFAULT', 'C. NOT NULL', 'D. CHECK'],
-            correctIndex: 2,
-            explanation: 'NOT NULL enforces that every inserted or updated row must provide a valid value for that column.',
+            question: 'What is the minimum requirement to create a table in SQL?',
+            options: [
+              'A. Only a table name',
+              'B. A table name and at least one column definition (name and data type)',
+              'C. A table name and an existing CSV file',
+              'D. A foreign key constraint',
+            ],
+            correctIndex: 1,
+            explanation: 'Every CREATE TABLE requires a table name and at least one column with a defined data type.',
           },
         ],
-        masteryPoints: ['Design schemas with foreign key relationships', 'Apply CHECK and DEFAULT constraints'],
+        masteryPoints: ['Write clean CREATE TABLE statements'],
       },
       tasks: [
         {
           id: 'day20-c1-t1',
-          title: 'Task 1: Create the Reviews Table',
-          description: 'Create a new `reviews` table with primary key, foreign keys, rating check, and timestamp default.',
+          title: 'Task 1: Create the Product Tags Table',
+          description: 'Create a new table named `product_tags` with `tag_id INT` and `tag_name VARCHAR(50)`.',
           instructions: [
-            'Write the CREATE TABLE statement for `reviews`.',
-            'Include `review_id INT AUTO_INCREMENT PRIMARY KEY`, `product_id INT NOT NULL`, `customer_id INT NOT NULL`, `rating INT NOT NULL`, `comment TEXT`, `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`.',
+            'Write `CREATE TABLE product_tags (tag_id INT, tag_name VARCHAR(50));`.',
             'End with a semicolon (;).',
           ],
           type: 'guided',
-          primaryTable: 'reviews',
-          initialSql: '-- Write your SQL query here\n',
-          solutionSql: 'CREATE TABLE reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL, comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );',
-          solutionExplanation: 'Creates the reviews table schema with constraints.',
-          hints: [{ level: 1, text: 'Use `CREATE TABLE reviews (...);`' }],
+          primaryTable: 'product_tags',
+          initialSql: '-- Create product_tags table\n',
+          solutionSql: 'CREATE TABLE product_tags (tag_id INT, tag_name VARCHAR(50));',
+          solutionExplanation: 'Creates product_tags with tag_id and tag_name.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE product_tags (tag_id INT, tag_name VARCHAR(50));`' }],
           validation: {
-            targetTable: 'reviews',
+            targetTable: 'product_tags',
             expectedRowCount: 1,
           },
-          successMessage: 'Reviews table created successfully!',
+          successMessage: 'Product tags table created!',
         },
         {
           id: 'day20-c1-t2',
-          title: 'Task 2: Query Average Product Ratings',
-          description: 'Join products with reviews to calculate the average rating and review count per product.',
+          title: 'Task 2: Create Quick Notes Table',
+          description: 'Create a table named `quick_notes` with columns `note_id INT` and `content TEXT`.',
           instructions: [
-            'Query `products p` JOIN `reviews r` ON `p.product_id = r.product_id`.',
-            'Select `p.product_id`, `p.name`, `AVG(r.rating) AS avg_rating`, and `COUNT(r.review_id) AS total_reviews`.',
-            'Group by `p.product_id`, `p.name`.',
+            'Create table `quick_notes`.',
+            'Define `note_id INT` and `content TEXT`.',
           ],
           type: 'independent',
+          primaryTable: 'quick_notes',
+          initialSql: '-- Create quick_notes table\n',
+          solutionSql: 'CREATE TABLE quick_notes (note_id INT, content TEXT);',
+          solutionExplanation: 'Allocates the quick_notes table schema.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE quick_notes (note_id INT, content TEXT);`' }],
+          validation: {
+            targetTable: 'quick_notes',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Well done! Quick notes table created.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 2: Column Data Types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN)
+    // =========================================================================
+    {
+      id: 'ddl-data-types',
+      order: 2,
+      title: '2. Choosing Column Data Types',
+      shortDescription: 'INT, VARCHAR, DECIMAL, DATETIME, and MySQL BOOLEAN / TINYINT(1).',
+      theory: {
+        summary: 'Choosing the correct data type ensures storage efficiency, query speed, and data accuracy.',
+        introTable: {
+          tableName: 'Common SQL Data Types',
+          description: 'Standard SQL data types comparison',
+          columns: ['Type', 'Usage', 'Example Values'],
+          rows: [
+            ['INT', 'Whole numbers / IDs', '1, 42, -500'],
+            ['VARCHAR(255)', 'Variable-length text', "'Wireless Mouse'"],
+            ['DECIMAL(10,2)', 'Exact financial numbers (10 digits, 2 decimals)', '49.99, 1200.50'],
+            ['DATETIME', 'Timestamps with date & time', "'2026-08-25 14:30:00'"],
+            ['BOOLEAN', 'True/False (In MySQL: TINYINT(1) where 1=TRUE, 0=FALSE)', 'TRUE (1), FALSE (0)'],
+          ],
+        },
+        explanation: [
+          '### 1. DECIMAL Precision & Scale',
+          '`DECIMAL(10, 2)` means **10 total digits** with **2 digits after the decimal point** (maximum: 99,999,999.99). Never use FLOAT for currency because floating-point rounding causes financial inaccuracy!',
+          '### 2. MySQL BOOLEAN Note',
+          'QUESTION_BLOCK::MySQL BOOLEAN Engine Detail::In MySQL, `BOOLEAN` is an alias for `TINYINT(1)`. `TRUE` evaluates to `1` and `FALSE` evaluates to `0`.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Multi-Type Schema Definition',
+            sqlSnippet: 'CREATE TABLE product_metrics (\n  product_id INT,\n  weight_kg DECIMAL(6,2),\n  is_fragile BOOLEAN,\n  logged_at DATETIME\n);',
+            explanation: 'Demonstrates integer, decimal, boolean, and timestamp data types.',
+            tableData: {
+              tableName: 'Metrics Schema',
+              columns: ['Column', 'Type'],
+              rows: [
+                ['product_id', 'INT'],
+                ['weight_kg', 'DECIMAL(6,2)'],
+                ['is_fragile', 'BOOLEAN / TINYINT(1)'],
+                ['logged_at', 'DATETIME'],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Data type declarations',
+            sql: 'CREATE TABLE product_metrics (\n  product_id INT,\n  weight_kg DECIMAL(6,2),\n  is_fragile BOOLEAN,\n  logged_at DATETIME\n);',
+            description: 'Declares appropriate data types for varied business attributes.',
+          },
+        ],
+        keyTakeaway: 'Always use DECIMAL for financial currency and appropriate string lengths for VARCHAR.',
+        exampleQuery: 'CREATE TABLE product_metrics ( product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME );',
+        exampleQueryExplanation: 'Creates a multi-type metrics table.',
+        liveDemoSql: 'SELECT product_id, price FROM products LIMIT 3;',
+        liveDemoNotes: 'Displays DECIMAL price columns.',
+        mcqs: [
+          {
+            question: 'Why should monetary prices always use DECIMAL(10,2) instead of FLOAT?',
+            options: [
+              'A. Because FLOAT is deprecated',
+              'B. Because FLOAT uses binary approximations that cause floating-point rounding errors on money calculations',
+              'C. Because DECIMAL only works on positive numbers',
+              'D. Because FLOAT cannot store decimals',
+            ],
+            correctIndex: 1,
+            explanation: 'DECIMAL stores exact fixed-point numbers, preventing floating-point rounding inaccuracies.',
+          },
+        ],
+        masteryPoints: ['Select appropriate data types', 'Understand DECIMAL precision and MySQL BOOLEAN/TINYINT(1)'],
+      },
+      tasks: [
+        {
+          id: 'day20-c2-t1',
+          title: 'Task 1: Create Product Metrics Table',
+          description: 'Create `product_metrics` with `product_id INT`, `weight_kg DECIMAL(6,2)`, `is_fragile BOOLEAN`, and `logged_at DATETIME`.',
+          instructions: [
+            'Write `CREATE TABLE product_metrics (product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME);`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'product_metrics',
+          initialSql: '-- Create product_metrics table\n',
+          solutionSql: 'CREATE TABLE product_metrics (product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME);',
+          solutionExplanation: 'Creates product_metrics schema with precision decimals and booleans.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE product_metrics (product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME);`' }],
+          validation: {
+            targetTable: 'product_metrics',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Product metrics table created!',
+        },
+        {
+          id: 'day20-c2-t2',
+          title: 'Task 2: Create Customer Preferences Table',
+          description: 'Create `customer_preferences` with `customer_id INT`, `newsletter_subscribed BOOLEAN`, and `monthly_budget DECIMAL(10,2)`.',
+          instructions: [
+            'Create table `customer_preferences`.',
+            'Include `customer_id INT`, `newsletter_subscribed BOOLEAN`, `monthly_budget DECIMAL(10,2)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'customer_preferences',
+          initialSql: '-- Customer preferences table\n',
+          solutionSql: 'CREATE TABLE customer_preferences (customer_id INT, newsletter_subscribed BOOLEAN, monthly_budget DECIMAL(10,2));',
+          solutionExplanation: 'Defines preferences with boolean and currency decimal types.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE customer_preferences (customer_id INT, newsletter_subscribed BOOLEAN, monthly_budget DECIMAL(10,2));`' }],
+          validation: {
+            targetTable: 'customer_preferences',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Well done! Data types declared accurately.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 3: The PRIMARY KEY Constraint
+    // =========================================================================
+    {
+      id: 'ddl-primary-key',
+      order: 3,
+      title: '3. The PRIMARY KEY Constraint',
+      shortDescription: 'Uniquely identify every row and configure AUTO_INCREMENT.',
+      theory: {
+        summary: 'A `PRIMARY KEY` uniquely identifies each record in a table. It cannot contain NULL values, cannot have duplicates, and creates an automatic clustered index.',
+        introTable: {
+          tableName: 'categories_new',
+          description: 'Primary key identity demo',
+          columns: ['category_id (PK)', 'name'],
+          rows: [
+            [1, 'Electronics'],
+            [2, 'Kitchen & Dining'],
+            [3, 'Office Supplies'],
+          ],
+        },
+        explanation: [
+          '### 1. PRIMARY KEY & AUTO_INCREMENT',
+          '```sql\nCREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);\n```',
+          'QUESTION_BLOCK::Auto-Incrementing Sequence::When you insert a row without specifying `category_id`, the database automatically generates the next sequential integer (1, 2, 3, 4...).',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Primary Key Declaration',
+            sqlSnippet: 'CREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);',
+            explanation: 'Declares category_id as the unique row identifier.',
+            tableData: {
+              tableName: 'Primary Key Table',
+              columns: ['Column', 'Constraint'],
+              rows: [['category_id', 'PRIMARY KEY AUTO_INCREMENT']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'PRIMARY KEY syntax',
+            sql: 'CREATE TABLE table_name (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);',
+            description: 'Defines auto-increment primary key.',
+          },
+        ],
+        keyTakeaway: 'A PRIMARY KEY guarantees uniqueness and provides a permanent identity for each record.',
+        exampleQuery: 'CREATE TABLE categories_new ( category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) );',
+        exampleQueryExplanation: 'Creates category table with auto-incrementing primary key.',
+        liveDemoSql: 'SELECT customer_id, name FROM customers LIMIT 3;',
+        liveDemoNotes: 'Displays customer primary key IDs.',
+        mcqs: [
+          {
+            question: 'Can a PRIMARY KEY column contain NULL values?',
+            options: [
+              'A. Yes, at most one NULL',
+              'B. No, PRIMARY KEY columns are implicitly NOT NULL and strictly unique',
+              'C. Yes, if AUTO_INCREMENT is off',
+              'D. Only in SQLite',
+            ],
+            correctIndex: 1,
+            explanation: 'Primary keys strictly disallow NULL values and require unique scalar entries for every row.',
+          },
+        ],
+        masteryPoints: ['Declare PRIMARY KEY with AUTO_INCREMENT'],
+      },
+      tasks: [
+        {
+          id: 'day20-c3-t1',
+          title: 'Task 1: Create Categories Table with Primary Key',
+          description: 'Create a table named `categories_new` with `category_id INT AUTO_INCREMENT PRIMARY KEY` and `name VARCHAR(100)`.',
+          instructions: [
+            'Write `CREATE TABLE categories_new (category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100));`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'categories_new',
+          initialSql: '-- Categories with PK\n',
+          solutionSql: 'CREATE TABLE categories_new (category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100));',
+          solutionExplanation: 'Creates table with auto-incrementing primary key.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE categories_new (category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100));`' }],
+          validation: {
+            targetTable: 'categories_new',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Categories table created with Primary Key!',
+        },
+        {
+          id: 'day20-c3-t2',
+          title: 'Task 2: Create Departments Table with Primary Key',
+          description: 'Create `departments` with `dept_id INT AUTO_INCREMENT PRIMARY KEY` and `title VARCHAR(80)`.',
+          instructions: [
+            'Create table `departments`.',
+            'Define `dept_id INT AUTO_INCREMENT PRIMARY KEY` and `title VARCHAR(80)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'departments',
+          initialSql: '-- Departments with PK\n',
+          solutionSql: 'CREATE TABLE departments (dept_id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(80));',
+          solutionExplanation: 'Allocates departments with primary key.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE departments (dept_id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(80));`' }],
+          validation: {
+            targetTable: 'departments',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Perfect! Primary key constraint configured.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 4: Mandatory Columns with NOT NULL
+    // =========================================================================
+    {
+      id: 'ddl-not-null',
+      order: 4,
+      title: '4. Mandatory Columns with NOT NULL',
+      shortDescription: 'Prevent missing values and enforce required business fields.',
+      theory: {
+        summary: 'The `NOT NULL` constraint enforces that a column must have a value on every INSERT or UPDATE. Attempting to insert a NULL value triggers a constraint violation error.',
+        introTable: {
+          tableName: 'employees (schema)',
+          description: 'Employees with mandatory name and salary',
+          columns: ['emp_id (PK)', 'full_name (NOT NULL)', 'salary (NOT NULL)'],
+          rows: [
+            [101, 'Arif Chowdhury', 55000.00],
+            [102, 'Nadia Islam', 62000.00],
+          ],
+        },
+        explanation: [
+          '### 1. Enforcing NOT NULL',
+          '```sql\nCREATE TABLE employees (\n  emp_id INT PRIMARY KEY,\n  full_name VARCHAR(100) NOT NULL,\n  salary DECIMAL(10,2) NOT NULL\n);\n```',
+          'QUESTION_BLOCK::Data Hygiene::Use NOT NULL for essential data (names, prices, dates) to avoid dealing with NULL handling edge-cases later in analytics.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Applying NOT NULL',
+            sqlSnippet: 'CREATE TABLE employees (\n  emp_id INT PRIMARY KEY,\n  full_name VARCHAR(100) NOT NULL,\n  salary DECIMAL(10,2) NOT NULL\n);',
+            explanation: 'Guarantees that no employee record can ever be saved without a name and salary.',
+            tableData: {
+              tableName: 'NOT NULL Schema',
+              columns: ['Column', 'Requirement'],
+              rows: [
+                ['full_name', 'Mandatory (NOT NULL)'],
+                ['salary', 'Mandatory (NOT NULL)'],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'NOT NULL syntax',
+            sql: 'CREATE TABLE employees (\n  emp_id INT PRIMARY KEY,\n  full_name VARCHAR(100) NOT NULL,\n  salary DECIMAL(10,2) NOT NULL\n);',
+            description: 'Enforces non-nullable column rules.',
+          },
+        ],
+        keyTakeaway: 'Apply NOT NULL to every column that must always hold a concrete value.',
+        exampleQuery: 'CREATE TABLE employees ( emp_id INT PRIMARY KEY, full_name VARCHAR(100) NOT NULL, salary DECIMAL(10,2) NOT NULL );',
+        exampleQueryExplanation: 'Creates employee table with NOT NULL constraints.',
+        liveDemoSql: 'SELECT * FROM students WHERE age IS NOT NULL;',
+        liveDemoNotes: 'Displays students with valid age entries.',
+        mcqs: [
+          {
+            question: 'What happens when an INSERT query provides NULL for a column marked NOT NULL without a DEFAULT?',
+            options: [
+              'A. SQL inserts an empty string',
+              'B. SQL aborts the query and throws a constraint violation error',
+              'C. SQL inserts 0',
+              'D. SQL prompts the terminal for input',
+            ],
+            correctIndex: 1,
+            explanation: 'Violating a NOT NULL constraint raises a database error and rejects the insert.',
+          },
+        ],
+        masteryPoints: ['Enforce mandatory columns using NOT NULL'],
+      },
+      tasks: [
+        {
+          id: 'day20-c4-t1',
+          title: 'Task 1: Create Employees Table with NOT NULL',
+          description: 'Create table `employees` with `emp_id INT PRIMARY KEY`, `full_name VARCHAR(100) NOT NULL`, and `salary DECIMAL(10,2) NOT NULL`.',
+          instructions: [
+            'Write `CREATE TABLE employees (emp_id INT PRIMARY KEY, full_name VARCHAR(100) NOT NULL, salary DECIMAL(10,2) NOT NULL);`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'employees',
+          initialSql: '-- Employees with NOT NULL\n',
+          solutionSql: 'CREATE TABLE employees (emp_id INT PRIMARY KEY, full_name VARCHAR(100) NOT NULL, salary DECIMAL(10,2) NOT NULL);',
+          solutionExplanation: 'Enforces NOT NULL on full_name and salary.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE employees (emp_id INT PRIMARY KEY, full_name VARCHAR(100) NOT NULL, salary DECIMAL(10,2) NOT NULL);`' }],
+          validation: {
+            targetTable: 'employees',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Employees table created with NOT NULL constraints!',
+        },
+        {
+          id: 'day20-c4-t2',
+          title: 'Task 2: Create User Logins Table',
+          description: 'Create `user_logins` with `login_id INT PRIMARY KEY`, `username VARCHAR(50) NOT NULL`, and `password_hash VARCHAR(255) NOT NULL`.',
+          instructions: [
+            'Create table `user_logins`.',
+            'Include `login_id INT PRIMARY KEY`, `username VARCHAR(50) NOT NULL`, `password_hash VARCHAR(255) NOT NULL`.',
+          ],
+          type: 'independent',
+          primaryTable: 'user_logins',
+          initialSql: '-- User logins table\n',
+          solutionSql: 'CREATE TABLE user_logins (login_id INT PRIMARY KEY, username VARCHAR(50) NOT NULL, password_hash VARCHAR(255) NOT NULL);',
+          solutionExplanation: 'Enforces required credentials using NOT NULL.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE user_logins (login_id INT PRIMARY KEY, username VARCHAR(50) NOT NULL, password_hash VARCHAR(255) NOT NULL);`' }],
+          validation: {
+            targetTable: 'user_logins',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Well done! Required fields protected with NOT NULL.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 5: Preventing Duplicates with UNIQUE
+    // =========================================================================
+    {
+      id: 'ddl-unique',
+      order: 5,
+      title: '5. Preventing Duplicates with UNIQUE',
+      shortDescription: 'Guarantee distinct column values across rows (emails, SKUs, usernames).',
+      theory: {
+        summary: 'The `UNIQUE` constraint ensures that all values in a column are distinct across all rows in the table. Unlike PRIMARY KEY, a table can have multiple UNIQUE columns.',
+        introTable: {
+          tableName: 'customer_emails (schema)',
+          description: 'Enforcing unique email registration',
+          columns: ['account_id (PK)', 'email (UNIQUE)'],
+          rows: [
+            [1, 'rafiul@example.com'],
+            [2, 'priya.akter@example.com'],
+          ],
+        },
+        explanation: [
+          '### 1. UNIQUE Syntax',
+          '```sql\nCREATE TABLE customer_emails (\n  account_id INT PRIMARY KEY,\n  email VARCHAR(150) NOT NULL UNIQUE\n);\n```',
+          'QUESTION_BLOCK::UNIQUE vs PRIMARY KEY::A table can only have **one** PRIMARY KEY, but can have **multiple** UNIQUE columns (e.g. `username UNIQUE`, `email UNIQUE`, `phone_number UNIQUE`).',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Applying UNIQUE Constraint',
+            sqlSnippet: 'CREATE TABLE customer_emails (\n  account_id INT PRIMARY KEY,\n  email VARCHAR(150) NOT NULL UNIQUE\n);',
+            explanation: 'Guarantees no duplicate emails can ever be inserted.',
+            tableData: {
+              tableName: 'UNIQUE Schema',
+              columns: ['Column', 'Constraint'],
+              rows: [['email', 'NOT NULL UNIQUE']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'UNIQUE syntax',
+            sql: 'CREATE TABLE customer_emails (\n  account_id INT PRIMARY KEY,\n  email VARCHAR(150) NOT NULL UNIQUE\n);',
+            description: 'Enforces column uniqueness.',
+          },
+        ],
+        keyTakeaway: 'Use UNIQUE constraints to prevent duplicate emails, SKUs, slugs, and barcodes.',
+        exampleQuery: 'CREATE TABLE customer_emails ( account_id INT PRIMARY KEY, email VARCHAR(150) NOT NULL UNIQUE );',
+        exampleQueryExplanation: 'Creates customer emails table with UNIQUE constraint.',
+        liveDemoSql: 'SELECT customer_id, email FROM customers WHERE email IS NOT NULL LIMIT 3;',
+        liveDemoNotes: 'Displays distinct customer email addresses.',
+        mcqs: [
+          {
+            question: 'How many UNIQUE constraints can a single table contain?',
+            options: [
+              'A. Exactly one',
+              'B. As many as needed across different columns',
+              'C. None if a PRIMARY KEY exists',
+              'D. Maximum 2',
+            ],
+            correctIndex: 1,
+            explanation: 'A table can have multiple UNIQUE constraints across any columns requiring distinct values.',
+          },
+        ],
+        masteryPoints: ['Apply UNIQUE constraints to business keys'],
+      },
+      tasks: [
+        {
+          id: 'day20-c5-t1',
+          title: 'Task 1: Create Customer Emails Table with UNIQUE',
+          description: 'Create `customer_emails` with `account_id INT PRIMARY KEY` and `email VARCHAR(150) NOT NULL UNIQUE`.',
+          instructions: [
+            'Write `CREATE TABLE customer_emails (account_id INT PRIMARY KEY, email VARCHAR(150) NOT NULL UNIQUE);`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'customer_emails',
+          initialSql: '-- Customer emails with UNIQUE\n',
+          solutionSql: 'CREATE TABLE customer_emails (account_id INT PRIMARY KEY, email VARCHAR(150) NOT NULL UNIQUE);',
+          solutionExplanation: 'Enforces email uniqueness with UNIQUE.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE customer_emails (account_id INT PRIMARY KEY, email VARCHAR(150) NOT NULL UNIQUE);`' }],
+          validation: {
+            targetTable: 'customer_emails',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Customer emails table created with UNIQUE constraint!',
+        },
+        {
+          id: 'day20-c5-t2',
+          title: 'Task 2: Create Product SKUs Table with UNIQUE',
+          description: 'Create `product_skus` with `item_id INT PRIMARY KEY` and `sku_code VARCHAR(30) NOT NULL UNIQUE`.',
+          instructions: [
+            'Create table `product_skus`.',
+            'Include `item_id INT PRIMARY KEY` and `sku_code VARCHAR(30) NOT NULL UNIQUE`.',
+          ],
+          type: 'independent',
+          primaryTable: 'product_skus',
+          initialSql: '-- Product SKUs with UNIQUE\n',
+          solutionSql: 'CREATE TABLE product_skus (item_id INT PRIMARY KEY, sku_code VARCHAR(30) NOT NULL UNIQUE);',
+          solutionExplanation: 'Prevents duplicate SKU codes.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE product_skus (item_id INT PRIMARY KEY, sku_code VARCHAR(30) NOT NULL UNIQUE);`' }],
+          validation: {
+            targetTable: 'product_skus',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Perfect! Product SKU uniqueness guaranteed.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 6: Automatic Fallback Values with DEFAULT
+    // =========================================================================
+    {
+      id: 'ddl-default',
+      order: 6,
+      title: '6. Automatic Fallback Values with DEFAULT',
+      shortDescription: 'Supply automatic fallback values when INSERT omits a column.',
+      theory: {
+        summary: 'The `DEFAULT` constraint specifies a fallback value for a column when an `INSERT` statement does not explicitly provide one.',
+        introTable: {
+          tableName: 'audit_logs (schema)',
+          description: 'Logs table with automatic timestamp default',
+          columns: ['log_id (PK)', 'action', 'created_at (DEFAULT CURRENT_TIMESTAMP)'],
+          rows: [
+            [1, 'user_login', '2026-08-25 15:00:00'],
+            [2, 'item_checkout', '2026-08-25 15:05:12'],
+          ],
+        },
+        explanation: [
+          '### 1. DEFAULT Syntax Examples',
+          '• Number default: `balance DECIMAL(10,2) DEFAULT 0.00`',
+          '• String default: `status VARCHAR(20) DEFAULT \'active\'`',
+          '• Timestamp default: `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Applying DEFAULT',
+            sqlSnippet: 'CREATE TABLE audit_logs (\n  log_id INT PRIMARY KEY,\n  action VARCHAR(100) NOT NULL,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);',
+            explanation: 'Automatically fills created_at with current server timestamp when omitted.',
+            tableData: {
+              tableName: 'DEFAULT Schema',
+              columns: ['Column', 'Default Value'],
+              rows: [['created_at', 'CURRENT_TIMESTAMP']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'DEFAULT syntax',
+            sql: 'CREATE TABLE audit_logs (\n  log_id INT PRIMARY KEY,\n  action VARCHAR(100) NOT NULL,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);',
+            description: 'Configures default values for column insertions.',
+          },
+        ],
+        keyTakeaway: 'DEFAULT eliminates the need to manually pass timestamps or standard initial zero/active states.',
+        exampleQuery: 'CREATE TABLE audit_logs ( log_id INT PRIMARY KEY, action VARCHAR(100) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );',
+        exampleQueryExplanation: 'Creates audit logs with automatic timestamp default.',
+        liveDemoSql: 'SELECT order_id, order_date, status FROM orders LIMIT 3;',
+        liveDemoNotes: 'Displays orders with timestamps.',
+        mcqs: [
+          {
+            question: 'What happens if you insert a row without mentioning a column that has a DEFAULT specified?',
+            options: [
+              'A. The query errors with a missing field warning',
+              'B. SQL automatically populates that column with the configured DEFAULT value',
+              'C. The column is set to NULL',
+              'D. The whole table is reset',
+            ],
+            correctIndex: 1,
+            explanation: 'When an inserted column is omitted, SQL automatically substitutes the DEFAULT value.',
+          },
+        ],
+        masteryPoints: ['Configure DEFAULT values for timestamps, counters, and status flags'],
+      },
+      tasks: [
+        {
+          id: 'day20-c6-t1',
+          title: 'Task 1: Create Audit Logs Table with DEFAULT',
+          description: 'Create `audit_logs` with `log_id INT PRIMARY KEY`, `action VARCHAR(100) NOT NULL`, and `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`.',
+          instructions: [
+            'Write `CREATE TABLE audit_logs (log_id INT PRIMARY KEY, action VARCHAR(100) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'audit_logs',
+          initialSql: '-- Audit logs with DEFAULT\n',
+          solutionSql: 'CREATE TABLE audit_logs (log_id INT PRIMARY KEY, action VARCHAR(100) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);',
+          solutionExplanation: 'Configures automatic CURRENT_TIMESTAMP default.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE audit_logs (log_id INT PRIMARY KEY, action VARCHAR(100) NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`' }],
+          validation: {
+            targetTable: 'audit_logs',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Audit logs table created with DEFAULT timestamp!',
+        },
+        {
+          id: 'day20-c6-t2',
+          title: 'Task 2: Create Store Credits Table with Defaults',
+          description: 'Create `store_credits` with `account_id INT PRIMARY KEY`, `balance DECIMAL(10,2) DEFAULT 0.00`, and `status VARCHAR(20) DEFAULT \'active\'`.',
+          instructions: [
+            'Create table `store_credits`.',
+            'Define `account_id INT PRIMARY KEY`, `balance DECIMAL(10,2) DEFAULT 0.00`, `status VARCHAR(20) DEFAULT \'active\'`.',
+          ],
+          type: 'independent',
+          primaryTable: 'store_credits',
+          initialSql: '-- Store credits with defaults\n',
+          solutionSql: 'CREATE TABLE store_credits (account_id INT PRIMARY KEY, balance DECIMAL(10,2) DEFAULT 0.00, status VARCHAR(20) DEFAULT \'active\');',
+          solutionExplanation: 'Configures default financial balance and status.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE store_credits (account_id INT PRIMARY KEY, balance DECIMAL(10,2) DEFAULT 0.00, status VARCHAR(20) DEFAULT \'active\');`' }],
+          validation: {
+            targetTable: 'store_credits',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Spot on! Default values configured cleanly.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 7: Business Rules with CHECK
+    // =========================================================================
+    {
+      id: 'ddl-check',
+      order: 7,
+      title: '7. Business Rules with CHECK',
+      shortDescription: 'Validate range conditions and rules directly at the database layer.',
+      theory: {
+        summary: 'A `CHECK` constraint validates that values inserted or updated in a column satisfy a boolean condition (e.g. `rating BETWEEN 1 AND 5`, `price >= 0`).',
+        introTable: {
+          tableName: 'product_ratings (schema)',
+          description: 'Enforcing 1 to 5 star rating boundaries',
+          columns: ['rating_id (PK)', 'score (CHECK 1..5)'],
+          rows: [
+            [1, 5],
+            [2, 4],
+          ],
+        },
+        explanation: [
+          '### 1. CHECK Constraint Syntax',
+          '```sql\nCREATE TABLE product_ratings (\n  rating_id INT PRIMARY KEY,\n  score INT NOT NULL CHECK (score BETWEEN 1 AND 5)\n);\n```',
+          'QUESTION_BLOCK::Database-Level Safety::If a buggy frontend sends `score = 10` or `score = -1`, the database CHECK constraint instantly rejects the transaction and prevents corrupt data from ever entering your database.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Applying CHECK Constraint',
+            sqlSnippet: 'CREATE TABLE product_ratings (\n  rating_id INT PRIMARY KEY,\n  score INT NOT NULL CHECK (score BETWEEN 1 AND 5)\n);',
+            explanation: 'Guarantees ratings strictly stay between 1 and 5.',
+            tableData: {
+              tableName: 'CHECK Schema',
+              columns: ['Column', 'Rule'],
+              rows: [['score', 'CHECK (score BETWEEN 1 AND 5)']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'CHECK syntax',
+            sql: 'CREATE TABLE product_ratings (\n  rating_id INT PRIMARY KEY,\n  score INT NOT NULL CHECK (score BETWEEN 1 AND 5)\n);',
+            description: 'Enforces validation rule.',
+          },
+        ],
+        keyTakeaway: 'Use CHECK constraints to guard business limits (positive prices, percentage ranges, rating bounds).',
+        exampleQuery: 'CREATE TABLE product_ratings ( rating_id INT PRIMARY KEY, score INT NOT NULL CHECK (score BETWEEN 1 AND 5) );',
+        exampleQueryExplanation: 'Creates ratings table with boundary check.',
+        liveDemoSql: 'SELECT product_id, price FROM products WHERE price > 0 LIMIT 3;',
+        liveDemoNotes: 'Displays valid product prices.',
+        mcqs: [
+          {
+            question: 'What happens if an application tries to insert rating = 6 into a column with `CHECK (rating BETWEEN 1 AND 5)`?',
+            options: [
+              'A. The database rounds it down to 5',
+              'B. The database rejects the query with a CHECK constraint violation error',
+              'C. It inserts NULL',
+              'D. It logs a warning but allows the insert',
+            ],
+            correctIndex: 1,
+            explanation: 'CHECK constraints strictly reject invalid data by throwing a violation error.',
+          },
+        ],
+        masteryPoints: ['Write CHECK constraints for boundary and range validation'],
+      },
+      tasks: [
+        {
+          id: 'day20-c7-t1',
+          title: 'Task 1: Create Product Ratings Table with CHECK',
+          description: 'Create `product_ratings` with `rating_id INT PRIMARY KEY` and `score INT NOT NULL CHECK (score BETWEEN 1 AND 5)`.',
+          instructions: [
+            'Write `CREATE TABLE product_ratings (rating_id INT PRIMARY KEY, score INT NOT NULL CHECK (score BETWEEN 1 AND 5));`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'product_ratings',
+          initialSql: '-- Ratings with CHECK\n',
+          solutionSql: 'CREATE TABLE product_ratings (rating_id INT PRIMARY KEY, score INT NOT NULL CHECK (score BETWEEN 1 AND 5));',
+          solutionExplanation: 'Enforces valid 1-5 rating range with CHECK.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE product_ratings (rating_id INT PRIMARY KEY, score INT NOT NULL CHECK (score BETWEEN 1 AND 5));`' }],
+          validation: {
+            targetTable: 'product_ratings',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Product ratings table created with CHECK constraint!',
+        },
+        {
+          id: 'day20-c7-t2',
+          title: 'Task 2: Create Employee Bonuses Table with CHECK',
+          description: 'Create `employee_bonuses` with `bonus_id INT PRIMARY KEY` and `percentage DECIMAL(4,2) CHECK (percentage >= 0.00 AND percentage <= 1.00)`.',
+          instructions: [
+            'Create table `employee_bonuses`.',
+            'Define `bonus_id INT PRIMARY KEY` and `percentage DECIMAL(4,2) CHECK (percentage >= 0.00 AND percentage <= 1.00)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'employee_bonuses',
+          initialSql: '-- Employee bonuses with CHECK\n',
+          solutionSql: 'CREATE TABLE employee_bonuses (bonus_id INT PRIMARY KEY, percentage DECIMAL(4,2) CHECK (percentage >= 0.00 AND percentage <= 1.00));',
+          solutionExplanation: 'Enforces bonus percentage between 0% and 100%.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE employee_bonuses (bonus_id INT PRIMARY KEY, percentage DECIMAL(4,2) CHECK (percentage >= 0.00 AND percentage <= 1.00));`' }],
+          validation: {
+            targetTable: 'employee_bonuses',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Spot on! CHECK rule protects percentage boundaries.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 8: Modifying Existing Tables with ALTER TABLE ... ADD
+    // =========================================================================
+    {
+      id: 'ddl-alter-table-add',
+      order: 8,
+      title: '8. Modifying Existing Tables with ALTER TABLE ... ADD',
+      shortDescription: 'Add new columns to live tables without dropping existing data.',
+      theory: {
+        summary: 'As application requirements grow, you can add new columns to existing live tables using `ALTER TABLE table_name ADD COLUMN column_name data_type;`.',
+        introTable: {
+          tableName: 'products (adding is_featured)',
+          description: 'Altering live products schema',
+          columns: ['product_id', 'name', 'price', '+ is_featured (NEW)'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99, 'FALSE (default)'],
+            [2, 'Bluetooth Speaker', 45.50, 'FALSE (default)'],
+          ],
+        },
+        explanation: [
+          '### 1. ALTER TABLE ADD Syntax',
+          '```sql\nALTER TABLE products\nADD COLUMN is_featured BOOLEAN DEFAULT FALSE;\n```',
+          'QUESTION_BLOCK::Preserving Data::ALTER TABLE preserves all existing rows in the table, populating the new column with NULL (or the specified DEFAULT value).',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Adding Column to Existing Table',
+            sqlSnippet: 'ALTER TABLE products ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;',
+            explanation: 'Appends is_featured to products without losing any existing catalog items.',
+            tableData: {
+              tableName: 'Altered Schema',
+              columns: ['Existing Columns', 'New Column Added'],
+              rows: [['product_id, name, price...', 'is_featured (BOOLEAN DEFAULT FALSE)']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'ALTER TABLE ADD syntax',
+            sql: 'ALTER TABLE table_name\nADD COLUMN column_name datatype constraint;',
+            description: 'Appends a new column to an existing table.',
+          },
+        ],
+        keyTakeaway: 'ALTER TABLE allows schema evolution without destroying existing production data.',
+        exampleQuery: 'ALTER TABLE products ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;',
+        exampleQueryExplanation: 'Adds a featured flag column to products.',
+        liveDemoSql: 'SELECT * FROM products LIMIT 2;',
+        liveDemoNotes: 'Displays existing products schema.',
+        mcqs: [
+          {
+            question: 'What happens to existing records when you execute `ALTER TABLE ... ADD COLUMN`?',
+            options: [
+              'A. All existing rows are deleted',
+              'B. All existing rows are preserved, and the new column is filled with NULL or the column DEFAULT',
+              'C. The database duplicates the table',
+              'D. It fails if the table has data',
+            ],
+            correctIndex: 1,
+            explanation: 'ALTER TABLE preserves existing records, populating new attributes with NULL or default values.',
+          },
+        ],
+        masteryPoints: ['Evolve schemas safely using ALTER TABLE ADD COLUMN'],
+      },
+      tasks: [
+        {
+          id: 'day20-c8-t1',
+          title: 'Task 1: Add Featured Flag to Products',
+          description: 'Add a new column `is_featured BOOLEAN DEFAULT FALSE` to the `products` table using ALTER TABLE.',
+          instructions: [
+            'Write `ALTER TABLE products ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
           primaryTable: 'products',
-          secondaryTables: ['reviews'],
-          initialSql: '-- Average rating per product\n',
-          solutionSql: 'SELECT p.product_id, p.name, AVG(r.rating) AS avg_rating, COUNT(r.review_id) AS total_reviews FROM products p JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;',
-          solutionExplanation: 'Calculates review metrics per product.',
-          hints: [{ level: 1, text: 'Use `JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;`' }],
+          initialSql: '-- Add is_featured column\n',
+          solutionSql: 'ALTER TABLE products ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;',
+          solutionExplanation: 'Appends is_featured to products.',
+          hints: [{ level: 1, text: 'Use `ALTER TABLE products ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;`' }],
           validation: {
             targetTable: 'products',
-            requireJoin: true,
-            requireGroupBy: true,
-            expectedRowCount: 12,
+            expectedRowCount: 1,
           },
-          successMessage: 'Spot on! Product ratings aggregated successfully.',
+          successMessage: 'New column added to products safely!',
+        },
+        {
+          id: 'day20-c8-t2',
+          title: 'Task 2: Add Phone Number to Customers',
+          description: 'Add a new column `phone_number VARCHAR(20)` to the `customers` table.',
+          instructions: [
+            'Alter table `customers`.',
+            'Add column `phone_number VARCHAR(20)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'customers',
+          initialSql: '-- Add phone_number to customers\n',
+          solutionSql: 'ALTER TABLE customers ADD COLUMN phone_number VARCHAR(20);',
+          solutionExplanation: 'Adds phone_number column to customers.',
+          hints: [{ level: 1, text: 'Use `ALTER TABLE customers ADD COLUMN phone_number VARCHAR(20);`' }],
+          validation: {
+            targetTable: 'customers',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Spot on! Customer schema extended with phone_number.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 9: Connecting Tables with ALTER TABLE ... ADD FOREIGN KEY
+    // =========================================================================
+    {
+      id: 'ddl-foreign-key',
+      order: 9,
+      title: '9. Connecting Tables with FOREIGN KEY Constraints',
+      shortDescription: 'Enforce relational integrity between child and parent tables.',
+      theory: {
+        summary: 'A `FOREIGN KEY` links a column in a child table to the `PRIMARY KEY` of a parent table, guaranteeing that orphaned records cannot be created.',
+        introTable: {
+          tableName: 'orders -> customers link',
+          description: 'Relating orders to customers via foreign key',
+          columns: ['Child Table Column (FK)', 'Parent Table Reference (PK)'],
+          rows: [['orders.customer_id', 'customers.customer_id']],
+        },
+        explanation: [
+          '### 1. Adding Foreign Key Constraints',
+          '```sql\nALTER TABLE orders\nADD CONSTRAINT fk_orders_customer\nFOREIGN KEY (customer_id) REFERENCES customers(customer_id);\n```',
+          'QUESTION_BLOCK::Referential Integrity::Once this constraint is active, SQL will prevent anyone from inserting an order with a non-existent `customer_id` (e.g. customer 9999).',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Applying Foreign Key',
+            sqlSnippet: 'ALTER TABLE orders ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id);',
+            explanation: 'Enforces that all order customer_id values must exist in the customers table.',
+            tableData: {
+              tableName: 'Constraint Definition',
+              columns: ['Constraint Name', 'FK Column', 'Target PK'],
+              rows: [['fk_orders_customer', 'customer_id', 'customers(customer_id)']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'ADD FOREIGN KEY syntax',
+            sql: 'ALTER TABLE child_table\nADD CONSTRAINT fk_name\nFOREIGN KEY (child_column) REFERENCES parent_table(parent_column);',
+            description: 'Enforces relational referential integrity.',
+          },
+        ],
+        keyTakeaway: 'Foreign keys protect relational integrity, preventing orphan or invalid records.',
+        exampleQuery: 'ALTER TABLE orders ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id);',
+        exampleQueryExplanation: 'Establishes foreign key constraint between orders and customers.',
+        liveDemoSql: 'SELECT order_id, customer_id FROM orders LIMIT 3;',
+        liveDemoNotes: 'Displays orders with parent customer IDs.',
+        mcqs: [
+          {
+            question: 'What happens if you try to insert an order with customer_id = 999 when no customer 999 exists and a FOREIGN KEY is enabled?',
+            options: [
+              'A. The database creates a placeholder customer 999',
+              'B. The insert is rejected with a foreign key constraint violation error',
+              'C. The order is inserted with customer_id = NULL',
+              'D. The database prompts for customer info',
+            ],
+            correctIndex: 1,
+            explanation: 'Foreign keys guarantee referential integrity and strictly reject non-existent parent references.',
+          },
+        ],
+        masteryPoints: ['Establish relational integrity with FOREIGN KEY constraints'],
+      },
+      tasks: [
+        {
+          id: 'day20-c9-t1',
+          title: 'Task 1: Add Foreign Key from Orders to Customers',
+          description: 'Add a foreign key constraint named `fk_orders_customer` on `orders(customer_id)` referencing `customers(customer_id)`.',
+          instructions: [
+            'Write `ALTER TABLE orders ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id);`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'orders',
+          secondaryTables: ['customers'],
+          initialSql: '-- Add foreign key constraint\n',
+          solutionSql: 'ALTER TABLE orders ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id);',
+          solutionExplanation: 'Enforces foreign key link to customers.',
+          hints: [{ level: 1, text: 'Use `ALTER TABLE orders ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id);`' }],
+          validation: {
+            targetTable: 'orders',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Foreign key constraint established successfully!',
+        },
+        {
+          id: 'day20-c9-t2',
+          title: 'Task 2: Add Foreign Key from Order Items to Products',
+          description: 'Add a foreign key constraint named `fk_items_product` on `order_items(product_id)` referencing `products(product_id)`.',
+          instructions: [
+            'Alter table `order_items`.',
+            'Add constraint `fk_items_product` foreign key `(product_id)` references `products(product_id)`.',
+          ],
+          type: 'independent',
+          primaryTable: 'order_items',
+          secondaryTables: ['products'],
+          initialSql: '-- Add FK on order_items\n',
+          solutionSql: 'ALTER TABLE order_items ADD CONSTRAINT fk_items_product FOREIGN KEY (product_id) REFERENCES products(product_id);',
+          solutionExplanation: 'Links order_items to products.',
+          hints: [{ level: 1, text: 'Use `ALTER TABLE order_items ADD CONSTRAINT fk_items_product FOREIGN KEY (product_id) REFERENCES products(product_id);`' }],
+          validation: {
+            targetTable: 'order_items',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Perfect! Relational integrity enforced on order_items.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 10: Removing Tables with DROP TABLE IF EXISTS
+    // =========================================================================
+    {
+      id: 'ddl-drop-table',
+      order: 10,
+      title: '10. Removing Tables with DROP TABLE IF EXISTS',
+      shortDescription: 'Permanently remove schemas and use IF EXISTS to prevent runtime errors.',
+      theory: {
+        summary: '`DROP TABLE table_name;` permanently destroys a table and all data inside it. Using `DROP TABLE IF EXISTS` avoids fatal errors if the table does not exist in migration scripts.',
+        introTable: {
+          tableName: 'Database Schema Cleanup',
+          description: 'Dropping temporary staging entities',
+          columns: ['Command', 'Behavior'],
+          rows: [
+            ['DROP TABLE table_name;', 'Fails with an error if table does not exist'],
+            ['DROP TABLE IF EXISTS table_name;', 'Succeeds safely whether table exists or not'],
+          ],
+        },
+        explanation: [
+          '### 1. The Safe DROP TABLE Pattern',
+          '```sql\nDROP TABLE IF EXISTS temp_order_staging;\n```',
+          'QUESTION_BLOCK::Irreversible Deletion::Unlike deleting rows inside a transaction, dropping a table is a DDL operation that cannot typically be undone with a simple ROLLBACK. Use with care in production!',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Dropping Table Safely',
+            sqlSnippet: 'DROP TABLE IF EXISTS temp_order_staging;',
+            explanation: 'Permanently tears down table schema without throwing errors if already absent.',
+            tableData: {
+              tableName: 'Drop Status',
+              columns: ['Target Table', 'Result'],
+              rows: [['temp_order_staging', 'Destroyed cleanly']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'DROP TABLE syntax',
+            sql: 'DROP TABLE IF EXISTS table_name;',
+            description: 'Safely removes a table from the database.',
+          },
+        ],
+        keyTakeaway: 'Always use IF EXISTS with DROP TABLE in reproducible migration and reset scripts.',
+        exampleQuery: 'DROP TABLE IF EXISTS temp_order_staging;',
+        exampleQueryExplanation: 'Safely drops staging table.',
+        liveDemoSql: 'SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' LIMIT 2;',
+        liveDemoNotes: 'Displays database tables.',
+        mcqs: [
+          {
+            question: 'Why is `DROP TABLE IF EXISTS` preferred over plain `DROP TABLE` in migration scripts?',
+            options: [
+              'A. It executes twice as fast',
+              'B. It prevents the entire migration script from crashing with an error if the table was already dropped or does not exist',
+              'C. It backs up the data first',
+              'D. It only drops empty tables',
+            ],
+            correctIndex: 1,
+            explanation: '`IF EXISTS` suppresses missing-table errors, allowing scripts to run idempotently.',
+          },
+        ],
+        masteryPoints: ['Safely tear down tables using DROP TABLE IF EXISTS'],
+      },
+      tasks: [
+        {
+          id: 'day20-c10-t1',
+          title: 'Task 1: Drop Staging Table Safely',
+          description: 'Safely drop the table named `temp_order_staging` if it exists.',
+          instructions: [
+            'Write `DROP TABLE IF EXISTS temp_order_staging;`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'temp_order_staging',
+          initialSql: '-- Drop staging table\n',
+          solutionSql: 'DROP TABLE IF EXISTS temp_order_staging;',
+          solutionExplanation: 'Safely destroys temp_order_staging schema.',
+          hints: [{ level: 1, text: 'Use `DROP TABLE IF EXISTS temp_order_staging;`' }],
+          validation: {
+            targetTable: 'temp_order_staging',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Staging table safely dropped!',
+        },
+        {
+          id: 'day20-c10-t2',
+          title: 'Task 2: Drop Legacy Grades Table',
+          description: 'Safely drop the table named `legacy_student_grades` if it exists.',
+          instructions: [
+            'Drop table `legacy_student_grades` if it exists.',
+          ],
+          type: 'independent',
+          primaryTable: 'legacy_student_grades',
+          initialSql: '-- Drop legacy grades table\n',
+          solutionSql: 'DROP TABLE IF EXISTS legacy_student_grades;',
+          solutionExplanation: 'Safely drops legacy_student_grades.',
+          hints: [{ level: 1, text: 'Use `DROP TABLE IF EXISTS legacy_student_grades;`' }],
+          validation: {
+            targetTable: 'legacy_student_grades',
+            expectedRowCount: 1,
+          },
+          successMessage: 'Spot on! Legacy table destroyed cleanly.',
         },
       ],
     },
@@ -848,15 +2318,15 @@ export const DAY_20_MODULE: ModuleData = {
         title: 'Task 1: Create a reviews table',
         description: 'Create a reviews table: review_id (PK, auto-increment), product_id (FK → products), customer_id (FK → customers), rating (1–5), comment (TEXT), created_at (DEFAULT CURRENT_TIMESTAMP).',
         instructions: [
-          'Write `CREATE TABLE reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL, comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );`.',
+          'Write `CREATE TABLE reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
         primaryTable: 'reviews',
         initialSql: '-- Task 1: Create the reviews table\n',
-        solutionSql: 'CREATE TABLE reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL, comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );',
-        solutionExplanation: 'Creates the new reviews entity table.',
-        hints: [{ level: 1, text: 'Use `CREATE TABLE reviews (...);`' }],
+        solutionSql: 'CREATE TABLE reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );',
+        solutionExplanation: 'Creates the new reviews entity table with complete constraints.',
+        hints: [{ level: 1, text: 'Use `CREATE TABLE reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );`' }],
         validation: {
           targetTable: 'reviews',
           expectedRowCount: 1,

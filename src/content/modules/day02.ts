@@ -8,24 +8,25 @@ export const DAY_02_MODULE: ModuleData = {
   shortTitle: 'WHERE & Core Filtering',
   type: 'module',
   milestoneId: 'milestone-1',
-  description: 'Master single-condition row filtering using WHERE, numeric equality & inequality (=, !=, <>), numeric range comparisons (<, >, <=, >=), and string filtering with single quotes.',
+  description: 'Master single-condition row filtering using WHERE, exact equality (=), inequality (!= / <>), numeric range comparisons (<, >, <=, >=), and string filtering with single quotes.',
   estimatedMinutes: 45,
   completionLearnings: [
     'Understand how WHERE filters rows before SELECT picks columns',
-    'Test exact numeric equality and inequality using = and !=',
-    'Compare numeric values against thresholds using <, >, <=, and >=',
+    'Test exact equality using = on numeric and primary key fields',
+    'Filter out unwanted values using the inequality operator != (<>)',
+    'Apply strict comparisons (<, >) that exclude boundary threshold values',
+    'Apply inclusive comparisons (<=, >=) that explicitly include boundary threshold values',
     'Filter text and strings safely using single quotes (\'value\')',
-    'Understand why unquoted text causes "Unknown column" errors in SQL',
   ],
   concepts: [
     // =========================================================================
-    // CONCEPT 1: The WHERE Clause & Numeric Equality (=, !=, <>)
+    // CONCEPT 1a: The WHERE Clause & Exact Equality (=)
     // =========================================================================
     {
-      id: 'where-numeric-equality',
+      id: 'where-exact-equality',
       order: 1,
-      title: '1. The WHERE Clause & Exact Equality',
-      shortDescription: 'How SQL filters specific rows based on exact numeric values.',
+      title: '1. Filtering Rows with WHERE and Exact Equality (=)',
+      shortDescription: 'How SQL filters specific rows based on exact matches.',
       theory: {
         summary: 'Imagine we have our database table called:',
         introTable: {
@@ -47,8 +48,7 @@ export const DAY_02_MODULE: ModuleData = {
           'QUESTION_BLOCK::FROM::Where should I get the data from?',
           'QUESTION_BLOCK::WHERE::Which rows meet my criteria?',
           'QUESTION_BLOCK::SELECT::What columns do I want in the final output?',
-          '### 2. Exact Equality and Inequality\nWhen checking exact numbers in SQL, we write the numbers directly without quotes:',
-          '| Operator | Meaning | Example | Matching Students |\n|---|---|---|---|\n| `=` | Equal to | `age = 21` | Rahim (21), Tanvir (21) |\n| `!=` or `<>` | Not equal to | `age != 21` | Karim (22), Ayesha (20), Sumaiya (23) |\n| `=` | Primary Key lookup | `id = 3` | Ayesha (exact 1 row) |',
+          '### 2. Exact Equality with =\nWhen checking exact numbers in SQL, we write the numbers directly without quotes. The `=` operator tests if a column\'s value exactly matches the specified value.',
           '### Notice: The Golden Rule of Row Filtering\n**SELECT controls columns. WHERE controls rows.**\n\nSQL first evaluates the `WHERE` condition row-by-row against the table to filter which records survive, and only then extracts the specific columns requested in `SELECT`.',
         ],
         stepBreakdowns: [
@@ -105,13 +105,8 @@ export const DAY_02_MODULE: ModuleData = {
             sql: 'SELECT column1, column2\nFROM table_name\nWHERE numeric_column = value;',
             description: 'Only rows where numeric_column equals the value are returned.',
           },
-          {
-            title: 'Inequality filtering',
-            sql: 'SELECT name, age\nFROM students\nWHERE age != 21;',
-            description: 'Returns all students whose age is NOT 21.',
-          },
         ],
-        keyTakeaway: 'WHERE filters rows before SELECT chooses columns. Numbers are written directly without quotes.',
+        keyTakeaway: 'WHERE filters rows before SELECT chooses columns. The = operator tests exact equality.',
         exampleQuery: 'SELECT name, age FROM students WHERE age = 21;',
         exampleQueryExplanation: 'From students, keeps rows where age is exactly 21, displaying name and age.',
         liveDemoSql: 'SELECT name, age FROM students WHERE age = 21;',
@@ -129,7 +124,7 @@ export const DAY_02_MODULE: ModuleData = {
             explanation: 'WHERE acts as a row filter: it evaluates each row and retains only rows where the condition is TRUE.',
           },
           {
-            question: 'How many rows will this query return?\nSELECT * FROM students WHERE id = 3;',
+            question: 'How many rows will this query return on our students table?\nSELECT * FROM students WHERE id = 3;',
             options: [
               'A. 5 rows (all students)',
               'B. 3 rows',
@@ -143,12 +138,12 @@ export const DAY_02_MODULE: ModuleData = {
       },
       masteryPoints: [
         'Understand that WHERE filters rows while SELECT picks columns',
-        'Use = for exact equality and != for inequality',
+        'Use = for exact equality matching on numeric values',
         'Remember that numeric values do not require quotes in SQL',
       ],
       tasks: [
         {
-          id: 'day02-c1-t1',
+          id: 'day02-c1a-t1',
           title: 'Task 1: Students aged exactly 22',
           description: 'Show the name and age of students whose age is exactly 22.',
           instructions: [
@@ -176,7 +171,7 @@ export const DAY_02_MODULE: ModuleData = {
           successMessage: 'Great job! You filtered rows by exact numeric equality.',
         },
         {
-          id: 'day02-c1-t2',
+          id: 'day02-c1a-t2',
           title: 'Task 2: Lookup Product by ID',
           description: 'Lookup product details for product_id 4 from the products table.',
           instructions: [
@@ -189,7 +184,7 @@ export const DAY_02_MODULE: ModuleData = {
           primaryTable: 'products',
           initialSql: '-- Lookup product #4\n',
           solutionSql: 'SELECT product_id, name, price FROM products WHERE product_id = 4;',
-          solutionExplanation: '`SELECT product_id, name, price FROM products WHERE product_id = 4;` retrieves the Ergonomic Desk Chair record.',
+          solutionExplanation: '`SELECT product_id, name, price FROM products WHERE product_id = 4;` retrieves the Mechanical Keyboard record.',
           hints: [
             { level: 1, text: 'Start with `SELECT product_id, name, price FROM products WHERE product_id = 4;`' },
           ],
@@ -206,161 +201,276 @@ export const DAY_02_MODULE: ModuleData = {
     },
 
     // =========================================================================
-    // CONCEPT 2: Numeric Range & Threshold Comparisons (<, >, <=, >=)
+    // CONCEPT 1b: Inequality Filtering (!= / <>)
     // =========================================================================
     {
-      id: 'where-numeric-ranges',
+      id: 'where-inequality',
       order: 2,
-      title: '2. Numeric Range & Threshold Comparisons',
-      shortDescription: 'How to filter rows using comparison operators (<, >, <=, >=).',
+      title: '2. Excluding Values with Inequality (!= / <>)',
+      shortDescription: 'How to filter rows that do NOT match a specific value.',
       theory: {
-        summary: 'Now let\'s explore filtering data with comparison thresholds:',
+        summary: 'What if we want every student EXCEPT those in a specific department?',
         introTable: {
-          tableName: 'products',
-          description: 'Sample products from the inventory database (5 items)',
-          columns: ['product_id', 'name', 'price', 'quantity_in_stock', 'reorder_level'],
+          tableName: 'students',
+          description: 'Original students table in database',
+          columns: ['id', 'name', 'age', 'department', 'city'],
           rows: [
-            [1, 'Wireless Mouse', 25.00, 42, 10],
-            [2, 'Mechanical Keyboard', 89.99, 15, 5],
-            [3, 'USB-C Cable (2m)', 12.50, 120, 20],
-            [4, 'Ergonomic Desk Chair', 249.00, 8, 5],
-            [5, 'Noise-Cancelling Headphones', 179.50, 22, 8],
+            [1, 'Rahim', 21, 'CSE', 'Dhaka'],
+            [2, 'Karim', 22, 'EEE', 'Gazipur'],
+            [3, 'Ayesha', 20, 'CSE', 'Dhaka'],
+            [4, 'Sumaiya', 23, 'BBA', 'Chattogram'],
+            [5, 'Tanvir', 21, 'CSE', 'Rajshahi'],
           ],
         },
         explanation: [
-          'In many scenarios, we do not want exact numbers, but rather thresholds: premium items over $100, budget items under $30, or low-stock items.',
-          '### 1. The Comparison Operators\nSQL provides standard mathematical comparison operators:',
-          '| Operator | Meaning | Example | Result on Products Table |\n|---|---|---|---|\n| `<` | Strictly less than | `price < 30.00` | Wireless Mouse ($25), USB-C Cable ($12.50) |\n| `>` | Strictly greater than | `price > 100.00` | Ergonomic Desk Chair ($249), Headphones ($179.50) |\n| `<=` | Less than or equal to | `price <= 25.00` | Includes Wireless Mouse ($25.00) and Cable ($12.50) |\n| `>=` | Greater than or equal to | `quantity_in_stock >= 40` | USB-C Cable (120), Wireless Mouse (42) |',
-          '### 2. Strict vs. Inclusive Comparisons\nNotice the difference between `<` (strict) and `<=` (inclusive):\n\n• `price < 25.00` excludes an item priced exactly at $25.00.\n• `price <= 25.00` includes an item priced exactly at $25.00.',
-          '### Notice: Filtering by Another Column\nYou can also compare two numeric columns against each other!\n\nFor example, to find items needing restocking:\n```sql\nSELECT name, quantity_in_stock, reorder_level\nFROM products\nWHERE quantity_in_stock <= reorder_level;\n```',
+          'The inequality operators **`!=`** and **`<>`** construct the exact opposite condition of equality.',
+          'They retain every row where the column does **NOT** equal the specified value.',
+          '### 1. Inequality Syntax\n```sql\nSELECT name, department\nFROM students\nWHERE department != \'EEE\';\n```\nThis query evaluates every row and keeps all students whose department is not EEE (4 students).',
+          '### 2. SQL Dialect Note: != vs <>\n• `<>` is the official **SQL-standard** inequality operator.\n• `!=` is supported by virtually all modern relational databases, including MySQL and PostgreSQL.\nBoth operators behave identically.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM products',
-            sqlSnippet: 'FROM products',
-            explanation: 'SQL visits the products table with all rows.',
+            stepTitle: 'Step 1: FROM students',
+            sqlSnippet: 'FROM students',
+            explanation: 'SQL scans the students table with all 5 records.',
             tableData: {
-              tableName: 'products',
-              columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
+              tableName: 'students',
+              columns: ['id', 'name', 'department'],
               rows: [
-                [1, 'Wireless Mouse', 25.00, 42],
-                [2, 'Mechanical Keyboard', 89.99, 15],
-                [3, 'USB-C Cable (2m)', 12.50, 120],
-                [4, 'Ergonomic Desk Chair', 249.00, 8],
-                [5, 'Noise-Cancelling Headphones', 179.50, 22],
+                [1, 'Rahim', 'CSE'],
+                [2, 'Karim', 'EEE'],
+                [3, 'Ayesha', 'CSE'],
+                [4, 'Sumaiya', 'BBA'],
+                [5, 'Tanvir', 'CSE'],
               ],
             },
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: WHERE price >= 100.00 (Threshold Check)',
-            sqlSnippet: 'WHERE price >= 100.00',
-            explanation: 'Wireless Mouse ($25.00 >= 100.00): FALSE ❌\nMechanical Keyboard ($89.99 >= 100.00): FALSE ❌\nUSB-C Cable ($12.50 >= 100.00): FALSE ❌\nErgonomic Desk Chair ($249.00 >= 100.00): TRUE ✅\nNoise-Cancelling Headphones ($179.50 >= 100.00): TRUE ✅',
+            stepTitle: "Step 2: WHERE department != 'EEE'",
+            sqlSnippet: "WHERE department != 'EEE'",
+            explanation: "Rahim ('CSE' != 'EEE'): TRUE ✅\nKarim ('EEE' != 'EEE'): FALSE ❌\nAyesha ('CSE' != 'EEE'): TRUE ✅\nSumaiya ('BBA' != 'EEE'): TRUE ✅\nTanvir ('CSE' != 'EEE'): TRUE ✅",
             tableData: {
               tableName: 'Surviving Rows',
-              columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
+              columns: ['name', 'department'],
               rows: [
-                [4, 'Ergonomic Desk Chair', 249.00, 8],
-                [5, 'Noise-Cancelling Headphones', 179.50, 22],
-              ],
-            },
-          },
-          {
-            stepNumber: 3,
-            stepTitle: 'Step 3: SELECT name, price',
-            sqlSnippet: 'SELECT name, price',
-            explanation: 'Extracts the requested columns for premium products:',
-            tableData: {
-              tableName: 'Result',
-              columns: ['name', 'price'],
-              highlightedColumns: ['name', 'price'],
-              rows: [
-                ['Ergonomic Desk Chair', 249.00],
-                ['Noise-Cancelling Headphones', 179.50],
+                ['Rahim', 'CSE'],
+                ['Ayesha', 'CSE'],
+                ['Sumaiya', 'BBA'],
+                ['Tanvir', 'CSE'],
               ],
             },
           },
         ],
         syntaxBlocks: [
           {
-            title: 'Threshold comparison syntax',
-            sql: 'SELECT name, price\nFROM products\nWHERE price >= 100.00;',
-            description: 'Returns products with a price of $100.00 or higher.',
-          },
-          {
-            title: 'Strict comparison syntax',
-            sql: 'SELECT name, price\nFROM products\nWHERE price < 50.00;',
-            description: 'Returns products costing strictly less than $50.00.',
+            title: 'Inequality filtering syntax',
+            sql: "SELECT name, department\nFROM students\nWHERE department != 'EEE';",
+            description: "Returns all students whose department is NOT 'EEE'.",
           },
         ],
-        keyTakeaway: 'Use <, >, <=, and >= to filter numeric columns against thresholds without quotes.',
-        exampleQuery: 'SELECT name, price FROM products WHERE price >= 100.00;',
-        exampleQueryExplanation: 'Filters for products priced at $100.00 or higher.',
-        liveDemoSql: 'SELECT name, price, quantity_in_stock FROM products WHERE price >= 100.00;',
-        liveDemoNotes: 'Displays premium items in the catalog.',
+        keyTakeaway: 'Use != or <> to exclude specific values from your result set.',
+        exampleQuery: "SELECT name, department FROM students WHERE department != 'EEE';",
+        exampleQueryExplanation: 'Returns Rahim, Ayesha, Sumaiya, and Tanvir, excluding Karim.',
+        liveDemoSql: "SELECT name, department FROM students WHERE department != 'EEE';",
+        liveDemoNotes: 'Excludes the EEE department record.',
         mcqs: [
           {
-            question: 'How many rows will this query return on the students table?\nSELECT * FROM students WHERE age > 21;',
+            question: "The students table has 5 rows: 3 in 'CSE', 1 in 'EEE', and 1 in 'BBA'. How many rows does `WHERE department != 'EEE'` return?",
             options: [
-              'A. 5 rows (all students)',
-              'B. 2 rows (Karim: 22, Sumaiya: 23)',
-              'C. 3 rows (Rahim: 21, Karim: 22, Sumaiya: 23)',
+              'A. 1 row',
+              'B. 4 rows',
+              'C. 5 rows',
               'D. 0 rows',
             ],
             correctIndex: 1,
-            explanation: 'Strictly greater than (>) 21 excludes age 21. Only Karim (22) and Sumaiya (23) pass the filter.',
-          },
-          {
-            question: 'Which query finds all products priced at $50.00 or less?',
-            options: [
-              'A. SELECT * FROM products WHERE price < 50.00;',
-              'B. SELECT * FROM products WHERE price <= 50.00;',
-              'C. SELECT * FROM products WHERE price = 50.00;',
-              'D. SELECT * FROM products WHERE price > 50.00;',
-            ],
-            correctIndex: 1,
-            explanation: '"$50.00 or less" is inclusive, requiring the less-than-or-equal operator (<=).',
+            explanation: 'It excludes only the 1 student in EEE, leaving the 3 CSE and 1 BBA students (4 total).',
           },
         ],
       },
       masteryPoints: [
-        'Use < and > for strict numeric boundaries',
-        'Use <= and >= for inclusive numeric boundaries',
-        'Compare columns against numbers or other columns',
+        'Use != or <> to exclude values',
+        'Recognize <> as the SQL-standard form of !=',
       ],
       tasks: [
         {
-          id: 'day02-c2-t1',
-          title: 'Task 1: Premium Products ($50 or more)',
-          description: 'Show the name and price of products priced at $50.00 or more from the products table.',
+          id: 'day02-c1b-t1',
+          title: 'Task 1: Exclude EEE department students',
+          description: 'Show name and department of all students who are NOT in the EEE department.',
           instructions: [
-            'Select `name` and `price` from `products`.',
-            'Filter rows where `price >= 50.00`.',
+            'Select `name` and `department` from `students`.',
+            "Filter for rows where `department != 'EEE'` (or `department <> 'EEE'`).",
             'End with a semicolon (;).',
           ],
           type: 'guided',
-          primaryTable: 'products',
-          initialSql: '-- Write your SQL query here\n',
-          solutionSql: 'SELECT name, price FROM products WHERE price >= 50.00;',
-          solutionExplanation: '`WHERE price >= 50.00` extracts all items costing $50 or higher (5 items in full inventory).',
+          primaryTable: 'students',
+          initialSql: '-- Exclude EEE department\n',
+          solutionSql: "SELECT name, department FROM students WHERE department != 'EEE';",
+          solutionExplanation: '`WHERE department != \'EEE\'` retains the 4 students who are not in EEE.',
           hints: [
-            { level: 1, text: 'Add `50.00` after `price >=`.' },
-            { level: 2, text: '`SELECT name, price FROM products WHERE price >= 50.00;`' },
+            { level: 1, text: "Write `WHERE department != 'EEE';`" },
+          ],
+          validation: {
+            targetTable: 'students',
+            requiredColumns: ['name', 'department'],
+            requireWhere: true,
+            whereContainsTerms: ['department', 'EEE'],
+            expectedRowCount: 4,
+          },
+          successMessage: 'Great job! You excluded specific rows using inequality.',
+        },
+        {
+          id: 'day02-c1b-t2',
+          title: 'Task 2: Products other than Product #1',
+          description: 'Select name and price of all products except product_id 1.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `name` and `price`.',
+            'Filter where `product_id != 1`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Show all products except product 1\n',
+          solutionSql: 'SELECT name, price FROM products WHERE product_id != 1;',
+          solutionExplanation: '`WHERE product_id != 1` retrieves all 27 catalog items except product #1.',
+          hints: [
+            { level: 1, text: 'Use `SELECT name, price FROM products WHERE product_id != 1;`' },
           ],
           validation: {
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireWhere: true,
-            whereContainsTerms: ['price', '>=', '50'],
+            whereContainsTerms: ['product_id', '1'],
+            expectedRowCount: 27,
+          },
+          successMessage: 'Excellent! You filtered out a specific item by ID.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 2a: Strict Comparisons (> and <)
+    // =========================================================================
+    {
+      id: 'where-strict-comparisons',
+      order: 3,
+      title: '3. Strict Range Comparisons (> and <)',
+      shortDescription: 'Filter numeric columns strictly above or below a threshold.',
+      theory: {
+        summary: 'Now let\'s explore filtering data with strict comparison thresholds:',
+        introTable: {
+          tableName: 'products',
+          description: 'Sample inventory items',
+          columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99, 40],
+            [2, 'Bluetooth Speaker', 45.50, 3],
+            [3, 'USB-C Charging Cable', 9.99, 0],
+            [4, 'Mechanical Keyboard', 65.00, 12],
+            [14, 'Office Chair', 120.00, 5],
+          ],
+        },
+        explanation: [
+          'In many scenarios, we want threshold filters: premium items costing more than $50, or budget items under $20.',
+          '### 1. Strict Inequalities: > and <\n• `>` means **strictly greater than**.\n• `<` means **strictly less than**.',
+          '### 2. The Boundary Rule (Strict)\n**Strict comparisons exclude the exact boundary number.**',
+          'For example, `WHERE price > 50.00`:\n• An item priced at $50.01 is **included**.\n• An item priced at exactly $50.00 is **EXCLUDED**.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: FROM products',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL visits the products table.',
+            tableData: {
+              tableName: 'products',
+              columns: ['product_id', 'name', 'price'],
+              rows: [
+                [1, 'Wireless Mouse', 15.99],
+                [2, 'Bluetooth Speaker', 45.50],
+                [4, 'Mechanical Keyboard', 65.00],
+                [14, 'Office Chair', 120.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: WHERE price > 50.00 (Strict Boundary Check)',
+            sqlSnippet: 'WHERE price > 50.00',
+            explanation: 'Wireless Mouse ($15.99 > 50.00): FALSE ❌\nBluetooth Speaker ($45.50 > 50.00): FALSE ❌\nMechanical Keyboard ($65.00 > 50.00): TRUE ✅\nOffice Chair ($120.00 > 50.00): TRUE ✅',
+            tableData: {
+              tableName: 'Surviving Rows',
+              columns: ['product_id', 'name', 'price'],
+              rows: [
+                [4, 'Mechanical Keyboard', 65.00],
+                [14, 'Office Chair', 120.00],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Strict greater-than syntax',
+            sql: 'SELECT name, price\nFROM products\nWHERE price > 50.00;',
+            description: 'Returns products costing strictly more than $50.00.',
+          },
+        ],
+        keyTakeaway: 'Strict operators (> and <) exclude the exact threshold value.',
+        exampleQuery: 'SELECT name, price FROM products WHERE price > 50.00;',
+        exampleQueryExplanation: 'Finds all products costing strictly more than $50.00.',
+        liveDemoSql: 'SELECT name, price FROM products WHERE price > 50.00;',
+        liveDemoNotes: 'Returns items like Mechanical Keyboard ($65) and Office Chair ($120).',
+        mcqs: [
+          {
+            question: 'Does an item with `price = 50.00` survive the filter `WHERE price > 50.00`?',
+            options: [
+              'A. Yes, because 50 is on the boundary',
+              'B. No, because > is strict and excludes the boundary value',
+              'C. Only if the item is in stock',
+              'D. Yes, SQL automatically rounds numbers up',
+            ],
+            correctIndex: 1,
+            explanation: '> is a strict inequality. 50.00 is not greater than 50.00, so it evaluates to FALSE.',
+          },
+        ],
+      },
+      masteryPoints: [
+        'Use > for strictly greater than',
+        'Use < for strictly less than',
+        'Remember that strict comparisons exclude the boundary value',
+      ],
+      tasks: [
+        {
+          id: 'day02-c2a-t1',
+          title: 'Task 1: Products priced strictly over $50',
+          description: 'Show name and price of products costing strictly more than $50.00.',
+          instructions: [
+            'Select `name` and `price` from `products`.',
+            'Filter rows where `price > 50.00`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Products strictly over $50\n',
+          solutionSql: 'SELECT name, price FROM products WHERE price > 50.00;',
+          solutionExplanation: '`WHERE price > 50.00` selects all items costing strictly more than $50 (5 items).',
+          hints: [
+            { level: 1, text: 'Use `SELECT name, price FROM products WHERE price > 50.00;`' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price'],
+            requireWhere: true,
+            whereContainsTerms: ['price', '>', '50'],
             expectedRowCount: 5,
           },
-          successMessage: 'Great job! You filtered items using an inclusive threshold.',
+          successMessage: 'Great job! You applied a strict greater-than threshold.',
         },
         {
-          id: 'day02-c2-t2',
-          title: 'Task 2: Younger Students (Under 22)',
-          description: 'Show the name and age of students who are strictly younger than 22 years old.',
+          id: 'day02-c2a-t2',
+          title: 'Task 2: Students strictly under 22 years old',
+          description: 'Show name and age of students who are strictly younger than 22.',
           instructions: [
             'Query the `students` table.',
             'Select `name` and `age`.',
@@ -368,7 +478,7 @@ export const DAY_02_MODULE: ModuleData = {
           ],
           type: 'independent',
           primaryTable: 'students',
-          initialSql: '-- Show students younger than 22\n',
+          initialSql: '-- Students under 22\n',
           solutionSql: 'SELECT name, age FROM students WHERE age < 22;',
           solutionExplanation: '`WHERE age < 22` returns Rahim (21), Ayesha (20), and Tanvir (21).',
           hints: [
@@ -387,12 +497,189 @@ export const DAY_02_MODULE: ModuleData = {
     },
 
     // =========================================================================
+    // CONCEPT 2b: Inclusive Comparisons (>= and <=)
+    // =========================================================================
+    {
+      id: 'where-inclusive-comparisons',
+      order: 4,
+      title: '4. Inclusive Range Comparisons (>= and <=)',
+      shortDescription: 'Filter numeric columns with inclusive boundary thresholds.',
+      theory: {
+        summary: 'Now let\'s explore inclusive threshold comparisons:',
+        introTable: {
+          tableName: 'products',
+          description: 'Sample products snapshot',
+          columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
+          rows: [
+            [4, 'Mechanical Keyboard', 65.00, 12],
+            [6, 'Stainless Steel Pan Set', 55.00, 15],
+            [14, 'Office Chair', 120.00, 5],
+            [20, 'Tennis Racket', 55.00, 9],
+          ],
+        },
+        explanation: [
+          'When business requirements state **"$55.00 or more"** or **"at most 15 units"**, we need inclusive operators:',
+          '• `>=` means **greater than or equal to**.\n• `<=` means **less than or equal to**.',
+          '### The Boundary Rule (Inclusive)\n**Inclusive comparisons explicitly INCLUDE the boundary number.**',
+          'For example, `WHERE price >= 55.00`:\n• Items priced at $65.00 and $120.00 are included.\n• Items priced at **exactly $55.00** (like the Pan Set and Tennis Racket) are **INCLUDED**.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: FROM products',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL scans the products table.',
+            tableData: {
+              tableName: 'products',
+              columns: ['product_id', 'name', 'price'],
+              rows: [
+                [4, 'Mechanical Keyboard', 65.00],
+                [6, 'Stainless Steel Pan Set', 55.00],
+                [20, 'Tennis Racket', 55.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: WHERE price >= 55.00 (Inclusive Boundary Check)',
+            sqlSnippet: 'WHERE price >= 55.00',
+            explanation: 'Mechanical Keyboard ($65.00 >= 55.00): TRUE ✅\nStainless Steel Pan Set ($55.00 >= 55.00): TRUE ✅ (Boundary included)\nTennis Racket ($55.00 >= 55.00): TRUE ✅ (Boundary included)',
+            tableData: {
+              tableName: 'Surviving Rows',
+              columns: ['product_id', 'name', 'price'],
+              rows: [
+                [4, 'Mechanical Keyboard', 65.00],
+                [6, 'Stainless Steel Pan Set', 55.00],
+                [20, 'Tennis Racket', 55.00],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Inclusive greater-than-or-equal syntax',
+            sql: 'SELECT name, price\nFROM products\nWHERE price >= 55.00;',
+            description: 'Returns products with a price of $55.00 or higher.',
+          },
+          {
+            title: 'Inclusive less-than-or-equal syntax',
+            sql: 'SELECT name, quantity_in_stock\nFROM products\nWHERE quantity_in_stock <= 15;',
+            description: 'Returns products with 15 or fewer units in stock.',
+          },
+        ],
+        keyTakeaway: 'Use >= and <= when the threshold value itself must be included in the result.',
+        exampleQuery: 'SELECT name, price FROM products WHERE price >= 55.00;',
+        exampleQueryExplanation: 'Finds products priced at $55.00 or higher (including $55.00 items).',
+        liveDemoSql: 'SELECT name, price FROM products WHERE price >= 55.00;',
+        liveDemoNotes: 'Includes products priced at exactly $55.00.',
+        mcqs: [
+          {
+            question: 'Which query finds all products with 15 or fewer units in stock?',
+            options: [
+              'A. SELECT * FROM products WHERE quantity_in_stock < 15;',
+              'B. SELECT * FROM products WHERE quantity_in_stock <= 15;',
+              'C. SELECT * FROM products WHERE quantity_in_stock = 15;',
+              'D. SELECT * FROM products WHERE quantity_in_stock >= 15;',
+            ],
+            correctIndex: 1,
+            explanation: '"15 or fewer" means less than or equal to 15, which uses the <= operator.',
+          },
+        ],
+      },
+      masteryPoints: [
+        'Use >= for greater than or equal to',
+        'Use <= for less than or equal to',
+        'Verify that boundary values are included in the output',
+      ],
+      tasks: [
+        {
+          id: 'day02-c2b-t1',
+          title: 'Task 1: Items priced at $50.00 or more (>=)',
+          description: 'Show name and price for products priced at $50.00 or higher.',
+          instructions: [
+            'Select `name` and `price` from `products`.',
+            'Filter with `WHERE price >= 50.00`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Products priced $50 or more (>=)\n',
+          solutionSql: 'SELECT name, price FROM products WHERE price >= 50.00;',
+          solutionExplanation: '`WHERE price >= 50.00` selects all items costing $50.00 or higher (5 items).',
+          hints: [
+            { level: 1, text: 'Use `WHERE price >= 50.00;`' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price'],
+            requireWhere: true,
+            whereContainsTerms: ['price', '>=', '50'],
+            expectedRowCount: 5,
+          },
+          successMessage: 'Great job! You tested an inclusive greater-than-or-equal condition.',
+        },
+        {
+          id: 'day02-c2b-t2',
+          title: 'Task 2: Students aged 21 or younger (<=)',
+          description: 'Show name and age of students who are 21 years old or younger.',
+          instructions: [
+            'Query the `students` table.',
+            'Select `name` and `age`.',
+            'Filter where `age <= 21`.',
+          ],
+          type: 'independent',
+          primaryTable: 'students',
+          initialSql: '-- Students aged 21 or younger (<=)\n',
+          solutionSql: 'SELECT name, age FROM students WHERE age <= 21;',
+          solutionExplanation: '`WHERE age <= 21` returns Rahim (21), Ayesha (20), and Tanvir (21).',
+          hints: [
+            { level: 1, text: 'Write `SELECT name, age FROM students WHERE age <= 21;`' },
+          ],
+          validation: {
+            targetTable: 'students',
+            requiredColumns: ['name', 'age'],
+            requireWhere: true,
+            whereContainsTerms: ['age', '<=', '21'],
+            expectedRowCount: 3,
+          },
+          successMessage: 'Well done! You tested an inclusive less-than-or-equal condition.',
+        },
+        {
+          id: 'day02-c2b-t3',
+          title: 'Task 3: Boundary Confirmation (Stock <= 15)',
+          description: 'Find all products with quantity_in_stock of 15 or fewer. Confirm that products with exactly 15 units appear in the result.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `name`, `price`, and `quantity_in_stock`.',
+            'Filter where `quantity_in_stock <= 15`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Low stock items (15 or fewer)\n',
+          solutionSql: 'SELECT name, price, quantity_in_stock FROM products WHERE quantity_in_stock <= 15;',
+          solutionExplanation: '`WHERE quantity_in_stock <= 15` includes items with exactly 15 units in stock (such as Stainless Steel Pan Set and Mechanical Keyboard).',
+          hints: [
+            { level: 1, text: 'Write `SELECT name, price, quantity_in_stock FROM products WHERE quantity_in_stock <= 15;`' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price', 'quantity_in_stock'],
+            requireWhere: true,
+            whereContainsTerms: ['quantity_in_stock', '<=', '15'],
+            expectedRowCount: 18,
+          },
+          successMessage: 'Spot on! You verified that boundary values are included by <=.',
+        },
+      ],
+    },
+
+    // =========================================================================
     // CONCEPT 3: Filtering Text and Strings with Single Quotes
     // =========================================================================
     {
       id: 'where-text-strings',
-      order: 3,
-      title: '3. Filtering Text with Single Quotes',
+      order: 5,
+      title: '5. Filtering Text with Single Quotes',
       shortDescription: 'How to filter rows by string and text values safely.',
       theory: {
         summary: 'Now let\'s look at filtering text columns like city or department:',
@@ -413,7 +700,6 @@ export const DAY_02_MODULE: ModuleData = {
           '### 1. Filtering by Text Values\nFor example, to find all students located in Dhaka:\n\n```sql\nSELECT name, city\nFROM students\nWHERE city = \'Dhaka\';\n```',
           '### 2. Column Names vs. String Literals\nIf you write `WHERE city = Dhaka` without quotes, SQL assumes `Dhaka` is the name of another **column**!\n\nBecause no column named `Dhaka` exists in `students`, SQL will stop with an error (`Unknown column \'Dhaka\'`).',
           '| Identifier Type | Quoting Rule | Example | Status |\n|---|---|---|---|\n| Column Name | **Never quoted** | `name`, `city`, `age` | ✅ Valid column reference |\n| String Value | **Always single quotes** | `\'Dhaka\'`, `\'CSE\'`, `\'Electronics\'` | ✅ Valid text literal |\n| Number Value | **Never quoted** | `21`, `50.00`, `100` | ✅ Valid numeric literal |',
-          '### 3. Text Inequality (!= or <>)\nTo find students who are NOT in the CSE department:\n\n```sql\nSELECT name, department\nFROM students\nWHERE department != \'CSE\';\n```\nThis retains Karim (EEE) and Sumaiya (BBA), excluding all CSE majors.',
           '### Notice: The Golden Rule for Text\nAlways use **single quotes** (`\'...\'`) for text literals. Double quotes (`"..."`) or unquoted text will cause errors in standard SQL queries.',
         ],
         stepBreakdowns: [
@@ -470,11 +756,6 @@ export const DAY_02_MODULE: ModuleData = {
             sql: "SELECT name, city\nFROM students\nWHERE city = 'Dhaka';",
             description: "Matches rows where the city column exactly equals 'Dhaka'.",
           },
-          {
-            title: 'Excluding a string value with !=',
-            sql: "SELECT name, department\nFROM students\nWHERE department != 'CSE';",
-            description: 'Returns rows where department is not CSE.',
-          },
         ],
         keyTakeaway: "Always enclose string literals in single quotes ('...'). Never quote column names.",
         exampleQuery: "SELECT name, city FROM students WHERE city = 'Dhaka';",
@@ -493,23 +774,11 @@ export const DAY_02_MODULE: ModuleData = {
             correctIndex: 1,
             explanation: "Without single quotes, SQL interprets Dhaka as a column identifier rather than a string literal.",
           },
-          {
-            question: "Which query correctly finds all students NOT in the CSE department?",
-            options: [
-              "A. SELECT name FROM students WHERE department = 'NOT CSE';",
-              "B. SELECT name FROM students WHERE department != 'CSE';",
-              "C. SELECT name FROM students WHERE department IS CSE;",
-              "D. SELECT name FROM students DROP 'CSE';",
-            ],
-            correctIndex: 1,
-            explanation: "The `!=` (or `<>`) operator checks for inequality against the string literal 'CSE'.",
-          },
         ],
       },
       masteryPoints: [
         "Wrap text literals in single quotes ('...')",
         "Distinguish column identifiers from string literals",
-        "Use != or <> to exclude text matches",
       ],
       tasks: [
         {
@@ -579,7 +848,7 @@ export const DAY_02_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day02-hw-1',
-        title: 'Task 1: Products priced under $50',
+        title: 'Task 1: Products priced strictly under $50',
         description: 'Find all products priced strictly under $50.00.',
         instructions: [
           'Select `name` and `price` from `products` where `price < 50`.',

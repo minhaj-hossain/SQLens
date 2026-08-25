@@ -21,50 +21,47 @@ export const DAY_04_MODULE: ModuleData = {
   ],
   concepts: [
     // =========================================================================
-    // CONCEPT 1: Sorting with ORDER BY
+    // CONCEPT 1a: Single-Column Sorting with ORDER BY (ASC & DESC)
     // =========================================================================
     {
-      id: 'order-by-sorting',
+      id: 'order-by-single-column',
       order: 1,
-      title: '1. Sorting with ORDER BY (ASC & DESC)',
-      shortDescription: 'Control the presentation order of query results.',
+      title: '1. Single-Column Sorting (ASC & DESC)',
+      shortDescription: 'Sort query results by a single column in ascending or descending order.',
       theory: {
-        summary: 'Without an ORDER BY clause, relational databases return rows in arbitrary internal storage order. ORDER BY allows you to sort records explicitly.',
+        summary: 'Without an ORDER BY clause, relational databases return rows in arbitrary storage order. ORDER BY allows you to sort records explicitly.',
         introTable: {
           tableName: 'products',
           description: 'Inventory items with price and stock levels.',
           columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
           rows: [
-            [1, 'Wireless Mouse', 25.00, 42],
-            [2, 'Mechanical Keyboard', 89.99, 15],
-            [3, 'USB-C Cable (2m)', 12.50, 120],
-            [4, 'Ergonomic Desk Chair', 249.00, 8],
-            [5, 'Noise-Cancelling Headphones', 179.50, 22],
+            [1, 'Wireless Mouse', 15.99, 40],
+            [2, 'Bluetooth Speaker', 45.50, 3],
+            [3, 'USB-C Charging Cable', 9.99, 0],
+            [4, 'Mechanical Keyboard', 65.00, 12],
+            [14, 'Office Chair', 120.00, 5],
           ],
         },
         explanation: [
           '### 1. Ascending vs Descending Order',
-          '`ORDER BY price ASC` sorts from lowest to highest (`ASC` is the default).',
+          '`ORDER BY price ASC` sorts from lowest to highest (`ASC` is the default direction).',
           '`ORDER BY price DESC` sorts from highest to lowest (useful for "top expensive" or "newest").',
           'QUESTION_BLOCK::ORDER BY Clause::Always placed after the WHERE clause: `SELECT ... FROM ... WHERE ... ORDER BY ...`',
-          '### 2. Sorting by Multiple Columns',
-          'You can sort by multiple columns by separating them with commas:\n```sql\nSELECT name, category_id, price\nFROM products\nORDER BY category_id ASC, price DESC;\n```\nThis groups items by category first, then sorts by price within each category.',
         ],
         stepBreakdowns: [
           {
             stepNumber: 1,
             stepTitle: 'Step 1: FROM products',
             sqlSnippet: 'FROM products',
-            explanation: 'SQL visits the products table.',
+            explanation: 'SQL scans the products table.',
             tableData: {
               tableName: 'products',
               columns: ['product_id', 'name', 'price'],
               rows: [
-                [1, 'Wireless Mouse', 25.00],
-                [2, 'Mechanical Keyboard', 89.99],
-                [3, 'USB-C Cable (2m)', 12.50],
-                [4, 'Ergonomic Desk Chair', 249.00],
-                [5, 'Noise-Cancelling Headphones', 179.50],
+                [1, 'Wireless Mouse', 15.99],
+                [2, 'Bluetooth Speaker', 45.50],
+                [4, 'Mechanical Keyboard', 65.00],
+                [14, 'Office Chair', 120.00],
               ],
             },
           },
@@ -72,24 +69,23 @@ export const DAY_04_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: 'Step 2: ORDER BY price DESC',
             sqlSnippet: 'ORDER BY price DESC',
-            explanation: 'SQL arranges all rows starting from highest price ($249.00) down to lowest ($12.50).',
+            explanation: 'SQL arranges all rows starting from highest price ($120.00) down to lowest ($15.99).',
             tableData: {
               tableName: 'Sorted Result',
               columns: ['name', 'price'],
               highlightedColumns: ['price'],
               rows: [
-                ['Ergonomic Desk Chair', 249.00],
-                ['Noise-Cancelling Headphones', 179.50],
-                ['Mechanical Keyboard', 89.99],
-                ['Wireless Mouse', 25.00],
-                ['USB-C Cable (2m)', 12.50],
+                ['Office Chair', 120.00],
+                ['Mechanical Keyboard', 65.00],
+                ['Bluetooth Speaker', 45.50],
+                ['Wireless Mouse', 15.99],
               ],
             },
           },
         ],
         syntaxBlocks: [
           {
-            title: 'Sorting query results',
+            title: 'Sorting descending by price',
             sql: 'SELECT name, price\nFROM products\nORDER BY price DESC;',
             description: 'Sorts output in descending order by price.',
           },
@@ -116,7 +112,7 @@ export const DAY_04_MODULE: ModuleData = {
       },
       tasks: [
         {
-          id: 'day04-c1-t1',
+          id: 'day04-c1a-t1',
           title: 'Task 1: Sort Products by Price Descending',
           description: 'Sort all products by price starting with the highest price.',
           instructions: [
@@ -139,7 +135,7 @@ export const DAY_04_MODULE: ModuleData = {
           successMessage: 'Products sorted by price descending!',
         },
         {
-          id: 'day04-c1-t2',
+          id: 'day04-c1a-t2',
           title: 'Task 2: Customers Alphabetical Directory',
           description: 'Show customer name and city, sorted alphabetically by name from A to Z.',
           instructions: [
@@ -165,12 +161,165 @@ export const DAY_04_MODULE: ModuleData = {
     },
 
     // =========================================================================
+    // CONCEPT 1b: Multi-Column Sorting (Tie-Breaking)
+    // =========================================================================
+    {
+      id: 'order-by-multi-column',
+      order: 2,
+      title: '2. Multi-Column Sorting (Tie-Breaking)',
+      shortDescription: 'How to use secondary sort columns to resolve identical values.',
+      theory: {
+        summary: 'When multiple rows share the same value in the primary sort column, secondary sort columns resolve ties.',
+        introTable: {
+          tableName: 'students',
+          description: 'Students table with shared ages',
+          columns: ['id', 'name', 'age', 'department'],
+          rows: [
+            [1, 'Rahim', 21, 'CSE'],
+            [2, 'Karim', 22, 'EEE'],
+            [3, 'Ayesha', 20, 'CSE'],
+            [4, 'Sumaiya', 23, 'BBA'],
+            [5, 'Tanvir', 21, 'CSE'],
+          ],
+        },
+        explanation: [
+          '### 1. Why Secondary Columns Matter',
+          'Notice that both Rahim and Tanvir are age 21. If we sort only by `age ASC`, SQL puts them in an arbitrary tie order.',
+          '### 2. Resolving Ties with Comma Separation',
+          'Adding a second column tells SQL: *"Sort by age first; whenever two students have the same age, sort them alphabetically by name"*\n```sql\nSELECT name, age\nFROM students\nORDER BY age ASC, name ASC;\n```\nBecause `R` comes before `T`, Rahim is listed before Tanvir.',
+          '### 3. Independent Directions per Column',
+          'Each column can have its own sort direction: `ORDER BY category_id ASC, price DESC` groups categories from 1 to 5, and shows the most expensive products first within each category.',
+        ],
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Primary Sort on age ASC',
+            sqlSnippet: 'ORDER BY age ASC',
+            explanation: 'Students ordered by age: Ayesha (20), then age 21 tie, Karim (22), Sumaiya (23).',
+            tableData: {
+              tableName: 'Primary Sort',
+              columns: ['name', 'age'],
+              rows: [
+                ['Ayesha', 20],
+                ['Rahim', 21],
+                ['Tanvir', 21],
+                ['Karim', 22],
+                ['Sumaiya', 23],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Secondary Tiebreaker on name ASC',
+            sqlSnippet: 'ORDER BY age ASC, name ASC',
+            explanation: 'On the age 21 tie, Rahim (R) precedes Tanvir (T) alphabetically.',
+            tableData: {
+              tableName: 'Final Tiebroken Result',
+              columns: ['name', 'age'],
+              highlightedColumns: ['name', 'age'],
+              rows: [
+                ['Ayesha', 20],
+                ['Rahim', 21],
+                ['Tanvir', 21],
+                ['Karim', 22],
+                ['Sumaiya', 23],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Multi-column sort syntax',
+            sql: 'SELECT name, category_id, price\nFROM products\nORDER BY category_id ASC, price DESC;',
+            description: 'Groups by category ascending, then sorts price descending within each category.',
+          },
+        ],
+        keyTakeaway: 'In ORDER BY col1, col2, col2 acts as a tiebreaker whenever col1 values are identical.',
+        exampleQuery: 'SELECT name, age FROM students ORDER BY age ASC, name ASC;',
+        exampleQueryExplanation: 'Sorts by age youngest first, breaking ties alphabetically.',
+        liveDemoSql: 'SELECT name, category_id, price FROM products ORDER BY category_id ASC, price DESC LIMIT 6;',
+        liveDemoNotes: 'Displays categories in order with highest priced items first.',
+        mcqs: [
+          {
+            question: 'In `ORDER BY category_id ASC, price DESC`, which column resolves ties when two products have the same category_id?',
+            options: [
+              'A. category_id',
+              'B. price',
+              'C. product_id',
+              'D. name',
+            ],
+            correctIndex: 1,
+            explanation: 'The secondary column (`price`) acts as the tiebreaker when primary `category_id` values match.',
+          },
+        ],
+        masteryPoints: [
+          'Use comma-separated column lists in ORDER BY',
+          'Specify distinct ASC/DESC directions for each column',
+        ],
+      },
+      tasks: [
+        {
+          id: 'day04-c1b-t1',
+          title: 'Task 1: Students Sorted by Age and Name',
+          description: 'Show student name and age, sorted youngest first (age ASC), and alphabetically by name (name ASC) for any age ties.',
+          instructions: [
+            'Select `name` and `age` from `students`.',
+            'Order by `age ASC, name ASC`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'students',
+          initialSql: '-- Sort by age then name\n',
+          solutionSql: 'SELECT name, age FROM students ORDER BY age ASC, name ASC;',
+          solutionExplanation: '`ORDER BY age ASC, name ASC` sorts youngest first and alphabetically breaks ties (Rahim before Tanvir).',
+          hints: [{ level: 1, text: 'Use `ORDER BY age ASC, name ASC;`' }],
+          validation: {
+            targetTable: 'students',
+            requiredColumns: ['name', 'age'],
+            requireOrderBy: [
+              { column: 'age', direction: 'ASC' },
+              { column: 'name', direction: 'ASC' },
+            ],
+            expectedRowCount: 5,
+          },
+          successMessage: 'Great job! You resolved sorting ties with multi-column ORDER BY.',
+        },
+        {
+          id: 'day04-c1b-t2',
+          title: 'Task 2: Products by Category and Price',
+          description: 'Show name, category_id, and price from products, sorted by category_id ascending, and price descending within each category.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `name`, `category_id`, and `price`.',
+            'Order by `category_id ASC, price DESC`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Sort by category then price descending\n',
+          solutionSql: 'SELECT name, category_id, price FROM products ORDER BY category_id ASC, price DESC;',
+          solutionExplanation: '`ORDER BY category_id ASC, price DESC` organizes products by category with highest price items first.',
+          hints: [{ level: 1, text: 'Use `ORDER BY category_id ASC, price DESC;`' }],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'category_id', 'price'],
+            requireOrderBy: [
+              { column: 'category_id', direction: 'ASC' },
+              { column: 'price', direction: 'DESC' },
+            ],
+            expectedRowCount: 28,
+          },
+          successMessage: 'Well done! You applied multi-column sorting with mixed directions.',
+        },
+      ],
+    },
+
+    // =========================================================================
     // CONCEPT 2: Deduplication with DISTINCT
     // =========================================================================
     {
       id: 'distinct-deduplication',
-      order: 2,
-      title: '2. Deduplication with DISTINCT',
+      order: 3,
+      title: '3. Deduplication with DISTINCT',
       shortDescription: 'Eliminate duplicate rows to discover unique values.',
       theory: {
         summary: 'When multiple rows contain the same value in a column (e.g. several customers residing in "Dhaka"), `DISTINCT` collapses duplicates into a single unique list.',
@@ -179,11 +328,11 @@ export const DAY_04_MODULE: ModuleData = {
           description: 'Customer list with overlapping cities.',
           columns: ['customer_id', 'name', 'city'],
           rows: [
-            [1, 'Rahim Chowdhury', 'Dhaka'],
-            [2, 'Karim Ahmed', 'Chittagong'],
-            [3, 'Ayesha Siddika', 'Dhaka'],
-            [4, 'Tanvir Hossain', 'Sylhet'],
-            [5, 'Fatima Noor', 'Dhaka'],
+            [1, 'Rafiul Islam', 'Dhaka'],
+            [2, 'Priya Akter', 'Dhaka'],
+            [3, 'Tanvir Ahmed', 'Chittagong'],
+            [4, 'Nusrat Jahan', 'Chittagong'],
+            [5, 'Kamal Hossain', 'Sylhet'],
           ],
         },
         explanation: [
@@ -206,9 +355,9 @@ export const DAY_04_MODULE: ModuleData = {
                 ['Dhaka'],
                 ['Chittagong'],
                 ['Sylhet'],
-                ['Boston'],
-                ['London'],
-                ['Dublin'],
+                ['Khulna'],
+                ['Rajshahi'],
+                ['Barisal'],
               ],
             },
           },
@@ -275,7 +424,7 @@ export const DAY_04_MODULE: ModuleData = {
           primaryTable: 'products',
           initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT DISTINCT category_id FROM products;',
-          solutionExplanation: 'Returns unique category IDs (1, 2, 3, 4, 5).',
+          solutionExplanation: 'Returns unique category IDs (1, 2, 3, 4, 5, and null).',
           hints: [{ level: 1, text: 'Use `SELECT DISTINCT category_id FROM products;`' }],
           validation: {
             targetTable: 'products',
@@ -293,8 +442,8 @@ export const DAY_04_MODULE: ModuleData = {
     // =========================================================================
     {
       id: 'limit-and-offset',
-      order: 3,
-      title: '3. Pagination with LIMIT & OFFSET',
+      order: 4,
+      title: '4. Pagination with LIMIT & OFFSET',
       shortDescription: 'Restrict row counts and skip rows for multi-page displays.',
       theory: {
         summary: 'Web applications rarely display thousands of records at once. `LIMIT` restricts how many rows to return, and `OFFSET` skips a specified number of rows before returning results.',
@@ -303,12 +452,12 @@ export const DAY_04_MODULE: ModuleData = {
           description: 'Product catalog rows 1 through 6',
           columns: ['product_id', 'name', 'price'],
           rows: [
-            [1, 'Wireless Mouse', 25.00],
-            [2, 'Mechanical Keyboard', 89.99],
-            [3, 'USB-C Cable (2m)', 12.50],
-            [4, 'Ergonomic Desk Chair', 249.00],
-            [5, 'Noise-Cancelling Headphones', 179.50],
-            [6, '4K UltraHD Monitor', 349.99],
+            [1, 'Wireless Mouse', 15.99],
+            [2, 'Bluetooth Speaker', 45.50],
+            [3, 'USB-C Charging Cable', 9.99],
+            [4, 'Mechanical Keyboard', 65.00],
+            [14, 'Office Chair', 120.00],
+            [15, 'Filing Cabinet', 89.99],
           ],
         },
         explanation: [
@@ -327,9 +476,9 @@ export const DAY_04_MODULE: ModuleData = {
               tableName: 'Page 1 (Top 3)',
               columns: ['name', 'price'],
               rows: [
-                ['4K UltraHD Monitor (27-inch)', 349.99],
-                ['Ergonomic Desk Chair', 249.00],
-                ['Thunderbolt 4 Docking Station', 185.00],
+                ['Office Chair', 120.00],
+                ['Filing Cabinet', 89.99],
+                ['Mechanical Keyboard', 65.00],
               ],
             },
           },
