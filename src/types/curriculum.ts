@@ -55,16 +55,25 @@ export interface ConceptMCQ {
   explanation?: string;
 }
 
+export interface TargetQuery {
+  sql: string;
+  explanation?: string;
+  badge?: string; // e.g. "Query we'll break down", "Dissecting this query"
+}
+
 export interface ConceptStepBreakdown {
   stepNumber: number;
   stepTitle: string;
   sqlSnippet: string;
+  clause?: string;
   explanation: string;
   tableData?: {
     tableName: string;
     columns: string[];
-    rows: (string | number)[][];
+    rows: (string | number | null)[][];
     highlightedColumns?: string[];
+    highlightedRows?: number[];
+    dimmedRows?: number[];
   };
 }
 
@@ -74,11 +83,12 @@ export interface ConceptTheory {
   keyTakeaway: string;
   exampleQuery: string;
   exampleQueryExplanation: string;
+  targetQuery?: TargetQuery;
   introTable?: {
     tableName: string;
     description?: string;
     columns: string[];
-    rows: (string | number)[][];
+    rows: (string | number | null)[][];
   };
   stepBreakdowns?: ConceptStepBreakdown[];
   mcqs?: ConceptMCQ[];

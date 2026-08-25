@@ -27,7 +27,7 @@ export const DAY_01_MODULE: ModuleData = {
       title: 'SELECT and FROM',
       shortDescription: 'The foundational building blocks of every SQL query.',
       theory: {
-        summary: 'Imagine we have a database containing a table called:',
+        summary: 'Imagine we have a database containing a table called students:',
         introTable: {
           tableName: 'students',
           description: 'This table is already stored in the database.',
@@ -41,21 +41,24 @@ export const DAY_01_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          'This table is already stored in the database.',
-          '### 1. The Basic Idea',
-          'When you write:\n\n```sql\nSELECT ...\nFROM ...\n```\n\nYou are basically answering two questions:',
+          'When you write a basic SQL query, you answer two simple questions:',
           'QUESTION_BLOCK::FROM::Where should I get the data from?',
-          'QUESTION_BLOCK::SELECT::What data do I want from there?',
-          'For example:\n\n```sql\nSELECT name\nFROM students;\n```\n\nLet\'s break it down.',
+          'QUESTION_BLOCK::SELECT::What columns do I want to see?',
+          'Let\'s see how SQL processes a query that asks for only the student names.',
         ],
+        targetQuery: {
+          sql: 'SELECT name\nFROM students;',
+          explanation: 'From the students table, retrieve only the name column.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find the source table)',
             sqlSnippet: 'FROM students',
-            explanation: 'SQL first looks at this: "Go to the students table." So SQL sees the full table with all rows and columns.',
+            explanation: 'SQL begins by finding the students table. At this stage, all 5 rows and all 5 columns are available.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['id', 'name', 'age', 'department', 'city'],
               rows: [
                 [1, 'Rahim', 21, 'CSE', 'Dhaka'],
@@ -68,11 +71,11 @@ export const DAY_01_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: SELECT name',
+            stepTitle: 'Step 2: SELECT name (Extract the column)',
             sqlSnippet: 'SELECT name',
-            explanation: 'Then SQL says: "From this table, only give me the name column."',
+            explanation: 'Next, SQL extracts only the name column from each row.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'Final Query Result',
               columns: ['name'],
               highlightedColumns: ['name'],
               rows: [
@@ -192,19 +195,39 @@ export const DAY_01_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          'To retrieve more than one column from a table, separate the column names with a comma in your `SELECT` statement:',
-          '```sql\nSELECT name, age\nFROM students;\n```',
-          '### Query Execution Order:\n1. **FROM students** — Identifies the source table (`students`).\n2. **SELECT name, age** — Projects only the specified `name` and `age` columns.',
-          '### Notice something important:\n• **Original table (5 columns):** `id`, `name`, `age`, `department`, `city`\n• **Query result (2 columns):** `name`, `age`\n\n**SELECT decides which columns appear in the result.** The table in the database remains unchanged, but your output only contains the columns you requested.',
+          'To retrieve more than one column from a table, separate the column names with a comma in your `SELECT` statement.',
+          '### Notice how SELECT shapes columns:\n• **Original table:** 5 columns (`id`, `name`, `age`, `department`, `city`)\n• **Query result:** 2 columns (`name`, `age`)\n\n**SELECT decides which columns appear in the result.** The table in the database remains unchanged.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, age\nFROM students;',
+          explanation: 'From the students table, retrieve both the name and age columns.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Result of SELECT name, age FROM students;',
-            sqlSnippet: 'SELECT name, age FROM students;',
-            explanation: 'Result containing only the 2 requested columns:',
+            stepTitle: 'Step 1: FROM students (Read all columns)',
+            sqlSnippet: 'FROM students',
+            explanation: 'SQL visits the students table with all 5 columns.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'students (Full Table)',
+              columns: ['id', 'name', 'age', 'department', 'city'],
+              rows: [
+                [1, 'Rahim', 21, 'CSE', 'Dhaka'],
+                [2, 'Karim', 22, 'EEE', 'Gazipur'],
+                [3, 'Ayesha', 20, 'CSE', 'Dhaka'],
+                [4, 'Sumaiya', 23, 'BBA', 'Chattogram'],
+                [5, 'Tanvir', 21, 'CSE', 'Rajshahi'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT name, age (Shape columns)',
+            sqlSnippet: 'SELECT name, age',
+            explanation: 'SQL projects only the name and age columns into the output result.',
+            tableData: {
+              tableName: 'Final Query Result',
               columns: ['name', 'age'],
               highlightedColumns: ['name', 'age'],
               rows: [
@@ -322,27 +345,48 @@ export const DAY_01_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          'The `*` (asterisk) means: **Select all columns**.',
-          '```sql\nSELECT *\nFROM students;\n```',
-          '### Think of it like this:\n\n```text\nstudents table\n       │\n       ▼\nSELECT *\n       │\n       ▼\nALL COLUMNS\n```',
-          'While:\n\n```sql\nSELECT name, city\nFROM students;\n```\n\nmeans:\n\n```text\nstudents table\n       │\n       ▼\nSELECT name, city\n       │\n       ▼\nONLY THESE COLUMNS\n```',
+          'The `*` (asterisk) is SQL\'s shorthand for **all columns**.',
+          'Instead of typing out every column name manually, `SELECT *` tells SQL: *"Give me every column stored in this table."*',
+          '### When to use SELECT * vs Specific Columns:\n• Use `SELECT *` when you are first exploring a table to see what columns exist.\n• In production apps and reports, prefer naming specific columns (like `SELECT name, city`) to keep queries fast and clean.',
         ],
+        targetQuery: {
+          sql: 'SELECT *\nFROM students;',
+          explanation: 'The * wildcard retrieves every column and every row stored in the students table.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Comparison: SELECT name, city vs SELECT *',
-            sqlSnippet: 'SELECT name, city FROM students;',
-            explanation: 'Selective projection returns only name and city:',
+            stepTitle: 'Step 1: FROM students (Open table)',
+            sqlSnippet: 'FROM students',
+            explanation: 'SQL visits the students table in the database.',
             tableData: {
-              tableName: 'Result',
-              columns: ['name', 'city'],
-              highlightedColumns: ['name', 'city'],
+              tableName: 'students (Source Table)',
+              columns: ['id', 'name', 'age', 'department', 'city'],
               rows: [
-                ['Rahim', 'Dhaka'],
-                ['Karim', 'Gazipur'],
-                ['Ayesha', 'Dhaka'],
-                ['Sumaiya', 'Chattogram'],
-                ['Tanvir', 'Rajshahi'],
+                [1, 'Rahim', 21, 'CSE', 'Dhaka'],
+                [2, 'Karim', 22, 'EEE', 'Gazipur'],
+                [3, 'Ayesha', 20, 'CSE', 'Dhaka'],
+                [4, 'Sumaiya', 23, 'BBA', 'Chattogram'],
+                [5, 'Tanvir', 21, 'CSE', 'Rajshahi'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT * (Include all 5 columns)',
+            sqlSnippet: 'SELECT *',
+            explanation: 'Because * means all columns, the final result keeps every column without removing anything.',
+            tableData: {
+              tableName: 'Final Query Result (All Columns)',
+              columns: ['id', 'name', 'age', 'department', 'city'],
+              highlightedColumns: ['id', 'name', 'age', 'department', 'city'],
+              rows: [
+                [1, 'Rahim', 21, 'CSE', 'Dhaka'],
+                [2, 'Karim', 22, 'EEE', 'Gazipur'],
+                [3, 'Ayesha', 20, 'CSE', 'Dhaka'],
+                [4, 'Sumaiya', 23, 'BBA', 'Chattogram'],
+                [5, 'Tanvir', 21, 'CSE', 'Rajshahi'],
               ],
             },
           },
@@ -451,21 +495,23 @@ export const DAY_01_MODULE: ModuleData = {
         },
         explanation: [
           '### 1. What problem does AS solve?',
-          'Suppose you write:\n\n```sql\nSELECT name, age\nFROM students;\n```\n\nOutput columns: `name` | `age`\n\nBut maybe you want the output to look more readable:\n`Student Name` | `Student Age`\n\nThe actual column names in the database are still `name` and `age`. We are not changing the table. We are only changing how the column names appear in the result. That\'s where **AS** comes in.',
-          '### 2. Basic Syntax\n\n```sql\nSELECT column_name AS new_name\nFROM table_name;\n```\n\nExample:\n\n```sql\nSELECT name AS student_name\nFROM students;\n```',
-          'Let\'s visualize what happens:\n\n```text\nstudents table\n      │\n      ▼\nSELECT name\n      │\n      ▼\nRename output column\n      │\n      ▼\nstudent_name\n```\n\nNotice:\n• Database column: `name`\n• Output column: `student_name`\n\nThe real database column is still called `name`.',
-          '### 3. Multiple Aliases\n\nYou can rename multiple columns:\n\n```sql\nSELECT\n    name AS student_name,\n    age AS student_age,\n    city AS student_city\nFROM students;\n```\n\nThink of AS like this:\n\n```text\nREAL COLUMN        OUTPUT NAME\nname       ───────► student_name\nage        ───────► student_age\ncity       ───────► student_city\n```',
-          '### 4. Aliases with Spaces\n\nSuppose you want `Student Name` instead of `student_name`. You can write:\n\n```sql\nSELECT name AS "Student Name"\nFROM students;\n```\n\nBecause `"Student Name"` contains a space.',
-          '### Important Concept\n\nAt this stage, we are not removing rows.\n\nFor example:\n\n```sql\nSELECT name\nFROM students;\n```\n\nWe still have all 5 students. We only removed unnecessary columns from the output.\n\n• Original: 5 rows × 5 columns\n• Result: 5 rows × 1 column\n\nSo remember: **SELECT controls columns. Later, WHERE will control rows.**',
+          'Sometimes raw database column names look technical or cryptic (like `std_nm` or `dob`).',
+          'With **AS**, you can give columns friendly, readable labels in your output without changing anything in the database.',
+          '### 2. Notice this golden rule:\n**AS only renames the presentation header in the query result.** The actual database column names remain unchanged.',
         ],
+        targetQuery: {
+          sql: 'SELECT name AS student_name, age AS student_age\nFROM students;',
+          explanation: 'Rename the name and age column headers in the output result.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find rows)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL visits the students table with all 5 records.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['id', 'name', 'age', 'department', 'city'],
               rows: [
                 [1, 'Rahim', 21, 'CSE', 'Dhaka'],
@@ -478,11 +524,11 @@ export const DAY_01_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: SELECT name AS student_name, age AS student_age',
+            stepTitle: 'Step 2: SELECT name AS student_name, age AS student_age (Rename headers)',
             sqlSnippet: 'SELECT name AS student_name, age AS student_age',
-            explanation: 'Extracts the columns and assigns the presentation aliases.',
+            explanation: 'SQL extracts the name and age columns and applies your new custom header labels.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'Final Query Result (Aliased Headers)',
               columns: ['student_name', 'student_age'],
               highlightedColumns: ['student_name', 'student_age'],
               rows: [

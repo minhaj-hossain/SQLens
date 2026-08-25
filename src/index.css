@@ -13,10 +13,10 @@
   --text-faint: #545C71;
 
   /* syntax-highlight accent system */
-  --keyword: #7C9BFF;   /* SELECT / WHERE / FROM — structure, schema */
-  --string:  #F0A860;   /* string literal amber — "in progress", cursor */
-  --func:    #48D8C8;   /* function/aggregate teal — done, success */
-  --comment: #6FA98B;   /* muted comment green — secondary labels & type badges */
+  --keyword: #60A5FA;   /* SELECT / WHERE / FROM — clean bright blue */
+  --string:  #F59E0B;   /* string literal amber */
+  --func:    #38BDF8;   /* primary brand sky blue */
+  --comment: #94A3B8;   /* cool slate neutral */
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -43,13 +43,13 @@
   --color-text-muted: #8D96AC;
   --color-text-faint: #545C71;
 
-  --color-keyword: #7C9BFF;
-  --color-string: #F0A860;
-  --color-func: #48D8C8;
-  --color-comment: #6FA98B;
+  --color-keyword: #60A5FA;
+  --color-string: #F59E0B;
+  --color-func: #38BDF8;
+  --color-comment: #94A3B8;
 
-  --color-primary: #48D8C8;
-  --color-primary-container: #48D8C8;
+  --color-primary: #38BDF8;
+  --color-primary-container: #38BDF8;
   --color-on-primary: #0A0D12;
   --color-on-primary-container: #0A0D12;
 

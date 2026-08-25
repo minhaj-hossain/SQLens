@@ -46,17 +46,40 @@ export const DAY_09_MODULE: ModuleData = {
           '### 1. COUNT(*) vs COUNT(column)',
           '• `COUNT(*)` counts **every single row** in the table, regardless of what values columns hold.',
           '• `COUNT(column_name)` counts **only non-NULL values** in that specific column.',
-          'QUESTION_BLOCK::NULL Handling in COUNT::If 2 out of 5 customers have a NULL email, `COUNT(*)` returns 5, while `COUNT(email)` returns 3.',
+          'If 2 out of 5 customers have a NULL email, `COUNT(*)` returns 5, while `COUNT(email)` returns 3.',
         ],
+        targetQuery: {
+          sql: 'SELECT COUNT(*) AS total_rows, COUNT(email) AS emails_present\nFROM customers;',
+          explanation: 'Count total customer rows versus how many have a non-NULL email address.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Comparing COUNT(*) and COUNT(email)',
-            sqlSnippet: 'SELECT COUNT(*) AS total_rows, COUNT(email) AS emails_present FROM customers;',
+            stepTitle: 'Step 1: FROM customers (Evaluate table rows)',
+            sqlSnippet: 'FROM customers',
+            explanation: 'SQL visits customers table containing 5 records (3 with valid emails, 2 with NULL).',
+            tableData: {
+              tableName: 'customers (Candidate Rows)',
+              columns: ['name', 'email'],
+              rows: [
+                ['Rafiul Islam', 'rafiul@example.com'],
+                ['Priya Akter', 'priya.akter@example.com'],
+                ['Tanvir Ahmed', null],
+                ['Nusrat Jahan', 'nusrat.j@example.com'],
+                ['Shakil Ahmed', null],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Aggregate COUNT(*) vs COUNT(email)',
+            sqlSnippet: 'SELECT COUNT(*) AS total_rows, COUNT(email) AS emails_present',
             explanation: 'Processes customer rows: counts 5 total rows and 3 valid email entries.',
             tableData: {
-              tableName: 'Count Summary',
+              tableName: 'Count Summary Result',
               columns: ['total_rows', 'emails_present'],
+              highlightedColumns: ['total_rows', 'emails_present'],
               rows: [[5, 3]],
             },
           },
@@ -158,17 +181,39 @@ export const DAY_09_MODULE: ModuleData = {
         explanation: [
           '### 1. The MIN Function',
           '`MIN(price)` examines every price value in the table and outputs the lowest one ($4.99).',
-          'QUESTION_BLOCK::NULL Handling::Like all summary aggregates, `MIN` ignores NULL values.',
+          'Like all summary aggregates, `MIN` ignores NULL values.',
         ],
+        targetQuery: {
+          sql: 'SELECT MIN(price) AS lowest_price\nFROM products;',
+          explanation: 'Find the lowest product price in the catalog.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Evaluating MIN(price)',
-            sqlSnippet: 'SELECT MIN(price) AS lowest_price FROM products;',
+            stepTitle: 'Step 1: FROM products (Scan price values)',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL visits all product records.',
+            tableData: {
+              tableName: 'products (Candidate Prices)',
+              columns: ['name', 'price'],
+              rows: [
+                ['Wireless Mouse', 15.99],
+                ['USB-C Charging Cable', 9.99],
+                ['Sticky Notes Pack', 4.99],
+                ['Office Chair', 120.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT MIN(price) (Identify minimum)',
+            sqlSnippet: 'SELECT MIN(price) AS lowest_price',
             explanation: 'Scans all prices and finds $4.99.',
             tableData: {
-              tableName: 'MIN Result',
+              tableName: 'MIN Scalar Result',
               columns: ['lowest_price'],
+              highlightedColumns: ['lowest_price'],
               rows: [[4.99]],
             },
           },
@@ -265,17 +310,39 @@ export const DAY_09_MODULE: ModuleData = {
         explanation: [
           '### 1. The MAX Function',
           '`MAX(price)` examines every price value in the table and outputs the highest one ($120.00).',
-          'QUESTION_BLOCK::Latest Dates::`MAX(date_column)` finds the most recent timestamp or calendar date.',
+          'MAX works on numbers, strings (alphabetical latest), and timestamps (most recent dates).',
         ],
+        targetQuery: {
+          sql: 'SELECT MAX(price) AS highest_price\nFROM products;',
+          explanation: 'Find the most expensive product price in the catalog.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Evaluating MAX(price)',
-            sqlSnippet: 'SELECT MAX(price) AS highest_price FROM products;',
+            stepTitle: 'Step 1: FROM products (Scan price list)',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL visits product prices in inventory.',
+            tableData: {
+              tableName: 'products (Candidate Prices)',
+              columns: ['name', 'price'],
+              rows: [
+                ['Wireless Mouse', 15.99],
+                ['Mechanical Keyboard', 65.00],
+                ['Office Chair', 120.00],
+                ['Filing Cabinet', 89.99],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT MAX(price) (Identify maximum)',
+            sqlSnippet: 'SELECT MAX(price) AS highest_price',
             explanation: 'Scans all prices and finds $120.00.',
             tableData: {
-              tableName: 'MAX Result',
+              tableName: 'MAX Scalar Result',
               columns: ['highest_price'],
+              highlightedColumns: ['highest_price'],
               rows: [[120.00]],
             },
           },
@@ -376,17 +443,38 @@ export const DAY_09_MODULE: ModuleData = {
         explanation: [
           '### 1. The SUM Function',
           '`SUM(quantity_in_stock)` adds up all inventory units across all products.',
-          'QUESTION_BLOCK::Non-numeric Columns::SUM only works on numeric data types (INT, DECIMAL, FLOAT). Running SUM on text or date columns causes an error.',
+          'SUM only works on numeric data types (INT, DECIMAL, FLOAT).',
         ],
+        targetQuery: {
+          sql: 'SELECT SUM(quantity_in_stock) AS total_units\nFROM products;',
+          explanation: 'Calculate the total inventory units across all products in stock.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Adding quantities',
-            sqlSnippet: 'SELECT SUM(quantity_in_stock) AS total_units FROM products;',
+            stepTitle: 'Step 1: FROM products (Scan quantities)',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL visits the products table.',
+            tableData: {
+              tableName: 'products (Candidate Units)',
+              columns: ['name', 'quantity_in_stock'],
+              rows: [
+                ['Wireless Mouse', 40],
+                ['Bluetooth Speaker', 3],
+                ['Mechanical Keyboard', 12],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT SUM(quantity_in_stock) (Sum counts)',
+            sqlSnippet: 'SELECT SUM(quantity_in_stock) AS total_units',
             explanation: 'Adds 40 + 3 + 12 = 55 total units.',
             tableData: {
-              tableName: 'SUM Result',
+              tableName: 'SUM Scalar Result',
               columns: ['total_units'],
+              highlightedColumns: ['total_units'],
               rows: [[55]],
             },
           },
@@ -489,17 +577,40 @@ export const DAY_09_MODULE: ModuleData = {
         explanation: [
           '### 1. How AVG Calculates',
           '`AVG(age)` computes $(21 + 22 + 20 + 23 + 21) / 5 = 21.40$.',
-          'QUESTION_BLOCK::NULL Exclusion in Divisor::If a row has `NULL`, it is excluded from BOTH the sum (numerator) and the count (denominator).',
+          'If a row has `NULL`, it is excluded from BOTH the sum (numerator) and the count (denominator).',
         ],
+        targetQuery: {
+          sql: 'SELECT AVG(age) AS avg_age\nFROM students;',
+          explanation: 'Compute the average age of all enrolled students.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Calculating AVG(age)',
-            sqlSnippet: 'SELECT AVG(age) AS avg_age FROM students;',
+            stepTitle: 'Step 1: FROM students (Extract student ages)',
+            sqlSnippet: 'FROM students',
+            explanation: 'SQL visits all student age records.',
+            tableData: {
+              tableName: 'students (Ages)',
+              columns: ['name', 'age'],
+              rows: [
+                ['Rahim', 21],
+                ['Karim', 22],
+                ['Ayesha', 20],
+                ['Sumaiya', 23],
+                ['Tanvir', 21],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT AVG(age) (Compute mean)',
+            sqlSnippet: 'SELECT AVG(age) AS avg_age',
             explanation: 'Sums ages (107) and divides by 5 students = 21.4.',
             tableData: {
-              tableName: 'AVG Result',
+              tableName: 'AVG Scalar Result',
               columns: ['avg_age'],
+              highlightedColumns: ['avg_age'],
               rows: [[21.4]],
             },
           },
@@ -602,17 +713,42 @@ export const DAY_09_MODULE: ModuleData = {
         explanation: [
           '### 1. How GROUP BY Works',
           'SQL sorts rows into buckets sharing the same `category_id`, then calculates aggregates per bucket.',
-          'QUESTION_BLOCK::Handling NULLs in GROUP BY::If a column contains `NULL`, SQL places all NULL rows into their own separate group.',
+          'If a column contains `NULL`, SQL places all NULL rows into their own separate group.',
         ],
+        targetQuery: {
+          sql: 'SELECT category_id, COUNT(*) AS total_products\nFROM products\nGROUP BY category_id;',
+          explanation: 'Group products by category and calculate total items in each bucket.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Grouping by category_id',
-            sqlSnippet: 'SELECT category_id, COUNT(*) AS total_products\nFROM products\nGROUP BY category_id;',
+            stepTitle: 'Step 1: FROM products GROUP BY category_id (Partition buckets)',
+            sqlSnippet: 'FROM products GROUP BY category_id',
+            explanation: 'Partitions all products into groups sharing the same category_id.',
+            tableData: {
+              tableName: 'Categorized Product Groups',
+              columns: ['category_id', 'name'],
+              rows: [
+                [1, 'Wireless Mouse, Speaker, Cable... (6 items)'],
+                [2, 'Pan Set, Bowls... (5 items)'],
+                [3, 'Desk Organizer, Chair... (5 items)'],
+                [4, 'Sporting Goods... (5 items)'],
+                [5, 'Books & Media... (6 items)'],
+                [null, 'Uncategorized (1 item)'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT category_id, COUNT(*) (Compute per-group metric)',
+            sqlSnippet: 'SELECT category_id, COUNT(*) AS total_products',
             explanation: 'Creates a summary row for each category with its item count.',
             tableData: {
-              tableName: 'Category Summary',
+              tableName: 'Category Summary Result',
               columns: ['category_id', 'total_products'],
+              highlightedColumns: ['category_id', 'total_products'],
+              highlightedRows: [0, 1, 2, 3, 4, 5],
               rows: [
                 [1, 6],
                 [2, 5],
@@ -726,17 +862,41 @@ export const DAY_09_MODULE: ModuleData = {
           '### 1. WHERE vs HAVING Timing',
           '• **WHERE** filters individual raw records *before* `GROUP BY` aggregates them.',
           '• **HAVING** filters grouped summary rows *after* `GROUP BY` aggregates them.',
-          'QUESTION_BLOCK::Invalid Query Error::Writing `WHERE COUNT(*) > 2` is a syntax error because WHERE executes before COUNT(*) exists. Always write `HAVING COUNT(*) > 2`.',
+          'Writing `WHERE COUNT(*) > 2` is an error because WHERE runs before aggregates exist. Always use `HAVING`.',
         ],
+        targetQuery: {
+          sql: 'SELECT category_id, COUNT(*) AS total_products, AVG(price) AS avg_price\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 30;',
+          explanation: 'Group products by category and filter for categories averaging over $30.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Filtering Categories with HAVING',
-            sqlSnippet: 'SELECT category_id, COUNT(*) AS total_products, AVG(price) AS avg_price\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 30;',
-            explanation: 'Computes category averages and discards categories averaging under $30.',
+            stepTitle: 'Step 1: FROM products GROUP BY category_id (Aggregate all categories)',
+            sqlSnippet: 'FROM products GROUP BY category_id',
+            explanation: 'Computes product count and average price for all categories.',
             tableData: {
-              tableName: 'Filtered Categories',
+              tableName: 'All Aggregated Categories',
               columns: ['category_id', 'total_products', 'avg_price'],
+              rows: [
+                [1, 6, 31.79],
+                [2, 5, 28.56],
+                [3, 5, 47.15],
+                [4, 5, 29.10],
+                [5, 6, 20.62],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: HAVING AVG(price) > 30 (Filter group averages)',
+            sqlSnippet: 'HAVING AVG(price) > 30',
+            explanation: 'Discards categories averaging under $30, keeping categories 1 and 3.',
+            tableData: {
+              tableName: 'Filtered Category Groups',
+              columns: ['category_id', 'total_products', 'avg_price'],
+              highlightedColumns: ['avg_price'],
+              highlightedRows: [0, 1],
               rows: [
                 [1, 6, 31.79],
                 [3, 5, 47.15],
@@ -948,17 +1108,40 @@ export const DAY_10_MODULE: ModuleData = {
           '### 2. The Dual-Filter Rule (WHERE vs HAVING)',
           '• **`WHERE`** filters individual rows *before* grouping (e.g. `WHERE quantity_in_stock > 0`).',
           '• **`HAVING`** filters aggregated group metrics *after* grouping (e.g. `HAVING COUNT(*) >= 5`).',
-          'QUESTION_BLOCK::Multi-Metric Efficiency::Combining multiple aggregates in one query calculates all statistics in a single table pass rather than running separate queries.',
         ],
+        targetQuery: {
+          sql: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price, SUM(quantity_in_stock) AS total_units\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 15\nORDER BY product_count DESC;',
+          explanation: 'Generate an executive category audit report for categories averaging over $15, sorted by product count.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Multi-Metric Category Audit',
-            sqlSnippet: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price, SUM(quantity_in_stock) AS total_units\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 15\nORDER BY product_count DESC;',
-            explanation: 'Aggregates metrics per category, filters categories with avg price > $15, and sorts by item count.',
+            stepTitle: 'Step 1: FROM products GROUP BY category_id (Group and aggregate)',
+            sqlSnippet: 'FROM products GROUP BY category_id',
+            explanation: 'Computes product count, avg price, and total stock per category.',
             tableData: {
-              tableName: 'Category Audit Report',
+              tableName: 'products (Aggregated Groups)',
               columns: ['category_id', 'product_count', 'avg_price', 'total_units'],
+              rows: [
+                [1, 6, 31.79, 88],
+                [5, 6, 20.62, 137],
+                [2, 5, 28.56, 102],
+                [3, 5, 47.15, 187],
+                [4, 5, 29.10, 102],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: HAVING AVG(price) > 15 ORDER BY product_count DESC',
+            sqlSnippet: 'HAVING AVG(price) > 15 ORDER BY product_count DESC',
+            explanation: 'Filters categories averaging over $15 and sorts highest product volume first.',
+            tableData: {
+              tableName: 'Category Audit Report Result',
+              columns: ['category_id', 'product_count', 'avg_price', 'total_units'],
+              highlightedColumns: ['category_id', 'product_count', 'avg_price', 'total_units'],
+              highlightedRows: [0, 1, 2, 3, 4],
               rows: [
                 [1, 6, 31.79, 88],
                 [5, 6, 20.62, 137],
@@ -1168,20 +1351,41 @@ export const DAY_11_MODULE: ModuleData = {
         explanation: [
           '### 1. INNER JOIN Mechanics',
           '`INNER JOIN` combines rows from two tables **only when there is a match in both tables**.',
-          'QUESTION_BLOCK::Table Aliases::Use short aliases for readability: `FROM products p INNER JOIN categories c ON p.category_id = c.category_id`',
           '### 2. The ON Condition',
           'The `ON` clause specifies how the tables link: `ON p.category_id = c.category_id`. If an ID does not exist in both tables, it is excluded from the result.',
         ],
+        targetQuery: {
+          sql: 'SELECT p.name AS product_name, c.name AS category_name\nFROM products p\nINNER JOIN categories c ON p.category_id = c.category_id;',
+          explanation: 'Combine products with their category names wherever foreign keys match.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Lining up rows with INNER JOIN',
-            sqlSnippet: 'SELECT p.name AS product_name, c.name AS category_name\nFROM products p\nINNER JOIN categories c ON p.category_id = c.category_id;',
-            explanation: 'Lining up each product with its parent category name.',
+            stepTitle: 'Step 1: FROM products p INNER JOIN categories c ON p.category_id = c.category_id',
+            sqlSnippet: 'FROM products p INNER JOIN categories c ON p.category_id = c.category_id',
+            explanation: 'Matches each product record to its parent category in the taxonomy table.',
             tableData: {
-              tableName: 'Joined Result',
+              tableName: 'Matched Joined Rows',
+              columns: ['p.name', 'p.category_id', 'c.category_id', 'c.name'],
+              rows: [
+                ['Wireless Mouse', 1, 1, 'Electronics'],
+                ['Bluetooth Speaker', 1, 1, 'Electronics'],
+                ['Stainless Steel Pan Set', 2, 2, 'Kitchen & Dining'],
+                ['Desk Organizer', 3, 3, 'Office Supplies'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT p.name AS product_name, c.name AS category_name',
+            sqlSnippet: 'SELECT p.name AS product_name, c.name AS category_name',
+            explanation: 'Extracts cleanly aliased product and category names.',
+            tableData: {
+              tableName: 'Final Joined Result',
               columns: ['product_name', 'category_name'],
               highlightedColumns: ['product_name', 'category_name'],
+              highlightedRows: [0, 1, 2, 3],
               rows: [
                 ['Wireless Mouse', 'Electronics'],
                 ['Bluetooth Speaker', 'Electronics'],
@@ -1295,17 +1499,37 @@ export const DAY_11_MODULE: ModuleData = {
           '### 1. LEFT JOIN Mechanics',
           '`FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id` keeps every customer in the database.',
           'For customers with no orders (such as newly registered users), right-side order columns are populated with `NULL`.',
-          'QUESTION_BLOCK::Left vs Right Table::The table before LEFT JOIN is the "left table". The table after LEFT JOIN is the "right table". All left rows are guaranteed to appear.',
         ],
+        targetQuery: {
+          sql: 'SELECT c.name, o.order_id\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id;',
+          explanation: 'List all customers and their order IDs, preserving customers with zero orders.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Preserving Unmatched Left Rows',
-            sqlSnippet: 'SELECT c.name, o.order_id\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id;',
-            explanation: 'Returns all customers; customers with 0 orders have NULL in order_id.',
+            stepTitle: 'Step 1: FROM customers c (Preserve all left rows)',
+            sqlSnippet: 'FROM customers c',
+            explanation: 'Identifies all registered customers in the database.',
             tableData: {
-              tableName: 'LEFT JOIN Output',
+              tableName: 'customers (Left Table)',
+              columns: ['customer_id', 'name'],
+              rows: [
+                [1, 'Rafiul Islam'],
+                [13, 'Arif Chowdhury'],
+                [14, 'Nadia Islam'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: LEFT JOIN orders o ON c.customer_id = o.customer_id (Pad unmatched with NULL)',
+            sqlSnippet: 'LEFT JOIN orders o ON c.customer_id = o.customer_id',
+            explanation: 'Joins orders where available; fills NULL for customers with zero orders.',
+            tableData: {
+              tableName: 'LEFT JOIN Output Result',
               columns: ['name', 'order_id'],
+              highlightedColumns: ['name', 'order_id'],
               rows: [
                 ['Rafiul Islam', 1],
                 ['Rafiul Islam', 14],
@@ -1499,22 +1723,46 @@ export const DAY_12_MODULE: ModuleData = {
           '• Running `COUNT(o.order_id)` returns **5** ❌ (it counts duplicate joined rows!).',
           '### 2. The Solution: COUNT(DISTINCT o.order_id)',
           '`COUNT(DISTINCT o.order_id)` ignores duplicate order IDs and returns **2** ✅.',
-          'QUESTION_BLOCK::The Fan-Out Rule::Whenever you aggregate parent entities while joining down a one-to-many relationship, ALWAYS use `COUNT(DISTINCT parent_pk)`.',
+          'Whenever you aggregate parent entities while joining down a one-to-many relationship, ALWAYS use `COUNT(DISTINCT parent_pk)`.',
         ],
+        targetQuery: {
+          sql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS distinct_orders, SUM(oi.quantity * oi.unit_price) AS total_spend\nFROM customers c\nINNER JOIN orders o ON c.customer_id = o.customer_id\nINNER JOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY c.customer_id, c.name;',
+          explanation: 'Calculate accurate order counts and spend per customer, avoiding fan-out row inflation.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Multi-Table Spend Calculation',
-            sqlSnippet: 'SELECT c.customer_id, c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY c.customer_id, c.name;',
-            explanation: 'Computes distinct order count and total money spent per customer without overcounting.',
+            stepTitle: 'Step 1: Multi-Table Joins (Fan-Out Multiplication)',
+            sqlSnippet: 'FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id',
+            explanation: 'Joining down to line items duplicates order rows for every item purchased.',
             tableData: {
-              tableName: 'Accurate Customer Spend',
-              columns: ['customer_id', 'name', 'order_count', 'total_spent'],
+              tableName: 'Multiplied Joined Line Items',
+              columns: ['c.name', 'o.order_id', 'oi.quantity', 'oi.unit_price'],
               rows: [
-                [1, 'Rafiul Islam', 2, 262.48],
-                [2, 'Priya Akter', 1, 55.00],
-                [3, 'Tanvir Ahmed', 2, 94.79],
-                [4, 'Nusrat Jahan', 1, 56.97],
+                ['Rahim Chowdhury', 1, 2, 15.99],
+                ['Rahim Chowdhury', 1, 1, 65.00],
+                ['Rahim Chowdhury', 14, 1, 45.50],
+                ['Rahim Chowdhury', 14, 1, 55.00],
+                ['Rahim Chowdhury', 14, 1, 65.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: COUNT(DISTINCT o.order_id) & SUM(...) GROUP BY c.customer_id',
+            sqlSnippet: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS distinct_orders, SUM(oi.quantity * oi.unit_price) AS total_spend',
+            explanation: 'Deduplicates order count to 2 while correctly summing all line item financial values.',
+            tableData: {
+              tableName: 'Accurate Customer Summary Result',
+              columns: ['name', 'distinct_orders', 'total_spend'],
+              highlightedColumns: ['distinct_orders', 'total_spend'],
+              highlightedRows: [0, 1, 2, 3],
+              rows: [
+                ['Rafiul Islam', 2, 262.48],
+                ['Priya Akter', 1, 55.00],
+                ['Tanvir Ahmed', 2, 94.79],
+                ['Nusrat Jahan', 1, 56.97],
               ],
             },
           },
@@ -1686,50 +1934,109 @@ export const DAY_13_MODULE: ModuleData = {
           '5. **`SELECT`** (Step 5): Columns are computed, aggregated, and assigned aliases.',
           '6. **`ORDER BY`** (Step 6): The resulting rows are sorted (can see `SELECT` aliases!).',
           '7. **`LIMIT / OFFSET`** (Step 7): The final sorted output is sliced.',
-          'QUESTION_BLOCK::Logical Model vs Database Extensions::The 7-step logical processing order defines when expressions conceptually exist. However, some databases (including MySQL) provide convenience extensions that permit aliases in HAVING. We learn the logical model to write reliable, portable SQL everywhere.',
         ],
+        targetQuery: {
+          sql: "SELECT c.name, COUNT(o.order_id) AS valid_orders\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nWHERE o.status != 'cancelled'\nGROUP BY c.customer_id, c.name\nHAVING COUNT(o.order_id) >= 1\nORDER BY valid_orders DESC\nLIMIT 5;",
+          explanation: 'Filter non-cancelled orders, group by customer, keep customers with >= 1 order, and return top 5 by order count.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM & JOIN',
+            stepTitle: 'Step 1: FROM & JOIN (Combine candidate entities)',
             sqlSnippet: 'FROM customers c JOIN orders o ON c.customer_id = o.customer_id',
             explanation: 'Loads and matches rows between customers and orders.',
+            tableData: {
+              tableName: 'Joined Order Candidates',
+              columns: ['c.name', 'o.order_id', 'o.status'],
+              rows: [
+                ['Rafiul Islam', 1, 'delivered'],
+                ['Rafiul Islam', 14, 'delivered'],
+                ['Kamal Hossain', 6, 'cancelled'],
+              ],
+            },
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: WHERE',
-            sqlSnippet: 'WHERE o.status != \'cancelled\'',
+            stepTitle: 'Step 2: WHERE (Filter raw records)',
+            sqlSnippet: "WHERE o.status != 'cancelled'",
             explanation: 'Filters out cancelled orders before any grouping occurs.',
+            tableData: {
+              tableName: 'Non-Cancelled Orders',
+              columns: ['c.name', 'o.order_id', 'o.status'],
+              rows: [
+                ['Rafiul Islam', 1, 'delivered'],
+                ['Rafiul Islam', 14, 'delivered'],
+              ],
+            },
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: GROUP BY',
+            stepTitle: 'Step 3: GROUP BY (Partition customer buckets)',
             sqlSnippet: 'GROUP BY c.customer_id, c.name',
             explanation: 'Groups active orders by customer.',
+            tableData: {
+              tableName: 'Customer Order Groups',
+              columns: ['customer', 'orders'],
+              rows: [
+                ['Rafiul Islam', 'Orders #1, #14 (2 orders)'],
+              ],
+            },
           },
           {
             stepNumber: 4,
-            stepTitle: 'Step 4: HAVING',
+            stepTitle: 'Step 4: HAVING (Filter aggregate groups)',
             sqlSnippet: 'HAVING COUNT(o.order_id) >= 1',
             explanation: 'Filters for customers with at least 1 valid order.',
+            tableData: {
+              tableName: 'Qualified Customer Groups',
+              columns: ['customer', 'order_count'],
+              rows: [
+                ['Rafiul Islam', 2],
+              ],
+            },
           },
           {
             stepNumber: 5,
-            stepTitle: 'Step 5: SELECT',
+            stepTitle: 'Step 5: SELECT (Extract columns and aliases)',
             sqlSnippet: 'SELECT c.name, COUNT(o.order_id) AS valid_orders',
             explanation: 'Projects name and assigns the valid_orders alias.',
+            tableData: {
+              tableName: 'Projected Columns',
+              columns: ['name', 'valid_orders'],
+              rows: [
+                ['Rafiul Islam', 2],
+              ],
+            },
           },
           {
             stepNumber: 6,
-            stepTitle: 'Step 6: ORDER BY',
+            stepTitle: 'Step 6: ORDER BY (Sort by alias)',
             sqlSnippet: 'ORDER BY valid_orders DESC',
             explanation: 'Sorts using the valid_orders alias created in SELECT.',
+            tableData: {
+              tableName: 'Sorted Customers',
+              columns: ['name', 'valid_orders'],
+              highlightedColumns: ['valid_orders'],
+              rows: [
+                ['Rafiul Islam', 2],
+              ],
+            },
           },
           {
             stepNumber: 7,
-            stepTitle: 'Step 7: LIMIT',
+            stepTitle: 'Step 7: LIMIT (Slice final rows)',
             sqlSnippet: 'LIMIT 5',
             explanation: 'Takes the top 5 customers.',
+            tableData: {
+              tableName: 'Final Query Result',
+              columns: ['name', 'valid_orders'],
+              highlightedColumns: ['name', 'valid_orders'],
+              highlightedRows: [0],
+              rows: [
+                ['Rafiul Islam', 2],
+              ],
+            },
           },
         ],
         syntaxBlocks: [
@@ -1910,15 +2217,37 @@ export const DAY_14_MODULE: ModuleData = {
           'To find items that have never been purchased, `LEFT JOIN order_items` onto `products` and filter with `WHERE oi.order_item_id IS NULL`.',
           'Any product that has no matching row in `order_items` will have `NULL` for `oi.order_item_id`.',
         ],
+        targetQuery: {
+          sql: 'SELECT p.name, SUM(oi.quantity) AS total_units_sold\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.product_id, p.name\nORDER BY total_units_sold DESC;',
+          explanation: 'Aggregate line-item sales across products and rank products by total volume sold.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Product Sales Volume Ranking',
-            sqlSnippet: 'SELECT p.name, SUM(oi.quantity) AS total_units_sold\nFROM products p\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY p.product_id, p.name\nORDER BY total_units_sold DESC;',
-            explanation: 'Aggregates item quantities per product and sorts by sales volume descending.',
+            stepTitle: 'Step 1: FROM products p JOIN order_items oi ON p.product_id = oi.product_id',
+            sqlSnippet: 'FROM products p JOIN order_items oi ON p.product_id = oi.product_id',
+            explanation: 'Matches products with their order line items.',
             tableData: {
-              tableName: 'Product Sales Volume',
+              tableName: 'Matched Product Line Items',
+              columns: ['p.name', 'oi.quantity', 'oi.unit_price'],
+              rows: [
+                ['Wireless Mouse', 2, 15.99],
+                ['Wireless Mouse', 5, 15.99],
+                ['Mechanical Keyboard', 4, 65.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC',
+            sqlSnippet: 'SELECT p.name, SUM(oi.quantity) AS total_units_sold GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC',
+            explanation: 'Sums total quantity per product and ranks top sellers first.',
+            tableData: {
+              tableName: 'Product Sales Volume Result',
               columns: ['name', 'total_units_sold'],
+              highlightedColumns: ['name', 'total_units_sold'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Wireless Mouse', 7],
                 ['Mechanical Keyboard', 4],
@@ -2136,15 +2465,37 @@ export const DAY_15_MODULE: ModuleData = {
           'Combine JOINs, WHERE date filters, and GROUP BY:',
           '```sql\nSELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;\n```',
         ],
+        targetQuery: {
+          sql: "SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= '2026-06-25'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;",
+          explanation: 'Calculate recent customer spend for orders placed on or after 2026-06-25, sorted highest first.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Multi-Table Spend with Date Boundaries',
-            sqlSnippet: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;',
-            explanation: 'Filters recent orders, aggregates total spend per customer, and sorts descending.',
+            stepTitle: 'Step 1: FROM ... JOIN ... WHERE o.order_date >= \'2026-06-25\'',
+            sqlSnippet: "FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= '2026-06-25'",
+            explanation: 'Joins customer line items and filters for transactions on or after 2026-06-25.',
             tableData: {
-              tableName: 'Recent Spend Breakdown',
+              tableName: 'Recent Qualifying Line Items',
+              columns: ['c.name', 'o.order_date', 'oi.quantity', 'oi.unit_price'],
+              rows: [
+                ['Rafiul Islam', '2026-08-02', 1, 165.50],
+                ['Farhana Rahman', '2026-07-14', 1, 144.97],
+                ['Priya Akter', '2026-07-01', 1, 55.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC',
+            sqlSnippet: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC',
+            explanation: 'Aggregates spend per customer and sorts highest spenders first.',
+            tableData: {
+              tableName: 'Recent Spend Breakdown Result',
               columns: ['name', 'recent_spend'],
+              highlightedColumns: ['name', 'recent_spend'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Rafiul Islam', 165.50],
                 ['Farhana Rahman', 144.97],
@@ -2321,15 +2672,37 @@ export const DAY_16_MODULE: ModuleData = {
           '• **Transfer**: High-value customers filtering with post-aggregation thresholds (`HAVING total_spent > 200`).',
           '• **Hard Problem**: Anti-join discovery of suppliers with zero ordered products (find Unity Traders BD).',
         ],
+        targetQuery: {
+          sql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue\nFROM categories cat\nJOIN products p ON cat.category_id = p.category_id\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY cat.category_id, cat.name\nORDER BY category_revenue DESC;',
+          explanation: 'Aggregate multi-table revenue breakdown across categories, products, and line items, sorted highest revenue first.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Category Revenue Aggregation',
-            sqlSnippet: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue\nFROM categories cat\nJOIN products p ON cat.category_id = p.category_id\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY cat.category_id, cat.name\nORDER BY category_revenue DESC;',
-            explanation: 'Multi-table join calculating revenue per category.',
+            stepTitle: 'Step 1: FROM categories cat JOIN products p JOIN order_items oi',
+            sqlSnippet: 'FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id',
+            explanation: 'Joins 3 tables to link category names to product purchases.',
             tableData: {
-              tableName: 'Category Revenue Summary',
+              tableName: 'Matched Multi-Table Line Items',
+              columns: ['cat.name', 'p.name', 'oi.quantity', 'oi.unit_price'],
+              rows: [
+                ['Electronics', 'Wireless Mouse', 2, 15.99],
+                ['Electronics', 'Mechanical Keyboard', 1, 65.00],
+                ['Kitchen & Dining', 'Stainless Steel Pan Set', 1, 55.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC',
+            sqlSnippet: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC',
+            explanation: 'Computes total sales revenue generated per category.',
+            tableData: {
+              tableName: 'Category Revenue Summary Result',
               columns: ['name', 'category_revenue'],
+              highlightedColumns: ['name', 'category_revenue'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Electronics', 448.47],
                 ['Office Furniture', 209.99],

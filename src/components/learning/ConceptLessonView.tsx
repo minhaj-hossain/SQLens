@@ -500,22 +500,59 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             <FormattedExplanation content={theory.explanation} />
           )}
 
+          {/* Target Query Hero (Query we'll break down) */}
+          {theory.targetQuery && (
+            <div className="rounded-xl bg-surface border border-string/40 overflow-hidden shadow-md my-4">
+              <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-string uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-string">schema</span>
+                  <span>{theory.targetQuery.badge || "The query we're going to break down"}</span>
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(theory.targetQuery!.sql);
+                    setCopiedIndex(9999);
+                    setTimeout(() => setCopiedIndex(null), 2000);
+                  }}
+                  className="flex items-center gap-1 text-[11px] font-mono text-text-dim hover:text-text px-2 py-0.5 rounded hover:bg-surface-3 transition cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[13px]">
+                    {copiedIndex === 9999 ? 'check' : 'content_copy'}
+                  </span>
+                  <span>{copiedIndex === 9999 ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+              <div className="p-4 font-mono text-xs sm:text-sm text-keyword bg-ink overflow-x-auto whitespace-pre leading-relaxed">
+                <code>{theory.targetQuery.sql}</code>
+              </div>
+              {theory.targetQuery.explanation && (
+                <div className="px-4 py-2.5 bg-surface text-xs text-text-dim border-t border-border font-body">
+                  {theory.targetQuery.explanation}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Step-by-Step Breakdown Visuals */}
           {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
-            <div className="space-y-4 my-1">
+            <div className="space-y-4 my-3">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-text-dim px-1">
+                <span className="material-symbols-outlined text-[16px] text-func">account_tree</span>
+                <span>Step-by-step SQL processing</span>
+              </div>
               {theory.stepBreakdowns.map((step, sIdx) => (
                 <div
                   key={sIdx}
-                  className="rounded-xl bg-surface-base border border-outline-variant/70 overflow-hidden shadow-sm flex flex-col"
+                  className="rounded-xl bg-surface border border-border overflow-hidden shadow-sm flex flex-col"
                 >
-                  <div className="px-4 py-2.5 bg-surface-dim border-b border-outline-variant/60 flex items-center justify-between">
-                    <span className="font-label-sm text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[11px] font-bold">
+                  <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-func/20 text-func flex items-center justify-center text-[11px] font-bold">
                         {step.stepNumber}
                       </span>
                       <span>{step.stepTitle}</span>
                     </span>
-                    <code className="text-xs font-mono text-cyan-300 bg-surface-container px-2 py-0.5 rounded border border-outline-variant/50">
+                    <code className="text-xs font-mono text-keyword bg-ink px-2 py-0.5 rounded border border-border">
                       {step.sqlSnippet}
                     </code>
                   </div>
@@ -533,17 +570,16 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                               key={lIdx}
                               className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-mono border ${
                                 isTrue
-                                  ? 'bg-emerald-950/30 border-emerald-700/40 text-emerald-200'
+                                  ? 'bg-func/10 border-func/30 text-func'
                                   : isFalse
-                                  ? 'bg-zinc-800/60 border-zinc-700/40 text-zinc-400'
-                                  : 'bg-surface-container/40 border-outline-variant/30 text-on-surface-variant'
+                                  ? 'bg-surface-2/60 border-border text-text-faint'
+                                  : 'bg-surface-2 border-border text-text-dim'
                               }`}
                             >
-                              <span className={`shrink-0 text-base leading-none ${isTrue ? 'text-emerald-400' : isFalse ? 'text-zinc-500' : ''}`}>
-                                {isTrue ? '✅' : isFalse ? '✗' : '•'}
+                              <span className={`shrink-0 text-base leading-none ${isTrue ? 'text-func font-bold' : isFalse ? 'text-text-faint' : ''}`}>
+                                {isTrue ? '✓' : isFalse ? '✕' : '•'}
                               </span>
                               <span className="leading-snug">
-                                {/* Strip the emoji from the line since we render it separately */}
                                 {line.replace('✅', '').replace('❌', '').trim()}
                               </span>
                             </div>
@@ -551,15 +587,15 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+                      <p className="text-xs sm:text-sm text-text-dim leading-relaxed">
                         {step.explanation}
                       </p>
                     )}
 
                     {step.tableData && (
-                      <div className="overflow-x-auto rounded-lg border border-outline-variant/50 bg-surface-dim">
+                      <div className="overflow-x-auto rounded-lg border border-border bg-ink">
                         <table className="w-full text-left text-xs font-mono">
-                          <thead className="bg-surface-container-high text-on-surface font-bold border-b border-outline-variant/60">
+                          <thead className="bg-surface-2 text-text font-bold border-b border-border">
                             <tr>
                               {step.tableData.columns.map((col, idx) => {
                                 const isHighlighted = step.tableData?.highlightedColumns?.includes(col);
@@ -568,8 +604,8 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                                     key={idx}
                                     className={`px-3 py-2 whitespace-nowrap ${
                                       isHighlighted
-                                        ? 'text-cyan-300 bg-primary-container/20 font-extrabold'
-                                        : 'text-text-muted'
+                                        ? 'text-keyword bg-surface-3 font-extrabold'
+                                        : 'text-text-dim'
                                     }`}
                                   >
                                     {col}
@@ -578,27 +614,40 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                               })}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-outline-variant/30 text-on-surface/90">
-                            {step.tableData.rows.map((row, rIdx) => (
-                              <tr key={rIdx} className="hover:bg-surface-container/40">
-                                {row.map((cell, cIdx) => {
-                                  const colName = step.tableData?.columns[cIdx];
-                                  const isHighlighted = step.tableData?.highlightedColumns?.includes(colName || '');
-                                  return (
-                                    <td
-                                      key={cIdx}
-                                      className={`px-3 py-1.5 whitespace-nowrap ${
-                                        isHighlighted
-                                          ? 'text-on-surface font-semibold bg-primary-container/10'
-                                          : 'text-text-muted'
-                                      }`}
-                                    >
-                                      {cell}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            ))}
+                          <tbody className="divide-y divide-border text-text-dim">
+                            {step.tableData.rows.map((row, rIdx) => {
+                              const isRowHighlighted = step.tableData?.highlightedRows?.includes(rIdx);
+                              const isRowDimmed = step.tableData?.dimmedRows?.includes(rIdx);
+                              return (
+                                <tr
+                                  key={rIdx}
+                                  className={`transition-colors ${
+                                    isRowHighlighted
+                                      ? 'bg-func/10 text-text font-semibold'
+                                      : isRowDimmed
+                                      ? 'opacity-35 line-through text-text-faint bg-surface-2/20'
+                                      : 'hover:bg-surface-2/40'
+                                  }`}
+                                >
+                                  {row.map((cell, cIdx) => {
+                                    const colName = step.tableData?.columns[cIdx];
+                                    const isColHighlighted = step.tableData?.highlightedColumns?.includes(colName || '');
+                                    return (
+                                      <td
+                                        key={cIdx}
+                                        className={`px-3 py-1.5 whitespace-nowrap ${
+                                          isColHighlighted && !isRowDimmed
+                                            ? 'text-text font-semibold bg-surface-2/50'
+                                            : ''
+                                        }`}
+                                      >
+                                        {cell !== null && cell !== undefined ? String(cell) : <span className="text-text-faint italic">NULL</span>}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>

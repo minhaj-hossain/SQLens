@@ -46,16 +46,21 @@ export const DAY_04_MODULE: ModuleData = {
           '### 1. Ascending vs Descending Order',
           '`ORDER BY price ASC` sorts from lowest to highest (`ASC` is the default direction).',
           '`ORDER BY price DESC` sorts from highest to lowest (useful for "top expensive" or "newest").',
-          'QUESTION_BLOCK::ORDER BY Clause::Always placed after the WHERE clause: `SELECT ... FROM ... WHERE ... ORDER BY ...`',
+          'ORDER BY is always placed at the end of single-table queries after any WHERE conditions.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nORDER BY price DESC;',
+          explanation: 'Sort all products by price starting from the highest price down to the lowest.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM products',
+            stepTitle: 'Step 1: FROM products (Unordered rows)',
             sqlSnippet: 'FROM products',
-            explanation: 'SQL scans the products table.',
+            explanation: 'SQL reads the products table in storage order.',
             tableData: {
-              tableName: 'products',
+              tableName: 'products (Source Rows)',
               columns: ['product_id', 'name', 'price'],
               rows: [
                 [1, 'Wireless Mouse', 15.99],
@@ -67,13 +72,14 @@ export const DAY_04_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: ORDER BY price DESC',
+            stepTitle: 'Step 2: ORDER BY price DESC (Sort highest first)',
             sqlSnippet: 'ORDER BY price DESC',
             explanation: 'SQL arranges all rows starting from highest price ($120.00) down to lowest ($15.99).',
             tableData: {
-              tableName: 'Sorted Result',
+              tableName: 'Final Sorted Result',
               columns: ['name', 'price'],
               highlightedColumns: ['price'],
+              highlightedRows: [0, 1, 2, 3],
               rows: [
                 ['Office Chair', 120.00],
                 ['Mechanical Keyboard', 65.00],
@@ -186,10 +192,15 @@ export const DAY_04_MODULE: ModuleData = {
           '### 1. Why Secondary Columns Matter',
           'Notice that both Rahim and Tanvir are age 21. If we sort only by `age ASC`, SQL puts them in an arbitrary tie order.',
           '### 2. Resolving Ties with Comma Separation',
-          'Adding a second column tells SQL: *"Sort by age first; whenever two students have the same age, sort them alphabetically by name"*\n```sql\nSELECT name, age\nFROM students\nORDER BY age ASC, name ASC;\n```\nBecause `R` comes before `T`, Rahim is listed before Tanvir.',
+          'Adding a second column tells SQL: *"Sort by age first; whenever two students have the same age, sort them alphabetically by name"*:\n`ORDER BY age ASC, name ASC;`',
           '### 3. Independent Directions per Column',
           'Each column can have its own sort direction: `ORDER BY category_id ASC, price DESC` groups categories from 1 to 5, and shows the most expensive products first within each category.',
         ],
+        targetQuery: {
+          sql: "SELECT name, age\nFROM students\nORDER BY age ASC, name ASC;",
+          explanation: "Sort students youngest first; when ages match, sort alphabetically by name.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -197,7 +208,7 @@ export const DAY_04_MODULE: ModuleData = {
             sqlSnippet: 'ORDER BY age ASC',
             explanation: 'Students ordered by age: Ayesha (20), then age 21 tie, Karim (22), Sumaiya (23).',
             tableData: {
-              tableName: 'Primary Sort',
+              tableName: 'Primary Sort (Age Groups)',
               columns: ['name', 'age'],
               rows: [
                 ['Ayesha', 20],
@@ -217,6 +228,7 @@ export const DAY_04_MODULE: ModuleData = {
               tableName: 'Final Tiebroken Result',
               columns: ['name', 'age'],
               highlightedColumns: ['name', 'age'],
+              highlightedRows: [1, 2],
               rows: [
                 ['Ayesha', 20],
                 ['Rahim', 21],
@@ -337,27 +349,46 @@ export const DAY_04_MODULE: ModuleData = {
         },
         explanation: [
           '### 1. Finding Unique Values',
-          '`SELECT DISTINCT city FROM customers;` examines all rows and discards duplicates.',
-          'QUESTION_BLOCK::DISTINCT Keyword::Placed immediately after SELECT: `SELECT DISTINCT column1, column2 FROM ...`',
+          '`SELECT DISTINCT city FROM customers;` examines all rows and discards duplicate values so each city appears only once.',
           'Notice: DISTINCT is purely for row deduplication — it does not calculate totals or summaries.',
         ],
+        targetQuery: {
+          sql: 'SELECT DISTINCT city\nFROM customers;',
+          explanation: 'Find all unique cities where customers live, discarding duplicate entries.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Extracting Unique Cities',
-            sqlSnippet: 'SELECT DISTINCT city\nFROM customers;',
-            explanation: 'SQL finds all cities and removes duplicates, outputting each city exactly once.',
+            stepTitle: 'Step 1: FROM customers (Raw column values with duplicates)',
+            sqlSnippet: 'FROM customers',
+            explanation: 'SQL scans the city column for all customers.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'customers (Raw Cities)',
+              columns: ['name', 'city'],
+              rows: [
+                ['Rafiul Islam', 'Dhaka'],
+                ['Priya Akter', 'Dhaka'],
+                ['Tanvir Ahmed', 'Chittagong'],
+                ['Nusrat Jahan', 'Chittagong'],
+                ['Kamal Hossain', 'Sylhet'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT DISTINCT city (Collapse duplicates)',
+            sqlSnippet: 'SELECT DISTINCT city',
+            explanation: 'Duplicates of Dhaka and Chittagong are removed, producing unique city names.',
+            tableData: {
+              tableName: 'Final Unique Cities',
               columns: ['city'],
               highlightedColumns: ['city'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Dhaka'],
                 ['Chittagong'],
                 ['Sylhet'],
-                ['Khulna'],
-                ['Rajshahi'],
-                ['Barisal'],
               ],
             },
           },
@@ -464,17 +495,41 @@ export const DAY_04_MODULE: ModuleData = {
           '### 1. LIMIT and OFFSET Syntax',
           '`LIMIT 5` returns at most 5 rows.',
           '`LIMIT 10 OFFSET 10` returns 10 rows starting from row 11 (Page 2).',
-          'QUESTION_BLOCK::Pagination Formula::Page $N$ with size $S$: `LIMIT S OFFSET (N - 1) * S`',
+          'Pagination Formula: Page $N$ with size $S$ is `LIMIT S OFFSET (N - 1) * S`.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nORDER BY price DESC\nLIMIT 3 OFFSET 0;',
+          explanation: 'Retrieve the top 3 most expensive products (Page 1).',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Top 3 items (LIMIT 3 OFFSET 0)',
-            sqlSnippet: 'SELECT name, price FROM products ORDER BY price DESC LIMIT 3 OFFSET 0;',
+            stepTitle: 'Step 1: FROM products ORDER BY price DESC (Full sorted list)',
+            sqlSnippet: 'FROM products ORDER BY price DESC',
+            explanation: 'SQL sorts the catalog highest price first.',
+            tableData: {
+              tableName: 'Sorted Catalog',
+              columns: ['name', 'price'],
+              rows: [
+                ['Office Chair', 120.00],
+                ['Filing Cabinet', 89.99],
+                ['Mechanical Keyboard', 65.00],
+                ['Bluetooth Speaker', 45.50],
+                ['Wireless Mouse', 15.99],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: LIMIT 3 OFFSET 0 (Slice Page 1)',
+            sqlSnippet: 'LIMIT 3 OFFSET 0',
             explanation: 'Slices the first 3 most expensive products.',
             tableData: {
-              tableName: 'Page 1 (Top 3)',
+              tableName: 'Page 1 (Top 3 Items)',
               columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Office Chair', 120.00],
                 ['Filing Cabinet', 89.99],
@@ -641,7 +696,7 @@ export const DAY_04_MODULE: ModuleData = {
   },
 };
 
-// ========================================================================// =============================================================================
+// =============================================================================
 // DAY 5: Guided Practice: Full Single-Table Query Pipelines (Mode 2)
 // =============================================================================
 export const DAY_05_MODULE: ModuleData = {
@@ -687,17 +742,40 @@ export const DAY_05_MODULE: ModuleData = {
           '3. `WHERE [conditions]` — Filter rows based on business rules.',
           '4. `ORDER BY [column ASC|DESC]` — Organize the output rows.',
           '5. `LIMIT [count] OFFSET [skip]` — Slice the specific page to display.',
-          'QUESTION_BLOCK::Pagination Formula::Page 1 is `LIMIT 10 OFFSET 0`. Page 2 is `LIMIT 10 OFFSET 10`. Page $N$ is `LIMIT 10 OFFSET (N - 1) * 10`.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price, quantity_in_stock, reorder_level\nFROM products\nWHERE quantity_in_stock <= reorder_level\nORDER BY quantity_in_stock ASC\nLIMIT 5;',
+          explanation: 'Find the 5 most urgently low-stock products (at or below reorder level), sorted lowest stock first.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: The Integrated Restock Pipeline',
-            sqlSnippet: 'SELECT name, price, quantity_in_stock, reorder_level\nFROM products\nWHERE quantity_in_stock <= reorder_level\nORDER BY quantity_in_stock ASC\nLIMIT 5;',
-            explanation: 'Filters low-stock items, sorts lowest stock first, and takes the top 5 urgent items.',
+            stepTitle: 'Step 1: FROM products WHERE quantity_in_stock <= reorder_level',
+            sqlSnippet: 'FROM products WHERE quantity_in_stock <= reorder_level',
+            explanation: 'SQL visits products and isolates items at or below the reorder threshold.',
+            tableData: {
+              tableName: 'Low-Stock Candidates',
+              columns: ['name', 'price', 'quantity_in_stock', 'reorder_level'],
+              rows: [
+                ['Wireless Charging Pad', 19.99, 0, 15],
+                ['Steel Frame Footrest', 45.00, 0, 5],
+                ['Steel Cable Management Tray', 22.00, 2, 8],
+                ['Adjustable Standing Desk', 420.00, 3, 5],
+                ['4K UltraHD Monitor (27-inch)', 349.99, 6, 10],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: ORDER BY quantity_in_stock ASC LIMIT 5',
+            sqlSnippet: 'ORDER BY quantity_in_stock ASC LIMIT 5',
+            explanation: 'Sorts lowest stock first and takes the top 5 urgent items.',
             tableData: {
               tableName: 'Priority Restock List',
               columns: ['name', 'price', 'quantity_in_stock', 'reorder_level'],
+              highlightedColumns: ['name', 'quantity_in_stock'],
+              highlightedRows: [0, 1, 2, 3, 4],
               rows: [
                 ['Wireless Charging Pad', 19.99, 0, 15],
                 ['Steel Frame Footrest', 45.00, 0, 5],
@@ -972,38 +1050,86 @@ export const DAY_06_MODULE: ModuleData = {
           '3. **Step 3: `SELECT ...`** — Specific columns are extracted, calculated, and assigned aliases.',
           '4. **Step 4: `ORDER BY ...`** — The resulting rows are sorted. (*Can see SELECT aliases!*)',
           '5. **Step 5: `LIMIT / OFFSET`** — The sorted output is sliced.',
-          'QUESTION_BLOCK::Logical Model vs Database Extensions::The 5-step logical order defines when values conceptually exist. Some engines (like MySQL) offer convenience syntax extensions that allow aliases in additional clauses, but standard SQL strictly enforces the logical lifecycle.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price * 1.15 AS taxed_price\nFROM products\nWHERE price * 1.15 > 50\nORDER BY taxed_price DESC\nLIMIT 5;',
+          explanation: 'Find products with a taxed price over $50, sort highest first, and return the top 5.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
             stepTitle: 'Step 1: FROM products',
             sqlSnippet: 'FROM products',
-            explanation: 'SQL identifies the products table with all 20 records.',
+            explanation: 'SQL identifies the products table with all records.',
+            tableData: {
+              tableName: 'products (Source Table)',
+              columns: ['name', 'price'],
+              rows: [
+                ['Wireless Mouse', 25.00],
+                ['Mechanical Keyboard', 89.99],
+                ['4K UltraHD Monitor', 349.99],
+              ],
+            },
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: WHERE price * 1.15 > 50',
+            stepTitle: 'Step 2: WHERE price * 1.15 > 50 (Filter using raw expression)',
             sqlSnippet: 'WHERE price * 1.15 > 50',
-            explanation: 'SQL filters rows using the raw expression. (Column alias does not exist yet).',
+            explanation: 'SQL filters rows using raw math (the alias taxed_price is not created yet).',
+            tableData: {
+              tableName: 'Filtered Surviving Rows',
+              columns: ['name', 'price'],
+              rows: [
+                ['Mechanical Keyboard', 89.99],
+                ['4K UltraHD Monitor', 349.99],
+              ],
+            },
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: SELECT name, price * 1.15 AS taxed_price',
+            stepTitle: 'Step 3: SELECT name, price * 1.15 AS taxed_price (Alias created)',
             sqlSnippet: 'SELECT name, price * 1.15 AS taxed_price',
-            explanation: 'SQL computes the expression and creates the alias taxed_price.',
+            explanation: 'SQL computes the expression and assigns the alias taxed_price.',
+            tableData: {
+              tableName: 'Calculated Columns',
+              columns: ['name', 'taxed_price'],
+              rows: [
+                ['Mechanical Keyboard', 103.49],
+                ['4K UltraHD Monitor', 402.49],
+              ],
+            },
           },
           {
             stepNumber: 4,
-            stepTitle: 'Step 4: ORDER BY taxed_price DESC',
+            stepTitle: 'Step 4: ORDER BY taxed_price DESC (Alias is visible here)',
             sqlSnippet: 'ORDER BY taxed_price DESC',
-            explanation: 'ORDER BY executes after SELECT, so it CAN safely reference taxed_price.',
+            explanation: 'ORDER BY runs after SELECT, so it safely sees and sorts by taxed_price.',
+            tableData: {
+              tableName: 'Sorted Calculation',
+              columns: ['name', 'taxed_price'],
+              highlightedColumns: ['taxed_price'],
+              rows: [
+                ['4K UltraHD Monitor', 402.49],
+                ['Mechanical Keyboard', 103.49],
+              ],
+            },
           },
           {
             stepNumber: 5,
-            stepTitle: 'Step 5: LIMIT 5',
+            stepTitle: 'Step 5: LIMIT 5 (Slice final rows)',
             sqlSnippet: 'LIMIT 5',
             explanation: 'Takes the top 5 highest-priced rows.',
+            tableData: {
+              tableName: 'Final Query Result',
+              columns: ['name', 'taxed_price'],
+              highlightedColumns: ['name', 'taxed_price'],
+              highlightedRows: [0, 1],
+              rows: [
+                ['4K UltraHD Monitor', 402.49],
+                ['Mechanical Keyboard', 103.49],
+              ],
+            },
           },
         ],
         syntaxBlocks: [
@@ -1177,15 +1303,39 @@ export const DAY_07_MODULE: ModuleData = {
           '• **`orders`**: Customer checkout records (`order_id`, `customer_id`, `order_date`, `status`).',
           '• **`order_items`**: Individual line items (`order_item_id`, `order_id`, `product_id`, `quantity`, `unit_price`).',
         ],
+        targetQuery: {
+          sql: 'SELECT supplier_id, name, contact_email\nFROM suppliers\nORDER BY supplier_id ASC;',
+          explanation: 'Audit all registered supplier partners in the directory ordered by ID.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Inspecting suppliers table',
-            sqlSnippet: 'SELECT * FROM suppliers;',
+            stepTitle: 'Step 1: FROM suppliers (Scan directory table)',
+            sqlSnippet: 'FROM suppliers',
             explanation: 'Loads all registered vendor partner records.',
             tableData: {
               tableName: 'suppliers',
               columns: ['supplier_id', 'name', 'contact_email'],
+              rows: [
+                [1, 'LogiTech Direct', 'supply@logitech-direct.com'],
+                [2, 'KeyChron Components', 'orders@keychron-comp.com'],
+                [3, 'Apex Cables & Hubs', 'sales@apexcables.io'],
+                [4, 'ErgoComfort Workspace', 'wholesale@ergocomfort.com'],
+                [5, 'SoundWave Acoustic', 'b2b@soundwave.net'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT supplier_id, name, contact_email ORDER BY supplier_id ASC',
+            sqlSnippet: 'SELECT supplier_id, name, contact_email ORDER BY supplier_id ASC',
+            explanation: 'Extracts supplier contact profiles in numeric ID order.',
+            tableData: {
+              tableName: 'Audited Supplier Directory',
+              columns: ['supplier_id', 'name', 'contact_email'],
+              highlightedColumns: ['supplier_id', 'name', 'contact_email'],
+              highlightedRows: [0, 1, 2, 3, 4],
               rows: [
                 [1, 'LogiTech Direct', 'supply@logitech-direct.com'],
                 [2, 'KeyChron Components', 'orders@keychron-comp.com'],
@@ -1424,12 +1574,43 @@ export const DAY_08_MODULE: ModuleData = {
           '• **Transfer**: Retrieve extreme values (`LIMIT 1`).',
           '• **Hard Problem**: Multi-clause date interval pagination (`LIMIT` + `OFFSET`).',
         ],
+        targetQuery: {
+          sql: 'SELECT name, quantity_in_stock, reorder_level\nFROM products\nWHERE quantity_in_stock <= reorder_level\nORDER BY quantity_in_stock ASC\nLIMIT 5;',
+          explanation: 'Assemble a complete single-table query filtering low-stock inventory, sorting worst-first, and limiting to 5.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Evaluation Pipeline',
-            sqlSnippet: 'SELECT * FROM products WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;',
-            explanation: 'Demonstrates end-to-end single table mastery.',
+            stepTitle: 'Step 1: FROM products WHERE quantity_in_stock <= reorder_level',
+            sqlSnippet: 'FROM products WHERE quantity_in_stock <= reorder_level',
+            explanation: 'Filters all items where quantity_in_stock is at or below the reorder point.',
+            tableData: {
+              tableName: 'Low-Stock Products',
+              columns: ['name', 'quantity_in_stock', 'reorder_level'],
+              rows: [
+                ['Wireless Charging Pad', 0, 15],
+                ['Steel Frame Footrest', 0, 5],
+                ['Steel Cable Management Tray', 2, 8],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: ORDER BY quantity_in_stock ASC LIMIT 5',
+            sqlSnippet: 'ORDER BY quantity_in_stock ASC LIMIT 5',
+            explanation: 'Sorts by stock quantity ascending and slices the top 5 urgent restock items.',
+            tableData: {
+              tableName: 'Final Query Result',
+              columns: ['name', 'quantity_in_stock', 'reorder_level'],
+              highlightedColumns: ['name', 'quantity_in_stock'],
+              highlightedRows: [0, 1, 2],
+              rows: [
+                ['Wireless Charging Pad', 0, 15],
+                ['Steel Frame Footrest', 0, 5],
+                ['Steel Cable Management Tray', 2, 8],
+              ],
+            },
           },
         ],
         syntaxBlocks: [

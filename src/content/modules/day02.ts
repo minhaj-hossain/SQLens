@@ -44,21 +44,25 @@ export const DAY_02_MODULE: ModuleData = {
         explanation: [
           'In Day 1, we learned that `SELECT` controls which **columns** appear in the output.',
           'Now, what if we do not want every single student? What if we only want students whose age is **exactly 21**? That is what **WHERE** is for.',
-          '### 1. The Three Questions of SQL\nWhen writing a filtered query:\n\n```sql\nSELECT name, age\nFROM students\nWHERE age = 21;\n```\n\nYou are answering three fundamental questions in sequence:',
+          '### 1. The Three Questions of SQL\nWhen writing a filtered query, you answer three questions in order:',
           'QUESTION_BLOCK::FROM::Where should I get the data from?',
           'QUESTION_BLOCK::WHERE::Which rows meet my criteria?',
-          'QUESTION_BLOCK::SELECT::What columns do I want in the final output?',
-          '### 2. Exact Equality with =\nWhen checking exact numbers in SQL, we write the numbers directly without quotes. The `=` operator tests if a column\'s value exactly matches the specified value.',
-          '### Notice: The Golden Rule of Row Filtering\n**SELECT controls columns. WHERE controls rows.**\n\nSQL first evaluates the `WHERE` condition row-by-row against the table to filter which records survive, and only then extracts the specific columns requested in `SELECT`.',
+          'QUESTION_BLOCK::SELECT::What columns do I want to see in the result?',
+          '### 2. The Golden Rule of Row Filtering\n**SELECT controls columns. WHERE controls rows.**\nSQL first evaluates the `WHERE` condition row-by-row to decide which rows survive, and only then extracts the columns requested in `SELECT`.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, age\nFROM students\nWHERE age = 21;',
+          explanation: 'From students, find students whose age is exactly 21 and show their name and age.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find all rows)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL visits the students table containing all 5 rows.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['id', 'name', 'age', 'department', 'city'],
               rows: [
                 [1, 'Rahim', 21, 'CSE', 'Dhaka'],
@@ -71,12 +75,13 @@ export const DAY_02_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: WHERE age = 21 (Row-by-Row Evaluation)',
+            stepTitle: 'Step 2: WHERE age = 21 (Row-by-Row check)',
             sqlSnippet: 'WHERE age = 21',
             explanation: 'Row 1 (21 = 21): TRUE ✅\nRow 2 (22 = 21): FALSE ❌\nRow 3 (20 = 21): FALSE ❌\nRow 4 (23 = 21): FALSE ❌\nRow 5 (21 = 21): TRUE ✅',
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (age = 21)',
               columns: ['id', 'name', 'age', 'department', 'city'],
+              highlightedRows: [0, 1],
               rows: [
                 [1, 'Rahim', 21, 'CSE', 'Dhaka'],
                 [5, 'Tanvir', 21, 'CSE', 'Rajshahi'],
@@ -85,11 +90,11 @@ export const DAY_02_MODULE: ModuleData = {
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: SELECT name, age',
+            stepTitle: 'Step 3: SELECT name, age (Extract requested columns)',
             sqlSnippet: 'SELECT name, age',
             explanation: 'Only the requested columns (name and age) are extracted from the surviving rows:',
             tableData: {
-              tableName: 'Result',
+              tableName: 'Final Query Result',
               columns: ['name', 'age'],
               highlightedColumns: ['name', 'age'],
               rows: [
@@ -224,18 +229,22 @@ export const DAY_02_MODULE: ModuleData = {
         },
         explanation: [
           'The inequality operators **`!=`** and **`<>`** construct the exact opposite condition of equality.',
-          'They retain every row where the column does **NOT** equal the specified value.',
-          '### 1. Inequality Syntax\n```sql\nSELECT name, department\nFROM students\nWHERE department != \'EEE\';\n```\nThis query evaluates every row and keeps all students whose department is not EEE (4 students).',
-          '### 2. SQL Dialect Note: != vs <>\n• `<>` is the official **SQL-standard** inequality operator.\n• `!=` is supported by virtually all modern relational databases, including MySQL and PostgreSQL.\nBoth operators behave identically.',
+          'They keep every row where the column value does **NOT** equal the specified value.',
+          '### 1. SQL Dialect Note: != vs <>\n• `<>` is the official **SQL-standard** inequality operator.\n• `!=` is supported by virtually all modern relational databases (PostgreSQL, MySQL, SQLite).\nBoth operators perform the exact same filtering.',
         ],
+        targetQuery: {
+          sql: "SELECT name, department\nFROM students\nWHERE department != 'EEE';",
+          explanation: "From students, find all students whose department is NOT 'EEE' and show their name and department.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Load candidate rows)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL scans the students table with all 5 records.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['id', 'name', 'department'],
               rows: [
                 [1, 'Rahim', 'CSE'],
@@ -248,12 +257,30 @@ export const DAY_02_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: "Step 2: WHERE department != 'EEE'",
+            stepTitle: "Step 2: WHERE department != 'EEE' (Exclude EEE)",
             sqlSnippet: "WHERE department != 'EEE'",
             explanation: "Rahim ('CSE' != 'EEE'): TRUE ✅\nKarim ('EEE' != 'EEE'): FALSE ❌\nAyesha ('CSE' != 'EEE'): TRUE ✅\nSumaiya ('BBA' != 'EEE'): TRUE ✅\nTanvir ('CSE' != 'EEE'): TRUE ✅",
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (department != EEE)',
+              columns: ['id', 'name', 'department'],
+              highlightedRows: [0, 1, 2, 3],
+              rows: [
+                [1, 'Rahim', 'CSE'],
+                [3, 'Ayesha', 'CSE'],
+                [4, 'Sumaiya', 'BBA'],
+                [5, 'Tanvir', 'CSE'],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: SELECT name, department (Final result)',
+            sqlSnippet: 'SELECT name, department',
+            explanation: 'Returns the name and department of all 4 non-EEE students.',
+            tableData: {
+              tableName: 'Final Query Result',
               columns: ['name', 'department'],
+              highlightedColumns: ['name', 'department'],
               rows: [
                 ['Rahim', 'CSE'],
                 ['Ayesha', 'CSE'],
@@ -372,19 +399,24 @@ export const DAY_02_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          'In many scenarios, we want threshold filters: premium items costing more than $50, or budget items under $20.',
+          'In many queries, we want threshold filters: premium items costing more than $50, or budget items under $20.',
           '### 1. Strict Inequalities: > and <\n• `>` means **strictly greater than**.\n• `<` means **strictly less than**.',
           '### 2. The Boundary Rule (Strict)\n**Strict comparisons exclude the exact boundary number.**',
-          'For example, `WHERE price > 50.00`:\n• An item priced at $50.01 is **included**.\n• An item priced at exactly $50.00 is **EXCLUDED**.',
+          'For example, in `WHERE price > 50.00`:\n• An item priced at $50.01 is **included**.\n• An item priced at exactly $50.00 is **EXCLUDED**.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nWHERE price > 50.00;',
+          explanation: 'Find all products costing strictly more than $50.00 (excluding exactly $50.00).',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM products',
+            stepTitle: 'Step 1: FROM products (Scan rows)',
             sqlSnippet: 'FROM products',
             explanation: 'SQL visits the products table.',
             tableData: {
-              tableName: 'products',
+              tableName: 'products (Sample Items)',
               columns: ['product_id', 'name', 'price'],
               rows: [
                 [1, 'Wireless Mouse', 15.99],
@@ -400,11 +432,27 @@ export const DAY_02_MODULE: ModuleData = {
             sqlSnippet: 'WHERE price > 50.00',
             explanation: 'Wireless Mouse ($15.99 > 50.00): FALSE ❌\nBluetooth Speaker ($45.50 > 50.00): FALSE ❌\nMechanical Keyboard ($65.00 > 50.00): TRUE ✅\nOffice Chair ($120.00 > 50.00): TRUE ✅',
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (price > 50.00)',
               columns: ['product_id', 'name', 'price'],
+              highlightedRows: [0, 1],
               rows: [
                 [4, 'Mechanical Keyboard', 65.00],
                 [14, 'Office Chair', 120.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: SELECT name, price (Final result)',
+            sqlSnippet: 'SELECT name, price',
+            explanation: 'Extracts the name and price of items passing the threshold.',
+            tableData: {
+              tableName: 'Final Query Result',
+              columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
+              rows: [
+                ['Mechanical Keyboard', 65.00],
+                ['Office Chair', 120.00],
               ],
             },
           },
@@ -521,16 +569,21 @@ export const DAY_02_MODULE: ModuleData = {
           'When business requirements state **"$55.00 or more"** or **"at most 15 units"**, we need inclusive operators:',
           '• `>=` means **greater than or equal to**.\n• `<=` means **less than or equal to**.',
           '### The Boundary Rule (Inclusive)\n**Inclusive comparisons explicitly INCLUDE the boundary number.**',
-          'For example, `WHERE price >= 55.00`:\n• Items priced at $65.00 and $120.00 are included.\n• Items priced at **exactly $55.00** (like the Pan Set and Tennis Racket) are **INCLUDED**.',
+          'For example, in `WHERE price >= 55.00`:\n• Items priced at $65.00 and $120.00 are included.\n• Items priced at **exactly $55.00** (like the Pan Set and Tennis Racket) are **INCLUDED**.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nWHERE price >= 55.00;',
+          explanation: 'Find all products priced at $55.00 or higher (including products that cost exactly $55.00).',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM products',
+            stepTitle: 'Step 1: FROM products (Scan rows)',
             sqlSnippet: 'FROM products',
             explanation: 'SQL scans the products table.',
             tableData: {
-              tableName: 'products',
+              tableName: 'products (Candidate Rows)',
               columns: ['product_id', 'name', 'price'],
               rows: [
                 [4, 'Mechanical Keyboard', 65.00],
@@ -545,12 +598,29 @@ export const DAY_02_MODULE: ModuleData = {
             sqlSnippet: 'WHERE price >= 55.00',
             explanation: 'Mechanical Keyboard ($65.00 >= 55.00): TRUE ✅\nStainless Steel Pan Set ($55.00 >= 55.00): TRUE ✅ (Boundary included)\nTennis Racket ($55.00 >= 55.00): TRUE ✅ (Boundary included)',
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (price >= 55.00)',
               columns: ['product_id', 'name', 'price'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 [4, 'Mechanical Keyboard', 65.00],
                 [6, 'Stainless Steel Pan Set', 55.00],
                 [20, 'Tennis Racket', 55.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: SELECT name, price (Final result)',
+            sqlSnippet: 'SELECT name, price',
+            explanation: 'Returns name and price for all items qualifying under the inclusive threshold.',
+            tableData: {
+              tableName: 'Final Query Result',
+              columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
+              rows: [
+                ['Mechanical Keyboard', 65.00],
+                ['Stainless Steel Pan Set', 55.00],
+                ['Tennis Racket', 55.00],
               ],
             },
           },
@@ -697,19 +767,23 @@ export const DAY_02_MODULE: ModuleData = {
         },
         explanation: [
           'In SQL, numbers are written directly, but **text values (strings) MUST ALWAYS be enclosed in single quotes (\'...\')**.',
-          '### 1. Filtering by Text Values\nFor example, to find all students located in Dhaka:\n\n```sql\nSELECT name, city\nFROM students\nWHERE city = \'Dhaka\';\n```',
-          '### 2. Column Names vs. String Literals\nIf you write `WHERE city = Dhaka` without quotes, SQL assumes `Dhaka` is the name of another **column**!\n\nBecause no column named `Dhaka` exists in `students`, SQL will stop with an error (`Unknown column \'Dhaka\'`).',
+          '### 1. Column Names vs. String Literals\nIf you write `WHERE city = Dhaka` without quotes, SQL assumes `Dhaka` is the name of another **column**!\n\nBecause no column named `Dhaka` exists in `students`, SQL stops with an error (`Unknown column \'Dhaka\'`).',
           '| Identifier Type | Quoting Rule | Example | Status |\n|---|---|---|---|\n| Column Name | **Never quoted** | `name`, `city`, `age` | ✅ Valid column reference |\n| String Value | **Always single quotes** | `\'Dhaka\'`, `\'CSE\'`, `\'Electronics\'` | ✅ Valid text literal |\n| Number Value | **Never quoted** | `21`, `50.00`, `100` | ✅ Valid numeric literal |',
-          '### Notice: The Golden Rule for Text\nAlways use **single quotes** (`\'...\'`) for text literals. Double quotes (`"..."`) or unquoted text will cause errors in standard SQL queries.',
+          '### Notice: The Golden Rule for Text\nAlways use **single quotes** (`\'...\'`) for text literals in SQL.',
         ],
+        targetQuery: {
+          sql: "SELECT name, city\nFROM students\nWHERE city = 'Dhaka';",
+          explanation: "Find all students who live in Dhaka and show their name and city.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find all students)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL loads the entire students table.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['id', 'name', 'age', 'department', 'city'],
               rows: [
                 [1, 'Rahim', 21, 'CSE', 'Dhaka'],
@@ -722,12 +796,13 @@ export const DAY_02_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: "Step 2: WHERE city = 'Dhaka'",
+            stepTitle: "Step 2: WHERE city = 'Dhaka' (Check text matches)",
             sqlSnippet: "WHERE city = 'Dhaka'",
             explanation: "Rahim ('Dhaka' = 'Dhaka'): TRUE ✅\nKarim ('Gazipur' = 'Dhaka'): FALSE ❌\nAyesha ('Dhaka' = 'Dhaka'): TRUE ✅\nSumaiya ('Chattogram' = 'Dhaka'): FALSE ❌\nTanvir ('Rajshahi' = 'Dhaka'): FALSE ❌",
             tableData: {
-              tableName: 'Filtered Rows',
+              tableName: 'Surviving Rows (city = Dhaka)',
               columns: ['id', 'name', 'age', 'department', 'city'],
+              highlightedRows: [0, 1],
               rows: [
                 [1, 'Rahim', 21, 'CSE', 'Dhaka'],
                 [3, 'Ayesha', 20, 'CSE', 'Dhaka'],
@@ -736,11 +811,11 @@ export const DAY_02_MODULE: ModuleData = {
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: SELECT name, city',
+            stepTitle: 'Step 3: SELECT name, city (Final result)',
             sqlSnippet: 'SELECT name, city',
-            explanation: 'Result containing only the name and city columns of Dhaka students:',
+            explanation: 'Extracts only the name and city columns for Dhaka students:',
             tableData: {
-              tableName: 'Result',
+              tableName: 'Final Query Result',
               columns: ['name', 'city'],
               highlightedColumns: ['name', 'city'],
               rows: [

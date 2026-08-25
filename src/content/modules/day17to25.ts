@@ -45,17 +45,23 @@ export const DAY_17_MODULE: ModuleData = {
           'Instead of hardcoding a magic number like `WHERE price > 30.00`, a scalar subquery computes the threshold dynamically:\n```sql\nSELECT name, price\nFROM products\nWHERE price > (SELECT AVG(price) FROM products);\n```',
           '### 2. Execution Order',
           '1. The database evaluates the inner query `(SELECT AVG(price) FROM products)` first to get the scalar value ($30.13).\n2. The outer query then filters rows where `price > 30.13`.',
-          'QUESTION_BLOCK::Scalar Rule::A scalar subquery MUST return exactly one row and one column. If it returns multiple rows or columns, SQL will halt with an error.',
+          'A scalar subquery MUST return exactly one row and one column. If it returns multiple rows or columns, SQL will halt with an error.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nWHERE price > (SELECT AVG(price) FROM products);',
+          explanation: 'Find all products priced higher than the overall catalog average price.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Inner Query Computes Average',
+            stepTitle: 'Step 1: Inner Query Computes Average (Scalar Value)',
             sqlSnippet: 'SELECT AVG(price) FROM products;',
             explanation: 'Computes overall catalog average price ($30.13).',
             tableData: {
-              tableName: 'Inner Result',
+              tableName: 'Inner Subquery Scalar Result',
               columns: ['AVG(price)'],
+              highlightedColumns: ['AVG(price)'],
               rows: [[30.13]],
             },
           },
@@ -63,10 +69,11 @@ export const DAY_17_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: 'Step 2: Outer Query Filters for price > $30.13',
             sqlSnippet: 'SELECT name, price FROM products WHERE price > 30.13;',
-            explanation: 'Retains only items priced above the average.',
+            explanation: 'Retains only items priced above the calculated average.',
             tableData: {
-              tableName: 'Above Average Items',
+              tableName: 'Above Average Products Result',
               columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
               rows: [
                 ['Bluetooth Speaker', 45.50],
                 ['Mechanical Keyboard', 65.00],
@@ -178,16 +185,37 @@ export const DAY_17_MODULE: ModuleData = {
           '### 2. How SQL Evaluates It',
           '1. The inner query produces a distinct set of customer IDs from `orders`.\n2. The outer query matches customer records against that set.',
         ],
+        targetQuery: {
+          sql: 'SELECT customer_id, name\nFROM customers\nWHERE customer_id IN (SELECT customer_id FROM orders);',
+          explanation: 'Find all customers who have placed at least one order using a dynamic IN subquery.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Inner Query Generates Customer ID List',
+            stepTitle: 'Step 1: Inner Query Generates Customer ID Set',
             sqlSnippet: 'SELECT customer_id FROM orders;',
-            explanation: 'Produces list: (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).',
+            explanation: 'Produces dynamic ID list: (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).',
             tableData: {
               tableName: 'Order Placer IDs',
               columns: ['customer_id'],
               rows: [[1], [2], [3], [4], [5]],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Outer Query Filters for Matching IDs',
+            sqlSnippet: 'SELECT customer_id, name FROM customers WHERE customer_id IN (...)',
+            explanation: 'Matches customer records against the active buyer list.',
+            tableData: {
+              tableName: 'Active Buyers Result',
+              columns: ['customer_id', 'name'],
+              highlightedColumns: ['customer_id', 'name'],
+              rows: [
+                [1, 'Rafiul Islam'],
+                [2, 'Priya Akter'],
+                [3, 'Tanvir Ahmed'],
+              ],
             },
           },
         ],
@@ -298,22 +326,37 @@ export const DAY_17_MODULE: ModuleData = {
           '### 3. The Safe Pattern: Always Filter Out NULLs in Inner Queries',
           '```sql\n-- ✅ Always include WHERE col IS NOT NULL in subqueries used with NOT IN:\nSELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);\n```',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);',
+          explanation: 'Safely find products that have never been ordered, guarding against NULL trap failures.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Finding Unordered Products Safely',
-            sqlSnippet: 'SELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);',
+            stepTitle: 'Step 1: Inner Query Generates Non-NULL Product IDs',
+            sqlSnippet: 'SELECT product_id FROM order_items WHERE product_id IS NOT NULL',
+            explanation: 'Produces clean non-NULL list of ordered product IDs.',
+            tableData: {
+              tableName: 'Non-NULL Ordered Product IDs',
+              columns: ['product_id'],
+              rows: [[1], [2], [4], [5]],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Outer Query Filters for product_id NOT IN (...)',
+            sqlSnippet: 'SELECT name, price FROM products WHERE product_id NOT IN (...)',
             explanation: 'Isolates the 6 products that have never been ordered.',
             tableData: {
-              tableName: 'Unordered Products',
+              tableName: 'Unordered Products Result',
               columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
               rows: [
                 ['USB-C Charging Cable', 9.99],
                 ['Cutting Board Set', 18.00],
                 ['Football', 16.50],
                 ['Wireless Doorbell', 38.00],
-                ['Portable Charger', 21.99],
-                ['Miscellaneous Clearance Item', 4.99],
               ],
             },
           },
@@ -428,12 +471,22 @@ export const DAY_17_MODULE: ModuleData = {
           '• **Inner Query (`products p2`)**: Calculates the average price only for products in that specific category.',
           'QUESTION_BLOCK::Repeated Execution Model::A regular subquery runs once for the whole query. A correlated subquery runs once for each outer row, comparing each item against its localized peer group.',
         ],
+        targetQuery: {
+          sql: 'SELECT p1.name, p1.price, p1.category_id\nFROM products p1\nWHERE p1.price > (\n  SELECT AVG(p2.price)\n  FROM products p2\n  WHERE p2.category_id = p1.category_id\n);',
+          explanation: 'Compare each product against its own specific category average price dynamically.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Outer Query Inspects Product Row',
+            stepTitle: 'Step 1: Outer Query Evaluates Row Candidate',
             sqlSnippet: '-- Inspecting Product: "Office Chair" (Category 3, Price $120.00)',
             explanation: 'Outer query provides p1.category_id = 3 to the inner query.',
+            tableData: {
+              tableName: 'Outer Candidate Row (p1)',
+              columns: ['name', 'price', 'category_id'],
+              rows: [['Office Chair', 120.00, 3]],
+            },
           },
           {
             stepNumber: 2,
@@ -441,16 +494,26 @@ export const DAY_17_MODULE: ModuleData = {
             sqlSnippet: 'SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = 3;',
             explanation: 'Inner query evaluates to $47.15 (Category 3 average).',
             tableData: {
-              tableName: 'Category 3 Benchmark',
+              tableName: 'Category 3 Benchmark (p2)',
               columns: ['AVG(price)'],
+              highlightedColumns: ['AVG(price)'],
               rows: [[47.15]],
             },
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: WHERE Condition Evaluates',
-            sqlSnippet: '-- 120.00 > 47.15 -> TRUE (Office Chair is kept in result)',
+            stepTitle: 'Step 3: WHERE Condition Evaluates ($120.00 > $47.15)',
+            sqlSnippet: 'WHERE p1.price > 47.15 -- TRUE',
             explanation: 'Product is kept because its price exceeds its category average.',
+            tableData: {
+              tableName: 'Surviving Qualified Products',
+              columns: ['name', 'price', 'category_id'],
+              highlightedColumns: ['name', 'price'],
+              rows: [
+                ['Mechanical Keyboard', 65.00, 1],
+                ['Office Chair', 120.00, 3],
+              ],
+            },
           },
         ],
         syntaxBlocks: [
@@ -487,7 +550,7 @@ export const DAY_17_MODULE: ModuleData = {
           description: 'Find name, price, and category_id for products priced higher than the average price within their own category.',
           instructions: [
             'Query `products p1`.',
-            'Select `p1.name`, `p1.price`, and `p1.category_id`.',
+            'Select `p1.name`, `p1.price` and `p1.category_id`.',
             'Filter where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
             'End with a semicolon (;).',
           ],
@@ -557,17 +620,34 @@ export const DAY_17_MODULE: ModuleData = {
         explanation: [
           '### 1. What is a CTE?',
           'A CTE is a named temporary result set defined with `WITH cte_name AS (...)` placed at the top of your query.',
-          'QUESTION_BLOCK::Readability Advantage::CTEs eliminate deeply nested subqueries and allow you to break complex business logic into clean, readable steps.',
+          'CTEs eliminate deeply nested subqueries and allow you to break complex business logic into clean, readable steps.',
         ],
+        targetQuery: {
+          sql: 'WITH ActiveCustomers AS (\n  SELECT DISTINCT customer_id FROM orders\n)\nSELECT c.customer_id, c.name\nFROM customers c\nJOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;',
+          explanation: 'Stage active customer IDs in a clean CTE and join them with the customers table.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Defining ActiveCustomers CTE',
-            sqlSnippet: 'WITH ActiveCustomers AS (\n  SELECT DISTINCT customer_id FROM orders\n)\nSELECT c.customer_id, c.name\nFROM customers c\nJOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;',
-            explanation: 'Defines the ActiveCustomers CTE and joins it cleanly to customers.',
+            stepTitle: 'Step 1: Staging ActiveCustomers CTE',
+            sqlSnippet: 'WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders)',
+            explanation: 'Evaluates the named temporary CTE containing distinct buyer IDs.',
             tableData: {
-              tableName: 'CTE Output',
+              tableName: 'ActiveCustomers (Staged CTE)',
+              columns: ['customer_id'],
+              rows: [[1], [2], [3], [4]],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Joining CTE with Customers Table',
+            sqlSnippet: 'SELECT c.customer_id, c.name FROM customers c JOIN ActiveCustomers ac ON c.customer_id = ac.customer_id',
+            explanation: 'Joins customers table with the staged CTE result set.',
+            tableData: {
+              tableName: 'Final Joined Result',
               columns: ['customer_id', 'name'],
+              highlightedColumns: ['customer_id', 'name'],
               rows: [
                 [1, 'Rafiul Islam'],
                 [2, 'Priya Akter'],
@@ -787,8 +867,13 @@ export const DAY_18_MODULE: ModuleData = {
           '### 2. Multi-Stage CTE Reporting',
           '```sql\nWITH CustomerSpend AS (\n  SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent\n  FROM customers c\n  JOIN orders o ON c.customer_id = o.customer_id\n  JOIN order_items oi ON o.order_id = oi.order_id\n  GROUP BY c.customer_id, c.name\n)\nSELECT * FROM CustomerSpend WHERE total_spent > 150 ORDER BY total_spent DESC;\n```',
           '### 3. CTE Refactoring Pattern',
-          'When queries require multi-step aggregation (e.g. finding customers whose spending exceeds the average customer spend), CTEs allow you to stage the metrics cleanly without deep nesting.',
+          'When queries require multi-step aggregation, CTEs allow you to stage the metrics cleanly without deep nesting.',
         ],
+        targetQuery: {
+          sql: 'SELECT p1.name, p1.price, p1.category_id\nFROM products p1\nWHERE p1.price > (\n  SELECT AVG(p2.price)\n  FROM products p2\n  WHERE p2.category_id = p1.category_id\n);',
+          explanation: 'Compare products against localized category benchmarks with a correlated subquery.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -798,6 +883,7 @@ export const DAY_18_MODULE: ModuleData = {
             tableData: {
               tableName: 'Above-Category-Average Items',
               columns: ['name', 'price', 'category_id'],
+              highlightedColumns: ['name', 'price', 'category_id'],
               rows: [
                 ['Mechanical Keyboard', 65.00, 1],
                 ['Gaming Headset', 55.00, 1],
@@ -1013,18 +1099,24 @@ export const DAY_19_MODULE: ModuleData = {
           '### 1. INSERT INTO Syntax',
           'Specify the target table, the column names in parentheses, followed by `VALUES (...)` with the matching data:',
           '```sql\nINSERT INTO products (\n  name, supplier_id, category_id, price, quantity_in_stock, reorder_level\n) VALUES (\n  \'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20\n);\n```',
-          'QUESTION_BLOCK::Auto-Increment IDs::You typically omit the primary key column (e.g. `product_id`) if the database is configured to generate sequential auto-increment IDs automatically.',
+          'You typically omit the primary key column (e.g. `product_id`) if the database is configured to generate sequential auto-increment IDs automatically.',
         ],
+        targetQuery: {
+          sql: "INSERT INTO products (\n  name, supplier_id, category_id, price, quantity_in_stock, reorder_level\n) VALUES (\n  'Ultra Wireless Mouse', 1, 1, 49.99, 100, 20\n);",
+          explanation: 'Append a new wireless mouse record into the products inventory catalog.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Appending New Record',
-            sqlSnippet: 'INSERT INTO products (name, price) VALUES (\'Precision Stylus Pen\', 29.99);',
+            stepTitle: 'Step 1: Appending New Record (INSERT INTO)',
+            sqlSnippet: "INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Ultra Wireless Mouse', 1, 1, 49.99, 100, 20);",
             explanation: 'Creates a new row in the products table with the specified attributes.',
             tableData: {
-              tableName: 'Newly Inserted Row',
-              columns: ['name', 'price'],
-              rows: [['Precision Stylus Pen', 29.99]],
+              tableName: 'Newly Inserted Product Row',
+              columns: ['name', 'supplier_id', 'category_id', 'price', 'quantity_in_stock'],
+              highlightedColumns: ['name', 'price', 'quantity_in_stock'],
+              rows: [['Ultra Wireless Mouse', 1, 1, 49.99, 100]],
             },
           },
         ],
@@ -1122,8 +1214,13 @@ export const DAY_19_MODULE: ModuleData = {
           '### 1. The Anatomy of an UPDATE',
           '```sql\nUPDATE products\nSET price = 19.99\nWHERE product_id = 1;\n```',
           '### 2. The Danger of Missing WHERE',
-          'QUESTION_BLOCK::Critical Warning::If you accidentally run `UPDATE products SET price = 19.99;` without a `WHERE` clause, **every product in the catalog will be set to $19.99**! Always write your `WHERE` clause first.',
+          'If you accidentally run `UPDATE products SET price = 19.99;` without a `WHERE` clause, **every product in the catalog will be set to $19.99**! Always write your `WHERE` clause first.',
         ],
+        targetQuery: {
+          sql: 'UPDATE products\nSET price = price * 1.10\nWHERE product_id = 1;',
+          explanation: 'Safely apply a 10% price increase specifically to product 1 using a targeted WHERE condition.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1133,6 +1230,7 @@ export const DAY_19_MODULE: ModuleData = {
             tableData: {
               tableName: 'Updated Row',
               columns: ['product_id', 'name', 'price'],
+              highlightedColumns: ['price'],
               rows: [[1, 'Wireless Mouse', 17.59]],
             },
           },
@@ -1236,8 +1334,13 @@ export const DAY_19_MODULE: ModuleData = {
           '### 1. The Anatomy of a DELETE',
           '```sql\nDELETE FROM orders\nWHERE order_id = 18;\n```',
           '### 2. The Danger of Missing WHERE',
-          'QUESTION_BLOCK::Catastrophic Data Loss::Executing `DELETE FROM orders;` without a `WHERE` clause deletes **every single row** in the table! Always specify the exact primary key or condition to delete.',
+          'Executing `DELETE FROM orders;` without a `WHERE` clause deletes **every single row** in the table! Always specify the exact primary key or condition to delete.',
         ],
+        targetQuery: {
+          sql: 'DELETE FROM orders\nWHERE order_id = 18;',
+          explanation: 'Safely delete temporary test order 18 from the orders table.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1247,6 +1350,7 @@ export const DAY_19_MODULE: ModuleData = {
             tableData: {
               tableName: 'Surviving Orders',
               columns: ['order_id', 'status'],
+              highlightedColumns: ['order_id'],
               rows: [[17, 'delivered']],
             },
           },
@@ -1424,8 +1528,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. The Core CREATE TABLE Syntax',
           '```sql\nCREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);\n```',
-          'QUESTION_BLOCK::Table Names::Table names should be lowercase, descriptive, and pluralized by convention (e.g. `products`, `orders`, `tags`).',
+          'Table names should be lowercase, descriptive, and pluralized by convention (e.g. `products`, `orders`, `tags`).',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);',
+          explanation: 'Allocate a new table structure for tagging catalog items with integer IDs and descriptive names.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1539,8 +1648,13 @@ export const DAY_20_MODULE: ModuleData = {
           '### 1. DECIMAL Precision & Scale',
           '`DECIMAL(10, 2)` means **10 total digits** with **2 digits after the decimal point** (maximum: 99,999,999.99). Never use FLOAT for currency because floating-point rounding causes financial inaccuracy!',
           '### 2. MySQL BOOLEAN Note',
-          'QUESTION_BLOCK::MySQL BOOLEAN Engine Detail::In MySQL, `BOOLEAN` is an alias for `TINYINT(1)`. `TRUE` evaluates to `1` and `FALSE` evaluates to `0`.',
+          'In MySQL, `BOOLEAN` is an alias for `TINYINT(1)`. `TRUE` evaluates to `1` and `FALSE` evaluates to `0`.',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE product_metrics (\n  product_id INT,\n  weight_kg DECIMAL(6,2),\n  is_fragile BOOLEAN,\n  logged_at DATETIME\n);',
+          explanation: 'Define appropriate data types (INT, exact DECIMAL, BOOLEAN, and DATETIME) for a metrics table.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1653,8 +1767,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. PRIMARY KEY & AUTO_INCREMENT',
           '```sql\nCREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);\n```',
-          'QUESTION_BLOCK::Auto-Incrementing Sequence::When you insert a row without specifying `category_id`, the database automatically generates the next sequential integer (1, 2, 3, 4...).',
+          'When you insert a row without specifying `category_id`, the database automatically generates the next sequential integer (1, 2, 3, 4...).',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);',
+          explanation: 'Establish unique row identity and automatic sequential numbering with AUTO_INCREMENT PRIMARY KEY.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1761,8 +1880,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. Enforcing NOT NULL',
           '```sql\nCREATE TABLE employees (\n  emp_id INT PRIMARY KEY,\n  full_name VARCHAR(100) NOT NULL,\n  salary DECIMAL(10,2) NOT NULL\n);\n```',
-          'QUESTION_BLOCK::Data Hygiene::Use NOT NULL for essential data (names, prices, dates) to avoid dealing with NULL handling edge-cases later in analytics.',
+          'Use NOT NULL for essential data (names, prices, dates) to avoid dealing with NULL handling edge-cases later in analytics.',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE employees (\n  emp_id INT PRIMARY KEY,\n  full_name VARCHAR(100) NOT NULL,\n  salary DECIMAL(10,2) NOT NULL\n);',
+          explanation: 'Enforce that all employee records must contain a valid name and salary upon insertion.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1872,8 +1996,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. UNIQUE Syntax',
           '```sql\nCREATE TABLE customer_emails (\n  account_id INT PRIMARY KEY,\n  email VARCHAR(150) NOT NULL UNIQUE\n);\n```',
-          'QUESTION_BLOCK::UNIQUE vs PRIMARY KEY::A table can only have **one** PRIMARY KEY, but can have **multiple** UNIQUE columns (e.g. `username UNIQUE`, `email UNIQUE`, `phone_number UNIQUE`).',
+          'A table can only have **one** PRIMARY KEY, but can have **multiple** UNIQUE columns (e.g. `username UNIQUE`, `email UNIQUE`, `phone_number UNIQUE`).',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE customer_emails (\n  account_id INT PRIMARY KEY,\n  email VARCHAR(150) NOT NULL UNIQUE\n);',
+          explanation: 'Prevent duplicate email addresses across customer registrations using a UNIQUE constraint.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -1983,6 +2112,11 @@ export const DAY_20_MODULE: ModuleData = {
           '• String default: `status VARCHAR(20) DEFAULT \'active\'`',
           '• Timestamp default: `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE audit_logs (\n  log_id INT PRIMARY KEY,\n  action VARCHAR(100) NOT NULL,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);',
+          explanation: 'Automatically populate created_at with current server timestamp when omitted.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2089,8 +2223,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. CHECK Constraint Syntax',
           '```sql\nCREATE TABLE product_ratings (\n  rating_id INT PRIMARY KEY,\n  score INT NOT NULL CHECK (score BETWEEN 1 AND 5)\n);\n```',
-          'QUESTION_BLOCK::Database-Level Safety::If a buggy frontend sends `score = 10` or `score = -1`, the database CHECK constraint instantly rejects the transaction and prevents corrupt data from ever entering your database.',
+          'If a buggy frontend sends `score = 10` or `score = -1`, the database CHECK constraint instantly rejects the transaction and prevents corrupt data from ever entering your database.',
         ],
+        targetQuery: {
+          sql: 'CREATE TABLE product_ratings (\n  rating_id INT PRIMARY KEY,\n  score INT NOT NULL CHECK (score BETWEEN 1 AND 5)\n);',
+          explanation: 'Enforce database-level validation rules with CHECK to ensure ratings stay between 1 and 5.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2197,8 +2336,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. ALTER TABLE ADD Syntax',
           '```sql\nALTER TABLE products\nADD COLUMN is_featured BOOLEAN DEFAULT FALSE;\n```',
-          'QUESTION_BLOCK::Preserving Data::ALTER TABLE preserves all existing rows in the table, populating the new column with NULL (or the specified DEFAULT value).',
+          'ALTER TABLE preserves all existing rows in the table, populating the new column with NULL (or the specified DEFAULT value).',
         ],
+        targetQuery: {
+          sql: 'ALTER TABLE products\nADD COLUMN is_featured BOOLEAN DEFAULT FALSE;',
+          explanation: 'Safely evolve existing tables by appending new columns without deleting production rows.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2302,8 +2446,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. Adding Foreign Key Constraints',
           '```sql\nALTER TABLE orders\nADD CONSTRAINT fk_orders_customer\nFOREIGN KEY (customer_id) REFERENCES customers(customer_id);\n```',
-          'QUESTION_BLOCK::Referential Integrity::Once this constraint is active, SQL will prevent anyone from inserting an order with a non-existent `customer_id` (e.g. customer 9999).',
+          'Once this constraint is active, SQL will prevent anyone from inserting an order with a non-existent `customer_id` (e.g. customer 9999).',
         ],
+        targetQuery: {
+          sql: 'ALTER TABLE orders\nADD CONSTRAINT fk_orders_customer\nFOREIGN KEY (customer_id) REFERENCES customers(customer_id);',
+          explanation: 'Establish referential integrity between orders and customers to prevent orphaned records.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2412,8 +2561,13 @@ export const DAY_20_MODULE: ModuleData = {
         explanation: [
           '### 1. The Safe DROP TABLE Pattern',
           '```sql\nDROP TABLE IF EXISTS temp_order_staging;\n```',
-          'QUESTION_BLOCK::Irreversible Deletion::Unlike deleting rows inside a transaction, dropping a table is a DDL operation that cannot typically be undone with a simple ROLLBACK. Use with care in production!',
+          'Unlike deleting rows inside a transaction, dropping a table is a DDL operation that cannot typically be undone with a simple ROLLBACK. Use with care in production!',
         ],
+        targetQuery: {
+          sql: 'DROP TABLE IF EXISTS temp_order_staging;',
+          explanation: 'Permanently tear down temporary staging schemas safely without crashing if they are already dropped.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2602,8 +2756,13 @@ export const DAY_21_MODULE: ModuleData = {
           '### 3. Application Efficiency (N+1 Problem vs Single Relational Query)',
           '• **Approach A (Loop of queries)**: 1 query to get 50 orders, plus 50 separate round-trip queries to get line items (51 network requests).',
           '• **Approach B (Single SQL JOIN)**: 1 well-designed relational query fetching all data in a single network round trip.',
-          'QUESTION_BLOCK::Efficiency Principle::Reducing unnecessary database round trips can significantly improve performance across production backend applications.',
+          'Reducing unnecessary database round trips can significantly improve performance across production backend applications.',
         ],
+        targetQuery: {
+          sql: 'EXPLAIN SELECT * FROM products WHERE price > 50;',
+          explanation: 'Inspect query execution plans to identify whether SQL utilizes fast B-tree index scans or slow full table scans.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2611,8 +2770,9 @@ export const DAY_21_MODULE: ModuleData = {
             sqlSnippet: 'EXPLAIN SELECT * FROM products WHERE price > 50;',
             explanation: 'Shows execution cost, estimated rows scanned, and index usage.',
             tableData: {
-              tableName: 'EXPLAIN Output',
+              tableName: 'EXPLAIN Execution Plan Output',
               columns: ['id', 'select_type', 'table', 'type', 'rows', 'Extra'],
+              highlightedColumns: ['type', 'rows'],
               rows: [
                 [1, 'SIMPLE', 'products', 'ALL', 28, 'Using where'],
               ],
@@ -2766,6 +2926,11 @@ export const DAY_22_MODULE: ModuleData = {
           '### 3. The Executive Dashboard KPI Endpoint (`GET /api/admin/dashboard`)',
           'Aggregates total distinct orders and grand total revenue in a single pass.',
         ],
+        targetQuery: {
+          sql: 'SELECT p.product_id, p.name, p.price,\n       c.name AS category_name, s.name AS supplier_name\nFROM products p\nJOIN categories c ON p.category_id = c.category_id\nJOIN suppliers s ON p.supplier_id = s.supplier_id\nWHERE p.product_id = 1;',
+          explanation: 'Hydrate an entire production product detail view across 3 joined tables in 1 database round trip.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2775,6 +2940,7 @@ export const DAY_22_MODULE: ModuleData = {
             tableData: {
               tableName: 'Hydrated View Payload',
               columns: ['product_id', 'name', 'price', 'category_name', 'supplier_name'],
+              highlightedColumns: ['name', 'category_name', 'supplier_name'],
               rows: [
                 [1, 'Wireless Mouse', 15.99, 'Accessories', 'LogiTech Direct'],
               ],
@@ -2956,8 +3122,13 @@ export const DAY_23_MODULE: ModuleData = {
           '• **`SUM(oi.quantity)`**: Returns **`NULL`** when there are no matching rows to sum. You **MUST** use `COALESCE(SUM(oi.quantity), 0)` to display `0`.',
           '### 2. Preserving Zero-Order Customers',
           '`SELECT c.customer_id, c.name, COUNT(o.order_id) AS order_count FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`',
-          'QUESTION_BLOCK::Zero-State Rule::INNER JOIN silently drops inactive entities (e.g. customers with 0 orders). Always use LEFT JOIN when reporting rosters require 100% entity coverage.',
+          'INNER JOIN silently drops inactive entities (e.g. customers with 0 orders). Always use LEFT JOIN when reporting rosters require 100% entity coverage.',
         ],
+        targetQuery: {
+          sql: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS order_count\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;',
+          explanation: 'Preserve inactive zero-order customers in audits using a LEFT JOIN with natural COUNT 0-behavior.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -2967,6 +3138,7 @@ export const DAY_23_MODULE: ModuleData = {
             tableData: {
               tableName: 'Zero-Safe Customer Order Volume',
               columns: ['customer_id', 'name', 'order_count'],
+              highlightedColumns: ['name', 'order_count'],
               rows: [
                 [1, 'Rafiul Islam', 2],
                 [13, 'Arif Chowdhury', 0],
@@ -3135,6 +3307,11 @@ export const DAY_24_MODULE: ModuleData = {
           '• **Deliverable 3 (Schema DDL)**: Add a `status` column with a default value to `products`.',
           '• **Deliverable 4 (Index DDL)**: Create an index on `orders(customer_id)` for lookup acceleration.',
         ],
+        targetQuery: {
+          sql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue\nFROM categories cat\nJOIN products p ON cat.category_id = p.category_id\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY cat.category_id, cat.name\nORDER BY category_revenue DESC\nLIMIT 3;',
+          explanation: 'Aggregate total sales revenue per product category across 3 joined tables and limit to top 3 rankings.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -3144,6 +3321,7 @@ export const DAY_24_MODULE: ModuleData = {
             tableData: {
               tableName: 'Top 3 Revenue Categories',
               columns: ['name', 'category_revenue'],
+              highlightedColumns: ['name', 'category_revenue'],
               rows: [
                 ['Electronics', 448.47],
                 ['Office Furniture', 209.99],
@@ -3377,6 +3555,11 @@ export const DAY_25_MODULE: ModuleData = {
           '### 3. Graduation Celebration 🎓',
           'You have progressed through 25 comprehensive days: from single-table retrieval and filtering, to multi-table joins, relational aggregation, subqueries, CTEs, DML mutations, DDL schema architecture, and performance indexing!',
         ],
+        targetQuery: {
+          sql: 'SELECT name, category_id, price,\n       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank\nFROM products;',
+          explanation: 'Compute analytical in-category price ranks dynamically without collapsing individual product rows.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
@@ -3386,6 +3569,7 @@ export const DAY_25_MODULE: ModuleData = {
             tableData: {
               tableName: 'Partitioned Product Rankings',
               columns: ['name', 'category_id', 'price', 'category_rank'],
+              highlightedColumns: ['category_id', 'category_rank'],
               rows: [
                 ['Mechanical Keyboard', 1, 65.00, 1],
                 ['Gaming Headset', 1, 55.00, 2],
@@ -3499,3 +3683,4 @@ export const DAY_25_MODULE: ModuleData = {
     ],
   },
 };
+

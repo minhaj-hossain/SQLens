@@ -57,6 +57,15 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
     targetConceptIdx?: number;
     actionLabel?: string;
   } | null>(null);
+  const [heroCopied, setHeroCopied] = useState(false);
+
+  const heroSql = `SELECT skill\nFROM you\nWHERE consistency = 'daily';`;
+
+  const handleCopyHero = () => {
+    navigator.clipboard.writeText(heroSql);
+    setHeroCopied(true);
+    setTimeout(() => setHeroCopied(false), 2000);
+  };
 
   // Overall curriculum stats
   const totalDays = ALL_MODULES.length;
@@ -128,7 +137,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       {/* ============ HERO SECTION ============ */}
       <section className="max-w-[840px] mx-auto w-full px-4 sm:px-6 pt-10 sm:pt-14 pb-8 sm:pb-10">
         <div className="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-func uppercase mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-func shadow-[0_0_8px_#48D8C8] shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-func shadow-[0_0_8px_rgba(56,189,248,0.6)] shrink-0" />
           <span>SQLens · Curriculum Roadmap</span>
         </div>
 
@@ -139,17 +148,57 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
           25 days, 3 milestones — from single-table querying to production-ready relational architecture.
         </p>
 
-        {/* Query Box with Syntax Highlighting */}
-        <div className="bg-surface border border-border rounded-xl p-4 sm:p-5 mb-7 font-mono text-xs sm:text-sm shadow-2xl overflow-x-auto">
-          <div className="flex gap-2 mb-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block" />
-            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block" />
-            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block" />
+        {/* Query Box with Premium Terminal Syntax Highlighting */}
+        <div className="rounded-xl bg-[#0B0F17] border border-border/80 shadow-2xl overflow-hidden mb-7 transition-all duration-300 hover:border-func/40 group">
+          {/* Terminal Title Bar */}
+          <div className="px-4 py-2.5 bg-surface/80 border-b border-border/60 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F56]/80 hover:bg-[#FF5F56] transition-colors inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]/80 hover:bg-[#FFBD2E] transition-colors inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27C93F]/80 hover:bg-[#27C93F] transition-colors inline-block" />
+              </div>
+              <span className="text-[11px] font-mono text-text-dim/80 ml-2 select-none flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px] text-func/70">terminal</span>
+                daily_ritual.sql
+              </span>
+            </div>
+            <button
+              onClick={handleCopyHero}
+              className="flex items-center gap-1 text-[11px] font-mono text-text-dim hover:text-func px-2 py-0.5 rounded hover:bg-surface-2 transition cursor-pointer"
+              title="Copy Query"
+            >
+              <span className="material-symbols-outlined text-[13px]">
+                {heroCopied ? 'check' : 'content_copy'}
+              </span>
+              <span>{heroCopied ? 'Copied' : 'Copy'}</span>
+            </button>
           </div>
-          <div className="text-text space-y-1">
-            <div><span className="text-keyword font-bold">SELECT</span> skill</div>
-            <div><span className="text-keyword font-bold">FROM</span> you</div>
-            <div><span className="text-keyword font-bold">WHERE</span> consistency = <span className="text-string">'daily'</span>;</div>
+
+          {/* Code Content with Line Numbers & Harmonious Colors */}
+          <div className="p-4 sm:p-5 font-mono text-xs sm:text-sm overflow-x-auto flex gap-4 bg-[#080B10]">
+            <div className="select-none text-text-faint/60 flex flex-col text-right font-mono text-xs sm:text-sm space-y-1.5 pr-3 border-r border-border/40">
+              <span>01</span>
+              <span>02</span>
+              <span>03</span>
+            </div>
+            <div className="space-y-1.5 font-mono">
+              <div className="flex items-center">
+                <span className="text-func font-bold mr-2">SELECT</span>
+                <span className="text-text font-medium">skill</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-func font-bold mr-2">FROM</span>
+                <span className="text-indigo-300 font-medium">you</span>
+              </div>
+              <div className="flex items-center">
+                <span className="text-func font-bold mr-2">WHERE</span>
+                <span className="text-text font-medium">consistency</span>
+                <span className="text-text-dim font-bold mx-1.5">=</span>
+                <span className="text-string font-medium">'daily'</span>
+                <span className="text-text-dim">;</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -159,7 +208,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             onClick={() => {
               onSelectModuleAndConcept(activeModule.id, activeTargetConceptIdx, 'lesson');
             }}
-            className="bg-func text-ink font-body font-bold text-sm px-6 py-3 rounded-full inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(72,216,200,0.5)] transition duration-150 cursor-pointer"
+            className="bg-func text-ink font-body font-bold text-sm px-6 py-3 rounded-full inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(56,189,248,0.5)] transition duration-150 cursor-pointer"
           >
             <span>Continue Day {activeModule.day}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -171,7 +220,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             <div className="w-28 h-1.5 bg-surface-3 rounded-full overflow-hidden shrink-0">
               <div
                 style={{ width: `${overallPercent}%` }}
-                className="h-full bg-func rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(72,216,200,0.5)]"
+                className="h-full bg-func rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]"
               />
             </div>
             <span>{completedDaysCount} / {totalDays} days · {overallPercent}%</span>

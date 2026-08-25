@@ -361,6 +361,7 @@ export default function App() {
         onResetProgress={handleResetProgress}
         onOpenSchemaModal={() => setIsSchemaModalOpen(true)}
         onOpenRoadmapModal={() => setIsRoadmapModalOpen(true)}
+        onLogoClick={() => setActiveTab('learning-path')}
         activeViewTitle={activeTab === 'practice' ? `Day ${currentModule.day}: ${currentModule.shortTitle}` : 'Learning Path'}
       />
 

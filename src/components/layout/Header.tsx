@@ -12,6 +12,7 @@ interface HeaderProps {
   onOpenRoadmapModal: () => void;
   activeViewTitle?: string;
   onProfileClick?: () => void;
+  onLogoClick?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSchemaModal,
   activeViewTitle = 'Learning Path',
   onProfileClick,
+  onLogoClick,
 }) => {
   const [showDevMenu, setShowDevMenu] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
@@ -31,22 +33,27 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 w-full z-50 bg-ink/90 backdrop-blur-md pt-safe border-b border-border-soft">
       <div className="h-14 px-4 sm:px-6 flex items-center justify-between max-w-5xl mx-auto w-full gap-4">
 
-        {/* Left: Brand Icon + SQLens Name */}
-        <div className="flex items-center gap-2.5 min-w-0">
-          <svg width="26" height="26" viewBox="0 0 30 30" fill="none" className="shrink-0">
-            <circle cx="12.5" cy="12.5" r="9" stroke="#48D8C8" strokeWidth="2" />
-            <line x1="19" y1="19" x2="26" y2="26" stroke="#48D8C8" strokeWidth="2.4" strokeLinecap="round" />
-            <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#7C9BFF" strokeWidth="1.6" strokeLinecap="round" />
-            <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#7C9BFF" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
+        {/* Left: Brand Icon + SQLens Name (Clickable to Home) */}
+        <button
+          onClick={onLogoClick}
+          className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition cursor-pointer text-left focus:outline-none group"
+          title="Return to Curriculum Homepage"
+          aria-label="Return to Curriculum Homepage"
+        >
+          <svg width="26" height="26" viewBox="0 0 30 30" fill="none" className="shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <circle cx="12.5" cy="12.5" r="9" stroke="#38BDF8" strokeWidth="2" />
+            <line x1="19" y1="19" x2="26" y2="26" stroke="#38BDF8" strokeWidth="2.4" strokeLinecap="round" />
+            <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#60A5FA" strokeWidth="1.6" strokeLinecap="round" />
+            <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#60A5FA" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
           </svg>
           <span className="font-display font-bold text-base sm:text-lg tracking-tight text-text">
             SQL<span className="text-func">ens</span>
           </span>
           <span className="hidden sm:inline-block text-border font-mono text-xs">/</span>
-          <span className="hidden sm:inline-block font-body text-xs text-text-dim truncate">
+          <span className="hidden sm:inline-block font-body text-xs text-text-dim truncate group-hover:text-text transition-colors">
             {activeViewTitle}
           </span>
-        </div>
+        </button>
 
         {/* Right: Streak Pill + Icon Buttons */}
         <div className="flex items-center gap-3 shrink-0">

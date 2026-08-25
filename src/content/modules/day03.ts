@@ -46,16 +46,21 @@ export const DAY_03_MODULE: ModuleData = {
         explanation: [
           '`AND` narrows down your results. A row survives only if **every condition** evaluates to `TRUE`.',
           '### 1. AND Logic Table\n• `TRUE AND TRUE` $\\rightarrow$ **TRUE** ✅\n• `TRUE AND FALSE` $\\rightarrow$ **FALSE** ❌\n• `FALSE AND TRUE` $\\rightarrow$ **FALSE** ❌\n• `FALSE AND FALSE` $\\rightarrow$ **FALSE** ❌',
-          '### 2. Syntax Example\n```sql\nSELECT name, age, department\nFROM students\nWHERE department = \'CSE\' AND age = 21;\n```\nThis query evaluates every row and keeps only Rahim and Tanvir (both are in CSE and age 21).',
+          'Let\'s see how SQL checks each student against both criteria simultaneously.',
         ],
+        targetQuery: {
+          sql: "SELECT name, age, department\nFROM students\nWHERE department = 'CSE' AND age = 21;",
+          explanation: "Find students who are BOTH in the CSE department AND 21 years old.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find all students)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL visits the students table containing 5 records.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['id', 'name', 'age', 'department'],
               rows: [
                 [1, 'Rahim', 21, 'CSE'],
@@ -72,8 +77,9 @@ export const DAY_03_MODULE: ModuleData = {
             sqlSnippet: "WHERE department = 'CSE' AND age = 21",
             explanation: "1. Rahim: (CSE = TRUE) AND (21 = TRUE) ➔ TRUE ✅\n2. Karim: (EEE = FALSE) ➔ FALSE ❌\n3. Ayesha: (CSE = TRUE) AND (20 = FALSE) ➔ FALSE ❌\n4. Sumaiya: (BBA = FALSE) ➔ FALSE ❌\n5. Tanvir: (CSE = TRUE) AND (21 = TRUE) ➔ TRUE ✅",
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (CSE & 21)',
               columns: ['name', 'age', 'department'],
+              highlightedRows: [0, 1],
               rows: [
                 ['Rahim', 21, 'CSE'],
                 ['Tanvir', 21, 'CSE'],
@@ -193,16 +199,20 @@ export const DAY_03_MODULE: ModuleData = {
         explanation: [
           '`OR` broadens your results. A row survives if **at least one** condition passes (either condition 1, condition 2, or both).',
           '### 1. OR Logic Table\n• `TRUE OR TRUE` $\\rightarrow$ **TRUE** ✅\n• `TRUE OR FALSE` $\\rightarrow$ **TRUE** ✅\n• `FALSE OR TRUE` $\\rightarrow$ **TRUE** ✅\n• `FALSE OR FALSE` $\\rightarrow$ **FALSE** ❌',
-          '### 2. Syntax Example\n```sql\nSELECT name, city\nFROM students\nWHERE city = \'Dhaka\' OR city = \'Gazipur\';\n```\nThis query returns Rahim (Dhaka), Karim (Gazipur), and Ayesha (Dhaka).',
         ],
+        targetQuery: {
+          sql: "SELECT name, city\nFROM students\nWHERE city = 'Dhaka' OR city = 'Gazipur';",
+          explanation: "Find students who live in Dhaka OR Gazipur (either location is acceptable).",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find all students)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL scans the students table.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['name', 'city'],
               rows: [
                 ['Rahim', 'Dhaka'],
@@ -215,12 +225,13 @@ export const DAY_03_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: "Step 2: WHERE city = 'Dhaka' OR city = 'Gazipur'",
+            stepTitle: "Step 2: WHERE city = 'Dhaka' OR city = 'Gazipur' (Evaluate either location)",
             sqlSnippet: "WHERE city = 'Dhaka' OR city = 'Gazipur'",
             explanation: "1. Rahim: ('Dhaka' = TRUE) ➔ TRUE ✅\n2. Karim: ('Gazipur' = TRUE) ➔ TRUE ✅\n3. Ayesha: ('Dhaka' = TRUE) ➔ TRUE ✅\n4. Sumaiya: ('Chattogram' = FALSE) ➔ FALSE ❌\n5. Tanvir: ('Rajshahi' = FALSE) ➔ FALSE ❌",
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (Dhaka or Gazipur)',
               columns: ['name', 'city'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Rahim', 'Dhaka'],
                 ['Karim', 'Gazipur'],
@@ -339,17 +350,21 @@ export const DAY_03_MODULE: ModuleData = {
         },
         explanation: [
           'The `NOT` operator inverts the boolean evaluation of a condition.',
-          '### 1. The Parenthesized NOT Pattern\nWriting `WHERE NOT (condition)` makes the mental model explicit:\n1. First, SQL evaluates the inner condition inside the parentheses: `(city = \'Dhaka\')` $\\rightarrow$ `TRUE` or `FALSE`.\n2. Second, `NOT` inverts that result: `NOT (TRUE)` becomes `FALSE`, and `NOT (FALSE)` becomes `TRUE`.',
-          '### 2. Syntax Example\n```sql\nSELECT name, city\nFROM students\nWHERE NOT (city = \'Dhaka\');\n```\nThis query selects Karim (Gazipur), Sumaiya (Chattogram), and Tanvir (Rajshahi), excluding the Dhaka students.',
+          '### 1. The Parenthesized NOT Pattern\nWriting `WHERE NOT (condition)` makes the mental model explicit:\n1. First, SQL evaluates the inner condition: `(city = \'Dhaka\')` $\\rightarrow$ `TRUE` or `FALSE`.\n2. Second, `NOT` inverts that result: `NOT (TRUE)` becomes `FALSE`, and `NOT (FALSE)` becomes `TRUE`.',
         ],
+        targetQuery: {
+          sql: "SELECT name, city\nFROM students\nWHERE NOT (city = 'Dhaka');",
+          explanation: "Find all students who do NOT live in Dhaka.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM students',
+            stepTitle: 'Step 1: FROM students (Find all students)',
             sqlSnippet: 'FROM students',
             explanation: 'SQL visits the students table.',
             tableData: {
-              tableName: 'students',
+              tableName: 'students (Source Table)',
               columns: ['name', 'city'],
               rows: [
                 ['Rahim', 'Dhaka'],
@@ -362,12 +377,13 @@ export const DAY_03_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: "Step 2: WHERE NOT (city = 'Dhaka')",
+            stepTitle: "Step 2: WHERE NOT (city = 'Dhaka') (Invert matches)",
             sqlSnippet: "WHERE NOT (city = 'Dhaka')",
             explanation: "1. Rahim: NOT ('Dhaka' = 'Dhaka') ➔ NOT (TRUE) ➔ FALSE ❌\n2. Karim: NOT ('Gazipur' = 'Dhaka') ➔ NOT (FALSE) ➔ TRUE ✅\n3. Ayesha: NOT ('Dhaka' = 'Dhaka') ➔ NOT (TRUE) ➔ FALSE ❌\n4. Sumaiya: NOT ('Chattogram' = 'Dhaka') ➔ NOT (FALSE) ➔ TRUE ✅\n5. Tanvir: NOT ('Rajshahi' = 'Dhaka') ➔ NOT (FALSE) ➔ TRUE ✅",
             tableData: {
-              tableName: 'Surviving Rows',
+              tableName: 'Surviving Rows (city NOT Dhaka)',
               columns: ['name', 'city'],
+              highlightedRows: [0, 1, 2],
               rows: [
                 ['Karim', 'Gazipur'],
                 ['Sumaiya', 'Chattogram'],
@@ -485,17 +501,22 @@ export const DAY_03_MODULE: ModuleData = {
         },
         explanation: [
           'Just like multiplication comes before addition in math, **`AND` is evaluated before `OR` in SQL**.',
-          '### 1. The Precedence Trap\nConsider this query:\n```sql\nWHERE price > 50 AND category_id = 1 OR category_id = 2\n```\nBecause `AND` binds first, SQL reads this as:\n```sql\nWHERE (price > 50 AND category_id = 1) OR category_id = 2\n```\nThis accidentally includes **every** product in category 2 regardless of its price (even a $12 mixing bowl)!',
-          '### 2. The Solution: Explicit Parentheses\nWrap your `OR` clauses in parentheses to force SQL to evaluate the union first:\n```sql\nWHERE price > 50 AND (category_id = 1 OR category_id = 2)\n```\nNow, SQL only returns products that cost over $50 AND belong to category 1 or 2.',
+          '### 1. The Precedence Trap\nConsider this query without parentheses:\n`WHERE price > 50 AND category_id = 1 OR category_id = 2`\nBecause `AND` binds first, SQL accidentally includes **every** product in category 2 regardless of its price!',
+          '### 2. The Solution: Explicit Parentheses\nWrap your `OR` clauses in parentheses to force SQL to evaluate the union first:\n`WHERE price > 50 AND (category_id = 1 OR category_id = 2)`',
         ],
+        targetQuery: {
+          sql: "SELECT name, category_id, price\nFROM products\nWHERE price > 50 AND (category_id = 1 OR category_id = 2);",
+          explanation: "Find products priced over $50 that belong to category 1 or category 2.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Without Parentheses (Bug)',
+            stepTitle: 'Step 1: Without Parentheses (Precedence Bug)',
             sqlSnippet: 'WHERE price > 50 AND category_id = 1 OR category_id = 2',
             explanation: 'Binds category 2 without price filter: returns cheap category 2 items by mistake.',
             tableData: {
-              tableName: 'Buggy Output',
+              tableName: 'Buggy Output (Without Parentheses)',
               columns: ['name', 'category_id', 'price'],
               rows: [
                 ['Mechanical Keyboard', 1, 65.00],
@@ -506,12 +527,13 @@ export const DAY_03_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: With Parentheses (Correct)',
+            stepTitle: 'Step 2: With Parentheses (Correct Logic)',
             sqlSnippet: 'WHERE price > 50 AND (category_id = 1 OR category_id = 2)',
             explanation: 'Forces price > 50 across both categories: excludes cheap mixing bowls.',
             tableData: {
-              tableName: 'Correct Output',
+              tableName: 'Correct Output (With Parentheses)',
               columns: ['name', 'category_id', 'price'],
+              highlightedRows: [0, 1],
               rows: [
                 ['Mechanical Keyboard', 1, 65.00],
                 ['Stainless Steel Pan Set', 2, 55.00],
@@ -629,19 +651,41 @@ export const DAY_03_MODULE: ModuleData = {
         explanation: [
           '`BETWEEN min AND max` is clean shorthand for `col >= min AND col <= max`.',
           '### 1. The Inclusivity Rule\n**BETWEEN is always inclusive.** Both the lower boundary and upper boundary values are included in the result.',
-          '### 2. Syntax Example\n```sql\nSELECT name, price\nFROM products\nWHERE price BETWEEN 25.00 AND 100.00;\n```\nAn item priced at exactly $25.00 or $100.00 will be included in the output.',
+          'An item priced at exactly $25.00 or $100.00 will be included in the output.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nWHERE price BETWEEN 25.00 AND 100.00;',
+          explanation: 'Find all products priced in the $25.00 to $100.00 inclusive range.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Check interval with BETWEEN',
-            sqlSnippet: 'SELECT name, price FROM products WHERE price BETWEEN 15.99 AND 65.00;',
-            explanation: 'Both $15.99 (Wireless Mouse) and $65.00 (Mechanical Keyboard) are included on the boundary.',
+            stepTitle: 'Step 1: FROM products (Scan candidates)',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL scans the products table.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'products (Candidate Rows)',
               columns: ['name', 'price'],
               rows: [
                 ['Wireless Mouse', 15.99],
+                ['Bluetooth Speaker', 45.50],
+                ['Mechanical Keyboard', 65.00],
+                ['Office Chair', 120.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: WHERE price BETWEEN 25.00 AND 100.00 (Inclusive check)',
+            sqlSnippet: 'WHERE price BETWEEN 25.00 AND 100.00',
+            explanation: 'Wireless Mouse ($15.99): FALSE ❌\nBluetooth Speaker ($45.50): TRUE ✅\nMechanical Keyboard ($65.00): TRUE ✅\nOffice Chair ($120.00): FALSE ❌',
+            tableData: {
+              tableName: 'Final Query Result',
+              columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
+              highlightedRows: [0, 1],
+              rows: [
                 ['Bluetooth Speaker', 45.50],
                 ['Mechanical Keyboard', 65.00],
               ],
@@ -783,23 +827,46 @@ export const DAY_03_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          'Instead of writing repetitive OR chains:\n```sql\nWHERE city = \'Dhaka\' OR city = \'Chattogram\' OR city = \'Rajshahi\'\n```\nYou can write the clean, readable equivalent:\n```sql\nWHERE city IN (\'Dhaka\', \'Chattogram\', \'Rajshahi\')\n```',
-          '### 1. How IN Evaluates\n`IN (val1, val2, ...)` tests whether the column value is a member of the discrete set.',
-          '### 2. Numeric Sets\n`IN` works for numbers too: `WHERE category_id IN (1, 2, 5)` matches products in categories 1, 2, or 5.',
+          'Instead of writing repetitive OR chains:\n`WHERE city = \'Dhaka\' OR city = \'Chattogram\' OR city = \'Rajshahi\'`\nYou can write the clean, readable equivalent:\n`WHERE city IN (\'Dhaka\', \'Chattogram\', \'Rajshahi\')`',
+          '### How IN Evaluates\n`IN (val1, val2, ...)` tests whether the column value is a member of the discrete set.',
         ],
+        targetQuery: {
+          sql: "SELECT name, department, city\nFROM students\nWHERE city IN ('Dhaka', 'Chattogram');",
+          explanation: "Find students located in any of the listed cities ('Dhaka' or 'Chattogram').",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Check discrete set with IN',
-            sqlSnippet: "SELECT name, city FROM students WHERE city IN ('Dhaka', 'Chattogram');",
+            stepTitle: 'Step 1: FROM students (Find all students)',
+            sqlSnippet: 'FROM students',
+            explanation: 'SQL visits the students table.',
+            tableData: {
+              tableName: 'students (Source Table)',
+              columns: ['name', 'department', 'city'],
+              rows: [
+                ['Rahim', 'CSE', 'Dhaka'],
+                ['Karim', 'EEE', 'Gazipur'],
+                ['Ayesha', 'CSE', 'Dhaka'],
+                ['Sumaiya', 'BBA', 'Chattogram'],
+                ['Tanvir', 'CSE', 'Rajshahi'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: "Step 2: WHERE city IN ('Dhaka', 'Chattogram') (Match set list)",
+            sqlSnippet: "WHERE city IN ('Dhaka', 'Chattogram')",
             explanation: "Matches students located in Dhaka (Rahim, Ayesha) or Chattogram (Sumaiya).",
             tableData: {
-              tableName: 'Result',
-              columns: ['name', 'city'],
+              tableName: 'Final Query Result',
+              columns: ['name', 'department', 'city'],
+              highlightedColumns: ['city'],
+              highlightedRows: [0, 1, 2],
               rows: [
-                ['Rahim', 'Dhaka'],
-                ['Ayesha', 'Dhaka'],
-                ['Sumaiya', 'Chattogram'],
+                ['Rahim', 'CSE', 'Dhaka'],
+                ['Ayesha', 'CSE', 'Dhaka'],
+                ['Sumaiya', 'BBA', 'Chattogram'],
               ],
             },
           },
@@ -915,19 +982,26 @@ export const DAY_03_MODULE: ModuleData = {
         explanation: [
           'The `LIKE` operator matches text against a pattern containing special wildcard characters.',
           '### 1. The Two Wildcards\n• **`%` (Percent sign)**: Matches **zero, one, or many** characters of any length.\n• **`_` (Underscore)**: Matches **exactly one character** at that specific index position.',
-          '### 2. Positional Matching Breakdown\nWhen searching with `_` and `%` together:\n\n```text\nPattern:  _  S  B  %\n          │  │  │  │\nMatches:  U  S  B  -C Charging Cable\n          ↑  ↑  ↑  ↑\n          1  2  3  remainder\n```\n• `_` matches the 1st character (`U`).\n• `S` must be the 2nd character.\n• `B` must be the 3rd character.\n• `%` matches any remaining characters.',
+          '### 2. Positional Matching Breakdown\nWhen searching with `_` and `%` together:\n`Pattern: _SB%`\n• `_` matches the 1st character (`U`).\n• `S` must be the 2nd character.\n• `B` must be the 3rd character.\n• `%` matches any remaining characters.',
         ],
+        targetQuery: {
+          sql: "SELECT name, price\nFROM products\nWHERE name LIKE 'Wireless%';",
+          explanation: "Find all products starting with the word 'Wireless' followed by any text.",
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Prefix search with %',
-            sqlSnippet: "SELECT name, price FROM products WHERE name LIKE 'Wireless%';",
-            explanation: "Matches products beginning with 'Wireless' followed by any text.",
+            stepTitle: 'Step 1: FROM products (Scan candidates)',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL scans the products table.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'products (Sample Items)',
               columns: ['name', 'price'],
               rows: [
                 ['Wireless Mouse', 15.99],
+                ['USB-C Charging Cable', 9.99],
+                ['Mechanical Keyboard', 65.00],
                 ['Wireless Doorbell', 38.00],
                 ['Wireless Earbuds', 32.00],
               ],
@@ -935,14 +1009,18 @@ export const DAY_03_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: Positional search with _ and %',
-            sqlSnippet: "SELECT name, price FROM products WHERE name LIKE '_SB%';",
-            explanation: "Matches 'USB-C Charging Cable' where the 2nd and 3rd letters are 'SB'.",
+            stepTitle: "Step 2: WHERE name LIKE 'Wireless%' (Match prefix)",
+            sqlSnippet: "WHERE name LIKE 'Wireless%'",
+            explanation: "Matches products beginning with 'Wireless' followed by any text.",
             tableData: {
-              tableName: 'Result',
+              tableName: 'Final Query Result',
               columns: ['name', 'price'],
+              highlightedColumns: ['name'],
+              highlightedRows: [0, 1, 2],
               rows: [
-                ['USB-C Charging Cable', 9.99],
+                ['Wireless Mouse', 15.99],
+                ['Wireless Doorbell', 38.00],
+                ['Wireless Earbuds', 32.00],
               ],
             },
           },
@@ -1057,17 +1135,40 @@ export const DAY_03_MODULE: ModuleData = {
         explanation: [
           '`NULL` represents unknown or missing data. It is **not** an empty string `\'\'` and **not** zero `0`.',
           '### 1. Three-Valued Logic: Why = NULL Always Fails Silently\nIn SQL, any direct comparison with NULL using `=` or `!=` evaluates to **UNKNOWN**, not `TRUE` or `FALSE`.\n\nBecause `WHERE` only retains rows where the condition evaluates to `TRUE`, writing `WHERE email = NULL` filters out **all** rows—returning 0 results even when NULLs exist!',
-          '### 2. The Safe Syntax: IS NULL and IS NOT NULL\nAlways use `IS NULL` to find missing values, and `IS NOT NULL` to find present values:\n```sql\n-- ✅ Correct:\nSELECT name, city FROM customers WHERE email IS NULL;\nSELECT name, city FROM customers WHERE email IS NOT NULL;\n```',
+          '### 2. The Safe Syntax: IS NULL and IS NOT NULL\nAlways use `IS NULL` to find missing values, and `IS NOT NULL` to find present values.',
         ],
+        targetQuery: {
+          sql: 'SELECT name, city\nFROM customers\nWHERE email IS NULL;',
+          explanation: 'Find all customer accounts that have a missing (NULL) email address.',
+          badge: "The query we're going to break down",
+        },
         stepBreakdowns: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Finding missing emails with IS NULL',
-            sqlSnippet: 'SELECT name, city FROM customers WHERE email IS NULL;',
+            stepTitle: 'Step 1: FROM customers (Find candidate accounts)',
+            sqlSnippet: 'FROM customers',
+            explanation: 'SQL visits the customers table.',
+            tableData: {
+              tableName: 'customers (Sample Accounts)',
+              columns: ['name', 'email', 'city'],
+              rows: [
+                ['Rafiul Islam', 'rafiul@example.com', 'Dhaka'],
+                ['Tanvir Ahmed', null, 'Chittagong'],
+                ['Nusrat Jahan', 'nusrat.j@example.com', 'Chittagong'],
+                ['Shakil Ahmed', null, 'Khulna'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: WHERE email IS NULL (Isolate missing data)',
+            sqlSnippet: 'WHERE email IS NULL',
             explanation: 'SQL identifies records where the email column holds NULL.',
             tableData: {
-              tableName: 'Result',
+              tableName: 'Final Query Result (Missing Email)',
               columns: ['name', 'city'],
+              highlightedColumns: ['name', 'city'],
+              highlightedRows: [0, 1],
               rows: [
                 ['Tanvir Ahmed', 'Chittagong'],
                 ['Shakil Ahmed', 'Khulna'],
