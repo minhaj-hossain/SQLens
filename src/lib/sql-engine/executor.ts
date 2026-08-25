@@ -663,6 +663,13 @@ export class SqlExecutor {
       return andParts.every(part => this.evaluateWhere(part, row));
     }
 
+    // Negation: NOT <expr> (e.g. `NOT (category_id = 1)`, `NOT price > 50`)
+    // Evaluate the inner expression and invert the boolean result.
+    if (/^NOT\s+/i.test(trimmed)) {
+      const inner = trimmed.replace(/^NOT\s+/i, '').trim();
+      return !this.evaluateWhere(inner, row);
+    }
+
     // IS NULL / IS NOT NULL
     const isNullMatch = trimmed.match(/^([`"']?[\w_.]+[`"']?)\s+IS\s+(NOT\s+)?NULL$/i);
     if (isNullMatch) {

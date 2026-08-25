@@ -1304,7 +1304,7 @@ export const DAY_19_MODULE: ModuleData = {
           validation: {
             targetTable: 'products',
             requireWhere: true,
-            expectedRowCount: 6,
+            expectedRowCount: 7,
           },
           successMessage: 'Well done! Batch category update executed safely.',
         },

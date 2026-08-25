@@ -507,7 +507,7 @@ export const DAY_03_MODULE: ModuleData = {
             requiredColumns: ["name", "city"],
             requireWhere: true,
             whereContainsTerms: ["NOT", "city", "Dhaka"],
-            expectedRowCount: 5,
+            expectedRowCount: 3,
           },
           successMessage: "Great job! You inverted conditions using NOT.",
         },
@@ -534,7 +534,7 @@ export const DAY_03_MODULE: ModuleData = {
             requiredColumns: ["name", "category_id"],
             requireWhere: true,
             whereContainsTerms: ["NOT", "category_id", "1"],
-            expectedRowCount: 28,
+            expectedRowCount: 21,
           },
           successMessage:
             "Well done! You applied boolean negation to category filtering.",
@@ -869,7 +869,7 @@ export const DAY_03_MODULE: ModuleData = {
             requiredColumns: ["name", "price"],
             requireWhere: true,
             whereContainsTerms: ["BETWEEN", "25", "100"],
-            expectedRowCount: 12,
+            expectedRowCount: 10,
           },
           successMessage: "Great job! You executed an inclusive range query.",
         },
@@ -933,7 +933,7 @@ export const DAY_03_MODULE: ModuleData = {
             requiredColumns: ["name", "price"],
             requireWhere: true,
             whereContainsTerms: ["price", "BETWEEN", "15.99", "65"],
-            expectedRowCount: 16,
+            expectedRowCount: 17,
           },
           successMessage:
             "Spot on! You verified that both boundary values are returned by BETWEEN.",
@@ -1246,7 +1246,7 @@ export const DAY_03_MODULE: ModuleData = {
             requiredColumns: ["name", "email"],
             requireWhere: true,
             whereContainsTerms: ["email", "LIKE", "%@example.com"],
-            expectedRowCount: 11,
+            expectedRowCount: 13,
           },
           successMessage:
             "Great job! You executed a wildcard domain search with %.",
@@ -1509,7 +1509,7 @@ export const DAY_03_MODULE: ModuleData = {
           requiredColumns: ["name", "price"],
           requireWhere: true,
           whereContainsTerms: ["BETWEEN", "25", "100"],
-          expectedRowCount: 12,
+          expectedRowCount: 10,
         },
         successMessage:
           "Task 1 completed! Mid-tier catalog products retrieved.",
@@ -1644,7 +1644,7 @@ export const DAY_03_MODULE: ModuleData = {
             "50",
             "quantity_in_stock",
           ],
-          expectedRowCount: 7,
+          expectedRowCount: 10,
         },
         successMessage:
           "Task 5 completed! You mastered multi-clause compound query filters.",

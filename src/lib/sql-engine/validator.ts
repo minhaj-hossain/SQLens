@@ -270,24 +270,31 @@ export function validateTaskSolution(
 
   // 13. Check Expected Row Count
   if (rule.expectedRowCount !== undefined) {
+    // For DML (INSERT/UPDATE/DELETE) the executor returns a single status row,
+    // so rowCount is always 1. The meaningful count is `affectedRows`.
+    const countedRows =
+      result.affectedRows !== undefined && result.affectedRows !== null
+        ? result.affectedRows
+        : result.rowCount;
+
     if (typeof rule.expectedRowCount === 'number') {
-      if (result.rowCount !== rule.expectedRowCount) {
+      if (countedRows !== rule.expectedRowCount) {
         return {
           passed: false,
-          feedback: `Your query returned ${result.rowCount} row(s), but ${rule.expectedRowCount} row(s) were expected. Check your WHERE condition, JOINs, or LIMIT.`,
+          feedback: `Your query returned ${countedRows} row(s), but ${rule.expectedRowCount} row(s) were expected. Check your WHERE condition, JOINs, or LIMIT.`,
         };
       }
     } else {
-      if (rule.expectedRowCount.min !== undefined && result.rowCount < rule.expectedRowCount.min) {
+      if (rule.expectedRowCount.min !== undefined && countedRows < rule.expectedRowCount.min) {
         return {
           passed: false,
-          feedback: `Your query returned too few rows (${result.rowCount}). Check your filtering logic.`,
+          feedback: `Your query returned too few rows (${countedRows}). Check your filtering logic.`,
         };
       }
-      if (rule.expectedRowCount.max !== undefined && result.rowCount > rule.expectedRowCount.max) {
+      if (rule.expectedRowCount.max !== undefined && countedRows > rule.expectedRowCount.max) {
         return {
           passed: false,
-          feedback: `Your query returned too many rows (${result.rowCount}). Check your filtering conditions or LIMIT.`,
+          feedback: `Your query returned too many rows (${countedRows}). Check your filtering conditions or LIMIT.`,
         };
       }
     }
