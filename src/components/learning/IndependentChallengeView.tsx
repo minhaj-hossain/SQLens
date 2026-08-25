@@ -369,7 +369,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     >
       {/* 1. TOP HEADER & QUESTION */}
       <div className="bg-surface rounded-xl border border-border p-5 shadow-md space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono font-bold text-string uppercase tracking-wider">
               FINAL CHALLENGE
@@ -393,7 +393,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           >
             <Database className="w-3.5 h-3.5 text-func" />
             <span>Database: <strong className="text-text">{currentTask.primaryTable}</strong></span>
-            <span className="text-[10px] text-text-faint">({tableRowCount} rows)</span>
+            <span className="hidden sm:inline text-[10px] text-text-faint">({tableRowCount} rows)</span>
             <ChevronDown className="w-3 h-3 text-text-faint ml-0.5" />
           </button>
         </div>
@@ -405,7 +405,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
         {/* Multi-Task Navigation Pills: show checkmark ONLY if truly completed in completedTaskIds */}
         {challenge.tasks.length > 1 && (
-          <div className="flex items-center gap-2 pt-2 border-t border-border-soft">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border-soft">
             {challenge.tasks.map((t, idx) => {
               const isTaskDone = completedTaskIds.includes(t.id);
               const isSelected = idx === selectedTaskIdx;

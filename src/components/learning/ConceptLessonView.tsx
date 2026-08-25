@@ -411,14 +411,14 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
 
         <div className="p-6 sm:p-8 flex flex-col gap-6">
           {/* Top Breadcrumb & Status + Corner Next Button */}
-          <div className="flex items-center justify-between border-b border-outline-variant/60 pb-4">
-            <div className="flex items-center gap-2 font-label-md text-xs sm:text-sm text-text-muted">
-              <span className="text-primary font-bold">SQL Lesson {conceptIndex + 1}</span>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-outline-variant/60 pb-4">
+            <div className="flex items-center gap-2 font-label-md text-xs sm:text-sm text-text-muted min-w-0 flex-1">
+              <span className="text-primary font-bold whitespace-nowrap">SQL Lesson {conceptIndex + 1}</span>
               <span>/</span>
-              <span className="text-on-surface font-semibold">{concept.title}</span>
+              <span className="text-on-surface font-semibold truncate">{concept.title}</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <span className="bg-primary-container/15 text-primary px-3 py-1 rounded-full text-xs font-label-sm font-semibold border border-primary-container/30">
                 Concept {conceptIndex + 1} of {totalConcepts}
               </span>
@@ -545,7 +545,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                   key={sIdx}
                   className="rounded-xl bg-surface border border-border overflow-hidden shadow-sm flex flex-col"
                 >
-                  <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex items-center justify-between">
+                  <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex flex-wrap items-center justify-between gap-2">
                     <span className="font-mono text-xs font-bold text-text uppercase tracking-wider flex items-center gap-2">
                       <span className="w-5 h-5 rounded-full bg-func/20 text-func flex items-center justify-center text-[11px] font-bold">
                         {step.stepNumber}

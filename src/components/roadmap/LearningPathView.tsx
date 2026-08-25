@@ -403,7 +403,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         }`}
                       >
                         {/* Day Card Header */}
-                        <div className="flex items-start justify-between gap-3 mb-5">
+                        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 mb-5">
                           <div className="space-y-1">
                             <div className="flex items-center gap-1.5 text-comment font-mono text-[10.5px] uppercase tracking-wider">
                               <span className="material-symbols-outlined text-[14px]">
