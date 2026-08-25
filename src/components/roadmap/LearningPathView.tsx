@@ -142,10 +142,10 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         </div>
 
         <h1 className="font-display font-semibold text-3xl sm:text-4xl lg:text-[44px] leading-tight tracking-tight text-text max-w-xl mb-4">
-          Master SQL, one query at a time.
+          Go from SELECT * to shipped.
         </h1>
         <p className="text-text-dim text-sm sm:text-base max-w-lg mb-7">
-          25 days, 3 milestones — from single-table querying to production-ready relational architecture.
+          25 days of hands-on SQL — because 'I sort of know JOINs' isn't a personality trait.
         </p>
 
         {/* Query Box with Premium Terminal Syntax Highlighting */}
