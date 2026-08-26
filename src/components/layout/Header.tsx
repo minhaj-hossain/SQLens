@@ -11,6 +11,7 @@ interface HeaderProps {
   onResetProgress: () => void;
   onOpenSchemaModal: () => void;
   onOpenRoadmapModal: () => void;
+  onOpenPlayground?: () => void;
   activeViewTitle?: string;
   onProfileClick?: () => void;
   onLogoClick?: () => void;
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onUpdateState,
   onResetProgress,
   onOpenSchemaModal,
+  onOpenPlayground,
   activeViewTitle = 'Learning Path',
   onProfileClick,
   onLogoClick,
@@ -108,6 +110,18 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Icon name="database" className="text-[16px]" />
           </button>
+
+          {/* SQL Playground */}
+          {onOpenPlayground && (
+            <button
+              onClick={onOpenPlayground}
+              title="Open SQL Playground"
+              aria-label="Open SQL Playground"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-func hover:border-func/40 transition-all duration-150 cursor-pointer"
+            >
+              <Icon name="terminal" className="text-[16px]" />
+            </button>
+          )}
 
           {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
           {isAuthPending ? (

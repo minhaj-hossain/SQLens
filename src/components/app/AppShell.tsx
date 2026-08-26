@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import Icon from '@/components/ui/Icon';
 import { AuthView } from '@/components/auth/AuthView';
 import BlockedView from '@/components/auth/BlockedView';
+import Playground from '@/components/learning/Playground';
 import { LearningPathView } from '@/components/roadmap/LearningPathView';
 import { ConceptLessonView } from '@/components/learning/ConceptLessonView';
 import { PracticeTaskView } from '@/components/learning/PracticeTaskView';
@@ -203,6 +204,7 @@ export default function AppShell() {
   // Modals & UI Toggles
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState<boolean>(false);
   const [isRoadmapModalOpen, setIsRoadmapModalOpen] = useState<boolean>(false);
+  const [isPlaygroundOpen, setIsPlaygroundOpen] = useState<boolean>(false);
   const [successModalData, setSuccessModalData] = useState<{
     isOpen: boolean;
     title: string;
@@ -687,6 +689,11 @@ export default function AppShell() {
     return <BlockedView onSignOut={handleSignOut} />;
   }
 
+  // SQL Playground — its own full page, like the auth view.
+  if (isPlaygroundOpen) {
+    return <Playground onClose={() => setIsPlaygroundOpen(false)} />;
+  }
+
   return (
     <div
       data-availability={availabilityVersion}
@@ -700,6 +707,7 @@ export default function AppShell() {
         onResetProgress={handleResetProgress}
         onOpenSchemaModal={() => setIsSchemaModalOpen(true)}
         onOpenRoadmapModal={() => setIsRoadmapModalOpen(true)}
+        onOpenPlayground={() => setIsPlaygroundOpen(true)}
         onLogoClick={() => {
           setRoadmapScrollTarget(currentModuleId);
           setActiveTab('learning-path');
