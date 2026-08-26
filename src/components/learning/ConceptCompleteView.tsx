@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { Concept } from '../../types/curriculum';
 
 interface ConceptCompleteViewProps {
@@ -27,7 +28,7 @@ export const ConceptCompleteView: React.FC<ConceptCompleteViewProps> = ({
     >
       {/* Minimal Icon */}
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_12px_rgba(0,173,181,0.3)]">
-        <span className="material-symbols-outlined text-[24px]">check</span>
+        <Icon name="check" className="text-[24px]" />
       </div>
 
       <div className="space-y-1.5">
@@ -64,7 +65,7 @@ export const ConceptCompleteView: React.FC<ConceptCompleteViewProps> = ({
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary-container px-6 py-2.5 font-label-sm text-xs font-semibold text-on-primary-container hover:brightness-110 active:scale-95 transition cursor-pointer shadow-[0_0_8px_rgba(0,173,181,0.25)]"
         >
           <span>{isLastConcept ? 'Proceed to Independent Challenge' : 'Continue to Next Concept'}</span>
-          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          <Icon name="arrow_forward" className="text-[16px]" />
         </button>
       </div>
     </motion.div>

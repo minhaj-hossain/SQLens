@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
+import Icon from '@/components/ui/Icon';
 import { ModuleData, Concept } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
 import {
@@ -113,7 +114,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
           <div className="bg-surface border border-string/50 shadow-2xl rounded-xl p-4 flex items-start gap-3 text-left animate-in fade-in slide-in-from-top-3 duration-200">
             <div className="p-2 rounded-lg bg-string/20 text-string shrink-0">
-              <span className="material-symbols-outlined text-[20px]">lock</span>
+              <Icon name="lock" className="text-[20px]" />
             </div>
             <div className="flex-1 space-y-1">
               <h4 className="font-display text-sm font-bold text-text">
@@ -151,7 +152,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
               className="text-text-dim hover:text-text p-1 cursor-pointer"
               aria-label="Close alert"
             >
-              <span className="material-symbols-outlined text-[16px]">close</span>
+              <Icon name="close" className="text-[16px]" />
             </button>
           </div>
         </div>
@@ -182,7 +183,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 <span className="w-2.5 h-2.5 rounded-full bg-[#27C93F]/80 hover:bg-[#27C93F] transition-colors inline-block" />
               </div>
               <span className="text-[11px] font-mono text-text-dim/80 ml-2 select-none flex items-center gap-1">
-                <span className="material-symbols-outlined text-[13px] text-func/70">terminal</span>
+                <Icon name="terminal" className="text-[13px] text-func/70" />
                 daily_ritual.sql
               </span>
             </div>
@@ -191,9 +192,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
               className="flex items-center gap-1 text-[11px] font-mono text-text-dim hover:text-func px-2 py-0.5 rounded hover:bg-surface-2 transition cursor-pointer"
               title="Copy Query"
             >
-              <span className="material-symbols-outlined text-[13px]">
-                {heroCopied ? 'check' : 'content_copy'}
-              </span>
+              <Icon name={heroCopied ? 'check' : 'content_copy'} className="text-[13px]" />
               <span>{heroCopied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
@@ -320,7 +319,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 className="flex items-center gap-4 bg-surface border border-dashed border-border rounded-2xl p-6 opacity-70"
               >
                 <div className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0 text-text-faint">
-                  <span className="material-symbols-outlined text-[20px]">lock</span>
+                  <Icon name="lock" className="text-[20px]" />
                 </div>
                 <div>
                   <h3 className="font-display text-base font-semibold text-text-dim mb-1">
@@ -347,9 +346,10 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                     {milestone.title} · {milestone.daysRange}
                   </span>
                   <span className="flex items-center gap-1.5 font-mono text-xs text-text-dim">
-                    <span className="material-symbols-outlined text-[14px] text-string">
-                      {isMilestoneCompleted ? 'check_circle' : isMilestoneActive ? 'play_circle' : 'schedule'}
-                    </span>
+                    <Icon
+                      name={isMilestoneCompleted ? 'check_circle' : isMilestoneActive ? 'play_circle' : 'schedule'}
+                      className="text-[14px] text-string"
+                    />
                     <span>
                       {isMilestoneCompleted
                         ? 'Completed'
@@ -411,9 +411,9 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         aria-hidden="true"
                       >
                         {isCompleted ? (
-                          <span className="material-symbols-outlined text-[14px]">check</span>
+                          <Icon name="check" className="text-[14px]" />
                         ) : !isUnlocked ? (
-                          <span className="material-symbols-outlined text-[14px]">lock</span>
+                          <Icon name="lock" className="text-[14px]" />
                         ) : (
                           module.day
                         )}
@@ -433,9 +433,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 mb-5">
                           <div className="space-y-1">
                             <div className="flex items-center gap-1.5 text-comment font-mono text-[10.5px] uppercase tracking-wider">
-                              <span className="material-symbols-outlined text-[14px]">
-                                {modeInfo.icon}
-                              </span>
+                              <Icon name={modeInfo.icon} className="text-[14px]" />
                               <span>{modeInfo.label}</span>
                             </div>
                             <h4
@@ -530,11 +528,11 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   }`}
                                 >
                                   {isConceptDone ? (
-                                    <span className="material-symbols-outlined text-[16px]">check</span>
+                                    <Icon name="check" className="text-[16px]" />
                                   ) : isConceptActive ? (
-                                    <span className="material-symbols-outlined text-[18px]">play_arrow</span>
+                                    <Icon name="play_arrow" className="text-[18px]" />
                                   ) : !isUnlocked ? (
-                                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                                    <Icon name="lock" className="text-[16px]" />
                                   ) : (
                                     <span className="font-mono text-xs font-semibold">{idx + 1}</span>
                                   )}
@@ -588,21 +586,21 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                               aria-disabled={!isChallengeUnlocked}
                             >
                               <div className="flex items-center gap-2.5">
-                                <span
-                                  className={`material-symbols-outlined text-[18px] ${
+                                <Icon
+                                  name={
+                                    isChallengeCompleted
+                                      ? 'workspace_premium'
+                                      : isChallengeUnlocked
+                                      ? 'terminal'
+                                      : 'lock'}
+                                  className={`text-[18px] ${
                                     isChallengeCompleted
                                       ? 'text-func'
                                       : isChallengeUnlocked
                                       ? 'text-string'
                                       : 'text-text-faint'
                                   }`}
-                                >
-                                  {isChallengeCompleted
-                                    ? 'workspace_premium'
-                                    : isChallengeUnlocked
-                                    ? 'terminal'
-                                    : 'lock'}
-                                </span>
+                                />
                                 <span
                                   className={`font-mono text-xs ${
                                     isChallengeUnlocked ? 'font-semibold text-text' : 'text-text-dim'

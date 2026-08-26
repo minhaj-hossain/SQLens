@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 
 interface SuccessModalProps {
@@ -50,12 +51,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
             <div className="p-6 sm:p-8 flex flex-col gap-5">
               {/* Correct Banner */}
               <div className="w-full flex items-center gap-3 p-4 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30">
-                <span
-                  className="material-symbols-outlined text-[#10B981] text-[24px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  check_circle
-                </span>
+                <Icon name="check_circle" className="text-[#10B981] text-[24px] [&]:fill-[#10B981]/20" />
                 <span className="font-headline-sm text-lg font-bold text-[#10B981]">
                   {title}
                 </span>
@@ -81,7 +77,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
               {/* Progress & Review Info */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
                 <div className="flex items-center gap-2 text-text-muted text-xs font-body-md">
-                  <span className="material-symbols-outlined text-[16px]">schedule</span>
+                  <Icon name="schedule" className="text-[16px]" />
                   <span>Next review: 6 days (Interval Spaced)</span>
                 </div>
 
@@ -99,9 +95,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
                 className="w-full mt-2 bg-primary-container hover:brightness-110 text-on-primary-container font-headline-sm text-sm sm:text-base font-bold py-3.5 rounded-lg transition-all duration-200 active:scale-[0.98] active:ring-2 active:ring-inset active:ring-on-primary/30 flex items-center justify-center gap-2 group cursor-pointer shadow-lg shadow-primary-container/20"
               >
                 <span className="relative z-10">Continue</span>
-                <span className="material-symbols-outlined relative z-10 group-hover:translate-x-1 transition-transform text-[20px]">
-                  arrow_forward
-                </span>
+                <Icon name="arrow_forward" className="relative z-10 group-hover:translate-x-1 transition-transform text-[20px]" />
               </button>
             </div>
           </motion.div>

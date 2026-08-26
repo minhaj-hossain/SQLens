@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 
@@ -94,9 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'bg-surface-2 border-border text-text-dim hover:text-text hover:border-text-dim'
             }`}
           >
-            <span className="material-symbols-outlined text-[16px]">
-              {userState.bypassDailyLock ? 'lock_open' : 'schedule'}
-            </span>
+            <Icon name={userState.bypassDailyLock ? 'lock_open' : 'schedule'} className="text-[16px]" />
           </button>
 
           {/* Database Schema */}
@@ -107,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
             aria-label="Inspect Database Schema"
             className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150 cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[16px]">database</span>
+            <Icon name="database" className="text-[16px]" />
           </button>
 
           {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
@@ -132,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-label="Admin dashboard"
                   className="hidden sm:flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-func/10 border border-func/30 text-func hover:bg-func/20 transition-all duration-150"
                 >
-                  <span className="material-symbols-outlined text-[16px]">shield_person</span>
+                  <Icon name="shield_person" className="text-[16px]" />
                 </a>
               )}
               {/* Avatar — animated brand-hue shimmer orbiting the initial */}
@@ -220,7 +219,7 @@ export const Header: React.FC<HeaderProps> = ({
                             onClick={() => setUserMenuOpen(false)}
                             className="sm:hidden flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-[15px] text-func">shield_person</span>
+                            <Icon name="shield_person" className="text-[15px] text-func" />
                             Admin dashboard
                           </a>
                         )}
@@ -232,7 +231,7 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-[15px]">logout</span>
+                          <Icon name="logout" className="text-[15px]" />
                           Sign out
                         </button>
                       </div>
@@ -272,7 +271,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-3">
                   <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-func">settings</span>
+                    <Icon name="settings" className="text-[15px] text-func" />
                     <span className="text-xs font-semibold text-text font-display">Progression Controls</span>
                   </div>
                   <span className="text-[9px] text-text-dim font-mono bg-ink px-1.5 py-0.5 rounded border border-border tracking-wider uppercase">Dev</span>

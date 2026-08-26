@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
@@ -39,7 +40,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-soft bg-ink px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-func">database</span>
+            <Icon name="database" className="text-[20px] text-func" />
             <div>
               <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-text">
                 Database Schema Reference
@@ -51,7 +52,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
             onClick={onClose}
             className="rounded p-1 text-text-dim hover:bg-surface-2 hover:text-text transition cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <Icon name="close" className="text-[18px]" />
           </button>
         </div>
 
@@ -78,9 +79,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
                     }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[15px] text-text-faint">
-                        table_chart
-                      </span>
+                      <Icon name="table_chart" className="text-[15px] text-text-faint" />
                       <span>{schema.name}</span>
                     </div>
                     <span className="text-[10px] text-text-faint font-mono">

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Header } from '@/components/layout/Header';
+import Icon from '@/components/ui/Icon';
 import { AuthView } from '@/components/auth/AuthView';
 import BlockedView from '@/components/auth/BlockedView';
 import { LearningPathView } from '@/components/roadmap/LearningPathView';
@@ -650,7 +651,7 @@ export default function AppShell() {
                 }}
                 className="flex items-center gap-2 font-label-sm text-label-sm text-text-muted hover:text-primary transition cursor-pointer min-w-0"
               >
-                <span className="material-symbols-outlined text-[18px] shrink-0">arrow_back</span>
+                <Icon name="arrow_back" className="text-[18px] shrink-0" />
                 <span className="truncate">Back to Learning Path</span>
               </button>
 

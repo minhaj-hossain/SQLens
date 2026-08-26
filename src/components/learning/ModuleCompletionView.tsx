@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { ModuleData } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
 import { getNextUnlockTime, formatTimeRemaining, getEffectiveNow, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
@@ -72,7 +73,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
     >
       {/* Completion Icon */}
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_16px_rgba(0,173,181,0.3)]">
-        <span className="material-symbols-outlined text-[28px]">check</span>
+        <Icon name="check" className="text-[28px]" />
       </div>
 
       <div className="space-y-2">
@@ -138,12 +139,12 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
 
               {isUnlockedNow ? (
                 <span className="inline-flex items-center gap-1 text-xs font-label-sm text-primary">
-                  <span className="material-symbols-outlined text-[14px]">lock_open</span>
+                  <Icon name="lock_open" className="text-[14px]" />
                   Ready to start
                 </span>
               ) : (
                 <div className="flex items-center gap-1.5 text-xs font-mono text-text-muted bg-surface-dim px-3 py-1.5 rounded-lg border border-outline-variant/60">
-                  <span className="material-symbols-outlined text-[14px]">schedule</span>
+                  <Icon name="schedule" className="text-[14px]" />
                   <span>Unlocks in: {countdown}</span>
                 </div>
               )}
@@ -154,7 +155,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
                 onClick={onReviewModule}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-dim px-4 py-2 font-label-sm text-xs font-medium text-text-muted hover:text-on-surface hover:border-primary-container/40 transition cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[15px]">restart_alt</span>
+                <Icon name="restart_alt" className="text-[15px]" />
                 <span>Review Today's Module</span>
               </button>
 
@@ -162,7 +163,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
                 onClick={onOpenRoadmap}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-dim px-4 py-2 font-label-sm text-xs font-medium text-text-muted hover:text-on-surface hover:border-primary-container/40 transition cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[15px]">map</span>
+                <Icon name="map" className="text-[15px]" />
                 <span>Explore Full Roadmap</span>
               </button>
 
@@ -172,7 +173,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
                   className="inline-flex items-center gap-1.5 rounded-lg bg-primary-container px-5 py-2 font-label-sm text-xs font-semibold text-on-primary-container hover:brightness-110 active:scale-95 transition cursor-pointer shadow-[0_0_8px_rgba(0,173,181,0.25)]"
                 >
                   <span>Start Day {nextModule.day}</span>
-                  <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                  <Icon name="arrow_forward" className="text-[15px]" />
                 </button>
               )}
             </div>

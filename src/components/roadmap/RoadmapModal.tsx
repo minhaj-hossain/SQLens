@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { UserLearningState } from '../../types/progress';
@@ -45,7 +46,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-soft bg-ink px-5 py-3">
           <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-[20px] text-string">map</span>
+            <Icon name="map" className="text-[20px] text-string" />
             <div>
               <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-text">
                 25-Day Curriculum Map
@@ -57,7 +58,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
             onClick={onClose}
             className="rounded p-1 text-text-dim hover:bg-surface-2 hover:text-text transition cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <Icon name="close" className="text-[18px]" />
           </button>
         </div>
 
@@ -122,17 +123,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                             Day {module.day}
                           </span>
                           {isCompleted ? (
-                            <span className="material-symbols-outlined text-[14px] text-func">
-                              check_circle
-                            </span>
+                            <Icon name="check_circle" className="text-[14px] text-func" />
                           ) : isUnlocked ? (
-                            <span className="material-symbols-outlined text-[14px] text-keyword">
-                              play_circle
-                            </span>
+                            <Icon name="play_circle" className="text-[14px] text-keyword" />
                           ) : (
-                            <span className="material-symbols-outlined text-[14px] text-text-faint">
-                              lock
-                            </span>
+                            <Icon name="lock" className="text-[14px] text-text-faint" />
                           )}
                         </div>
                         <span className="font-mono text-xs line-clamp-1 text-text">

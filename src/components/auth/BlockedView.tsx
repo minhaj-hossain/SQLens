@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 
 /**
  * Full-page screen shown when the signed-in account has status = 'blocked'
@@ -37,7 +38,7 @@ export default function BlockedView({ onSignOut }: { onSignOut?: () => void }) {
           className="bg-surface border border-error/30 rounded-2xl p-8 max-w-md w-full text-center"
         >
           <div className="mx-auto mb-5 w-12 h-12 rounded-full bg-error/10 border border-error/40 flex items-center justify-center">
-            <span className="material-symbols-outlined text-error text-2xl">block</span>
+            <Icon name="block" className="text-error text-[24px]" />
           </div>
 
           <h1 className="font-display font-bold text-xl text-text mb-2">Account suspended</h1>

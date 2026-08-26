@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import Icon from '@/components/ui/Icon';
 import { Concept } from '../../types/curriculum';
 import { QueryExecutionResult } from '../../types/database';
 
@@ -78,9 +79,7 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
             onClick={handleCopy}
             className="flex items-center gap-1 text-[11px] font-medium text-text-muted hover:text-on-surface transition cursor-pointer px-2 py-0.5 rounded hover:bg-surface-container-high"
           >
-            <span className="material-symbols-outlined text-[13px]">
-              {copied ? 'check' : 'content_copy'}
-            </span>
+            <Icon name={copied ? 'check' : 'content_copy'} className="text-[13px]" />
             <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
@@ -105,9 +104,7 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
       return (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 sm:p-5 flex flex-col gap-2.5 my-3 shadow-sm">
           <div className="flex items-center gap-2 text-primary font-bold text-sm sm:text-base">
-            <span className="material-symbols-outlined text-[20px] text-primary">
-              tips_and_updates
-            </span>
+            <Icon name="tips_and_updates" className="text-[20px] text-primary" />
             <span>{headerLine.replace(/:$/, '')}</span>
           </div>
           {remainingText && (
@@ -427,7 +424,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                 className="bg-primary-container hover:brightness-110 active:scale-95 transition-all text-on-primary-container text-xs font-bold px-4 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
                 <span>Next</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                <Icon name="arrow_forward" className="text-[16px]" />
               </button>
             </div>
           </div>
@@ -458,7 +455,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             <div className="flex flex-col gap-2 rounded-xl bg-surface-base border border-outline-variant/70 overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 bg-surface-dim border-b border-outline-variant/60 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                 <span className="font-mono text-xs font-bold text-primary flex items-center gap-1.5 min-w-0">
-                  <span className="material-symbols-outlined text-[16px] shrink-0">table_chart</span>
+                  <Icon name="table_chart" className="text-[16px] shrink-0" />
                   <span className="truncate">{theory.introTable.tableName}</span>
                 </span>
                 {theory.introTable.description && (
@@ -505,7 +502,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             <div className="rounded-xl bg-surface border border-string/40 overflow-hidden shadow-md my-4">
               <div className="px-4 py-2.5 bg-surface-2 border-b border-border flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                 <span className="font-mono text-xs font-bold text-string uppercase tracking-wider flex items-center gap-1.5 min-w-0">
-                  <span className="material-symbols-outlined text-[16px] text-string shrink-0">schema</span>
+                  <Icon name="schema" className="text-[16px] text-string shrink-0" />
                   <span className="truncate">{theory.targetQuery.badge || "The query we're going to break down"}</span>
                 </span>
                 <button
@@ -516,9 +513,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                   }}
                   className="flex items-center gap-1 text-[11px] font-mono text-text-dim hover:text-text px-2 py-0.5 rounded hover:bg-surface-3 transition cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[13px]">
-                    {copiedIndex === 9999 ? 'check' : 'content_copy'}
-                  </span>
+                  <Icon name={copiedIndex === 9999 ? 'check' : 'content_copy'} className="text-[13px]" />
                   <span>{copiedIndex === 9999 ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
@@ -537,7 +532,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
             <div className="space-y-4 my-3">
               <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-text-dim px-1">
-                <span className="material-symbols-outlined text-[16px] text-func">account_tree</span>
+                <Icon name="account_tree" className="text-[16px] text-func" />
                 <span>Step-by-step SQL processing</span>
               </div>
               {theory.stepBreakdowns.map((step, sIdx) => (
@@ -668,7 +663,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                 >
                   <div className="flex items-center justify-between px-4 py-2.5 bg-surface-dim border-b border-outline-variant/60">
                     <span className="font-label-sm text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[15px]">code</span>
+                      <Icon name="code" className="text-[15px]" />
                       <span>{block.title}</span>
                     </span>
                     <button
@@ -676,9 +671,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                       className="text-text-muted hover:text-on-surface text-[11px] flex items-center gap-1 transition px-2 py-0.5 rounded hover:bg-surface-container cursor-pointer"
                       title="Copy SQL"
                     >
-                      <span className="material-symbols-outlined text-[14px]">
-                        {copiedIndex === bIdx ? 'check' : 'content_copy'}
-                      </span>
+                      <Icon name={copiedIndex === bIdx ? 'check' : 'content_copy'} className="text-[14px]" />
                       <span>{copiedIndex === bIdx ? 'Copied' : 'Copy'}</span>
                     </button>
                   </div>
@@ -698,7 +691,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           ) : theory.syntaxDiagram ? (
             <div className="flex flex-col gap-2">
               <span className="font-label-sm text-xs text-text-muted uppercase tracking-widest flex items-center gap-1.5 font-semibold">
-                <span className="material-symbols-outlined text-[16px] text-primary">data_object</span>
+                <Icon name="data_object" className="text-[16px] text-primary" />
                 <span>Syntax Pattern</span>
               </span>
               <div className="bg-surface-dim border border-outline-variant/80 rounded-xl p-4 font-mono text-xs sm:text-sm text-on-surface overflow-x-auto whitespace-pre leading-relaxed shadow-inner">
@@ -711,14 +704,14 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           <div className="flex flex-col rounded-xl bg-surface-base border border-primary-container/40 overflow-hidden shadow-md">
             <div className="flex items-center justify-between px-4 py-2.5 bg-primary-container/10 border-b border-primary-container/30">
               <span className="font-label-sm text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px]">play_circle</span>
+                <Icon name="play_circle" className="text-[16px]" />
                 <span>Interactive Live Demo</span>
               </span>
               <button
                 onClick={() => handleRunDemo()}
                 className="bg-primary text-surface-base px-3 py-1 rounded-md text-xs font-bold hover:brightness-110 active:scale-95 transition flex items-center gap-1 shadow cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[14px]">play_arrow</span>
+                <Icon name="play_arrow" className="text-[14px]" />
                 <span>Run Query</span>
               </button>
             </div>
@@ -795,7 +788,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           {theory.mcqs && theory.mcqs.length > 0 && (
             <div className="rounded-xl bg-surface-base border border-outline-variant/70 p-5 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 text-primary font-label-sm text-xs uppercase tracking-wider font-bold border-b border-outline-variant/50 pb-2.5">
-                <span className="material-symbols-outlined text-[18px]">quiz</span>
+                <Icon name="quiz" className="text-[18px]" />
                 <span>MCQ — Test Yourself</span>
               </div>
 
@@ -851,14 +844,10 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                             >
                               <span>{opt}</span>
                               {hasAnswered && isOptionCorrect && (
-                                <span className="material-symbols-outlined text-[16px] text-emerald-400">
-                                  check_circle
-                                </span>
+                                <Icon name="check_circle" className="text-[16px] text-emerald-400" />
                               )}
                               {hasAnswered && isOptionSelected && !isCorrect && (
-                                <span className="material-symbols-outlined text-[16px] text-rose-400">
-                                  cancel
-                                </span>
+                                <Icon name="cancel" className="text-[16px] text-rose-400" />
                               )}
                             </button>
                           );
@@ -891,7 +880,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             {theory.keyTakeaway && (
               <div className="rounded-xl bg-surface-base border border-outline-variant/60 p-4 space-y-2">
                 <h3 className="font-label-sm text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">lightbulb</span>
+                  <Icon name="lightbulb" className="text-[16px]" />
                   <span>Key Takeaway</span>
                 </h3>
                 <p className="text-xs text-on-surface/90 leading-relaxed font-body-md">
@@ -903,7 +892,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             {theory.commonMistakes && theory.commonMistakes.length > 0 && (
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 p-4 space-y-2">
                 <h3 className="font-label-sm text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">warning</span>
+                  <Icon name="warning" className="text-[16px]" />
                   <span>Watch Out For</span>
                 </h3>
                 <ul className="space-y-1 text-xs text-on-surface/90">
@@ -926,7 +915,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                   onClick={onPrevious}
                   className="text-text-muted hover:text-on-surface transition-colors font-label-md text-xs sm:text-sm flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-outline-variant/60 hover:border-outline-variant cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                  <Icon name="arrow_back" className="text-[18px]" />
                   <span>Previous Concept</span>
                 </button>
               ) : (
@@ -940,7 +929,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
               className="bg-primary-container hover:brightness-110 active:brightness-90 transition-all font-headline-sm text-xs sm:text-sm px-6 py-2.5 rounded-lg font-bold text-on-primary-container shadow-md shadow-primary-container/20 flex items-center gap-2 cursor-pointer"
             >
               <span>Next</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              <Icon name="arrow_forward" className="text-[18px]" />
             </button>
           </div>
         </div>

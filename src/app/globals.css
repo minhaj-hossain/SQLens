@@ -123,29 +123,6 @@
       scroll-behavior: auto !important;
     }
   }
-
-  .material-symbols-outlined {
-    font-family: 'Material Symbols Outlined';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-  }
-}
-
-/* Hide raw ligature text while the Material Symbols font is still loading.
-   The inline script in index.html adds .icons-loading on boot and removes it
-   once document.fonts.ready resolves (or after a 3s failsafe). */
-html.icons-loading .material-symbols-outlined {
-  visibility: hidden;
 }
 
 /* ============ ER-STYLE TIMELINE & NODE STYLES ============ */
