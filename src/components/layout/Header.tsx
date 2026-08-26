@@ -15,7 +15,7 @@ interface HeaderProps {
   onLogoClick?: () => void;
   onSignInClick?: () => void;
   onSignUpClick?: () => void;
-  user?: { id?: string; name?: string | null; email?: string | null } | null;
+  user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
   isAuthPending?: boolean;
   onSignOut?: () => void;
 }
@@ -120,6 +120,16 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           ) : user ? (
             <>
+              {user.role === 'admin' && (
+                <a
+                  href="/admin"
+                  title="Admin dashboard"
+                  aria-label="Admin dashboard"
+                  className="hidden sm:flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-func/10 border border-func/30 text-func hover:bg-func/20 transition-all duration-150"
+                >
+                  <span className="material-symbols-outlined text-[16px]">shield_person</span>
+                </a>
+              )}
               <span
                 title={user.email ?? user.name ?? 'Signed in'}
                 aria-label={`Signed in as ${user.name ?? user.email}`}

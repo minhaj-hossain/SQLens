@@ -69,7 +69,14 @@ export default function AppShell() {
   // `useSession()` is not type-inferred without server type generation; cast to
   // the minimal user shape we consume.
   const authUser =
-    (sessionData as { user?: { id?: string; name?: string | null; email?: string | null } | null } | null)
+    (sessionData as {
+      user?: {
+        id?: string;
+        name?: string | null;
+        email?: string | null;
+        role?: string | null;
+      } | null;
+    } | null)
       ?.user ?? null;
 
   // Modals & UI Toggles
