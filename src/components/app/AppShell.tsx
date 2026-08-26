@@ -12,8 +12,15 @@ import { ConceptCompleteView } from '@/components/learning/ConceptCompleteView';
 import { IndependentChallengeView } from '@/components/learning/IndependentChallengeView';
 import { ModuleCompletionView } from '@/components/learning/ModuleCompletionView';
 import { SuccessModal } from '@/components/learning/SuccessModal';
-import { SchemaModal } from '@/components/roadmap/SchemaModal';
-import { RoadmapModal } from '@/components/roadmap/RoadmapModal';
+import dynamic from 'next/dynamic';
+
+// Heavy, rarely-opened modals are code-split out of the initial bundle.
+const SchemaModal = dynamic(
+  () => import('@/components/roadmap/SchemaModal').then((m) => m.SchemaModal),
+);
+const RoadmapModal = dynamic(
+  () => import('@/components/roadmap/RoadmapModal').then((m) => m.RoadmapModal),
+);
 import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
 import { SqlExecutor } from '@/lib/sql-engine/executor';
 import {
