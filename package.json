@@ -9,7 +9,8 @@
     "start": "next start",
     "clean": "rm -rf dist server.js .next",
     "lint": "tsc --noEmit",
-    "verify:curriculum": "tsx scripts/verify-curriculum.ts"
+    "verify:curriculum": "tsx scripts/verify-curriculum.ts",
+    "test:engine": "tsx scripts/engine-tests.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",

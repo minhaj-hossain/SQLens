@@ -5,6 +5,8 @@ export interface ParsedSelectColumn {
   aggregate?: 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX';
   aggregateArg?: string;
   isDistinct?: boolean;
+  /** Present when the column is a CASE WHEN ... THEN ... ELSE ... END expression. */
+  caseExpression?: ParsedCaseWhen;
   windowFunction?: {
     type: 'ROW_NUMBER' | 'RANK' | 'DENSE_RANK';
     partitionBy?: string;
@@ -14,11 +16,16 @@ export interface ParsedSelectColumn {
 }
 
 export interface ParsedJoin {
-  type: 'INNER' | 'LEFT';
+  type: 'INNER' | 'LEFT' | 'RIGHT' | 'FULL' | 'CROSS';
   table: string;
   alias?: string;
   onLeft: string;
   onRight: string;
+}
+
+export interface ParsedCaseWhen {
+  whens: Array<{ condition: string; result: string }>;
+  elseResult?: string;
 }
 
 export interface ParsedOrderBy {
@@ -27,9 +34,13 @@ export interface ParsedOrderBy {
 }
 
 export interface ParsedSqlQuery {
-  type: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'TRANSACTION' | 'CTE' | 'EXPLAIN' | 'DDL' | 'UNKNOWN';
+  type: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'TRANSACTION' | 'CTE' | 'EXPLAIN' | 'DDL' | 'SET_OPERATION' | 'UNKNOWN';
   raw: string;
   normalized: string;
+  /** Set-operation kind (only for SET_OPERATION queries). */
+  setOp?: 'UNION' | 'UNION_ALL' | 'INTERSECT' | 'EXCEPT';
+  setLeft?: string;
+  setRight?: string;
   isDistinct?: boolean;
   columns?: ParsedSelectColumn[];
   fromTable?: string;
@@ -160,8 +171,23 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     };
   }
 
-  // Handle SELECT
+  // Handle SELECT — but first check whether it is a compound (set-operation)
+  // query like `SELECT ... UNION [ALL] SELECT ...` / INTERSECT / EXCEPT.
   if (/^SELECT\b/i.test(sql)) {
+    // 'UNION ALL' must be tested before 'UNION'.
+    for (const op of ['UNION ALL', 'UNION', 'INTERSECT', 'EXCEPT']) {
+      const opIdx = findTopLevelKeyword(sql, op);
+      if (opIdx !== -1) {
+        return {
+          type: 'SET_OPERATION',
+          raw: rawSql,
+          normalized: sql,
+          setOp: (op === 'UNION ALL' ? 'UNION_ALL' : op) as ParsedSqlQuery['setOp'],
+          setLeft: sql.substring(0, opIdx).trim(),
+          setRight: sql.substring(opIdx + op.length).trim(),
+        };
+      }
+    }
     return parseSelect(sql, rawSql);
   }
 
@@ -352,6 +378,20 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
       continue;
     }
 
+    // Check CASE WHEN ... THEN ... [ELSE ...] END [AS alias] — before the
+    // generic alias parsing so embedded string literals aren't mis-parsed.
+    if (/\bCASE\b/i.test(cleanPart)) {
+      const parsedCase = parseCaseExpression(cleanPart);
+      if (parsedCase) {
+        const caseAliasMatch = cleanPart.match(/\bEND\s+(?:AS\s+)?([`"']?[\w_]+[`"']?)\s*$/i);
+        col.caseExpression = parsedCase;
+        col.alias = caseAliasMatch ? caseAliasMatch[1].replace(/[`'"]/g, '') : 'case_result';
+        col.expression = col.alias;
+        cols.push(col);
+        continue;
+      }
+    }
+
     // Check alias AS or whitespace
     const asMatch = cleanPart.match(/^([\s\S]+?)\s+(?:AS\s+)?([`"']?[\w_]+[`"']?)$/i);
     if (asMatch && !cleanPart.includes('(')) {
@@ -372,6 +412,7 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
       }
     }
 
+    // CASE WHEN ... THEN ... is handled above (before alias parsing).
     cols.push(col);
   }
 
@@ -379,8 +420,10 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
 }
 
 function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
-  // Check for JOIN keywords
-  const joinParts = fromSection.split(/\b(INNER\s+JOIN|LEFT\s+JOIN|JOIN)\b/i);
+  // Support INNER / LEFT [OUTER] / RIGHT [OUTER] / FULL [OUTER] / CROSS / bare JOIN
+  const joinParts = fromSection.split(
+    /\b(INNER\s+JOIN|LEFT\s+(?:OUTER\s+)?JOIN|RIGHT\s+(?:OUTER\s+)?JOIN|FULL\s+(?:OUTER\s+)?JOIN|CROSS\s+JOIN|JOIN)\b/i
+  );
   const baseTableExpr = joinParts[0].trim();
 
   const baseParts = baseTableExpr.split(/\s+(?:AS\s+)?/i);
@@ -390,16 +433,40 @@ function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
   }
 
   for (let i = 1; i < joinParts.length; i += 2) {
-    const joinType = /LEFT/i.test(joinParts[i]) ? 'LEFT' : 'INNER';
+    const opToken = (joinParts[i] || '').toUpperCase();
+    let joinType: 'INNER' | 'LEFT' | 'RIGHT' | 'FULL' | 'CROSS' = 'INNER';
+    if (/\bRIGHT\b/i.test(opToken)) joinType = 'RIGHT';
+    else if (/\bFULL\b/i.test(opToken)) joinType = 'FULL';
+    else if (/\bCROSS\b/i.test(opToken)) joinType = 'CROSS';
+    else if (/\bLEFT\b/i.test(opToken)) joinType = 'LEFT';
+
     const joinBody = joinParts[i + 1]?.trim() || '';
-    const onMatch = joinBody.match(/^([`"']?[\w_]+[`"']?)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?\s+ON\s+([\w_.]+)\s*=\s*([\w_.]+)/i);
+
+    // CROSS JOIN has no ON clause.
+    if (joinType === 'CROSS') {
+      const crossBody = joinBody.match(/^([`"']?[\w_]+[`"']?)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?/i);
+      if (crossBody) {
+        query.joins?.push({
+          type: 'CROSS',
+          table: crossBody[1].replace(/[`"']/g, ''),
+          alias: crossBody[2]?.replace(/[`"']/g, ''),
+          onLeft: '',
+          onRight: '',
+        });
+      }
+      continue;
+    }
+
+    const onMatch = joinBody.match(
+      /^([`"']?[\w_]+[`"']?)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?\s+(?:ON\s+([\w_.]+)\s*=\s*([\w_.]+))?/i
+    );
     if (onMatch) {
       query.joins?.push({
         type: joinType,
         table: onMatch[1].replace(/[`"']/g, ''),
         alias: onMatch[2]?.replace(/[`"']/g, ''),
-        onLeft: onMatch[3].replace(/[`"']/g, ''),
-        onRight: onMatch[4].replace(/[`"']/g, ''),
+        onLeft: (onMatch[3] || '').replace(/[`"']/g, ''),
+        onRight: (onMatch[4] || '').replace(/[`"']/g, ''),
       });
     }
   }
@@ -476,4 +543,83 @@ function parseDelete(sql: string, rawSql: string): ParsedSqlQuery {
     deleteTable: match[1].replace(/[`"']/g, ''),
     whereClause: match[2]?.trim(),
   };
+}
+
+/**
+ * Parses a `CASE WHEN <cond> THEN <result> ... [ELSE <result>] END`
+ * expression into its condition/result parts. Quote-aware so string literals
+ * inside conditions or results are preserved.
+ */
+export function parseCaseExpression(input: string): ParsedCaseWhen | null {
+  // Strip a trailing alias if present ("... END AS bucket" / "... END bucket").
+  let src = input.replace(/\bEND\s+(?:AS\s+)?[`"']?[\w_]+[`"']?\s*$/i, 'END');
+  const caseMatch = src.match(/\bCASE\b([\s\S]*?)\bEND\b/i);
+  if (!caseMatch) return null;
+  const body = caseMatch[1];
+
+  // Optional simple CASE operand: CASE <expr> WHEN a THEN ...
+  // A leading operand is ignored for evaluation; handle searched CASE only for
+  // correctness, but allow the bar to fall back if operative part is missing.
+  const whens: Array<{ condition: string; result: string }> = [];
+  let elseResult: string | undefined;
+
+  // Split by WHEN at top-level (quote & paren aware).
+  const rawClauses = splitCaseClauses(body);
+  for (const clause of rawClauses) {
+    const t = clause.trim();
+    if (/^WHEN\b/i.test(t)) {
+      const whenMatch = t.match(/^WHEN\b([\s\S]*?)\bTHEN\b([\s\S]*)$/i);
+      if (whenMatch) {
+        whens.push({
+          condition: whenMatch[1].trim(),
+          result: whenMatch[2].trim(),
+        });
+      }
+    } else if (/^ELSE\b/i.test(t)) {
+      const elseMatch = t.match(/^ELSE\b([\s\S]*)$/i);
+      if (elseMatch) elseResult = elseMatch[1].trim();
+    }
+  }
+
+  if (whens.length === 0) return null;
+  return { whens, elseResult };
+}
+
+/** Splits a CASE body on WHEN/ELSE keywords at depth 0 (quote-aware). */
+function splitCaseClauses(body: string): string[] {
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inString: string | null = null;
+
+  const tokens = [/\bWHEN\b/.source, /\bELSE\b/.source, /\bEND\b/.source].join('|');
+  const splitter = new RegExp(`(${tokens})`, 'i');
+
+  let rest = body;
+  while (rest.length) {
+    const m = splitter.exec(rest);
+    const head = m ? rest.slice(0, m.index) : rest;
+    if (head.trim()) parts.push(head);
+    if (!m) break;
+    const seg = m[0];
+    // Rebuild node: WHEN takes the value up to the chunk; push operator separately.
+    // Simpler: push each keyword token as its own fragment start.
+    parts.push(seg);
+    rest = rest.slice(m.index + seg.length);
+  }
+
+  // Rejoin fragments: a fragment starting with WHEN/ELSE previously owns the text
+  // that came BEFORE it. Assemble so that each WHEN/ELSE carries its predicate.
+  const rebuilt: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    if (/^(WHEN|ELSE|THEN)\b/i.test(p)) {
+      rebuilt.push(p + (parts[i + 1] ?? ''));
+      i++;
+    } else {
+      rebuilt[rebuilt.length - 1] = (rebuilt[rebuilt.length - 1] || '') + p;
+      if (rebuilt.length === 0) rebuilt.push(p);
+    }
+  }
+  return rebuilt.filter(Boolean);
 }

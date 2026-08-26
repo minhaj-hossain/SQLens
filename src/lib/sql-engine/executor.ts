@@ -1,5 +1,5 @@
 import { DatabaseState, QueryExecutionResult, TableRow } from '../../types/database';
-import { parseSql, ParsedSqlQuery } from './parser';
+import { parseSql, ParsedSqlQuery, ParsedCaseWhen } from './parser';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 
@@ -181,6 +181,10 @@ export class SqlExecutor {
         return this.executeDelete(parsed, startTime);
       }
 
+      if (parsed.type === 'SET_OPERATION') {
+        return this.executeSetOperation(parsed, startTime);
+      }
+
       return {
         success: false,
         columns: [],
@@ -201,6 +205,112 @@ export class SqlExecutor {
     }
   }
 
+// ---------------------------------------------------------------------
+  // Set operations (UNION [ALL] / INTERSECT / EXCEPT).
+  // ---------------------------------------------------------------------
+  private executeSetOperation(parsed: ParsedSqlQuery, startTime: number): QueryExecutionResult {
+    const leftSql = parsed.setLeft;
+    const rightSql = parsed.setRight;
+    const op = parsed.setOp;
+    if (!leftSql || !rightSql || !op) {
+      throw new Error('Invalid set-operation query (missing side or operator).');
+    }
+
+    const leftRes = this.execute(leftSql);
+    if (!leftRes.success) {
+      throw new Error(`Error in the left side of ${op}: ${leftRes.error}`);
+    }
+    const rightRes = this.execute(rightSql);
+    if (!rightRes.success) {
+      throw new Error(`Error in the right side of ${op}: ${rightRes.error}`);
+    }
+
+    const rowKey = (r: TableRow): string =>
+      Object.keys(r)
+        .sort()
+        .map((k) => `${k}:${String(r[k] ?? '')}`)
+        .join('¦');
+
+    let rows: TableRow[];
+    switch (op) {
+      case 'UNION_ALL':
+        rows = [...leftRes.rows, ...rightRes.rows];
+        break;
+      case 'UNION': {
+        const seen = new Set<string>();
+        rows = [];
+        for (const r of [...leftRes.rows, ...rightRes.rows]) {
+          const k = rowKey(r);
+          if (!seen.has(k)) {
+            seen.add(k);
+            rows.push(r);
+          }
+        }
+        break;
+      }
+      case 'INTERSECT': {
+        const presentRight = new Set<string>(rightRes.rows.map(rowKey));
+        const seen = new Set<string>();
+        rows = [];
+        for (const r of leftRes.rows) {
+          const k = rowKey(r);
+          if (!presentRight.has(k) || seen.has(k)) continue;
+          seen.add(k);
+          rows.push(r);
+        }
+        break;
+      }
+      case 'EXCEPT': {
+        const presentRight = new Set<string>(rightRes.rows.map(rowKey));
+        const seen = new Set<string>();
+        rows = [];
+        for (const r of leftRes.rows) {
+          const k = rowKey(r);
+          if (presentRight.has(k) || seen.has(k)) continue;
+          seen.add(k);
+          rows.push(r);
+        }
+        break;
+      }
+      default:
+        throw new Error(`Unsupported set operation: ${op}`);
+    }
+
+    return {
+      success: true,
+      columns: leftRes.columns,
+      rows,
+      rowCount: rows.length,
+      executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // CASE WHEN support (reused by SELECT projection).
+  // ---------------------------------------------------------------------
+  private evaluateCase(caseExpr: ParsedCaseWhen, row: TableRow): any {
+    for (const when of caseExpr.whens) {
+      if (this.evaluateWhere(when.condition, row)) {
+        return this.resolveCaseResult(when.result, row);
+      }
+    }
+    if (caseExpr.elseResult !== undefined) {
+      return this.resolveCaseResult(caseExpr.elseResult, row);
+    }
+    return null;
+  }
+
+  private resolveCaseResult(result: string, row: TableRow): any {
+    const t = result.trim();
+    if (t.startsWith("'") || t.startsWith('"')) {
+      return t.replace(/^['"]|['"]$/g, '');
+    }
+    const num = Number(t);
+    if (t !== '' && !isNaN(num)) return num;
+    const v = getRowValue(row, t);
+    if (v !== undefined) return v;
+    return t;
+  }
   private executeCte(parsed: ParsedSqlQuery, startTime: number): QueryExecutionResult {
     const cteName = parsed.cteName?.toLowerCase();
     const cteSql = parsed.cteQuery;
@@ -389,50 +499,98 @@ export class SqlExecutor {
         if (!targetData) {
           throw new Error(`Table '${join.table}' in JOIN clause does not exist.`);
         }
+        const leftTable = tableName;
+        const leftAlias = fromAlias || tableName;
+
+        const buildNullSide = (side: 'left' | 'right'): Record<string, any> => {
+          const srcTable = side === 'right' ? joinTable : leftTable;
+          const srcData = side === 'right' ? targetData : this.db.tables[leftTable];
+          const prefix = side === 'right' ? joinAlias : leftAlias;
+          // Mirror prefixed keys so getRowValue can resolve qualified columns.
+          const nullSide: Record<string, any> = {};
+          const schema = this.db.schemas[srcTable];
+          if (schema) {
+            schema.columns.forEach((col) => {
+              nullSide[col.name] = null;
+              nullSide[`${srcTable}.${col.name}`] = null;
+              if (prefix) nullSide[`${prefix}.${col.name}`] = null;
+            });
+          } else if (srcData && srcData.length > 0) {
+            Object.keys(srcData[0]).forEach((k) => {
+              nullSide[k] = null;
+              nullSide[`${srcTable}.${k}`] = null;
+              if (prefix) nullSide[`${prefix}.${k}`] = null;
+            });
+          }
+          return nullSide;
+        };
+
+        const mergeRow = (row: TableRow, targetRow: TableRow): TableRow => {
+          const merged: TableRow = { ...row };
+          Object.keys(targetRow).forEach((k) => {
+            merged[`${joinTable}.${k}`] = targetRow[k];
+            if (joinAlias) merged[`${joinAlias}.${k}`] = targetRow[k];
+            if (merged[k] === undefined) merged[k] = targetRow[k];
+          });
+          return merged;
+        };
+
+        const matches = (row: TableRow, targetRow: TableRow): boolean => {
+          if (join.type === 'CROSS') return true;
+          const vLeft = getRowValue(row, join.onLeft);
+          const vRight = getRowValue(targetRow, join.onRight);
+          const vLeftAlt = getRowValue(row, join.onRight);
+          const vRightAlt = getRowValue(targetRow, join.onLeft);
+          return (
+            (vLeft !== undefined && vRight !== undefined && vLeft == vRight) ||
+            (vLeftAlt !== undefined && vRightAlt !== undefined && vLeftAlt == vRightAlt)
+          );
+        };
 
         const newRows: TableRow[] = [];
-        const leftKey = join.onLeft;
-        const rightKey = join.onRight;
 
-        for (const row of currentRows) {
-          let matched = false;
-          for (const targetRow of targetData) {
-            const vLeft = getRowValue(row, leftKey);
-            const vRight = getRowValue(targetRow, rightKey);
-            const vLeftAlt = getRowValue(row, rightKey);
-            const vRightAlt = getRowValue(targetRow, leftKey);
-
-            if ((vLeft !== undefined && vRight !== undefined && vLeft == vRight) ||
-                (vLeftAlt !== undefined && vRightAlt !== undefined && vLeftAlt == vRightAlt)) {
-              const merged: TableRow = { ...row };
-              Object.keys(targetRow).forEach(k => {
-                merged[`${joinTable}.${k}`] = targetRow[k];
-                if (joinAlias) merged[`${joinAlias}.${k}`] = targetRow[k];
-                if (merged[k] === undefined) merged[k] = targetRow[k];
-              });
-              newRows.push(merged);
-              matched = true;
+        if (join.type === 'CROSS') {
+          for (const row of currentRows) {
+            for (const targetRow of targetData) {
+              newRows.push(mergeRow(row, targetRow));
             }
           }
-          if (!matched && join.type === 'LEFT') {
-            const nullTarget: Record<string, any> = {};
-            const schema = this.db.schemas[joinTable];
-            if (schema) {
-              schema.columns.forEach(col => {
-                nullTarget[col.name] = null;
-                nullTarget[`${joinTable}.${col.name}`] = null;
-                if (joinAlias) nullTarget[`${joinAlias}.${col.name}`] = null;
-              });
-            } else if (targetData.length > 0) {
-              Object.keys(targetData[0]).forEach(k => {
-                nullTarget[k] = null;
-                nullTarget[`${joinTable}.${k}`] = null;
-                if (joinAlias) nullTarget[`${joinAlias}.${k}`] = null;
-              });
+        } else if (join.type === 'INNER') {
+          for (const row of currentRows) {
+            for (const targetRow of targetData) {
+              if (matches(row, targetRow)) newRows.push(mergeRow(row, targetRow));
             }
-            newRows.push({ ...row, ...nullTarget });
+          }
+        } else {
+          // LEFT / RIGHT / FULL — need matched + unmatched sides.
+          const matchedLeft = new Set<TableRow>();
+          const matchedRight = new Set<TableRow>();
+          for (const row of currentRows) {
+            for (const targetRow of targetData) {
+              if (matches(row, targetRow)) {
+                newRows.push(mergeRow(row, targetRow));
+                matchedLeft.add(row);
+                matchedRight.add(targetRow);
+              }
+            }
+          }
+          if (join.type === 'LEFT' || join.type === 'FULL') {
+            for (const row of currentRows) {
+              if (!matchedLeft.has(row)) {
+                newRows.push({ ...row, ...buildNullSide('right') });
+              }
+            }
+          }
+          if (join.type === 'RIGHT' || join.type === 'FULL') {
+            const nullLeft = buildNullSide('left');
+            for (const targetRow of targetData) {
+              if (!matchedRight.has(targetRow)) {
+                newRows.push({ ...nullLeft, ...targetRow });
+              }
+            }
           }
         }
+
         currentRows = newRows;
       }
     }
@@ -468,7 +626,9 @@ export class SqlExecutor {
         // Calculate projections
         query.columns?.forEach(col => {
           const colName = col.alias || (col.expression.includes('.') ? col.expression.split('.')[1] : col.expression);
-          if (col.aggregate) {
+          if (col.caseExpression) {
+            projected[colName] = groupRows[0] ? this.evaluateCase(col.caseExpression, groupRows[0]) : null;
+          } else if (col.aggregate) {
             projected[colName] = this.computeAggregate(col.aggregate, col.aggregateArg || '', groupRows);
           } else {
             // Take first row value for grouped columns
@@ -526,13 +686,17 @@ export class SqlExecutor {
             const outputCol = col.alias || (col.expression.includes('.') ? col.expression.split('.')[1] : col.expression);
             const srcCol = col.expression;
             
+            // CASE WHEN result
+            if (col.caseExpression) {
+              projected[outputCol] = this.evaluateCase(col.caseExpression, row);
+            }
             // Check computed expressions (e.g., quantity * unit_price)
-            if (srcCol.includes('*')) {
+            else if (srcCol.includes('*')) {
               const [c1, c2] = srcCol.split('*').map(s => s.trim());
               const val1 = Number(getRowValue(row, c1)) || 0;
               const val2 = Number(getRowValue(row, c2)) || 0;
               projected[outputCol] = val1 * val2;
-            } else if (!col.windowFunction) {
+            } else if (!col.windowFunction && !col.aggregate) {
               projected[outputCol] = getRowValue(row, srcCol) !== undefined ? getRowValue(row, srcCol) : null;
             }
           });
