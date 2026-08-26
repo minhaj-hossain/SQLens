@@ -7,7 +7,6 @@ import { ModuleData } from '../../types/curriculum';
 interface HeaderProps {
   userState: UserLearningState;
   currentModule: ModuleData;
-  onUpdateState: (updater: (prev: UserLearningState) => UserLearningState) => void;
   onResetProgress: () => void;
   onOpenSchemaModal: () => void;
   onOpenRoadmapModal: () => void;
@@ -25,7 +24,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   userState,
   currentModule,
-  onUpdateState,
   onResetProgress,
   onOpenSchemaModal,
   onOpenPlayground,
@@ -38,7 +36,6 @@ export const Header: React.FC<HeaderProps> = ({
   isAuthPending,
   onSignOut,
 }) => {
-  const [showDevMenu, setShowDevMenu] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
   const progressPct = Math.round((completedCount / 25) * 100);
@@ -84,22 +81,6 @@ export const Header: React.FC<HeaderProps> = ({
             <span><strong className="text-func font-semibold">{completedCount}/25</strong><span className="hidden min-[380px]:inline"> days</span></span>
           </div>
 
-          {/* Unlock / Dev Controls */}
-          <button
-            id="header-unlock-btn"
-            onClick={() => setShowDevMenu(!showDevMenu)}
-            title="Daily Unlock Controls"
-            aria-label="Daily Unlock Controls"
-            aria-expanded={showDevMenu}
-            className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg border transition-all duration-150 cursor-pointer ${
-              showDevMenu
-                ? 'bg-func/20 border-func/40 text-func'
-                : 'bg-surface-2 border-border text-text-dim hover:text-text hover:border-text-dim'
-            }`}
-          >
-            <Icon name={userState.bypassDailyLock ? 'lock_open' : 'schedule'} className="text-[16px]" />
-          </button>
-
           {/* Database Schema */}
           <button
             id="header-schema-btn"
@@ -135,8 +116,6 @@ export const Header: React.FC<HeaderProps> = ({
           ) : user ? (
             <div
               className="relative flex items-center gap-1.5"
-              onMouseEnter={() => setUserMenuOpen(true)}
-              onMouseLeave={() => setUserMenuOpen(false)}
             >
               {user.role === 'admin' && (
                 <a
@@ -148,10 +127,14 @@ export const Header: React.FC<HeaderProps> = ({
                   <Icon name="shield_person" className="text-[16px]" />
                 </a>
               )}
-              {/* Avatar — animated brand-hue shimmer orbiting the initial */}
+              {/* Avatar — animated brand-hue shimmer orbiting the initial.
+                  Hover handlers live HERE only, so the admin shield icon does
+                  not open the account popover. */}
               <button
                 id="header-user-btn"
                 onClick={() => setUserMenuOpen((v) => !v)}
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setUserMenuOpen(false)}
                 aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
                 aria-expanded={userMenuOpen}
                 className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
@@ -198,6 +181,8 @@ export const Header: React.FC<HeaderProps> = ({
                       exit={{ opacity: 0, y: -4, scale: 0.96 }}
                       transition={{ duration: 0.16, ease: 'easeOut' }}
                       role="menu"
+                      onMouseEnter={() => setUserMenuOpen(true)}
+                      onMouseLeave={() => setUserMenuOpen(false)}
                       aria-label="Account menu"
                       className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-surface-2 shadow-2xl z-50 origin-top-right overflow-hidden"
                     >
@@ -226,6 +211,19 @@ export const Header: React.FC<HeaderProps> = ({
 
                       {/* Actions */}
                       <div className="border-t border-border/60 py-1">
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            if (window.confirm('Reset all course progress back to Day 1?')) {
+                              setUserMenuOpen(false);
+                              onResetProgress();
+                            }
+                          }}
+                          className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
+                        >
+                          <Icon name="restart_alt" className="text-[15px]" />
+                          Reset Progress
+                        </button>
                         {user.role === 'admin' && (
                           <a
                             href="/admin"
@@ -267,103 +265,6 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Dev / Settings Popover - animated slide+fade */}
-        <AnimatePresence>
-          {showDevMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setShowDevMenu(false)}
-                aria-hidden="true"
-              />
-              <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="absolute right-4 top-16 w-72 rounded-xl border border-border bg-surface-2 p-4 shadow-2xl z-50 origin-top-right"
-              >
-                <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <Icon name="settings" className="text-[15px] text-func" />
-                    <span className="text-xs font-semibold text-text font-display">Progression Controls</span>
-                  </div>
-                  <span className="text-[9px] text-text-dim font-mono bg-ink px-1.5 py-0.5 rounded border border-border tracking-wider uppercase">Dev</span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-text">Bypass Unlock Gates</span>
-                    <input
-                      type="checkbox"
-                      checked={userState.bypassDailyLock}
-                      onChange={(e) => {
-                        onUpdateState((prev) => ({ ...prev, bypassDailyLock: e.target.checked }));
-                      }}
-                      className="rounded border-border bg-ink text-func focus:ring-0 cursor-pointer"
-                    />
-                  </div>
-                  <p className="text-[11px] text-text-dim leading-relaxed">
-                    Bypasses all unlock gates: the 6:00 PM daily lock <em>and</em> any scheduled publish dates. Previous module must still be completed.
-                  </p>
-
-                  <div className="border-t border-border/60 pt-2">
-                    <span className="text-text-dim block mb-1.5 text-[11px]">Simulated Time Offset:</span>
-                    <div className="grid grid-cols-3 gap-1">
-                      <button
-                        onClick={() => onUpdateState((prev) => ({ ...prev, simulatedTimeOffsetHours: 0 }))}
-                        className={`rounded px-2 py-1 text-[11px] font-mono border transition-colors duration-150 cursor-pointer ${
-                          userState.simulatedTimeOffsetHours === 0
-                            ? 'bg-func text-ink border-func font-bold'
-                            : 'bg-ink text-text-dim border-border hover:text-text'
-                        }`}
-                      >
-                        Real Time
-                      </button>
-                      <button
-                        onClick={() => onUpdateState((prev) => ({ ...prev, simulatedTimeOffsetHours: prev.simulatedTimeOffsetHours + 6 }))}
-                        className="rounded bg-ink px-2 py-1 text-[11px] font-mono text-text border border-border hover:bg-surface transition-colors duration-150 cursor-pointer"
-                      >
-                        +6h
-                      </button>
-                      <button
-                        onClick={() => onUpdateState((prev) => ({ ...prev, simulatedTimeOffsetHours: prev.simulatedTimeOffsetHours + 24 }))}
-                        className="rounded bg-ink px-2 py-1 text-[11px] font-mono text-text border border-border hover:bg-surface transition-colors duration-150 cursor-pointer"
-                      >
-                        +24h
-                      </button>
-                    </div>
-                    {userState.simulatedTimeOffsetHours !== 0 && (
-                      <p className="mt-1.5 text-[10px] text-func font-mono">
-                        Offset: +{userState.simulatedTimeOffsetHours} hours
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="border-t border-border/60 pt-2 flex justify-between">
-                    <button
-                      onClick={() => {
-                        if (confirm('Reset all course progress back to Day 1?')) {
-                          onResetProgress();
-                          setShowDevMenu(false);
-                        }
-                      }}
-                      className="flex items-center gap-1 text-[11px] text-error hover:underline cursor-pointer"
-                    >
-                      Reset Progress
-                    </button>
-                    <button
-                      onClick={() => setShowDevMenu(false)}
-                      className="text-[11px] text-text-dim hover:text-text cursor-pointer transition-colors duration-150"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
       </div>
     </header>
   );

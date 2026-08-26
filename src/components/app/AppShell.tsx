@@ -703,7 +703,6 @@ export default function AppShell() {
       <Header
         userState={userState}
         currentModule={currentModule}
-        onUpdateState={setUserState}
         onResetProgress={handleResetProgress}
         onOpenSchemaModal={() => setIsSchemaModalOpen(true)}
         onOpenRoadmapModal={() => setIsRoadmapModalOpen(true)}

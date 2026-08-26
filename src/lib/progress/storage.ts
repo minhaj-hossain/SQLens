@@ -25,7 +25,15 @@ export function loadUserState(): UserLearningState {
     const raw = localStorage.getItem(LEARNING_CONFIG.STORAGE_KEY);
     if (!raw) return INITIAL_USER_STATE;
     const parsed = JSON.parse(raw);
-    return { ...INITIAL_USER_STATE, ...parsed };
+    // The legacy dev-only "Progression Controls" were removed once role-based
+    // administration shipped. Normalize any stale bypass flags so a stored
+    // true/offset can never silently unlock modules for regular users.
+    return {
+      ...INITIAL_USER_STATE,
+      ...parsed,
+      bypassDailyLock: false,
+      simulatedTimeOffsetHours: 0,
+    };
   } catch (e) {
     console.error('Failed to load learning state from localStorage:', e);
     return INITIAL_USER_STATE;

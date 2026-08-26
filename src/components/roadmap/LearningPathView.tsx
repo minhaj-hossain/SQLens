@@ -6,6 +6,7 @@ import { ModuleData, Concept } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
 import {
   getModuleUnlockStatus,
+  getModuleProgressCounts,
   isConceptCompleted,
   isModuleConceptsCompleted,
   isModuleChallengeUnlocked,
@@ -378,6 +379,9 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   const completedConceptsCount = module.concepts.filter((c) =>
                     isConceptCompleted(c, module.id, userState)
                   ).length;
+                  // Task-granular progress — some days pack many tasks into one
+                  // concept, so concept-count alone would show a misleading 0/1.
+                  const taskProgress = getModuleProgressCounts(module, userState);
 
                   const challengeStatus = isModuleChallengeUnlocked(module, ALL_MODULES, userState);
                   const isChallengeUnlocked = challengeStatus.isUnlocked;
@@ -615,7 +619,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   ? `${module.challenge.tasks.length}/${module.challenge.tasks.length} done`
                                   : isChallengeUnlocked
                                   ? 'Ready to Start →'
-                                  : `${completedConceptsCount}/${totalConcepts} concepts done`}
+                                  : `${taskProgress.done}/${taskProgress.total} tasks done`}
                               </span>
                             </div>
                           )}

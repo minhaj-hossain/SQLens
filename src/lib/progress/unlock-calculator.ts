@@ -121,7 +121,43 @@ export function isConceptCompleted(
 }
 
 /**
- * Checks if all concepts in a module have been completed.
+ * Task-level progress counts for a module. Some modules pack many practice
+ * tasks into a single concept object, so counting *concepts* alone would read
+ * "0/1" while the learner is halfway through ten tasks. This counts finished
+ * tasks instead (a concept with no tasks counts as one unit when complete).
+ */
+export function getModuleProgressCounts(
+  module: ModuleData,
+  state: UserLearningState
+): { done: number; total: number } {
+  const moduleProgress = state.completedModules?.[module.id];
+  let done = 0;
+  let total = 0;
+
+  for (const concept of module.concepts) {
+    const tasks = concept.tasks ?? [];
+    if (tasks.length === 0) {
+      // Concept-level unit (theory-only concept)
+      total += 1;
+      if (isConceptCompleted(concept, module.id, state)) done += 1;
+      continue;
+    }
+    total += tasks.length;
+    for (const task of tasks) {
+      if (
+        state.taskAttempts?.[task.id]?.completed ||
+        moduleProgress?.completedTasks?.includes(task.id)
+      ) {
+        done += 1;
+      }
+    }
+  }
+
+  return { done, total };
+}
+
+/**
+ * Checks whether all concepts in a module have been completed.
  */
 export function isModuleConceptsCompleted(
   module: ModuleData,
