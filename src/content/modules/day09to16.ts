@@ -1241,7 +1241,7 @@ export const DAY_10_MODULE: ModuleData = {
         {
           id: 'day10-c1-t3',
           title: 'Task 3 (Goal Only): In-Stock Category Inventory Audit',
-          description: 'For each `category_id`, count products where `quantity_in_stock` is greater than 0. Keep only categories with at least 4 such products (`HAVING COUNT(*) >= 4`) and sort by the count from highest to lowest.',
+          description: 'Count how many in-stock products each category has (ignore products with zero stock). Only include categories that have at least 4 in-stock products, and put the categories with the most in-stock products first.',
           instructions: [
             'Select `category_id` and `COUNT(*) AS in_stock_count` from `products`.',
             'Filter rows with `WHERE quantity_in_stock > 0` before grouping.',
@@ -2374,7 +2374,7 @@ export const DAY_14_MODULE: ModuleData = {
       {
         id: 'day14-hw-2',
         title: 'Report 2: Top 5 VIP Spenders Leaderboard',
-        description: 'Find the 5 customers who have spent the most money overall: join `customers → orders → order_items`, compute each customer\'s total spend as `SUM(oi.quantity * oi.unit_price)`, then sort by that total from highest to lowest and return only the top 5 rows.',
+        description: 'Build a leaderboard of the 5 customers who have spent the most money across all their orders. Show each customer\'s id, name, and their total amount spent, best spender first.',
         instructions: [
           'Select `c.customer_id`, `c.name`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name` ORDER BY `total_spent DESC` LIMIT 5.',
           'End with a semicolon (;).',
