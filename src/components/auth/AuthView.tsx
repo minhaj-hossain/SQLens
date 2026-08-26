@@ -182,7 +182,14 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
     try {
       const res = await authClient.signIn.email({ email, password, rememberMe });
       if (res.error) {
-        setError(res.error.message ?? 'Unable to sign in. Check your email and password.');
+        // Blocked accounts are rejected server-side with ACCOUNT_BLOCKED.
+        if (res.error.message === 'ACCOUNT_BLOCKED' || res.error.status === 403) {
+          setError(
+            'This account has been suspended by an administrator. If you believe this is a mistake, contact the site administrator.'
+          );
+        } else {
+          setError(res.error.message ?? 'Unable to sign in. Check your email and password.');
+        }
         setLoading(false);
         return;
       }

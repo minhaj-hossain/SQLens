@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { MongoClient } from 'mongodb';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 
 /**
  * Server-side Better Auth instance (never import this file from the client —
@@ -45,6 +46,12 @@ export const mongoClient = new MongoClient(mongodbUri, {
 const databaseName =
   (process.env.MONGODB_DB_NAME ?? databaseNameFromUri(mongodbUri)) || 'sqlens';
 
+/**
+ * The database used by Better Auth. Admin tooling should use this same handle
+ * so reads/writes hit the identical collection set as auth does.
+ */
+export const db = mongoClient.db(databaseName);
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL:
@@ -66,7 +73,7 @@ export const auth = betterAuth({
       },
     },
   },
-  database: mongodbAdapter(mongoClient.db(databaseName), {
+  database: mongodbAdapter(db, {
     client: mongoClient,
     // IMPORTANT: Passing a `client` enables multi-document transactions by
     // default. On a fresh database, Better Auth's first signup/sign-in triggers
@@ -80,6 +87,23 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+  },
+  hooks: {
+    // Block sign-in at the door for suspended accounts. Existing/live sessions
+    // are enforced separately in src/lib/authorize.ts (status check per request)
+    // and by the blocked-account screen in the app shell.
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === '/sign-in/email') {
+        const email = (
+          ctx.body as { email?: string } | undefined
+        )?.email?.toLowerCase();
+        if (!email) return;
+        const user = await db.collection('user').findOne({ email });
+        if (user?.status === 'blocked') {
+          throw new APIError('FORBIDDEN', { message: 'ACCOUNT_BLOCKED' });
+        }
+      }
+    }),
   },
   advanced: {
     database: { joins: true },

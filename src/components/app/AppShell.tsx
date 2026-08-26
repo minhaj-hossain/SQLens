@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Header } from '@/components/layout/Header';
 import { AuthView } from '@/components/auth/AuthView';
+import BlockedView from '@/components/auth/BlockedView';
 import { LearningPathView } from '@/components/roadmap/LearningPathView';
 import { ConceptLessonView } from '@/components/learning/ConceptLessonView';
 import { PracticeTaskView } from '@/components/learning/PracticeTaskView';
@@ -75,6 +76,7 @@ export default function AppShell() {
         name?: string | null;
         email?: string | null;
         role?: string | null;
+        status?: string | null;
       } | null;
     } | null)
       ?.user ?? null;
@@ -444,6 +446,12 @@ export default function AppShell() {
         onSuccess={handleAuthBack}
       />
     );
+  }
+
+  // A blocked account gets a dedicated full-page screen instead of the app.
+  // (Server-side enforcement happens independently on every authenticated API.)
+  if (!isAuthPending && authUser?.status === 'blocked') {
+    return <BlockedView onSignOut={handleSignOut} />;
   }
 
   return (
