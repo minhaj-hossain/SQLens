@@ -166,6 +166,26 @@ export function isModuleFullyComplete(
 }
 
 /**
+ * Restores which Independent Challenge tasks were completed for a module.
+ * Challenge task ids are persisted inside `completedModules[id].completedTasks`
+ * (appended by handleChallengeTaskSuccess), so partial challenge progress
+ * survives refresh and cross-device sync. If the whole challenge is finished
+ * (`challengeCompleted`), every task id is returned.
+ */
+export function getCompletedChallengeTaskIds(
+  module: ModuleData,
+  state: UserLearningState
+): string[] {
+  if (!module.challenge) return [];
+  const challengeIds = module.challenge.tasks.map((t) => t.id);
+  const record = state.completedModules?.[module.id];
+  if (!record) return [];
+  if (record.challengeCompleted) return challengeIds;
+  const saved = new Set(record.completedTasks || []);
+  return challengeIds.filter((id) => saved.has(id));
+}
+
+/**
  * Determines whether the Independent Challenge for a module is unlocked.
  * A challenge is unlocked ONLY IF:
  * 1. The module itself is unlocked (or completed).

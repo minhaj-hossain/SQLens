@@ -936,7 +936,7 @@ export const DAY_05_MODULE: ModuleData = {
       {
         id: 'day05-hw-2',
         title: 'Task 2: Priority Reorder Products',
-        description: 'Find products at or below their reorder level, sorted from lowest stock to highest.',
+        description: 'Find all products where `quantity_in_stock` is less than or equal to `reorder_level`. Sort the results by `quantity_in_stock` from lowest to highest (ASC).',
         instructions: [
           'Select `name`, `quantity_in_stock`, `reorder_level` from `products`.',
           'Where `quantity_in_stock <= reorder_level` ordered by `quantity_in_stock ASC`.',
@@ -1643,8 +1643,8 @@ export const DAY_08_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day08-c1-t1',
-          title: 'Warmup 1: Low Stock Products Worst-First',
-          description: 'Select products where `quantity_in_stock <= reorder_level`, ordered by `quantity_in_stock ASC`.',
+          title: 'Warmup 1: Low Stock Products (Lowest Stock First)',
+          description: 'Find all products where `quantity_in_stock` is less than or equal to `reorder_level`. Sort the results by `quantity_in_stock` from lowest to highest (ASC).',
           instructions: [
             'Select `name`, `quantity_in_stock`, `reorder_level` from `products`.',
             'Where `quantity_in_stock <= reorder_level`.',
@@ -1664,7 +1664,7 @@ export const DAY_08_MODULE: ModuleData = {
             requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
             expectedRowCount: 8,
           },
-          successMessage: 'Warmup 1 completed! Low stock items identified worst-first.',
+          successMessage: 'Warmup 1 completed! Low stock items listed lowest stock first.',
         },
         {
           id: 'day08-c1-t2',
@@ -1704,15 +1704,15 @@ export const DAY_08_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day08-hw-1',
-        title: 'Deliverable 1 (Core): Products below reorder level, worst-first',
-        description: 'Products below reorder level, worst-first (lowest quantity_in_stock first).',
+        title: 'Deliverable 1 (Core): Products at or below reorder level, lowest stock first',
+        description: 'Find all products where `quantity_in_stock` is less than or equal to `reorder_level`. Sort the results by `quantity_in_stock` from lowest to highest (ASC).',
         instructions: [
           'Select from `products` where `quantity_in_stock <= reorder_level` ordered by `quantity_in_stock ASC`.',
           'End with a semicolon (;).',
         ],
         type: 'challenge',
         primaryTable: 'products',
-        initialSql: '-- Deliverable 1: Products below reorder level, worst-first\n',
+        initialSql: '-- Deliverable 1: Products at or below reorder level, lowest stock first\n',
         solutionSql: 'SELECT * FROM products WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;',
         solutionExplanation: 'Sorts products below reorder level by stock quantity ascending.',
         hints: [{ level: 1, text: 'Use `WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;`' }],
@@ -1722,12 +1722,12 @@ export const DAY_08_MODULE: ModuleData = {
           requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
           expectedRowCount: 8,
         },
-        successMessage: 'Deliverable 1 verified! Low stock items sorted worst-first.',
+        successMessage: 'Deliverable 1 verified! Low stock items sorted lowest stock first.',
       },
       {
         id: 'day08-hw-2',
         title: 'Deliverable 2 (Combination): Distinct supplier IDs in low-stock inventory',
-        description: 'Distinct supplier IDs represented in the low-stock inventory list.',
+        description: 'List each unique `supplier_id` that appears on any product where `quantity_in_stock` is less than or equal to `reorder_level`. Use `DISTINCT` so no supplier is repeated.',
         instructions: [
           'Select `DISTINCT supplier_id` from `products` where `quantity_in_stock <= reorder_level`.',
           'End with a semicolon (;).',
@@ -1750,7 +1750,7 @@ export const DAY_08_MODULE: ModuleData = {
       {
         id: 'day08-hw-3',
         title: 'Deliverable 3 (Transfer): The single newest customer signup',
-        description: 'Retrieve the single most recently registered customer record.',
+        description: 'Find the most recently registered customer: sort `customers` by `signup_date` from newest to oldest (DESC) and return only the first row (`LIMIT 1`).',
         instructions: [
           'Select from `customers` ordered by `signup_date DESC LIMIT 1`.',
           'End with a semicolon (;).',
@@ -1772,7 +1772,7 @@ export const DAY_08_MODULE: ModuleData = {
       {
         id: 'day08-hw-4',
         title: 'Deliverable 4 (Transfer): Top 5 cheapest products',
-        description: 'Retrieve the 5 lowest priced products in the catalog.',
+        description: 'Retrieve the 5 products with the lowest `price`: sort `products` by `price` ascending (ASC) and return only the first 5 rows (`LIMIT 5`).',
         instructions: [
           'Select from `products` ordered by `price ASC LIMIT 5`.',
           'End with a semicolon (;).',

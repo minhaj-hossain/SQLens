@@ -42,6 +42,7 @@ import {
   isConceptCompleted,
   isModuleConceptsCompleted,
   isModuleChallengeUnlocked,
+  getCompletedChallengeTaskIds,
 } from '@/lib/progress/unlock-calculator';
 
 type LearningStage = 'lesson' | 'practice' | 'concept_complete' | 'challenge' | 'day_complete';
@@ -367,14 +368,12 @@ export default function AppShell() {
     });
   }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage, activeTab]);
 
-  // On reload into a finished day's challenge view, restore its completed-markers
-  // so all challenge tasks show as done (same as when navigating normally).
+  // On reload into a challenge view, restore completed-task markers from the
+  // persisted module record so partial progress survives refresh (not just the
+  // all-or-nothing challengeCompleted flag).
   useEffect(() => {
     if (stage === 'challenge' && currentModule.challenge) {
-      const rec = userState.completedModules[currentModule.id];
-      if (rec?.challengeCompleted) {
-        setCompletedChallengeTaskIds(currentModule.challenge.tasks.map((t) => t.id));
-      }
+      setCompletedChallengeTaskIds(getCompletedChallengeTaskIds(currentModule, userState));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentModuleId, stage]);
@@ -420,11 +419,7 @@ export default function AppShell() {
       setCurrentModuleId(moduleId);
       setCurrentConceptIndex(conceptIndex);
       setCurrentTaskIndex(0);
-      if (userState.completedModules[moduleId]?.challengeCompleted && mod.challenge) {
-        setCompletedChallengeTaskIds(mod.challenge.tasks.map((t) => t.id));
-      } else {
-        setCompletedChallengeTaskIds([]);
-      }
+      setCompletedChallengeTaskIds(mod.challenge ? getCompletedChallengeTaskIds(mod, userState) : []);
       setStage('challenge');
       setActiveTab('practice');
       return;
@@ -433,6 +428,7 @@ export default function AppShell() {
     setCurrentModuleId(moduleId);
     setCurrentConceptIndex(conceptIndex);
     setCurrentTaskIndex(0);
+    // Non-challenge stages don't render challenge task tabs.
     setCompletedChallengeTaskIds([]);
 
     if (targetStage === 'day_complete' && userState.completedModules[moduleId]) {

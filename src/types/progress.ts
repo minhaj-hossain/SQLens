@@ -23,6 +23,11 @@ export interface CompletedModuleRecord {
   completedAt: string; // ISO String
   learningDayCycleId?: string;
   completedConcepts?: string[];
+  /**
+   * Ids of finished tasks. Includes BOTH guided practice task ids and
+   * independent-challenge task ids (challenge ones are appended by
+   * handleChallengeTaskSuccess), so partial challenge progress persists.
+   */
   completedTasks?: string[];
   challengeCompleted?: boolean;
 }

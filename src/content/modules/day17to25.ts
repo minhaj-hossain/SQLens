@@ -547,7 +547,7 @@ export const DAY_17_MODULE: ModuleData = {
         {
           id: 'day17-c1d-t1',
           title: 'Task 1: Products Above Category Average',
-          description: 'Find name, price, and category_id for products priced higher than the average price within their own category.',
+          description: 'Find `name`, `price`, and `category_id` of products whose `price` is greater than the average price of all products in the same category (compare each row using a correlated subquery on `category_id`).',
           instructions: [
             'Query `products p1`.',
             'Select `p1.name`, `p1.price` and `p1.category_id`.',
@@ -574,7 +574,7 @@ export const DAY_17_MODULE: ModuleData = {
         {
           id: 'day17-c1d-t2',
           title: 'Task 2: Products with Above-Average Stock in Category',
-          description: 'Select name, quantity_in_stock, and category_id for products having stock strictly greater than their category average stock.',
+          description: 'Find `name`, `quantity_in_stock`, and `category_id` of products whose `quantity_in_stock` is strictly greater than the average `quantity_in_stock` of all products in the same category.',
           instructions: [
             'Query `products p1`.',
             'Select `p1.name`, `p1.quantity_in_stock`, and `p1.category_id`.',
@@ -923,7 +923,7 @@ export const DAY_18_MODULE: ModuleData = {
         {
           id: 'day18-c1-t1',
           title: 'Task 1 (High Guidance): Products Above Category Average',
-          description: 'Find products priced higher than the average price within their own category.',
+          description: 'Find products whose `price` is greater than the average price of all products in the same category (compare each row with a correlated subquery on `category_id`).',
           instructions: [
             'Query `products p1`.',
             'Select `p1.name`, `p1.price`, and `p1.category_id`.',
@@ -1013,7 +1013,7 @@ export const DAY_18_MODULE: ModuleData = {
       {
         id: 'day18-hw-1',
         title: 'Task 1: Products priced above their own category average',
-        description: 'Products priced above their own category average (correlated subquery).',
+        description: 'Find `name` and `price` of products whose `price` is greater than the average price of all products in the same category (use a correlated subquery matching `category_id`).',
         instructions: [
           'Select `p1.name`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
           'End with a semicolon (;).',
@@ -3178,7 +3178,7 @@ export const DAY_23_MODULE: ModuleData = {
         {
           id: 'day23-c1-t1',
           title: 'Task 1 (Guided Fix): Customer Order Volume Audit',
-          description: 'List all customers with their order count, using LEFT JOIN so customers with 0 orders are preserved.',
+          description: 'List every customer together with their number of orders (`COUNT`); use a `LEFT JOIN` so customers who have never ordered still appear with a count of 0.',
           instructions: [
             'Query `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`.',
             'Select `c.customer_id`, `c.name`, and `COUNT(o.order_id) AS total_orders`.',
@@ -3203,7 +3203,7 @@ export const DAY_23_MODULE: ModuleData = {
         {
           id: 'day23-c1-t2',
           title: 'Task 2 (Transfer): Catalog Sales Volume Audit with COALESCE',
-          description: 'List all products with total units sold using LEFT JOIN and COALESCE(SUM(oi.quantity), 0) so unpurchased products show 0 units.',
+          description: 'List every product with its total units sold: compute `SUM(oi.quantity)` via a `LEFT JOIN` from `products` to `order_items`, and wrap it in `COALESCE(..., 0)` so products never purchased show 0 instead of nothing.',
           instructions: [
             'Query `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
             'Select `p.product_id`, `p.name`, and `COALESCE(SUM(oi.quantity), 0) AS total_units_sold`.',
