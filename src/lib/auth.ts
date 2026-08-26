@@ -50,6 +50,22 @@ export const auth = betterAuth({
   baseURL:
     process.env.BETTER_AUTH_URL ??
     `http://localhost:${process.env.PORT || 3000}`,
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        input: false, // never writable from the client UI
+        returned: true, // exposed on the session user object
+        defaultValue: 'user',
+      },
+      status: {
+        type: 'string',
+        input: false,
+        returned: true,
+        defaultValue: 'active',
+      },
+    },
+  },
   database: mongodbAdapter(mongoClient.db(databaseName), {
     client: mongoClient,
     // IMPORTANT: Passing a `client` enables multi-document transactions by
