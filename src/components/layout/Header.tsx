@@ -36,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSignOut,
 }) => {
   const [showDevMenu, setShowDevMenu] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
   const progressPct = Math.round((completedCount / 25) * 100);
 
@@ -119,7 +120,11 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="w-3 h-3 rounded-full border-2 border-border border-t-func animate-spin" />
             </button>
           ) : user ? (
-            <>
+            <div
+              className="relative flex items-center gap-1.5"
+              onMouseEnter={() => setUserMenuOpen(true)}
+              onMouseLeave={() => setUserMenuOpen(false)}
+            >
               {user.role === 'admin' && (
                 <a
                   href="/admin"
@@ -130,27 +135,110 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="material-symbols-outlined text-[16px]">shield_person</span>
                 </a>
               )}
-              <span
-                title={user.email ?? user.name ?? 'Signed in'}
-                aria-label={`Signed in as ${user.name ?? user.email}`}
-                className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 cursor-default"
-              >
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-func/15 text-func text-[10px] font-bold font-mono">
-                  {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
-                </span>
-                <span className="max-w-[110px] truncate font-mono text-[11px] text-text-dim">
-                  {user.name ?? user.email}
-                </span>
-              </span>
+              {/* Avatar — animated gradient halo orbiting the initial */}
               <button
-                onClick={() => onSignOut?.()}
-                title="Sign out"
-                aria-label="Sign out"
-                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-error hover:border-text-dim transition-all duration-150 cursor-pointer"
+                id="header-user-btn"
+                onClick={() => setUserMenuOpen((v) => !v)}
+                aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
+                aria-expanded={userMenuOpen}
+                className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
               >
-                <span className="material-symbols-outlined text-[16px]">logout</span>
+                {/* Rotating conic-gradient ring */}
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background:
+                      'conic-gradient(from 0deg, #38BDF8, #60A5FA, #A78BFA, #38BDF8)',
+                  }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 6, ease: 'linear', repeat: Infinity }}
+                />
+                {/* Inner disc with initial */}
+                <span className="absolute inset-[2px] rounded-full bg-ink flex items-center justify-center">
+                  <span className="font-display font-bold text-func text-xs sm:text-sm select-none">
+                    {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
+                  </span>
+                </span>
+                {/* Subtle glow pulse */}
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute -inset-0.5 rounded-full bg-func/20 blur-[6px]"
+                  animate={{ opacity: [0.25, 0.55, 0.25] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                />
               </button>
-            </>
+              {/* Profile popover — opens on hover/tap */}
+              <AnimatePresence>
+                {userMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setUserMenuOpen(false)}
+                      aria-hidden="true"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                      transition={{ duration: 0.16, ease: 'easeOut' }}
+                      role="menu"
+                      aria-label="Account menu"
+                      className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-surface-2 shadow-2xl z-50 origin-top-right overflow-hidden"
+                    >
+                      {/* Identity header */}
+                      <div className="flex items-start gap-2.5 px-3.5 pt-3.5 pb-3">
+                        <span className="shrink-0 mt-0.5 flex items-center justify-center w-8 h-8 rounded-full bg-func/15 text-func text-sm font-bold font-display">
+                          {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-text font-display truncate">
+                            {user.name || 'Learner'}
+                          </p>
+                          <p
+                            className="font-mono text-[10px] text-text-dim truncate"
+                            title={user.email ?? ''}
+                          >
+                            {user.email}
+                          </p>
+                          {user.role === 'admin' && (
+                            <span className="mt-1 inline-block bg-func/15 text-func border border-func/30 font-mono text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="border-t border-border/60 py-1">
+                        {user.role === 'admin' && (
+                          <a
+                            href="/admin"
+                            role="menuitem"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="sm:hidden flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-func">shield_person</span>
+                            Admin dashboard
+                          </a>
+                        )}
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            onSignOut?.();
+                          }}
+                          className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">logout</span>
+                          Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           ) : (
             <button
               id="header-signin-btn"
