@@ -105,7 +105,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
                 {totalRows} {totalRows === 1 ? 'row' : 'rows'}
               </span>
               <span className="px-2 py-0.5 rounded bg-surface-2 text-string text-[10px] font-mono border border-border">
-                {result.fields?.length || 0} cols
+                {result.columns?.length || 0} cols
               </span>
               <span className="px-2 py-0.5 rounded bg-surface-2 text-func text-[10px] font-mono border border-border">
                 {result.executionTimeMs?.toFixed(1) || '1.2'}ms
@@ -215,7 +215,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             <table className="min-w-full text-left font-mono border-collapse text-xs">
             <thead className="sticky top-0 z-10 bg-surface-2 border-b border-border text-text">
               <tr>
-                {result.fields?.map((field) => (
+                {result.columns?.map((field) => (
                   <th key={field} className="px-3 py-2 text-[11px] font-bold select-none whitespace-nowrap bg-surface-2 text-keyword">
                     {field}
                   </th>
@@ -225,7 +225,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             <tbody className="divide-y divide-border text-[11.5px] text-text-dim">
               {displayedRows.map((row, rIdx) => (
                 <tr key={rIdx} className="hover:bg-surface-2/50 transition-colors">
-                  {result.fields?.map((field) => (
+                  {result.columns?.map((field) => (
                     <td key={field} className="px-3 py-1.5 whitespace-nowrap">
                       {row[field] !== null && row[field] !== undefined ? (
                         String(row[field])

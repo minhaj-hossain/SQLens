@@ -13,6 +13,11 @@ interface HeaderProps {
   activeViewTitle?: string;
   onProfileClick?: () => void;
   onLogoClick?: () => void;
+  onSignInClick?: () => void;
+  onSignUpClick?: () => void;
+  user?: { id?: string; name?: string | null; email?: string | null } | null;
+  isAuthPending?: boolean;
+  onSignOut?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,6 +29,11 @@ export const Header: React.FC<HeaderProps> = ({
   activeViewTitle = 'Learning Path',
   onProfileClick,
   onLogoClick,
+  onSignInClick,
+  onSignUpClick,
+  user,
+  isAuthPending,
+  onSignOut,
 }) => {
   const [showDevMenu, setShowDevMenu] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
@@ -99,16 +109,49 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="material-symbols-outlined text-[16px]">database</span>
           </button>
 
-          {/* Profile / Avatar */}
-          <button
-            id="header-profile-btn"
-            onClick={() => { if (onProfileClick) onProfileClick(); }}
-            title="Your Profile"
-            aria-label="Your Profile"
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-func to-keyword flex items-center justify-center font-display font-bold text-[11px] sm:text-xs text-ink hover:opacity-90 transition cursor-pointer"
-          >
-            M
-          </button>
+          {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
+          {isAuthPending ? (
+            <button
+              title="Checking session"
+              aria-label="Checking session"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface-2 border border-border flex items-center justify-center"
+            >
+              <span className="w-3 h-3 rounded-full border-2 border-border border-t-func animate-spin" />
+            </button>
+          ) : user ? (
+            <>
+              <span
+                title={user.email ?? user.name ?? 'Signed in'}
+                aria-label={`Signed in as ${user.name ?? user.email}`}
+                className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 cursor-default"
+              >
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-func/15 text-func text-[10px] font-bold font-mono">
+                  {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
+                </span>
+                <span className="max-w-[110px] truncate font-mono text-[11px] text-text-dim">
+                  {user.name ?? user.email}
+                </span>
+              </span>
+              <button
+                onClick={() => onSignOut?.()}
+                title="Sign out"
+                aria-label="Sign out"
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-error hover:border-text-dim transition-all duration-150 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+              </button>
+            </>
+          ) : (
+            <button
+              id="header-signin-btn"
+              onClick={() => onSignInClick?.()}
+              title="Sign in"
+              aria-label="Sign in"
+              className="flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-lg bg-func text-ink font-bold hover:brightness-110 transition-all duration-150 cursor-pointer font-mono text-[11px] sm:text-xs whitespace-nowrap"
+            >
+              Sign In
+            </button>
+          )}
         </div>
 
         {/* Dev / Settings Popover - animated slide+fade */}
