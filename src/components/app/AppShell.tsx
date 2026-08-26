@@ -1,5 +1,5 @@
 ﻿'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Header } from '@/components/layout/Header';
 import { AuthView } from '@/components/auth/AuthView';
@@ -27,6 +27,7 @@ import { UserLearningState } from '@/types/progress';
 import { ModuleData } from '@/types/curriculum';
 import { AvailabilityMap } from '@/types/progress';
 import { setAvailabilityMap } from '@/lib/progress/availability-store';
+import { mergeProgress, toCloudProgress, CloudProgress } from '@/lib/progress/merge';
 import { authClient } from '@/lib/auth-client';
 import {
   getModuleUnlockStatus,
@@ -104,6 +105,92 @@ export default function AppShell() {
     };
   }, []);
 
+  // ---- Phase 2: cross-device progress sync --------------------------------
+  // Local writes stay instant & offline-safe. For signed-in users we also
+  // hydrate from the server once per session, merge (local ∪ cloud), then
+  // keep a debounced copy pushed to /api/me/progress (with retry + flush).
+  const signedInUserId =
+    authUser?.id && authUser.status !== 'blocked' ? authUser.id : null;
+
+  const hydratedForUserRef = useRef<string | null>(null);
+  const latestStateRef = useRef(userState);
+  latestStateRef.current = userState;
+  const signedInUserIdRef = useRef<string | null>(null);
+  signedInUserIdRef.current = signedInUserId;
+  const pendingPushRef = useRef(false);
+  const lastPushedJsonRef = useRef<string | null>(null);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCountRef = useRef(0);
+
+  /** Immediate PUT of the current local state to the user's cloud doc. */
+  const pushCloudNow = async (): Promise<boolean> => {
+    if (!signedInUserIdRef.current) return false;
+    if (syncTimerRef.current) {
+      clearTimeout(syncTimerRef.current);
+      syncTimerRef.current = null;
+    }
+    const payload = JSON.stringify({ progress: toCloudProgress(latestStateRef.current) });
+    try {
+      const r = await fetch('/api/me/progress', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      lastPushedJsonRef.current = payload;
+      pendingPushRef.current = false;
+      retryCountRef.current = 0;
+      return true;
+    } catch {
+      // Network failure — localStorage already holds the data; retry w/ backoff.
+      if (retryCountRef.current < 3) {
+        retryCountRef.current += 1;
+        pendingPushRef.current = true;
+        syncTimerRef.current = setTimeout(
+          () => void pushCloudNow(),
+          4000 * retryCountRef.current,
+        );
+      }
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (!signedInUserId) {
+      hydratedForUserRef.current = null;
+      return;
+    }
+    if (hydratedForUserRef.current === signedInUserId) return; // already done
+    hydratedForUserRef.current = signedInUserId;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const r = await fetch('/api/me/progress');
+        if (cancelled || !r.ok) return;
+        const body = (await r.json()) as { progress: CloudProgress | null };
+        if (cancelled) return;
+        if (body.progress) {
+          // Merge guest/local progress with cloud progress → unified state.
+          const merged = mergeProgress(latestStateRef.current, body.progress);
+          latestStateRef.current = merged;
+          setUserState(merged);
+          await pushCloudNow(); // persist merged result immediately
+        } else {
+          // First sign-in with no cloud doc — upload existing local progress.
+          await pushCloudNow();
+        }
+      } catch {
+        /* offline — the debounced saver will reconcile on the next change */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedInUserId]);
+
   // Modals & UI Toggles
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState<boolean>(false);
   const [isRoadmapModalOpen, setIsRoadmapModalOpen] = useState<boolean>(false);
@@ -137,10 +224,48 @@ export default function AppShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage]);
 
-  // Sync state with localStorage
+  // Sync state with localStorage (instant — offline-safe source of truth)
   useEffect(() => {
     saveUserState(userState);
   }, [userState]);
+
+  // Debounced cloud sync for signed-in users (skips no-op / already-synced
+  // state, e.g. the write performed by hydration itself).
+  useEffect(() => {
+    if (!signedInUserId || hydratedForUserRef.current !== signedInUserId) return;
+    if (lastPushedJsonRef.current === JSON.stringify(toCloudProgress(userState))) return;
+    pendingPushRef.current = true;
+    const t = setTimeout(() => void pushCloudNow(), 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userState, signedInUserId]);
+
+  // Flush pending cloud saves when the tab is closed or hidden.
+  useEffect(() => {
+    const flush = () => {
+      if (!signedInUserIdRef.current || !pendingPushRef.current) return;
+      try {
+        void fetch('/api/me/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ progress: toCloudProgress(latestStateRef.current) }),
+          keepalive: true, // survives tab unload
+        });
+        pendingPushRef.current = false;
+      } catch {
+        /* nothing more we can do on unload */
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
 
   // Persist the learner's current navigation position so reloads resume here.
   useEffect(() => {
