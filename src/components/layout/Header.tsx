@@ -127,18 +127,22 @@ export const Header: React.FC<HeaderProps> = ({
                   <Icon name="shield_person" className="text-[16px]" />
                 </a>
               )}
-              {/* Avatar — animated brand-hue shimmer orbiting the initial.
-                  Hover handlers live HERE only, so the admin shield icon does
-                  not open the account popover. */}
-              <button
-                id="header-user-btn"
-                onClick={() => setUserMenuOpen((v) => !v)}
+              {/* Avatar + popover share one hover wrapper so the mouse can move
+                  from the circle into the menu without closing it. The admin
+                  shield stays OUTSIDE this wrapper — hovering it never opens
+                  the account menu. */}
+              <div
+                className="relative"
                 onMouseEnter={() => setUserMenuOpen(true)}
                 onMouseLeave={() => setUserMenuOpen(false)}
-                aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
-                aria-expanded={userMenuOpen}
-                className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
               >
+                <button
+                  id="header-user-btn"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
+                  aria-expanded={userMenuOpen}
+                  className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
+                >
                 {/* Rotating conic ring — cyan→sky shades only (matches --func brand) */}
                 <motion.span
                   aria-hidden="true"
@@ -181,8 +185,6 @@ export const Header: React.FC<HeaderProps> = ({
                       exit={{ opacity: 0, y: -4, scale: 0.96 }}
                       transition={{ duration: 0.16, ease: 'easeOut' }}
                       role="menu"
-                      onMouseEnter={() => setUserMenuOpen(true)}
-                      onMouseLeave={() => setUserMenuOpen(false)}
                       aria-label="Account menu"
                       className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-surface-2 shadow-2xl z-50 origin-top-right overflow-hidden"
                     >
@@ -251,6 +253,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           ) : (
             <button
