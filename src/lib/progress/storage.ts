@@ -48,6 +48,65 @@ export function resetUserState(): UserLearningState {
   return INITIAL_USER_STATE;
 }
 
+// =============================================================================
+// UI NAVIGATION SNAPSHOT
+// Persists the learner's current position (module / concept / task / stage /
+// active view) so a page reload returns them to the same screen instead of the
+// homepage. Stored separately from learning progress to avoid coupling.
+// =============================================================================
+
+export interface NavSnapshot {
+  moduleId: string;
+  conceptIndex: number;
+  taskIndex: number;
+  stage: string;
+  tab: string;
+}
+
+const NAV_KEY = 'sql_mastery_nav_v1';
+
+const VALID_TABS = ['learning-path', 'home', 'practice', 'schema', 'settings'];
+const VALID_STAGES = ['lesson', 'practice', 'concept_complete', 'challenge', 'day_complete'];
+
+export function loadNavSnapshot(): NavSnapshot | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(NAV_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    const tab = VALID_TABS.includes(parsed.tab) ? parsed.tab : 'learning-path';
+    const stage = VALID_STAGES.includes(parsed.stage) ? parsed.stage : 'lesson';
+
+    return {
+      moduleId: typeof parsed.moduleId === 'string' ? parsed.moduleId : 'day-01',
+      conceptIndex: Number.isFinite(parsed.conceptIndex) ? Number(parsed.conceptIndex) : 0,
+      taskIndex: Number.isFinite(parsed.taskIndex) ? Number(parsed.taskIndex) : 0,
+      stage,
+      tab,
+    };
+  } catch (e) {
+    console.error('Failed to load navigation snapshot:', e);
+    return null;
+  }
+}
+
+export function saveNavSnapshot(snapshot: NavSnapshot): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(NAV_KEY, JSON.stringify(snapshot));
+  } catch (e) {
+    console.error('Failed to save navigation snapshot:', e);
+  }
+}
+
+export function resetNavSnapshot(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(NAV_KEY);
+  }
+}
+
 export const loadUserLearningState = loadUserState;
 export const saveUserLearningState = saveUserState;
 export const resetAllProgress = resetUserState;

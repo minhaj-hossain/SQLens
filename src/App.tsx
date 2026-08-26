@@ -12,7 +12,14 @@ import { SchemaModal } from './components/roadmap/SchemaModal';
 import { RoadmapModal } from './components/roadmap/RoadmapModal';
 import { ALL_MODULES, getModuleById } from './content/curriculum-index';
 import { SqlExecutor } from './lib/sql-engine/executor';
-import { loadUserState, saveUserState, resetUserState } from './lib/progress/storage';
+import {
+  loadUserState,
+  saveUserState,
+  resetUserState,
+  loadNavSnapshot,
+  saveNavSnapshot,
+  resetNavSnapshot,
+} from './lib/progress/storage';
 import { UserLearningState } from './types/progress';
 import { ModuleData } from './types/curriculum';
 import {
@@ -30,13 +37,24 @@ type LearningStage = 'lesson' | 'practice' | 'concept_complete' | 'challenge' | 
 export type NavTab = 'home' | 'learning-path' | 'practice' | 'schema' | 'settings';
 
 export default function App() {
+  // On first mount, restore the learner's last navigation position so a reload
+  // returns to the same screen (not the homepage). Falls back to saved progress
+  // module or day-01.
+  const persistedNav = useMemo(() => loadNavSnapshot(), []);
+
   const [userState, setUserState] = useState<UserLearningState>(loadUserState);
-  const [currentModuleId, setCurrentModuleId] = useState<string>(userState.currentModuleId || 'day-01');
-  const [currentConceptIndex, setCurrentConceptIndex] = useState<number>(0);
-  const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
-  const [stage, setStage] = useState<LearningStage>('lesson');
+  const [currentModuleId, setCurrentModuleId] = useState<string>(
+    persistedNav?.moduleId ?? userState.currentModuleId ?? 'day-01'
+  );
+  const [currentConceptIndex, setCurrentConceptIndex] = useState<number>(persistedNav?.conceptIndex ?? 0);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(persistedNav?.taskIndex ?? 0);
+  const [stage, setStage] = useState<LearningStage>(
+    (persistedNav?.stage as LearningStage) || 'lesson'
+  );
   const [completedChallengeTaskIds, setCompletedChallengeTaskIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<NavTab>('learning-path');
+  const [activeTab, setActiveTab] = useState<NavTab>(
+    (persistedNav?.tab as NavTab) || 'learning-path'
+  );
 
   // Modals & UI Toggles
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState<boolean>(false);
@@ -75,6 +93,29 @@ export default function App() {
   useEffect(() => {
     saveUserState(userState);
   }, [userState]);
+
+  // Persist the learner's current navigation position so reloads resume here.
+  useEffect(() => {
+    saveNavSnapshot({
+      moduleId: currentModuleId,
+      conceptIndex: currentConceptIndex,
+      taskIndex: currentTaskIndex,
+      stage,
+      tab: activeTab,
+    });
+  }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage, activeTab]);
+
+  // On reload into a finished day's challenge view, restore its completed-markers
+  // so all challenge tasks show as done (same as when navigating normally).
+  useEffect(() => {
+    if (stage === 'challenge' && currentModule.challenge) {
+      const rec = userState.completedModules[currentModule.id];
+      if (rec?.challengeCompleted) {
+        setCompletedChallengeTaskIds(currentModule.challenge.tasks.map((t) => t.id));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentModuleId, stage]);
 
   const currentModule: ModuleData = useMemo(() => {
     return getModuleById(currentModuleId) || ALL_MODULES[0];
@@ -147,12 +188,14 @@ export default function App() {
 
   const handleResetProgress = () => {
     const fresh = resetUserState();
+    resetNavSnapshot();
     setUserState(fresh);
     setCurrentModuleId('day-01');
     setCurrentConceptIndex(0);
     setCurrentTaskIndex(0);
     setStage('lesson');
     setCompletedChallengeTaskIds([]);
+    setActiveTab('learning-path');
   };
 
   // Step 1: User finishes reading Concept Lesson -> Move to Guided Practice
