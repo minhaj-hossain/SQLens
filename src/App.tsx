@@ -55,6 +55,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>(
     (persistedNav?.tab as NavTab) || 'learning-path'
   );
+  // Module card the Learning Path should auto-scroll to when it becomes visible.
+  const [roadmapScrollTarget, setRoadmapScrollTarget] = useState<string | null>(null);
 
   // Modals & UI Toggles
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState<boolean>(false);
@@ -409,7 +411,10 @@ export default function App() {
         onResetProgress={handleResetProgress}
         onOpenSchemaModal={() => setIsSchemaModalOpen(true)}
         onOpenRoadmapModal={() => setIsRoadmapModalOpen(true)}
-        onLogoClick={() => setActiveTab('learning-path')}
+        onLogoClick={() => {
+          setRoadmapScrollTarget(currentModuleId);
+          setActiveTab('learning-path');
+        }}
         activeViewTitle={activeTab === 'practice' ? `Day ${currentModule.day}: ${currentModule.shortTitle}` : 'Learning Path'}
       />
 
@@ -422,13 +427,18 @@ export default function App() {
             currentConceptIndex={currentConceptIndex}
             onSelectModuleAndConcept={handleSelectModuleAndConcept}
             onOpenSchema={() => setIsSchemaModalOpen(true)}
+            scrollToModuleId={roadmapScrollTarget ?? undefined}
+            onScrolledToModule={() => setRoadmapScrollTarget(null)}
           />
         ) : (
           <div className="flex flex-col w-full pb-8 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
             {/* Breadcrumb Header in Practice View */}
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-4 mb-4 border-b border-outline-variant/40">
               <button
-                onClick={() => setActiveTab('learning-path')}
+                onClick={() => {
+                  setRoadmapScrollTarget(currentModuleId);
+                  setActiveTab('learning-path');
+                }}
                 className="flex items-center gap-2 font-label-sm text-label-sm text-text-muted hover:text-primary transition cursor-pointer min-w-0"
               >
                 <span className="material-symbols-outlined text-[18px] shrink-0">arrow_back</span>

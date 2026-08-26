@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ModuleData, Concept } from '../../types/curriculum';
@@ -17,6 +17,10 @@ interface LearningPathViewProps {
   currentConceptIndex: number;
   onSelectModuleAndConcept: (moduleId: string, conceptIndex?: number, stage?: 'lesson' | 'practice' | 'challenge') => void;
   onOpenSchema: () => void;
+  /** When set, the roadmap auto-scrolls to this day's card on mount/change. */
+  scrollToModuleId?: string;
+  /** Callback fired after the scroll has been performed (optional). */
+  onScrolledToModule?: () => void;
 }
 
 function getPedagogicalModeInfo(module: ModuleData) {
@@ -50,6 +54,8 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   currentConceptIndex,
   onSelectModuleAndConcept,
   onOpenSchema,
+  scrollToModuleId,
+  onScrolledToModule,
 }) => {
   const [lockedAlert, setLockedAlert] = useState<{
     title: string;
@@ -59,6 +65,22 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
     actionLabel?: string;
   } | null>(null);
   const [heroCopied, setHeroCopied] = useState(false);
+
+  // Auto-scroll to the target day's card when this view mounts or the target
+  // changes (e.g. user clicks "Back to Learning Path" from inside a module).
+  useEffect(() => {
+    if (!scrollToModuleId) return;
+    // Wait one tick so the roadmap has fully rendered before scrolling.
+    const t = setTimeout(() => {
+      const el = document.getElementById(`day-card-${scrollToModuleId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        onScrolledToModule?.();
+      }
+    }, 60);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToModuleId]);
 
   const heroSql = `SELECT skill\nFROM you\nWHERE consistency = 'daily';`;
 
@@ -380,6 +402,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   return (
                     <li
                       key={module.id}
+                      id={`day-card-${module.id}`}
                       className={`relative mb-6 ${nodeStateClass}`}
                     >
                       {/* Left Rail Connector Dot */}
