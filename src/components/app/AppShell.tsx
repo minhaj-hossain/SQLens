@@ -25,6 +25,8 @@ import {
 } from '@/lib/progress/storage';
 import { UserLearningState } from '@/types/progress';
 import { ModuleData } from '@/types/curriculum';
+import { AvailabilityMap } from '@/types/progress';
+import { setAvailabilityMap } from '@/lib/progress/availability-store';
 import { authClient } from '@/lib/auth-client';
 import {
   getModuleUnlockStatus,
@@ -80,6 +82,27 @@ export default function AppShell() {
       } | null;
     } | null)
       ?.user ?? null;
+
+  // Server-controlled curriculum availability (Phase 8): fetched once on mount
+  // from the public endpoint, registered into the unlock calculator's store,
+  // and version-bumped so every roadmap component recomputes with fresh data.
+  const [availabilityVersion, setAvailabilityVersion] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/curriculum/availability')
+      .then((r) => (r.ok ? r.json() : { availability: {} }))
+      .then((body: { availability?: AvailabilityMap }) => {
+        if (cancelled) return;
+        setAvailabilityMap(body?.availability ?? {});
+        setAvailabilityVersion((v) => v + 1);
+      })
+      .catch(() => {
+        /* Fail open: empty map → default automatic behaviour everywhere. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Modals & UI Toggles
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState<boolean>(false);
@@ -455,7 +478,10 @@ export default function AppShell() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased selection:bg-primary-container/30 selection:text-primary">
+    <div
+      data-availability={availabilityVersion}
+      className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased selection:bg-primary-container/30 selection:text-primary"
+    >
       {/* Top Application Header matching HTML */}
       <Header
         userState={userState}

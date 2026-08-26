@@ -1,6 +1,7 @@
 import { LEARNING_CONFIG } from '../../config/learning';
 import { UserLearningState, UnlockStatus } from '../../types/progress';
 import { ModuleData, Concept } from '../../types/curriculum';
+import { getAvailabilityForModule } from './availability-store';
 
 /**
  * Get effective current time, factoring in any simulated offset hours (for testing).
@@ -249,6 +250,30 @@ export function getModuleUnlockStatus(
     };
   }
 
+  // ─── Server-controlled availability (admin global control) ───────────────
+  // The database is the source of truth for global module availability;
+  // these overrides apply on top of the user-progression rules below.
+  const availability = getAvailabilityForModule(module.id);
+
+  // 'locked' → closed for everyone (modules already completed stay viewable).
+  if (availability?.unlockMode === 'locked') {
+    return {
+      isUnlocked: false,
+      isCompleted: false,
+      isCurrent: state.currentModuleId === module.id,
+      reason: 'This module is currently locked by the administrator.',
+    };
+  }
+
+  // 'manual' → unlocked for everyone immediately, regardless of progression.
+  if (availability?.unlockMode === 'manual') {
+    return {
+      isUnlocked: true,
+      isCompleted: isModuleFullyComplete(module, state),
+      isCurrent: state.currentModuleId === module.id,
+    };
+  }
+
   // Bypass mode — skip all time/schedule gates; only require previous completion
   if (state.bypassDailyLock) {
     const prevModule = allModules.find(m => m.day === module.day - 1);
@@ -299,6 +324,31 @@ export function getModuleUnlockStatus(
   const now = getEffectiveNow(state.simulatedTimeOffsetHours);
   const prevCompletedDate = new Date(prevCompletionRecord.completedAt);
   const nextUnlockDate = getNextUnlockTime(prevCompletedDate);
+
+  // Gate 3.5 — Admin-scheduled global release (overrides all local timing).
+  // The module still requires previous-module completion, but unlocks at the
+  // server-defined date instead of the default 6 PM cycle.
+  if (availability?.unlockMode === 'scheduled' && availability.unlockAt) {
+    const scheduledAt = new Date(availability.unlockAt);
+    if (!isNaN(scheduledAt.getTime())) {
+      if (now.getTime() >= scheduledAt.getTime()) {
+        return {
+          isUnlocked: true,
+          isCompleted: false,
+          isCurrent: state.currentModuleId === module.id,
+          unlockTime: scheduledAt,
+        };
+      }
+      return {
+        isUnlocked: false,
+        isCompleted: false,
+        isCurrent: false,
+        unlockTime: scheduledAt,
+        countdownFormatted: formatTimeRemaining(scheduledAt, now),
+        reason: `Scheduled for release on ${scheduledAt.toLocaleDateString()} at ${scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${formatTimeRemaining(scheduledAt, now)} remaining).`,
+      };
+    }
+  }
 
   // Gate 4 — Respect scheduledPublishDate if set on this module
   if (module.scheduledPublishDate) {

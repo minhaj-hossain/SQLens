@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import UsersPanel from './UsersPanel';
 import Overview from './Overview';
+import ModulesPanel from './ModulesPanel';
 import { AdminUsersResponse, adminListUsers, AdminApiError } from '../../lib/admin-api';
 
 /**
@@ -11,7 +12,7 @@ import { AdminUsersResponse, adminListUsers, AdminApiError } from '../../lib/adm
  * Rendered only after the server component verified an active admin session.
  */
 export default function AdminDashboard({ adminName }: { adminName: string }) {
-  const [tab, setTab] = useState<'overview' | 'users'>('overview');
+  const [tab, setTab] = useState<'overview' | 'curriculum' | 'users'>('overview');
   const [data, setData] = useState<AdminUsersResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +80,7 @@ export default function AdminDashboard({ adminName }: { adminName: string }) {
         </div>
         {/* Tabs */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 flex gap-1">
-          {(['overview', 'users'] as const).map((t) => (
+          {(['overview', 'curriculum', 'users'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -100,6 +101,8 @@ export default function AdminDashboard({ adminName }: { adminName: string }) {
           <p className="font-mono text-xs text-text-dim animate-pulse py-12 text-center">Loading…</p>
         ) : tab === 'overview' ? (
           <Overview data={data} onGoUsers={() => setTab('users')} />
+        ) : tab === 'curriculum' ? (
+          <ModulesPanel />
         ) : (
           <UsersPanel initial={data} onChanged={load} />
         )}

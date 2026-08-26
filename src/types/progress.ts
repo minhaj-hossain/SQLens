@@ -44,6 +44,26 @@ export interface UserLearningState {
   simulatedTimeOffsetHours: number; // For time-traveling forward to test 6:00 PM unlock
 }
 
+
+/**
+ * Server-controlled module availability (Phase 8).
+ * The database is the source of truth for whether a module is globally
+ * unlocked, locked, or scheduled; the frontend only displays the result.
+ */
+export type UnlockMode = 'automatic' | 'manual' | 'scheduled' | 'locked';
+
+export interface ModuleAvailability {
+  dayId: string;
+  unlockMode: UnlockMode;
+  /** ISO datetime — only meaningful for unlockMode === 'scheduled'. */
+  unlockAt?: string | null;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+}
+
+/** Map of dayId (e.g. 'day-07') → availability override. Missing = automatic. */
+export type AvailabilityMap = Record<string, ModuleAvailability>;
+
 export interface UnlockStatus {
   isUnlocked: boolean;
   isCompleted: boolean;

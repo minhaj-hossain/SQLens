@@ -82,3 +82,36 @@ export async function adminDeleteUser(id: string): Promise<{ success: boolean }>
   });
   return assertOk(res, 'request_failed');
 }
+
+// ─── Curriculum availability (Phase 8) ────────────────────────────────────
+
+export interface ModuleAvailability {
+  dayId: string;
+  unlockMode: 'automatic' | 'manual' | 'scheduled' | 'locked';
+  unlockAt?: string | null;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+}
+
+export type AvailabilityMap = Record<string, ModuleAvailability>;
+
+/** GET /api/admin/modules — full availability map (admin only). */
+export async function adminListModules(): Promise<AvailabilityMap> {
+  const res = await fetch('/api/admin/modules', { credentials: 'same-origin' });
+  const body = (await assertOk(res, 'request_failed')) as { availability?: AvailabilityMap };
+  return body?.availability ?? {};
+}
+
+/** PUT /api/admin/modules/:dayId — set one module's availability mode. */
+export async function adminSetModule(
+  dayId: string,
+  payload: { unlockMode: ModuleAvailability['unlockMode']; unlockAt?: string | null },
+): Promise<{ module: ModuleAvailability }> {
+  const res = await fetch(`/api/admin/modules/${dayId}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(payload),
+  });
+  return assertOk(res, 'request_failed');
+}
