@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth, db } from '@/lib/auth';
-import AdminDashboard from '../../src/components/admin/AdminDashboard';
+import AdminDashboard from '@/components/admin/AdminDashboard';
 
 export const dynamic = 'force-dynamic';
 

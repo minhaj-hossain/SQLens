@@ -1,4 +1,4 @@
-import AppShell from '../src/components/app/AppShell';
+import AppShell from '@/components/app/AppShell';
 
 export default function HomePage() {
   return <AppShell />;
