@@ -1,5 +1,5 @@
 ﻿'use client';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Header } from '@/components/layout/Header';
 import Icon from '@/components/ui/Icon';
@@ -212,6 +212,87 @@ export default function AppShell() {
     progressPercent: 100,
     onContinue: () => {},
   });
+
+  // ---- Phase P6: URL ↔ lesson navigation sync ----
+  // The learning flow is an internal state machine; here we mirror it into the
+  // URL as ?day=N&stage=lesson|practice|challenge&concept=I&task=J so the
+  // browser Back/Forward buttons, refresh, and shared links all restore the
+  // exact lesson position — without changing how any view renders.
+  const applyingUrlRef = useRef(true); // suppress push-back when we apply a URL
+  const userStateRef = useRef(userState);
+  userStateRef.current = userState;
+
+  const applyUrlToNavState = useCallback((search: string): boolean => {
+    const params = new URLSearchParams(search);
+    const dayParam = Number(params.get('day'));
+    const stageParam = params.get('stage');
+    if (!dayParam || !Number.isFinite(dayParam) || !stageParam) return false;
+
+    const target = getModuleById(`day-${String(dayParam).padStart(2, '0')}`);
+    if (!target || !['lesson', 'practice', 'concept_complete', 'challenge', 'day_complete'].includes(stageParam)) {
+      return false;
+    }
+
+    // Respect unlock rules: never let a URL open a locked module.
+    const status = getModuleUnlockStatus(target, ALL_MODULES, userStateRef.current);
+    if (!status.isUnlocked && !status.isCompleted && !userStateRef.current.bypassDailyLock) {
+      return false;
+    }
+
+    const maxConcept = Math.max(0, (target.concepts?.length ?? 1) - 1);
+    const conceptIdx = Math.min(Math.max(Number(params.get('concept') ?? 1) - 1, 0), maxConcept);
+    const taskIdx = Math.max(Number(params.get('task') ?? 0), 0);
+
+    setCurrentModuleId(target.id);
+    setCurrentConceptIndex(conceptIdx);
+    setCurrentTaskIndex(taskIdx);
+    setStage(stageParam as LearningStage);
+    setActiveTab('practice');
+    return true;
+  }, []);
+
+  // Deep-link / history navigation (Back & Forward & initial load with params).
+  useEffect(() => {
+    // Initial load: honour ?day=..&stage=.. links once on mount.
+    applyUrlToNavState(window.location.search);
+
+    const onPopState = () => {
+      applyingUrlRef.current = true; // restoring from history — don't re-push
+      const applied = applyUrlToNavState(window.location.search);
+      if (!applied) {
+        // No valid lesson params → treat as roadmap view.
+        setStage('lesson');
+        setActiveTab('learning-path');
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [applyUrlToNavState]);
+
+  // Push a history entry whenever the lesson position changes in-app.
+  useEffect(() => {
+    const qs = new URLSearchParams();
+    const mod = getModuleById(currentModuleId);
+    const inLessonFlow =
+      mod &&
+      ['lesson', 'practice', 'concept_complete', 'challenge', 'day_complete'].includes(stage);
+
+    if (inLessonFlow && mod) {
+      qs.set('day', String(mod.day));
+      qs.set('stage', stage);
+      qs.set('concept', String(currentConceptIndex + 1));
+      qs.set('task', String(currentTaskIndex));
+    }
+    const url = `${window.location.pathname}${qs.toString() ? `?${qs}` : ''}`;
+    if (applyingUrlRef.current) {
+      applyingUrlRef.current = false;
+      // Replace instead of push so restoring from history doesn't duplicate entries.
+      window.history.replaceState(null, '', url);
+      return;
+    }
+    window.history.pushState(null, '', url);
+  }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage]);
+
 
   // In-memory SQL Executor instance
   const sqlExecutor = useMemo(() => new SqlExecutor(), []);
