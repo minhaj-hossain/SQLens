@@ -135,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="material-symbols-outlined text-[16px]">shield_person</span>
                 </a>
               )}
-              {/* Avatar — animated gradient halo orbiting the initial */}
+              {/* Avatar — animated brand-hue shimmer orbiting the initial */}
               <button
                 id="header-user-btn"
                 onClick={() => setUserMenuOpen((v) => !v)}
@@ -143,29 +143,31 @@ export const Header: React.FC<HeaderProps> = ({
                 aria-expanded={userMenuOpen}
                 className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
               >
-                {/* Rotating conic-gradient ring */}
+                {/* Rotating conic ring — cyan→sky shades only (matches --func brand) */}
                 <motion.span
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full"
                   style={{
                     background:
-                      'conic-gradient(from 0deg, #38BDF8, #60A5FA, #A78BFA, #38BDF8)',
+                      'conic-gradient(from 140deg, #67E8F9, #38BDF8, #0284C7, #7DD3FC, #22D3EE, #67E8F9)',
                   }}
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 6, ease: 'linear', repeat: Infinity }}
+                  transition={{ duration: 8, ease: 'linear', repeat: Infinity }}
                 />
+                {/* Soft gap between ring and disc */}
+                <span className="absolute inset-[2px] rounded-full bg-ink" />
                 {/* Inner disc with initial */}
-                <span className="absolute inset-[2px] rounded-full bg-ink flex items-center justify-center">
-                  <span className="font-display font-bold text-func text-xs sm:text-sm select-none">
+                <span className="absolute inset-[3px] rounded-full bg-surface-2 flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <span className="font-display font-bold text-func text-xs sm:text-sm select-none drop-shadow-[0_0_6px_rgba(56,189,248,0.45)]">
                     {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
                   </span>
                 </span>
-                {/* Subtle glow pulse */}
+                {/* Gentle breathing glow */}
                 <motion.span
                   aria-hidden="true"
-                  className="absolute -inset-0.5 rounded-full bg-func/20 blur-[6px]"
-                  animate={{ opacity: [0.25, 0.55, 0.25] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -inset-0.5 rounded-full bg-func/15 blur-[5px]"
+                  animate={{ opacity: [0.35, 0.65, 0.35] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 />
               </button>
               {/* Profile popover — opens on hover/tap */}
@@ -188,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
                     >
                       {/* Identity header */}
                       <div className="flex items-start gap-2.5 px-3.5 pt-3.5 pb-3">
-                        <span className="shrink-0 mt-0.5 flex items-center justify-center w-8 h-8 rounded-full bg-func/15 text-func text-sm font-bold font-display">
+                        <span className="shrink-0 mt-0.5 flex items-center justify-center w-8 h-8 rounded-full bg-func/10 border border-func/25 text-func text-sm font-bold font-display shadow-[0_0_10px_rgba(56,189,248,0.2)]">
                           {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
                         </span>
                         <div className="min-w-0">
