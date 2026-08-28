@@ -220,7 +220,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     incl. all 25 days.
 
 ### Phase 5 — Backlog (post-migration; work only on request)
-**Status: ✅ COMPLETE** · Commit: `BACKLOG_COMMIT` · Completed: 2026-08-28
+**Status: ✅ COMPLETE** · Commit: `cb8434c` · Completed: 2026-08-28
 - [x] Admin panel split → `/admin/users`, `/admin/modules` pages (gate already shared via `(admin)/layout.tsx`)
 - [x] Guest-progress prompt UX on first sign-in w/ divergent cloud doc (auto union-merge remains the default)
 - [x] `PracticeTask.freshDb` opt-in flag for tasks needing an isolated DB
@@ -266,4 +266,5 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 - `e102a7e` **Phase 2 COMPLETE** — navigation switched to stable concept slugs (currentConceptId) with legacy-index shim; merge.ts unchanged; scripts/phase2-check.ts added (25 modules / 64 concepts verified); all gates green.
 - `5d3b5b2` **Phase 3 COMPLETE** — real /learn/[dayId] route tree + NEW module overview page; URL is the position (provider stripped of navigation); legacy redirects; executor boundaries day+concept (DML audit); NavSnapshot/pushState machinery deleted; all gates green.
 - `da7330f` **Phase 4 COMPLETE** — 25 static day shells + /learn static; per-day/per-concept metadata (canonical/OG); JSON-LD LearningResource; sitemap 27 URLs; learn pages = server wrappers + client views; all gates green.
+- `cb8434c` **Phase 5 COMPLETE** — admin dashboard split into /admin + /admin/users + /admin/modules routes (shared gate/provider/shell, noindex); guest-progress merge prompt UX; PracticeTask.freshDb; dead Code removed; README route-map refresh. **All phases complete.**
 
