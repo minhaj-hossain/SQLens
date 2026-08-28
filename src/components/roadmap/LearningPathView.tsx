@@ -18,7 +18,7 @@ interface LearningPathViewProps {
   currentModuleId: string;
   /** Stable slug of the learner's current concept (Phase 2); null = first. */
   currentConceptId: string | null;
-  onSelectModuleAndConcept: (moduleId: string, conceptId?: string, stage?: 'lesson' | 'practice' | 'challenge') => void;
+  onSelectModuleAndConcept: (moduleId: string, conceptId?: string, stage?: 'theory' | 'practice' | 'challenge') => void;
   onOpenSchema: () => void;
   /** When set, the roadmap auto-scrolls to this day's card on mount/change. */
   scrollToModuleId?: string;
@@ -133,7 +133,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                       onSelectModuleAndConcept(
                         lockedAlert.targetModuleId!,
                         lockedAlert.targetConceptId,
-                        'lesson'
+                        'theory'
                       );
                       setLockedAlert(null);
                     }}
@@ -231,7 +231,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         <div className="flex items-center gap-5 flex-wrap row-gap-4">
           <button
             onClick={() => {
-              onSelectModuleAndConcept(activeModule.id, activeTargetConceptId, 'lesson');
+              onSelectModuleAndConcept(activeModule.id, activeTargetConceptId, 'theory');
             }}
             className="bg-func text-ink font-body font-bold text-sm px-6 py-3 rounded-full inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(56,189,248,0.5)] transition duration-150 cursor-pointer"
           >
@@ -459,7 +459,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   COMPLETED
                                 </span>
                                 <button
-                                  onClick={() => onSelectModuleAndConcept(module.id, module.concepts[0]?.id, 'lesson')}
+                                  onClick={() => onSelectModuleAndConcept(module.id, module.concepts[0]?.id, 'theory')}
                                   className="font-mono text-xs text-func border border-func/30 px-3 py-1 rounded-lg hover:bg-func/10 transition cursor-pointer"
                                 >
                                   Review
@@ -471,7 +471,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   IN PROGRESS
                                 </span>
                                 <button
-                                  onClick={() => onSelectModuleAndConcept(module.id, targetConceptId, 'lesson')}
+                                  onClick={() => onSelectModuleAndConcept(module.id, targetConceptId, 'theory')}
                                   className="font-mono text-xs text-ink bg-func font-bold px-3 py-1 rounded-lg hover:brightness-110 transition cursor-pointer"
                                 >
                                   Continue →
@@ -479,7 +479,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                               </>
                             ) : isUnlocked ? (
                               <button
-                                onClick={() => onSelectModuleAndConcept(module.id, module.concepts[0]?.id, 'lesson')}
+                                onClick={() => onSelectModuleAndConcept(module.id, module.concepts[0]?.id, 'theory')}
                                 className="font-mono text-xs text-text-dim border border-border px-3 py-1 rounded-lg hover:text-text hover:border-text-dim transition cursor-pointer"
                               >
                                 Start
@@ -506,7 +506,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                 key={concept.id}
                                 onClick={() => {
                                   if (isUnlocked) {
-                                    onSelectModuleAndConcept(module.id, concept.id, 'lesson');
+                                    onSelectModuleAndConcept(module.id, concept.id, 'theory');
                                   } else {
                                     setLockedAlert({
                                       title: `Day ${module.day} is Locked`,

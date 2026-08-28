@@ -159,16 +159,45 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     resolution incl. out-of-bounds and unknown-slug rejection.
 
 ### Phase 3 — The learn tree + legacy redirects
-**Status: ⬜ NOT STARTED** · Commit: — · Completed: —
-- [ ] `[dayId]/layout.tsx` — validate dayId (`notFound()`), breadcrumb, executor reset boundary
-- [ ] `/learn/[dayId]` Module Overview page (NEW UI: concept list, per-concept state, challenge entry, continue CTA)
-- [ ] `theory/[conceptId]`, `practice/[conceptId]?task=N`, `challenge`, `complete` pages
-- [ ] `(app)/template.tsx` stage transition animation
-- [ ] `/learn` resume redirect; locked-day UI; invalid conceptId → `notFound()`
-- [ ] `src/lib/legacy-routes.ts` + wiring in `(public)/page.tsx`
-- [ ] DELETE NavSnapshot + AppShell's pushState/popstate URL-sync machinery
-- [ ] DML-leakage canary (Day 1 DELETE → SELECT task) manual pass
+**Status: ✅ COMPLETE** · Commit: `62f2a36` · Completed: 2026-08-28
+- [x] `[dayId]/layout.tsx` — validate dayId (`notFound()`), breadcrumb, executor reset boundary
+- [x] `/learn/[dayId]` Module Overview page (NEW UI: concept list with ✓/▶/🔒 states, challenge entry, continue CTA, progress bar, locked-day notice)
+- [x] `theory/[conceptId]`, `practice/[conceptId]?task=N`, `challenge`, `complete` pages
+- [x] `(app)/template.tsx` stage transition animation (fade/slide on every route change)
+- [x] `/learn` resume redirect (first-incomplete concept → challenge → complete); locked-day UI in overview; invalid dayId/conceptId → `notFound()`; concept-level lock → redirect to overview
+- [x] `src/lib/legacy-routes.ts` + server wiring in `(app)/page.tsx` (?highlight= passes through)
+- [x] DELETE NavSnapshot + pushState/popstate URL-sync machinery; `activeTab`/`NavTab` die; `/` is roadmap-only
+- [x] DML-leakage canary: AUTOMATED content audit (new tooling, see notes) — manual playthrough of Day 19/20 still recommended
 - Notes:
+  - **Provider v3**: LearningProgressProvider holds ONLY Tier-B progress +
+    sync + availability + pure `mark*` actions (markTaskComplete,
+    markChallengeTaskComplete, markConceptComplete, markModuleComplete,
+    resetProgress). Position (module/concept/stage/task) comes from ROUTE
+    params; navigation lives in `useLearningNavigation()` (guard-preserving
+    router.push actions). `completedChallengeTaskIds` state removed —
+    challenge page derives via getCompletedChallengeTaskIds.
+  - **Executor reset boundaries (audited)**: reset on day OR concept change.
+    Content audit found 31 DML/DDL fields concentrated in day-19 (DML) and
+    day-20 (DDL): per-day-only reset would break Day-20 CREATE TABLE retries
+    ("table exists") and leak Day-19 mutations across concepts. Theory→practice
+    and task→task within a concept keep continuity (per plan).
+  - New libs: `learn-routes.ts` (LearnStage, learnUrl, dayId/conceptId from
+    pathname, roadmapUrl ?highlight=) and `legacy-routes.ts`
+    (legacyNavigationToRoute — full mapping table incl. concept_complete →
+    next theory/challenge/complete; unit-verified).
+  - AppChrome derives header title/current module from pathname; logo is a
+    `<Link href="/">`; Reset Progress = provider action + hard nav to `/`.
+    RoadmapModal selection routes to /learn (UiChromeProvider uses nav hook;
+    scroll-target state replaced by `?highlight=` on `/`).
+  - Dead code: ConceptCompleteView no longer reachable ('concept_complete'
+    stage was URL-only even pre-migration) — Phase 5 cleanup candidate.
+    SuccessModal legacy mount dropped with LearnHomePage.
+  - Smoke (live server): / · /learn · /learn/day-01 · theory · practice?task=0
+    · challenge · /learn/day-25 (locked notice rendered) · /learn/day-99 (404)
+    · legacy ?day=3&stage=lesson&concept=2 streams redirect to
+    /learn/day-03/theory/where-or-union · /signin /playground /admin OK.
+    Gates: tsc clean · build OK (learn routes dynamic) · engine 21/21 ·
+    phase2-check passing.
 
 ### Phase 4 — SEO layer
 **Status: ⬜ NOT STARTED** · Commit: — · Completed: —

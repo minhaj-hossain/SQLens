@@ -11,7 +11,6 @@ interface HeaderProps {
   onResetProgress: () => void;
   onOpenSchemaModal: () => void;
   activeViewTitle?: string;
-  onLogoClick?: () => void;
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
   isAuthPending?: boolean;
   onSignOut?: () => void;
@@ -23,7 +22,6 @@ export const Header: React.FC<HeaderProps> = ({
   onResetProgress,
   onOpenSchemaModal,
   activeViewTitle = 'Learning Path',
-  onLogoClick,
   user,
   isAuthPending,
   onSignOut,
@@ -36,10 +34,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 w-full z-50 bg-ink/90 backdrop-blur-md pt-safe border-b border-border-soft">
       <div className="h-14 px-3 sm:px-6 flex items-center justify-between max-w-5xl mx-auto w-full gap-2 sm:gap-4">
 
-        {/* Left: Brand Icon + SQLens Name (Clickable to Home) */}
-        <button
-          onClick={onLogoClick}
-          className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition cursor-pointer text-left focus:outline-none group"
+        {/* Left: Brand Icon + SQLens Name — links home (route since Phase 3) */}
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition text-left focus:outline-none group"
           title="Return to Curriculum Homepage"
           aria-label="Return to Curriculum Homepage"
         >
@@ -56,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden sm:inline-block font-body text-xs text-text-dim truncate group-hover:text-text transition-colors">
             {activeViewTitle}
           </span>
-        </button>
+        </Link>
 
         {/* Right: Streak Pill + Icon Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
