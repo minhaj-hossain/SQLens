@@ -1,6 +1,13 @@
-﻿'use client';
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+'use client';
+/**
+ * AppShell — presentation layer only (Phase 0).
+ * All learning state, progress sync, auth session and the SQL executor now
+ * live in the providers under src/components/providers (see AppProviders).
+ * What remains here: full-page gates (auth view, blocked view, playground),
+ * chrome (header), global modals, and the routing of stage → view component.
+ */
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { Header } from '@/components/layout/Header';
 import Icon from '@/components/ui/Icon';
 import { AuthView } from '@/components/auth/AuthView';
@@ -14,6 +21,9 @@ import { IndependentChallengeView } from '@/components/learning/IndependentChall
 import { ModuleCompletionView } from '@/components/learning/ModuleCompletionView';
 import { SuccessModal } from '@/components/learning/SuccessModal';
 import dynamic from 'next/dynamic';
+import { useLearning } from '@/components/providers/LearningProgressProvider';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 
 // Heavy, rarely-opened modals are code-split out of the initial bundle.
 const SchemaModal = dynamic(
@@ -22,186 +32,49 @@ const SchemaModal = dynamic(
 const RoadmapModal = dynamic(
   () => import('@/components/roadmap/RoadmapModal').then((m) => m.RoadmapModal),
 );
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
-import { SqlExecutor } from '@/lib/sql-engine/executor';
-import {
-  loadUserState,
-  saveUserState,
-  resetUserState,
-  loadNavSnapshot,
-  saveNavSnapshot,
-  resetNavSnapshot,
-} from '@/lib/progress/storage';
-import { UserLearningState } from '@/types/progress';
-import { ModuleData } from '@/types/curriculum';
-import { AvailabilityMap } from '@/types/progress';
-import { setAvailabilityMap } from '@/lib/progress/availability-store';
-import { mergeProgress, toCloudProgress, CloudProgress } from '@/lib/progress/merge';
-import { authClient } from '@/lib/auth-client';
-import {
-  getModuleUnlockStatus,
-  isConceptCompleted,
-  isModuleConceptsCompleted,
-  isModuleChallengeUnlocked,
-  getCompletedChallengeTaskIds,
-} from '@/lib/progress/unlock-calculator';
-
-type LearningStage = 'lesson' | 'practice' | 'concept_complete' | 'challenge' | 'day_complete';
-// Active app view. The bottom navigation bar was removed; 'learning-path' is the
-// landing view, 'practice' is entered by selecting a module. 'settings'/'home'
-// are retained on the type for backward compatibility with saved state but are
-// no longer directly navigable.
-export type NavTab = 'home' | 'learning-path' | 'practice' | 'schema' | 'settings';
 
 export default function AppShell() {
-  // On first mount, restore the learner's last navigation position so a reload
-  // returns to the same screen (not the homepage). Falls back to saved progress
-  // module or day-01.
-  const persistedNav = useMemo(() => loadNavSnapshot(), []);
+  // ---- Learning state & actions (owned by LearningProgressProvider) --------
+  const {
+    userState,
+    currentModuleId,
+    setCurrentModuleId,
+    currentConceptIndex,
+    setCurrentConceptIndex,
+    currentTaskIndex,
+    setCurrentTaskIndex,
+    stage,
+    setStage,
+    activeTab,
+    setActiveTab,
+    currentModule,
+    concepts,
+    currentConcept,
+    currentTasks,
+    currentTask,
+    nextModule,
+    availabilityVersion,
+    completedChallengeTaskIds,
+    handleSelectModuleAndConcept,
+    handleSelectModule,
+    handleResetProgress,
+    handleStartPractice,
+    handleTaskSuccess,
+    handleCompleteConcept,
+    handleContinueNextConcept,
+    handleChallengeTaskSuccess,
+    handleCompleteDay,
+    handleReviewModule,
+    handleContinueNextDay,
+  } = useLearning();
+  const { user: authUser, isAuthPending, signOut } = useAuth();
+  const { executeQuery, resetDatabase } = useSqlExecutor();
 
-  const [userState, setUserState] = useState<UserLearningState>(loadUserState);
-  const [currentModuleId, setCurrentModuleId] = useState<string>(
-    persistedNav?.moduleId ?? userState.currentModuleId ?? 'day-01'
-  );
-  const [currentConceptIndex, setCurrentConceptIndex] = useState<number>(persistedNav?.conceptIndex ?? 0);
-  const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(persistedNav?.taskIndex ?? 0);
-  const [stage, setStage] = useState<LearningStage>(
-    (persistedNav?.stage as LearningStage) || 'lesson'
-  );
-  const [completedChallengeTaskIds, setCompletedChallengeTaskIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<NavTab>(
-    (persistedNav?.tab as NavTab) || 'learning-path'
-  );
-  // Module card the Learning Path should auto-scroll to when it becomes visible.
-  const [roadmapScrollTarget, setRoadmapScrollTarget] = useState<string | null>(null);
-
+  // ---- Chrome-only state (stays in AppShell) -------------------------------
   // Auth pages ('signin' | 'signup' | null = closed). Static UI only for now.
   const [authMode, setAuthMode] = useState<'signin' | 'signup' | null>(null);
-
-  // Live Better Auth session (cookies → server at /api/auth/*).
-  const { data: sessionData, isPending: isAuthPending } = authClient.useSession();
-  // `useSession()` is not type-inferred without server type generation; cast to
-  // the minimal user shape we consume.
-  const authUser =
-    (sessionData as {
-      user?: {
-        id?: string;
-        name?: string | null;
-        email?: string | null;
-        role?: string | null;
-        status?: string | null;
-      } | null;
-    } | null)
-      ?.user ?? null;
-
-  // Server-controlled curriculum availability (Phase 8): fetched once on mount
-  // from the public endpoint, registered into the unlock calculator's store,
-  // and version-bumped so every roadmap component recomputes with fresh data.
-  const [availabilityVersion, setAvailabilityVersion] = useState(0);
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/curriculum/availability')
-      .then((r) => (r.ok ? r.json() : { availability: {} }))
-      .then((body: { availability?: AvailabilityMap }) => {
-        if (cancelled) return;
-        setAvailabilityMap(body?.availability ?? {});
-        setAvailabilityVersion((v) => v + 1);
-      })
-      .catch(() => {
-        /* Fail open: empty map → default automatic behaviour everywhere. */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // ---- Phase 2: cross-device progress sync --------------------------------
-  // Local writes stay instant & offline-safe. For signed-in users we also
-  // hydrate from the server once per session, merge (local ∪ cloud), then
-  // keep a debounced copy pushed to /api/me/progress (with retry + flush).
-  const signedInUserId =
-    authUser?.id && authUser.status !== 'blocked' ? authUser.id : null;
-
-  const hydratedForUserRef = useRef<string | null>(null);
-  const latestStateRef = useRef(userState);
-  latestStateRef.current = userState;
-  const signedInUserIdRef = useRef<string | null>(null);
-  signedInUserIdRef.current = signedInUserId;
-  const pendingPushRef = useRef(false);
-  const lastPushedJsonRef = useRef<string | null>(null);
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const retryCountRef = useRef(0);
-
-  /** Immediate PUT of the current local state to the user's cloud doc. */
-  const pushCloudNow = async (): Promise<boolean> => {
-    if (!signedInUserIdRef.current) return false;
-    if (syncTimerRef.current) {
-      clearTimeout(syncTimerRef.current);
-      syncTimerRef.current = null;
-    }
-    const payload = JSON.stringify({ progress: toCloudProgress(latestStateRef.current) });
-    try {
-      const r = await fetch('/api/me/progress', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-      });
-      if (!r.ok) throw new Error(String(r.status));
-      lastPushedJsonRef.current = payload;
-      pendingPushRef.current = false;
-      retryCountRef.current = 0;
-      return true;
-    } catch {
-      // Network failure — localStorage already holds the data; retry w/ backoff.
-      if (retryCountRef.current < 3) {
-        retryCountRef.current += 1;
-        pendingPushRef.current = true;
-        syncTimerRef.current = setTimeout(
-          () => void pushCloudNow(),
-          4000 * retryCountRef.current,
-        );
-      }
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    if (!signedInUserId) {
-      hydratedForUserRef.current = null;
-      return;
-    }
-    if (hydratedForUserRef.current === signedInUserId) return; // already done
-    hydratedForUserRef.current = signedInUserId;
-
-    let cancelled = false;
-    void (async () => {
-      try {
-        const r = await fetch('/api/me/progress');
-        if (cancelled || !r.ok) return;
-        const body = (await r.json()) as { progress: CloudProgress | null };
-        if (cancelled) return;
-        if (body.progress) {
-          // Merge guest/local progress with cloud progress → unified state.
-          const merged = mergeProgress(latestStateRef.current, body.progress);
-          latestStateRef.current = merged;
-          setUserState(merged);
-          await pushCloudNow(); // persist merged result immediately
-        } else {
-          // First sign-in with no cloud doc — upload existing local progress.
-          await pushCloudNow();
-        }
-      } catch {
-        /* offline — the debounced saver will reconcile on the next change */
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signedInUserId]);
-
-  // Modals & UI Toggles
+  // Module card the Learning Path should auto-scroll to when it becomes visible.
+  const [roadmapScrollTarget, setRoadmapScrollTarget] = useState<string | null>(null);
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState<boolean>(false);
   const [isRoadmapModalOpen, setIsRoadmapModalOpen] = useState<boolean>(false);
   const [isPlaygroundOpen, setIsPlaygroundOpen] = useState<boolean>(false);
@@ -223,451 +96,18 @@ export default function AppShell() {
     onContinue: () => {},
   });
 
-  // ---- Phase P6: URL ↔ lesson navigation sync ----
-  // The learning flow is an internal state machine; here we mirror it into the
-  // URL as ?day=N&stage=lesson|practice|challenge&concept=I&task=J so the
-  // browser Back/Forward buttons, refresh, and shared links all restore the
-  // exact lesson position — without changing how any view renders.
-  const applyingUrlRef = useRef(true); // suppress push-back when we apply a URL
-  const userStateRef = useRef(userState);
-  userStateRef.current = userState;
-
-  const applyUrlToNavState = useCallback((search: string): boolean => {
-    const params = new URLSearchParams(search);
-    const dayParam = Number(params.get('day'));
-    const stageParam = params.get('stage');
-    if (!dayParam || !Number.isFinite(dayParam) || !stageParam) return false;
-
-    const target = getModuleById(`day-${String(dayParam).padStart(2, '0')}`);
-    if (!target || !['lesson', 'practice', 'concept_complete', 'challenge', 'day_complete'].includes(stageParam)) {
-      return false;
-    }
-
-    // Respect unlock rules: never let a URL open a locked module.
-    const status = getModuleUnlockStatus(target, ALL_MODULES, userStateRef.current);
-    if (!status.isUnlocked && !status.isCompleted && !userStateRef.current.bypassDailyLock) {
-      return false;
-    }
-
-    const maxConcept = Math.max(0, (target.concepts?.length ?? 1) - 1);
-    const conceptIdx = Math.min(Math.max(Number(params.get('concept') ?? 1) - 1, 0), maxConcept);
-    const taskIdx = Math.max(Number(params.get('task') ?? 0), 0);
-
-    setCurrentModuleId(target.id);
-    setCurrentConceptIndex(conceptIdx);
-    setCurrentTaskIndex(taskIdx);
-    setStage(stageParam as LearningStage);
-    setActiveTab('practice');
-    return true;
-  }, []);
-
-  // Deep-link / history navigation (Back & Forward & initial load with params).
-  useEffect(() => {
-    // Initial load: honour ?day=..&stage=.. links once on mount.
-    applyUrlToNavState(window.location.search);
-
-    const onPopState = () => {
-      applyingUrlRef.current = true; // restoring from history — don't re-push
-      const applied = applyUrlToNavState(window.location.search);
-      if (!applied) {
-        // No valid lesson params → treat as roadmap view.
-        setStage('lesson');
-        setActiveTab('learning-path');
-      }
-    };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [applyUrlToNavState]);
-
-  // Push a history entry whenever the lesson position changes in-app.
-  useEffect(() => {
-    const qs = new URLSearchParams();
-    const mod = getModuleById(currentModuleId);
-    const inLessonFlow =
-      mod &&
-      ['lesson', 'practice', 'concept_complete', 'challenge', 'day_complete'].includes(stage);
-
-    if (inLessonFlow && mod) {
-      qs.set('day', String(mod.day));
-      qs.set('stage', stage);
-      qs.set('concept', String(currentConceptIndex + 1));
-      qs.set('task', String(currentTaskIndex));
-    }
-    const url = `${window.location.pathname}${qs.toString() ? `?${qs}` : ''}`;
-    if (applyingUrlRef.current) {
-      applyingUrlRef.current = false;
-      // Replace instead of push so restoring from history doesn't duplicate entries.
-      window.history.replaceState(null, '', url);
-      return;
-    }
-    window.history.pushState(null, '', url);
-  }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage]);
-
-
-  // In-memory SQL Executor instance
-  const sqlExecutor = useMemo(() => new SqlExecutor(), []);
-
   // Reset the in-memory DB whenever the active module/concept/task/stage changes.
-  // This prevents DML/DDL mutations from one task (e.g. DELETE FROM products;
-  // or CREATE TABLE) from leaking into later lessons, which would cause
-  // misleading "returned X rows, expected Y rows" mismatches down the course.
+  // This prevents DML/DDL mutations from one task (e.g. DELETE FROM products;)
+  // from leaking into later lessons. (Phase 3 moves this to route boundaries.)
   useEffect(() => {
-    sqlExecutor.resetDatabase();
+    resetDatabase();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage]);
-
-  // Sync state with localStorage (instant — offline-safe source of truth)
-  useEffect(() => {
-    saveUserState(userState);
-  }, [userState]);
-
-  // Debounced cloud sync for signed-in users (skips no-op / already-synced
-  // state, e.g. the write performed by hydration itself).
-  useEffect(() => {
-    if (!signedInUserId || hydratedForUserRef.current !== signedInUserId) return;
-    if (lastPushedJsonRef.current === JSON.stringify(toCloudProgress(userState))) return;
-    pendingPushRef.current = true;
-    const t = setTimeout(() => void pushCloudNow(), 1500);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userState, signedInUserId]);
-
-  // Flush pending cloud saves when the tab is closed or hidden.
-  useEffect(() => {
-    const flush = () => {
-      if (!signedInUserIdRef.current || !pendingPushRef.current) return;
-      try {
-        void fetch('/api/me/progress', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ progress: toCloudProgress(latestStateRef.current) }),
-          keepalive: true, // survives tab unload
-        });
-        pendingPushRef.current = false;
-      } catch {
-        /* nothing more we can do on unload */
-      }
-    };
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') flush();
-    };
-    window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      window.removeEventListener('pagehide', flush);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, []);
-
-  // Persist the learner's current navigation position so reloads resume here.
-  useEffect(() => {
-    saveNavSnapshot({
-      moduleId: currentModuleId,
-      conceptIndex: currentConceptIndex,
-      taskIndex: currentTaskIndex,
-      stage,
-      tab: activeTab,
-    });
-  }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage, activeTab]);
-
-  // On reload into a challenge view, restore completed-task markers from the
-  // persisted module record so partial progress survives refresh (not just the
-  // all-or-nothing challengeCompleted flag).
-  useEffect(() => {
-    if (stage === 'challenge' && currentModule.challenge) {
-      setCompletedChallengeTaskIds(getCompletedChallengeTaskIds(currentModule, userState));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentModuleId, stage]);
-
-  const currentModule: ModuleData = useMemo(() => {
-    return getModuleById(currentModuleId) || ALL_MODULES[0];
-  }, [currentModuleId]);
-
-  const concepts = currentModule.concepts || [];
-  const currentConcept = concepts[currentConceptIndex] || concepts[0];
-  const currentTasks = currentConcept?.tasks || [];
-  const currentTask = currentTasks[currentTaskIndex] || currentTasks[0];
-
-  // Handle module selection from learning path or roadmap
-  const handleSelectModuleAndConcept = (
-    moduleId: string,
-    conceptIndex: number = 0,
-    targetStage: LearningStage = 'lesson'
-  ) => {
-    const mod = getModuleById(moduleId);
-    if (!mod) return;
-
-    const status = getModuleUnlockStatus(mod, ALL_MODULES, userState);
-    if (!status.isUnlocked && !userState.completedModules[moduleId]) return;
-
-    // Strict guard: Enforce that user cannot access challenge before completing all module concepts
-    if (targetStage === 'challenge') {
-      const challengeUnlock = isModuleChallengeUnlocked(mod, ALL_MODULES, userState);
-      if (!challengeUnlock.isUnlocked) {
-        // Find first unfinished concept and guide the user there
-        const firstIncompleteIdx = mod.concepts.findIndex(
-          (c) => !isConceptCompleted(c, mod.id, userState)
-        );
-        setCurrentModuleId(moduleId);
-        setCurrentConceptIndex(firstIncompleteIdx >= 0 ? firstIncompleteIdx : 0);
-        setCurrentTaskIndex(0);
-        setStage('lesson');
-        setActiveTab('practice');
-        return;
-      }
-
-      // If unlocked, take user directly to the Challenge stage
-      setCurrentModuleId(moduleId);
-      setCurrentConceptIndex(conceptIndex);
-      setCurrentTaskIndex(0);
-      setCompletedChallengeTaskIds(mod.challenge ? getCompletedChallengeTaskIds(mod, userState) : []);
-      setStage('challenge');
-      setActiveTab('practice');
-      return;
-    }
-
-    setCurrentModuleId(moduleId);
-    setCurrentConceptIndex(conceptIndex);
-    setCurrentTaskIndex(0);
-    // Non-challenge stages don't render challenge task tabs.
-    setCompletedChallengeTaskIds([]);
-
-    if (targetStage === 'day_complete' && userState.completedModules[moduleId]) {
-      setStage('day_complete');
-    } else {
-      setStage(targetStage);
-    }
-
-    setActiveTab('practice');
-  };
-
-  const handleSelectModule = (moduleId: string) => {
-    handleSelectModuleAndConcept(moduleId, 0, 'lesson');
-  };
-
-  const handleResetProgress = () => {
-    const fresh = resetUserState();
-    resetNavSnapshot();
-    setUserState(fresh);
-    setCurrentModuleId('day-01');
-    setCurrentConceptIndex(0);
-    setCurrentTaskIndex(0);
-    setStage('lesson');
-    setCompletedChallengeTaskIds([]);
-    setActiveTab('learning-path');
-  };
-
-  // Step 1: User finishes reading Concept Lesson -> Move to Guided Practice
-  const handleStartPractice = () => {
-    if (currentTasks.length > 0) {
-      // Retain currentTaskIndex if already valid within the current concept; otherwise start at 0
-      const validIndex =
-        currentTaskIndex >= 0 && currentTaskIndex < currentTasks.length
-          ? currentTaskIndex
-          : 0;
-      setCurrentTaskIndex(validIndex);
-      setStage('practice');
-    } else {
-      handleCompleteConcept();
-    }
-  };
-
-  // Step 2: Task completed successfully
-  const handleTaskSuccess = (userSql: string, hintsUsed: number, viewedSolution: boolean) => {
-    setUserState((prev) => {
-      const existing = prev.taskAttempts?.[currentTask.id] || {
-        taskId: currentTask.id,
-        attemptsCount: 0,
-        completed: false,
-        hintsUsed: 0,
-        viewedSolution: false,
-      };
-
-      const moduleProgress = prev.completedModules[currentModule.id] || {
-        moduleId: currentModule.id,
-        completedAt: '',
-        completedConcepts: [],
-        completedTasks: [],
-        challengeCompleted: false,
-      };
-
-      const updatedCompletedTasks = [...(moduleProgress.completedTasks || [])];
-      if (!updatedCompletedTasks.includes(currentTask.id)) {
-        updatedCompletedTasks.push(currentTask.id);
-      }
-
-      return {
-        ...prev,
-        taskAttempts: {
-          ...prev.taskAttempts,
-          [currentTask.id]: {
-            ...existing,
-            attemptsCount: (existing.attemptsCount || 0) + 1,
-            completed: true,
-            hintsUsed: Math.max(existing.hintsUsed || 0, hintsUsed),
-            viewedSolution: existing.viewedSolution || viewedSolution,
-            lastSubmittedSql: userSql,
-            completedAt: new Date().toISOString(),
-          },
-        },
-        completedModules: {
-          ...prev.completedModules,
-          [currentModule.id]: {
-            ...moduleProgress,
-            completedTasks: updatedCompletedTasks,
-          },
-        },
-      };
-    });
-  };
-
-  // Step 3: All tasks in concept finished -> Advance directly to next concept / challenge / day complete
-  const handleCompleteConcept = () => {
-    setUserState((prev) => {
-      const moduleProgress = prev.completedModules[currentModule.id];
-      const completedConcepts = moduleProgress?.completedConcepts || [];
-      if (!completedConcepts.includes(currentConcept.id)) {
-        completedConcepts.push(currentConcept.id);
-      }
-      return {
-        ...prev,
-        completedModules: {
-          ...prev.completedModules,
-          [currentModule.id]: {
-            moduleId: currentModule.id,
-            completedAt: moduleProgress?.completedAt || '',
-            completedConcepts,
-            completedTasks: moduleProgress?.completedTasks || [],
-            challengeCompleted: moduleProgress?.challengeCompleted || false,
-          },
-        },
-      };
-    });
-
-    const nextConceptIdx = currentConceptIndex + 1;
-    if (nextConceptIdx < concepts.length) {
-      setCurrentConceptIndex(nextConceptIdx);
-      setCurrentTaskIndex(0);
-      setStage('lesson');
-    } else if (currentModule.challenge) {
-      setStage('challenge');
-    } else {
-      handleCompleteDay();
-    }
-  };
-
-  // Step 3 -> 4: Continue to Next Concept or Independent Challenge
-  const handleContinueNextConcept = () => {
-    const nextConceptIdx = currentConceptIndex + 1;
-    if (nextConceptIdx < concepts.length) {
-      setCurrentConceptIndex(nextConceptIdx);
-      setCurrentTaskIndex(0);
-      setStage('lesson');
-    } else if (currentModule.challenge) {
-      setStage('challenge');
-    } else {
-      handleCompleteDay();
-    }
-  };
-
-  // Step 4: Challenge Task Success
-  const handleChallengeTaskSuccess = (taskId: string, userSql: string) => {
-    setCompletedChallengeTaskIds((prev) => {
-      if (prev.includes(taskId)) return prev;
-      return [...prev, taskId];
-    });
-
-    setUserState((prev) => {
-      const existing = prev.taskAttempts?.[taskId] || {
-        taskId,
-        attemptsCount: 0,
-        completed: false,
-        hintsUsed: 0,
-        viewedSolution: false,
-      };
-
-      const moduleProgress = prev.completedModules[currentModule.id] || {
-        moduleId: currentModule.id,
-        completedAt: '',
-        completedConcepts: [],
-        completedTasks: [],
-        challengeCompleted: false,
-      };
-
-      const updatedCompletedTasks = [...(moduleProgress.completedTasks || [])];
-      if (!updatedCompletedTasks.includes(taskId)) {
-        updatedCompletedTasks.push(taskId);
-      }
-
-      return {
-        ...prev,
-        taskAttempts: {
-          ...prev.taskAttempts,
-          [taskId]: {
-            ...existing,
-            attemptsCount: (existing.attemptsCount || 0) + 1,
-            completed: true,
-            lastSubmittedSql: userSql,
-            completedAt: new Date().toISOString(),
-          },
-        },
-        completedModules: {
-          ...prev.completedModules,
-          [currentModule.id]: {
-            ...moduleProgress,
-            completedTasks: updatedCompletedTasks,
-          },
-        },
-      };
-    });
-  };
-
-  // Step 4 -> 5: Finish Challenge & Complete Day
-  const handleCompleteDay = () => {
-    const completedAt = new Date().toISOString();
-    setUserState((prev) => ({
-      ...prev,
-      completedModules: {
-        ...prev.completedModules,
-        [currentModule.id]: {
-          moduleId: currentModule.id,
-          completedAt,
-          completedConcepts: currentModule.concepts.map((c) => c.id),
-          completedTasks: currentModule.concepts.flatMap((c) => c.tasks.map((t) => t.id)),
-          challengeCompleted: true,
-        },
-      },
-    }));
-
-    setStage('day_complete');
-  };
-
-  // Review today's module from the beginning
-  const handleReviewModule = () => {
-    setCurrentConceptIndex(0);
-    setCurrentTaskIndex(0);
-    setStage('lesson');
-  };
-
-  // Find next module in roadmap
-  const nextModule = ALL_MODULES.find((m) => m.day === currentModule.day + 1);
-
-  const handleContinueNextDay = () => {
-    if (nextModule) {
-      handleSelectModule(nextModule.id);
-    }
-  };
 
   // Close the auth page and return to the homepage (landing view).
   const handleAuthBack = () => {
     setAuthMode(null);
     setActiveTab('learning-path');
-  };
-
-  // Sign the user out via Better Auth.
-  const handleSignOut = async () => {
-    await authClient.signOut();
   };
 
   // Auth is its own full page — when a mode is active, render the auth view in
@@ -686,7 +126,7 @@ export default function AppShell() {
   // A blocked account gets a dedicated full-page screen instead of the app.
   // (Server-side enforcement happens independently on every authenticated API.)
   if (!isAuthPending && authUser?.status === 'blocked') {
-    return <BlockedView onSignOut={handleSignOut} />;
+    return <BlockedView onSignOut={signOut} />;
   }
 
   // SQL Playground — its own full page, like the auth view.
@@ -715,11 +155,11 @@ export default function AppShell() {
         onSignUpClick={() => setAuthMode('signup')}
         user={authUser}
         isAuthPending={isAuthPending}
-        onSignOut={handleSignOut}
+        onSignOut={signOut}
         activeViewTitle={activeTab === 'practice' ? `Day ${currentModule.day}: ${currentModule.shortTitle}` : 'Learning Path'}
       />
 
-      {/* Main Content Area â€” header is sticky (in flow), so no top offset needed */}
+      {/* Main Content Area — header is sticky (in flow), so no top offset needed */}
       <main className="relative w-full bg-surface-base min-h-screen">
         {activeTab === 'learning-path' || activeTab === 'home' ? (
           <LearningPathView
@@ -762,7 +202,7 @@ export default function AppShell() {
                   conceptIndex={currentConceptIndex}
                   totalConcepts={concepts.length}
                   onStartPractice={handleStartPractice}
-                  onExecuteSql={(sql) => sqlExecutor.executeQuery(sql)}
+                  onExecuteSql={executeQuery}
                   onPrevious={() => {
                     if (currentConceptIndex > 0) {
                       setCurrentConceptIndex((prev) => prev - 1);
@@ -772,6 +212,7 @@ export default function AppShell() {
                   canGoBack={currentConceptIndex > 0}
                 />
               )}
+
 
               {stage === 'practice' && currentTask && currentConcept && (
                 <PracticeTaskView
@@ -787,7 +228,7 @@ export default function AppShell() {
                     userState.completedModules?.[currentModule.id]?.completedTasks?.includes(currentTask.id)
                   )}
                   savedSql={userState.taskAttempts?.[currentTask.id]?.lastSubmittedSql}
-                  onExecuteSql={(sql) => sqlExecutor.executeQuery(sql)}
+                  onExecuteSql={executeQuery}
                   onTaskSuccess={handleTaskSuccess}
                   onPreviousTask={() => {
                     if (currentTaskIndex > 0) {
@@ -825,7 +266,7 @@ export default function AppShell() {
                   key={`challenge-${currentModule.challenge.id}`}
                   challenge={currentModule.challenge}
                   completedTaskIds={completedChallengeTaskIds}
-                  onExecuteSql={(sql) => sqlExecutor.executeQuery(sql)}
+                  onExecuteSql={executeQuery}
                   onChallengeTaskSuccess={handleChallengeTaskSuccess}
                   onFinishAllChallenges={handleCompleteDay}
                   onBackToPractice={() => {
@@ -878,3 +319,4 @@ export default function AppShell() {
     </div>
   );
 }
+

@@ -96,13 +96,20 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 ## Phases
 
 ### Phase 0 — Provider extraction & decomposition (no routes yet, zero visual change)
-**Status: ⬜ NOT STARTED** · Commit: — · Completed: —
-- [ ] `AuthProvider` — session, user, role/status, signOut, blocked-state (extracted from AppShell)
-- [ ] `LearningProgressProvider` — userState, all progress actions, localStorage sync, cloud hydration/merge/debounce/flush (verbatim move, then trimmed)
-- [ ] `SqlExecutorProvider` — executor instance + `executeQuery()` + `resetDatabase()` as a function (no path effects)
-- [ ] `AppProviders` composition; AppShell consumes context only
-- [ ] Gates: tsc + build + engine tests + smoke test
-- Notes:
+**Status: ✅ COMPLETE** · Commit: `d75f8a6` · Completed: 2026-08-28
+- [x] `AuthProvider` — session, user, role/status, signOut, blocked-state (extracted from AppShell)
+- [x] `LearningProgressProvider` — userState, all progress actions, localStorage sync, cloud hydration/merge/debounce/flush (verbatim move, then trimmed)
+- [x] `SqlExecutorProvider` — executor instance + `executeQuery()` + `resetDatabase()` as a function (no path effects)
+- [x] `AppProviders` composition; AppShell consumes context only
+- [x] Gates: tsc + build + engine tests + smoke test
+- Notes: AppShell 880 → 322 lines (presentation only). Position state
+  (module/concept/task/stage/tab) temporarily co-located in
+  LearningProgressProvider because progress handlers fuse position + progress
+  writes; Phase 3 peels it into routes. URL-sync + NavSnapshot intentionally
+  left intact until Phase 3. AppProviders mounts in `src/app/page.tsx` for now
+  (moves to `(app)/layout.tsx` in Phase 1). Executor reset effect stays in
+  AppShell, now calling `resetDatabase()` from the provider (behavior identical:
+  resets on module/concept/task/stage change).
 
 ### Phase 1 — Route-group skeleton, auth & playground routes
 **Status: ⬜ NOT STARTED** · Commit: — · Completed: —
@@ -166,4 +173,6 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 ## Changelog (append one line per phase completion)
 
 - `4b49977` baseline — tracker created; all phases pending.
+- `d01f32a` docs — PHASES.md tracker committed.
+- `d75f8a6` **Phase 0 COMPLETE** — providers extracted (Auth / LearningProgress / SqlExecutor / AppProviders); AppShell 880→322 lines; all gates green.
 
