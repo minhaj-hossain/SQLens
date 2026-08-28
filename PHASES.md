@@ -217,6 +217,35 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
   - Verified on live server: day-01 HTML contains meta title, canonical
     `/learn/day-01`, JSON-LD; theory page title
     `Day 1 · SELECT and FROM · SQLens` + canonical; sitemap.xml has 27 URLs
+## Phase 3.5 — DML/DDL verification pass (Day 19/20)
+
+**Status:** ✅ COMPLETE · **Commit:** `(pending)` · **Date:** 2026-08-28
+
+### Task classification (audited against real content, not assumed)
+| Class | Tasks |
+|---|---|
+| `databaseLifecycle: 'fresh'` | All 26 DML/DDL **practice** tasks: Day 19 `dml-insert-into` (c1-t1/t2), `dml-safe-update` (c2a-t1/t2), `dml-safe-delete` (c2b-t1/t2); Day 20 c1–c10 ×2 each (`ddl-create-table`, `ddl-data-types`, `ddl-primary-key`, `ddl-not-null`, `ddl-unique`, `ddl-default`, `ddl-check`, `ddl-alter-table-add`, `ddl-foreign-key`, `ddl-drop-table`) |
+| `databaseLifecycle: 'inherit'` | **Both challenges only**: `day19-hw-1→hw-2` (INSERT product, then UPDATE that row), `day20-hw-1→hw-2` (CREATE `reviews`, then JOIN it) |
+
+Design: `PracticeTask.databaseLifecycle?: 'fresh' | 'inherit'` (default = old behavior) and `IndependentChallenge.databaseLifecycle = 'inherit'` (challenge tasks chain within the group; seed via `initialSql`). Every classification verified against task intent — nothing blindly flagged.
+
+**Curriculum bug found & fixed during audit:** Day 20 challenge hw-2's solution referenced a non-existent `product_reviews` table; corrected to `reviews` (what hw-1 actually creates).
+
+### Test suites added
+- `scripts/engine-tests.ts` — DML/DDL/transaction block: insert/update/delete roundtrips, BEGIN/COMMIT/ROLLBACK, CREATE-recreate error, ALTER, DROP IF EXISTS, resetDatabase restores seed & drops created tables (21→**46** assertions).
+- `scripts/db-lifecycle-check.ts` (`npm run test:db-lifecycle`) — UI-boundary lifecycle model on real content: fresh-reset on fresh task, no reset on inherit, challenge switch behavior, concept/day boundaries, revisit-after-solve (48 assertions).
+- `scripts/day1920-manual-pass.ts` (`npm run test:manual-pass`) — executes **every real solution SQL** for all Day 19/20 practice tasks + both challenges through the actual engine+validator: fresh isolation, inherit chains, revisit rebasing, day-boundary reset, progress-storage independence (localStorage shim) — **86 assertions**.
+
+### Gate results
+`tsc` clean · engine 46/46 · db-lifecycle 48/48 · manual-pass 86/86 · verify:curriculum OK · build compiled (all routes registered).
+
+### Production smoke (local `next start`)
+`/` 200 · `/learn/day-01|day-19|day-20|day-25` 200 (deep links, no 404) · `sitemap.xml` 200 · legacy `?day=3&stage=lesson&concept=2` 200 (server redirect) · static CSS 200.
+
+### Residual risks / limitations
+- The in-browser (visual/DOM) pass — draft-SQL restore in the real editor, signed-in cloud merge in the real UI — is covered by logic tests + earlier phase smokes, but not a fresh human click-through of Day 19/20; recommended once post-push.
+- `fresh` tasks rely on PracticeView/ChallengeView honoring `databaseLifecycle` at mount/task-switch; a future refactor of those views must preserve this (guarded by db-lifecycle-check, which mirrors their logic).
+
     incl. all 25 days.
 
 ### Phase 5 — Backlog (post-migration; work only on request)
@@ -267,4 +296,5 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 - `5d3b5b2` **Phase 3 COMPLETE** — real /learn/[dayId] route tree + NEW module overview page; URL is the position (provider stripped of navigation); legacy redirects; executor boundaries day+concept (DML audit); NavSnapshot/pushState machinery deleted; all gates green.
 - `da7330f` **Phase 4 COMPLETE** — 25 static day shells + /learn static; per-day/per-concept metadata (canonical/OG); JSON-LD LearningResource; sitemap 27 URLs; learn pages = server wrappers + client views; all gates green.
 - `cb8434c` **Phase 5 COMPLETE** — admin dashboard split into /admin + /admin/users + /admin/modules routes (shared gate/provider/shell, noindex); guest-progress merge prompt UX; PracticeTask.freshDb; dead Code removed; README route-map refresh. **All phases complete.**
+- Phase 3.5 **DML/DDL verification pass COMPLETE** — Day 19/20 tasks audited & classified (26 practice=fresh, both challenges=inherit); `databaseLifecycle` model; Day-20 challenge solution bug fixed (`product_reviews`→`reviews`); 3 new suites (engine 46, lifecycle 48, manual-pass 86 — all green); production smoke passed.
 

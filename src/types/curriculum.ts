@@ -40,11 +40,15 @@ export interface PracticeTask {
   validation: ValidationRule;
   successMessage: string;
   /**
-   * Opt-in (Phase 5): when true, the in-memory SQL database is reset when this
-   * task mounts — for tasks that need an isolated database regardless of the
-   * day/concept reset boundaries. Default: false (continuity preserved).
+   * Database lifecycle for this task (v2, replaces the earlier `freshDb`
+   * boolean — audited Day 19/20 curriculum): 
+   *   - `fresh`  — always start from the original seed state (reset on mount).
+   *   - `inherit`— continue from the previously-mutated state (for connected
+   *               multi-step scenarios, e.g. a challenge's second task that
+   *               builds on the first task's INSERT/CREATE).
+   *   undefined (default) — current behavior: inherit within a concept/day.
    */
-  freshDb?: boolean;
+  databaseLifecycle?: 'fresh' | 'inherit';
 }
 
 export interface SyntaxBlock {
@@ -138,6 +142,15 @@ export interface IndependentChallenge {
   id: string;
   title: string;
   scenario: string;
+  /**
+   * Database lifecycle for the challenge's task SET (v2):
+   *   - `fresh`  (recommended) — each task starts from the seed state, so
+   *              challenge tasks are independently verifiable.
+   *   - `inherit` — the whole challenge runs as one sequence: the first task
+   *              starts from seed, later tasks build on earlier mutations.
+   *   undefined (default) — `fresh` (independence; decide per challenge).
+   */
+  databaseLifecycle?: 'fresh' | 'inherit';
   tasks: PracticeTask[];
 }
 

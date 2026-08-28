@@ -10,7 +10,9 @@
     "clean": "rm -rf dist server.js .next",
     "lint": "tsc --noEmit",
     "verify:curriculum": "tsx scripts/verify-curriculum.ts",
-    "test:engine": "tsx scripts/engine-tests.ts"
+    "test:engine": "tsx scripts/engine-tests.ts",
+    "test:db-lifecycle": "tsx scripts/db-lifecycle-check.ts",
+    "test:manual-pass": "tsx scripts/day1920-manual-pass.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",

@@ -376,12 +376,32 @@ export class SqlExecutor {
     const cmd = parsed.ddlCommand || '';
 
     // CREATE TABLE
-    const createMatch = cmd.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([`"']?[\w_]+[`"']?)/i);
+    const createMatch = cmd.match(/CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?([`"']?[\w_]+[`"']?)/i);
     if (createMatch) {
-      const tbl = createMatch[1].replace(/[`"']/g, '').toLowerCase();
-      if (!this.db.tables[tbl]) {
-        this.db.tables[tbl] = [];
+      const tbl = createMatch[2].replace(/[`"']/g, '').toLowerCase();
+      const ifNotExists = !!createMatch[1];
+      if (this.db.tables[tbl]) {
+        // v2 DDL fix: re-creating an existing table is an error (mirrors
+        // real SQL behavior). `IF NOT EXISTS` suppresses it silently.
+        if (!ifNotExists) {
+          return {
+            success: false,
+            columns: [],
+            rows: [],
+            rowCount: 0,
+            executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+            error: `Table '${tbl}' already exists. Use CREATE TABLE IF NOT EXISTS to ignore, or DROP TABLE first.`,
+          };
+        }
+        return {
+          success: true,
+          columns: ['status'],
+          rows: [{ status: `Table '${tbl}' already exists (IF NOT EXISTS — no change)` }],
+          rowCount: 1,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+        };
       }
+      this.db.tables[tbl] = [];
       return {
         success: true,
         columns: ['status'],
@@ -1045,7 +1065,14 @@ export class SqlExecutor {
     this.db.tables[table] = this.db.tables[table].map(row => {
       if (!query.whereClause || this.evaluateWhere(query.whereClause, row)) {
         affected++;
-        return { ...row, ...query.updateSet };
+        // v2 DML fix: evaluate each SET value against the CURRENT row, so
+        // expressions like `price * 1.10`, `quantity_in_stock + 20` compute
+        // properly instead of being stored as the raw string.
+        const updates: Record<string, any> = {};
+        for (const [col, val] of Object.entries(query.updateSet ?? {})) {
+          updates[col] = this.evaluateSetValue(String(val), row);
+        }
+        return { ...row, ...updates };
       }
       return row;
     });
@@ -1058,6 +1085,72 @@ export class SqlExecutor {
       affectedRows: affected,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
     };
+  }
+
+  /**
+   * Evaluate a SET clause value. Handles:
+   *   - bare numeric/string literals (returned as-is)
+   *   - arithmetic expressions referencing the row (`price * 1.10`,
+   *     `quantity_in_stock + 20`, `price + tax * 0.5`, ...) → computed number
+   *   - a plain column reference / comparison that evaluates via evaluateWhere
+   *     → its computed value (numeric if the comparison is numeric)
+   * Degrades gracefully to the raw string when nothing matches.
+   */
+  private evaluateSetValue(rawValue: string, row: TableRow): any {
+    const v = String(rawValue ?? '').trim();
+    if (v === '') return rawValue;
+
+    // Bare quoted string → unquote.
+    if (/^['"].*['"]$/.test(v)) return v.replace(/^['"]|['"]$/g, '');
+
+    // Pure numeric literal → number.
+    if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+
+    // Arithmetic expression → compute against the row.
+    if (/[+\-*/%]/.test(v) && !/^[=!<>]/.test(v)) {
+      // Replace column references with current row values (null → keep name
+      // so a friendly error surfaces rather than NaN).
+      let expr = v;
+      expr = expr.replace(/[`"']?([a-zA-Z_][a-zA-Z0-9_]*)[`"']?/g, (tok, col: string) => {
+        const lower = col.toLowerCase();
+        if (['null', 'true', 'false', 'and', 'or', 'not'].includes(lower)) return tok;
+        const val = getRowValue(row, col);
+        if (typeof val === 'number') return String(val);
+        if (typeof val === 'string' && !isNaN(Number(val))) return String(Number(val));
+        // Unknown identifier → keep as-is (will produce NaN → we throw below).
+        return tok;
+      });
+      // Safety: only allow digits, operators, parens, dots (no injection).
+      if (!/^[\d\.\+\-\*\/%\s()]+$/.test(expr)) {
+        // Fall back to treating it as a comparison value.
+        return this.booleanToValue(this.evaluateWhere(v, row), v, row);
+      }
+      try {
+        // eslint-disable-next-line no-eval
+        const result = Function(`"use strict"; return (${expr});`)();
+        if (typeof result === 'number' && !isNaN(result)) return result;
+      } catch {
+        /* fall through to raw */
+      }
+      return rawValue;
+    }
+
+    // Plain value: try the comparison evaluator (handles e.g. `category_id`)
+    // to resolve a column reference to the row's value.
+    return this.booleanToValue(this.evaluateWhere(v, row), v, row);
+  }
+
+  /** For `SET x = <col-ref>` produce the actual column value, not a boolean. */
+  private booleanToValue(result: boolean, raw: string, row: TableRow): any {
+    // If the expression is a plain identifier, resolve it directly.
+    const ident = raw.trim();
+    if (/^[`"\']?[a-zA-Z_][a-zA-Z0-9_]*[`"\']?$/.test(ident)) {
+      return getRowValue(row, ident.replace(/[`"\']/g, ''));
+    }
+    // Evaluate the comparison: if it yielded a numeric comparison, return the
+    // matched value clamped to the comparison (e.g. `SET x = price < 50`
+    // returns a boolean per SQL), otherwise fall back to the raw value.
+    return result === true ? true : raw;
   }
 
   private executeDelete(query: ParsedSqlQuery, startTime: number): QueryExecutionResult {

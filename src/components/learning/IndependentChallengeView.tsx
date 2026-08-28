@@ -30,6 +30,9 @@ interface IndependentChallengeViewProps {
   onChallengeTaskSuccess: (taskId: string, userSql: string) => void;
   onFinishAllChallenges: () => void;
   onBackToPractice?: () => void;
+  /** v2: called on every task switch so the host can honor the challenge's
+   *  lifecycle (fresh → reset DB; inherit → keep mutated state). */
+  onSelectedTaskChange?: (taskId: string) => void;
 }
 
 const SQL_KEYWORDS = [
@@ -56,6 +59,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   onChallengeTaskSuccess,
   onFinishAllChallenges,
   onBackToPractice,
+  onSelectedTaskChange,
 }) => {
   const [selectedTaskIdx, setSelectedTaskIdx] = useState(0);
   const currentTask: PracticeTask = challenge.tasks[selectedTaskIdx] || challenge.tasks[0];
@@ -161,6 +165,10 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     setRevealedHintLevel(0);
     setFailedAttemptsCount(0);
     setInspectTable(currentTask.primaryTable || 'products');
+    // v2 database lifecycle: a `fresh` challenge resets the database to seed
+    // on every task switch so each task is independently verifiable. `inherit`
+    // (or default) keeps the mutated state for connected multi-step tasks.
+    onSelectedTaskChange?.(currentTask.id);
   }, [currentTask.id]);
 
   const isLastTask = selectedTaskIdx >= challenge.tasks.length - 1;

@@ -27,7 +27,7 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
   if (!mod) notFound();
 
   const { userState, markChallengeTaskComplete } = useLearning();
-  const { executeQuery } = useSqlExecutor();
+  const { executeQuery, resetDatabase } = useSqlExecutor();
   const nav = useLearningNavigation();
   const router = useRouter();
 
@@ -57,6 +57,11 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
         markChallengeTaskComplete({ taskId, moduleId: mod.id, userSql })
       }
       onFinishAllChallenges={() => nav.finishModule(mod)}
+      onSelectedTaskChange={() => {
+        // v2 lifecycle: fresh challenges reset the DB to seed on every task
+        // switch; inherit (or default) keeps continuity for connected tasks.
+        if (mod.challenge?.databaseLifecycle === 'fresh') resetDatabase();
+      }}
       onBackToPractice={() => {
         const last = mod.concepts[mod.concepts.length - 1];
         if (last) router.push(learnUrl(mod.id, 'practice', last.id, 0));

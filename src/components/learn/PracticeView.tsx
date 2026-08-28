@@ -54,10 +54,12 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
-  // Opt-in per-task isolation (PracticeTask.freshDb, Phase 5).
+  // Database lifecycle (v2, replaces freshDb): reset to seed when this task
+  // mounts with the `fresh` lifecycle. `inherit`/undefined keep continuity
+  // (which the concept-boundary reset in the day layout still bounds).
   const { resetDatabase } = useSqlExecutor();
   useEffect(() => {
-    if (task?.freshDb) resetDatabase();
+    if (task?.databaseLifecycle === 'fresh') resetDatabase();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id]);
 
