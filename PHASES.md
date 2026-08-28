@@ -137,7 +137,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     pre-migration admin page).
 
 ### Phase 2 — Concept-ID navigation switch (stable slugs)
-**Status: ✅ COMPLETE** · Commit: `2f2b10a` · Completed: 2026-08-28
+**Status: ✅ COMPLETE** · Commit: `e102a7e` · Completed: 2026-08-28
 - [x] `UserLearningState.currentConceptIndex` → `currentConceptId: string | null`
 - [x] One-time localStorage shim (resolve old index → slug on load, in the provider via `resolveConceptId()`; storage.ts stays curriculum-agnostic)
 - [x] All navigation helpers switch to IDs (selectModuleAndConcept, selectModule, completeConcept, continueNextConcept, reviewModule, resetProgress, legacy-URL applier)
@@ -206,4 +206,5 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 - `d75f8a6` Phase 0 work committed (superseded by amend → see next line).
 - `249b88f` **Phase 0 COMPLETE** — providers extracted (Auth / LearningProgress / SqlExecutor / AppProviders); AppShell 880→322 lines; all gates green.
 - `6fa1df6` **Phase 1 COMPLETE** — route groups (public)/(auth)/(app)/(admin); /signin /signup /playground real routes; AppShell deleted → AppChrome + LearnHomePage; UiChromeProvider added; all gates green.
+- `e102a7e` **Phase 2 COMPLETE** — navigation switched to stable concept slugs (currentConceptId) with legacy-index shim; merge.ts unchanged; scripts/phase2-check.ts added (25 modules / 64 concepts verified); all gates green.
 
