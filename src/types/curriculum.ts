@@ -39,6 +39,12 @@ export interface PracticeTask {
   hints: TaskHint[];
   validation: ValidationRule;
   successMessage: string;
+  /**
+   * Opt-in (Phase 5): when true, the in-memory SQL database is reset when this
+   * task mounts — for tasks that need an isolated database regardless of the
+   * day/concept reset boundaries. Default: false (continuity preserved).
+   */
+  freshDb?: boolean;
 }
 
 export interface SyntaxBlock {

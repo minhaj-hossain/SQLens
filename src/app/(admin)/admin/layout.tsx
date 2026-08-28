@@ -1,11 +1,19 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 import { auth, db } from '@/lib/auth';
+import { AdminUsersProvider } from '@/components/admin/AdminUsersContext';
 
 export const dynamic = 'force-dynamic';
 
+// Admin pages must never be indexed.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
 /**
- * (admin) group layout — the role gate for EVERY admin route (Phase 1).
+ * (admin) group layout — the role gate for EVERY admin route (Phase 1),
+ * plus the shared users-data provider for the split panels (Phase 5).
  * The role check reads the MongoDB `user` document via the trusted Better Auth
  * session — never a client-supplied value — so hitting any /admin/* page as an
  * anonymous user or regular user yields a redirect, not a render. (The admin
@@ -26,5 +34,6 @@ export default async function AdminGroupLayout({ children }: { children: React.R
     redirect('/');
   }
 
-  return <>{children}</>;
+  return <AdminUsersProvider>{children}</AdminUsersProvider>;
 }
+

@@ -54,6 +54,13 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
 
+  // Opt-in per-task isolation (PracticeTask.freshDb, Phase 5).
+  const { resetDatabase } = useSqlExecutor();
+  useEffect(() => {
+    if (task?.freshDb) resetDatabase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id]);
+
   if (!task) return null;
 
   return (

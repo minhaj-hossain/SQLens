@@ -84,7 +84,8 @@ Every day of the course follows the same loop:
 - **25 structured days** — from basic `SELECT` through joins, aggregation, subqueries, CTEs, window functions, and DDL
 - Guided practice with step-by-step hints, attempt tracking, and optional solutions
 - Independent challenge sets per module
-- Lesson URLs are deep-linkable (`?day=7&stage=practice&concept=2`) — browser Back/Forward navigate between lesson steps
+- **Real App Router routes** — every lesson is a URL (`/learn/day-07/theory/aggregates`, `/learn/day-07/practice/aggregates?task=1`, `/learn/day-07/challenge`) with its own metadata, canonical URL and prefetch; module overviews are statically prerendered; browser Back/Forward and shared links land exactly on the lesson step
+- Legacy deep links (`?day=7&stage=practice&concept=2`) are **server-redirected** to the new URLs automatically
 - Reset-progress safety net per learner
 
 </details>
@@ -124,7 +125,7 @@ Every day of the course follows the same loop:
 
 - Email/password authentication via **Better Auth** + official MongoDB driver adapter
 - Server-enforced roles (`user` / `admin`) and account status (`active` / `blocked`)
-- Admin dashboard at `/admin`: live stats, searchable users list, block/unblock/delete with confirmation dialogs
+- Admin dashboard as real routes: `/admin` (overview + stats), `/admin/users` (searchable list with block/unblock/delete + confirmations), `/admin/modules` (curriculum availability & scheduling) — each with its own URL, all behind the same server gate
 - Blocked accounts are rejected at sign-in *and* locked out of existing sessions/APIs — with a friendly "Account suspended" screen that still allows guest browsing
 - All privileged actions verified server-side on every request; frontend checks are cosmetic only
 
@@ -305,11 +306,17 @@ focused workspace and remembers your draft + history between visits.
 Reachable only by verified admins (role lives server-side, re-checked on every request).
 Admins get a shield icon in the header linking to `/admin`.
 
-| Section | What you get |
+| Route | What you get |
 |---|---|
-| **Overview** | Total users, blocked count, admin count, new users (7 days), latest signups |
-| **Users** | Searchable list · role/status badges · join dates · block (reversible) · delete (destructive) |
-| **Guardrails** | Confirmation dialogs for every destructive action; `requireAdmin` runs before each endpoint |
+| **`/admin`** | Overview: total users, blocked count, admin count, new users (7 days), latest signups |
+| **`/admin/users`** | Searchable list · role/status badges · join dates · block (reversible) · delete (destructive) |
+| **`/admin/modules`** | Curriculum availability & scheduling (automatic / scheduled / manual / locked) |
+
+| Guardrail | How |
+|---|---|
+| **Server gate** | `(admin)/layout.tsx` re-checks DB role + status on every request → non-admins redirect `/` |
+| **API re-verification** | `requireAdmin` runs before each endpoint |
+| **Destructive actions** | Confirmation dialogs; admin pages carry `robots: noindex` |
 
 Blocked users see a calm "Account suspended" screen, may continue learning as guests, and their
 data stays in MongoDB so they can be restored anytime.
@@ -367,12 +374,18 @@ endpoints fail fast.
 ```
 sql_learning/
 ├── src/
-│   ├── app/                        # Next.js App Router
-│   │   ├── layout.tsx              # HTML shell · fonts · metadata · SEO
-│   │   ├── page.tsx                # mounts the main application shell
+│   ├── app/                        # Next.js App Router (route groups)
+│   │   ├── layout.tsx              # HTML shell · fonts · global metadata · SEO
 │   │   ├── loading.tsx             # branded route-loading skeleton
 │   │   ├── error.tsx               # friendly crash boundary
 │   │   ├── not-found.tsx           # custom 404
+│   │   ├── (app)/                  # learning shell (Header + providers)
+│   │   │   ├── layout.tsx          # AppProviders + UiChrome + AppChrome
+│   │   │   ├── page.tsx            # `/` roadmap + legacy redirects
+│   │   │   ├── template.tsx        # route-transition animation
+│   │   │   └── learn/              # /learn + /learn/[dayId]/* lesson tree
+│   │   ├── (auth)/                 # /signin, /signup (signed-in → redirect)
+│   │   ├── (admin)/admin/          # /admin, /admin/users, /admin/modules
 │   │   ├── robots.ts · sitemap.ts  # SEO plumbing
 │   │   ├── icon.svg                # favicon (database glyph)
 │   │   ├── admin/page.tsx          # server-guarded admin entry

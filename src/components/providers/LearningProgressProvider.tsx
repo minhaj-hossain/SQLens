@@ -29,13 +29,21 @@ import { loadUserState, saveUserState, resetUserState } from '@/lib/progress/sto
 import { UserLearningState, AvailabilityMap } from '@/types/progress';
 import { ModuleData } from '@/types/curriculum';
 import { setAvailabilityMap } from '@/lib/progress/availability-store';
-import { mergeProgress, toCloudProgress, CloudProgress } from '@/lib/progress/merge';
+import { mergeProgress, fromCloudProgress, toCloudProgress, CloudProgress } from '@/lib/progress/merge';
 import { useAuth } from './AuthProvider';
 
 interface LearningContextValue {
   userState: UserLearningState;
   setUserState: Dispatch<SetStateAction<UserLearningState>>;
   availabilityVersion: number;
+  /**
+   * Set when a signed-in user has meaningful progress BOTH locally and in the
+   * cloud and they differ. While set, no automatic merge has been applied —
+   * the user must choose (guest-progress prompt UX, Phase 5).
+   */
+  mergePrompt: { local: UserLearningState; cloud: CloudProgress } | null;
+  /** Resolve the prompt: 'combine' (union, recommended) or 'useCloud'. */
+  resolveMergePrompt: (choice: 'combine' | 'useCloud') => void;
   /** Record a guided practice task attempt/success. */
   markTaskComplete: (args: {
     taskId: string;
@@ -86,6 +94,14 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   const [userState, setUserState] = useState<UserLearningState>(() =>
     resolveLegacyPosition(loadUserState()),
   );
+
+  // Guest-progress prompt state (Phase 5) — see hydration effect below.
+  const [mergePrompt, setMergePrompt] = useState<{
+    local: UserLearningState;
+    cloud: CloudProgress;
+  } | null>(null);
+  const mergePromptRef = useRef(mergePrompt);
+  mergePromptRef.current = mergePrompt;
 
   // ---- Auth (session user id drives cloud sync) -----------------------------
   const { user: authUser } = useAuth();
@@ -179,8 +195,23 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         const body = (await r.json()) as { progress: CloudProgress | null };
         if (cancelled) return;
         if (body.progress) {
+          // Guest-progress prompt (Phase 5): if BOTH sides have meaningful
+          // progress and they differ, let the user choose. Otherwise keep the
+          // silent union-merge (covers: empty cloud → upload local, empty
+          // local → take cloud, identical progress → no-op).
+          const local = latestStateRef.current;
+          const cloud = body.progress;
+          const localKeys = Object.keys(local.completedModules ?? {}).sort().join(',');
+          const cloudKeys = Object.keys(cloud.completedModules ?? {}).sort().join(',');
+          const divergent =
+            localKeys.length > 0 && cloudKeys.length > 0 && localKeys !== cloudKeys;
+          if (divergent) {
+            if (cancelled) return;
+            setMergePrompt({ local, cloud });
+            return;
+          }
           // Merge guest/local progress with cloud progress → unified state.
-          const merged = mergeProgress(latestStateRef.current, body.progress);
+          const merged = mergeProgress(local, cloud);
           latestStateRef.current = merged;
           setUserState(merged);
           await pushCloudNow(); // persist merged result immediately
@@ -397,12 +428,35 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       /* ignore */
     }
     setUserState(fresh);
+    setMergePrompt(null);
+  }, []);
+
+  /** Guest-progress prompt resolution (Phase 5). */
+  const resolveMergePrompt = useCallback((choice: 'combine' | 'useCloud') => {
+    const prompt = mergePromptRef.current;
+    if (!prompt) return;
+    setMergePrompt(null);
+    if (choice === 'combine') {
+      // Union-merge local ∪ cloud, then persist the merged result.
+      const merged = mergeProgress(prompt.local, prompt.cloud);
+      latestStateRef.current = merged;
+      setUserState(merged);
+    } else {
+      // Adopt the account's progress; keep local-only dev toggles.
+      const adopted = fromCloudProgress(prompt.cloud, prompt.local);
+      latestStateRef.current = adopted;
+      setUserState(adopted);
+    }
+    // Persist either way (debounced saver also fires; this is immediate).
+    void pushCloudNow();
   }, []);
 
   const value: LearningContextValue = {
     userState,
     setUserState,
     availabilityVersion,
+    mergePrompt,
+    resolveMergePrompt,
     markTaskComplete,
     markChallengeTaskComplete,
     markConceptComplete,
@@ -410,8 +464,46 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     resetProgress,
   };
 
-  return <LearningContext.Provider value={value}>{children}</LearningContext.Provider>;
+  return (
+    <LearningContext.Provider value={value}>
+      {children}
+      {mergePrompt && <MergePromptDialog onResolve={resolveMergePrompt} />}
+    </LearningContext.Provider>
+  );
 }
+
+/** Guest-progress prompt dialog (Phase 5). */
+function MergePromptDialog({ onResolve }: { onResolve: (choice: 'combine' | 'useCloud') => void }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/80 backdrop-blur-sm px-4">
+      <div className="bg-surface border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <h2 className="font-display text-lg font-bold text-text mb-2">
+          Keep this learning progress?
+        </h2>
+        <p className="text-sm text-text-dim font-body leading-relaxed mb-6">
+          We found learning progress on this device <em>and</em> in your account, and
+          they cover different days. Combine them to keep everything, or use only your
+          account&apos;s progress.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+          <button
+            onClick={() => onResolve('useCloud')}
+            className="px-4 py-2.5 rounded-lg border border-border font-mono text-xs text-text-dim hover:text-text hover:border-text-dim transition"
+          >
+            Use my account&apos;s progress
+          </button>
+          <button
+            onClick={() => onResolve('combine')}
+            className="px-4 py-2.5 rounded-lg bg-func text-ink font-mono text-xs font-bold hover:brightness-110 transition"
+          >
+            Combine both (recommended)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export function useLearning(): LearningContextValue {
   const ctx = useContext(LearningContext);

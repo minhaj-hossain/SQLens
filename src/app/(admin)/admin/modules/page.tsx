@@ -1,15 +1,12 @@
 import { headers } from 'next/headers';
 import { auth, db } from '@/lib/auth';
 import AdminShell from '@/components/admin/AdminShell';
-import AdminOverviewPanel from '@/components/admin/AdminOverviewPanel';
+import AdminModulesPanel from '@/components/admin/AdminModulesPanel';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * /admin — Overview (Phase 5 split). Role protection lives in the group
- * layout; this page only reads the admin's display name.
- */
-export default async function AdminPage() {
+/** /admin/modules — curriculum & scheduling controls (Phase 5 split). */
+export default async function AdminModulesPage() {
   const h = await headers();
   const session = await auth.api.getSession({ headers: h });
 
@@ -22,7 +19,7 @@ export default async function AdminPage() {
 
   return (
     <AdminShell adminName={adminName}>
-      <AdminOverviewPanel />
+      <AdminModulesPanel />
     </AdminShell>
   );
 }

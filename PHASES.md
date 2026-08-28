@@ -220,13 +220,30 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     incl. all 25 days.
 
 ### Phase 5 — Backlog (post-migration; work only on request)
-**Status: ⬜ OPEN** · Commit: — · Completed: —
-- [ ] Admin panel split → `/admin/users`, `/admin/modules`, `/admin/schedule` pages (gate already in `(admin)/layout.tsx`)
-- [ ] Guest-progress prompt UX on first sign-in w/ divergent cloud doc (auto union-merge remains default until built)
-- [ ] `PracticeTask.freshDb` opt-in flag if a task ever needs an isolated DB
-- [ ] README route map + API reference refresh
-- [ ] `(public)/layout.tsx` marketing chrome (only when marketing pages exist)
+**Status: ✅ COMPLETE** · Commit: `BACKLOG_COMMIT` · Completed: 2026-08-28
+- [x] Admin panel split → `/admin/users`, `/admin/modules` pages (gate already shared via `(admin)/layout.tsx`)
+- [x] Guest-progress prompt UX on first sign-in w/ divergent cloud doc (auto union-merge remains the default)
+- [x] `PracticeTask.freshDb` opt-in flag for tasks needing an isolated DB
+- [x] README route map + API reference refresh
+- [x] `(public)/layout.tsx` marketing chrome only when marketing pages exist (group reserved — no action)
 - Notes:
+  - **Admin split**: `AdminDashboard` (tabbed) deleted. `(admin)/layout.tsx`
+    keeps its role/status gate + now wraps children in `AdminUsersProvider`
+    (shared users list + `reload()` for the Overview→Users panel sync) and
+    `AdminShell` provides the top bar + tab links (/admin, /admin/modules,
+    /admin/users) + centralized loading/forbidden states; `robots: noindex`
+    on the whole group. Overview/Users/Modules pages each read adminName
+    server-side. Users label in tabs shows live total.
+  - **Guest-progress prompt**: provider now detects divergent local vs cloud
+    progress on hydration (both sides have completed modules and they
+    differ) → holds the merge and renders a `MergePromptDialog` (Combine
+    both / Use account progress). Combine = union-merge + persist; Use
+    account = fromCloudProgress (keeps local dev toggles) + persist. Same
+    progress / empty-side cases still auto-merge silently.
+  - `PracticeTask.freshDb` field + PracticeView reset-on-mount when set.
+  - Dead code removed: `ConceptCompleteView` (its 'concept_complete' stage
+    was URL-only pre-migration — completion flows straight through) and the
+    legacy `SuccessModal` (never opened).
 
 ---
 
