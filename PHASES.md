@@ -219,7 +219,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     `Day 1 · SELECT and FROM · SQLens` + canonical; sitemap.xml has 27 URLs
 ## Phase 3.5 — DML/DDL verification pass (Day 19/20)
 
-**Status:** ✅ COMPLETE · **Commit:** `(pending)` · **Date:** 2026-08-28
+**Status:** ✅ COMPLETE · **Commit:** `372bc13` (pushed, deployed) · **Date:** 2026-08-28
 
 ### Task classification (audited against real content, not assumed)
 | Class | Tasks |
@@ -296,5 +296,5 @@ Design: `PracticeTask.databaseLifecycle?: 'fresh' | 'inherit'` (default = old be
 - `5d3b5b2` **Phase 3 COMPLETE** — real /learn/[dayId] route tree + NEW module overview page; URL is the position (provider stripped of navigation); legacy redirects; executor boundaries day+concept (DML audit); NavSnapshot/pushState machinery deleted; all gates green.
 - `da7330f` **Phase 4 COMPLETE** — 25 static day shells + /learn static; per-day/per-concept metadata (canonical/OG); JSON-LD LearningResource; sitemap 27 URLs; learn pages = server wrappers + client views; all gates green.
 - `cb8434c` **Phase 5 COMPLETE** — admin dashboard split into /admin + /admin/users + /admin/modules routes (shared gate/provider/shell, noindex); guest-progress merge prompt UX; PracticeTask.freshDb; dead Code removed; README route-map refresh. **All phases complete.**
-- Phase 3.5 **DML/DDL verification pass COMPLETE** — Day 19/20 tasks audited & classified (26 practice=fresh, both challenges=inherit); `databaseLifecycle` model; Day-20 challenge solution bug fixed (`product_reviews`→`reviews`); 3 new suites (engine 46, lifecycle 48, manual-pass 86 — all green); production smoke passed.
+- Phase 3.5 **DML/DDL verification pass COMPLETE** (`372bc13`) — Day 19/20 tasks audited & classified (26 practice=fresh, both challenges=inherit); `databaseLifecycle` model; Day-20 challenge solution bug fixed (`product_reviews`→`reviews`); 3 new suites (engine 46, lifecycle 48, manual-pass 86 — all green); pushed & deployed; **production smoke passed** on sqlens-ruddy.vercel.app (deep links 200, sitemap, JSON-LD).
 
