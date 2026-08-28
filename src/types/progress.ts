@@ -34,7 +34,13 @@ export interface CompletedModuleRecord {
 
 export interface UserLearningState {
   currentModuleId: string;
-  currentConceptIndex: number;
+  /**
+   * Stable slug of the concept the learner is positioned on (Phase 2 of the
+   * route migration — replaces the old numeric `currentConceptIndex` so URLs,
+   * bookmarks and progress survive curriculum reordering). `null` = start of
+   * module (first concept).
+   */
+  currentConceptId: string | null;
   currentTaskIndex: number;
   currentStepType?: 'concept_theory' | 'practice_task' | 'concept_complete' | 'module_challenge' | 'module_complete';
   challengeTaskIndex?: number;

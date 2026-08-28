@@ -3,7 +3,7 @@ import { UserLearningState } from '../../types/progress';
 
 export const INITIAL_USER_STATE: UserLearningState = {
   currentModuleId: 'day-01',
-  currentConceptIndex: 0,
+  currentConceptId: null,
   currentTaskIndex: 0,
   currentStepType: 'concept_theory',
   challengeTaskIndex: 0,
@@ -17,7 +17,13 @@ export const INITIAL_USER_STATE: UserLearningState = {
   simulatedTimeOffsetHours: 0,
 };
 
-export function loadUserState(): UserLearningState {
+/**
+ * Load persisted state. Tolerates the pre-Phase-2 position format: older saves
+ * carry `currentConceptIndex` (number). The raw legacy field is passed through
+ * on the returned object so the provider can resolve it to a concept slug —
+ * storage stays curriculum-agnostic (no module imports here).
+ */
+export function loadUserState(): UserLearningState & { currentConceptIndex?: number } {
   if (typeof window === 'undefined') {
     return INITIAL_USER_STATE;
   }
@@ -65,7 +71,13 @@ export function resetUserState(): UserLearningState {
 
 export interface NavSnapshot {
   moduleId: string;
-  conceptIndex: number;
+  /**
+   * Stable concept slug (Phase 2). Legacy snapshots carry `conceptIndex`
+   * instead — loadNavSnapshot surfaces it as legacyConceptIndex for the
+   * provider to resolve against the module's concept list.
+   */
+  conceptId: string | null;
+  legacyConceptIndex?: number;
   taskIndex: number;
   stage: string;
   tab: string;
@@ -89,7 +101,10 @@ export function loadNavSnapshot(): NavSnapshot | null {
 
     return {
       moduleId: typeof parsed.moduleId === 'string' ? parsed.moduleId : 'day-01',
-      conceptIndex: Number.isFinite(parsed.conceptIndex) ? Number(parsed.conceptIndex) : 0,
+      conceptId: typeof parsed.conceptId === 'string' ? parsed.conceptId : null,
+      legacyConceptIndex: Number.isFinite(parsed.conceptIndex)
+        ? Number(parsed.conceptIndex)
+        : undefined,
       taskIndex: Number.isFinite(parsed.taskIndex) ? Number(parsed.taskIndex) : 0,
       stage,
       tab,

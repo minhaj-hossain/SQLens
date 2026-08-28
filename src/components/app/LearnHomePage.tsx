@@ -23,8 +23,9 @@ export default function LearnHomePage() {
   const {
     userState,
     currentModuleId,
+    currentConceptId,
+    setCurrentConceptId,
     currentConceptIndex,
-    setCurrentConceptIndex,
     currentTaskIndex,
     setCurrentTaskIndex,
     stage,
@@ -77,7 +78,7 @@ export default function LearnHomePage() {
         <LearningPathView
           userState={userState}
           currentModuleId={currentModuleId}
-          currentConceptIndex={currentConceptIndex}
+          currentConceptId={currentConceptId}
           onSelectModuleAndConcept={handleSelectModuleAndConcept}
           onOpenSchema={openSchema}
           scrollToModuleId={roadmapScrollTarget ?? undefined}
@@ -117,7 +118,8 @@ export default function LearnHomePage() {
                 onExecuteSql={executeQuery}
                 onPrevious={() => {
                   if (currentConceptIndex > 0) {
-                    setCurrentConceptIndex((prev) => prev - 1);
+                    const prevConcept = concepts[currentConceptIndex - 1];
+                    if (prevConcept) setCurrentConceptId(prevConcept.id);
                     setCurrentTaskIndex(0);
                   }
                 }}

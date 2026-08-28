@@ -66,8 +66,14 @@ interface LearningContextValue {
   // ---- Position (temporary here; moves to routes in Phase 3) ---------------
   currentModuleId: string;
   setCurrentModuleId: Dispatch<SetStateAction<string>>;
+  /**
+   * Stable concept slug (Phase 2). `null` = first concept of the module.
+   * Views keep receiving the derived numeric `currentConceptIndex` below.
+   */
+  currentConceptId: string | null;
+  setCurrentConceptId: Dispatch<SetStateAction<string | null>>;
+  /** Derived from currentConceptId — safe to read, never set directly. */
   currentConceptIndex: number;
-  setCurrentConceptIndex: Dispatch<SetStateAction<number>>;
   currentTaskIndex: number;
   setCurrentTaskIndex: Dispatch<SetStateAction<number>>;
   stage: LearningStage;
@@ -84,7 +90,7 @@ interface LearningContextValue {
   availabilityVersion: number;
   // ---- Actions -------------------------------------------------------------
   applyUrlToNavState: (search: string) => boolean;
-  handleSelectModuleAndConcept: (moduleId: string, conceptIndex?: number, targetStage?: LearningStage) => void;
+  handleSelectModuleAndConcept: (moduleId: string, conceptId?: string, targetStage?: LearningStage) => void;
   handleSelectModule: (moduleId: string) => void;
   handleResetProgress: () => void;
   handleStartPractice: () => void;
@@ -99,17 +105,52 @@ interface LearningContextValue {
 
 const LearningContext = createContext<LearningContextValue | null>(null);
 
+/**
+ * Resolve a position to a VALID concept slug for the given module (Phase 2
+ * migration shim). Priority: explicit slug (validated) → legacy numeric index
+ * → null (= first concept). Guarantees a stale/renamed slug or an
+ * out-of-bounds legacy index can never break navigation.
+ */
+function resolveConceptId(
+  moduleId: string | null | undefined,
+  conceptId: string | null | undefined,
+  legacyConceptIndex?: number,
+): string | null {
+  const mod = moduleId ? getModuleById(moduleId) : undefined;
+  const concepts = mod?.concepts ?? [];
+  if (conceptId && concepts.some((c) => c.id === conceptId)) return conceptId;
+  if (typeof legacyConceptIndex === 'number' && concepts[legacyConceptIndex]) {
+    return concepts[legacyConceptIndex].id;
+  }
+  return null;
+}
+
 export function LearningProgressProvider({ children }: { children: React.ReactNode }) {
   // On first mount, restore the learner's last navigation position so a reload
   // returns to the same screen (not the homepage). Falls back to saved progress
   // module or day-01.
   const persistedNav = useMemo(() => loadNavSnapshot(), []);
 
-  const [userState, setUserState] = useState<UserLearningState>(loadUserState);
+  const [userState, setUserState] = useState<UserLearningState>(() => {
+    // Phase 2 shim: persisted states may carry the legacy numeric
+    // `currentConceptIndex`. Resolve it to a slug and strip the legacy field.
+    const raw = loadUserState();
+    const legacyIndex = (raw as { currentConceptIndex?: number }).currentConceptIndex;
+    const currentConceptId = resolveConceptId(raw.currentModuleId, raw.currentConceptId, legacyIndex);
+    const resolved: UserLearningState = { ...raw, currentConceptId };
+    delete (resolved as { currentConceptIndex?: number }).currentConceptIndex;
+    return resolved;
+  });
   const [currentModuleId, setCurrentModuleId] = useState<string>(
     persistedNav?.moduleId ?? userState.currentModuleId ?? 'day-01'
   );
-  const [currentConceptIndex, setCurrentConceptIndex] = useState<number>(persistedNav?.conceptIndex ?? 0);
+  const [currentConceptId, setCurrentConceptId] = useState<string | null>(() =>
+    resolveConceptId(
+      persistedNav?.moduleId,
+      persistedNav?.conceptId,
+      persistedNav?.legacyConceptIndex,
+    )
+  );
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(persistedNav?.taskIndex ?? 0);
   const [stage, setStage] = useState<LearningStage>(
     (persistedNav?.stage as LearningStage) || 'lesson'
@@ -277,12 +318,30 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     saveNavSnapshot({
       moduleId: currentModuleId,
-      conceptIndex: currentConceptIndex,
+      conceptId: currentConceptId,
       taskIndex: currentTaskIndex,
       stage,
       tab: activeTab,
     });
-  }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage, activeTab]);
+  }, [currentModuleId, currentConceptId, currentTaskIndex, stage, activeTab]);
+
+  const currentModule: ModuleData = useMemo(() => {
+    return getModuleById(currentModuleId) || ALL_MODULES[0];
+  }, [currentModuleId]);
+
+  // Derived position (Phase 2): the concept slug is the source of truth; the
+  // numeric index is derived for view components that display "Concept N of M".
+  const concepts = currentModule.concepts || [];
+  const currentConceptIndex = Math.max(
+    0,
+    concepts.findIndex((c) => c.id === currentConceptId),
+  );
+  const currentConcept = concepts[currentConceptIndex] ?? concepts[0];
+  const currentTasks = currentConcept?.tasks || [];
+  const currentTask = currentTasks[currentTaskIndex] || currentTasks[0];
+
+  // Find next module in roadmap
+  const nextModule = ALL_MODULES.find((m) => m.day === currentModule.day + 1);
 
 
   // ---- Phase P6: URL ↔ lesson navigation sync ----
@@ -316,7 +375,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     const taskIdx = Math.max(Number(params.get('task') ?? 0), 0);
 
     setCurrentModuleId(target.id);
-    setCurrentConceptIndex(conceptIdx);
+    // Resolve the legacy 1-based `?concept=` index to a stable concept slug.
+    setCurrentConceptId(target.concepts[conceptIdx]?.id ?? null);
     setCurrentTaskIndex(taskIdx);
     setStage(stageParam as LearningStage);
     setActiveTab('practice');
@@ -365,11 +425,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     window.history.pushState(null, '', url);
   }, [currentModuleId, currentConceptIndex, currentTaskIndex, stage]);
 
-
-  const currentModule: ModuleData = useMemo(() => {
-    return getModuleById(currentModuleId) || ALL_MODULES[0];
-  }, [currentModuleId]);
-
   // On reload into a challenge view, restore completed-task markers from the
   // persisted module record so partial progress survives refresh (not just the
   // all-or-nothing challengeCompleted flag).
@@ -380,18 +435,10 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentModuleId, stage]);
 
-  const concepts = currentModule.concepts || [];
-  const currentConcept = concepts[currentConceptIndex] || concepts[0];
-  const currentTasks = currentConcept?.tasks || [];
-  const currentTask = currentTasks[currentTaskIndex] || currentTasks[0];
-
-  // Find next module in roadmap
-  const nextModule = ALL_MODULES.find((m) => m.day === currentModule.day + 1);
-
   // Handle module selection from learning path or roadmap
   const handleSelectModuleAndConcept = (
     moduleId: string,
-    conceptIndex: number = 0,
+    conceptId?: string,
     targetStage: LearningStage = 'lesson'
   ) => {
     const mod = getModuleById(moduleId);
@@ -399,6 +446,13 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
     const status = getModuleUnlockStatus(mod, ALL_MODULES, userState);
     if (!status.isUnlocked && !userState.completedModules[moduleId]) return;
+
+    // Resolve the requested concept slug; unknown ids fall back to the first
+    // concept of the module.
+    const targetConceptId =
+      conceptId && mod.concepts.some((c) => c.id === conceptId)
+        ? conceptId
+        : mod.concepts[0]?.id ?? null;
 
     // Strict guard: Enforce that user cannot access challenge before completing all module concepts
     if (targetStage === 'challenge') {
@@ -409,7 +463,11 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           (c) => !isConceptCompleted(c, mod.id, userState)
         );
         setCurrentModuleId(moduleId);
-        setCurrentConceptIndex(firstIncompleteIdx >= 0 ? firstIncompleteIdx : 0);
+        setCurrentConceptId(
+          (firstIncompleteIdx >= 0 ? mod.concepts[firstIncompleteIdx]?.id : null) ??
+            mod.concepts[0]?.id ??
+            null,
+        );
         setCurrentTaskIndex(0);
         setStage('lesson');
         setActiveTab('practice');
@@ -418,7 +476,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
       // If unlocked, take user directly to the Challenge stage
       setCurrentModuleId(moduleId);
-      setCurrentConceptIndex(conceptIndex);
+      setCurrentConceptId(targetConceptId);
       setCurrentTaskIndex(0);
       setCompletedChallengeTaskIds(mod.challenge ? getCompletedChallengeTaskIds(mod, userState) : []);
       setStage('challenge');
@@ -427,7 +485,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     }
 
     setCurrentModuleId(moduleId);
-    setCurrentConceptIndex(conceptIndex);
+    setCurrentConceptId(targetConceptId);
     setCurrentTaskIndex(0);
     // Non-challenge stages don't render challenge task tabs.
     setCompletedChallengeTaskIds([]);
@@ -443,7 +501,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
 
   const handleSelectModule = (moduleId: string) => {
-    handleSelectModuleAndConcept(moduleId, 0, 'lesson');
+    handleSelectModuleAndConcept(moduleId, undefined, 'lesson');
   };
 
   const handleResetProgress = () => {
@@ -451,7 +509,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     resetNavSnapshot();
     setUserState(fresh);
     setCurrentModuleId('day-01');
-    setCurrentConceptIndex(0);
+    setCurrentConceptId(null);
     setCurrentTaskIndex(0);
     setStage('lesson');
     setCompletedChallengeTaskIds([]);
@@ -546,9 +604,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       };
     });
 
-    const nextConceptIdx = currentConceptIndex + 1;
-    if (nextConceptIdx < concepts.length) {
-      setCurrentConceptIndex(nextConceptIdx);
+    const nextConcept = concepts[currentConceptIndex + 1];
+    if (nextConcept) {
+      setCurrentConceptId(nextConcept.id);
       setCurrentTaskIndex(0);
       setStage('lesson');
     } else if (currentModule.challenge) {
@@ -561,9 +619,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
   // Step 3 -> 4: Continue to Next Concept or Independent Challenge
   const handleContinueNextConcept = () => {
-    const nextConceptIdx = currentConceptIndex + 1;
-    if (nextConceptIdx < concepts.length) {
-      setCurrentConceptIndex(nextConceptIdx);
+    const nextConcept = concepts[currentConceptIndex + 1];
+    if (nextConcept) {
+      setCurrentConceptId(nextConcept.id);
       setCurrentTaskIndex(0);
       setStage('lesson');
     } else if (currentModule.challenge) {
@@ -648,7 +706,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
   // Review today's module from the beginning
   const handleReviewModule = () => {
-    setCurrentConceptIndex(0);
+    setCurrentConceptId(null);
     setCurrentTaskIndex(0);
     setStage('lesson');
   };
@@ -665,8 +723,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     completedChallengeTaskIds,
     currentModuleId,
     setCurrentModuleId,
+    currentConceptId,
+    setCurrentConceptId,
     currentConceptIndex,
-    setCurrentConceptIndex,
     currentTaskIndex,
     setCurrentTaskIndex,
     stage,

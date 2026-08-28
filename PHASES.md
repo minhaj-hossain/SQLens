@@ -137,12 +137,26 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     pre-migration admin page).
 
 ### Phase 2 — Concept-ID navigation switch (stable slugs)
-**Status: ⬜ NOT STARTED** · Commit: — · Completed: —
-- [ ] `UserLearningState.currentConceptIndex` → `currentConceptId: string | null`
-- [ ] One-time localStorage shim (resolve old index → slug on load)
-- [ ] All navigation helpers switch to IDs (startPractice, completeConcept, continueNextConcept, selectModuleAndConcept)
-- [ ] `merge.ts` position merge updated; engine tests green
+**Status: ✅ COMPLETE** · Commit: `2f2b10a` · Completed: 2026-08-28
+- [x] `UserLearningState.currentConceptIndex` → `currentConceptId: string | null`
+- [x] One-time localStorage shim (resolve old index → slug on load, in the provider via `resolveConceptId()`; storage.ts stays curriculum-agnostic)
+- [x] All navigation helpers switch to IDs (selectModuleAndConcept, selectModule, completeConcept, continueNextConcept, reviewModule, resetProgress, legacy-URL applier)
+- [x] `merge.ts` position merge — NO change needed: it spreads the whole position source, so the new field flows through generically
+- [x] Engine tests + curriculum verify + build green
 - Notes:
+  - Provider exposes BOTH `currentConceptId` (settable slug) and a derived
+    read-only `currentConceptIndex` (computed via `concepts.findIndex` +
+    `Math.max(0, …)`) — view components (ConceptLessonView, PracticeTaskView,
+    ConceptCompleteView) keep their numeric index props unchanged.
+  - NavSnapshot format: `conceptId` + optional `legacyConceptIndex` (resolved
+    on load); `saveNavSnapshot` writes only the slug going forward.
+  - LearningPathView: `onSelectModuleAndConcept(moduleId, conceptId?, stage?)`
+    — all call sites (start/continue/review/concept grid/locked alert/challenge
+    strip) pass slugs; active-concept highlight compares `currentConceptId ===
+    concept.id`.
+  - New `scripts/phase2-check.ts` (npx tsx): validates slug uniqueness +
+    URL-safety per module (25 modules / 64 concepts) and legacy index → slug
+    resolution incl. out-of-bounds and unknown-slug rejection.
 
 ### Phase 3 — The learn tree + legacy redirects
 **Status: ⬜ NOT STARTED** · Commit: — · Completed: —
