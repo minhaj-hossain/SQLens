@@ -112,7 +112,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
   resets on module/concept/task/stage change).
 
 ### Phase 1 — Route-group skeleton, auth & playground routes
-**Status: ✅ COMPLETE** · Commit: `41564d1` · Completed: 2026-08-28
+**Status: ✅ COMPLETE** · Commit: `6fa1df6` · Completed: 2026-08-28
 - [x] Route groups `(public)` `(auth)` `(app)` `(admin)`; root layout untouched (global concerns only)
 - [x] `(app)/layout.tsx` owns AppProviders + UiChromeProvider + AppChrome (Header + <main>); AppShell deleted
 - [x] `/playground` real route; header terminal → `<Link>`; `isPlaygroundOpen` deleted
@@ -191,4 +191,5 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 - `d01f32a` docs — PHASES.md tracker committed.
 - `d75f8a6` Phase 0 work committed (superseded by amend → see next line).
 - `249b88f` **Phase 0 COMPLETE** — providers extracted (Auth / LearningProgress / SqlExecutor / AppProviders); AppShell 880→322 lines; all gates green.
+- `6fa1df6` **Phase 1 COMPLETE** — route groups (public)/(auth)/(app)/(admin); /signin /signup /playground real routes; AppShell deleted → AppChrome + LearnHomePage; UiChromeProvider added; all gates green.
 
