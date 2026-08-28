@@ -1,45 +1,25 @@
-'use client';
+import type { Metadata } from 'next';
+import { learnPageMetadata } from '@/lib/learn-metadata';
+import CompleteView from '@/components/learn/CompleteView';
+
 /**
- * /learn/[dayId]/complete — ModuleCompletionView on a real route.
- * Guard: only reachable when the module is actually completed; otherwise
- * redirected to the day overview.
+ * Server page wrapper (Phase 4 SEO layer) — completion-screen metadata; the
+ * interactive completion view stays client-side.
  */
-import React, { useEffect } from 'react';
-import { useParams, useRouter, notFound } from 'next/navigation';
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
-import { ModuleCompletionView } from '@/components/learning/ModuleCompletionView';
-import { useLearning } from '@/components/providers/LearningProgressProvider';
-import { useUiChrome } from '@/components/providers/UiChromeProvider';
-import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ dayId: string }>;
+}): Promise<Metadata> {
+  const { dayId } = await params;
+  return learnPageMetadata({ dayId, stage: 'complete' });
+}
 
-export default function CompletePage() {
-  const { dayId } = useParams<{ dayId: string }>();
-  const mod = getModuleById(dayId);
-  if (!mod) notFound();
-
-  const { userState } = useLearning();
-  const { openRoadmap } = useUiChrome();
-  const nav = useLearningNavigation();
-  const router = useRouter();
-
-  const isCompleted = Boolean(userState.completedModules[mod.id]);
-  useEffect(() => {
-    if (!isCompleted) router.replace(`/learn/${mod.id}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCompleted]);
-
-  if (!isCompleted) return null;
-
-  const nextModule = ALL_MODULES.find((m) => m.day === mod.day + 1);
-
-  return (
-    <ModuleCompletionView
-      module={mod}
-      nextModule={nextModule}
-      userState={userState}
-      onReviewModule={() => nav.reviewModule(mod.id)}
-      onOpenRoadmap={openRoadmap}
-      onContinueNextDay={() => nav.continueNextDay(mod.id)}
-    />
-  );
+export default async function CompletePage({
+  params,
+}: {
+  params: Promise<{ dayId: string }>;
+}) {
+  const { dayId } = await params;
+  return <CompleteView dayId={dayId} />;
 }

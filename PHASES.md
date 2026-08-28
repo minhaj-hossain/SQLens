@@ -200,13 +200,24 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     phase2-check passing.
 
 ### Phase 4 — SEO layer
-**Status: ⬜ NOT STARTED** · Commit: — · Completed: —
-- [ ] `generateStaticParams` ×25 day shells
-- [ ] `generateMetadata` per day + `/playground` (title/desc/canonical/OG)
-- [ ] JSON-LD LearningResource per module; sitemap: home + /learn + 25 day URLs
-- [ ] `<Link prefetch>` audit on roadmap cards
-- [ ] Gates: build output inspection (static params emitted)
+**Status: ✅ COMPLETE** · Commit: `SEO_COMMIT` · Completed: 2026-08-28
+- [x] `generateStaticParams` ×25 day shells — all 25 `/learn/[dayId]` prerendered **static** (●) at build; `/learn` also static; stage pages dynamic with on-demand metadata
+- [x] `generateMetadata` per day + per concept/stage (theory/practice/challenge/complete) + `/playground` (title/desc/canonical/OG/twitter via `src/lib/learn-metadata.ts`)
+- [x] JSON-LD `LearningResource` per module overview (name, description, url, timeRequired, teaches, provider, isAccessibleForFree)
+- [x] Sitemap expanded: home + /learn + 25 day overview URLs (stage pages intentionally excluded — client-gated practice surfaces)
+- [x] `<Link prefetch>` audit: header logo/terminal/admin links are `<Link>`s (prefetched); roadmap/overview cards navigate via `router.push` (no prefetch) — conversion deferred to Phase 5 if needed
 - Notes:
+  - Page structure: each learn page is now a thin SERVER wrapper exporting
+    `generateMetadata` (day overview also `generateStaticParams` + JSON-LD
+    script) rendering a client view (`ModuleOverview`/`TheoryView`/
+    `PracticeView`/`ChallengeView`/`CompleteView` in src/components/learn/)
+    that receives only the serializable `dayId`/`conceptId` — module data
+    (with its function-valued validators) imports client-side and never
+    crosses the server→client boundary.
+  - Verified on live server: day-01 HTML contains meta title, canonical
+    `/learn/day-01`, JSON-LD; theory page title
+    `Day 1 · SELECT and FROM · SQLens` + canonical; sitemap.xml has 27 URLs
+    incl. all 25 days.
 
 ### Phase 5 — Backlog (post-migration; work only on request)
 **Status: ⬜ OPEN** · Commit: — · Completed: —

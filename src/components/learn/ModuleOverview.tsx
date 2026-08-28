@@ -6,8 +6,9 @@
  * notice instead of the content (client-side unlock rules, per the plan).
  */
 import React from 'react';
+import { notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
-import { ModuleData } from '@/types/curriculum';
+import { getModuleById } from '@/content/curriculum-index';
 import { ALL_MODULES } from '@/content/curriculum-index';
 import {
   getModuleUnlockStatus,
@@ -19,10 +20,14 @@ import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useLearningNavigation } from './use-learning-navigation';
 
 interface ModuleOverviewProps {
-  module: ModuleData;
+  /** Serializable day id — ModuleData itself contains non-serializable
+   *  validators and must never cross the server→client boundary. */
+  dayId: string;
 }
 
-export default function ModuleOverview({ module: mod }: ModuleOverviewProps) {
+export default function ModuleOverview({ dayId }: ModuleOverviewProps) {
+  const mod = getModuleById(dayId);
+  if (!mod) notFound();
   const { userState, availabilityVersion } = useLearning();
   const { selectModuleAndConcept, startPractice, finishModule } = useLearningNavigation();
 

@@ -1,94 +1,25 @@
-'use client';
+import type { Metadata } from 'next';
+import { learnPageMetadata } from '@/lib/learn-metadata';
+import PracticeView from '@/components/learn/PracticeView';
+
 /**
- * /learn/[dayId]/practice/[conceptId]?task=N — PracticeTaskView on a real
- * route. The task index lives in the query string so paging between tasks of
- * the same concept never remounts the editor or loses draft SQL.
- * useSearchParams → content is wrapped in a Suspense boundary.
+ * Server page wrapper (Phase 4 SEO layer) — per-concept practice metadata;
+ * interactive task flow stays client-side (Suspense for useSearchParams).
  */
-import React, { Suspense, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams, notFound } from 'next/navigation';
-import { getModuleById } from '@/content/curriculum-index';
-import { Concept, ModuleData } from '@/types/curriculum';
-import { learnUrl } from '@/lib/learn-routes';
-import { PracticeTaskView } from '@/components/learning/PracticeTaskView';
-import { useLearning } from '@/components/providers/LearningProgressProvider';
-import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
-import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
-
-interface PracticeViewProps {
-  mod: ModuleData;
-  concept: Concept;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ dayId: string; conceptId: string }>;
+}): Promise<Metadata> {
+  const { dayId, conceptId } = await params;
+  return learnPageMetadata({ dayId, stage: 'practice', conceptId });
 }
 
-function PracticeView({ mod, concept }: PracticeViewProps) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { userState, markTaskComplete } = useLearning();
-  const { executeQuery } = useSqlExecutor();
-  const nav = useLearningNavigation();
-
-  const rawTask = Number(searchParams.get('task') ?? 0);
-  const taskIndex =
-    Number.isFinite(rawTask) && rawTask > 0
-      ? Math.min(rawTask, concept.tasks.length - 1)
-      : 0;
-  const task = concept.tasks[taskIndex] ?? concept.tasks[0];
-
-  // A concept with no practice tasks shouldn't render this page — complete it
-  // and continue to the next stage (mirrors old handleStartPractice).
-  useEffect(() => {
-    if (!task) nav.completeConcept(mod.id, concept.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task]);
-
-  if (!task) return null;
-
-  return (
-    <PracticeTaskView
-      task={task}
-      taskIndex={taskIndex}
-      totalTasks={concept.tasks.length}
-      concept={concept}
-      conceptIndex={mod.concepts.findIndex((c) => c.id === concept.id)}
-      totalConcepts={mod.concepts.length}
-      isCompleted={Boolean(
-        userState.taskAttempts?.[task.id]?.completed ||
-        userState.completedModules?.[mod.id]?.completedTasks?.includes(task.id)
-      )}
-      savedSql={userState.taskAttempts?.[task.id]?.lastSubmittedSql}
-      onExecuteSql={executeQuery}
-      onTaskSuccess={(userSql, hintsUsed, viewedSolution) =>
-        markTaskComplete({ taskId: task.id, moduleId: mod.id, userSql, hintsUsed, viewedSolution })
-      }
-      onPreviousTask={() => {
-        if (taskIndex > 0) router.push(learnUrl(mod.id, 'practice', concept.id, taskIndex - 1));
-      }}
-      onNextTask={() => {
-        if (taskIndex < concept.tasks.length - 1) {
-          router.push(learnUrl(mod.id, 'practice', concept.id, taskIndex + 1));
-        } else {
-          nav.completeConcept(mod.id, concept.id);
-        }
-      }}
-      onBackToLesson={() => router.push(learnUrl(mod.id, 'theory', concept.id))}
-      canGoBack={taskIndex > 0}
-      canGoForward={
-        taskIndex < concept.tasks.length - 1 ||
-        Boolean(userState.taskAttempts?.[task.id]?.completed)
-      }
-    />
-  );
-}
-
-export default function PracticePage() {
-  const { dayId, conceptId } = useParams<{ dayId: string; conceptId: string }>();
-  const mod = getModuleById(dayId);
-  const concept = mod?.concepts.find((c) => c.id === conceptId);
-  if (!mod || !concept) notFound();
-
-  return (
-    <Suspense fallback={null}>
-      <PracticeView mod={mod} concept={concept} />
-    </Suspense>
-  );
+export default async function PracticePage({
+  params,
+}: {
+  params: Promise<{ dayId: string; conceptId: string }>;
+}) {
+  const { dayId, conceptId } = await params;
+  return <PracticeView dayId={dayId} conceptId={conceptId} />;
 }
