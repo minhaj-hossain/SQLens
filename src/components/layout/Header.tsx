@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { UserLearningState } from '../../types/progress';
@@ -9,13 +10,8 @@ interface HeaderProps {
   currentModule: ModuleData;
   onResetProgress: () => void;
   onOpenSchemaModal: () => void;
-  onOpenRoadmapModal: () => void;
-  onOpenPlayground?: () => void;
   activeViewTitle?: string;
-  onProfileClick?: () => void;
   onLogoClick?: () => void;
-  onSignInClick?: () => void;
-  onSignUpClick?: () => void;
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
   isAuthPending?: boolean;
   onSignOut?: () => void;
@@ -26,12 +22,8 @@ export const Header: React.FC<HeaderProps> = ({
   currentModule,
   onResetProgress,
   onOpenSchemaModal,
-  onOpenPlayground,
   activeViewTitle = 'Learning Path',
-  onProfileClick,
   onLogoClick,
-  onSignInClick,
-  onSignUpClick,
   user,
   isAuthPending,
   onSignOut,
@@ -92,17 +84,15 @@ export const Header: React.FC<HeaderProps> = ({
             <Icon name="database" className="text-[16px]" />
           </button>
 
-          {/* SQL Playground */}
-          {onOpenPlayground && (
-            <button
-              onClick={onOpenPlayground}
-              title="Open SQL Playground"
-              aria-label="Open SQL Playground"
-              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-func hover:border-func/40 transition-all duration-150 cursor-pointer"
-            >
-              <Icon name="terminal" className="text-[16px]" />
-            </button>
-          )}
+          {/* SQL Playground — real route since Phase 1 */}
+          <Link
+            href="/playground"
+            title="Open SQL Playground"
+            aria-label="Open SQL Playground"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-func hover:border-func/40 transition-all duration-150"
+          >
+            <Icon name="terminal" className="text-[16px]" />
+          </Link>
 
           {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
           {isAuthPending ? (
@@ -118,14 +108,14 @@ export const Header: React.FC<HeaderProps> = ({
               className="relative flex items-center gap-1.5"
             >
               {user.role === 'admin' && (
-                <a
+                <Link
                   href="/admin"
                   title="Admin dashboard"
                   aria-label="Admin dashboard"
                   className="hidden sm:flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-func/10 border border-func/30 text-func hover:bg-func/20 transition-all duration-150"
                 >
                   <Icon name="shield_person" className="text-[16px]" />
-                </a>
+                </Link>
               )}
               {/* Avatar + popover share one hover wrapper so the mouse can move
                   from the circle into the menu without closing it. The admin
@@ -227,7 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
                           Reset Progress
                         </button>
                         {user.role === 'admin' && (
-                          <a
+                          <Link
                             href="/admin"
                             role="menuitem"
                             onClick={() => setUserMenuOpen(false)}
@@ -235,7 +225,7 @@ export const Header: React.FC<HeaderProps> = ({
                           >
                             <Icon name="shield_person" className="text-[15px] text-func" />
                             Admin dashboard
-                          </a>
+                          </Link>
                         )}
                         <button
                           role="menuitem"
@@ -256,15 +246,15 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
           ) : (
-            <button
+            <Link
               id="header-signin-btn"
-              onClick={() => onSignInClick?.()}
+              href="/signin"
               title="Sign in"
               aria-label="Sign in"
-              className="flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-lg bg-func text-ink font-bold hover:brightness-110 transition-all duration-150 cursor-pointer font-mono text-[11px] sm:text-xs whitespace-nowrap"
+              className="flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-lg bg-func text-ink font-bold hover:brightness-110 transition-all duration-150 font-mono text-[11px] sm:text-xs whitespace-nowrap"
             >
               Sign In
-            </button>
+            </Link>
           )}
         </div>
 

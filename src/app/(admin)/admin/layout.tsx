@@ -1,17 +1,17 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth, db } from '@/lib/auth';
-import AdminDashboard from '@/components/admin/AdminDashboard';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Server-side gate. The role check reads the MongoDB `user` document via the
- * trusted Better Auth session — never a client-supplied value — so hitting
- * /admin as an anonymous user or regular user yields a redirect, not a render.
- * (The admin API re-verifies independently on every request.)
+ * (admin) group layout — the role gate for EVERY admin route (Phase 1).
+ * The role check reads the MongoDB `user` document via the trusted Better Auth
+ * session — never a client-supplied value — so hitting any /admin/* page as an
+ * anonymous user or regular user yields a redirect, not a render. (The admin
+ * API re-verifies independently on every request.)
  */
-export default async function AdminPage() {
+export default async function AdminGroupLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
   const session = await auth.api.getSession({ headers: h });
 
@@ -26,9 +26,5 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  return (
-    <AdminDashboard
-      adminName={doc?.name ?? session.user.name ?? session.user.email ?? 'Admin'}
-    />
-  );
+  return <>{children}</>;
 }

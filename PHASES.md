@@ -112,14 +112,29 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
   resets on module/concept/task/stage change).
 
 ### Phase 1 — Route-group skeleton, auth & playground routes
-**Status: ⬜ NOT STARTED** · Commit: — · Completed: —
-- [ ] Route groups `(public)` `(auth)` `(app)` `(admin)`; root layout slimmed to global concerns
-- [ ] `(app)/layout.tsx` owns AppProviders + Header + `<main>`; AppShell deleted
-- [ ] `/playground` real route; header terminal → `<Link>`; `isPlaygroundOpen` deleted
-- [ ] `/signin` `/signup` routes w/ per-route metadata; `authMode` deleted; already-signed-in redirect
-- [ ] `(admin)/layout.tsx` server role gate (moved verbatim from app/admin/page.tsx)
-- [ ] Gates: tsc + build + engine tests + smoke test
+**Status: ✅ COMPLETE** · Commit: `41564d1` · Completed: 2026-08-28
+- [x] Route groups `(public)` `(auth)` `(app)` `(admin)`; root layout untouched (global concerns only)
+- [x] `(app)/layout.tsx` owns AppProviders + UiChromeProvider + AppChrome (Header + <main>); AppShell deleted
+- [x] `/playground` real route; header terminal → `<Link>`; `isPlaygroundOpen` deleted
+- [x] `/signin` `/signup` routes w/ per-route metadata; `authMode` deleted; already-signed-in redirect in `(auth)/layout.tsx`
+- [x] `(admin)/admin/layout.tsx` server role gate (moved verbatim from the old admin page)
+- [x] Gates: tsc + build + engine tests + smoke test
 - Notes:
+  - New `UiChromeProvider` (inside AppProviders): schema/roadmap modal state +
+    roadmap scroll target shared between the header and page content; renders
+    both modals at layout level.
+  - AppShell replaced by `AppChrome` (chrome + blocked gate) and
+    `LearnHomePage` (page content). Header: playground/sign-in/admin buttons
+    are now `<Link>`s; dead props removed (onOpenRoadmapModal, onProfileClick,
+    onSignUpClick); onLogoClick keeps setRoadmapScrollTarget + setActiveTab.
+  - DEVIATION: `/playground` is a TOP-LEVEL route, not inside (app) — it is a
+    standalone full-page tool (own SqlExecutor, no Header), matching
+    pre-migration UX. Revisit in Phase 5 if chrome integration is wanted.
+  - DEVIATION: `/` lives in (app), not (public) — the roadmap is the app
+    landing and needs Header + providers. (public) is a reserved empty group.
+  - Smoke: `/` 200 · `/playground` 200 · `/signin` `/signup` 200 (anon) ·
+    `/admin` streams NEXT_REDIRECT→`/` for anon (same mechanism as
+    pre-migration admin page).
 
 ### Phase 2 — Concept-ID navigation switch (stable slugs)
 **Status: ⬜ NOT STARTED** · Commit: — · Completed: —
