@@ -159,7 +159,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     resolution incl. out-of-bounds and unknown-slug rejection.
 
 ### Phase 3 — The learn tree + legacy redirects
-**Status: ✅ COMPLETE** · Commit: `62f2a36` · Completed: 2026-08-28
+**Status: ✅ COMPLETE** · Commit: `5d3b5b2` · Completed: 2026-08-28
 - [x] `[dayId]/layout.tsx` — validate dayId (`notFound()`), breadcrumb, executor reset boundary
 - [x] `/learn/[dayId]` Module Overview page (NEW UI: concept list with ✓/▶/🔒 states, challenge entry, continue CTA, progress bar, locked-day notice)
 - [x] `theory/[conceptId]`, `practice/[conceptId]?task=N`, `challenge`, `complete` pages
@@ -236,4 +236,5 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 - `249b88f` **Phase 0 COMPLETE** — providers extracted (Auth / LearningProgress / SqlExecutor / AppProviders); AppShell 880→322 lines; all gates green.
 - `6fa1df6` **Phase 1 COMPLETE** — route groups (public)/(auth)/(app)/(admin); /signin /signup /playground real routes; AppShell deleted → AppChrome + LearnHomePage; UiChromeProvider added; all gates green.
 - `e102a7e` **Phase 2 COMPLETE** — navigation switched to stable concept slugs (currentConceptId) with legacy-index shim; merge.ts unchanged; scripts/phase2-check.ts added (25 modules / 64 concepts verified); all gates green.
+- `5d3b5b2` **Phase 3 COMPLETE** — real /learn/[dayId] route tree + NEW module overview page; URL is the position (provider stripped of navigation); legacy redirects; executor boundaries day+concept (DML audit); NavSnapshot/pushState machinery deleted; all gates green.
 
