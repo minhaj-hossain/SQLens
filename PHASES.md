@@ -96,7 +96,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 ## Phases
 
 ### Phase 0 — Provider extraction & decomposition (no routes yet, zero visual change)
-**Status: ✅ COMPLETE** · Commit: `d75f8a6` · Completed: 2026-08-28
+**Status: ✅ COMPLETE** · Commit: `249b88f` · Completed: 2026-08-28
 - [x] `AuthProvider` — session, user, role/status, signOut, blocked-state (extracted from AppShell)
 - [x] `LearningProgressProvider` — userState, all progress actions, localStorage sync, cloud hydration/merge/debounce/flush (verbatim move, then trimmed)
 - [x] `SqlExecutorProvider` — executor instance + `executeQuery()` + `resetDatabase()` as a function (no path effects)
@@ -174,5 +174,6 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 
 - `4b49977` baseline — tracker created; all phases pending.
 - `d01f32a` docs — PHASES.md tracker committed.
-- `d75f8a6` **Phase 0 COMPLETE** — providers extracted (Auth / LearningProgress / SqlExecutor / AppProviders); AppShell 880→322 lines; all gates green.
+- `d75f8a6` Phase 0 work committed (superseded by amend → see next line).
+- `249b88f` **Phase 0 COMPLETE** — providers extracted (Auth / LearningProgress / SqlExecutor / AppProviders); AppShell 880→322 lines; all gates green.
 
