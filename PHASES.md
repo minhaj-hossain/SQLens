@@ -200,7 +200,7 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
     phase2-check passing.
 
 ### Phase 4 — SEO layer
-**Status: ✅ COMPLETE** · Commit: `SEO_COMMIT` · Completed: 2026-08-28
+**Status: ✅ COMPLETE** · Commit: `da7330f` · Completed: 2026-08-28
 - [x] `generateStaticParams` ×25 day shells — all 25 `/learn/[dayId]` prerendered **static** (●) at build; `/learn` also static; stage pages dynamic with on-demand metadata
 - [x] `generateMetadata` per day + per concept/stage (theory/practice/challenge/complete) + `/playground` (title/desc/canonical/OG/twitter via `src/lib/learn-metadata.ts`)
 - [x] JSON-LD `LearningResource` per module overview (name, description, url, timeRequired, teaches, provider, isAccessibleForFree)
@@ -248,4 +248,5 @@ URLs: `/`, `/signin`, `/signup`, `/learn`, `/learn/day-01`,
 - `6fa1df6` **Phase 1 COMPLETE** — route groups (public)/(auth)/(app)/(admin); /signin /signup /playground real routes; AppShell deleted → AppChrome + LearnHomePage; UiChromeProvider added; all gates green.
 - `e102a7e` **Phase 2 COMPLETE** — navigation switched to stable concept slugs (currentConceptId) with legacy-index shim; merge.ts unchanged; scripts/phase2-check.ts added (25 modules / 64 concepts verified); all gates green.
 - `5d3b5b2` **Phase 3 COMPLETE** — real /learn/[dayId] route tree + NEW module overview page; URL is the position (provider stripped of navigation); legacy redirects; executor boundaries day+concept (DML audit); NavSnapshot/pushState machinery deleted; all gates green.
+- `da7330f` **Phase 4 COMPLETE** — 25 static day shells + /learn static; per-day/per-concept metadata (canonical/OG); JSON-LD LearningResource; sitemap 27 URLs; learn pages = server wrappers + client views; all gates green.
 
