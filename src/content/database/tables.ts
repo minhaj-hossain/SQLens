@@ -170,4 +170,31 @@ export const INITIAL_TABLES: Record<string, TableRow[]> = {
     { review_id: 11, product_id: 21, customer_id: 5, rating: 4, comment: 'Flexible and sturdy garden hose.', created_at: '2026-04-05' },
     { review_id: 12, product_id: 26, customer_id: 9, rating: 5, comment: 'Crisp audio and long battery life.', created_at: '2026-08-01' },
   ],
+
+  // Teaching table for Day 30 (Schema Design & Normalization): the anti-pattern.
+  // Facts are copied onto every line so learners can MEASURE redundancy, cause
+  // update/delete anomalies, then design the normalized replacement themselves.
+  // Constraints: 3 distinct product names, 3 distinct emails, order_id 1 appears
+  // exactly once (the update-anomaly task mutates only that row).
+  fat_orders: [
+    { order_id: 1, customer_email: 'rafiul@example.com', product_name: 'Wireless Mouse', product_price: 15.99, quantity: 2 },
+    { order_id: 2, customer_email: 'priya.akter@example.com', product_name: 'Wireless Mouse', product_price: 15.99, quantity: 5 },
+    { order_id: 3, customer_email: 'kamal.h@example.com', product_name: 'Bluetooth Speaker', product_price: 45.50, quantity: 1 },
+    { order_id: 4, customer_email: 'kamal.h@example.com', product_name: 'Stainless Steel Pan Set', product_price: 55.00, quantity: 2 },
+  ],
+
+  // Teaching tables for Day 30 concepts 4-5 (functional dependency -> 2NF/3NF).
+  // Seed rows deliberately mirror the concept intro tables so the dependency
+  // counts discussed in theory match what learners run live.
+  combined_items: [
+    { order_id: 1, product_id: 101, product_name: 'Wireless Mouse', product_price: 15.99, quantity: 2 },
+    { order_id: 1, product_id: 102, product_name: 'Bluetooth Speaker', product_price: 45.50, quantity: 1 },
+    { order_id: 2, product_id: 101, product_name: 'Wireless Mouse', product_price: 15.99, quantity: 5 },
+  ],
+
+  combined_orders: [
+    { order_id: 1, customer_id: 10, customer_name: 'Rahim', customer_city: 'Dhaka' },
+    { order_id: 2, customer_id: 10, customer_name: 'Rahim', customer_city: 'Dhaka' },
+    { order_id: 3, customer_id: 11, customer_name: 'Karim', customer_city: 'Chattogram' },
+  ],
 };

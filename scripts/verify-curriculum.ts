@@ -1,4 +1,5 @@
 import { ALL_MODULES } from '../src/content/curriculum-index';
+import { getModuleOrder } from '../src/lib/curriculum/module-order';
 import { DATABASE_SCHEMAS } from '../src/content/database/schema';
 import { INITIAL_TABLES } from '../src/content/database/tables';
 
@@ -37,6 +38,33 @@ console.log('   SQLens Automated Curriculum Quality & Pedagogy Audit');
 console.log('========================================================\n');
 
 for (const module of ALL_MODULES) {
+  // ── DDL-awareness: collect tables this module's tasks create or drop ──────
+  // DDL days (e.g. Day 20) teach CREATE/DROP TABLE: their practice tasks
+  // reference tables that are born (or safely destroyed) inside the task
+  // itself, so they legitimately don't exist in the global DATABASE_SCHEMAS /
+  // INITIAL_TABLES. Scanning each task's solution/initial SQL for CREATE
+  // TABLE and DROP TABLE prevents false positives.
+  const moduleCreatedTables = new Set<string>();
+  const ddlSources: string[] = [];
+  for (const concept of module.concepts) {
+    for (const task of concept.tasks || []) {
+      ddlSources.push(task.solutionSql || '', task.initialSql || '');
+    }
+  }
+  if (module.challenge) {
+    for (const task of module.challenge.tasks) {
+      ddlSources.push(task.solutionSql || '', task.initialSql || '');
+    }
+  }
+  for (const sql of ddlSources) {
+    for (const m of sql.matchAll(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"']?(\w+)[`"']?/gi)) {
+      moduleCreatedTables.add(m[1].toLowerCase());
+    }
+    for (const m of sql.matchAll(/DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?[`"']?(\w+)[`"']?/gi)) {
+      moduleCreatedTables.add(m[1].toLowerCase());
+    }
+  }
+
   const modResult: AuditResult = {
     day: module.day,
     moduleId: module.id,
@@ -76,18 +104,19 @@ for (const module of ALL_MODULES) {
     // Rule 2: Intro table validation
     if (theory.introTable) {
       const tName = theory.introTable.tableName?.toLowerCase().split(/[\s,&]+/)[0];
-      if (tName && !DATABASE_SCHEMAS[tName] && !['result', 'inner', 'primary', 'category', 'custom', 'students', 'student_records'].includes(tName)) {
+      if (tName && !DATABASE_SCHEMAS[tName] && !INITIAL_TABLES[tName] && !moduleCreatedTables.has(tName) && !['result', 'inner', 'primary', 'category', 'custom', 'students', 'student_records'].includes(tName)) {
         issues.push(`⚠️ Intro table '${theory.introTable.tableName}' might not match standard schema`);
       }
     }
 
-    // Rule 3: Practice task tables must exist in database schemas
+    // Rule 3: Practice task tables must exist in database schemas — or be
+    // created by this module's own DDL tasks (see moduleCreatedTables above).
     for (const task of concept.tasks || []) {
-      if (!DATABASE_SCHEMAS[task.primaryTable] && !INITIAL_TABLES[task.primaryTable]) {
+      if (!DATABASE_SCHEMAS[task.primaryTable] && !INITIAL_TABLES[task.primaryTable] && !moduleCreatedTables.has(task.primaryTable.toLowerCase())) {
         issues.push(`🔴 Task '${task.id}' references unknown primaryTable '${task.primaryTable}'`);
       }
       for (const secTable of task.secondaryTables || []) {
-        if (!DATABASE_SCHEMAS[secTable] && !INITIAL_TABLES[secTable]) {
+        if (!DATABASE_SCHEMAS[secTable] && !INITIAL_TABLES[secTable] && !moduleCreatedTables.has(secTable.toLowerCase())) {
           issues.push(`🔴 Task '${task.id}' references unknown secondaryTable '${secTable}'`);
         }
       }
@@ -104,7 +133,7 @@ for (const module of ALL_MODULES) {
     }
 
     if (issues.length > 0) {
-      allIssues.push(`[Day ${module.day} - ${concept.title}] ${issues.join('; ')}`);
+      allIssues.push(`[${module.displayLabel ?? `Day ${module.day}`} - ${concept.title}] ${issues.join('; ')}`);
     }
 
     modResult.concepts.push({
@@ -140,10 +169,17 @@ console.log(`❓ Total MCQs:                ${totalMCQsCount}`);
 console.log(`⚠️ Concepts Missing Target Query before Steps: ${missingTargetQueryCount} / ${totalConceptsCount}\n`);
 
 console.log('--- DAY-BY-DAY AUDIT SUMMARY ---');
-for (const m of auditResults) {
+// Iterate in canonical curriculum order — new modules carry day: 0, so the
+// legacy `day` field is cosmetic-only; displayLabel/curriculumOrder rule here.
+function canonicalOrder(a: AuditResult): number {
+  const mod = ALL_MODULES.find((m) => m.id === a.moduleId);
+  return mod ? getModuleOrder(mod) : 9999;
+}
+for (const m of auditResults.slice().sort((a, b) => canonicalOrder(a) - canonicalOrder(b))) {
   const statusIcon = m.concepts.every(c => c.issues.length === 0) ? '✅' : '⚠️';
   const targetQueryFraction = `${m.concepts.filter(c => c.hasTargetQuery).length}/${m.concepts.length}`;
-  console.log(`Day ${String(m.day).padStart(2, ' ')}: ${m.moduleTitle.padEnd(45, ' ')} [Concepts: ${m.concepts.length}, TargetQueries: ${targetQueryFraction}, Tasks: ${m.totalTasks}] ${statusIcon}`);
+  const label = ALL_MODULES.find((mod) => mod.id === m.moduleId)?.displayLabel ?? `Day ${m.day}`;
+  console.log(`${label.padStart(6, ' ')}: ${m.moduleTitle.padEnd(45, ' ')} [Concepts: ${m.concepts.length}, TargetQueries: ${targetQueryFraction}, Tasks: ${m.totalTasks}] ${statusIcon}`);
 }
 
 if (allIssues.length > 0) {

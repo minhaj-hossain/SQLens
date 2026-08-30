@@ -5,13 +5,39 @@ export interface ParsedSelectColumn {
   aggregate?: 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX';
   aggregateArg?: string;
   isDistinct?: boolean;
+  /**
+   * Literal fallback when the column is `COALESCE(<aggregate>(arg), <literal>)`
+   * (e.g. `COALESCE(SUM(oi.quantity), 0)` → fallback `0`). Applied when the
+   * aggregate evaluates to NULL (SUM over an all-NULL / empty set).
+   */
+  coalesceFallback?: string;
+  /**
+   * Scalar function expression, e.g. `UPPER(name)`, `CONCAT(a, ' ', b)`,
+   * `SUBSTRING(name, 1, 3)`, `YEAR(order_date)`, `DATEDIFF(a, b)`.
+   * Flat calls only (no nesting) — see docs/DIALECT.md §2.
+   */
+  functionCall?: { name: string; args: string[] };
   /** Present when the column is a CASE WHEN ... THEN ... ELSE ... END expression. */
   caseExpression?: ParsedCaseWhen;
   windowFunction?: {
-    type: 'ROW_NUMBER' | 'RANK' | 'DENSE_RANK';
+    type:
+      | 'ROW_NUMBER'
+      | 'RANK'
+      | 'DENSE_RANK'
+      | 'SUM'
+      | 'COUNT'
+      | 'AVG'
+      | 'MIN'
+      | 'MAX'
+      | 'LAG'
+      | 'LEAD';
     partitionBy?: string;
     orderBy?: string;
     direction?: 'ASC' | 'DESC';
+    /** Column the window operates on (aggregates and LAG/LEAD). */
+    aggregateArg?: string;
+    /** Raw argument tokens (LAG/LEAD offset/default). */
+    args?: string[];
   };
 }
 
@@ -31,6 +57,8 @@ export interface ParsedCaseWhen {
 export interface ParsedOrderBy {
   column: string;
   direction: 'ASC' | 'DESC';
+  /** Present when the sort key is a CASE expression (ORDER BY CASE … END). */
+  caseExpression?: ParsedCaseWhen;
 }
 
 export interface ParsedSqlQuery {
@@ -54,12 +82,16 @@ export interface ParsedSqlQuery {
   offset?: number;
   insertTable?: string;
   insertValues?: Record<string, any>;
+  /** Multi-row INSERT tuples (`VALUES (...), (...), …`). Always non-empty when the statement had multiple tuples. */
+  insertValuesList?: Record<string, any>[];
   updateTable?: string;
   updateSet?: Record<string, any>;
   deleteTable?: string;
   transactionCommand?: 'BEGIN' | 'COMMIT' | 'ROLLBACK';
   cteName?: string;
   cteQuery?: string;
+  /** Chained CTE definitions (`WITH a AS (…), b AS (…) SELECT …`). */
+  ctes?: { name: string; query: string }[];
   mainQuery?: string;
   explainTarget?: string;
   ddlCommand?: string;
@@ -132,22 +164,31 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'ROLLBACK' };
   }
 
-  // CTE (WITH cte_name AS (...) SELECT ...)
-  const cteMatch = sql.match(/^WITH\s+([a-zA-Z0-9_]+)\s+AS\s*\(([\s\S]+?)\)\s*(SELECT[\s\S]+)$/i);
-  if (cteMatch) {
-    const cteName = cteMatch[1].trim();
-    const cteQuery = cteMatch[2].trim();
-    const mainQuery = cteMatch[3].trim();
-    const mainParsed = parseSelect(mainQuery, rawSql);
-    return {
-      ...mainParsed,
-      type: 'CTE',
-      raw: rawSql,
-      normalized: sql,
-      cteName,
-      cteQuery,
-      mainQuery,
-    };
+  // CTE (WITH name AS (...) SELECT ...) — supports chained CTEs:
+  //   WITH a AS (...), b AS (...) SELECT ...
+  if (/^WITH\b/i.test(sql)) {
+    const mainIdx = findMainSelectAfterWith(sql);
+    const cteSection = sql.slice(4, mainIdx).trim();
+    const mainQuery = sql.slice(mainIdx).trim();
+    if (mainIdx > 4 && mainQuery && /AS\s*\(/i.test(cteSection)) {
+      const ctes: { name: string; query: string }[] = [];
+      for (const def of splitFunctionArgs(cteSection)) {
+        const m = def.match(/^\s*([a-zA-Z0-9_]+)\s+AS\s*\(([\s\S]+)\)\s*$/i);
+        if (m) ctes.push({ name: m[1].trim(), query: m[2].trim() });
+      }
+      if (ctes.length > 0 && /^SELECT/i.test(mainQuery)) {
+        const first = ctes[0];
+        return {
+          type: 'CTE',
+          raw: rawSql,
+          normalized: sql,
+          cteName: first.name,
+          cteQuery: first.query,
+          ctes,
+          mainQuery,
+        };
+      }
+    }
   }
 
   // EXPLAIN query
@@ -161,8 +202,8 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     };
   }
 
-  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX)
-  if (/^(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(UNIQUE\s+)?INDEX)/i.test(sql)) {
+  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX, DROP INDEX)
+  if (/^(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(UNIQUE\s+)?INDEX|DROP\s+INDEX)/i.test(sql)) {
     return {
       type: 'DDL',
       raw: rawSql,
@@ -174,19 +215,21 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
   // Handle SELECT — but first check whether it is a compound (set-operation)
   // query like `SELECT ... UNION [ALL] SELECT ...` / INTERSECT / EXCEPT.
   if (/^SELECT\b/i.test(sql)) {
-    // 'UNION ALL' must be tested before 'UNION'.
-    for (const op of ['UNION ALL', 'UNION', 'INTERSECT', 'EXCEPT']) {
-      const opIdx = findTopLevelKeyword(sql, op);
-      if (opIdx !== -1) {
-        return {
-          type: 'SET_OPERATION',
-          raw: rawSql,
-          normalized: sql,
-          setOp: (op === 'UNION ALL' ? 'UNION_ALL' : op) as ParsedSqlQuery['setOp'],
-          setLeft: sql.substring(0, opIdx).trim(),
-          setRight: sql.substring(opIdx + op.length).trim(),
-        };
-      }
+    const setOps = findAllTopLevelSetOps(sql);
+    if (setOps.length > 0) {
+      // Split at the LAST top-level operator so chains fold left-associatively:
+      // `A UNION B EXCEPT C` must parse as `(A UNION B) EXCEPT C`, matching
+      // standard left-to-right evaluation. Splitting at the first operator
+      // would right-nest and apply EXCEPT only to the final SELECT.
+      const last = setOps[setOps.length - 1];
+      return {
+        type: 'SET_OPERATION',
+        raw: rawSql,
+        normalized: sql,
+        setOp: (last.op === 'UNION ALL' ? 'UNION_ALL' : last.op) as ParsedSqlQuery['setOp'],
+        setLeft: sql.substring(0, last.index).trim(),
+        setRight: sql.substring(last.index + last.op.length).trim(),
+      };
     }
     return parseSelect(sql, rawSql);
   }
@@ -235,6 +278,64 @@ function findTopLevelKeyword(sql: string, keyword: string): number {
   return -1;
 }
 
+interface TopLevelSetOp {
+  index: number;
+  op: 'UNION ALL' | 'UNION' | 'INTERSECT' | 'EXCEPT';
+}
+
+/**
+ * Finds every top-level set operator in a SELECT statement, left to right.
+ * 'UNION ALL' is matched as a single unit (a bare 'UNION' immediately followed
+ * by 'ALL' is not reported as 'UNION'). Used to fold chained set operations
+ * left-associatively.
+ */
+function findAllTopLevelSetOps(sql: string): TopLevelSetOp[] {
+  const ops: TopLevelSetOp[] = [];
+  let parenDepth = 0;
+  let inQuote: string | null = null;
+  const upperSql = sql.toUpperCase();
+
+  for (let i = 0; i < sql.length; i++) {
+    const char = sql[i];
+    if ((char === "'" || char === '"' || char === '`') && (i === 0 || sql[i - 1] !== '\\')) {
+      if (!inQuote) inQuote = char;
+      else if (inQuote === char) inQuote = null;
+      continue;
+    }
+    if (inQuote) continue;
+    if (char === '(') {
+      parenDepth++;
+      continue;
+    }
+    if (char === ')') {
+      parenDepth = Math.max(0, parenDepth - 1);
+      continue;
+    }
+    if (parenDepth !== 0) continue;
+
+    const isWordStart = i === 0 || /[\s,;()]/.test(sql[i - 1]);
+    if (!isWordStart) continue;
+
+    for (const op of ['UNION ALL', 'UNION', 'INTERSECT', 'EXCEPT'] as const) {
+      const end = i + op.length;
+      if (upperSql.substring(i, end) !== op) continue;
+      const isWordEnd = end === sql.length || /[\s,;()]/.test(sql[end]);
+      if (!isWordEnd) continue;
+      // A bare 'UNION' immediately followed by 'ALL' is part of 'UNION ALL'.
+      if (op === 'UNION') {
+        const rest = upperSql.substring(end).trimStart();
+        if (rest.startsWith('ALL') && (rest.length === 3 || /[\s,;()]/.test(rest[3]))) {
+          continue;
+        }
+      }
+      ops.push({ index: i, op });
+      i = end - 1; // skip past the matched operator
+      break;
+    }
+  }
+  return ops;
+}
+
 function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
   const query: ParsedSqlQuery = {
     type: 'SELECT',
@@ -269,6 +370,19 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
       const orderSection = remaining.substring(orderIdx).replace(/^ORDER\s+BY\s+/i, '').trim();
       const orderExprs = orderSection.split(',').map((s) => s.trim());
       for (const expr of orderExprs) {
+        // CASE expression as sort key: ORDER BY CASE WHEN … END [ASC|DESC]
+        const caseOrderMatch = expr.match(/^(CASE[\s\S]*END)\s*(ASC|DESC)?$/i);
+        if (caseOrderMatch) {
+          const parsedCase = parseCaseExpression(caseOrderMatch[1]);
+          if (parsedCase) {
+            query.orderBy?.push({
+              column: '__case_sort__',
+              direction: caseOrderMatch[2]?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
+              caseExpression: parsedCase,
+            });
+            continue;
+          }
+        }
         const parts = expr.split(/\s+/);
         const col = parts[0].replace(/[`"']/g, '');
         const dir = parts[1] && parts[1].toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
@@ -302,7 +416,14 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
     // Extract FROM & JOINs (at top level)
     const fromIdx = findTopLevelKeyword(remaining, 'FROM');
     if (fromIdx === -1) {
-      return { ...query, error: 'Missing FROM clause in SELECT query' };
+      // FROM-less SELECT (`SELECT 1 AS month`) — constant select list, valid
+      // MySQL. Column references resolve to NULL; DISTINCT/* require a table.
+      const bareSection = remaining.replace(/^SELECT\s+/i, '').trim();
+      if (/^DISTINCT\s+/i.test(bareSection) || bareSection === '*') {
+        return { ...query, error: 'DISTINCT and * require a FROM clause' };
+      }
+      query.columns = parseColumnList(bareSection);
+      return query;
     }
 
     const selectSection = remaining.substring(0, fromIdx).replace(/^SELECT\s+/i, '').trim();
@@ -356,12 +477,29 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
       expression: cleanPart.replace(/^[`"']|[`"']$/g, ''),
     };
 
-    // Check window function: ROW_NUMBER() OVER (PARTITION BY cat ORDER BY price DESC) AS rank
-    const windowMatch = cleanPart.match(/^(ROW_NUMBER|RANK|DENSE_RANK)\s*\(\)\s*OVER\s*\(([\s\S]*?)\)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?$/i);
+    // Quoted string literal (e.g. 'customer' AS source — the tagged
+    // UNION ALL pattern): keep the quotes in `expression` so the executor
+    // recognizes it as a literal value, not a column reference.
+    const strLitMatch = cleanPart.match(/^'([^']*)'\s*(?:AS\s+)?(?:[`"']?([\w_]+)[`"']?)?$/);
+    if (strLitMatch) {
+      col.expression = `'${strLitMatch[1]}'`;
+      col.alias = strLitMatch[2] || strLitMatch[1];
+      cols.push(col);
+      continue;
+    }
+
+    // Check window function:
+    //   ROW_NUMBER() / RANK() / DENSE_RANK() ... OVER (PARTITION BY … ORDER BY …)
+    //   SUM(col)/COUNT(*)/AVG/MIN/MAX ... OVER (ORDER BY …)        → running/rolling
+    //   LAG(col[, offset[, default]]) / LEAD(col[, offset[, default]]) OVER (…)
+    const windowMatch = cleanPart.match(
+      /^(ROW_NUMBER|RANK|DENSE_RANK|SUM|COUNT|AVG|MIN|MAX|LAG|LEAD)\s*\(([\s\S]*?)\)\s*OVER\s*\(([\s\S]*?)\)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?$/i
+    );
     if (windowMatch) {
       const funcType = windowMatch[1].toUpperCase() as any;
-      const overBody = windowMatch[2].trim();
-      const alias = windowMatch[3]?.replace(/[`"']/g, '').trim() || `${funcType.toLowerCase()}_result`;
+      const args = splitFunctionArgs(windowMatch[2]);
+      const overBody = windowMatch[3].trim();
+      const alias = windowMatch[4]?.replace(/[`"']/g, '').trim() || `${funcType.toLowerCase()}_result`;
 
       const partMatch = overBody.match(/PARTITION\s+BY\s+([`"']?[\w_.]+[`"']?)/i);
       const orderMatch = overBody.match(/ORDER\s+BY\s+([`"']?[\w_.]+[`"']?)(?:\s+(ASC|DESC))?/i);
@@ -372,8 +510,35 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
         type: funcType,
         partitionBy: partMatch ? partMatch[1].replace(/[`"']/g, '').trim() : undefined,
         orderBy: orderMatch ? orderMatch[1].replace(/[`"']/g, '').trim() : undefined,
-        direction: orderMatch && orderMatch[2] && orderMatch[2].toUpperCase() === 'ASC' ? 'ASC' : 'DESC',
+        // SQL default ORDER BY direction is ASC.
+        direction: orderMatch && orderMatch[2]?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
+        aggregateArg: args && args.length > 0 ? args[0].trim().replace(/[`"']/g, '') : undefined,
+        args,
       };
+      cols.push(col);
+      continue;
+    }
+
+    // Check aggregate-over-CASE: SUM(CASE WHEN … END) AS alias — must be
+    // detected BEFORE the plain CASE branch, which would otherwise swallow
+    // the whole expression and drop the aggregate.
+    const aggCaseMatch = cleanPart.match(/^(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*(CASE[\s\S]*END)\s*\)(?:\s+AS\s+)?(?:[`"']?([\w_]+)[`"']?)?\s*$/i);
+    if (aggCaseMatch) {
+      col.aggregate = aggCaseMatch[1].toUpperCase() as any;
+      col.aggregateArg = aggCaseMatch[2].trim();
+      col.alias = aggCaseMatch[3]?.replace(/[`"']/g, '') || `${col.aggregate.toLowerCase()}_case_result`;
+      col.expression = col.alias;
+      cols.push(col);
+      continue;
+    }
+
+    // Check scalar function expressions: UPPER/LOWER/TRIM/LENGTH/CONCAT/
+    // SUBSTRING/YEAR/MONTH/DAY/EXTRACT/DATEDIFF — flat calls only.
+    const fnMatch = cleanPart.match(/^(UPPER|LOWER|TRIM|LENGTH|CONCAT|SUBSTRING|YEAR|MONTH|DAY|EXTRACT|DATEDIFF)\s*\(([\s\S]*)\)(?:\s+AS\s+)?(?:[`"']?([\w_]+)[`"']?)?\s*$/i);
+    if (fnMatch) {
+      col.functionCall = { name: fnMatch[1].toUpperCase(), args: splitFunctionArgs(fnMatch[2]) };
+      col.alias = fnMatch[3]?.replace(/[`"']/g, '') || `${fnMatch[1].toLowerCase()}_result`;
+      col.expression = col.alias;
       cols.push(col);
       continue;
     }
@@ -409,6 +574,21 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
       col.aggregateArg = aggMatch[2].trim().replace(/[`"']/g, '');
       if (!col.alias) {
         col.alias = `${col.aggregate.toLowerCase()}_${col.aggregateArg.replace(/[^a-zA-Z0-9_]/g, '')}`;
+      }
+    } else {
+      // COALESCE-wrapped aggregate: COALESCE(SUM(col), 0) — the standard
+      // null-safe reporting pattern. Parse the inner aggregate and remember
+      // the fallback literal so the executor can substitute it on NULL.
+      const coalesceAggMatch = col.expression.match(
+        /^COALESCE\s*\(\s*(COUNT|SUM|AVG|MIN|MAX)\s*\(\s*([\s\S]*?)\s*\)\s*,\s*([\s\S]+)\)\s*$/i
+      );
+      if (coalesceAggMatch) {
+        col.aggregate = coalesceAggMatch[1].toUpperCase() as any;
+        col.aggregateArg = coalesceAggMatch[2].trim().replace(/[`"']/g, '');
+        col.coalesceFallback = coalesceAggMatch[3].trim();
+        if (!col.alias) {
+          col.alias = `coalesce_${col.aggregate.toLowerCase()}_${col.aggregateArg.replace(/[^a-zA-Z0-9_]/g, '')}`;
+        }
       }
     }
 
@@ -472,9 +652,54 @@ function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
   }
 }
 
+/**
+ * Splits the VALUES section of an INSERT into top-level tuples, respecting
+ * string literals and nested parentheses: `('A', 1), ('B', 2)` → two tuples.
+ */
+function splitValueTuples(valueSection: string): string[] {
+  const tuples: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inString: string | null = null;
+  for (let i = 0; i < valueSection.length; i++) {
+    const ch = valueSection[i];
+    if (inString) {
+      current += ch;
+      if (ch === inString && valueSection[i - 1] !== '\\') inString = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      inString = ch;
+      current += ch;
+      continue;
+    }
+    if (ch === '(') {
+      depth++;
+      current += ch;
+      continue;
+    }
+    if (ch === ')') {
+      depth--;
+      current += ch;
+      if (depth === 0) {
+        tuples.push(current.trim());
+        current = '';
+      }
+      continue;
+    }
+    if (ch === ',' && depth === 0) {
+      // top-level separator between tuples — discard (drops the ", " gap)
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  return tuples.filter((t) => t.length > 2);
+}
+
 function parseInsert(sql: string, rawSql: string): ParsedSqlQuery {
-  const match = sql.match(/INSERT\s+INTO\s+([`"']?[\w_]+[`"']?)\s*\(([\s\S]+?)\)\s*VALUES\s*\(([\s\S]+?)\)/i);
-  if (!match) {
+  const headerMatch = sql.match(/INSERT\s+INTO\s+([`"']?[\w_]+[`"']?)\s*\(([\s\S]+?)\)\s*VALUES\s*([\s\S]+)$/i);
+  if (!headerMatch) {
     return {
       type: 'INSERT',
       raw: rawSql,
@@ -482,23 +707,42 @@ function parseInsert(sql: string, rawSql: string): ParsedSqlQuery {
       error: 'Invalid INSERT syntax. Expected INSERT INTO table (cols) VALUES (vals)',
     };
   }
-  const table = match[1].replace(/[`"']/g, '');
-  const cols = match[2].split(',').map((s) => s.trim().replace(/[`"']/g, ''));
-  const vals = match[3].split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, ''));
+  const table = headerMatch[1].replace(/[`"']/g, '');
+  const cols = splitFunctionArgs(headerMatch[2])
+    .map((s) => s.trim().replace(/[`"']/g, ''))
+    .filter(Boolean);
 
-  const insertValues: Record<string, any> = {};
-  cols.forEach((col, idx) => {
-    const rawVal = vals[idx];
-    const num = Number(rawVal);
-    insertValues[col] = !isNaN(num) && rawVal !== '' ? num : rawVal;
-  });
+  const tuples = splitValueTuples(headerMatch[3]);
+  if (tuples.length === 0) {
+    return {
+      type: 'INSERT',
+      raw: rawSql,
+      normalized: sql,
+      error: 'Invalid INSERT syntax. Expected at least one VALUES tuple.',
+    };
+  }
+
+  const rowFromVals = (vals: string[]): Record<string, any> => {
+    const row: Record<string, any> = {};
+    cols.forEach((col, idx) => {
+      const rawVal = (vals[idx] ?? '').trim().replace(/^['"]|['"]$/g, '');
+      const num = Number(rawVal);
+      row[col] = !isNaN(num) && rawVal !== '' ? num : rawVal;
+    });
+    return row;
+  };
+
+  const insertValuesList = tuples.map((t) =>
+    rowFromVals(splitFunctionArgs(t.trim().replace(/^\(/, '').replace(/\)$/, '')))
+  );
 
   return {
     type: 'INSERT',
     raw: rawSql,
     normalized: sql,
     insertTable: table,
-    insertValues,
+    insertValues: insertValuesList[0],
+    insertValuesList,
   };
 }
 
@@ -511,15 +755,20 @@ function parseUpdate(sql: string, rawSql: string): ParsedSqlQuery {
   const setExpr = match[2];
   const whereClause = match[3]?.trim();
 
+  // Store each SET value RAW (quotes preserved). executeUpdate's
+  // evaluateSetValue owns interpretation: quoted strings unquote, numeric
+  // literals convert, expressions compute against the current row. The old
+  // behavior transformed values here - which stripped the quotes from string
+  // literals, so evaluateSetValue no longer recognized them and corrupted
+  // prose values into booleans downstream.
   const updateSet: Record<string, any> = {};
-  setExpr.split(',').forEach((part) => {
-    const [c, v] = part.split('=').map((s) => s.trim());
-    if (c && v !== undefined) {
-      const cleanVal = v.replace(/^['"]|['"]$/g, '');
-      const num = Number(cleanVal);
-      updateSet[c.replace(/[`"']/g, '')] = !isNaN(num) && cleanVal !== '' ? num : cleanVal;
-    }
-  });
+  for (const pair of splitFunctionArgs(setExpr)) {
+    const eqIdx = findTopLevelEquals(pair);
+    if (eqIdx === -1) continue;
+    const col = pair.slice(0, eqIdx).trim().replace(/[`"']/g, '');
+    const val = pair.slice(eqIdx + 1).trim();
+    if (col && val !== '') updateSet[col] = val;
+  }
 
   return {
     type: 'UPDATE',
@@ -583,6 +832,81 @@ export function parseCaseExpression(input: string): ParsedCaseWhen | null {
 
   if (whens.length === 0) return null;
   return { whens, elseResult };
+}
+
+/**
+ * Finds the index of the main `SELECT` that starts a `WITH ... AS (...) SELECT`
+ * statement. The earliest candidate is at paren-depth 0 AFTER at least one CTE
+ * body has been opened and closed — bodies may themselves contain SELECT
+ * keywords, but only ever at depth ≥ 1.
+ */
+function findMainSelectAfterWith(sql: string): number {
+  let depth = 0;
+  let opened = false;
+  for (let i = 4; i < sql.length - 6; i++) {
+    const ch = sql[i];
+    if (ch === '(') { depth++; opened = true; }
+    else if (ch === ')') { depth--; }
+    if (depth === 0 && opened && /\bSELECT\b/i.test(sql.slice(i, i + 7))) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Splits a function-call argument list on top-level commas (paren- and
+ * quote-aware): `name, ' <', email` → [`name`, `' <'`, `email`].
+ */
+/** Finds the first `=` outside quotes/parens in a SET pair. -1 when absent. */
+function findTopLevelEquals(s: string): number {
+  let inString: string | null = null;
+  let depth = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (inString) {
+      if (ch === inString) inString = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      inString = ch;
+      continue;
+    }
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    else if (ch === '=' && depth === 0) return i;
+  }
+  return -1;
+}
+
+export function splitFunctionArgs(argList: string): string[] {
+  const args: string[] = [];
+  let current = '';
+  let depth = 0;
+  let inString: string | null = null;
+  for (let i = 0; i < argList.length; i++) {
+    const ch = argList[i];
+    if (inString) {
+      current += ch;
+      if (ch === inString) inString = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      inString = ch;
+      current += ch;
+      continue;
+    }
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) {
+      args.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) args.push(current.trim());
+  return args;
 }
 
 /** Splits a CASE body on WHEN/ELSE keywords at depth 0 (quote-aware). */

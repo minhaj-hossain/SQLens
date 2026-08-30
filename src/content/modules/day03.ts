@@ -466,6 +466,17 @@ export const DAY_03_MODULE: ModuleData = {
         liveDemoNotes: "Returns Karim, Sumaiya, and Tanvir.",
         mcqs: [
           {
+            question: "Recall from Day 2: which operator would you use to find products priced ABOVE 50, including exactly 50.00?",
+            options: [
+              'A. > (strict - excludes the boundary)',
+              'B. >= (inclusive - includes the boundary)',
+              'C. != (excludes only 50.00)',
+              'D. = (matches only 50.00)',
+            ],
+            correctIndex: 1,
+            explanation: 'Day 2\'s boundary distinction: strict > excludes 50.00, inclusive >= keeps it. NOT inverts the result of the whole condition - knowing which rows survive still starts with the boundary rule.',
+          },
+          {
             question: "What does `WHERE NOT (price < 50)` evaluate to?",
             options: [
               "A. WHERE price = 50",

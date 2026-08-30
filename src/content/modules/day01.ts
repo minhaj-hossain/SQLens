@@ -27,7 +27,7 @@ export const DAY_01_MODULE: ModuleData = {
       title: 'SELECT and FROM',
       shortDescription: 'The foundational building blocks of every SQL query.',
       theory: {
-        summary: 'Imagine we have a database containing a table called students:',
+        summary: 'Every SQL query answers two questions: WHERE does the data come from, and WHICH columns do you want back? Imagine we have a database containing a table called students:',
         introTable: {
           tableName: 'students',
           description: 'This table is already stored in the database.',
@@ -481,7 +481,7 @@ export const DAY_01_MODULE: ModuleData = {
       title: 'AS: Renaming Columns in the Output',
       shortDescription: 'Change how column names appear in the result without modifying the database.',
       theory: {
-        summary: 'We still have our students table:',
+        summary: 'Column names in the result do not have to match the database — AS gives any column a temporary display name, without ever modifying the table itself. We still have our students table:',
         introTable: {
           tableName: 'students',
           columns: ['id', 'name', 'age', 'department', 'city'],

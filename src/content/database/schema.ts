@@ -117,4 +117,39 @@ export const DATABASE_SCHEMAS: Record<string, TableSchema> = {
       { name: 'created_at', type: 'date', description: 'Date review was submitted' },
     ],
   },
+  fat_orders: {
+    name: 'fat_orders',
+    displayName: 'Fat Orders (Anti-Pattern)',
+    description: 'Deliberately denormalized demo table: customer and product facts are copied onto every order line instead of referenced. Used to teach redundancy, anomalies, and normalization.',
+    columns: [
+      { name: 'order_id', type: 'number', description: 'Order this line belongs to (not unique across lines - part of the anti-pattern)' },
+      { name: 'customer_email', type: 'string', description: 'Customer email copied from customers onto every line' },
+      { name: 'product_name', type: 'string', description: 'Product name copied from products onto every line' },
+      { name: 'product_price', type: 'decimal', description: 'Product price copied from products onto every line' },
+      { name: 'quantity', type: 'number', description: 'Units purchased on this line' },
+    ],
+  },
+  combined_items: {
+    name: 'combined_items',
+    displayName: 'Combined Items (Anti-Pattern)',
+    description: 'Teaching table for functional dependencies: order_items merged with product facts on a composite key (order_id, product_id). product_name and product_price depend only on part of the key - the partial dependency 2NF removes.',
+    columns: [
+      { name: 'order_id', type: 'number', description: 'Part one of the composite key' },
+      { name: 'product_id', type: 'number', description: 'Part two of the composite key' },
+      { name: 'product_name', type: 'string', description: 'Copied from products - depends on product_id only (partial)' },
+      { name: 'product_price', type: 'decimal', description: 'Copied from products - depends on product_id only (partial)' },
+      { name: 'quantity', type: 'number', description: 'Depends on the full composite key (correctly placed)' },
+    ],
+  },
+  combined_orders: {
+    name: 'combined_orders',
+    displayName: 'Combined Orders (Anti-Pattern)',
+    description: 'Teaching table for transitive dependencies: orders merged with customer facts. customer_name and customer_city depend on customer_id, not on order_id - the transitive chain 3NF removes.',
+    columns: [
+      { name: 'order_id', type: 'number', primaryKey: true, description: 'Order identifier' },
+      { name: 'customer_id', type: 'number', description: 'Customer who placed the order' },
+      { name: 'customer_name', type: 'string', description: 'Copied from customers - depends on customer_id, not order_id (transitive)' },
+      { name: 'customer_city', type: 'string', description: 'Copied from customers - depends on customer_id, not order_id (transitive)' },
+    ],
+  },
 };

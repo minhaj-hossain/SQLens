@@ -5,6 +5,7 @@ import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { UserLearningState } from '../../types/progress';
 import { getModuleUnlockStatus, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
+import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 
 interface RoadmapModalProps {
@@ -120,7 +121,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                       >
                         <div className="flex items-center justify-between w-full mb-1">
                           <span className="font-mono text-[11px] font-medium text-text-faint">
-                            Day {module.day}
+                            {getModuleDisplayLabel(module)}
                           </span>
                           {isCompleted ? (
                             <Icon name="check_circle" className="text-[14px] text-func" />

@@ -8,6 +8,7 @@
 import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { getNextModule } from '@/lib/curriculum/module-order';
 import { ModuleData } from '@/types/curriculum';
 import {
   getModuleUnlockStatus,
@@ -108,10 +109,11 @@ export function useLearningNavigation() {
     }
   }, []);
 
-  /** Continue to the next day's lesson (pre-migration: straight into the lesson). */
+  /** Continue to the next module's lesson (canonical curriculum order). */
   const continueNextDay = useCallback((moduleId: string) => {
     const mod = getModuleById(moduleId);
-    const next = ALL_MODULES.find((m) => m.day === (mod?.day ?? 0) + 1);
+    if (!mod) return;
+    const next = getNextModule(mod, ALL_MODULES);
     if (!next) return;
     const firstIncomplete =
       next.concepts.find((c) => !isConceptCompleted(c, next.id, userStateRef.current)) ??

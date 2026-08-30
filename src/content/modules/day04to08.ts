@@ -1627,6 +1627,17 @@ export const DAY_08_MODULE: ModuleData = {
         liveDemoNotes: 'Displays critical inventory items.',
         mcqs: [
           {
+            question: 'Spiral check from Day 2: a product has price = 50.00. Which filter keeps it?',
+            options: [
+              'A. WHERE price > 50',
+              'B. WHERE price >= 50',
+              'C. WHERE price != 50',
+              'D. WHERE price < 50',
+            ],
+            correctIndex: 1,
+            explanation: 'Only >= includes the boundary itself (Day 2). Checkpoints deliberately re-test earlier milestones - if this felt shaky, revisit Day 2 before the deliverables below.',
+          },
+          {
             question: 'What is the primary objective of Milestone 1?',
             options: [
               'A. Writing complex multi-table joins',

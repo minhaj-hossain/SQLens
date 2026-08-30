@@ -6,6 +6,7 @@ import { UserLearningState } from '../../types/progress';
 import { getNextUnlockTime, formatTimeRemaining, getEffectiveNow, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
+import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
 
 interface ModuleCompletionViewProps {
   module: ModuleData;
@@ -78,7 +79,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
 
       <div className="space-y-2">
         <div className="font-label-sm text-xs text-primary font-medium uppercase tracking-wider">
-          Day {module.day} Complete · {module.title}
+          {getModuleDisplayLabel(module)} Complete · {module.title}
         </div>
         <h1 className="font-headline-lg text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
           Module Mastered
@@ -133,7 +134,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
               <div>
                 <span className="font-label-sm text-xs text-text-muted block">Next in Roadmap:</span>
                 <span className="font-headline-sm text-base font-semibold text-on-surface">
-                  Day {nextModule.day}: {nextModule.title}
+                  {getModuleDisplayLabel(nextModule!)}: {nextModule.title}
                 </span>
               </div>
 
@@ -172,7 +173,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
                   onClick={onContinueNextDay}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-primary-container px-5 py-2 font-label-sm text-xs font-semibold text-on-primary-container hover:brightness-110 active:scale-95 transition cursor-pointer shadow-[0_0_8px_rgba(0,173,181,0.25)]"
                 >
-                  <span>Start Day {nextModule.day}</span>
+                  <span>Start {getModuleDisplayLabel(nextModule!)}</span>
                   <Icon name="arrow_forward" className="text-[15px]" />
                 </button>
               )}

@@ -7,6 +7,7 @@
 import React, { useEffect } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { getNextModule } from '@/lib/curriculum/module-order';
 import { ModuleCompletionView } from '@/components/learning/ModuleCompletionView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useUiChrome } from '@/components/providers/UiChromeProvider';
@@ -33,7 +34,7 @@ export default function CompleteView({ dayId }: CompleteViewProps) {
 
   if (!isCompleted) return null;
 
-  const nextModule = ALL_MODULES.find((m) => m.day === mod.day + 1);
+  const nextModule = getNextModule(mod, ALL_MODULES);
 
   return (
     <ModuleCompletionView

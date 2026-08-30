@@ -10,6 +10,7 @@ import { usePathname } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import BlockedView from '@/components/auth/BlockedView';
 import { getModuleById } from '@/content/curriculum-index';
+import { getModuleDisplayLabel } from '@/lib/curriculum/module-order';
 import { dayIdFromPathname } from '@/lib/learn-routes';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
@@ -25,7 +26,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathDayId = dayIdFromPathname(pathname);
   const pathModule = pathDayId ? getModuleById(pathDayId) : undefined;
   const activeViewTitle = pathModule
-    ? `Day ${pathModule.day}: ${pathModule.shortTitle}`
+    ? `${getModuleDisplayLabel(pathModule)}: ${pathModule.shortTitle}`
     : 'Learning Path';
 
   // A blocked account gets a dedicated full-page screen instead of the app.

@@ -8,8 +8,8 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
-import { getModuleById } from '@/content/curriculum-index';
-import { ALL_MODULES } from '@/content/curriculum-index';
+import { getModuleById, ALL_MODULES } from '@/content/curriculum-index';
+import { getModuleDisplayLabel } from '@/lib/curriculum/module-order';
 import {
   getModuleUnlockStatus,
   getModuleProgressCounts,
@@ -45,7 +45,7 @@ export default function ModuleOverview({ dayId }: ModuleOverviewProps) {
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-surface-container border border-outline-variant/60 text-text-dim mb-4">
           <Icon name="lock" className="text-[26px]" />
         </div>
-        <h1 className="font-display text-xl font-bold text-text mb-2">Day {mod.day} is locked</h1>
+        <h1 className="font-display text-xl font-bold text-text mb-2">{getModuleDisplayLabel(mod)} is locked</h1>
         <p className="text-sm text-text-dim font-body leading-relaxed mb-6">
           {unlockStatus.reason || 'Complete the previous days to unlock this lesson.'}
         </p>
@@ -70,7 +70,7 @@ export default function ModuleOverview({ dayId }: ModuleOverviewProps) {
     <div data-availability={availabilityVersion} className="max-w-3xl mx-auto">
       {/* Day header */}
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-text">
-        Day {mod.day}: {mod.title}
+        {getModuleDisplayLabel(mod)}: {mod.title}
       </h1>
       <p className="text-sm text-text-dim font-body leading-relaxed mt-2 mb-2">{mod.description}</p>
       <div className="flex items-center gap-3 text-[11px] font-mono text-text-dim mb-6">

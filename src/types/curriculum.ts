@@ -21,6 +21,17 @@ export interface ValidationRule {
   requireJoin?: boolean;
   requireGroupBy?: boolean;
   requireHaving?: boolean;
+  /** Require a CASE WHEN … THEN … END expression in the query. */
+  requireCase?: boolean;
+  /** Require a call to this function (e.g. 'CONCAT', 'YEAR') in the query. */
+  requireFunction?: string;
+  /** Require a top-level set operation: 'UNION', 'UNION ALL', or 'EXCEPT'. */
+  requireSetOp?: 'UNION' | 'UNION ALL' | 'EXCEPT';
+  /**
+   * Deliberate-failure lab: the task REQUIRES the query to error (e.g. a
+   * constraint violation mid-transaction). Passes when the engine rejects it.
+   */
+  expectFailure?: boolean;
   expectedRowCount?: number | { min?: number; max?: number };
   customValidator?: (queryAst: any, result: any) => { valid: boolean; message?: string };
 }
@@ -171,6 +182,19 @@ export interface ModuleData {
   concepts: Concept[];
   challenge?: IndependentChallenge;
   completionLearnings: string[];
+  /**
+   * Position-independent sort key controlling the canonical curriculum order
+   * (unlock sequence, roadmap ordering, prev/next navigation). Existing
+   * modules may omit it — `day` is used as the fallback. New modules MUST set
+   * it explicitly: IDs must never encode position (semantic IDs like
+   * `case-conditional-logic` + fractional orders like 10.5 are the pattern).
+   */
+  curriculumOrder?: number;
+  /**
+   * Cosmetic display label, e.g. "Day 10". Falls back to `Day ${day}` when
+   * omitted. Never used for logic — ordering/unlocking reads curriculumOrder.
+   */
+  displayLabel?: string;
   /**
    * Optional ISO datetime string (e.g. "2024-11-01T18:00:00") for manually
    * scheduling this module's earliest availability. If set, the module will NOT

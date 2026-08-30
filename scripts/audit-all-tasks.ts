@@ -40,9 +40,18 @@ function formatExpected(e: PracticeTask['validation']['expectedRowCount']): stri
   return '<none>';
 }
 
-function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'challenge') {
+function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'challenge', exec: SqlExecutor) {
   totalTasks++;
-  const exec = new SqlExecutor();
+
+  // Lifecycle modelling matches the UI:
+  //  - lesson tasks: 'fresh' resets the session; everything else (undefined,
+  //    'inherit') carries the module session state.
+  //  - challenge tasks: handled by the caller (one shared executor per module
+  //    challenge; 'fresh' challenge resets on every task switch — the UI resets
+  //    on task change too).
+  if (where === 'lesson') {
+    if (task.databaseLifecycle === 'fresh') exec.resetDatabase();
+  }
 
   let result;
   try {
@@ -61,6 +70,13 @@ function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'ch
   }
 
   if (!result.success) {
+    // Deliberate-failure labs (expectFailure): the query FAILING is the point.
+    // Delegate to the validator so its expectFailure branch marks it passed.
+    const outcome = validateTaskSolution(task.solutionSql, result, task.validation);
+    if (outcome.passed) {
+      passedTasks++;
+      return;
+    }
     issues.push({
       day: module.day,
       taskId: task.id,
@@ -136,13 +152,21 @@ console.log('\n=== SQLens Full-Task Audit (solution execution + validation) ===\
 
 for (const module of ALL_MODULES) {
   const before = totalTasks;
+  // Per-module session, mirroring the UI provider: lesson tasks share one
+  // executor across the module (reset only when a task is explicitly 'fresh').
+  const moduleExec = new SqlExecutor();
   for (const concept of module.concepts) {
     for (const task of concept.tasks || []) {
-      auditTask(task, module, 'lesson');
+      auditTask(task, module, 'lesson', moduleExec);
     }
   }
+  // Challenge: one executor for the whole challenge. A 'fresh' challenge resets
+  // before EACH task (UI resets on task switch); 'inherit'/default carries, so
+  // sequenced challenges (BEGIN → INSERT → COMMIT → verify) see each other.
+  const challengeExec = new SqlExecutor();
   for (const task of module.challenge?.tasks || []) {
-    auditTask(task, module, 'challenge');
+    if (module.challenge?.databaseLifecycle === 'fresh') challengeExec.resetDatabase();
+    auditTask(task, module, 'challenge', challengeExec);
   }
   const dayTotal = totalTasks - before;
   const dayIssues = issues.filter((i) => i.day === module.day);

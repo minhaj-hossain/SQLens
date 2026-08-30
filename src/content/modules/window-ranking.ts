@@ -1,0 +1,935 @@
+import { ModuleData } from '../../types/curriculum';
+
+// =============================================================================
+// DAY 23 — Window Functions I: Ranking  (id: window-ranking · order 23)
+// Inserts after Day 22 (Practice: Subqueries & CTEs). Atomic chain:
+//   C1 ROW_NUMBER (rank without collapsing) → C2 PARTITION BY →
+//   C3 RANK (ties leave gaps) → C4 DENSE_RANK (ties, no gaps) →
+//   C5 Pattern Lab: Top-N per group
+// =============================================================================
+export const WINDOW_RANKING_MODULE: ModuleData = {
+  id: 'window-ranking',
+  slug: 'window-ranking',
+  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 23)
+  title: 'Day 23 — Window Functions I: Ranking',
+  shortTitle: 'Window Functions: Ranking',
+  type: 'module',
+  milestoneId: 'milestone-3',
+  description: 'Append rank numbers to rows without collapsing them, restart rankings per group with PARTITION BY, master tie behavior with RANK and DENSE_RANK, and assemble the famous Top-N-per-group pattern.',
+  estimatedMinutes: 65,
+  completionLearnings: [
+    'Rank rows with ROW_NUMBER() OVER (ORDER BY …) — rows preserved, no GROUP BY collapse',
+    'Restart a ranking within each group using PARTITION BY',
+    'Choose correctly between RANK (gaps after ties) and DENSE_RANK (no gaps)',
+    'Build Top-N per group with a ranking CTE plus an outer filter',
+  ],
+  concepts: [
+    {
+      id: 'row-number-basics',
+      order: 1,
+      title: '1. ROW_NUMBER(): Rank Without Collapsing',
+      shortDescription: 'A leaderboard column appended to every row.',
+      theory: {
+        summary: "Day 9's GROUP BY answered 'how many products per category' but destroyed the rows. Now the question is different: keep every product AND give each one its price rank. ROW_NUMBER() OVER (ORDER BY …) appends a 1, 2, 3… column sorted by your chosen order — without removing a single row.",
+        introTable: {
+          tableName: 'products',
+          description: 'A few products with their prices — every one of them will keep its identity',
+          columns: ['name', 'price'],
+          rows: [
+            ['Office Chair', 120.00],
+            ['Mechanical Keyboard', 65.00],
+            ['Stainless Steel Pan Set', 55.00],
+            ['Tennis Racket', 55.00],
+          ],
+        },
+        explanation: [
+          'The mental model: an **OVER** clause defines a "window" — a slice of the rows the query sees — and the function computes across that slice instead of collapsing it. GROUP BY produces one row per group; a window function produces **one output for every input row**.',
+          '```sql\nSELECT name, price,\n       ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank\nFROM products;\n```',
+          'QUESTION_BLOCK::ORDER::What does ORDER BY price DESC inside OVER decide?\nQUESTION_BLOCK::ROWS::What happens to the rows themselves?',
+          'Reading the syntax: ROW_NUMBER() takes no arguments — the interesting part is inside OVER. `ORDER BY price DESC` says "walk the rows from most to least expensive, numbering as you go." The highest price becomes rank 1.',
+          'The rows are NOT grouped, NOT removed, NOT merged. 28 products in, 28 products out — each carrying an extra rank number. This is the exact opposite trade-off from GROUP BY, and knowing which one a report needs is the skill.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, price,\n       ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank\nFROM products;',
+          explanation: 'A full price leaderboard: all 28 products, ranked from most to least expensive.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: The query runs normally — all rows come out',
+            sqlSnippet: 'SELECT name, price FROM products',
+            explanation: 'Every product survives, exactly like a plain SELECT.',
+            tableData: {
+              tableName: 'Base rows',
+              columns: ['name', 'price'],
+              rows: [
+                ['Office Chair', 120.00],
+                ['Sticky Notes Pack', 4.99],
+                ['Mechanical Keyboard', 65.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: OVER defines the window — sort by price DESC',
+            sqlSnippet: 'OVER (ORDER BY price DESC)',
+            explanation: 'The engine conceptually lines the rows up from most to least expensive. This sort exists only inside the window — it is not the output ORDER BY.',
+            tableData: {
+              tableName: 'Window order',
+              columns: ['name', 'price'],
+              rows: [
+                ['Office Chair', 120.00],
+                ['Mechanical Keyboard', 65.00],
+                ['Sticky Notes Pack', 4.99],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Number the rows 1, 2, 3… and attach to each row',
+            sqlSnippet: 'ROW_NUMBER() … AS price_rank',
+            explanation: 'Each row carries its number alongside its data. No row lost, no row merged.',
+            tableData: {
+              tableName: 'Result',
+              columns: ['name', 'price', 'price_rank'],
+              highlightedColumns: ['price_rank'],
+              rows: [
+                ['Office Chair', 120.00, 1],
+                ['Mechanical Keyboard', 65.00, 3],
+                ['Sticky Notes Pack', 4.99, 28],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Window function syntax',
+            sql: 'SELECT col,\n       ROW_NUMBER() OVER (ORDER BY col2 DESC) AS rank_col\nFROM table_name;',
+            description: 'Function() OVER (window definition) — the OVER clause is what makes it a window function.',
+          },
+        ],
+        keyTakeaway: "ROW_NUMBER() OVER (ORDER BY …) appends a 1..N rank per row, sorted by the window's ORDER BY. Rows are preserved — GROUP BY collapses rows, window functions decorate them.",
+        exampleQuery: 'SELECT name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+        exampleQueryExplanation: '28 products in, 28 out — each with its price_rank. The Office Chair (120.00) is rank 1.',
+        liveDemoSql: 'SELECT name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank FROM products LIMIT 6;',
+        liveDemoNotes: 'Notice no GROUP BY and no lost rows — just an extra computed column, like CASE but ranking-aware.',
+        mcqs: [
+          {
+            question: 'What is the key difference between GROUP BY and a window function?',
+            options: [
+              'A. GROUP BY is faster',
+              'B. GROUP BY collapses rows into one per group; window functions keep every row and add a computed value',
+              'C. Window functions can only be used with JOINs',
+              'D. There is no difference',
+            ],
+            correctIndex: 1,
+            explanation: 'That is THE mental model of this module: collapse vs decorate. Same data, opposite output shapes.',
+          },
+          {
+            question: 'Where does the sorting for ROW_NUMBER happen?',
+            options: [
+              "A. In the query's final ORDER BY",
+              'B. Inside the OVER (...) clause',
+              'C. In the FROM clause',
+              'D. ROW_NUMBER never sorts',
+            ],
+            correctIndex: 1,
+            explanation: "OVER (ORDER BY …) defines the window's internal row order — completely independent of the output's ORDER BY.",
+          },
+          {
+            question: 'A table has 28 rows. After adding ROW_NUMBER() OVER (ORDER BY price), how many rows come out?',
+            options: ['A. 1', 'B. 28', 'C. Depends on duplicates', 'D. 27'],
+            correctIndex: 1,
+            explanation: 'Window functions never change the row count — one output value per input row.',
+          },
+        ],
+        commonMistakes: [
+          'Expecting the result to be sorted — the window order ranks the rows; add a real ORDER BY at the end if you want sorted output.',
+          'Writing ROW_NUMBER(price) — the function takes no arguments; the column goes inside OVER.',
+        ],
+        masteryPoints: ['Append a ROW_NUMBER rank to any table', 'Explain collapse vs decorate to a teammate'],
+      },
+      tasks: [
+        {
+          id: 'rownum-t1',
+          title: 'Task 1 (Guided): The price leaderboard',
+          description: 'Marketing wants every product ranked from most to least expensive — without losing any product from the list.',
+          instructions: [
+            'Select `name`, `price`, and `ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank`.',
+            'FROM `products`. Expect 28 rows — every product, now ranked.',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Price leaderboard\n',
+          solutionSql: 'SELECT name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+          solutionExplanation: 'Office Chair (120.00) is rank 1, Filing Cabinet (89.99) rank 2, down to Sticky Notes Pack (4.99) at rank 27-28 territory. 28 rows preserved.',
+          hints: [
+            { level: 1, text: 'ROW_NUMBER() takes nothing inside its parentheses — the sort lives inside OVER: OVER (ORDER BY price DESC).' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price', 'price_rank'],
+            requireFunction: 'ROW_NUMBER',
+            expectedRowCount: 28,
+          },
+          successMessage: 'First window function! 28 rows in, 28 out — each with its leaderboard position.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'rownum-t2',
+          title: 'Task 2 (Independent): Stock-level ranking',
+          description: 'Ops wants products ranked by how much stock they hold, most first. Same tool, different column.',
+          instructions: [
+            'Select `name`, `quantity_in_stock`, and a ROW_NUMBER over `quantity_in_stock DESC` aliased AS `stock_rank`.',
+            'Expect 28 rows. Sticky Notes Pack (100 units) should be rank 1.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Stock leaderboard\n',
+          solutionSql: 'SELECT name, quantity_in_stock, ROW_NUMBER() OVER (ORDER BY quantity_in_stock DESC) AS stock_rank FROM products;',
+          solutionExplanation: 'Sticky Notes Pack (100) ranks 1, Ballpoint Pen Box (60) ranks 2 — and the zero-stock products cluster at the bottom.',
+          hints: [
+            { level: 1, text: 'Identical shape to Task 1 — swap price for quantity_in_stock in the OVER clause.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'quantity_in_stock', 'stock_rank'],
+            requireFunction: 'ROW_NUMBER',
+            expectedRowCount: 28,
+          },
+          successMessage: 'Transfer complete — you can now rank by any numeric column without hints.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'partition-by',
+      order: 2,
+      title: '2. PARTITION BY: One Leaderboard Per Group',
+      shortDescription: 'Restart the ranking inside each category.',
+      theory: {
+        summary: "One global leaderboard is rarely what a report needs. The real request: 'rank products within each category.' Five categories means five leaderboards — PARTITION BY computes all of them in one query, resetting the rank to 1 at each new group.",
+        introTable: {
+          tableName: 'products (category 1 & 2 samples)',
+          description: 'PARTITION BY splits the rows into groups, then ranks each group independently',
+          columns: ['name', 'category_id', 'price'],
+          rows: [
+            ['Mechanical Keyboard', 1, 65.00],
+            ['Wireless Mouse', 1, 15.99],
+            ['Stainless Steel Pan Set', 2, 55.00],
+            ['Knife Sharpener', 2, 12.50],
+          ],
+        },
+        explanation: [
+          "PARTITION BY is \"GROUP BY's gentle sibling\": it **groups the rows for the window calculation** but, like every window function, it still returns one row per input row.",
+          '```sql\nSELECT name, category_id, price,\n       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank\nFROM products;\n```',
+          'QUESTION_BLOCK::PART::What does PARTITION BY category_id control?\nQUESTION_BLOCK::ORD::What does ORDER BY price DESC control inside each partition?',
+          'Read it as a pipeline: PARTITION BY first deals the rows into separate piles (one per category). Then ORDER BY sorts *within each pile*. Then ROW_NUMBER counts 1, 2, 3… *within each pile* — so every category has its own rank 1.',
+          'The NULL-category group gets its own partition too — the clearance item is ranked just like any category. Windows treat NULL as its own group value, exactly like GROUP BY does.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, category_id, price,\n       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank\nFROM products;',
+          explanation: 'Six independent leaderboards (one per category group) in a single result — every category has its own rank 1.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: PARTITION BY deals the rows into piles',
+            sqlSnippet: 'PARTITION BY category_id',
+            explanation: 'One pile per category — 6 piles for categories 1–5 plus the NULL group.',
+            tableData: {
+              tableName: 'Piles',
+              columns: ['category_id', 'rows in pile'],
+              rows: [
+                [1, '8 products'],
+                [2, '5 products'],
+                ['…', '…'],
+                ['NULL', '1 product'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Within each pile, sort by price DESC',
+            sqlSnippet: 'ORDER BY price DESC',
+            explanation: 'The sort restarts in every pile — piles never mix.',
+            tableData: {
+              tableName: 'Category 1 pile (sorted)',
+              columns: ['name', 'price'],
+              rows: [
+                ['Mechanical Keyboard', 65.00],
+                ['Bluetooth Speaker', 45.50],
+                ['Wireless Mouse', 15.99],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Number within each pile',
+            sqlSnippet: 'ROW_NUMBER() … AS cat_rank',
+            explanation: 'Category 1: Keyboard=1, Speaker=2… Category 2: Pan Set=1, Kettle=2… Every pile starts from 1.',
+            tableData: {
+              tableName: 'Result (two piles shown)',
+              columns: ['name', 'category_id', 'price', 'cat_rank'],
+              highlightedColumns: ['cat_rank'],
+              rows: [
+                ['Mechanical Keyboard', 1, 65.00, 1],
+                ['Bluetooth Speaker', 1, 45.50, 2],
+                ['Stainless Steel Pan Set', 2, 55.00, 1],
+                ['Electric Kettle', 2, 34.99, 2],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'PARTITION BY syntax',
+            sql: 'ROW_NUMBER() OVER (PARTITION BY group_col ORDER BY sort_col DESC) AS alias',
+            description: 'PARTITION BY = deal into piles; ORDER BY = sort within each pile; the function = compute within each pile.',
+          },
+        ],
+        keyTakeaway: 'PARTITION BY restarts the window calculation at each group: deal rows into piles first, then sort and number within each pile. Grouped calculation, preserved rows.',
+        exampleQuery: "SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank FROM products;",
+        exampleQueryExplanation: "Every category gets its own independent price ranking — Mechanical Keyboard is cat 1's rank 1, Pan Set is cat 2's.",
+        liveDemoSql: 'SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank FROM products LIMIT 10;',
+        liveDemoNotes: 'Watch cat_rank reset to 1 each time category_id changes.',
+        mcqs: [
+          {
+            question: 'What does PARTITION BY change compared to the global ranking?',
+            options: [
+              'A. The number of rows returned',
+              'B. Where the rank restarts — 1 begins again at each new group',
+              'C. The sort direction',
+              'D. Nothing — it is just an alias',
+            ],
+            correctIndex: 1,
+            explanation: 'Row count is unchanged; only the numbering scope changes — one independent sequence per partition.',
+          },
+          {
+            question: 'How many rank-1 rows will `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC)` produce across 6 category groups?',
+            options: ['A. 1', 'B. 5', 'C. 6', 'D. 28'],
+            correctIndex: 2,
+            explanation: 'Each partition crowns its own rank 1 — 6 partitions, 6 rank-1 rows.',
+          },
+        ],
+        commonMistakes: [
+          'Believing PARTITION BY collapses rows like GROUP BY — it only scopes the calculation; the rows all survive.',
+          'Putting the sort column in PARTITION BY instead of ORDER BY — partitioning by price would create a pile per price, not a sorted pile.',
+        ],
+        masteryPoints: ['Restart rankings per group with PARTITION BY', 'Predict the number of rank-1 rows'],
+      },
+      tasks: [
+        {
+          id: 'partition-t1',
+          title: 'Task 1 (Guided): Most expensive per category',
+          description: 'Give every category its own price ranking — most expensive first.',
+          instructions: [
+            'Select `name`, `category_id`, `price`, and `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank`.',
+            'FROM `products`. Expect 28 rows with cat_rank restarting at 1 in each category.',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Per-category price rank\n',
+          solutionSql: 'SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank FROM products;',
+          solutionExplanation: "Six leaderboards at once: Mechanical Keyboard tops category 1, Pan Set tops category 2, Office Chair tops category 3 — and 28 rows all survive.",
+          hints: [
+            { level: 1, text: 'The OVER clause now has two parts: PARTITION BY category_id first, then ORDER BY price DESC — comma-separated, in that order.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'category_id', 'price', 'cat_rank'],
+            requireFunction: 'ROW_NUMBER',
+            expectedRowCount: 28,
+          },
+          successMessage: 'Six leaderboards, one query — and every category got its own champion.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'partition-t2',
+          title: 'Task 2 (Independent): Rank within each supplier',
+          description: 'Procurement wants to see each supplier\'s most expensive products first. Rank products within each supplier (suppliers have up to 8 products each — a JOIN is not needed, the column lives on products).',
+          instructions: [
+            'Select `p.name`, `p.supplier_id`, `p.price` and a ROW_NUMBER partitioned BY `p.supplier_id`, ordered BY `p.price DESC`, aliased AS `sup_rank`.',
+            'Expect 28 rows — supplier 1 has 8 products, so its ranks run 1–8.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Per-supplier price rank\n',
+          solutionSql: 'SELECT p.name, p.supplier_id, p.price, ROW_NUMBER() OVER (PARTITION BY p.supplier_id ORDER BY p.price DESC) AS sup_rank FROM products p;',
+          solutionExplanation: 'Same pile-and-number machinery on supplier_id — TechSource\'s Mechanical Keyboard (65.00) is supplier 1\'s rank 1.',
+          hints: [
+            { level: 1, text: 'Copy Task 1\'s shape exactly; only the partition column changes to supplier_id. The p. alias is just table aliasing from Day 14.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'supplier_id', 'price', 'sup_rank'],
+            requireFunction: 'ROW_NUMBER',
+            expectedRowCount: 28,
+          },
+          successMessage: 'Partition logic transferred to a new column — plus an aliased table, joining two skills without noticing.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'rank-ties',
+      order: 3,
+      title: '3. RANK(): Ties Share a Rank — and Leave a Gap',
+      shortDescription: 'Competition ranking: equal values, equal rank, skipped numbers.',
+      theory: {
+        summary: 'ROW_NUMBER forces an arbitrary order onto ties — two $55.00 products become ranks 4 and 5 for no real reason. RANK() fixes the fairness problem: tied values share the same rank. But it awards ranks the way sports competitions do — after a tie, the numbering jumps ahead.',
+        introTable: {
+          tableName: 'products around the tie',
+          description: 'Two products cost exactly 55.00 — the tie RANK() must handle',
+          columns: ['price', 'name'],
+          rows: [
+            [89.99, 'Filing Cabinet'],
+            [65.00, 'Mechanical Keyboard'],
+            [55.00, 'Stainless Steel Pan Set'],
+            [55.00, 'Tennis Racket'],
+            [45.50, 'Bluetooth Speaker'],
+          ],
+        },
+        explanation: [
+          'Swap the function name, keep everything else: `RANK() OVER (ORDER BY price DESC)`. Tied rows receive the **same minimum rank** they would have had anyway.',
+          '```sql\nSELECT name, price,\n       RANK() OVER (ORDER BY price DESC) AS price_rank\nFROM products;\n```',
+          'QUESTION_BLOCK::TIE::What rank do the two 55.00 products get?\nQUESTION_BLOCK::NEXT::What rank does the next distinct price (45.50) get?',
+          'The rule in one line: tied rows share rank **4, 4** — and because two products occupied ranks 4 and 5, the next distinct price lands on rank **6**. Positions are consumed even when shared. That gap is not a bug; it is competition logic (two silver medals, no bronze).',
+          'Compare with ROW_NUMBER on the same data: it would have stamped 4 and 5 arbitrarily — which product got which depended on storage order, never on data. RANK removes that instability.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, price,\n       RANK() OVER (ORDER BY price DESC) AS price_rank\nFROM products;',
+          explanation: 'Same leaderboard, tie-aware: the two 55.00 products share rank 4, and 45.50 arrives at rank 6.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Rank the untied rows normally',
+            sqlSnippet: 'RANK() OVER (ORDER BY price DESC)',
+            explanation: 'Office Chair 120 → 1, Filing Cabinet 89.99 → 2, Keyboard 65 → 3.',
+            tableData: {
+              tableName: 'Before the tie',
+              columns: ['name', 'price', 'price_rank'],
+              rows: [
+                ['Office Chair', 120.00, 1],
+                ['Filing Cabinet', 89.99, 2],
+                ['Mechanical Keyboard', 65.00, 3],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Tied rows share the current rank',
+            sqlSnippet: '55.00, 55.00 → both rank 4',
+            explanation: 'Both 55.00 products take rank 4 — the position they were heading for anyway.',
+            tableData: {
+              tableName: 'The tie',
+              columns: ['name', 'price', 'price_rank'],
+              highlightedRows: [0, 1],
+              rows: [
+                ['Stainless Steel Pan Set', 55.00, 4],
+                ['Tennis Racket', 55.00, 4],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The next distinct value skips the consumed positions',
+            sqlSnippet: '45.50 → rank 6 (not 5)',
+            explanation: 'Two rows occupied ranks 4 and 5, so the next price continues after them at 6. The gap records "two products tied here."',
+            tableData: {
+              tableName: 'After the tie',
+              columns: ['name', 'price', 'price_rank'],
+              rows: [['Bluetooth Speaker', 45.50, 6]],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'RANK syntax',
+            sql: 'RANK() OVER (ORDER BY col DESC) AS rank_col',
+            description: 'Identical shape to ROW_NUMBER — only the tie behavior differs.',
+          },
+        ],
+        keyTakeaway: "RANK() gives tied rows the same rank and skips ahead afterwards (4, 4, 6). Use it whenever ties are real ties — equal prices, equal scores — and the gap itself is honest information.",
+        exampleQuery: 'SELECT name, price, RANK() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+        exampleQueryExplanation: 'The two 55.00 products share rank 4; Bluetooth Speaker (45.50) follows at rank 6.',
+        liveDemoSql: 'SELECT name, price, RANK() OVER (ORDER BY price DESC) AS price_rank FROM products LIMIT 7;',
+        liveDemoNotes: 'Find the two rank-4 rows — then notice rank 5 does not exist anywhere in the output.',
+        mcqs: [
+          {
+            question: 'Prices sorted DESC: 100, 80, 70, 70, 70, 50. What rank does the 50 get from RANK()?',
+            options: ['A. 4', 'B. 5', 'C. 6', 'D. 3'],
+            correctIndex: 2,
+            explanation: 'The three 70s share rank 3 and consume positions 3–4–5, so the next value lands on rank 6.',
+          },
+          {
+            question: 'Why is ROW_NUMBER wrong for a prize leaderboard with ties?',
+            options: [
+              'A. It is slower',
+              'B. It assigns arbitrary distinct numbers to tied rows — who gets 4 vs 5 is decided by storage order, not data',
+              'C. It removes duplicate rows',
+              'D. It cannot sort DESC',
+            ],
+            correctIndex: 1,
+            explanation: 'ROW_NUMBER is deterministic in count but arbitrary in tie assignment — RANK exists precisely for that fairness gap.',
+          },
+        ],
+        commonMistakes: [
+          "Reporting the gap to stakeholders as a bug — after a 2-way tie at 4, rank 5 is intentionally missing.",
+          "Using RANK when every row must have a unique number (e.g., row IDs) — that is ROW_NUMBER's job.",
+        ],
+        masteryPoints: ['Predict RANK output around a tie, including the gap', 'Choose RANK over ROW_NUMBER when ties matter'],
+      },
+      tasks: [
+        {
+          id: 'rank-t1',
+          title: 'Task 1 (Guided): The tie-aware price leaderboard',
+          description: 'Rebuild the price leaderboard with RANK() instead of ROW_NUMBER() — and observe what happens around the two $55.00 products.',
+          instructions: [
+            'Select `name`, `price`, and `RANK() OVER (ORDER BY price DESC) AS price_rank`.',
+            'Find the two rank-4 rows. Confirm rank 5 appears nowhere.',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Tie-aware leaderboard\n',
+          solutionSql: 'SELECT name, price, RANK() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+          solutionExplanation: 'Pan Set and Tennis Racket share rank 4; Bluetooth Speaker follows at rank 6 — the gap in action.',
+          hints: [
+            { level: 1, text: 'Identical to Concept 1\'s Task 1 except the function name: RANK instead of ROW_NUMBER.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price', 'price_rank'],
+            requireFunction: 'RANK',
+            expectedRowCount: 28,
+          },
+          successMessage: 'Tie handled like a competition — 4, 4, then 6. You can now explain the missing rank 5.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'rank-t2',
+          title: 'Task 2 (Independent): Predict, then verify',
+          description: 'Before running anything: the stock leaderboard ranks by quantity_in_stock DESC. Predict by hand what RANK() does with the two products that have 20 units in stock (Wireless Earbuds and Pruning Shears). Then run it and check yourself.',
+          instructions: [
+            'Select `name`, `quantity_in_stock`, and `RANK() OVER (ORDER BY quantity_in_stock DESC) AS stock_rank`.',
+            'Compare your prediction for the 20-unit products against the real output.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Stock ranks with ties\n',
+          solutionSql: 'SELECT name, quantity_in_stock, RANK() OVER (ORDER BY quantity_in_stock DESC) AS stock_rank FROM products;',
+          solutionExplanation: 'The two 20-unit products (Wireless Earbuds, Pruning Shears) share rank 9 and consume positions 9–10 — the next distinct stock (18) arrives at rank 11.',
+          hints: [
+            { level: 1, text: 'Rule: N tied rows share rank R and consume positions R through R+N-1. The next distinct value gets R+N.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'quantity_in_stock', 'stock_rank'],
+            requireFunction: 'RANK',
+            expectedRowCount: 28,
+          },
+          successMessage: 'Predicted, then verified — that is the difference between memorizing the rule and owning it.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'dense-rank',
+      order: 4,
+      title: '4. DENSE_RANK(): Ties Without Gaps',
+      shortDescription: 'League-table ranking: equal values, equal rank, consecutive numbers.',
+      theory: {
+        summary: 'RANK leaves gaps because ties consume positions. DENSE_RANK keeps the sharing but throws away the consumption: ties share a rank AND the next distinct value gets the very next number. Same data, one keyword difference — a genuinely different leaderboard philosophy.',
+        introTable: {
+          tableName: 'The three ranking functions side by side',
+          description: 'Prices 100, 70, 70, 50 — the same data under all three functions',
+          columns: ['price', 'ROW_NUMBER', 'RANK', 'DENSE_RANK'],
+          rows: [
+            [100, 1, 1, 1],
+            [70, 2, 2, 2],
+            [70, 3, 2, 2],
+            [50, 4, 4, 3],
+          ],
+        },
+        explanation: [
+          'One word changes: `DENSE_RANK() OVER (ORDER BY price DESC)`. Ties still share a rank (70, 70 → both 2) — but the next distinct value continues at **3**, not 4.',
+          '```sql\nSELECT name, price,\n       DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank\nFROM products;\n```',
+          'QUESTION_BLOCK::GAP::What disappeared between RANK and DENSE_RANK?',
+          'How to choose in one sentence each: ROW_NUMBER = "I need a unique sequence" (row IDs, stable ordering). RANK = "positions are positions" (prizes, competition). DENSE_RANK = "I want to count distinct levels" (how many price tiers exist, league tables).',
+          'This dataset makes the difference visible: the two $55.00 products sit at rank 4 in both RANK and DENSE_RANK — but RANK sends 45.50 to 6 while DENSE_RANK sends it to **5**.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, price,\n       RANK() OVER (ORDER BY price DESC) AS rank_gap,\n       DENSE_RANK() OVER (ORDER BY price DESC) AS rank_dense\nFROM products;',
+          explanation: 'Both rankings side by side: identical ranks for the tie, different continuation after it (6 vs 5).',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Ties behave identically in both functions',
+            sqlSnippet: '55.00, 55.00 → rank 4 in both',
+            explanation: 'Sharing is common to RANK and DENSE_RANK — only the aftermath differs.',
+            tableData: {
+              tableName: 'The shared tie',
+              columns: ['name', 'price', 'rank_gap', 'rank_dense'],
+              highlightedRows: [0, 1],
+              rows: [
+                ['Stainless Steel Pan Set', 55.00, 4, 4],
+                ['Tennis Racket', 55.00, 4, 4],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The continuation diverges',
+            sqlSnippet: '45.50 → rank_gap 6, rank_dense 5',
+            explanation: 'RANK consumed positions 4 AND 5 with the tie; DENSE_RANK never consumes — it counts distinct levels: level 4 (the 55s) is followed by level 5 (45.50).',
+            tableData: {
+              tableName: 'After the tie',
+              columns: ['name', 'price', 'rank_gap', 'rank_dense'],
+              rows: [['Bluetooth Speaker', 45.50, 6, 5]],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'The full comparison',
+            sql: 'SELECT name, price,\n       ROW_NUMBER()  OVER (ORDER BY price DESC) AS rn,\n       RANK()        OVER (ORDER BY price DESC) AS rk,\n       DENSE_RANK()  OVER (ORDER BY price DESC) AS drk\nFROM products;',
+            description: 'Run all three at once — the fastest way to internalize tie behavior.',
+          },
+        ],
+        keyTakeaway: 'DENSE_RANK = ties share a rank, no gaps afterwards. ROW_NUMBER = unique numbers. RANK = ties + gaps. Three philosophies, one syntax — the OVER clause never changes.',
+        exampleQuery: 'SELECT name, price, DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+        exampleQueryExplanation: 'The 55-tie sits at rank 4 and Bluetooth Speaker follows at 5 — consecutive, no gap.',
+        liveDemoSql: 'SELECT name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS rn, RANK() OVER (ORDER BY price DESC) AS rk, DENSE_RANK() OVER (ORDER BY price DESC) AS drk FROM products LIMIT 7;',
+        liveDemoNotes: "Three columns, one sort — compare each column's behavior across the 55-tie row by row.",
+        mcqs: [
+          {
+            question: 'Prices DESC: 100, 70, 70, 50. What does DENSE_RANK give the 50?',
+            options: ['A. 3', 'B. 4', 'C. 2', 'D. 5'],
+            correctIndex: 0,
+            explanation: 'Levels: 100 → 1, 70s → 2, 50 → 3. Distinct levels are counted, positions are not consumed.',
+          },
+          {
+            question: 'A stakeholder asks "how many distinct price levels exist in the top 10?" Which function helps directly?',
+            options: ['A. ROW_NUMBER', 'B. RANK', 'C. DENSE_RANK', 'D. COUNT'],
+            correctIndex: 2,
+            explanation: 'DENSE_RANK numbers distinct levels consecutively — the highest DENSE_RANK value in the top 10 IS the level count.',
+          },
+          {
+            question: 'Which function guarantees every row gets a different number even when values tie?',
+            options: ['A. RANK', 'B. DENSE_RANK', 'C. ROW_NUMBER', 'D. All of them'],
+            correctIndex: 2,
+            explanation: 'Only ROW_NUMBER forces uniqueness — arbitrarily but deterministically per execution.',
+          },
+        ],
+        commonMistakes: [
+          'Mixing up RANK and DENSE_RANK on interviews — the gap is the whole answer; rehearse 1,2,2,4 vs 1,2,2,3.',
+          'Thinking one function is "correct" — they answer different questions; the business need picks the function.',
+        ],
+        masteryPoints: ['Write all three ranking functions in one query', 'State the pick rule: unique / positions / levels'],
+      },
+      tasks: [
+        {
+          id: 'dense-t1',
+          title: 'Task 1 (Guided): The gapless leaderboard',
+          description: 'Produce the DENSE_RANK price leaderboard and compare it with yesterday\'s intuition — same tie, different continuation.',
+          instructions: [
+            'Select `name`, `price`, and `DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank`.',
+            'Check the two rank-4 rows, then confirm 45.50 arrives at rank 5 — not 6.',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Gapless leaderboard\n',
+          solutionSql: 'SELECT name, price, DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+          solutionExplanation: 'Identical sharing at the tie (4, 4) but a consecutive continuation: 45.50 → 5. The gap from RANK is gone.',
+          hints: [
+            { level: 1, text: 'Same query as the RANK task with one word swapped: DENSE_RANK.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price', 'price_rank'],
+            requireFunction: 'DENSE_RANK',
+            expectedRowCount: 28,
+          },
+          successMessage: '4, 4, then 5 — the league-table philosophy in action.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'dense-t2',
+          title: 'Task 2 (Independent): All three, side by side',
+          description: 'One query, three ranking columns: ROW_NUMBER, RANK, and DENSE_RANK over price DESC. This is the comparison that makes tie behavior permanent.',
+          instructions: [
+            'Select `name`, `price`, then three window columns aliased `rn`, `rk`, and `drk` — each with its own OVER (ORDER BY price DESC).',
+            'Scan the 55.00 rows: which columns agree? Which diverge afterwards?',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Three-way comparison\n',
+          solutionSql: 'SELECT name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS rn, RANK() OVER (ORDER BY price DESC) AS rk, DENSE_RANK() OVER (ORDER BY price DESC) AS drk FROM products;',
+          solutionExplanation: 'At the tie: rn differs (4, 5 — arbitrary split), rk and drk agree (4, 4). After the tie: rk jumps to 6, drk continues at 5.',
+          hints: [
+            { level: 1, text: 'Each column is an independent window function — three function calls, three OVER clauses, all identical inside.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price', 'rn', 'rk', 'drk'],
+            requireFunction: 'DENSE_RANK',
+            expectedRowCount: 28,
+          },
+          successMessage: 'Three philosophies in one result grid — you will never confuse them again.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'top-n-pattern',
+      order: 5,
+      title: '5. Pattern Lab: Top-N Per Group',
+      shortDescription: 'The classic interview pattern: rank in a CTE, filter outside it.',
+      theory: {
+        summary: '"Top 2 cheapest products per category" — the single most-asked window-function question in interviews, and a real reporting staple. It cannot be done with WHERE (WHERE cannot filter a window result) and cannot be done with GROUP BY (it would destroy the rows). The solution is a two-step pipeline you already own: rank inside a CTE, filter outside it.',
+        introTable: {
+          tableName: 'The pipeline',
+          description: "Two stages, each doing one job",
+          columns: ['Stage', 'Does', 'Rows out'],
+          rows: [
+            ['CTE: rank', 'Attach cat_rank to every row', '28'],
+            ["Outer query: filter", 'WHERE cat_rank <= 2', "11 (2 per category × 5 + the NULL group's 1)"],
+          ],
+        },
+        explanation: [
+          "Why can't we just add `WHERE cat_rank <= 2` to the ranking query? Remember Day 6/13's processing order: WHERE runs **before** SELECT — the window result does not exist yet when WHERE evaluates. SQL rejects it.",
+          '```sql\nWITH ranked AS (\n  SELECT name, category_id, price,\n         ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank\n  FROM products\n)\nSELECT name, category_id, price\nFROM ranked\nWHERE price_rank <= 2;\n```',
+          'QUESTION_BLOCK::WHY::Why must the filter live OUTSIDE the CTE?',
+          "The CTE gives the window result a name — and once it exists as `ranked`, the outer query treats it like any table from Day 13's pipeline: WHERE, ORDER BY, even JOIN. Two simple stages instead of one impossible query.",
+          'One design decision to own: ROW_NUMBER guarantees exactly N rows per group (arbitrary tie-splitting); RANK would return *everyone tied* at the cutoff (possibly more than N). For "top N" with no tolerance for extras, ROW_NUMBER is the right tool — and adding `name` as a tiebreaker inside ORDER BY makes the choice deterministic.',
+        ],
+        targetQuery: {
+          sql: 'WITH ranked AS (\n  SELECT name, category_id, price,\n         ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank\n  FROM products\n)\nSELECT name, category_id, price\nFROM ranked\nWHERE price_rank <= 2;',
+          explanation: 'The 2 cheapest products of every category in one result — USB-C Cable (9.99) and Wireless Mouse (15.99) lead category 1.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Stage 1 (inside the CTE): rank everything',
+            sqlSnippet: 'ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank',
+            explanation: 'All 28 rows, each with its within-category price position — ascending this time, so rank 1 is the cheapest.',
+            tableData: {
+              tableName: 'CTE result (28 rows)',
+              columns: ['name', 'category_id', 'price', 'price_rank'],
+              rows: [
+                ['USB-C Charging Cable', 1, 9.99, 1],
+                ['Wireless Mouse', 1, 15.99, 2],
+                ['Knife Sharpener', 2, 12.50, 1],
+                ['…', '…', '…', '…'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Stage 2 (outer query): keep only rank ≤ 2',
+            sqlSnippet: 'WHERE price_rank <= 2',
+            explanation: "The outer WHERE sees the CTE as an ordinary table — filtering a now-real column. 11 rows survive.",
+            tableData: {
+              tableName: 'Final result (11 rows)',
+              columns: ['name', 'category_id', 'price'],
+              rows: [
+                ['USB-C Charging Cable', 1, 9.99],
+                ['Wireless Mouse', 1, 15.99],
+                ['Knife Sharpener', 2, 12.50],
+                ['Cutting Board Set', 2, 18.00],
+                ['… 2 per category + the NULL group\'s 1'],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'The Top-N pattern',
+            sql: 'WITH ranked AS (\n  SELECT …, RANK_FN() OVER (PARTITION BY grp ORDER BY metric) AS rnk\n  FROM table\n)\nSELECT * FROM ranked WHERE rnk <= N;',
+            description: 'Rank inside, filter outside. The shape to reach for whenever you hear "top N per something."',
+          },
+        ],
+        keyTakeaway: 'Top-N per group = rank in a CTE, filter in the outer query. WHERE cannot see window results (it runs first) — the CTE makes the ranking a real column that the outer WHERE can filter.',
+        exampleQuery: 'WITH ranked AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank FROM products) SELECT name, category_id, price FROM ranked WHERE price_rank <= 2;',
+        exampleQueryExplanation: "11 rows: the 2 cheapest products of each category (plus the NULL-category group's single item).",
+        liveDemoSql: 'WITH ranked AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank FROM products) SELECT name, category_id, price, price_rank FROM ranked WHERE price_rank <= 2;',
+        liveDemoNotes: 'Notice the two-stage flow: the CTE ranks everything, the outer query keeps the winners.',
+        mcqs: [
+          {
+            question: 'Why does `WHERE price_rank <= 2` fail when written directly on the ranking query?',
+            options: [
+              'A. rank columns are private',
+              'B. WHERE executes before SELECT, so the window result does not exist yet — the CTE must materialize first',
+              'C. price_rank is text',
+              'D. It does not fail',
+            ],
+            correctIndex: 1,
+            explanation: "The Day 6/13 processing-order lesson strikes again: WHERE runs early. The CTE moves the ranking into a stage WHERE can see.",
+          },
+          {
+            question: 'For "exactly the top 2 per category," which ranking function is the right pick?',
+            options: [
+              'A. RANK — it is fairer',
+              'B. DENSE_RANK — no gaps',
+              'C. ROW_NUMBER — guarantees exactly N rows per group',
+              'D. Any of them',
+            ],
+            correctIndex: 2,
+            explanation: 'RANK/DENSE_RANK would include every row tied at the cutoff (more than N). ROW_NUMBER caps the count — add a tiebreaker column to make the split deterministic.',
+          },
+        ],
+        commonMistakes: [
+          "Trying to reference the window alias inside the same query's WHERE — the classic processing-order wall.",
+          'Forgetting the tiebreaker inside ORDER BY — ROW_NUMBER on tied values picks whichever row comes first, which can vary.',
+        ],
+        masteryPoints: ['Assemble the Top-N pattern from scratch', 'Justify ROW_NUMBER vs RANK for exact-N requirements'],
+      },
+      tasks: [
+        {
+          id: 'topn-t1',
+          title: 'Task 1 (Guided): The 2 cheapest per category',
+          description: 'Build the pattern from scratch: rank by ascending price within each category in a CTE, then keep the top 2.',
+          instructions: [
+            'CTE `ranked`: name, category_id, price, and `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank` FROM products.',
+            'Outer query: FROM `ranked`, WHERE `price_rank <= 2`. Expect 11 rows.',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Top-2 cheapest per category\n',
+          solutionSql: 'WITH ranked AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank FROM products) SELECT name, category_id, price FROM ranked WHERE price_rank <= 2;',
+          solutionExplanation: '11 rows: USB-C Cable & Wireless Mouse for category 1, Knife Sharpener & Cutting Board Set for category 2, and so on.',
+          hints: [
+            { level: 1, text: 'Two stages: WITH ranked AS (the ranking SELECT), then SELECT … FROM ranked WHERE price_rank <= 2.' },
+            { level: 2, text: 'The outer query must NOT redefine the window — price_rank is already a plain column inside the CTE.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'category_id', 'price'],
+            requireFunction: 'ROW_NUMBER',
+            expectedRowCount: 11,
+          },
+          successMessage: 'The Top-N pattern, built with your own hands — CTE + window + filter, three days of skills in one query.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'topn-t2',
+          title: 'Task 2 (Independent): Top-3 best-sellers per category',
+          description: 'Transfer to sales data: which 3 products sold the most units within each category? One more CTE is needed — sales per product first, then the ranking.',
+          instructions: [
+            'CTE `sold`: join `order_items oi` to `products p`, select `p.product_id, p.name, p.category_id`, and `SUM(oi.quantity) AS total_sold`, GROUP BY the three product columns.',
+            'CTE `ranked`: add `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_sold DESC) AS sales_rank`.',
+            'Outer query: keep `sales_rank <= 3`, output name, category_id, total_sold.',
+          ],
+          type: 'independent',
+          primaryTable: 'order_items',
+          secondaryTables: ['products'],
+          initialSql: '-- Top-3 best-sellers per category\n',
+          solutionSql: 'WITH sold AS (SELECT p.product_id, p.name, p.category_id, SUM(oi.quantity) AS total_sold FROM order_items oi JOIN products p ON oi.product_id = p.product_id GROUP BY p.product_id, p.name, p.category_id), ranked AS (SELECT product_id, name, category_id, total_sold, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_sold DESC) AS sales_rank FROM sold) SELECT name, category_id, total_sold FROM ranked WHERE sales_rank <= 3 ORDER BY category_id, total_sold DESC;',
+          solutionExplanation: 'The full production pipeline: aggregate sales, rank within category, cut to top 3. Three CTE-era skills chained into one deliverable.',
+          hints: [
+            { level: 1, text: "Stage 1 is the Day 9+14 aggregation you have written many times; stage 2 is Concept 2's PARTITION BY; stage 3 is this concept's filter." },
+          ],
+          validation: {
+            targetTable: 'order_items',
+            requiredColumns: ['name', 'category_id', 'total_sold'],
+            requireFunction: 'ROW_NUMBER',
+            requireJoin: true,
+          },
+          successMessage: 'A genuine BI deliverable — aggregate, rank, filter. This is the query shape interviews ask for by name.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+  ],
+  // ===========================================================================
+  // DAY 23 CHALLENGE: LEADERBOARDS IN PRODUCTION (ENDING ACTIVITY)
+  // ===========================================================================
+  challenge: {
+    id: 'window-ranking-homework',
+    title: 'Day 23 — Ranking Challenge (Ending Activity)',
+    scenario: 'Two required leaderboard deliverables and one stretch goal — all built from the ranking toolkit:',
+    databaseLifecycle: 'fresh',
+    tasks: [
+      {
+        id: 'rank-hw-1',
+        title: 'Task 1: The official price leaderboard (ties handled)',
+        description: 'The storefront\'s "Top prices" page needs the price leaderboard where equal prices share a rank and no rank is skipped afterwards. DENSE_RANK is the business choice: no gaps, ties shared.',
+        instructions: [
+          'Select `name`, `price`, and `DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank` FROM `products`.',
+          'Expect 28 rows; the two 55.00 products share rank 4 and 45.50 follows at 5.',
+        ],
+        type: 'challenge',
+        primaryTable: 'products',
+        initialSql: '-- Challenge: official leaderboard\n',
+        solutionSql: 'SELECT name, price, DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank FROM products;',
+        solutionExplanation: 'DENSE_RANK because the business wants consecutive tier numbers: 1, 2, 3, 4, 4, 5, …',
+        hints: [
+          { level: 1, text: 'One function name decides everything here: DENSE_RANK.' },
+        ],
+        validation: {
+          targetTable: 'products',
+          requiredColumns: ['name', 'price', 'price_rank'],
+          requireFunction: 'DENSE_RANK',
+          expectedRowCount: 28,
+        },
+        successMessage: 'Official leaderboard shipped — tie semantics chosen deliberately, not by accident.',
+      },        {
+          id: 'rank-hw-2',
+          title: 'Task 2: Top-3 premium products per category',
+          description: 'Merchandising wants the 3 most expensive products of every category, cheapest of the three last.',
+          instructions: [
+            'CTE ranked: name, category_id, price, ROW_NUMBER partitioned BY category_id, ordered BY price DESC.',
+            'Outer query: keep only price_rank <= 3 AND category_id IS NOT NULL (product 28 has no category - it must not claim a slot), output name, category_id, price, ordered BY category_id, price DESC.',
+          ],
+          type: 'challenge',
+          primaryTable: 'products',
+          initialSql: '-- Challenge: top-3 premium per category\n',
+          solutionSql: "WITH ranked AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS price_rank FROM products) SELECT name, category_id, price FROM ranked WHERE price_rank <= 3 AND category_id IS NOT NULL ORDER BY category_id, price DESC;",
+          solutionExplanation: '15 rows: 3 premium products per category across all 5 populated categories. The category-less product is excluded (WHERE category_id IS NOT NULL) because its NULL category forms its own one-row partition - without the guard you would silently get 16.',
+          hints: [
+            { level: 1, text: "Concept 5's pattern with two dials turned: ORDER BY price DESC and the cutoff at 3." },
+            { level: 2, text: 'One product has category_id NULL. Its NULL partition is rank 1 forever - filter it out with category_id IS NOT NULL to keep the report honest.' },
+          ],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'category_id', 'price'],
+            requireFunction: 'ROW_NUMBER',
+            expectedRowCount: 15,
+          },
+          successMessage: 'Top-3 per category excluding unassigned stock - the pattern is now yours to aim at any N and any metric.',
+        },      {
+        id: 'rank-hw-3',
+        title: 'Task 3 (Stretch): Best-seller per supplier',
+        description: 'For the supplier review: the single best-selling product (by total units sold) for each supplier. Everything from today in one query — aggregate, join, partition, cut to 1.',
+        instructions: [
+          'CTE `sold`: join `order_items oi` to `products p`; select `p.product_id, p.name, p.supplier_id, SUM(oi.quantity) AS total_sold`; GROUP BY the three product columns.',
+          'CTE `ranked`: ROW_NUMBER OVER (PARTITION BY `supplier_id` ORDER BY `total_sold DESC`) AS `sup_rank`.',
+          'Keep only `sup_rank = 1`.',
+        ],
+        type: 'challenge',
+        primaryTable: 'order_items',
+        secondaryTables: ['products'],
+        initialSql: '-- Stretch: best-seller per supplier\n',
+        solutionSql: 'WITH sold AS (SELECT p.product_id, p.name, p.supplier_id, SUM(oi.quantity) AS total_sold FROM order_items oi JOIN products p ON oi.product_id = p.product_id GROUP BY p.product_id, p.name, p.supplier_id), ranked AS (SELECT product_id, name, supplier_id, total_sold, ROW_NUMBER() OVER (PARTITION BY supplier_id ORDER BY total_sold DESC) AS sup_rank FROM sold) SELECT name, supplier_id, total_sold FROM ranked WHERE sup_rank = 1 ORDER BY supplier_id;',
+        solutionExplanation: 'One champion per supplier: Wireless Mouse (6 units) for TechSource, Knife Sharpener (3) for Global Kitchenware, and so on.',
+        hints: [
+          { level: 1, text: "Identical pipeline to Concept 5's Task 2 — the partition column becomes supplier_id and the cutoff becomes 1." },
+        ],
+        validation: {
+          targetTable: 'order_items',
+          requiredColumns: ['name', 'supplier_id', 'total_sold'],
+          requireFunction: 'ROW_NUMBER',
+          requireJoin: true,
+        },
+        successMessage: 'Stretch conquered — the full ranking pipeline aimed at suppliers. Interviewers call this "the window functions question"; you just shipped it.',
+      },
+    ],
+  },
+};

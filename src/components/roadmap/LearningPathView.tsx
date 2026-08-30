@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
+import {
+  isLastModule,
+  getModuleDisplayLabel,
+} from '../../lib/curriculum/module-order';
 import Icon from '@/components/ui/Icon';
 import { ModuleData, Concept } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
@@ -36,7 +40,7 @@ function getPedagogicalModeInfo(module: ModuleData) {
     case 'conceptual_session':
       return { label: 'CONCEPT LAB', icon: 'science' };
     case 'project_part':
-      if (module.day === 25) {
+      if (isLastModule(module, ALL_MODULES)) {
         return { label: 'GRADUATION', icon: 'workspace_premium' };
       }
       if (module.title.toLowerCase().includes('debug')) {
@@ -235,7 +239,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             }}
             className="bg-func text-ink font-body font-bold text-sm px-6 py-3 rounded-full inline-flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(56,189,248,0.5)] transition duration-150 cursor-pointer"
           >
-            <span>Continue Day {activeModule.day}</span>
+            <span>Continue {getModuleDisplayLabel(activeModule)}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
@@ -422,7 +426,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         ) : !isUnlocked ? (
                           <Icon name="lock" className="text-[14px]" />
                         ) : (
-                          module.day
+                          getModuleDisplayLabel(module).replace(/^Day\s*/, '')
                         )}
                       </span>
 
@@ -448,7 +452,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                 !isUnlocked ? 'text-text-faint' : 'text-text'
                               }`}
                             >
-                              Day {module.day} — {module.shortTitle || module.title}
+                              {getModuleDisplayLabel(module)} — {module.shortTitle || module.title}
                             </h4>
                           </div>
 
@@ -509,7 +513,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                     onSelectModuleAndConcept(module.id, concept.id, 'theory');
                                   } else {
                                     setLockedAlert({
-                                      title: `Day ${module.day} is Locked`,
+                                      title: `${getModuleDisplayLabel(module)} is Locked`,
                                       message: unlockStatus.reason || 'Complete previous days to unlock.',
                                     });
                                   }
@@ -572,10 +576,10 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                 } else {
                                   const targetIdx = firstIncompleteConceptIdx >= 0 ? firstIncompleteConceptIdx : 0;
                                   setLockedAlert({
-                                    title: `Day ${module.day} Challenge Locked`,
+                                    title: `${getModuleDisplayLabel(module)} Challenge Locked`,
                                     message:
                                       challengeStatus.reason ||
-                                      `You must complete all ${totalConcepts} concept lessons and practice tasks in Day ${module.day} before unlocking the Independent Challenge.`,
+                                      `You must complete all ${totalConcepts} concept lessons and practice tasks in ${getModuleDisplayLabel(module)} before unlocking the Independent Challenge.`,
                                     targetModuleId: isUnlocked ? module.id : undefined,
                                     targetConceptId: module.concepts[targetIdx]?.id,
                                     actionLabel: `Start Concept ${targetIdx + 1}`,
@@ -587,7 +591,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   ? 'text-text hover:text-func'
                                   : 'text-text-faint hover:text-text-dim'
                               }`}
-                              aria-label={`Day ${module.day} Challenge: ${module.challenge.title} - ${
+                              aria-label={`${getModuleDisplayLabel(module)} Challenge: ${module.challenge.title} - ${
                                 isChallengeCompleted ? 'Completed' : isChallengeUnlocked ? 'Unlocked' : 'Locked'
                               }`}
                               aria-disabled={!isChallengeUnlocked}
@@ -613,7 +617,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                     isChallengeUnlocked ? 'font-semibold text-text' : 'text-text-dim'
                                   }`}
                                 >
-                                  Day {module.day} Challenge
+                                  {getModuleDisplayLabel(module)} Challenge
                                 </span>
                               </div>
 

@@ -3,6 +3,7 @@ import { Check, Lock, ChevronRight } from 'lucide-react';
 import { UserLearningState } from '../../types/progress';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
+import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
 import { getModuleUnlockStatus, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
 
 interface RoadmapSidebarProps {
@@ -96,7 +97,7 @@ export const RoadmapSidebar: React.FC<RoadmapSidebarProps> = ({
 
                         <div className="truncate">
                           <span className="font-mono text-[11px] text-zinc-500 mr-1.5">
-                            D{module.day}
+                            {getModuleDisplayLabel(module).replace(/^Day\s*/, '')}
                           </span>
                           <span className={`${isCurrent ? 'text-zinc-100' : 'text-zinc-300'}`}>
                             {module.shortTitle}

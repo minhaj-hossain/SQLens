@@ -1,6 +1,7 @@
 import { QueryExecutionResult } from '../../types/database';
 import { ValidationRule } from '../../types/curriculum';
 import { parseSql } from './parser';
+import { splitStatements } from './split-statements';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 
 export interface ValidationOutcome {
@@ -44,6 +45,22 @@ export function validateTaskSolution(
     // We don't fail just for a missing semicolon, but we can give feedback if something else fails
   }
 
+  // Deliberate-failure lab (transactions Day 25 C3): the task REQUIRES the query
+  // to error (e.g. a foreign-key/CHECK violation mid-transaction). Passing means
+  // the engine surfaced the failure — the learner then ROLLBACKs to feel atomicity.
+  if (rule.expectFailure) {
+    if (!result.success) {
+      return {
+        passed: true,
+        feedback: `The query failed as expected. Engine error: ${result.error}`,
+      };
+    }
+    return {
+      passed: false,
+      feedback: 'This task expects the query to FAIL (e.g. a CHECK or foreign-key violation). Your query succeeded — try inserting a value that breaks a constraint.',
+    };
+  }
+
   // Check Common Aggregate in WHERE Trap (only within the WHERE clause and not part of a subquery or HAVING)
   const whereMatch = cleanSql.match(/\bWHERE\b((?:(?!\bSELECT\b)[\s\S])*?)(?:\bGROUP\s+BY\b|\bHAVING\b|\bORDER\s+BY\b|\bLIMIT\b|\)|;|$)/i);
   if (whereMatch && whereMatch[1]) {
@@ -80,6 +97,12 @@ export function validateTaskSolution(
 
   const parsed = parseSql(userSql);
 
+  // CTE queries carry their real projection / filter / sort clauses inside
+  // mainQuery (e.g. `WITH ranked AS (…) SELECT … FROM ranked WHERE … ORDER BY …`).
+  // Use that parse for clause-level checks so the rules see the actual query.
+  const effective =
+    parsed.type === 'CTE' && parsed.mainQuery ? parseSql(parsed.mainQuery) : parsed;
+
   // 1. Check Target Table
   if (rule.targetTable) {
     let fromTable = parsed.fromTable?.toLowerCase() || parsed.insertTable?.toLowerCase() || parsed.updateTable?.toLowerCase() || parsed.deleteTable?.toLowerCase();
@@ -103,6 +126,32 @@ export function validateTaskSolution(
       if (cleanSql.toLowerCase().includes(rule.targetTable.toLowerCase())) {
         fromTable = rule.targetTable.toLowerCase();
       }
+    }
+
+    // Script / compound-query fallback: multi-statement scripts (BEGIN; INSERT;
+    // COMMIT), set operations (SELECT … UNION SELECT …) and chained CTEs hide
+    // their tables from the single-statement parse. Check every statement.
+    if (!fromTable || fromTable !== rule.targetTable.toLowerCase()) {
+      const wanted = rule.targetTable.toLowerCase();
+      const tables = new Set<string>();
+      const collect = (sqlFragment: string, depth = 0) => {
+        if (depth > 3) return;
+        for (const stmt of splitStatements(sqlFragment)) {
+          const p = parseSql(stmt);
+          [p.fromTable, p.insertTable, p.updateTable, p.deleteTable]
+            .forEach((t) => t && tables.add(t.toLowerCase()));
+          if (p.type === 'SET_OPERATION') {
+            [p.setLeft, p.setRight].forEach((sq) => sq && collect(sq, depth + 1));
+          }
+          if (p.type === 'CTE') {
+            if (p.cteQuery) collect(p.cteQuery, depth + 1);
+            if (p.mainQuery) collect(p.mainQuery, depth + 1);
+            (p.ctes ?? []).forEach((c) => collect(c.query, depth + 1));
+          }
+        }
+      };
+      collect(userSql);
+      if (tables.has(wanted)) fromTable = wanted;
     }
 
     if (!fromTable || fromTable !== rule.targetTable.toLowerCase()) {
@@ -183,20 +232,61 @@ export function validateTaskSolution(
     };
   }
 
+  // 7.5 Check CASE requirement
+  if (rule.requireCase && !/\bCASE\b/i.test(cleanSql)) {
+    return {
+      passed: false,
+      feedback: `This task requires a CASE expression (CASE WHEN … THEN … ELSE … END) to produce the requested values.`,
+    };
+  }
+
+  // 7.6 Check required function (e.g. CONCAT, UPPER, YEAR, DATEDIFF)
+  if (rule.requireFunction && !new RegExp(`\\b${rule.requireFunction.toUpperCase()}\\s*\\(`, 'i').test(cleanSql)) {
+    return {
+      passed: false,
+      feedback: `This task requires the ${rule.requireFunction.toUpperCase()}() function in your query.`,
+    };
+  }
+
+  // 7.7 Check top-level set operation (UNION / UNION ALL / EXCEPT).
+  // Scans for the operator OUTSIDE any parentheses so a UNION hidden inside a
+  // subquery does not satisfy an EXCEPT requirement (and vice versa).
+  if (rule.requireSetOp) {
+    let depth = 0;
+    let found = false;
+    const upper = cleanSql.toUpperCase();
+    for (let i = 0; i < upper.length; i++) {
+      const ch = upper[i];
+      if (ch === '(') { depth++; continue; }
+      if (ch === ')') { depth = Math.max(0, depth - 1); continue; }
+      if (depth === 0) {
+        if (upper.startsWith('UNION ALL', i)) { if (rule.requireSetOp === 'UNION ALL') found = true; i += 9; continue; }
+        if (upper.startsWith('UNION', i)) { if (rule.requireSetOp === 'UNION') found = true; i += 4; continue; }
+        if (upper.startsWith('EXCEPT', i)) { if (rule.requireSetOp === 'EXCEPT') found = true; i += 5; continue; }
+      }
+    }
+    if (!found) {
+      return {
+        passed: false,
+        feedback: `This task requires combining two result sets with a top-level ${rule.requireSetOp} operator (e.g. SELECT … ${rule.requireSetOp} SELECT …).`,
+      };
+    }
+  }
+
   // 8. Check LIMIT
   if (rule.requireLimit !== undefined) {
     if (typeof rule.requireLimit === 'number') {
-      if (parsed.limit !== rule.requireLimit) {
+      if (effective.limit !== rule.requireLimit) {
         return {
           passed: false,
-          feedback: `Almost there! This task specifically requires a LIMIT of ${rule.requireLimit}. Currently LIMIT is ${parsed.limit ?? 'not set'}.`,
+          feedback: `Almost there! This task specifically requires a LIMIT of ${rule.requireLimit}. Currently LIMIT is ${effective.limit ?? 'not set'}.`,
         };
       }
     } else {
-      if (rule.requireLimit.exact && parsed.limit !== rule.requireLimit.exact) {
+      if (rule.requireLimit.exact && effective.limit !== rule.requireLimit.exact) {
         return {
           passed: false,
-          feedback: `This task requires LIMIT ${rule.requireLimit.exact}. Currently LIMIT is ${parsed.limit || 'not specified'}.`,
+          feedback: `This task requires LIMIT ${rule.requireLimit.exact}. Currently LIMIT is ${effective.limit || 'not specified'}.`,
         };
       }
     }
@@ -204,7 +294,7 @@ export function validateTaskSolution(
 
   // 9. Check OFFSET
   if (rule.requireOffset !== undefined) {
-    if (parsed.offset !== rule.requireOffset) {
+    if (effective.offset !== rule.requireOffset) {
       return {
         passed: false,
         feedback: `This task requires an OFFSET of ${rule.requireOffset} (e.g. LIMIT ... OFFSET ${rule.requireOffset}).`,
@@ -214,14 +304,20 @@ export function validateTaskSolution(
 
   // 10. Check ORDER BY
   if (rule.requireOrderBy && rule.requireOrderBy.length > 0) {
-    if (!parsed.orderBy || parsed.orderBy.length === 0) {
+    const orderByOk =
+      effective.orderBy && effective.orderBy.length > 0
+        ? effective.orderBy
+        : /\bORDER\s+BY\b/i.test(cleanSql)
+          ? rule.requireOrderBy.map((r) => ({ column: r.column, direction: r.direction }))
+          : null;
+    if (!orderByOk) {
       return {
         passed: false,
         feedback: `Remember to sort the results using the ORDER BY clause.`,
       };
     }
     for (const reqOrd of rule.requireOrderBy) {
-      const match = parsed.orderBy.find(o => o.column.toLowerCase() === reqOrd.column.toLowerCase());
+      const match = (orderByOk as any[]).find(o => o.column.toLowerCase() === reqOrd.column.toLowerCase());
       if (!match) {
         return {
           passed: false,
@@ -249,7 +345,12 @@ export function validateTaskSolution(
 
   // 12. Check WHERE
   if (rule.requireWhere) {
-    if (!parsed.whereClause && !parsed.havingClause) {
+    const hasFilter =
+      effective.whereClause ||
+      effective.havingClause ||
+      /\bWHERE\b/i.test(cleanSql) ||
+      /\bHAVING\b/i.test(cleanSql);
+    if (!hasFilter) {
       return {
         passed: false,
         feedback: `This task requires filtering with a WHERE clause.`,

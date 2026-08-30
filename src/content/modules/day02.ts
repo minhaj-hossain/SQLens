@@ -28,7 +28,7 @@ export const DAY_02_MODULE: ModuleData = {
       title: '1. Filtering Rows with WHERE and Exact Equality (=)',
       shortDescription: 'How SQL filters specific rows based on exact matches.',
       theory: {
-        summary: 'Imagine we have our database table called:',
+        summary: 'WHERE is SQL\'s row filter: it tests a condition against every row and keeps only the rows where the condition is TRUE. We begin with exact matching using the = operator, on our familiar students table:',
         introTable: {
           tableName: 'students',
           description: 'Original table stored in the database (5 rows × 5 columns)',
@@ -117,6 +117,17 @@ export const DAY_02_MODULE: ModuleData = {
         liveDemoSql: 'SELECT name, age FROM students WHERE age = 21;',
         liveDemoNotes: 'Executes row filtering: Rahim and Tanvir pass the age = 21 test.',
         mcqs: [
+          {
+            question: "Quick recall from Day 1: in `SELECT name FROM students WHERE age = 21`, which clause says WHERE TO LOOK and which says WHAT TO RETURN?",
+            options: [
+              'A. SELECT says where to look; FROM says what to return',
+              'B. FROM says where to look; SELECT says what to return',
+              'C. Both say where to look',
+              'D. WHERE says where to look',
+            ],
+            correctIndex: 1,
+            explanation: 'Day 1\'s first mental model: FROM identifies the source table, SELECT chooses the columns to return. WHERE (today) then filters which rows qualify.',
+          },
           {
             question: 'What does the WHERE clause do in a SQL query?\nSELECT name FROM students WHERE age = 21;',
             options: [

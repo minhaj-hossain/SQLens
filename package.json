@@ -10,7 +10,9 @@
     "clean": "rm -rf dist server.js .next",
     "lint": "tsc --noEmit",
     "verify:curriculum": "tsx scripts/verify-curriculum.ts",
+    "test": "vitest run",
     "test:engine": "tsx scripts/engine-tests.ts",
+    "test:module-order": "tsx scripts/module-order-check.ts",
     "test:db-lifecycle": "tsx scripts/db-lifecycle-check.ts",
     "test:manual-pass": "tsx scripts/day1920-manual-pass.ts"
   },
@@ -31,6 +33,7 @@
     "@types/react": "19.2.18",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "vitest": "^4.1.11"
   }
 }

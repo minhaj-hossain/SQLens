@@ -2,6 +2,11 @@ import { LEARNING_CONFIG } from '../../config/learning';
 import { UserLearningState, UnlockStatus } from '../../types/progress';
 import { ModuleData, Concept } from '../../types/curriculum';
 import { getAvailabilityForModule } from './availability-store';
+import {
+  getModuleDisplayLabel,
+  getPreviousModule,
+  isFirstModule,
+} from '../curriculum/module-order';
 
 /**
  * Get effective current time, factoring in any simulated offset hours (for testing).
@@ -241,7 +246,7 @@ export function isModuleChallengeUnlocked(
     return {
       isUnlocked: false,
       isCompleted: false,
-      reason: moduleStatus.reason || `Day ${module.day} is currently locked.`,
+      reason: moduleStatus.reason || `${getModuleDisplayLabel(module)} is currently locked.`,
     };
   }
 
@@ -258,7 +263,7 @@ export function isModuleChallengeUnlocked(
     return {
       isUnlocked: false,
       isCompleted: false,
-      reason: `Complete all Day ${module.day} concept lessons & practice tasks first (${completedCount}/${totalConcepts} completed).`,
+      reason: `Complete all ${getModuleDisplayLabel(module)} concept lessons & practice tasks first (${completedCount}/${totalConcepts} completed).`,
     };
   }
 
@@ -283,8 +288,8 @@ export function getModuleUnlockStatus(
   allModules: ModuleData[],
   state: UserLearningState
 ): UnlockStatus {
-  // Gate 0 — Day 1 is always unlocked
-  if (module.day === 1 || module.id === 'day-01') {
+  // Gate 0 — The first module in canonical curriculum order is always unlocked
+  if (isFirstModule(module, allModules)) {
     // A day only counts as "completed" when every concept AND the final
     // challenge (if any) is finished — never for a partial progress record.
     const isCompleted = isModuleFullyComplete(module, state);
@@ -332,7 +337,7 @@ export function getModuleUnlockStatus(
 
   // Bypass mode — skip all time/schedule gates; only require previous completion
   if (state.bypassDailyLock) {
-    const prevModule = allModules.find(m => m.day === module.day - 1);
+    const prevModule = getPreviousModule(module, allModules);
     const prevCompleted = prevModule ? !!state.completedModules[prevModule.id] : true;
     return {
       isUnlocked: prevCompleted,
@@ -342,8 +347,8 @@ export function getModuleUnlockStatus(
     };
   }
 
-  // Gate 1 — Find previous module
-  const prevModule = allModules.find(m => m.day === module.day - 1);
+  // Gate 1 — Find previous module (by canonical curriculum order, not position-encoded IDs)
+  const prevModule = getPreviousModule(module, allModules);
   if (!prevModule) {
     return { isUnlocked: true, isCompleted: false, isCurrent: false };
   }
@@ -355,7 +360,7 @@ export function getModuleUnlockStatus(
       isUnlocked: false,
       isCompleted: false,
       isCurrent: false,
-      reason: `Complete Day ${prevModule.day} (${prevModule.shortTitle}) first.`,
+      reason: `Complete ${getModuleDisplayLabel(prevModule)} (${prevModule.shortTitle}) first.`,
     };
   }
 
@@ -367,8 +372,8 @@ export function getModuleUnlockStatus(
     ).length ?? 0;
     const challengePending = prevModule.challenge && !prevCompletionRecord.challengeCompleted;
     const reason = challengePending
-      ? `Finish the Day ${prevModule.day} Independent Challenge to unlock Day ${module.day}.`
-      : `Finish all Day ${prevModule.day} concept lessons first (${completedCount}/${totalConcepts} done).`;
+      ? `Finish the ${getModuleDisplayLabel(prevModule)} Independent Challenge to unlock ${getModuleDisplayLabel(module)}.`
+      : `Finish all ${getModuleDisplayLabel(prevModule)} concept lessons first (${completedCount}/${totalConcepts} done).`;
     return {
       isUnlocked: false,
       isCompleted: false,

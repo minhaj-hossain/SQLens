@@ -1,7 +1,9 @@
-import { DatabaseState, QueryExecutionResult, TableRow } from '../../types/database';
-import { parseSql, ParsedSqlQuery, ParsedCaseWhen } from './parser';
+import { DatabaseState, QueryExecutionResult, TableRow, ColumnDefinition, TableSchema } from '../../types/database';
+import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, ParsedCaseWhen } from './parser';
+import { splitStatements } from './split-statements';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { SIMULATED_TODAY } from '../../config/simulated-date';
 
 function getRowValue(row: TableRow, colExpr: string): any {
   if (!row) return undefined;
@@ -96,10 +98,139 @@ function splitLogicalClauses(expr: string, operator: 'OR' | 'AND'): string[] {
   return parts;
 }
 
+export interface SqlIndexDef {
+  name: string; // display name, e.g. 'PRIMARY', 'idx_products_supplier'
+  table: string; // lowercase table name
+  column: string; // lowercase column name
+  unique?: boolean;
+}
+
+/** Per-table constraint metadata discovered from a runtime `CREATE TABLE`
+ *  statement. Seeded tables have NO meta (constraints are enforced on the
+ *  tables learners build with DDL, teaching exactly what the engine executes). */
+interface DdlTableMeta {
+  autoIncrementCol?: string;
+  notNull: string[];
+  uniques: string[];
+  defaults: Record<string, any>;
+  checks: { expr: string }[];
+  fks: { col: string; refTable: string; refCol: string }[];
+}
+
+/** Map a SQL column type token to the internal data type. */
+function sqlTypeToDataType(sqlType: string): string {
+  const t = (sqlType || '').toUpperCase();
+  if (/^(INT|BIGINT|SMALLINT|TINYINT|MEDIUMINT)/.test(t)) return 'number';
+  if (/^BOOL/.test(t)) return 'boolean';
+  if (/^(DEC|NUMERIC|FLOAT|DOUBLE|REAL)/.test(t)) return 'decimal';
+  if (/^(DATE|TIME)/.test(t)) return 'date';
+  return 'string'; // VARCHAR / CHAR / TEXT / ENUM
+}
+
+/**
+ * Parse the parenthesized body of a CREATE TABLE statement into column
+ * definitions and constraint metadata. Understands the DDL-vocabulary SQLens
+ * teaches: INT/VARCHAR/DECIMAL/DATE/BOOLEAN, PRIMARY KEY, AUTO_INCREMENT,
+ * NOT NULL, UNIQUE, DEFAULT <lit>, CHECK (<expr>), and table-level
+ * `FOREIGN KEY (col) REFERENCES tbl(col)`.
+ */
+function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTableMeta } {
+  const parts = splitFunctionArgs(body);
+  const cols: ColumnDefinition[] = [];
+  const meta: DdlTableMeta = { notNull: [], uniques: [], defaults: {}, checks: [], fks: [] };
+
+  for (const part of parts) {
+    const p = part.trim();
+    const colMatch = p.match(/^([`"']?[\w]+[`"']?)\s+([A-Za-z]+(?:\([^)]*\))?)\s*([\s\S]*)$/i);
+    if (!colMatch) continue;
+    const name = colMatch[1].replace(/[`"']/g, '');
+    const sqlType = colMatch[2];
+    const rest = colMatch[3];
+    const def: ColumnDefinition = {
+      name,
+      type: sqlTypeToDataType(sqlType) as any,
+      description: 'Runtime-created column',
+    };
+
+    if (/\bNOT\s+NULL\b/i.test(rest)) {
+      def.nullable = false;
+      meta.notNull.push(name);
+    }
+    const autoInc = /AUTO_INCREMENT/i.test(rest);
+    if (autoInc) meta.autoIncrementCol = name;
+    if (/\bPRIMARY\s+KEY\b/i.test(rest)) {
+      def.primaryKey = true;
+      def.nullable = false;
+      if (!autoInc) meta.notNull.push(name);
+    }
+    const defMatch = rest.match(/DEFAULT\s+([\s\S]+?)(?=\s+(?:NOT\s+NULL|UNIQUE|PRIMARY\s+KEY|CHECK|,)|$)/i);
+    if (defMatch) {
+      const dv = defMatch[1].trim().replace(/^['"]|['"]$/g, '');
+      const dvNum = Number(dv);
+      meta.defaults[name] = dv !== '' && !isNaN(dvNum) ? dvNum : dv;
+      def.defaultValue = meta.defaults[name];
+    }
+    if (/\bUNIQUE\b/i.test(rest)) {
+      meta.uniques.push(name);
+      def.description = 'Runtime-created unique column';
+    }
+    const chk = rest.match(/CHECK\s*\(([\s\S]+)\)$/i);
+    if (chk) meta.checks.push({ expr: chk[1].trim() });
+
+    cols.push(def);
+  }
+
+  // Table-level constraints (PRIMARY KEY (...), UNIQUE (...), FOREIGN KEY ...)
+  for (const part of parts) {
+    const p = part.trim().toLowerCase();
+    if (/^primary\s+key\s*\(/i.test(p)) {
+      const cm = p.match(/primary\s+key\s*\(([^)]+)\)/i);
+      if (cm) {
+        const keyCol = cm[1].trim().replace(/[`"']/g, '');
+        const cd = cols.find((c) => c.name.toLowerCase() === keyCol.toLowerCase());
+        if (cd) {
+          cd.primaryKey = true;
+          cd.nullable = false;
+          if (!meta.autoIncrementCol) meta.notNull.push(cd.name);
+        }
+      }
+    } else if (/^unique\s/i.test(p)) {
+      const um = p.match(/unique\s*(?:key|index)?\s*\(([^)]+)\)/i);
+      if (um) {
+        um[1].split(',').forEach((c) => {
+          const cc = c.trim().replace(/[`"']/g, '');
+          meta.uniques.push(cc);
+        });
+      }
+    } else if (/^foreign\s+key\s*\(/i.test(p)) {
+      const fm = p.match(/foreign\s+key\s*\(([^)]+)\)\s*references\s*([`"']?[\w]+[`"']?)\s*\(([^)]+)\)/i);
+      if (fm) {
+        const colName = fm[1].trim().replace(/[`"']/g, '');
+        const refTable = fm[2].replace(/[`"']/g, '').toLowerCase();
+        const refCol = fm[3].trim().replace(/[`"']/g, '');
+        meta.fks.push({ col: colName, refTable, refCol });
+        const cd = cols.find((c) => c.name.toLowerCase() === colName.toLowerCase());
+        if (cd) cd.foreignKey = { table: refTable, column: refCol };
+      }
+    }
+  }
+
+  // De-dupe notNull/uniques (a column can repeat via inline + table-level form)
+  meta.notNull = [...new Set(meta.notNull)];
+  meta.uniques = [...new Set(meta.uniques)];
+  return { cols, meta };
+}
+
 export class SqlExecutor {
   private db: DatabaseState;
   private transactionBackup: DatabaseState | null = null;
   private inTransaction: boolean = false;
+  /** Index registry — key is the lowercase index name. Seeded from the schema's
+   *  PRIMARY KEY columns; extended by `CREATE INDEX`, shrunk by `DROP INDEX`. */
+  private indexes: Record<string, SqlIndexDef>;
+  private indexBackup: Record<string, SqlIndexDef> | null = null;
+  /** Constraint metadata for tables created at runtime via CREATE TABLE. */
+  private tableMeta: Record<string, DdlTableMeta> = {};
 
   constructor(initialDb?: DatabaseState) {
     if (initialDb) {
@@ -107,9 +238,25 @@ export class SqlExecutor {
     } else {
       this.db = {
         tables: JSON.parse(JSON.stringify(INITIAL_TABLES)),
-        schemas: DATABASE_SCHEMAS,
+        schemas: JSON.parse(JSON.stringify(DATABASE_SCHEMAS)),
       };
     }
+    this.indexes = this.seedIndexes();
+    this.tableMeta = {};
+  }
+
+  /** PRIMARY KEY indexes are the seed state — one per table, on its PK column. */
+  private seedIndexes(): Record<string, SqlIndexDef> {
+    const out: Record<string, SqlIndexDef> = {};
+    for (const schema of Object.values(DATABASE_SCHEMAS)) {
+      const pk = schema.columns.find((c) => c.primaryKey);
+      if (pk) {
+        const table = schema.name.toLowerCase();
+        // Key must encode the table: every table has its own PRIMARY index.
+        out[`primary:${table}`] = { name: 'PRIMARY', table, column: pk.name.toLowerCase(), unique: true };
+      }
+    }
+    return out;
   }
 
   public getDatabaseState(): DatabaseState {
@@ -122,11 +269,39 @@ export class SqlExecutor {
     } else {
       this.db = {
         tables: JSON.parse(JSON.stringify(INITIAL_TABLES)),
-        schemas: DATABASE_SCHEMAS,
+        schemas: JSON.parse(JSON.stringify(DATABASE_SCHEMAS)),
       };
     }
     this.transactionBackup = null;
     this.inTransaction = false;
+    this.indexes = this.seedIndexes();
+    this.indexBackup = null;
+    this.tableMeta = {};
+  }
+
+  /** Extract simple column predicates from a WHERE clause for plan simulation.
+   *  Only used by the EXPLAIN teaching simulation (see docs/DIALECT.md §6). */
+  private extractWherePredicates(whereClause: string): { column: string; op: 'eq' | 'range' }[] {
+    const out: { column: string; op: 'eq' | 'range' }[] = [];
+    for (const clause of splitLogicalClauses(whereClause, 'AND')) {
+      const clean = clause.trim();
+      const cmp = clean.match(/^([a-zA-Z_][a-zA-Z0-9_.]*)\s*(>=|<=|!=|<>|=|>|<)/i);
+      if (cmp) {
+        out.push({
+          column: cmp[1].replace(/[`"']/g, '').split('.').pop()!.toLowerCase(),
+          op: cmp[2] === '=' ? 'eq' : 'range',
+        });
+        continue;
+      }
+      const rangeKw = clean.match(/^([a-zA-Z_][a-zA-Z0-9_.]*)\s+(BETWEEN|IN|LIKE)\b/i);
+      if (rangeKw) {
+        out.push({
+          column: rangeKw[1].replace(/[`"']/g, '').split('.').pop()!.toLowerCase(),
+          op: 'range',
+        });
+      }
+    }
+    return out;
   }
 
   public executeQuery(sql: string): QueryExecutionResult {
@@ -135,6 +310,39 @@ export class SqlExecutor {
 
   public execute(sql: string): QueryExecutionResult {
     const startTime = performance.now();
+
+    // Multi-statement scripts (e.g. `BEGIN; INSERT …; COMMIT;` or migration
+    // scripts) execute sequentially on the same database state; the result of
+    // the LAST statement is returned. Any statement failing aborts the script.
+    const statements = splitStatements(sql);
+    if (statements.length > 1) {
+      let last: QueryExecutionResult | null = null;
+      let lastData: QueryExecutionResult | null = null;
+      for (const stmt of statements) {
+        const r = this.execute(stmt);
+        if (!r.success) return r;
+        last = r;
+        // A transaction-control statement (BEGIN/COMMIT/ROLLBACK) carries no
+        // data — when it closes the script, the meaningful outcome is the
+        // previous data statement (INSERT/UPDATE/DELETE/SELECT). This keeps
+        // validation (expectedRowCount → affectedRows) correct for scripts
+        // like `BEGIN; INSERT …; COMMIT;`.
+        if (!/^(BEGIN|COMMIT|ROLLBACK)\b/i.test(stmt.trim())) lastData = r;
+      }
+      const endControl = /^(BEGIN|COMMIT|ROLLBACK)\b/i.test(statements[statements.length - 1].trim());
+      if (endControl && lastData) return { ...lastData, executionTimeMs: last.executionTimeMs };
+      return (
+        last ?? {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: 0,
+          error: 'Empty script',
+        }
+      );
+    }
+
     const parsed = parseSql(sql);
 
     if (parsed.error) {
@@ -225,51 +433,83 @@ export class SqlExecutor {
       throw new Error(`Error in the right side of ${op}: ${rightRes.error}`);
     }
 
-    const rowKey = (r: TableRow): string =>
-      Object.keys(r)
-        .sort()
-        .map((k) => `${k}:${String(r[k] ?? '')}`)
-        .join('¦');
+    // Shape compatibility: both sides must return the same number of columns.
+    // (Taught concept — "column alignment rules".) Silently concatenating
+    // mismatched shapes would hide bugs, so it errors loudly.
+    if (leftRes.columns.length !== rightRes.columns.length) {
+      throw new Error(
+        `${op} requires both sides to return the same number of columns ` +
+          `(left side: ${leftRes.columns.length}, right side: ${rightRes.columns.length}).`
+      );
+    }
+
+    // Set operations compare rows by VALUE POSITION, not by column name:
+    // `SELECT 1 AS month EXCEPT SELECT EXTRACT(MONTH FROM d)` must match even
+    // though the two sides label their columns differently (standard SQL
+    // compares result columns positionally after shape validation).
+    //
+    // Rows are therefore normalized to positional value arrays before any
+    // set logic runs. This also matters for NESTED set operations: a chained
+    // `A UNION B UNION C` evaluates `A UNION B` first, whose rows are keyed by
+    // A's column names — looking those rows up by C's column names would yield
+    // undefined for every value and silently collapse distinct rows during
+    // dedupe/EXCEPT matching.
+    const positional = (res: QueryExecutionResult): unknown[][] =>
+      res.rows.map((r) => res.columns.map((c) => r[c] ?? null));
+    const keyOf = (vals: unknown[]): string =>
+      vals.map((v) => (v === null || v === undefined ? '' : String(v))).join('¦');
+    const toRow = (vals: unknown[]): TableRow => {
+      const o: TableRow = {};
+      leftRes.columns.forEach((c, i) => {
+        o[c] = vals[i] ?? null;
+      });
+      return o;
+    };
+    const leftVals = positional(leftRes);
+    const rightVals = positional(rightRes);
 
     let rows: TableRow[];
     switch (op) {
       case 'UNION_ALL':
-        rows = [...leftRes.rows, ...rightRes.rows];
+        rows = [...leftVals, ...rightVals].map(toRow);
         break;
       case 'UNION': {
         const seen = new Set<string>();
-        rows = [];
-        for (const r of [...leftRes.rows, ...rightRes.rows]) {
-          const k = rowKey(r);
+        const kept: unknown[][] = [];
+        for (const vals of [...leftVals, ...rightVals]) {
+          const k = keyOf(vals);
           if (!seen.has(k)) {
             seen.add(k);
-            rows.push(r);
+            kept.push(vals);
           }
         }
+        rows = kept.map(toRow);
         break;
       }
       case 'INTERSECT': {
-        const presentRight = new Set<string>(rightRes.rows.map(rowKey));
+        const presentRight = new Set(rightVals.map(keyOf));
         const seen = new Set<string>();
-        rows = [];
-        for (const r of leftRes.rows) {
-          const k = rowKey(r);
+        const kept: unknown[][] = [];
+        for (const vals of leftVals) {
+          const k = keyOf(vals);
           if (!presentRight.has(k) || seen.has(k)) continue;
           seen.add(k);
-          rows.push(r);
+          kept.push(vals);
         }
+        rows = kept.map(toRow);
         break;
       }
       case 'EXCEPT': {
-        const presentRight = new Set<string>(rightRes.rows.map(rowKey));
+        const presentRight = new Set(rightVals.map(keyOf));
         const seen = new Set<string>();
-        rows = [];
-        for (const r of leftRes.rows) {
-          const k = rowKey(r);
+        const kept: unknown[][] = [];
+        for (const vals of leftVals) {
+          const k = keyOf(vals);
           if (presentRight.has(k) || seen.has(k)) continue;
           seen.add(k);
-          rows.push(r);
+          kept.push(vals);
         }
+        rows = kept.map(toRow);
         break;
       }
       default:
@@ -300,6 +540,123 @@ export class SqlExecutor {
     return null;
   }
 
+  /**
+   * Rows of the group currently being projected. Set only while evaluating a
+   * grouped CASE expression so aggregate conditions like
+   * `CASE WHEN COUNT(o.order_id) >= 3 THEN 'Gold' …` can be resolved.
+   */
+  private currentAggRows: TableRow[] | null = null;
+
+  /**
+   * Evaluates a scalar expression to a single value: string/number literal,
+   * CURDATE(), a column reference, or a flat function call
+   * (UPPER/LOWER/TRIM/LENGTH/CONCAT/SUBSTRING/YEAR/MONTH/DAY/EXTRACT/DATEDIFF).
+   */
+  private evaluateScalar(row: TableRow, expr: string): any {
+    const t = (expr ?? '').trim();
+    if (!t) return undefined;
+    if (/^['"]/.test(t)) return t.replace(/^['"]|['"]$/g, '');
+    if (/^CURDATE\(\)$/i.test(t)) return SIMULATED_TODAY;
+    const fn = t.match(/^([A-Za-z_]+)\s*\(([\s\S]*)\)$/);
+    if (fn) {
+      const fnName = fn[1].toUpperCase();
+      const fnArgs = splitFunctionArgs(fn[2]);
+      // Inside a grouped CASE condition, aggregate calls evaluate over the group
+      if (this.currentAggRows && ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'].includes(fnName)) {
+        return this.computeAggregate(fnName, fnArgs.join(','), this.currentAggRows);
+      }
+      return this.evaluateFunctionCall(fnName, fnArgs, row);
+    }
+    const num = Number(t);
+    if (t !== '' && !isNaN(num)) return num;
+    return getRowValue(row, t);
+  }
+
+  /** Evaluates a flat scalar function call against a row. */
+  private evaluateFunctionCall(name: string, args: string[], row: TableRow): any {
+    const arg = (i: number) => this.evaluateScalar(row, args[i]);
+    switch (name) {
+      case 'UPPER': return arg(0) === null || arg(0) === undefined ? null : String(arg(0)).toUpperCase();
+      case 'LOWER': return arg(0) === null || arg(0) === undefined ? null : String(arg(0)).toLowerCase();
+      case 'TRIM': return arg(0) === null || arg(0) === undefined ? null : String(arg(0)).trim();
+      case 'LENGTH': return arg(0) === null || arg(0) === undefined ? null : String(arg(0)).length;
+      case 'CONCAT':
+        return args.map((a) => String(this.evaluateScalar(row, a) ?? '')).join('');
+      case 'SUBSTRING': {
+        const s = String(arg(0) ?? '');
+        const start = Number(args[1]) || 1;
+        const len = args[2] !== undefined ? Number(args[2]) : undefined;
+        return len !== undefined ? s.substring(start - 1, start - 1 + len) : s.substring(start - 1);
+      }
+      case 'YEAR': return this.extractDatePart(arg(0), 'YEAR');
+      case 'MONTH': return this.extractDatePart(arg(0), 'MONTH');
+      case 'DAY': return this.extractDatePart(arg(0), 'DAY');
+      case 'EXTRACT': {
+        // Canonical EXTRACT form: EXTRACT(YEAR FROM col) — one arg string.
+        const em = String(args[0] ?? '').match(/^\s*(YEAR|MONTH|DAY)\s+FROM\s+([\s\S]+)\s*$/i);
+        if (em) return this.extractDatePart(this.evaluateScalar(row, em[2]), em[1].toUpperCase());
+        return this.extractDatePart(arg(0), 'YEAR');
+      }
+      case 'DATEDIFF': {
+        const a = new Date(String(arg(0) ?? ''));
+        const b = new Date(String(arg(1) ?? ''));
+        const ms = a.getTime() - b.getTime();
+        return isNaN(a.getTime()) || isNaN(b.getTime()) ? null : Math.round(ms / 86400000);
+      }
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Evaluates simple arithmetic over columns/literals/functions, e.g.
+   * `quantity * unit_price`, `revenue - prev_revenue`. Top-level split on
+   * the first + - * / operator outside parentheses.
+   */
+  private evaluateArithmetic(row: TableRow, expr: string): any {
+    const t = (expr ?? '').trim();
+    let level = 0;
+    let opIdx = -1;
+    let op = '';
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if (ch === '(') { level++; continue; }
+      if (ch === ')') { level--; continue; }
+      if (level === 0 && (ch === '+' || ch === '-' || ch === '*' || ch === '/')) {
+        opIdx = i;
+        op = ch;
+        break;
+      }
+    }
+    if (opIdx === -1) return undefined;
+    const left = this.evaluateScalar(row, t.slice(0, opIdx));
+    const right = this.evaluateScalar(row, t.slice(opIdx + 1));
+    if (left === null || left === undefined || right === null || right === undefined) return null;
+    const ln = Number(left);
+    const rn = Number(right);
+    if (isNaN(ln) || isNaN(rn)) return null;
+    switch (op) {
+      case '+': return ln + rn;
+      case '-': return ln - rn;
+      case '*': return ln * rn;
+      case '/': return rn === 0 ? null : ln / rn;
+      default: return null;
+    }
+  }
+
+  /** Extracts a date component from a 'YYYY-MM-DD…' value (UTC-safe). */
+  private extractDatePart(value: any, part: string): number | null {
+    if (value === null || value === undefined) return null;
+    const d = new Date(String(value));
+    if (isNaN(d.getTime())) return null;
+    switch (part) {
+      case 'YEAR': return d.getUTCFullYear();
+      case 'MONTH': return d.getUTCMonth() + 1;
+      case 'DAY': return d.getUTCDate();
+      default: return null;
+    }
+  }
+
   private resolveCaseResult(result: string, row: TableRow): any {
     const t = result.trim();
     if (t.startsWith("'") || t.startsWith('"')) {
@@ -312,34 +669,35 @@ export class SqlExecutor {
     return t;
   }
   private executeCte(parsed: ParsedSqlQuery, startTime: number): QueryExecutionResult {
-    const cteName = parsed.cteName?.toLowerCase();
-    const cteSql = parsed.cteQuery;
     const mainSql = parsed.mainQuery;
-
-    if (!cteName || !cteSql || !mainSql) {
+    const ctes = parsed.ctes ?? (parsed.cteQuery && parsed.cteName ? [{ name: parsed.cteName, query: parsed.cteQuery }] : []);
+    if (ctes.length === 0 || !mainSql) {
       throw new Error('Invalid Common Table Expression syntax');
     }
 
-    // Execute inner CTE query
-    const cteRes = this.execute(cteSql);
-    if (!cteRes.success) {
-      throw new Error(`Error executing CTE '${parsed.cteName}': ${cteRes.error}`);
+    // Execute every CTE definition in order, registering each as a temporary table.
+    const backups = new Map<string, TableRow[] | undefined>();
+    for (const cte of ctes) {
+      const cteRes = this.execute(cte.query);
+      if (!cteRes.success) {
+        throw new Error(`Error executing CTE '${cte.name}': ${cteRes.error}`);
+      }
+      const name = cte.name.toLowerCase();
+      backups.set(name, this.db.tables[name]);
+      this.db.tables[name] = cteRes.rows;
     }
-
-    // Register temporary table
-    const hadTableBefore = !!this.db.tables[cteName];
-    const prevTableData = this.db.tables[cteName];
-    this.db.tables[cteName] = cteRes.rows;
 
     try {
       const mainRes = this.execute(mainSql);
       mainRes.executionTimeMs = Math.round((performance.now() - startTime) * 100) / 100;
       return mainRes;
     } finally {
-      if (hadTableBefore) {
-        this.db.tables[cteName] = prevTableData;
-      } else {
-        delete this.db.tables[cteName];
+      for (const [name, prev] of backups.entries()) {
+        if (prev !== undefined) {
+          this.db.tables[name] = prev;
+        } else {
+          delete this.db.tables[name];
+        }
       }
     }
   }
@@ -347,27 +705,53 @@ export class SqlExecutor {
   private executeExplain(parsed: ParsedSqlQuery, startTime: number): QueryExecutionResult {
     const target = parsed.explainTarget || '';
     const parsedTarget = parseSql(target);
-    const targetTable = parsedTarget.fromTable || 'products';
+    const t = (parsedTarget.fromTable || 'products').toLowerCase();
+    const tableLen = this.db.tables[t]?.length ?? 0;
+
+    const tableIndexes = Object.values(this.indexes).filter((i) => i.table === t);
+    const possibleKeys = tableIndexes.length ? tableIndexes.map((i) => i.name).join(', ') : null;
+
+    let type: string = 'ALL';
+    let key: string | null = null;
+    let rows: number = tableLen || 1;
+    let extra = '';
+
+    if (parsedTarget.whereClause) {
+      for (const pred of this.extractWherePredicates(parsedTarget.whereClause)) {
+        const idx = tableIndexes.find((i) => i.column === pred.column);
+        if (!idx) continue; // no index on this column → keep scanning other predicates
+        if (pred.op === 'eq' && idx.unique) {
+          type = 'const';
+          key = idx.name;
+          rows = 1;
+          extra = 'Using where';
+          break;
+        }
+        type = pred.op === 'eq' ? 'ref' : 'range';
+        key = idx.name;
+        rows = Math.max(1, Math.round((tableLen || 1) / 4));
+        extra = 'Using index condition; Using where';
+        break;
+      }
+    }
 
     const columns = ['id', 'select_type', 'table', 'type', 'possible_keys', 'key', 'rows', 'Extra'];
-    const rows = [
-      {
-        id: 1,
-        select_type: 'SIMPLE',
-        table: targetTable,
-        type: parsedTarget.whereClause ? 'ref' : 'ALL',
-        possible_keys: parsedTarget.whereClause ? 'PRIMARY, idx_lookup' : null,
-        key: parsedTarget.whereClause ? 'idx_lookup' : null,
-        rows: this.db.tables[targetTable.toLowerCase()]?.length || 10,
-        Extra: parsedTarget.whereClause ? 'Using index condition; Using where' : '',
-      },
-    ];
+    const resultRow = {
+      id: 1,
+      select_type: 'SIMPLE',
+      table: t,
+      type,
+      possible_keys: possibleKeys,
+      key,
+      rows,
+      Extra: type === 'ALL' ? '' : extra,
+    };
 
     return {
       success: true,
       columns,
-      rows,
-      rowCount: rows.length,
+      rows: [resultRow],
+      rowCount: 1,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
     };
   }
@@ -401,11 +785,69 @@ export class SqlExecutor {
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         };
       }
+      const bodyMatch = cmd.match(/\(([\s\S]+)\)\s*$/i);
+      const body = bodyMatch ? bodyMatch[1] : '';
+      const { cols, meta } = parseColumnDefs(body);
+      const schema: TableSchema = {
+        name: tbl,
+        displayName: tbl
+          .split('_')
+          .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+          .join(' '),
+        description: 'Runtime-created table (CREATE TABLE)',
+        columns: cols,
+      };
       this.db.tables[tbl] = [];
+      this.db.schemas[tbl] = schema;
+      if (cols.length > 0 || meta.fks.length > 0 || meta.checks.length > 0) {
+        // Only meaningful metadata when the statement actually defined columns
+        // (keeps loose DDL like `CREATE TABLE x (id INT)` honest too).
+        this.tableMeta[tbl] = meta;
+      }
+      const pk = cols.find((c) => c.primaryKey);
+      if (pk) {
+        this.indexes[`primary:${tbl}`] = {
+          name: 'PRIMARY',
+          table: tbl,
+          column: pk.name.toLowerCase(),
+          unique: true,
+        };
+      }
       return {
         success: true,
         columns: ['status'],
         rows: [{ status: `Table '${tbl}' created successfully (0 rows affected)` }],
+        rowCount: 1,
+        executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      };
+    }
+
+    // DROP TABLE — removes the table (data + schema + constraints metadata) so a
+    // subsequent CREATE of the same name truly starts fresh, mirroring real SQL.
+    const dropMatch = cmd.match(/DROP\s+TABLE\s+(IF\s+EXISTS\s+)?([`"']?[\w_]+[`"']?)/i);
+    if (dropMatch) {
+      const tbl = dropMatch[2].replace(/[`"']/g, '').toLowerCase();
+      if (!this.db.tables[tbl]) {
+        return {
+          success: true,
+          columns: ['status'],
+          rows: [{ status: `Table '${tbl}' does not exist (IF EXISTS — no-op)` }],
+          rowCount: 1,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+        };
+      }
+      delete this.db.tables[tbl];
+      delete this.db.schemas[tbl];
+      delete this.tableMeta[tbl];
+      delete this.indexes[`primary:${tbl}`];
+      // Also drop any custom indexes registered on this table.
+      for (const key of Object.keys(this.indexes)) {
+        if (this.indexes[key].table === tbl) delete this.indexes[key];
+      }
+      return {
+        success: true,
+        columns: ['status'],
+        rows: [{ status: `Table '${tbl}' dropped` }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       };
@@ -425,10 +867,108 @@ export class SqlExecutor {
         }));
       }
 
+      // Keep the schema/metadata in sync so the new column resolves in later
+      // queries and new rows inherit the DEFAULT.
+      if (!this.db.schemas[tbl]) {
+        this.db.schemas[tbl] = {
+          name: tbl,
+          displayName: tbl
+            .split('_')
+            .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+            .join(' '),
+          description: 'Runtime-created table (ALTER TABLE)',
+          columns: [],
+        };
+      }
+      const colType = alterMatch[3].toUpperCase().replace(/\(.*$/, '');
+      const colDef: ColumnDefinition = {
+        name: colName,
+        type: sqlTypeToDataType(colType) as any,
+        description: 'Runtime-created column',
+      };
+      if (defVal !== null) {
+        const dvNum = Number(defVal);
+        colDef.defaultValue = !isNaN(dvNum) && defVal !== '' ? dvNum : defVal;
+      }
+      if (!this.db.schemas[tbl].columns.some((c) => c.name.toLowerCase() === colName.toLowerCase())) {
+        this.db.schemas[tbl].columns.push(colDef);
+      }
+      if (!this.tableMeta[tbl]) {
+        this.tableMeta[tbl] = { notNull: [], uniques: [], defaults: {}, checks: [], fks: [] };
+      }
+      if (defVal !== null) {
+        const dvNum = Number(defVal);
+        this.tableMeta[tbl].defaults[colName] = !isNaN(dvNum) && defVal !== '' ? dvNum : defVal;
+      }
+
       return {
         success: true,
         columns: ['status'],
         rows: [{ status: `Table '${tbl}' altered: column '${colName}' added successfully` }],
+        rowCount: 1,
+        executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      };
+    }
+
+    // CREATE INDEX
+    const createIndexMatch = cmd.match(/^CREATE\s+(UNIQUE\s+)?INDEX\s+([`"']?[\w_]+[`"']?)\s+ON\s+([`"']?[\w_]+[`"']?)\s*\(([^)]+)\)/i);
+    if (createIndexMatch) {
+      const name = createIndexMatch[2].replace(/[`"']/g, '').trim();
+      const tbl = createIndexMatch[3].replace(/[`"']/g, '').toLowerCase();
+      const col = createIndexMatch[4].replace(/[`"']/g, '').trim();
+      const key = name.toLowerCase();
+
+      if (!this.db.tables[tbl]) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Table '${tbl}' doesn't exist — cannot create index '${name}'.`,
+        };
+      }
+      if (this.indexes[key]) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Duplicate key name '${name}' — an index with this name already exists.`,
+        };
+      }
+      const colLower = col.split(' ')[0].toLowerCase();
+      this.indexes[key] = { name, table: tbl, column: colLower, unique: !!createIndexMatch[1] };
+      return {
+        success: true,
+        columns: ['status'],
+        rows: [{ status: `Index '${name}' created on ${tbl}(${colLower})` }],
+        rowCount: 1,
+        executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      };
+    }
+
+    // DROP INDEX
+    const dropIndexMatch = cmd.match(/^DROP\s+INDEX\s+([`"']?[\w_]+[`"']?)(?:\s+ON\s+([`"']?[\w_]+[`"']?))?/i);
+    if (dropIndexMatch) {
+      const name = dropIndexMatch[1].replace(/[`"']/g, '').trim();
+      const key = name.toLowerCase();
+      if (!this.indexes[key]) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Index '${name}' does not exist.`,
+        };
+      }
+      delete this.indexes[key];
+      return {
+        success: true,
+        columns: ['status'],
+        rows: [{ status: `Index '${name}' dropped` }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       };
@@ -448,6 +988,7 @@ export class SqlExecutor {
     if (cmd === 'BEGIN') {
       this.inTransaction = true;
       this.transactionBackup = JSON.parse(JSON.stringify(this.db));
+      this.indexBackup = JSON.parse(JSON.stringify(this.indexes));
       return {
         success: true,
         columns: ['status'],
@@ -459,6 +1000,7 @@ export class SqlExecutor {
     } else if (cmd === 'COMMIT') {
       this.inTransaction = false;
       this.transactionBackup = null;
+      this.indexBackup = null;
       return {
         success: true,
         columns: ['status'],
@@ -471,6 +1013,10 @@ export class SqlExecutor {
       if (this.transactionBackup) {
         this.db = this.transactionBackup;
         this.transactionBackup = null;
+      }
+      if (this.indexBackup) {
+        this.indexes = this.indexBackup;
+        this.indexBackup = null;
       }
       this.inTransaction = false;
       return {
@@ -495,7 +1041,44 @@ export class SqlExecutor {
 
   private executeSelect(query: ParsedSqlQuery, startTime: number): QueryExecutionResult {
     const tableName = query.fromTable?.toLowerCase();
-    if (!tableName || !this.db.tables[tableName]) {
+
+    // FROM-less SELECT (`SELECT 1 AS month`, `SELECT 'customer' AS source`):
+    // project the constant select list against a single empty row context.
+    // Used for building constant sets (e.g. a month calendar) that feed
+    // set operations like EXCEPT.
+    if (!tableName) {
+      if (query.columns?.some(c => c.expression.trim() === '*')) {
+        throw new Error('SELECT * requires a FROM clause.');
+      }
+      const emptyRow: TableRow = {};
+      const projected: TableRow = {};
+      const outCols: string[] = [];
+      query.columns?.forEach(col => {
+        const outputCol = col.alias || col.expression;
+        outCols.push(outputCol);
+        if (col.caseExpression) {
+          projected[outputCol] = this.evaluateCase(col.caseExpression, emptyRow);
+        } else if (col.functionCall) {
+          projected[outputCol] = this.evaluateFunctionCall(col.functionCall.name, col.functionCall.args, emptyRow);
+        } else if (/^'[^']*'$/.test(col.expression.trim())) {
+          projected[outputCol] = col.expression.trim().slice(1, -1);
+        } else if (/^-?\d+(\.\d+)?$/.test(col.expression.trim())) {
+          projected[outputCol] = Number(col.expression.trim());
+        } else {
+          // Column reference with no table — resolves to NULL (constant context).
+          projected[outputCol] = null;
+        }
+      });
+      return {
+        success: true,
+        columns: outCols,
+        rows: [projected],
+        rowCount: 1,
+        executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      };
+    }
+
+    if (!this.db.tables[tableName]) {
       throw new Error(`Table '${query.fromTable}' does not exist in database.`);
     }
 
@@ -631,7 +1214,11 @@ export class SqlExecutor {
       const groups: Record<string, TableRow[]> = {};
       if (hasGroupBy) {
         currentRows.forEach(row => {
-          const key = query.groupBy!.map(col => String(getRowValue(row, col) ?? '')).join('___');
+          const key = query.groupBy!.map(col => {
+            // GROUP BY may reference expressions (e.g. YEAR(order_date))
+            const v = /\(/.test(col) ? this.evaluateScalar(row, col) : getRowValue(row, col);
+            return String(v ?? '');
+          }).join('___');
           if (!groups[key]) groups[key] = [];
           groups[key].push(row);
         });
@@ -647,12 +1234,47 @@ export class SqlExecutor {
         query.columns?.forEach(col => {
           const colName = col.alias || (col.expression.includes('.') ? col.expression.split('.')[1] : col.expression);
           if (col.caseExpression) {
-            projected[colName] = groupRows[0] ? this.evaluateCase(col.caseExpression, groupRows[0]) : null;
+            // Grouped CASE may reference aggregates in its conditions
+            // (e.g. CASE WHEN COUNT(o.order_id) >= 3 THEN 'Gold' END).
+            this.currentAggRows = groupRows;
+            try {
+              projected[colName] = groupRows[0] ? this.evaluateCase(col.caseExpression, groupRows[0]) : null;
+            } finally {
+              this.currentAggRows = null;
+            }
           } else if (col.aggregate) {
-            projected[colName] = this.computeAggregate(col.aggregate, col.aggregateArg || '', groupRows);
+            let aggVal: any = this.computeAggregate(col.aggregate, col.aggregateArg || '', groupRows);
+            // COALESCE(<agg>(x), fallback): substitute the fallback literal when
+            // the aggregate yields NULL (e.g. SUM over an all-NULL group).
+            if (col.coalesceFallback !== undefined && (aggVal === null || aggVal === undefined)) {
+              const fb = col.coalesceFallback.replace(/^['"]|['"]$/g, '');
+              aggVal = fb !== '' && !isNaN(Number(fb)) ? Number(fb) : fb;
+            }
+            projected[colName] = aggVal;
+          } else if (col.functionCall) {
+            // Function args may reference aggregates inside a grouped query
+            // (e.g. DATEDIFF(CURDATE(), MAX(o.order_date))).
+            this.currentAggRows = groupRows;
+            try {
+              projected[colName] = groupRows[0]
+                ? this.evaluateFunctionCall(col.functionCall.name, col.functionCall.args, groupRows[0])
+                : null;
+            } finally {
+              this.currentAggRows = null;
+            }
           } else {
-            // Take first row value for grouped columns
-            projected[colName] = groupRows[0] ? getRowValue(groupRows[0], col.expression) : null;
+            // Quoted / numeric literal in a grouped query (tagged reports)
+            const trimmed = col.expression.trim();
+            const strLit = trimmed.match(/^'([^']*)'$/);
+            const numLit = trimmed.match(/^-?\d+(\.\d+)?$/);
+            if (strLit) {
+              projected[colName] = strLit[1];
+            } else if (numLit) {
+              projected[colName] = Number(trimmed);
+            } else {
+              // Take first row value for grouped columns
+              projected[colName] = groupRows[0] ? getRowValue(groupRows[0], col.expression) : null;
+            }
           }
         });
 
@@ -710,12 +1332,28 @@ export class SqlExecutor {
             if (col.caseExpression) {
               projected[outputCol] = this.evaluateCase(col.caseExpression, row);
             }
-            // Check computed expressions (e.g., quantity * unit_price)
-            else if (srcCol.includes('*')) {
-              const [c1, c2] = srcCol.split('*').map(s => s.trim());
-              const val1 = Number(getRowValue(row, c1)) || 0;
-              const val2 = Number(getRowValue(row, c2)) || 0;
-              projected[outputCol] = val1 * val2;
+            // Scalar function expression (UPPER(name), CONCAT(...), YEAR(...), …)
+            else if (col.functionCall) {
+              projected[outputCol] = this.evaluateFunctionCall(col.functionCall.name, col.functionCall.args, row);
+            }
+            // Quoted literal (e.g. 'customer' AS source in tagged UNION queries)
+            else if (!col.windowFunction && /^'[^']*'$/.test(srcCol.trim())) {
+              projected[outputCol] = srcCol.trim().slice(1, -1);
+            }
+            // Numeric literal (e.g. 1 AS flag)
+            else if (!col.windowFunction && /^-?\d+(\.\d+)?$/.test(srcCol.trim())) {
+              projected[outputCol] = Number(srcCol.trim());
+            }
+            // Check computed arithmetic expressions
+            // (quantity * unit_price, revenue - prev_revenue, …)
+            else if (!col.windowFunction && /[+\-*/]/.test(srcCol)) {
+              const ar = this.evaluateArithmetic(row, srcCol);
+              projected[outputCol] =
+                ar !== undefined
+                  ? ar
+                  : getRowValue(row, srcCol) !== undefined
+                  ? getRowValue(row, srcCol)
+                  : null;
             } else if (!col.windowFunction && !col.aggregate) {
               projected[outputCol] = getRowValue(row, srcCol) !== undefined ? getRowValue(row, srcCol) : null;
             }
@@ -725,7 +1363,10 @@ export class SqlExecutor {
       }
     }
 
-    // Window Functions (e.g. ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...))
+    // Window Functions post-pass:
+    //   ROW_NUMBER/RANK/DENSE_RANK (tie-aware),
+    //   SUM/COUNT/AVG/MIN/MAX OVER (ORDER BY …)  → running/rolling to current row,
+    //   LAG/LEAD(col[, offset[, default]]) OVER (…).
     const windowCols = query.columns?.filter(c => !!c.windowFunction);
     if (windowCols && windowCols.length > 0) {
       windowCols.forEach(winCol => {
@@ -733,8 +1374,9 @@ export class SqlExecutor {
         const partKey = win.partitionBy;
         const orderKey = win.orderBy;
         const outName = winCol.alias || winCol.expression;
+        const type = win.type;
 
-        // Group rows by partition
+        // Group rows by partition (in projection order).
         const partitions: Record<string, TableRow[]> = {};
         projectedRows.forEach(r => {
           const pk = partKey ? String(getRowValue(r, partKey) ?? '') : 'all';
@@ -742,18 +1384,92 @@ export class SqlExecutor {
           partitions[pk].push(r);
         });
 
-        // Compute rank within each partition
         Object.values(partitions).forEach(partRows => {
           if (orderKey) {
             partRows.sort((a, b) => {
-              const va = Number(getRowValue(a, orderKey)) || 0;
-              const vb = Number(getRowValue(b, orderKey)) || 0;
-              return win.direction === 'ASC' ? va - vb : vb - va;
+              const va = getRowValue(a, orderKey);
+              const vb = getRowValue(b, orderKey);
+              if (va === vb) return 0;
+              if (va === null || va === undefined) return win.direction === 'ASC' ? 1 : -1;
+              if (vb === null || vb === undefined) return win.direction === 'ASC' ? -1 : 1;
+              if (typeof va === 'number' && typeof vb === 'number') {
+                return win.direction === 'ASC' ? va - vb : vb - va;
+              }
+              return win.direction === 'ASC'
+                ? String(va).localeCompare(String(vb))
+                : String(vb).localeCompare(String(va));
             });
           }
-          partRows.forEach((r, idx) => {
-            r[outName] = idx + 1;
-          });
+          const sortVal = (r: TableRow) => (orderKey ? getRowValue(r, orderKey) : undefined);
+
+          if (type === 'ROW_NUMBER') {
+            partRows.forEach((r, idx) => { r[outName] = idx + 1; });
+          } else if (type === 'RANK' || type === 'DENSE_RANK') {
+            // Ties share a rank; RANK gaps, DENSE_RANK does not.
+            let prevVal: unknown = undefined;
+            let rank = 0;
+            let dense = 0;
+            partRows.forEach((r, idx) => {
+              const v = String(sortVal(r) ?? '');
+              if (idx === 0 || v !== String(prevVal ?? '')) {
+                prevVal = v;
+                rank = idx + 1;
+                dense += 1;
+              }
+              r[outName] = type === 'RANK' ? rank : dense;
+            });
+          } else if (type === 'LAG' || type === 'LEAD') {
+            const offset = Math.max(1, Math.abs(parseInt(String(win.args?.[1] ?? '1'), 10) || 1));
+            const rawDefault = win.args && win.args[2] !== undefined ? win.args[2].trim() : null;
+            const defVal =
+              rawDefault === null
+                ? null
+                : /^['"]/.test(rawDefault)
+                ? rawDefault.replace(/^['"]|['"]$/g, '')
+                : !isNaN(Number(rawDefault)) && rawDefault !== ''
+                ? Number(rawDefault)
+                : getRowValue(partRows[0], rawDefault) !== undefined
+                ? getRowValue(partRows[0], rawDefault)
+                : rawDefault;
+            const argCol = win.aggregateArg ?? '';
+            partRows.forEach((r, idx) => {
+              const tgtIdx = type === 'LAG' ? idx - offset : idx + offset;
+              const tgt = partRows[tgtIdx];
+              r[outName] = tgt ? getRowValue(tgt, argCol) : defVal;
+            });
+          } else if (['SUM', 'COUNT', 'AVG', 'MIN', 'MAX'].includes(type)) {
+            // Running/rolling frame: UNBOUNDED PRECEDING → CURRENT ROW.
+            const argCol = win.aggregateArg ?? '';
+            const countsRows = argCol === '*' || argCol === '';
+            let acc = 0;
+            let cnt = 0;
+            let minVal: any = undefined;
+            let maxVal: any = undefined;
+            partRows.forEach((r, idx) => {
+              if (type === 'COUNT') {
+                if (countsRows) {
+                  r[outName] = idx + 1;
+                  return;
+                }
+                const v = getRowValue(r, argCol);
+                if (v !== null && v !== undefined) cnt += 1;
+                r[outName] = cnt;
+                return;
+              }
+              const numeric = Number(getRowValue(r, argCol));
+              const v = getRowValue(r, argCol);
+              if (v !== null && v !== undefined && !isNaN(numeric)) {
+                acc += numeric;
+                cnt += 1;
+                if (minVal === undefined || numeric < minVal) minVal = numeric;
+                if (maxVal === undefined || numeric > maxVal) maxVal = numeric;
+              }
+              if (type === 'SUM') r[outName] = acc;
+              else if (type === 'AVG') r[outName] = cnt ? acc / cnt : null;
+              else if (type === 'MIN') r[outName] = minVal ?? null;
+              else r[outName] = maxVal ?? null;
+            });
+          }
         });
       });
     }
@@ -773,8 +1489,9 @@ export class SqlExecutor {
     if (query.orderBy && query.orderBy.length > 0) {
       projectedRows.sort((a, b) => {
         for (const ord of query.orderBy!) {
-          const valA = getRowValue(a, ord.column);
-          const valB = getRowValue(b, ord.column);
+          // Sort key may be a CASE expression (ORDER BY CASE … END)
+          const valA = ord.caseExpression ? this.evaluateCase(ord.caseExpression, a) : getRowValue(a, ord.column);
+          const valB = ord.caseExpression ? this.evaluateCase(ord.caseExpression, b) : getRowValue(b, ord.column);
           
           if (valA === valB) continue;
           if (valA === null || valA === undefined) return ord.direction === 'ASC' ? 1 : -1;
@@ -921,10 +1638,13 @@ export class SqlExecutor {
       return not ? !isBetween : isBetween;
     }
 
-    // Comparison operators (=, !=, <>, <=, >=, <, >) with literal or subquery
-    const compMatch = trimmed.match(/^([`"']?[\w_.]+[`"']?)\s*(=|!=|<>|<=|>=|<|>)\s*([\s\S]+)$/);
+    // Comparison operators (=, !=, <>, <=, >=, <, >) with literal or subquery.
+    // Left side may be a plain column OR a function expression (LENGTH(phone), UPPER(city), …).
+    const compMatch = trimmed.match(/^([A-Za-z_]+\s*\([^)]*\)|[`"']?[\w_.]+[`"']?)\s*(=|!=|<>|<=|>=|<|>)\s*([\s\S]+)$/);
     if (compMatch) {
-      const col = compMatch[1].replace(/[`"']/g, '');
+      const rawCol = compMatch[1];
+      const isFnCol = /\(/.test(rawCol);
+      const col = isFnCol ? rawCol : rawCol.replace(/[`"']/g, '');
       const op = compMatch[2];
       let target = compMatch[3].trim();
 
@@ -945,8 +1665,10 @@ export class SqlExecutor {
 
       // Check if target has CURDATE() or INTERVAL
       if (/CURDATE\(\)/i.test(target)) {
-        // Anchor CURDATE to '2024-03-01' matching seed dataset
-        const anchorDate = new Date('2024-03-01T00:00:00Z');
+        // Anchor "today" to the simulated curriculum date (see
+        // src/config/simulated-date.ts) so temporal filters match the 2026
+        // seed dataset deterministically.
+        const anchorDate = new Date(`${SIMULATED_TODAY}T00:00:00Z`);
         const intervalMatch = target.match(/INTERVAL\s+(\d+)\s+(DAY|MONTH|YEAR)/i);
         if (intervalMatch) {
           const num = parseInt(intervalMatch[1], 10);
@@ -963,7 +1685,9 @@ export class SqlExecutor {
         targetVal = getRowValue(row, targetVal);
       }
 
-      const rowVal = isNaN(Number(col)) || getRowValue(row, col) !== undefined ? getRowValue(row, col) : Number(col);
+      const rowVal = isFnCol
+        ? this.evaluateScalar(row, rawCol)
+        : (isNaN(Number(col)) || getRowValue(row, col) !== undefined ? getRowValue(row, col) : Number(col));
 
       const numRow = Number(rowVal);
       const numTarget = Number(targetVal);
@@ -988,6 +1712,25 @@ export class SqlExecutor {
 
   private computeAggregate(func: string, arg: string, rows: TableRow[]): number {
     const cleanArg = arg.trim();
+    // Aggregate over a CASE expression (e.g. SUM(CASE WHEN … THEN 1 ELSE 0 END)):
+    // evaluate the CASE per row, then aggregate the produced values.
+    if (/^CASE\b/i.test(cleanArg)) {
+      const parsedCase = parseCaseExpression(cleanArg);
+      if (parsedCase) {
+        const vals = rows
+          .map((r) => this.evaluateCase(parsedCase, r))
+          .filter((v) => v !== null && v !== undefined)
+          .map((v) => Number(v))
+          .filter((v) => !isNaN(v));
+        if (func === 'COUNT') return vals.length;
+        if (vals.length === 0) return 0;
+        const sum = vals.reduce((s, v) => s + v, 0);
+        if (func === 'SUM') return sum;
+        if (func === 'AVG') return sum / vals.length;
+        if (func === 'MIN') return Math.min(...vals);
+        if (func === 'MAX') return Math.max(...vals);
+      }
+    }
     if (func === 'COUNT') {
       if (cleanArg === '*' || cleanArg === '1') {
         return rows.length;
@@ -1036,21 +1779,95 @@ export class SqlExecutor {
       throw new Error(`Table '${query.insertTable}' does not exist.`);
     }
 
-    if (table === 'products' && query.insertValues?.category_id) {
-      const catExists = this.db.tables.categories.some(c => c.category_id === query.insertValues?.category_id);
-      if (!catExists) {
-        throw new Error(`Cannot add or update child row: a foreign key constraint fails (category_id ${query.insertValues.category_id} not found in categories).`);
+    const rowsToInsert =
+      query.insertValuesList && query.insertValuesList.length > 0
+        ? query.insertValuesList
+        : [query.insertValues];
+
+    const meta = this.tableMeta[table];
+    const existing = this.db.tables[table];
+
+    // Phase 1 — resolve each tuple into a clean row: AUTO_INCREMENT ids are
+    // assigned in sequence, and DEFAULT values fill missing columns.
+    let autoSeq = existing.reduce((m, r: any) => {
+      if (!meta?.autoIncrementCol) return m;
+      const v = Number(r[meta.autoIncrementCol]);
+      return !isNaN(v) && v > m ? v : m;
+    }, 0);
+    const resolved: TableRow[] = rowsToInsert.map((values) => {
+      let row: TableRow = { ...(values || {}) };
+      if (meta) {
+        if (
+          meta.autoIncrementCol &&
+          (row[meta.autoIncrementCol] === undefined ||
+            row[meta.autoIncrementCol] === null ||
+            row[meta.autoIncrementCol] === '')
+        ) {
+          autoSeq += 1;
+          row[meta.autoIncrementCol] = autoSeq;
+        }
+        for (const [col, dflt] of Object.entries(meta.defaults)) {
+          if (row[col] === undefined) row[col] = dflt;
+        }
+      }
+      return row;
+    });
+
+    // Phase 2 — validate EVERY row before touching the table. A multi-row
+    // INSERT is all-or-nothing: if any tuple violates NOT NULL / UNIQUE /
+    // CHECK / FK, no rows are inserted.
+    const seenUniques: Record<string, Set<any>> = {};
+    for (const row of resolved) {
+      if (table === 'products' && row.category_id) {
+        const catExists = this.db.tables.categories.some((c: any) => c.category_id === row.category_id);
+        if (!catExists) {
+          throw new Error(`Cannot add or update child row: a foreign key constraint fails (category_id ${row.category_id} not found in categories).`);
+        }
+      }
+      if (!meta) continue;
+      for (const col of meta.notNull) {
+        if (row[col] === undefined || row[col] === null) {
+          throw new Error(`Column '${col}' cannot be null (NOT NULL constraint).`);
+        }
+      }
+      for (const col of meta.uniques) {
+        if (row[col] !== undefined && row[col] !== null) {
+          const seenVals = seenUniques[col] || new Set(existing.map((r: any) => r[col]));
+          seenUniques[col] = seenVals;
+          if (seenVals.has(row[col])) {
+            throw new Error(`Duplicate entry '${row[col]}' for UNIQUE column '${col}'.`);
+          }
+          seenVals.add(row[col]);
+        }
+      }
+      for (const chk of meta.checks) {
+        const ok = this.evaluateWhere(chk.expr, row);
+        if (!ok) {
+          throw new Error(`CHECK constraint violated: ${chk.expr}`);
+        }
+      }
+      for (const fk of meta.fks) {
+        if (row[fk.col] !== undefined && row[fk.col] !== null) {
+          const refT = this.db.tables[fk.refTable];
+          const found = refT && refT.some((r: any) => r[fk.refCol] === row[fk.col]);
+          if (!found) {
+            throw new Error(`Cannot add or update a child row: a foreign key constraint fails (${fk.col} ${row[fk.col]} → ${fk.refTable}.${fk.refCol}).`);
+          }
+        }
       }
     }
 
-    this.db.tables[table].push({ ...query.insertValues });
+    for (const row of resolved) {
+      this.db.tables[table].push(row);
+    }
 
+    const inserted = rowsToInsert.length;
     return {
       success: true,
       columns: ['status', 'affected_rows'],
-      rows: [{ status: 'Row inserted successfully', affected_rows: 1 }],
+      rows: [{ status: `Inserted ${inserted} row(s) successfully`, affected_rows: inserted }],
       rowCount: 1,
-      affectedRows: 1,
+      affectedRows: inserted,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
     };
   }

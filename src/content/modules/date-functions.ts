@@ -1,0 +1,680 @@
+import { ModuleData } from '../../types/curriculum';
+
+// =============================================================================
+// DAY 12 — Date Functions  (id: date-functions · order 12)
+// Atomic chain: C1 Date components → C2 Grouping by components →
+//               C3 Date arithmetic (last N days) → C4 Date difference
+// Canonical dialect: YEAR()/MONTH()/DAY()/EXTRACT(), CURDATE(), DATEDIFF()
+// (docs/DIALECT.md §4). Anchor: SIMULATED_TODAY = 2026-08-24.
+// =============================================================================
+export const DATE_FUNCTIONS_MODULE: ModuleData = {
+  id: 'date-functions',
+  slug: 'date-functions',
+  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 12)
+  title: 'Day 12 — Date Functions: Thinking in Time',
+  shortTitle: 'Date Functions',
+  type: 'module',
+  milestoneId: 'milestone-2',
+  description: 'Treat dates as time, not text: extract components, group by them, compute relative windows like "the last 30 days", and measure gaps with DATEDIFF.',
+  estimatedMinutes: 60,
+  completionLearnings: [
+    'Extract date components with YEAR(), MONTH(), DAY() and EXTRACT()',
+    'Group and aggregate by date components',
+    'Compute relative windows with CURDATE() - INTERVAL n DAY',
+    'Measure gaps between dates with DATEDIFF()',
+  ],
+  concepts: [
+    {
+      id: 'date-components',
+      order: 1,
+      title: '1. Date Components: YEAR, MONTH, DAY',
+      shortDescription: 'A date is not a string — pull its parts out.',
+      theory: {
+        summary: "You saw on Day 11 that SUBSTRING(order_date, 1, 7) can slice '2026-08' out of a date — but that treats a date like text. Dates are their own data type with a real internal value, and SQL gives you purpose-built extractors: YEAR(), MONTH(), DAY(). They are clearer, safer, and signal intent.",
+        introTable: {
+          tableName: 'orders',
+          description: 'Order dates — each one contains a year, a month, and a day inside it',
+          columns: ['order_id', 'order_date'],
+          rows: [
+            [1, '2026-06-10'],
+            [2, '2026-08-01'],
+            [3, '2026-05-15'],
+          ],
+        },
+        explanation: [
+          '```sql\nSELECT order_date,\n       YEAR(order_date) AS yr,\n       MONTH(order_date) AS mon,\n       DAY(order_date) AS dy\nFROM orders;\n```',
+          'Each function returns a **number**: YEAR → 2026, MONTH → 6, DAY → 10. Numbers sort and group the way numbers should — no string sorting surprises.',
+          'You will also meet the SQL-standard spelling: `EXTRACT(YEAR FROM order_date)` — same result, different syntax. SQLens accepts both.',
+          'MCQ trap: why not `WHERE order_date LIKE \'2026%\'`? Because LIKE is a **string** pattern — it happens to work here, but it breaks the moment the format shifts and hides the fact that you are comparing dates as text.',
+        ],
+        targetQuery: {
+          sql: 'SELECT order_date,\n       YEAR(order_date) AS yr,\n       MONTH(order_date) AS mon,\n       DAY(order_date) AS dy\nFROM orders;',
+          explanation: 'The three components of every order date, as clean numbers.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: One date, three numbers',
+            sqlSnippet: 'YEAR(order_date), MONTH(order_date), DAY(order_date)',
+            explanation: "'2026-06-10' → yr 2026, mon 6, dy 10. Each extractor reads its own component.",
+            tableData: {
+              tableName: 'Decomposition',
+              columns: ['order_date', 'yr', 'mon', 'dy'],
+              highlightedColumns: ['yr', 'mon', 'dy'],
+              rows: [
+                ['2026-06-10', 2026, 6, 10],
+                ['2026-08-01', 2026, 8, 1],
+                ['2026-05-15', 2026, 5, 15],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: EXTRACT — the standard spelling',
+            sqlSnippet: 'EXTRACT(YEAR FROM order_date) AS yr',
+            explanation: 'Identical output to YEAR(order_date). Read it as "extract the year from this date". You will meet EXTRACT in most real-world SQL dialects.',
+            tableData: {
+              tableName: 'Two spellings, one result',
+              columns: ['syntax', 'output for 2026-06-10'],
+              rows: [
+                ['YEAR(order_date)', 2026],
+                ['EXTRACT(YEAR FROM order_date)', 2026],
+              ],
+            },
+          },
+        ],
+        keyTakeaway: 'Dates are not strings. YEAR()/MONTH()/DAY() (or EXTRACT(unit FROM col)) return the components as numbers — the right tool beats string slicing.',
+        exampleQuery: 'SELECT order_date, YEAR(order_date) AS yr, MONTH(order_date) AS mon, DAY(order_date) AS dy FROM orders;',
+        exampleQueryExplanation: 'Full decomposition of all 18 order dates.',
+        liveDemoSql: 'SELECT order_date, YEAR(order_date) AS yr, MONTH(order_date) AS mon, DAY(order_date) AS dy FROM orders LIMIT 6;',
+        liveDemoNotes: 'Compare with the Day-11 SUBSTRING approach — same information, cleaner intent.',
+        mcqs: [
+          {
+            question: "Why prefer MONTH(order_date) over SUBSTRING(order_date, 6, 2)?",
+            options: [
+              'A. No reason — they are identical forever',
+              'B. MONTH returns the component as a number with clear intent; SUBSTRING depends on the text format never changing',
+              'C. SUBSTRING does not work on dates at all',
+              'D. MONTH is faster to type only',
+            ],
+            correctIndex: 1,
+            explanation: 'SUBSTRING treats the date as text — one format change breaks it. The date function states what you mean and gets it right.',
+          },
+          {
+            question: "What does `EXTRACT(MONTH FROM '2026-06-10')` return?",
+            options: ['A. 6', 'B. 06', 'C. 10', 'D. 2026'],
+            correctIndex: 0,
+            explanation: 'Month as a number: 6 — no leading zero, because numbers have no padding.',
+          },
+        ],
+        masteryPoints: ['Use YEAR/MONTH/DAY extractors', 'Recognize EXTRACT as the standard equivalent'],
+      },
+      tasks: [
+        {
+          id: 'datecomp-t1',
+          title: 'Task 1 (Guided): Decompose order dates',
+          description: 'Output order_date alongside its yr, mon, and dy components.',
+          instructions: [
+            'Select `order_date`, `YEAR(order_date) AS yr`, `MONTH(order_date) AS mon`, `DAY(order_date) AS dy` from `orders`.',
+            'Add `LIMIT 5`. End with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'orders',
+          initialSql: '-- Decompose dates\n',
+          solutionSql: 'SELECT order_date, YEAR(order_date) AS yr, MONTH(order_date) AS mon, DAY(order_date) AS dy FROM orders LIMIT 5;',
+          solutionExplanation: 'Five orders with all three components as numbers.',
+          hints: [
+            { level: 1, text: 'Wrap order_date in YEAR(), MONTH(), DAY() — alias each.' },
+          ],
+          validation: {
+            targetTable: 'orders',
+            requiredColumns: ['order_date', 'yr', 'mon', 'dy'],
+            requireFunction: 'YEAR',
+            expectedRowCount: 5,
+          },
+          successMessage: 'Components extracted — the date is now three queryable numbers.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'datecomp-t2',
+          title: 'Task 2 (Independent): Signup years of customers',
+          description: 'Customer signup dates span 2025 and 2026. Output each customer with their signup year.',
+          instructions: [
+            'Select `name`, `signup_date`, `YEAR(signup_date) AS signup_year` from `customers`.',
+            'End with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'customers',
+          initialSql: '-- Signup years\n',
+          solutionSql: 'SELECT name, signup_date, YEAR(signup_date) AS signup_year FROM customers;',
+          solutionExplanation: '15 customers — 3 signed up in 2025, 12 in 2026.',
+          hints: [
+            { level: 1, text: 'Same extractor, different table and column: YEAR(signup_date).' },
+          ],
+          validation: {
+            targetTable: 'customers',
+            requiredColumns: ['name', 'signup_date', 'signup_year'],
+            requireFunction: 'YEAR',
+            expectedRowCount: 15,
+          },
+          successMessage: 'Transfer complete — extractors work on any date column.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'group-by-date-parts',
+      order: 2,
+      title: '2. Grouping by Date Components',
+      shortDescription: 'Buckets of time: counts per month, per year.',
+      theory: {
+        summary: 'The ops dashboard needs "orders per month". You know GROUP BY (Day 9) and you know MONTH() — put them together and GROUP BY accepts the function expression directly: every order lands in the bucket of its month.',
+        introTable: {
+          tableName: 'orders',
+          description: '18 orders spread across 7 months (2026-02 → 2026-08)',
+          columns: ['order_id', 'order_date'],
+          rows: [
+            [15, '2026-02-14'],
+            [9, '2026-03-20'],
+            [2, '2026-08-01'],
+          ],
+        },
+        explanation: [
+          '```sql\nSELECT MONTH(order_date) AS mon,\n       COUNT(*) AS order_count\nFROM orders\nGROUP BY MONTH(order_date)\nORDER BY mon;\n```',
+          'The grouping key is the component itself: all February orders share MONTH = 2, so they collapse into one bucket, and COUNT(*) counts the bucket.',
+          'GROUP BY a function is exactly like GROUP BY a column — Day 9\'s mental model (row → bucket) does not change; only the bucket label does.',
+        ],
+        targetQuery: {
+          sql: 'SELECT MONTH(order_date) AS mon,\n       COUNT(*) AS order_count\nFROM orders\nGROUP BY MONTH(order_date)\nORDER BY mon;',
+          explanation: 'The monthly order volume — a genuine dashboard widget.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Each row gets its bucket label',
+            sqlSnippet: 'GROUP BY MONTH(order_date)',
+            explanation: "Order 15 ('2026-02-14') → bucket 2. Order 9 ('2026-03-20') → bucket 3. Order 2 ('2026-08-01') → bucket 8.",
+            tableData: {
+              tableName: 'Bucketing',
+              columns: ['order_id', 'order_date', 'MONTH → bucket'],
+              highlightedColumns: ['MONTH → bucket'],
+              rows: [
+                [15, '2026-02-14', 2],
+                [9, '2026-03-20', 3],
+                [2, '2026-08-01', 8],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: COUNT per bucket — 7 buckets from 18 orders',
+            sqlSnippet: 'SELECT MONTH(order_date) AS mon, COUNT(*) AS order_count … ORDER BY mon',
+            explanation: 'Feb 1, Mar 1, Apr 1, May 2, Jun 3, Jul 3, Aug 7 — the busiest months surface immediately.',
+            tableData: {
+              tableName: 'Result',
+              columns: ['mon', 'order_count'],
+              highlightedColumns: ['order_count'],
+              rows: [
+                [2, 1],
+                [5, 2],
+                [8, 7],
+              ],
+            },
+          },
+        ],
+        keyTakeaway: 'GROUP BY MONTH(col) (or YEAR(col)) builds time buckets; COUNT(*) fills them. This is the skeleton of every trend report.',
+        exampleQuery: 'SELECT MONTH(order_date) AS mon, COUNT(*) AS order_count FROM orders GROUP BY MONTH(order_date) ORDER BY mon;',
+        exampleQueryExplanation: 'Monthly order volume across the whole dataset.',
+        liveDemoSql: 'SELECT MONTH(order_date) AS mon, COUNT(*) AS order_count FROM orders GROUP BY MONTH(order_date) ORDER BY mon;',
+        liveDemoNotes: 'Seven rows — one per month that actually has orders.',
+        mcqs: [
+          {
+            question: 'Why does `GROUP BY order_date` give ~18 groups while `GROUP BY MONTH(order_date)` gives 7?',
+            options: [
+              'A. It does not — both give 7',
+              'B. order_date is unique per order, but MONTH collapses many dates into one bucket',
+              'C. GROUP BY cannot handle columns',
+              'D. Because of the ORDER BY',
+            ],
+            correctIndex: 1,
+            explanation: 'The grouping key decides the bucket granularity: full date = per-day buckets, month component = monthly buckets.',
+          },
+          {
+            question: 'How would you bucket customers by the year they signed up?',
+            options: [
+              'A. GROUP BY signup_date',
+              'B. GROUP BY YEAR(signup_date)',
+              'C. GROUP BY name',
+              'D. It is impossible',
+            ],
+            correctIndex: 1,
+            explanation: 'Any component can be the bucket: YEAR(signup_date) → 2 buckets (2025: 3 customers, 2026: 12).',
+          },
+        ],
+        masteryPoints: ['GROUP BY a date component', 'Combine time buckets with COUNT/SUM for trend reports'],
+      },
+      tasks: [
+        {
+          id: 'dategrp-t1',
+          title: 'Task 1 (Guided): Monthly order volume',
+          description: 'Build the dashboard widget: order count per month, sorted by month.',
+          instructions: [
+            'Select `MONTH(order_date) AS mon` and `COUNT(*) AS order_count` from `orders`.',
+            'GROUP BY `MONTH(order_date)`, ORDER BY `mon`. End with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'orders',
+          initialSql: '-- Monthly volume\n',
+          solutionSql: 'SELECT MONTH(order_date) AS mon, COUNT(*) AS order_count FROM orders GROUP BY MONTH(order_date) ORDER BY mon;',
+          solutionExplanation: '7 monthly buckets: Feb–Aug. August peaks with 7 orders.',
+          hints: [
+            { level: 1, text: 'GROUP BY the same expression you select: GROUP BY MONTH(order_date).' },
+          ],
+          validation: {
+            targetTable: 'orders',
+            requiredColumns: ['mon', 'order_count'],
+            requireFunction: 'MONTH',
+            requireGroupBy: true,
+            expectedRowCount: 7,
+          },
+          successMessage: 'Your first time-series report — 18 rows became 7 buckets.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'dategrp-t2',
+          title: 'Task 2 (Independent): Signups per year',
+          description: 'Bucket customers by signup year: YEAR(signup_date), with COUNT(*) AS signups, sorted by year.',
+          instructions: [
+            'Select `YEAR(signup_date) AS signup_year` and `COUNT(*) AS signups` from `customers`.',
+            'GROUP BY `YEAR(signup_date)`, ORDER BY `signup_year`. End with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'customers',
+          initialSql: '-- Signups per year\n',
+          solutionSql: 'SELECT YEAR(signup_date) AS signup_year, COUNT(*) AS signups FROM customers GROUP BY YEAR(signup_date) ORDER BY signup_year;',
+          solutionExplanation: '2025 → 3 signups, 2026 → 12. Growth you can point at.',
+          hints: [
+            { level: 1, text: 'Identical shape to Task 1 — only the component (YEAR) and table change.' },
+          ],
+          validation: {
+            targetTable: 'customers',
+            requiredColumns: ['signup_year', 'signups'],
+            requireFunction: 'YEAR',
+            requireGroupBy: true,
+            expectedRowCount: 2,
+          },
+          successMessage: 'Yearly growth buckets — same skill, coarser granularity.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'date-arithmetic',
+      order: 3,
+      title: '3. Date Arithmetic: "The Last N Days"',
+      shortDescription: 'Relative time windows that never go stale.',
+      theory: {
+        summary: 'Finance asks every morning: "how many orders in the last 30 days?" A hardcoded date like \'2026-06-25\' works today and is wrong tomorrow. SQL\'s answer: compute the boundary from "today" — CURDATE() minus an INTERVAL — so the window slides forward automatically.',
+        introTable: {
+          tableName: 'orders',
+          description: 'With today simulated as 2026-08-24, "the last 30 days" means everything on or after 2026-07-25',
+          columns: ['order_id', 'order_date', 'within 30 days?'],
+          rows: [
+            [18, '2026-08-23', 'YES'],
+            [12, '2026-06-25', 'no — too old'],
+            [8, '2026-08-12', 'YES'],
+          ],
+        },
+        explanation: [
+          '```sql\nSELECT COUNT(*) AS recent_orders\nFROM orders\nWHERE order_date >= CURDATE() - INTERVAL 30 DAY;\n```',
+          'Read the boundary right to left: CURDATE() is today (2026-08-24 in SQLens), INTERVAL 30 DAY steps back 30 days → 2026-07-25. Every order on or after that date passes `>=`.',
+          'The magic: run this tomorrow and the boundary moves too. The query **never goes stale** — that is why production code always uses relative windows instead of pasted dates. (Change the unit to MONTH or YEAR for longer windows.)',
+        ],
+        targetQuery: {
+          sql: "SELECT COUNT(*) AS recent_orders\nFROM orders\nWHERE order_date >= CURDATE() - INTERVAL 30 DAY;",
+          explanation: 'One number: how many orders sit inside the sliding 30-day window.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: The boundary computes itself',
+            sqlSnippet: 'CURDATE() - INTERVAL 30 DAY',
+            explanation: 'CURDATE() → 2026-08-24. Minus 30 days → 2026-07-25. This is a real date value, not text.',
+            tableData: {
+              tableName: 'Boundary computation',
+              columns: ['today', 'interval', 'boundary'],
+              highlightedColumns: ['boundary'],
+              rows: [
+                ['2026-08-24', '30 DAY', '2026-07-25'],
+                ['2026-08-24', '60 DAY', '2026-06-25'],
+                ['2026-08-24', '1 YEAR', '2025-08-24'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The comparison filters as always',
+            sqlSnippet: 'WHERE order_date >= 2026-07-25',
+            explanation: "Orders on or after the boundary pass. With the 30-day window: 8 of the 18 orders. Widen to 60 days (Day 15's audit) and you get 11.",
+            tableData: {
+              tableName: 'Window sizes vs counts',
+              columns: ['window', 'boundary', 'matching orders'],
+              highlightedColumns: ['matching orders'],
+              rows: [
+                ['30 DAY', '2026-07-25', 8],
+                ['60 DAY', '2026-06-25', 11],
+              ],
+            },
+          },
+        ],
+        keyTakeaway: 'CURDATE() - INTERVAL n DAY builds a sliding boundary from "today". Relative windows never go stale — hardcoded dates always do.',
+        exampleQuery: "SELECT COUNT(*) AS recent_orders FROM orders WHERE order_date >= CURDATE() - INTERVAL 30 DAY;",
+        exampleQueryExplanation: 'Orders in the last 30 days — tomorrow, the window slides automatically.',
+        liveDemoSql: "SELECT order_id, order_date FROM orders WHERE order_date >= CURDATE() - INTERVAL 30 DAY ORDER BY order_date;",
+        liveDemoNotes: 'Every row is on/after 2026-07-25. Count them: 8.',
+        mcqs: [
+          {
+            question: 'Why is `CURDATE() - INTERVAL 30 DAY` better than `\'2026-07-25\'` in production code?',
+            options: [
+              'A. It is shorter to type',
+              'B. It computes from today, so the window slides forward as time passes',
+              'C. Hardcoded dates are invalid SQL',
+              'D. It runs faster',
+            ],
+            correctIndex: 1,
+            explanation: 'A hardcoded date is frozen forever; the relative boundary recalculates every run.',
+          },
+          {
+            question: 'Which boundary is OLDER: `CURDATE() - INTERVAL 30 DAY` or `CURDATE() - INTERVAL 90 DAY`?',
+            options: ['A. 30 days back', 'B. 90 days back', 'C. Same day', 'D. Cannot tell'],
+            correctIndex: 1,
+            explanation: 'Subtracting more days reaches further back — a 90-day window therefore matches more rows.',
+          },
+        ],
+        masteryPoints: ['Write sliding windows with CURDATE() - INTERVAL', 'Predict how window size changes match counts'],
+      },
+      tasks: [
+        {
+          id: 'datearith-t1',
+          title: 'Task 1 (Guided): The sliding 30-day report',
+          description: 'Finance\'s morning question: orders on or after CURDATE() - INTERVAL 30 DAY.',
+          instructions: [
+            'Select `order_id`, `order_date` from `orders`.',
+            'WHERE `order_date >= CURDATE() - INTERVAL 30 DAY`, ORDER BY `order_date`. End with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'orders',
+          initialSql: '-- Sliding 30-day window\n',
+          solutionSql: 'SELECT order_id, order_date FROM orders WHERE order_date >= CURDATE() - INTERVAL 30 DAY ORDER BY order_date;',
+          solutionExplanation: '8 orders, all dated 2026-07-25 or later — and the window slides automatically every day.',
+          hints: [
+            { level: 1, text: 'WHERE order_date >= CURDATE() - INTERVAL 30 DAY — the boundary computes itself.' },
+          ],
+          validation: {
+            targetTable: 'orders',
+            requiredColumns: ['order_id', 'order_date'],
+            expectedRowCount: 8,
+          },
+          successMessage: 'A window that never goes stale — the production-grade way to write recency filters.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'datearith-t2',
+          title: 'Task 2 (Independent): The 90-day churn window',
+          description: 'Retention wants an even wider net: customers whose last activity could reach back 90 days. Count orders in the last 90 days (CURDATE() - INTERVAL 90 DAY).',
+          instructions: [
+            'Select `COUNT(*) AS orders_last_90_days` from `orders`.',
+            'WHERE `order_date >= CURDATE() - INTERVAL 90 DAY`. End with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'orders',
+          initialSql: '-- 90-day window\n',
+          solutionSql: 'SELECT COUNT(*) AS orders_last_90_days FROM orders WHERE order_date >= CURDATE() - INTERVAL 90 DAY;',
+          solutionExplanation: 'Boundary = 2026-05-26 → 14 orders fall inside.',
+          hints: [
+            { level: 1, text: 'Same pattern as Task 1 with a bigger interval — wrap it in COUNT(*) for the one-number answer.' },
+          ],
+          validation: {
+            targetTable: 'orders',
+            requiredColumns: ['orders_last_90_days'],
+            expectedRowCount: 1,
+          },
+          successMessage: 'Wider window, more matches — you can now predict window math before running it.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+    {
+      id: 'datediff',
+      order: 4,
+      title: '4. DATEDIFF: Measuring Gaps in Days',
+      shortDescription: 'How far apart are two dates? One function, one number.',
+      theory: {
+        summary: '"How long ago did each customer sign up?" The answer is a gap — a number of days between two dates. DATEDIFF(a, b) returns a minus b in days: how many days b is before a. Positive = a is later; negative = b is later.',
+        introTable: {
+          tableName: 'customers',
+          description: 'Signup dates measured against today (2026-08-24)',
+          columns: ['name', 'signup_date'],
+          rows: [
+            ['Rafiul Islam', '2025-11-10'],
+            ['Priya Akter', '2026-08-05'],
+            ['Tanvir Ahmed', '2026-01-15'],
+          ],
+        },
+        explanation: [
+          '```sql\nSELECT name,\n       DATEDIFF(CURDATE(), signup_date) AS days_since_signup\nFROM customers;\n```',
+          'DATEDIFF(later, earlier) gives a positive count: from 2025-11-10 to 2026-08-24 is 287 days. Swap the arguments and you get −287 — argument order IS the direction.',
+          'This composes with everything: sort by the gap (`ORDER BY days_since_signup DESC` = longest-tenured first), filter it (`WHERE DATEDIFF(...) <= 30`), or aggregate it (AVG tenure per city — that is a Day 9 + Day 12 fusion).',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, signup_date,\n       DATEDIFF(CURDATE(), signup_date) AS days_since_signup\nFROM customers\nORDER BY days_since_signup DESC;',
+          explanation: 'Customer tenure ladder — longest-tenured first.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Each row measures its own gap',
+            sqlSnippet: 'DATEDIFF(CURDATE(), signup_date)',
+            explanation: 'Priya (2026-08-05): 24 − 5 = 19 days. Rafiul (2025-11-10): nearly a full year — 287 days.',
+            tableData: {
+              tableName: 'Gap measurement',
+              columns: ['name', 'signup_date', 'days_since_signup'],
+              highlightedColumns: ['days_since_signup'],
+              rows: [
+                ['Rafiul Islam', '2025-11-10', 287],
+                ['Priya Akter', '2026-08-05', 19],
+                ['Tanvir Ahmed', '2026-01-15', 221],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Sort by the gap — a tenure ladder',
+            sqlSnippet: 'ORDER BY days_since_signup DESC',
+            explanation: 'Rafiul (287) tops the ladder; Priya (19) is the newest. The number orders the relationship.',
+            tableData: {
+              tableName: 'Reading the direction',
+              columns: ['expression', 'meaning'],
+              rows: [
+                ['DATEDIFF(today, signup)', 'days since signup (positive)'],
+                ['DATEDIFF(signup, today)', 'negative of the same — order matters!'],
+              ],
+            },
+          },
+        ],
+        keyTakeaway: 'DATEDIFF(a, b) = days from b to a. Argument order sets direction; combine with ORDER BY or WHERE to rank and filter by time gaps.',
+        exampleQuery: 'SELECT name, signup_date, DATEDIFF(CURDATE(), signup_date) AS days_since_signup FROM customers ORDER BY days_since_signup DESC;',
+        exampleQueryExplanation: 'Tenure ladder for all 15 customers.',
+        liveDemoSql: 'SELECT name, signup_date, DATEDIFF(CURDATE(), signup_date) AS days_since_signup FROM customers ORDER BY days_since_signup DESC LIMIT 6;',
+        liveDemoNotes: 'The six longest-tenured customers — measured, not guessed.',
+        mcqs: [
+          {
+            question: "What does DATEDIFF('2026-08-24', '2026-08-14') return?",
+            options: ['A. -10', 'B. 10', 'C. 0.33', 'D. An error — dates cannot be subtracted'],
+            correctIndex: 1,
+            explanation: 'The first date is 10 days after the second → positive 10.',
+          },
+          {
+            question: 'DATEDIFF(CURDATE(), signup_date) returns −5 for a customer. What does that mean?',
+            options: [
+              'A. The customer signed up 5 days ago',
+              'B. The signup date is 5 days in the future of today',
+              'C. The query is broken',
+              'D. The customer has no signup',
+            ],
+            correctIndex: 1,
+            explanation: 'Negative = the second date is later than the first. A future signup date — a data-quality flag in real life.',
+          },
+        ],
+        masteryPoints: ['Compute day gaps with DATEDIFF', 'Control direction via argument order', 'Rank and filter by computed gaps'],
+      },
+      tasks: [
+        {
+          id: 'datediff-t1',
+          title: 'Task 1 (Guided): Customer tenure ladder',
+          description: 'Compute days_since_signup for every customer, longest-tenured first.',
+          instructions: [
+            'Select `name`, `signup_date`, `DATEDIFF(CURDATE(), signup_date) AS days_since_signup` from `customers`.',
+            'ORDER BY `days_since_signup DESC`. End with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'customers',
+          initialSql: '-- Tenure ladder\n',
+          solutionSql: 'SELECT name, signup_date, DATEDIFF(CURDATE(), signup_date) AS days_since_signup FROM customers ORDER BY days_since_signup DESC;',
+          solutionExplanation: 'Rafiul (2025-11-10) tops the ladder at 287 days; Priya (2026-08-05) is newest at 19.',
+          hints: [
+            { level: 1, text: 'DATEDIFF(CURDATE(), signup_date) — today first, so the gap counts forward from signup.' },
+          ],
+          validation: {
+            targetTable: 'customers',
+            requiredColumns: ['name', 'signup_date', 'days_since_signup'],
+            requireFunction: 'DATEDIFF',
+            expectedRowCount: 15,
+          },
+          successMessage: 'Tenure ladder built — gaps measured per row, ranked in one sort.',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'datediff-t2',
+          title: 'Task 2 (Independent): Order age report',
+          description: 'Same idea on orders: order_age = DATEDIFF(CURDATE(), order_date). Output order_id, order_date, order_age, oldest orders first.',
+          instructions: [
+            'Select `order_id`, `order_date`, `DATEDIFF(CURDATE(), order_date) AS order_age` from `orders`.',
+            'ORDER BY `order_age DESC`. End with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'orders',
+          initialSql: '-- Order ages\n',
+          solutionSql: 'SELECT order_id, order_date, DATEDIFF(CURDATE(), order_date) AS order_age FROM orders ORDER BY order_age DESC;',
+          solutionExplanation: 'Order 15 (2026-02-14) is oldest at 191 days; order 18 (2026-08-23) is newest at 1.',
+          hints: [
+            { level: 1, text: 'Identical shape to Task 1 — swap the date column to order_date.' },
+          ],
+          validation: {
+            targetTable: 'orders',
+            requiredColumns: ['order_id', 'order_date', 'order_age'],
+            requireFunction: 'DATEDIFF',
+            expectedRowCount: 18,
+          },
+          successMessage: 'Order aging report — the exact query support teams run daily.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+  ],
+  // ===========================================================================
+  // DAY 12 CHALLENGE: TEMPORAL REPORTING SUITE (ENDING ACTIVITY)
+  // ===========================================================================
+  challenge: {
+    id: 'date-functions-homework',
+    title: 'Day 12 — Date Functions Challenge (Ending Activity)',
+    scenario: 'Three real temporal deliverables, each fusing dates with earlier milestone skills:',
+    databaseLifecycle: 'fresh',
+    tasks: [
+      {
+        id: 'date-hw-1',
+        title: 'Task 1: Monthly revenue report',
+        description: 'The classic: revenue per month. Fuse Day 12 bucketing with Day 14-style aggregation (SUM over a computed amount).',
+        instructions: [
+          'Join `orders o` to `order_items oi` on `o.order_id = oi.order_id`.',
+          'Select `MONTH(o.order_date) AS mon` and `SUM(oi.quantity * oi.unit_price) AS revenue`.',
+          'GROUP BY `MONTH(o.order_date)`, ORDER BY `mon`. End with a semicolon.',
+        ],
+        type: 'challenge',
+        primaryTable: 'orders',
+        secondaryTables: ['order_items'],
+        initialSql: '-- Challenge: monthly revenue\n',
+        solutionSql: 'SELECT MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY MONTH(o.order_date) ORDER BY mon;',
+        solutionExplanation: 'Monthly buckets (7 rows) with real money summed into each — the two milestones fused in one query.',
+        hints: [
+          { level: 1, text: 'GROUP BY MONTH(o.order_date); the SUM is the Day-14 revenue expression.' },
+        ],
+        validation: {
+          targetTable: 'orders',
+          requiredColumns: ['mon', 'revenue'],
+          requireFunction: 'MONTH',
+          requireJoin: true,
+          requireGroupBy: true,
+        },
+        successMessage: 'Monthly revenue — the single most-requested report in real businesses.',
+      },
+      {
+        id: 'date-hw-2',
+        title: 'Task 2: Inactive-customer audit (90 days)',
+        description: 'Customers whose LAST order is older than 90 days — or who never ordered at all. The Day 15 audit, rebuilt with relative dates and DATEDIFF.',
+        instructions: [
+          'LEFT JOIN `orders o` on `c.customer_id = o.customer_id`; GROUP BY `c.customer_id, c.name`.',
+          'Select `c.name`, `MAX(o.order_date) AS last_order`, `DATEDIFF(CURDATE(), MAX(o.order_date)) AS days_since`.',
+          'HAVING the gap > 90 (or no orders at all). End with a semicolon.',
+        ],
+        type: 'challenge',
+        primaryTable: 'customers',
+        secondaryTables: ['orders'],
+        initialSql: '-- Challenge: inactive-customer audit\n',
+        solutionSql: 'SELECT c.name, MAX(o.order_date) AS last_order, DATEDIFF(CURDATE(), MAX(o.order_date)) AS days_since FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name HAVING DATEDIFF(CURDATE(), MAX(o.order_date)) > 90 OR MAX(o.order_date) IS NULL;',
+        solutionExplanation: 'Arif, Nadia and Jahid have no orders (last_order NULL — the LEFT JOIN zero-state); Sabrina\'s last order (2026-07-01) is 54 days back — inside the window. HAVING filters groups, exactly as Day 9 taught.',
+        hints: [
+          { level: 1, text: 'MAX(o.order_date) is the last order; the NULL case needs OR MAX(o.order_date) IS NULL because NULL fails any comparison.' },
+        ],
+        validation: {
+          targetTable: 'customers',
+          requiredColumns: ['name', 'last_order', 'days_since'],
+          requireFunction: 'DATEDIFF',
+          requireJoin: true,
+          requireGroupBy: true,
+          requireHaving: true,
+        },
+        successMessage: 'The Day 15 audit, rebuilt with relative dates — no hardcoded boundaries anywhere.',
+      },
+      {
+        id: 'date-hw-3',
+        title: 'Task 3: Customer tenure leaderboard (final boss)',
+        description: 'One query: every customer with signup year, tenure in days, and the signups-per-year buckets — no, keep it focused: name, signup_year, days_since_signup, ranked newest first, top 5 only.',
+        instructions: [
+          'Select `name`, `YEAR(signup_date) AS signup_year`, `DATEDIFF(CURDATE(), signup_date) AS days_since_signup` from `customers`.',
+          'ORDER BY `days_since_signup ASC`, LIMIT 5. End with a semicolon. (ASC = newest customers lead the leaderboard.)',
+        ],
+        type: 'challenge',
+        primaryTable: 'customers',
+        initialSql: '-- Challenge: newest-customer leaderboard\n',
+        solutionSql: 'SELECT name, YEAR(signup_date) AS signup_year, DATEDIFF(CURDATE(), signup_date) AS days_since_signup FROM customers ORDER BY days_since_signup ASC LIMIT 5;',
+        solutionExplanation: 'The five newest customers (19–136 days), each tagged with their signup year — two date functions composed, sorted and paginated.',
+        hints: [
+          { level: 1, text: 'Two functions on the same column: YEAR(signup_date) and DATEDIFF(CURDATE(), signup_date). Then sort + limit.' },
+        ],
+        validation: {
+          targetTable: 'customers',
+          requiredColumns: ['name', 'signup_year', 'days_since_signup'],
+          requireFunction: 'DATEDIFF',
+          requireLimit: 5,
+          expectedRowCount: 5,
+        },
+        successMessage: 'Final boss cleared — you now think in time: extract, bucket, measure, rank.',
+      },
+    ],
+  },
+};

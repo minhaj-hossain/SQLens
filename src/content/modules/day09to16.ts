@@ -912,10 +912,10 @@ export const DAY_09_MODULE: ModuleData = {
           },
         ],
         keyTakeaway: 'Use WHERE for raw row filtering and HAVING for aggregate summary filtering.',
-        exampleQuery: 'SELECT category_id, AVG(price) AS avg_price FROM products GROUP BY category_id ORDER BY avg_price DESC;',
-        exampleQueryExplanation: 'Calculates average price per category sorted highest first.',
-        liveDemoSql: 'SELECT category_id, AVG(price) AS avg_price FROM products GROUP BY category_id ORDER BY avg_price DESC;',
-        liveDemoNotes: 'Displays average price per category.',
+        exampleQuery: 'SELECT category_id, COUNT(*) AS total_products, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 30 ORDER BY avg_price DESC;',
+        exampleQueryExplanation: 'Groups products by category, keeps ONLY the categories whose average price exceeds $30, and sorts them highest first.',
+        liveDemoSql: 'SELECT category_id, COUNT(*) AS total_products, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 30 ORDER BY avg_price DESC;',
+        liveDemoNotes: 'Displays only categories whose average price passes the HAVING threshold of $30.',
         mcqs: [
           {
             question: 'Why can you NOT write `WHERE COUNT(*) > 5` in SQL?',
@@ -1408,6 +1408,17 @@ export const DAY_11_MODULE: ModuleData = {
         liveDemoSql: 'SELECT p.name, c.name AS category_name FROM products p INNER JOIN categories c ON p.category_id = c.category_id LIMIT 5;',
         liveDemoNotes: 'Displays products with matched category names.',
         mcqs: [
+          {
+            question: 'Spiral check from Day 3: in a LEFT JOIN result, how do you find the customers with NO matching orders?',
+            options: [
+              'A. WHERE o.order_id = 0',
+              'B. WHERE o.order_id IS NULL - unmatched rows carry NULL in the right table\'s columns',
+              'C. WHERE o.order_id != NULL',
+              'D. They disappear from a LEFT JOIN',
+            ],
+            correctIndex: 1,
+            explanation: 'NULL semantics from Day 3 return: unmatched LEFT JOIN rows are NULL-filled, and only IS NULL (never = NULL) can detect them. This is exactly the anti-join used later on Day 18.',
+          },
           {
             question: 'What happens to a customer who has never placed an order when using INNER JOIN orders?',
             options: [
