@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight } from 'lucide-react';
+import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
 
@@ -14,6 +14,9 @@ interface SQLEditorProps {
   readOnly?: boolean;
   /** Task guidance shown as the empty-editor placeholder (replaces in-code comments). */
   placeholder?: string;
+  /** P11.2: in-flow step-chain Back, rendered left of Run & Check. */
+  onBack?: () => void;
+  backLabel?: string;
 }
 
 export const SQLEditor: React.FC<SQLEditorProps> = ({
@@ -26,6 +29,8 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   onNextAction,
   readOnly = false,
   placeholder,
+  onBack,
+  backLabel = 'Back',
 }) => {
   const [copied, setCopied] = useState(false);
   const [cursorPos, setCursorPos] = useState(0);
@@ -34,6 +39,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionCoords, setSuggestionCoords] = useState({ top: 0, left: 0 });
+  // Word the user dismissed with Esc — suggestions stay hidden while this word
+  // is still at the cursor; typing a different word (or Ctrl+Space) re-opens.
+  const [dismissedWord, setDismissedWord] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -82,6 +90,12 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     const match = textBeforeCursor.match(/([a-zA-Z0-9_]+)$/);
     if (match && match[1].length >= 1) {
       const currentWord = match[1].toUpperCase();
+      // Respect an Esc dismissal: same word at the cursor keeps the panel shut.
+      if (dismissedWord === currentWord) {
+        setShowSuggestions(false);
+        return;
+      }
+      if (dismissedWord !== null) setDismissedWord(null); // different word -> re-open
       const matched = autocompleteList
         .filter(item => item.text.toUpperCase().startsWith(currentWord) && item.text.toUpperCase() !== currentWord)
         .slice(0, 5)
@@ -163,8 +177,36 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       }
       if (e.key === 'Escape') {
         setShowSuggestions(false);
+        const m = value.slice(0, e.currentTarget.selectionStart).match(/([a-zA-Z0-9_]+)$/);
+        setDismissedWord(m ? m[1].toUpperCase() : null);
         return;
       }
+    }
+
+    // Ctrl+Space -> force-open suggestions (even after Esc, even with no prefix)
+    if (e.ctrlKey && e.code === 'Space') {
+      e.preventDefault();
+      const selStart = e.currentTarget.selectionStart;
+      const m = value.slice(0, selStart).match(/([a-zA-Z0-9_]+)$/);
+      const prefix = m ? m[1].toUpperCase() : '';
+      let matched = prefix
+        ? autocompleteList
+            .filter(i => i.text.toUpperCase().startsWith(prefix) && i.text.toUpperCase() !== prefix)
+            .slice(0, 5)
+            .map(i => i.text)
+        : [];
+      if (matched.length === 0) matched = autocompleteList.slice(0, 5).map(i => i.text);
+      setDismissedWord(null);
+      setSuggestions(matched);
+      setSelectedSuggestionIdx(0);
+      setShowSuggestions(true);
+      const lines = value.slice(0, selStart).split('\n');
+      const currLineIdx = lines.length - 1;
+      const colIdx = lines[currLineIdx].length;
+      const dropdownHeight = matched.length * 30 + 36;
+      const topPos = currLineIdx >= 3 ? Math.max(8, currLineIdx * 22 - dropdownHeight) : currLineIdx * 22 + 30;
+      setSuggestionCoords({ top: topPos, left: Math.min(Math.max(colIdx * 8 + 12, 12), 220) });
+      return;
     }
 
     // Ctrl+Enter or Cmd+Enter -> Run & Check (or go Next if already correct)
@@ -383,7 +425,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             >
               <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between">
                 <span>Suggestions</span>
-                <span className="text-[9px] text-text-faint font-normal">Tab ↑</span>
+                <span className="text-[9px] text-text-faint font-normal">Esc · Ctrl+Space</span>
               </div>
               {suggestions.map((sug, idx) => (
                 <div
@@ -439,8 +481,19 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <span className="hidden sm:inline">to run &amp; check</span>
         </div>
 
-        {/* Single Smart Button: Run → Check → Next */}
+        {/* P11.2: step-chain Back + Single Smart Button: Run -> Check -> Next */}
         <div className="flex items-center gap-2.5">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              title={backLabel}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono text-text-dim border border-border bg-surface-2 hover:text-text hover:bg-surface transition cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
+            </button>
+          )}
           {evaluationState === 'correct' && onNextAction ? (
             <button
               id="next-task-btn"

@@ -1,19 +1,36 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿'use client';
+/**
+ * ModuleCompletionView — P11.4 rebuild on the current design system.
+ *
+ * Gold check-ring hero, milestone progress (mono labels + hairline bar),
+ * next-up card driven by getModuleUnlockStatus (immediate unlock under the
+ * default PACING_MODE=false; countdown only when pacing/schedule gates),
+ * step-chain Back (useStepBack), and `Roadmap — Day N` that lands on the
+ * module card via /?highlight= instead of opening the modal.
+ */
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { ModuleData } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
-import { getNextUnlockTime, formatTimeRemaining, getEffectiveNow, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
-import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { ALL_MODULES } from '../../content/curriculum-index';
+import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
+import {
+  getModuleUnlockStatus,
+  formatTimeRemaining,
+  getEffectiveNow,
+  isModuleFullyComplete,
+} from '../../lib/progress/unlock-calculator';
+import { roadmapUrl } from '../../lib/learn-routes';
+import { useStepBack } from '../learn/use-step-back';
 
 interface ModuleCompletionViewProps {
   module: ModuleData;
   nextModule?: ModuleData;
   userState: UserLearningState;
   onReviewModule: () => void;
-  onOpenRoadmap: () => void;
   onContinueNextDay?: () => void;
 }
 
@@ -22,173 +39,153 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
   nextModule,
   userState,
   onReviewModule,
-  onOpenRoadmap,
   onContinueNextDay,
 }) => {
-  const completedDate = userState.completedModules[module.id]?.completedAt || new Date().toISOString();
-  const baseUnlockDate = getNextUnlockTime(completedDate);
-  // If the next module has a scheduledPublishDate that is later than the standard
-  // 6 PM gate, we show a countdown to that later date instead.
-  const scheduledDate =
-    nextModule?.scheduledPublishDate ? new Date(nextModule.scheduledPublishDate) : null;
-  const nextUnlockDate =
-    scheduledDate && !isNaN(scheduledDate.getTime()) && scheduledDate > baseUnlockDate
-      ? scheduledDate
-      : baseUnlockDate;
-
-  const [countdown, setCountdown] = useState(() =>
-    formatTimeRemaining(nextUnlockDate, userState.simulatedTimeOffsetHours)
-  );
-  const [isUnlockedNow, setIsUnlockedNow] = useState(
-    userState.bypassDailyLock ||
-      getEffectiveNow(userState.simulatedTimeOffsetHours).getTime() >=
-        nextUnlockDate.getTime()
-  );
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const remaining = formatTimeRemaining(nextUnlockDate, userState.simulatedTimeOffsetHours);
-      setCountdown(remaining);
-      const unlocked =
-        userState.bypassDailyLock ||
-        getEffectiveNow(userState.simulatedTimeOffsetHours).getTime() >=
-          nextUnlockDate.getTime();
-      setIsUnlockedNow(unlocked);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [nextUnlockDate, userState.simulatedTimeOffsetHours, userState.bypassDailyLock]);
+  const router = useRouter();
+  const { backStep, goBack } = useStepBack(module.id);
 
   const currentMilestone =
     ROADMAP_MILESTONES.find((m) => m.id === module.milestoneId) || ROADMAP_MILESTONES[0];
   const milestoneModules = ALL_MODULES.filter((m) => currentMilestone.moduleIds.includes(m.id));
-  const completedInMilestone = milestoneModules.filter((m) => isModuleFullyComplete(m, userState)).length;
+  const completedInMilestone = milestoneModules.filter((m) =>
+    isModuleFullyComplete(m, userState),
+  ).length;
   const milestonePercent = Math.round((completedInMilestone / milestoneModules.length) * 100);
+
+  const nextStatus = nextModule
+    ? getModuleUnlockStatus(nextModule, ALL_MODULES, userState)
+    : null;
+  const nextLocked = Boolean(nextStatus && !nextStatus.isUnlocked);
+
+  // Countdown tick — only meaningful while the next module is gated
+  // (PACING_MODE on or a scheduledPublishDate). No timer when unlocked.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    if (!nextLocked) return;
+    const t = setInterval(() => forceTick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [nextLocked]);
+
+  const moduleLabel = getModuleDisplayLabel(module);
+  const countdown = nextStatus?.countdownFormatted ||
+    (nextStatus?.unlockTime
+      ? formatTimeRemaining(
+          nextStatus.unlockTime,
+          getEffectiveNow(userState.simulatedTimeOffsetHours),
+        )
+      : null);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="mx-auto max-w-3xl space-y-6 text-center py-4"
+      className='mx-auto max-w-2xl py-4'
     >
-      {/* Completion Icon */}
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_16px_rgba(244,196,48,0.3)]">
-        <Icon name="check" className="text-[28px]" />
-      </div>
-
-      <div className="space-y-2">
-        <div className="font-label-sm text-xs text-primary font-medium uppercase tracking-wider">
-          {getModuleDisplayLabel(module)} Complete · {module.title}
+      {/* Hero — gold check ring */}
+      <div className='flex flex-col items-center text-center'>
+        <div className='flex h-16 w-16 items-center justify-center rounded-full border border-accent/60 bg-accent/10 text-accent shadow-[0_0_18px_var(--accent-dim)]'>
+          <Icon name='check' className='text-[30px]' />
         </div>
-        <h1 className="font-headline-lg text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
-          Module Mastered
+        <div className='mt-5 font-mono text-[11px] uppercase tracking-[0.08em] text-text-faint'>
+          {moduleLabel} · Complete
+        </div>
+        <h1 className='mt-2 font-mono text-[26px] font-bold tracking-tight text-text'>
+          {module.title}
         </h1>
-        <p className="text-sm text-text-muted max-w-lg mx-auto leading-relaxed font-body-md">
-          You have successfully completed all concepts, guided practice exercises, and independent challenge scenarios for Day {module.day}.
+        <p className='mt-2 text-sm text-text-dim'>
+          Every concept finished and the challenge shipped. Nice work.
         </p>
       </div>
 
-      {/* Core Competencies Mastered */}
-      <div className="rounded-xl border border-outline-variant/70 bg-surface-container p-5 text-left space-y-3 shadow-sm">
-        <span className="font-label-sm text-xs font-semibold uppercase tracking-wider text-text-muted block">
-          Competencies Acquired:
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {module.completionLearnings.map((learning, idx) => (
-            <div
-              key={idx}
-              className="flex items-start gap-2 text-xs text-on-surface bg-surface-dim p-2.5 rounded-lg border border-outline-variant/60"
-            >
-              <span className="text-primary font-mono">✓</span>
-              <span className="leading-relaxed font-body-md">{learning}</span>
-            </div>
-          ))}
+      {/* Milestone progress */}
+      <div className='mt-8 rounded-xl border border-border bg-surface p-5'>
+        <div className='flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.06em]'>
+          <span className='text-text-faint'>{currentMilestone.title}</span>
+          <span className='text-text-dim'>{milestonePercent}%</span>
         </div>
-      </div>
-
-      {/* Milestone Progress Status */}
-      <div className="rounded-xl border border-outline-variant/70 bg-surface-container p-4 text-left space-y-2.5 shadow-sm">
-        <div className="flex items-center justify-between text-xs">
-          <div>
-            <span className="font-semibold text-on-surface">{currentMilestone.title}</span>
-            <span className="text-text-muted ml-2 font-label-sm">
-              ({completedInMilestone}/{milestoneModules.length} days completed)
-            </span>
-          </div>
-          <span className="font-medium text-primary font-mono">{milestonePercent}%</span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-surface-dim overflow-hidden">
+        <div className='mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2'>
           <div
+            className='h-full rounded-full bg-accent transition-all duration-500'
             style={{ width: `${milestonePercent}%` }}
-            className="h-full bg-primary-container rounded-full transition-all duration-300"
           />
         </div>
+        <div className='mt-2.5 font-mono text-[10.5px] text-text-faint'>
+          {completedInMilestone} of {milestoneModules.length} days in this stage
+        </div>
       </div>
 
-      {/* Next Day Unlock Status & Actions */}
-      <div className="rounded-xl border border-outline-variant/70 bg-surface-container p-5 space-y-4 shadow-sm">
-        {nextModule ? (
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-left">
-              <div>
-                <span className="font-label-sm text-xs text-text-muted block">Next in Roadmap:</span>
-                <span className="font-headline-sm text-base font-semibold text-on-surface">
-                  {getModuleDisplayLabel(nextModule!)}: {nextModule.title}
-                </span>
+      {/* Next up */}
+      <div className='mt-5 rounded-xl border border-border bg-surface p-5'>
+        {nextModule && nextStatus ? (
+          <>
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+              <div className='text-left'>
+                <div className='font-mono text-[10.5px] uppercase tracking-[0.06em] text-text-faint'>
+                  Next up
+                </div>
+                <div className='mt-1 text-[15px] font-semibold text-text'>
+                  {getModuleDisplayLabel(nextModule)}: {nextModule.title}
+                </div>
               </div>
-
-              {isUnlockedNow ? (
-                <span className="inline-flex items-center gap-1 text-xs font-label-sm text-primary">
-                  <Icon name="lock_open" className="text-[14px]" />
-                  Ready to start
+              {nextStatus.isUnlocked ? (
+                <span className='inline-flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-text-dim'>
+                  <Icon name='lock_open' className='text-[14px]' />
+                  Unlocked
                 </span>
               ) : (
-                <div className="flex items-center gap-1.5 text-xs font-mono text-text-muted bg-surface-dim px-3 py-1.5 rounded-lg border border-outline-variant/60">
-                  <Icon name="schedule" className="text-[14px]" />
-                  <span>Unlocks in: {countdown}</span>
-                </div>
+                <span className='inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2.5 py-1.5 font-mono text-[11px] text-text-dim'>
+                  <Icon name='schedule' className='text-[13px]' />
+                  Unlocks in {countdown}
+                </span>
               )}
             </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {nextStatus.isUnlocked && onContinueNextDay && (
               <button
-                onClick={onReviewModule}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-dim px-4 py-2 font-label-sm text-xs font-medium text-text-muted hover:text-on-surface hover:border-primary-container/40 transition cursor-pointer"
+                onClick={onContinueNextDay}
+                className='mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-[13px] font-semibold text-ink transition hover:brightness-105 active:scale-[0.99] sm:w-auto'
               >
-                <Icon name="restart_alt" className="text-[15px]" />
-                <span>Review Today's Module</span>
+                Start {getModuleDisplayLabel(nextModule)}
+                <Icon name='arrow_forward' className='text-[15px]' />
               </button>
-
-              <button
-                onClick={onOpenRoadmap}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-dim px-4 py-2 font-label-sm text-xs font-medium text-text-muted hover:text-on-surface hover:border-primary-container/40 transition cursor-pointer"
-              >
-                <Icon name="map" className="text-[15px]" />
-                <span>Explore Full Roadmap</span>
-              </button>
-
-              {isUnlockedNow && onContinueNextDay && (
-                <button
-                  onClick={onContinueNextDay}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary-container px-5 py-2 font-label-sm text-xs font-semibold text-on-primary-container hover:brightness-110 active:scale-95 transition cursor-pointer shadow-[0_0_8px_rgba(244,196,48,0.25)]"
-                >
-                  <span>Start {getModuleDisplayLabel(nextModule!)}</span>
-                  <Icon name="arrow_forward" className="text-[15px]" />
-                </button>
-              )}
-            </div>
-          </div>
+            )}
+          </>
         ) : (
-          <div className="space-y-3 py-2">
-            <span className="font-headline-sm text-base font-semibold text-primary block">
-              Curriculum Completed!
-            </span>
-            <p className="text-xs text-text-muted max-w-md mx-auto font-body-md">
-              Congratulations! You have finished all 38 Days of the SQL Master Curriculum.
+          <div className='py-1 text-center'>
+            <div className='text-[15px] font-semibold text-accent'>Curriculum completed</div>
+            <p className='mx-auto mt-1.5 max-w-md text-[13px] text-text-dim'>
+              You&apos;ve finished all {ALL_MODULES.length} days of the SQLens curriculum.
             </p>
           </div>
         )}
+      </div>
+
+      {/* Secondary nav — step-chain Back + Review + Roadmap */}
+      <div className='mt-5 flex flex-wrap items-center justify-center gap-3'>
+        {backStep && (
+          <button
+            onClick={() => goBack(backStep.url)}
+            title={backStep.label}
+            className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
+          >
+            <Icon name='arrow_back' className='text-[14px]' />
+            Back
+          </button>
+        )}
+        <button
+          onClick={onReviewModule}
+          className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
+        >
+          <Icon name='restart_alt' className='text-[14px]' />
+          Review Day
+        </button>
+        <button
+          onClick={() => router.push(roadmapUrl(module.id))}
+          className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
+        >
+          <Icon name='map' className='text-[14px]' />
+          Roadmap — {moduleLabel}
+        </button>
       </div>
     </motion.div>
   );

@@ -295,3 +295,11 @@
   height: 5px;
   display: none;
 }
+
+/* Stage-card arrival pulse (roadmap highlight deep-link) */
+@keyframes stage-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(244, 196, 48, 0.45); }
+  70% { box-shadow: 0 0 0 10px rgba(244, 196, 48, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(244, 196, 48, 0); }
+}
+.stage-pulse { animation: stage-pulse 0.9s ease-out 2; border-radius: 9999px; }

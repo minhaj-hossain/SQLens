@@ -8,7 +8,6 @@ import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
 import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
 import { splitTaskScaffold } from '../../lib/task-scaffold';
-import { ArrowLeft } from 'lucide-react';
 
 interface PracticeTaskViewProps {
   task: PracticeTask;
@@ -21,10 +20,10 @@ interface PracticeTaskViewProps {
   savedSql?: string;
   onExecuteSql: (sql: string) => QueryExecutionResult;
   onTaskSuccess: (userSql: string, hintsUsed: number, viewedSolution: boolean) => void;
-  onPreviousTask?: () => void;
   onNextTask?: () => void;
-  onBackToLesson?: () => void;
-  canGoBack?: boolean;
+  /** P11.2: step-chain Back (task N -> task N-1 -> lesson -> prev-concept task). */
+  onBack?: () => void;
+  backLabel?: string;
   canGoForward?: boolean;
 }
 
@@ -39,10 +38,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   savedSql,
   onExecuteSql,
   onTaskSuccess,
-  onPreviousTask,
   onNextTask,
-  onBackToLesson,
-  canGoBack = false,
+  onBack,
+  backLabel,
   canGoForward = false,
 }) => {
   // Guidance comments become the editor PLACEHOLDER; only real code loads.
@@ -143,7 +141,6 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               totalTasks={totalTasks}
               concept={concept}
               isCompleted={taskPassed || isCompleted}
-              onBackToLesson={onBackToLesson}
               onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
               onViewSolution={() => setViewedSolution(true)}
             />
@@ -179,6 +176,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               evaluationState={evaluationState}
               nextActionLabel={nextActionLabel}
               onNextAction={onNextTask}
+              onBack={onBack}
+              backLabel={backLabel}
             />
           </div>
 
@@ -193,19 +192,6 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Navigation Controls Bar */}
-      {onPreviousTask && canGoBack && (
-        <div className="flex items-center justify-between pt-1">
-          <button
-            onClick={onPreviousTask}
-            className="flex items-center gap-1.5 text-xs font-mono font-medium text-text-dim hover:text-text px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border transition cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Previous Task</span>
-          </button>
-        </div>
-      )}
     </motion.div>
   );
 };

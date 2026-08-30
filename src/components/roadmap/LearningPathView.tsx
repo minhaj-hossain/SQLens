@@ -42,6 +42,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   scrollToModuleId,
   onScrolledToModule,
 }) => {
+  const [pulseId, setPulseId] = useState<string | null>(null);
   const [lockedAlert, setLockedAlert] = useState<{
     title: string;
     message: string;
@@ -63,9 +64,13 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   useEffect(() => {
     if (!scrollToModuleId) return;
     const t = setTimeout(() => {
-      const el = document.getElementById(`leaf-${scrollToModuleId}`);
+      const el =
+        document.getElementById(`stage-card-${scrollToModuleId}`) ??
+        document.getElementById(`leaf-${scrollToModuleId}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setPulseId(scrollToModuleId);
+        setTimeout(() => setPulseId(null), 1800);
         onScrolledToModule?.();
       }
     }, 60);
@@ -264,8 +269,14 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                     const dayNum = getModuleDisplayLabel(mod).replace(/^Day\s*/, '');
 
                     return (
-                      <button
+                      <div
                         key={mod.id}
+                        id={`stage-card-${mod.id}`}
+                        className={`rounded-full p-1 transition-shadow duration-700 ${
+                          pulseId === mod.id ? 'stage-pulse' : ''
+                        }`}
+                      >
+                      <button
                         id={`leaf-${mod.id}`}
                         onClick={() => handleLeaf(mod)}
                         disabled={!isUnlocked}
@@ -283,6 +294,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                       >
                         {isDone ? '✓' : dayNum}
                       </button>
+                      </div>
                     );
                   })}
                 </div>

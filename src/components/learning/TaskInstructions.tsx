@@ -8,7 +8,6 @@ interface TaskInstructionsProps {
   totalTasks: number;
   concept: Concept;
   isCompleted?: boolean;
-  onBackToLesson?: () => void;
   onUseHint?: (level: number) => void;
   onViewSolution?: () => void;
 }
@@ -19,7 +18,6 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   totalTasks,
   concept,
   isCompleted = false,
-  onBackToLesson,
   onUseHint,
   onViewSolution,
 }) => {
@@ -67,17 +65,6 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
               <span className="w-3 h-3 rounded-full bg-done text-ink flex items-center justify-center text-[8px] font-bold leading-none">✓</span>
               <span>Done</span>
             </div>
-          )}
-
-          {onBackToLesson && (
-            <button
-              onClick={onBackToLesson}
-              className="flex items-center gap-1.5 text-text-dim hover:text-text text-[11px] font-mono px-2.5 py-1 rounded-md border border-border bg-transparent hover:bg-surface-2 transition cursor-pointer"
-              title="Review concept lesson"
-            >
-              <BookOpen className="w-3 h-3 text-text-dim" />
-              <span>Lesson</span>
-            </button>
           )}
         </div>
       </div>

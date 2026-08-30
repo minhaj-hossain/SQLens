@@ -10,7 +10,6 @@ import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
 import { getNextModule } from '@/lib/curriculum/module-order';
 import { ModuleCompletionView } from '@/components/learning/ModuleCompletionView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
-import { useUiChrome } from '@/components/providers/UiChromeProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
 
 interface CompleteViewProps {
@@ -22,7 +21,6 @@ export default function CompleteView({ dayId }: CompleteViewProps) {
   if (!mod) notFound();
 
   const { userState } = useLearning();
-  const { openRoadmap } = useUiChrome();
   const nav = useLearningNavigation();
   const router = useRouter();
 
@@ -42,7 +40,6 @@ export default function CompleteView({ dayId }: CompleteViewProps) {
       nextModule={nextModule}
       userState={userState}
       onReviewModule={() => nav.reviewModule(mod.id)}
-      onOpenRoadmap={openRoadmap}
       onContinueNextDay={() => nav.continueNextDay(mod.id)}
     />
   );

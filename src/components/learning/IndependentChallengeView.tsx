@@ -100,6 +100,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(0);
   const [suggestionWord, setSuggestionWord] = useState('');
+  // Word dismissed with Esc — panel stays shut while this word is at the
+  // cursor; typing a different word (or Ctrl+Space) re-opens suggestions.
+  const [dismissedWord, setDismissedWord] = useState<string | null>(null);
 
   // Column names for the current task's table
   const columnNames = useMemo(() => {
@@ -198,6 +201,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     const wordMatch = textBefore.match(/[\w]+$/);
     const word = wordMatch ? wordMatch[0].toUpperCase() : '';
     if (word.length >= 2) {
+      if (dismissedWord === word) {
+        setShowSuggestions(false);
+        return;
+      }
+      if (dismissedWord !== null) setDismissedWord(null); // different word -> re-open
       const allTerms = [...SQL_KEYWORDS, ...columnNames];
       const matches = allTerms.filter(
         (t) => t.toUpperCase().startsWith(word) && t.toUpperCase() !== word
@@ -299,7 +307,31 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedSuggestionIdx(p => (p + 1) % suggestions.length); return; }
       if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedSuggestionIdx(p => (p - 1 + suggestions.length) % suggestions.length); return; }
       if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) { e.preventDefault(); applySuggestion(suggestions[selectedSuggestionIdx]); return; }
-      if (e.key === 'Escape') { setShowSuggestions(false); return; }
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+        const m = currentSql.slice(0, e.currentTarget.selectionStart).match(/[\w]+$/);
+        setDismissedWord(m ? m[0].toUpperCase() : null);
+        return;
+      }
+    }
+
+    // Ctrl+Space -> force-open suggestions (even after Esc, even with no prefix)
+    if (e.ctrlKey && e.code === 'Space') {
+      e.preventDefault();
+      const selStart = e.currentTarget.selectionStart;
+      const m = currentSql.slice(0, selStart).match(/[\w]+$/);
+      const prefix = m ? m[0].toUpperCase() : '';
+      const allTerms = [...SQL_KEYWORDS, ...columnNames];
+      let matches = prefix
+        ? allTerms.filter((t) => t.toUpperCase().startsWith(prefix) && t.toUpperCase() !== prefix).slice(0, 8)
+        : [];
+      if (matches.length === 0) matches = SQL_KEYWORDS.slice(0, 8);
+      setDismissedWord(null);
+      setSuggestions(matches);
+      setSelectedSuggestionIdx(0);
+      setSuggestionWord(prefix);
+      setShowSuggestions(true);
+      return;
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -528,8 +560,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 className="absolute z-50 bg-surface-2 border border-border rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px]"
                 style={{ top: `${(activeLine) * 22 + 8}px`, left: '12px' }}
               >
-                <div className="px-2 py-0.5 text-[9px] font-mono text-text-faint border-b border-border-soft uppercase tracking-wider">
-                  Suggestions
+                <div className="px-2 py-0.5 text-[9px] font-mono text-text-faint border-b border-border-soft uppercase tracking-wider flex items-center justify-between">
+                  <span>Suggestions</span>
+                  <span className="text-[9px] text-text-faint font-normal normal-case">Esc · Ctrl+Space</span>
                 </div>
                 {suggestions.map((sug, idx) => (
                   <div

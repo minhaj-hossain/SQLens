@@ -7,6 +7,11 @@ export const LEARNING_CONFIG = {
   // Progression rules
   MAX_MODULES_PER_LEARNING_DAY: 1,
   SEQUENTIAL_ENFORCEMENT: true,
+
+  // Pacing mode — when true, a newly unlocked module waits for the 6 PM
+  // learning-cycle gate (Gate 5 in unlock-calculator). Default false:
+  // modules unlock immediately after the previous one is fully complete.
+  PACING_MODE: false,
   
   // App Defaults
   INITIAL_MODULE_ID: 'day-01',

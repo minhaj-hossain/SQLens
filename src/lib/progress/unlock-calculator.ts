@@ -426,7 +426,17 @@ export function getModuleUnlockStatus(
     }
   }
 
-  // Gate 5 — 6 PM learning-cycle gate
+  // Gate 5 — 6 PM learning-cycle gate (opt-in pacing mode).
+  // Default (PACING_MODE off): the module unlocks IMMEDIATELY once the
+  // previous module is fully complete — completion is the only gate.
+  if (!LEARNING_CONFIG.PACING_MODE) {
+    return {
+      isUnlocked: true,
+      isCompleted: false,
+      isCurrent: state.currentModuleId === module.id,
+    };
+  }
+
   const prevCycle = prevCompletionRecord.learningDayCycleId;
   const currentCycle = getLearningCycleId(now);
   const isPastUnlockTime = now.getTime() >= nextUnlockDate.getTime();

@@ -743,7 +743,7 @@ return (
                 onClick={onPrevious}
                 className="inline-flex items-center gap-1.5 font-mono text-xs text-text-dim border border-border bg-surface-2 hover:text-text hover:border-text-dim px-4 py-2.5 rounded-lg transition cursor-pointer"
               >
-                <Icon name="arrow_back" className="text-[15px]" /> Previous Concept
+                <Icon name="arrow_back" className="text-[15px]" /> Back
               </button>
             ) : (
               <div />

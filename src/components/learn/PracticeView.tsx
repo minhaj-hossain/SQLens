@@ -15,6 +15,7 @@ import { PracticeTaskView } from '@/components/learning/PracticeTaskView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
+import { useStepBack } from './use-step-back';
 
 interface PracticeViewProps {
   dayId: string;
@@ -46,6 +47,9 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
       ? Math.min(rawTask, concept.tasks.length - 1)
       : 0;
   const task = concept.tasks[taskIndex] ?? concept.tasks[0];
+
+  // P11.2: step-chain Back — task N -> task N-1 -> lesson -> prev concept task
+  const { backStep, goBack } = useStepBack(mod.id, String(taskIndex));
 
   // A concept with no practice tasks shouldn't render this page — complete it
   // and continue to the next stage (mirrors old handleStartPractice).
@@ -82,9 +86,8 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
       onTaskSuccess={(userSql, hintsUsed, viewedSolution) =>
         markTaskComplete({ taskId: task.id, moduleId: mod.id, userSql, hintsUsed, viewedSolution })
       }
-      onPreviousTask={() => {
-        if (taskIndex > 0) router.push(learnUrl(mod.id, 'practice', concept.id, taskIndex - 1));
-      }}
+      onBack={backStep ? () => goBack(backStep.url) : undefined}
+      backLabel={backStep?.label}
       onNextTask={() => {
         if (taskIndex < concept.tasks.length - 1) {
           router.push(learnUrl(mod.id, 'practice', concept.id, taskIndex + 1));
@@ -92,8 +95,6 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
           nav.completeConcept(mod.id, concept.id);
         }
       }}
-      onBackToLesson={() => router.push(learnUrl(mod.id, 'theory', concept.id))}
-      canGoBack={taskIndex > 0}
       canGoForward={
         taskIndex < concept.tasks.length - 1 ||
         Boolean(userState.taskAttempts?.[task.id]?.completed)

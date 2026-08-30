@@ -57,61 +57,89 @@ export function conceptIdFromPathname(pathname: string | null): string | null {
 }
 
 /**
- * P9.5 "Back to where I was" — deterministic previous-step mapping for the
- * linear learn chain:
+ * P11.2 "Back" — the exact reverse of the forward flow:
  *
  *   [module card] → c1 theory → c1 task1 → c1 task2 → c2 theory → … → challenge → complete
  *
  * Back always means the node before the current one, never fragile history:
  *   practice ?task=N>0 → that task's previous task
  *   practice ?task=0   → that concept's theory
- *   theory concept i>0 → previous concept's theory
- *   theory concept 0   → module overview card   (the exact flow you described)
- *   challenge          → last concept's theory
- *   complete           → challenge (or last theory if the module has none)
- *   overview           → null (no back; "Back to Learning Path" covers it)
+ *   theory concept i>0 → previous concept's LAST task (its true reverse),
+ *                        or its theory when it has none
+ *   theory concept 0   → module overview card
+ *   challenge          → last concept's last task (or its theory)
+ *   complete           → challenge
+ *   overview           → null (no back; the Roadmap link covers it)
+ *
+ * `tasksByConcept` maps conceptId → task count (pass it whenever available so
+ * theory can chain into the previous concept's tasks). `hint` carries the
+ * descriptive tooltip ("Back to Task 2") while `label` stays short ("Back").
  */
 export function getPreviousStep(
   dayId: string,
   pathname: string,
   conceptIds: string[],
   taskQuery: string | null,
-): { url: string; label: string } | null {
+  tasksByConcept?: Record<string, number>,
+): { url: string; label: string; hint: string } | null {
   const overview = `/learn/${dayId}`;
   if (pathname === overview) return null;
 
   const conceptId = conceptIdFromPathname(pathname) ?? '';
+  const lastTaskOf = (cid: string): { url: string; hint: string } | null => {
+    const count = tasksByConcept?.[cid] ?? 0;
+    if (count > 0) {
+      return { url: learnUrl(dayId, 'practice', cid, count - 1), hint: `Back to Task ${count}` };
+    }
+    return null;
+  };
 
   // practice /learn/day-XX/practice/[conceptId]?task=N
   if (pathname.startsWith(`${overview}/practice/`)) {
     const taskIdx = parseInt(taskQuery ?? '0', 10);
     if (!Number.isFinite(taskIdx) || taskIdx < 0) {
-      return { url: learnUrl(dayId, 'theory', conceptId), label: 'Back to Lesson' };
+      return { url: learnUrl(dayId, 'theory', conceptId), label: 'Back', hint: 'Back to Lesson' };
     }
     if (taskIdx > 0) {
-      return { url: learnUrl(dayId, 'practice', conceptId, taskIdx - 1), label: `Back to Task ${taskIdx}` };
+      return {
+        url: learnUrl(dayId, 'practice', conceptId, taskIdx - 1),
+        label: 'Back',
+        hint: `Back to Task ${taskIdx}`,
+      };
     }
-    return { url: learnUrl(dayId, 'theory', conceptId), label: 'Back to Lesson' };
+    return { url: learnUrl(dayId, 'theory', conceptId), label: 'Back', hint: 'Back to Lesson' };
   }
 
   // theory /learn/day-XX/theory/[conceptId]
   if (pathname.startsWith(`${overview}/theory/`)) {
     const idx = conceptIds.indexOf(conceptId);
     if (idx > 0) {
-      return { url: learnUrl(dayId, 'theory', conceptIds[idx - 1]), label: 'Previous Concept' };
+      const prevId = conceptIds[idx - 1];
+      const prevTask = lastTaskOf(prevId);
+      if (prevTask) return { ...prevTask, label: 'Back' };
+      return {
+        url: learnUrl(dayId, 'theory', prevId),
+        label: 'Back',
+        hint: 'Back to Lesson',
+      };
     }
-    return { url: overview, label: 'Back to Module' };
+    return { url: overview, label: 'Back', hint: 'Back to Module' };
   }
 
   // challenge
   if (pathname === `${overview}/challenge`) {
     const last = conceptIds[conceptIds.length - 1];
-    return last ? { url: learnUrl(dayId, 'theory', last), label: 'Back to Lesson' } : { url: overview, label: 'Back to Module' };
+    if (last) {
+      const lastTask = lastTaskOf(last);
+      if (lastTask) return { ...lastTask, label: 'Back' };
+      return { url: learnUrl(dayId, 'theory', last), label: 'Back', hint: 'Back to Lesson' };
+    }
+    return { url: overview, label: 'Back', hint: 'Back to Module' };
   }
 
   // complete
   if (pathname === `${overview}/complete`) {
-    return { url: `${overview}/challenge`, label: 'Back to Challenge' };
+    return { url: `${overview}/challenge`, label: 'Back', hint: 'Back to Challenge' };
   }
 
   return null;

@@ -9,12 +9,12 @@ import React from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { getModuleById } from '@/content/curriculum-index';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
-import { learnUrl } from '@/lib/learn-routes';
 import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
 
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
+import { useStepBack } from './use-step-back';
 
 interface TheoryViewProps {
   dayId: string;
@@ -30,6 +30,10 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
   const { executeQuery } = useSqlExecutor();
   const nav = useLearningNavigation();
   const router = useRouter();
+  // P11.2: step-chain Back — concept i>0 goes to the previous concept's LAST
+  // task; the first concept goes back to the module card (hooks before any
+  // conditional return, per rules-of-hooks).
+  const { backStep, goBack } = useStepBack(mod.id);
 
   const conceptIndex = mod.concepts.findIndex((c) => c.id === concept.id);
   // Concept-level lock: only concepts up to the first incomplete one are open.
@@ -39,8 +43,6 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
     router.replace(`/learn/${mod.id}`);
     return null;
   }
-
-  const prevConcept = conceptIndex > 0 ? mod.concepts[conceptIndex - 1] : undefined;
 
   return (
     <ConceptLessonView
@@ -52,10 +54,8 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
       )}
       onStartPractice={() => nav.startPractice(mod.id, concept.id)}
       onExecuteSql={executeQuery}
-      onPrevious={() => {
-        if (prevConcept) router.push(learnUrl(mod.id, 'theory', prevConcept.id));
-      }}
-      canGoBack={conceptIndex > 0}
+      onPrevious={backStep ? () => goBack(backStep.url) : undefined}
+      canGoBack={Boolean(backStep)}
     />
   );
 }
