@@ -181,7 +181,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
         </button>
         {nextModule && (
           <button
-            onClick={() => router.push(learnUrl(nextModule.id, 'theory'))}
+            onClick={() => router.push(learnUrl(nextModule.id, 'theory', nextModule.concepts[0].id))}
             title={`Open ${getModuleDisplayLabel(nextModule)}`}
             className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
           >
