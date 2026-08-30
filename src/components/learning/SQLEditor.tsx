@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
@@ -12,6 +12,8 @@ interface SQLEditorProps {
   nextActionLabel?: string;
   onNextAction?: () => void;
   readOnly?: boolean;
+  /** Task guidance shown as the empty-editor placeholder (replaces in-code comments). */
+  placeholder?: string;
 }
 
 export const SQLEditor: React.FC<SQLEditorProps> = ({
@@ -23,6 +25,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   nextActionLabel = 'Next Task',
   onNextAction,
   readOnly = false,
+  placeholder,
 }) => {
   const [copied, setCopied] = useState(false);
   const [cursorPos, setCursorPos] = useState(0);
@@ -86,7 +89,12 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
       if (matched.length > 0) {
         setSuggestions(matched);
-        setSelectedSuggestionIdx(0);
+        // Only reset the highlighted suggestion when the list actually changed —
+        // otherwise ArrowUp/ArrowDown keyup re-runs this and snaps the
+        // selection back to the first item (bug: could not navigate with arrows).
+        const sameList =
+          matched.length === suggestions.length && matched.every((m, i) => m === suggestions[i]);
+        setSelectedSuggestionIdx(sameList ? selectedSuggestionIdx : 0);
         setShowSuggestions(true);
         
         // Calculate safe position inside editor
@@ -352,7 +360,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               // Small delay so autocomplete item mousedown can fire before we close it
               setTimeout(() => setShowSuggestions(false), 100);
             }}
-            placeholder={`-- Type your SQL query here\nSELECT * FROM ${tableName};`}
+            placeholder={placeholder ?? `-- Type your SQL query here\nSELECT * FROM ${tableName};`}
             spellCheck={false}
             autoCapitalize="none"
             autoComplete="off"

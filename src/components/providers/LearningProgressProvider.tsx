@@ -388,6 +388,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       }
       return {
         ...prev,
+        currentModuleId: moduleId,
+        currentConceptId: conceptId,
         completedModules: {
           ...prev.completedModules,
           [moduleId]: {
@@ -406,6 +408,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     const completedAt = new Date().toISOString();
     setUserState((prev) => ({
       ...prev,
+      currentModuleId: module.id,
+      currentConceptId: null,
       completedModules: {
         ...prev.completedModules,
         [module.id]: {

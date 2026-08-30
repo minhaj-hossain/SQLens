@@ -450,3 +450,25 @@ export function getModuleUnlockStatus(
     reason: `Unlocks at 6:00 PM on next learning day (${formatTimeRemaining(nextUnlockDate, now)} remaining).`,
   };
 }
+
+/**
+ * Derive where the learner actually is (P9.7): the first module in canonical
+ * order that is not fully complete, at its first incomplete concept. This is
+ * the truth the homepage resume card shows — `userState.currentModuleId` is
+ * only a stored hint and was historically never updated by navigation.
+ */
+export function deriveLastPosition(
+  modules: ModuleData[],
+  state: UserLearningState,
+): { moduleId: string; conceptId: string | null } {
+  for (const mod of modules) {
+    if (mod.concepts.length === 0) continue;
+    if (isModuleFullyComplete(mod, state)) continue;
+    const firstIncomplete =
+      mod.concepts.find((c) => !isConceptCompleted(c, mod.id, state)) ?? mod.concepts[0];
+    return { moduleId: mod.id, conceptId: firstIncomplete?.id ?? null };
+  }
+  // Everything complete — land on the final module for review.
+  const last = modules[modules.length - 1];
+  return { moduleId: last?.id ?? state.currentModuleId, conceptId: last?.concepts[0]?.id ?? null };
+}

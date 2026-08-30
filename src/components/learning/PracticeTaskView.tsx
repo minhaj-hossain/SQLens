@@ -7,6 +7,7 @@ import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
 import { validateTaskSolution } from '../../lib/sql-engine/validator';
+import { splitTaskScaffold } from '../../lib/task-scaffold';
 import { ArrowLeft } from 'lucide-react';
 
 interface PracticeTaskViewProps {
@@ -44,7 +45,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   canGoBack = false,
   canGoForward = false,
 }) => {
-  const initialCode = savedSql && savedSql.trim().length > 0 ? savedSql : task.initialSql;
+  // Guidance comments become the editor PLACEHOLDER; only real code loads.
+  const taskScaffold = splitTaskScaffold(task.initialSql);
+  const initialCode = savedSql && savedSql.trim().length > 0 ? savedSql : taskScaffold.code;
   const [currentSql, setCurrentSql] = useState(initialCode);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [viewedSolution, setViewedSolution] = useState(false);
@@ -54,7 +57,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
 
   // Re-sync when switching tasks (tracked by task.id)
   useEffect(() => {
-    const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : task.initialSql;
+    const scaffold = splitTaskScaffold(task.initialSql);
+    const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : scaffold.code;
     setCurrentSql(codeToSet);
     setExecutionResult(null);
     setTaskPassed(isCompleted);
@@ -156,6 +160,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
             <SQLEditor
               value={currentSql}
               tableName={task.primaryTable}
+              placeholder={taskScaffold.placeholder || undefined}
               onChange={(newVal) => {
                 setCurrentSql(newVal);
                 if (evaluationState === 'wrong') {

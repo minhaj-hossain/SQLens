@@ -271,11 +271,11 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         disabled={!isUnlocked}
                         title={`${getModuleDisplayLabel(mod)} — ${mod.shortTitle}${isDone ? ' (complete)' : isCurrent ? ' (you are here)' : isUnlocked ? '' : ' (locked)'}`}
                         aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-transform ${
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-all duration-150 ${
                           isDone
-                            ? 'bg-done border-[1.5px] border-done text-ink font-bold'
+                            ? 'bg-done border-[1.5px] border-done text-ink font-bold hover:-translate-y-0.5 hover:shadow-[0_0_0_4px_rgba(216,216,211,0.15)] cursor-pointer'
                             : isCurrent
-                            ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_6px_var(--accent-dim)] cursor-pointer'
+                            ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_6px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
                             : isUnlocked
                             ? 'bg-surface border-[1.5px] border-border text-text-dim hover:-translate-y-0.5 cursor-pointer'
                             : 'bg-surface border-[1.5px] border-border text-text-faint cursor-not-allowed'
@@ -310,7 +310,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                             onClick={() =>
                               onSelectModuleAndConcept(currentModule.id, concept.id, conceptDone ? 'practice' : 'theory')
                             }
-                            className="flex items-center gap-2 text-xs text-text-dim px-2.5 py-2 bg-surface border border-border-soft rounded-[7px] text-left hover:border-text-dim transition-colors cursor-pointer"
+                            className="flex items-center gap-2 text-xs text-text-dim px-2.5 py-2 bg-surface border border-border-soft rounded-[7px] text-left hover:bg-surface-2 hover:-translate-y-px transition-all cursor-pointer"
                           >
                             <span
                               className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] shrink-0 font-bold ${

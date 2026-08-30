@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, TableRow } from '../../types/database';
 import { validateTaskSolution } from '../../lib/sql-engine/validator';
+import { splitTaskScaffold } from '../../lib/task-scaffold';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
@@ -65,7 +66,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     ...savedTaskSqls,
   }));
 
-  const initialSqlForTask = taskSqlCache[currentTask.id] ?? (currentTask.initialSql || '');
+  // Guidance comments become the editor PLACEHOLDER; only real code loads.
+  const taskScaffold = splitTaskScaffold(currentTask.initialSql);
+  const initialSqlForTask = taskSqlCache[currentTask.id] ?? taskScaffold.code;
   const [currentSql, setCurrentSql] = useState<string>(initialSqlForTask);
   const [executionResult, setExecutionResult] = useState<QueryExecutionResult | null>(null);
   const [taskPassed, setTaskPassed] = useState<boolean>(() => completedTaskIds.includes(currentTask.id));
@@ -114,7 +117,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   // Sync state when selected task changes (tracked by currentTask.id)
   useEffect(() => {
     const isDone = completedTaskIds.includes(currentTask.id);
-    const existingSql = taskSqlCache[currentTask.id] ?? (isDone && currentTask.solutionSql ? currentTask.solutionSql : (currentTask.initialSql || ''));
+    const scaffold = splitTaskScaffold(currentTask.initialSql);
+    const existingSql = taskSqlCache[currentTask.id] ?? (isDone && currentTask.solutionSql ? currentTask.solutionSql : scaffold.code);
     
     setCurrentSql(existingSql);
     setExecutionResult(null);
@@ -201,7 +205,12 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       setSuggestions(matches.slice(0, 8));
       setSuggestionWord(word);
       setShowSuggestions(matches.length > 0);
-      setSelectedSuggestionIdx(0);
+      // Keep the highlighted suggestion when the list is unchanged, so arrow-key
+      // navigation (keyup re-runs this) is not snapped back to the first item.
+      const next = matches.slice(0, 8);
+      const sameList =
+        next.length === suggestions.length && next.every((m, i) => m === suggestions[i]);
+      setSelectedSuggestionIdx(sameList ? selectedSuggestionIdx : 0);
     } else {
       setShowSuggestions(false);
     }
@@ -491,7 +500,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               onClick={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
               onKeyDown={handleKeyDown}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-              placeholder={`-- Type your SQL query here\nSELECT name, price\nFROM ${currentTask.primaryTable};`}
+              placeholder={taskScaffold.placeholder || `-- Type your SQL query here\nSELECT name, price\nFROM ${currentTask.primaryTable};`}
               spellCheck={false}
               autoCapitalize="none"
               autoComplete="off"

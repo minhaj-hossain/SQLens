@@ -149,3 +149,14 @@
 - [x] Rewrote pre-filled-answer initialSql (day-05/10/12/13/21/22/31/38 tasks) to partial scaffolding
 - [x] day17-c1c-t2: fixed solutionSql (was missing IS NOT NULL) + customValidator AST guard on whereClause
 - Gates: tsc 0 / tests 117/117 / build 0
+
+---
+### P9.7 - Correctness sweep + editor UX + homepage resume (COMPLETE)
+- [x] NEW GUARD tests/content/solution-sql.test.ts: every task + challenge solutionSql runs through the engine in curriculum order (per-module executor, lifecycle honored) and MUST pass its validator
+- [x] Sweep found 14 failures: harness artifacts (fresh-lifecycle resets) + real bug: capstone challenge re-created existing schema - fixed with DROP TABLE IF EXISTS cascade (cap-ch-t1 solution + hint)
+- [x] Suggestion navigation: arrow keys no longer snap back to first item (SQLEditor + IndependentChallengeView kept selection when list unchanged); Playground Ctrl+Space panel gained full arrow/Enter/Esc navigation
+- [x] Task guidance comments became dynamic editor placeholders (src/lib/task-scaffold.ts splitTaskScaffold; wired into PracticeTaskView + IndependentChallengeView + SQLEditor placeholder prop)
+- [x] Homepage resume card now derives true position (deriveLastPosition in unlock-calculator; first incomplete module/concept) - userState.currentModuleId was never written before
+- [x] Provider write-through: markConceptComplete/markModuleComplete keep currentModuleId/currentConceptId current
+- [x] Homepage hover: done leaves get subtle lift + gray halo; current leaf lifts; concept pills switch border-pop to smooth bg lift
+- Gates: tsc 0 / tests 118/118 / build 0

@@ -178,6 +178,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [dbMode, setDbMode] = useState<'lesson' | 'scratch'>('lesson');
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(0);
   const [shareCopied, setShareCopied] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -266,6 +267,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
       .filter((cand) => cand.toLowerCase().startsWith(prefix) && prefix.length >= 1)
       .slice(0, 8);
     setSuggestions(matches);
+    setSelectedSuggestionIdx(0);
   }, [sql]);
 
   /** Inserts a suggestion at the caret position. */
@@ -291,6 +293,28 @@ export default function Playground({ onClose }: PlaygroundProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Autocomplete navigation (when the Ctrl+Space panel is open)
+      if (suggestions.length > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedSuggestionIdx((p) => (p + 1) % suggestions.length);
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedSuggestionIdx((p) => (p - 1 + suggestions.length) % suggestions.length);
+          return;
+        }
+        if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) {
+          e.preventDefault();
+          insertSuggestion(suggestions[selectedSuggestionIdx]);
+          return;
+        }
+        if (e.key === 'Escape') {
+          setSuggestions([]);
+          return;
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         run();
@@ -314,7 +338,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
         });
       }
     },
-    [run, sql],
+    [run, sql, suggestions, selectedSuggestionIdx, insertSuggestion],
   );
 
   const shareQuery = useCallback(async () => {
@@ -521,18 +545,18 @@ export default function Playground({ onClose }: PlaygroundProps) {
             {suggestions.length > 0 && (
               <div className="absolute z-20 mt-[-8px] ml-4 rounded-xl border border-border bg-surface shadow-xl overflow-hidden w-64">
                 <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-text-faint bg-surface-2 border-b border-border">
-                  Ctrl+Space suggestions — click or keep typing
+                  Ctrl+Space suggestions — ↑↓ + Enter, or click
                 </div>
-                {suggestions.map((s) => (
+                {suggestions.map((s, idx) => (
                   <button
                     key={s}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       insertSuggestion(s);
                     }}
-                    className={`w-full text-left px-3 py-1.5 font-mono text-xs hover:bg-surface-2 transition cursor-pointer ${
-                      ALL_TABLES.includes(s) ? 'text-func' : 'text-text-dim'
-                    }`}
+                    className={`w-full text-left px-3 py-1.5 font-mono text-xs transition cursor-pointer ${
+                      idx === selectedSuggestionIdx ? 'bg-surface-2 text-text' : 'hover:bg-surface-2'
+                    } ${ALL_TABLES.includes(s) ? 'text-text' : 'text-text-dim'}`}
                     title={ALL_TABLES.includes(s) ? 'table' : SQL_KEYWORDS.includes(s) ? 'keyword' : 'column'}
                   >
                     {s}
