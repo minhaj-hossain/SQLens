@@ -110,6 +110,7 @@ export const Day_38_MODULE: ModuleData = {
           solutionExplanation: 'Ranks products by price within each category.',
           hints: [{ level: 1, text: 'Use `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'category_id', 'price', 'category_rank'],
             expectedRowCount: 28,
@@ -131,6 +132,7 @@ export const Day_38_MODULE: ModuleData = {
           solutionExplanation: 'Extracts top 2 ranked products per category.',
           hints: [{ level: 1, text: 'Use `WITH RankedProducts AS (...) SELECT * FROM RankedProducts WHERE rank_num <= 2;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             expectedRowCount: 11,
           },
@@ -164,6 +166,7 @@ export const Day_38_MODULE: ModuleData = {
         solutionExplanation: 'Combines a Window Function inside a CTE to slice the top 2 products per category.',
         hints: [{ level: 1, text: 'Use `WITH RankedProducts AS (...) SELECT * FROM RankedProducts WHERE rank_num <= 2;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           expectedRowCount: 11,
         },

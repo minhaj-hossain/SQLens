@@ -117,6 +117,7 @@ export const Day_31_MODULE: ModuleData = {
           solutionExplanation: 'No filter and no index — the plan is a full scan (ALL).',
           hints: [{ level: 1, text: 'Prefix the SELECT with EXPLAIN: EXPLAIN SELECT * FROM products;' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['type', 'key', 'rows', 'possible_keys'],
             expectedRowCount: 1,
@@ -142,6 +143,7 @@ export const Day_31_MODULE: ModuleData = {
           solutionExplanation: 'The WHERE clause constrains rows, but without an index on price SQL scans the whole table.',
           hints: [{ level: 1, text: 'EXPLAIN SELECT * FROM products WHERE price > 50;' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['type', 'key', 'rows'],
             expectedRowCount: 1,
@@ -242,6 +244,7 @@ export const Day_31_MODULE: ModuleData = {
           solutionExplanation: 'The PK index answers product_id = 7 directly — 1 row examined.',
           hints: [{ level: 1, text: 'EXPLAIN SELECT * FROM products WHERE product_id = 7;' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['type', 'key', 'rows', 'possible_keys'],
             expectedRowCount: 1,
@@ -432,6 +435,7 @@ export const Day_31_MODULE: ModuleData = {
         solutionExplanation: 'Before any index, customer_id filters scan the whole orders table.',
         hints: [{ level: 1, text: 'EXPLAIN SELECT * FROM orders WHERE customer_id = 3;' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['type', 'key', 'rows', 'possible_keys'],
           expectedRowCount: 1,
@@ -507,6 +511,7 @@ export const Day_31_MODULE: ModuleData = {
         solutionExplanation: 'The PK auto-index answers directly.',
         hints: [{ level: 1, text: 'EXPLAIN SELECT * FROM orders WHERE order_id = 3;' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['type', 'key', 'rows'],
           expectedRowCount: 1,

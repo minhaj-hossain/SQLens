@@ -203,6 +203,7 @@ export const Day_24_MODULE: ModuleData = {
             { level: 2, text: 'The OVER clause has its own ORDER BY mon — WITHOUT it, every row repeats 1188.71.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['mon', 'revenue', 'running_revenue'],
             requireFunction: 'SUM',
@@ -233,6 +234,7 @@ export const Day_24_MODULE: ModuleData = {
             { level: 1, text: 'A running total inside each group = SUM() OVER (PARTITION BY … ORDER BY …) — the partition pairs with Day 23\'s lesson.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['customer_id', 'order_id', 'order_date', 'total', 'running_total'],
             requireFunction: 'SUM',
@@ -416,6 +418,7 @@ export const Day_24_MODULE: ModuleData = {
             { level: 2, text: 'Subtract in the OUTER query — revenue - prev_revenue — not inside the CTE that created the LAG.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['mon', 'revenue', 'growth'],
             requireFunction: 'LAG',
@@ -446,6 +449,7 @@ export const Day_24_MODULE: ModuleData = {
             { level: 2, text: 'The first order of each customer has prev_date = NULL — filter it out with WHERE prev_date IS NOT NULL.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['customer_id', 'order_date', 'days_between'],
             requireFunction: 'LAG',
@@ -561,6 +565,7 @@ export const Day_24_MODULE: ModuleData = {
           { level: 2, text: 'running_revenue uses SUM() OVER; growth is revenue - prev_revenue where prev_revenue came from LAG.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['mon', 'revenue', 'running_revenue', 'growth'],
           requireFunction: 'LAG',
@@ -592,6 +597,7 @@ export const Day_24_MODULE: ModuleData = {
           { level: 2, text: 'DATEDIFF(order_date, prev_date) gives days; then GROUP BY customer_id and take MAX(days_between).' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['customer_id', 'longest_gap'],
           requireFunction: 'LAG',

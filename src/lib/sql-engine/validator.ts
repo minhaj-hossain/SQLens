@@ -10,6 +10,57 @@ export interface ValidationOutcome {
   hintLevelToUnlock?: number;
 }
 
+/**
+ * P10.1 — every column and table name in the seed schema, lowercased. Used by
+ * the Quote-Reminder check so valid cross-column comparisons
+ * (e.g. WHERE name = title) are never mistaken for unquoted string literals.
+ */
+const knownIdentifiers: Set<string> = (() => {
+  const set = new Set<string>();
+  // Common table aliases used across lessons (p, p1/p2, c, o, oi, s, r, cat, ac...) —
+  // comparing against an alias is a valid cross-column comparison, not an unquoted string.
+  for (const a of ['p','p1','p2','c','o','oi','s','r','cat','ac','b','bo','a','au','pu','pb','e','em','pr','sp','or','od']) set.add(a.toLowerCase());
+  for (const [table, schema] of Object.entries(DATABASE_SCHEMAS)) {
+    set.add(table.toLowerCase());
+    for (const col of schema.columns ?? []) set.add(col.name.toLowerCase());
+  }
+  return set;
+})();
+
+/** Serialize a cell value deterministically for dataset comparison (NULL-safe). */
+function serializeValue(v: unknown): string {
+  if (v === null || v === undefined) return String.fromCharCode(0) + 'NULL';
+  if (typeof v === 'number') return 'n:' + String(v);
+  if (v instanceof Date) return 'd:' + v.toISOString();
+  return 's:' + String(v);
+}
+
+/** True when two row-canonical-key lists represent the same multiset (approach-fair). */
+function sameValueMultiset(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const counts = new Map<string, number>();
+  for (const k of a) counts.set(k, (counts.get(k) ?? 0) + 1);
+  for (const k of b) {
+    const c = counts.get(k);
+    if (!c) return false;
+    if (c === 1) counts.delete(k); else counts.set(k, c - 1);
+  }
+  return counts.size === 0;
+}
+
+/**
+ * True when a SQL string is a single read-only query (one SELECT / set-op /
+ * CTE / EXPLAIN). Only such tasks may use requireExactResult, because
+ * computing the expected output must never mutate the session database.
+ */
+export function isReadOnlySelect(sql: string | undefined): boolean {
+  if (!sql) return false;
+  const stmts = splitStatements(sql);
+  if (stmts.length !== 1) return false;
+  const p = parseSql(stmts[0]);
+  return p.type === 'SELECT' || p.type === 'SET_OPERATION' || p.type === 'CTE' || (p.type === 'EXPLAIN' && !!p.explainTarget);
+}
+
 // Levenshtein distance for fuzzy typo suggestion
 function levenshtein(a: string, b: string): number {
   const an = a ? a.length : 0;
@@ -36,7 +87,8 @@ function levenshtein(a: string, b: string): number {
 export function validateTaskSolution(
   userSql: string,
   result: QueryExecutionResult,
-  rule: ValidationRule
+  rule: ValidationRule,
+  expected?: QueryExecutionResult,
 ): ValidationOutcome {
   const cleanSql = userSql.trim();
 
@@ -61,8 +113,12 @@ export function validateTaskSolution(
     };
   }
 
+  // Trap checks run on a string-literal-free copy of the SQL so patterns like
+  // '%SUM(%' inside quotes can never trigger a false "syntax trap" (P10.1).
+  const sqlNoStrings = cleanSql.replace(/'(?:[^']|'')*'/g, "''");
+
   // Check Common Aggregate in WHERE Trap (only within the WHERE clause and not part of a subquery or HAVING)
-  const whereMatch = cleanSql.match(/\bWHERE\b((?:(?!\bSELECT\b)[\s\S])*?)(?:\bGROUP\s+BY\b|\bHAVING\b|\bORDER\s+BY\b|\bLIMIT\b|\)|;|$)/i);
+  const whereMatch = sqlNoStrings.match(/\bWHERE\b((?:(?!\bSELECT\b)[\s\S])*?)(?:\bGROUP\s+BY\b|\bHAVING\b|\bORDER\s+BY\b|\bLIMIT\b|\)|;|$)/i);
   if (whereMatch && whereMatch[1]) {
     const whereText = whereMatch[1];
     if (/\b(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test(whereText)) {
@@ -74,13 +130,17 @@ export function validateTaskSolution(
   }
 
   // Check Missing Quotes around text literals in WHERE (excluding column comparisons like p2.cat_id = p1.cat_id)
-  const unquotedMatch = cleanSql.match(/\bWHERE\b\s+([a-zA-Z0-9_.]+)\s*(=|!=|LIKE)\s*([a-zA-Z][a-zA-Z0-9_]*)(?!\s*[\(.])/i);
+  const unquotedMatch = sqlNoStrings.match(/\bWHERE\b\s+([a-zA-Z0-9_.]+)\s*(=|!=|LIKE)\s*([a-zA-Z][a-zA-Z0-9_]*)(?!\s*[\(.])/i);
   if (unquotedMatch) {
     const rhs = unquotedMatch[3].toUpperCase();
     const isKeywordOrNumber = ['NULL', 'TRUE', 'FALSE', 'SELECT', 'AS', 'AND', 'OR', 'NOT'].includes(rhs) || /^\d+$/.test(rhs);
-    // Don't flag if it's a known table alias or table column
-    const isTableAlias = ['P1', 'P2', 'P', 'C', 'O', 'OI', 'S', 'R', 'CAT', 'AC'].includes(rhs);
-    if (!isKeywordOrNumber && !isTableAlias) {
+    // P10.1: a bare identifier is legitimate when it names a real column or
+    // table (e.g. WHERE name = title) — only flag when it could only be an
+    // unquoted string. Joins commonly compare two columns, so skip there too.
+    const isKnownIdentifier =
+      sqlNoStrings.toUpperCase().includes(' JOIN ') ||
+      knownIdentifiers.has(rhs.toLowerCase());
+    if (!isKeywordOrNumber && !isKnownIdentifier) {
       return {
         passed: false,
         feedback: `💡 Quote Reminder: Text values in SQL must be enclosed in single quotes (e.g., '${unquotedMatch[3]}' instead of ${unquotedMatch[3]}).`,
@@ -164,6 +224,11 @@ export function validateTaskSolution(
 
   // 2. Check Required Columns & provide typo suggestions
   if (rule.requiredColumns && rule.requiredColumns.length > 0) {
+    // P10.3: with exact-result grading the returned DATASET (column count +
+    // values) decides correctness, so column NAMES are free unless aliases are
+    // explicitly taught via requiredAliases. This allows aliased / reordered
+    // projections (SELECT name AS n, price) instead of false-failing them.
+    if (!(rule.requireExactResult && expected?.success)) {
     const resultCols = result.columns.map(c => c.toLowerCase());
     for (const reqCol of rule.requiredColumns) {
       if (!resultCols.includes(reqCol.toLowerCase())) {
@@ -179,6 +244,7 @@ export function validateTaskSolution(
           feedback: `Missing column '${reqCol}'.${typoHint} Your query currently outputs: [${result.columns.join(', ')}].`,
         };
       }
+    }
     }
   }
 
@@ -316,8 +382,18 @@ export function validateTaskSolution(
         feedback: `Remember to sort the results using the ORDER BY clause.`,
       };
     }
+    // P10.5: resolve positional sort keys (ORDER BY 2) to their output column
+    // so positional ORDER BY is accepted as the equivalent of naming the column.
+    const resolveSortCol = (c: string): string => {
+      if (/^\d+$/.test(c)) {
+        const idx = parseInt(c, 10) - 1;
+        const name = result.columns[idx]?.toLowerCase();
+        if (name) return name;
+      }
+      return c.toLowerCase();
+    };
     for (const reqOrd of rule.requireOrderBy) {
-      const match = (orderByOk as any[]).find(o => o.column.toLowerCase() === reqOrd.column.toLowerCase());
+      const match = (orderByOk as any[]).find(o => resolveSortCol(o.column) === reqOrd.column.toLowerCase());
       if (!match) {
         return {
           passed: false,
@@ -366,6 +442,38 @@ export function validateTaskSolution(
           };
         }
       }
+    }
+  }
+
+  // 12.5 P10.3 - Exact-result grading: compare the returned dataset to the
+  // solution's output. Values compare per-row as sorted value-multisets, so
+  // column identity/order/aliasing never matters; when requireOrderBy is set
+  // (a sorting lesson), row ORDER also matters.
+  if (rule.requireExactResult && expected && expected.success && !result.error) {
+    const gotCols = result.columns.map(c => c.toLowerCase());
+    const expCols = expected.columns.map(c => c.toLowerCase());
+    if (gotCols.length !== expCols.length) {
+      return {
+        passed: false,
+        feedback: `Your query returned ${gotCols.length} column(s), but the expected result has ${expCols.length}. Check your SELECT list.`,
+      };
+    }
+    const rowKey = (r: any) => Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
+    const gotKeys = (result.rows || []).map(rowKey);
+    const expKeys = (expected.rows || []).map(rowKey);
+    const ordered = !!(rule.requireOrderBy && rule.requireOrderBy.length > 0);
+    if (ordered) {
+      if (gotKeys.length !== expKeys.length || gotKeys.some((k, i) => k !== expKeys[i])) {
+        return {
+          passed: false,
+          feedback: 'The rows you returned do not match the expected result set (values or sort order). Check your filters, JOINs, and ORDER BY.',
+        };
+      }
+    } else if (!sameValueMultiset(gotKeys, expKeys)) {
+      return {
+        passed: false,
+        feedback: 'The returned data does not match the expected result set. The row count was right but one or more values differ - check your filter conditions and JOINs.',
+      };
     }
   }
 

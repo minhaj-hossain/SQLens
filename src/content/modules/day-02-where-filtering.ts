@@ -177,6 +177,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 2, text: 'Write `SELECT name, age FROM students WHERE age = 22;` and click Submit.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'age'],
             forbiddenColumns: ['id', 'department', 'city'],
@@ -205,6 +206,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Start with `SELECT product_id, name, price FROM products WHERE product_id = 4;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['product_id', 'name', 'price'],
             requireWhere: true,
@@ -350,6 +352,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: "Write `WHERE department != 'EEE';`" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'department'],
             requireWhere: true,
@@ -376,6 +379,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Use `SELECT name, price FROM products WHERE product_id != 1;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireWhere: true,
@@ -518,6 +522,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Use `SELECT name, price FROM products WHERE price > 50.00;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireWhere: true,
@@ -544,6 +549,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Write `SELECT name, age FROM students WHERE age < 22;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'age'],
             requireWhere: true,
@@ -691,6 +697,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Use `WHERE price >= 50.00;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireWhere: true,
@@ -717,6 +724,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Write `SELECT name, age FROM students WHERE age <= 21;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'age'],
             requireWhere: true,
@@ -743,6 +751,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: 'Write `SELECT name, price, quantity_in_stock FROM products WHERE quantity_in_stock <= 15;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'quantity_in_stock'],
             requireWhere: true,
@@ -886,6 +895,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 2, text: "`SELECT name, city FROM students WHERE city = 'Dhaka';`" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'city'],
             requireWhere: true,
@@ -912,6 +922,7 @@ export const Day_02_MODULE: ModuleData = {
             { level: 1, text: "`SELECT name, email, city FROM customers WHERE city = 'Chittagong';`" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'email', 'city'],
             requireWhere: true,
@@ -949,6 +960,7 @@ export const Day_02_MODULE: ModuleData = {
           { level: 1, text: 'Use `SELECT name, price FROM products WHERE price < 50;`' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'price'],
           requireWhere: true,
@@ -974,6 +986,7 @@ export const Day_02_MODULE: ModuleData = {
           { level: 1, text: 'Use `SELECT name, quantity_in_stock FROM products WHERE quantity_in_stock > 20;`' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'quantity_in_stock'],
           requireWhere: true,
@@ -999,6 +1012,7 @@ export const Day_02_MODULE: ModuleData = {
           { level: 1, text: 'Use `SELECT name, price, quantity_in_stock FROM products WHERE quantity_in_stock = 0;`' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'price', 'quantity_in_stock'],
           requireWhere: true,
@@ -1025,6 +1039,7 @@ export const Day_02_MODULE: ModuleData = {
           { level: 1, text: "Write `SELECT name, email, city FROM customers WHERE city = 'Chittagong';`" },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'email', 'city'],
           requireWhere: true,
@@ -1051,6 +1066,7 @@ export const Day_02_MODULE: ModuleData = {
           { level: 1, text: 'Use `WHERE price >= 50.00;`' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'price', 'quantity_in_stock'],
           requireWhere: true,

@@ -160,3 +160,12 @@
 - [x] Provider write-through: markConceptComplete/markModuleComplete keep currentModuleId/currentConceptId current
 - [x] Homepage hover: done leaves get subtle lift + gray halo; current leaf lifts; concept pills switch border-pop to smooth bg lift
 - Gates: tsc 0 / tests 118/118 / build 0
+
+---
+### P10 - Approach-fair grading (COMPLETE)
+- [x] P10.1 Validator false-rejects: string-literal-free copy for aggregate-in-WHERE + Quote-Reminder traps; quote check now schema/alias identifier-aware; joins skip it entirely
+- [x] P10.2 ORDER BY soundness: positional keys resolve to output columns; unknown keys / expressions error clearly instead of silently mis-sorting; projected rows carry non-enumerable __source__ for ORDER BY on non-selected columns
+- [x] P10.3 requireExactResult: dataset comparison vs solution output (NULL-safe multiset; ordered when requireOrderBy); requiredColumns relaxed under exact-result (column names free, aliasing allowed); isReadOnlySelect guard so expected never mutates; wired into PracticeTaskView + IndependentChallengeView + guards
+- [x] P10.4 Content pass: 272 read-only SELECT tasks flagged requireExactResult:true (34 files; day-03 double-quote ids patched +2nd pass)
+- [x] P10.5 Equivalence suite (tests/engine/equivalence.test.ts): operator aliases, IN vs OR, BETWEEN vs range, case/formatting, alias renames, column aliasing, positional ORDER BY, GROUP/HAVING; wrong variants must fail; trap-layer isolation tests
+- Gates: tsc 0 / tests 127/127 / build 0

@@ -72,7 +72,7 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
     const label = parts[1] || '';
     const question = parts[2] || '';
     return (
-      <div className="rounded-xl border border-border bg-surface-2 p-4 flex flex-col gap-2 transition hover:border-text-dim">
+      <div className="rounded-xl border border-border bg-surface-2 p-4 flex flex-col gap-2">
         <span className="inline-block self-start font-mono text-[10.5px] text-text-faint border border-border px-2 py-0.5 rounded-[5px]">
           {label}
         </span>
@@ -641,9 +641,10 @@ return (
                         const isOptSelected = selected === oIdx;
                         const isOptCorrect = oIdx === mcq.correctIndex;
                         let cls =
-                          'flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg border text-[13px] font-sans transition cursor-pointer ';
+                          'flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg border text-[13px] font-sans transition-all cursor-pointer ';
                         if (!hasAnswered) {
-                          cls += 'border-border text-text-dim hover:border-text-dim hover:bg-surface';
+                          // Subtle hover: smooth background lift + tiny raise, no border pop
+                          cls += 'border-border text-text-dim hover:bg-surface hover:-translate-y-px';
                         } else if (isOptCorrect) {
                           cls += 'border-func/60 bg-func/10 text-text font-medium';
                         } else if (isOptSelected && !isCorrect) {

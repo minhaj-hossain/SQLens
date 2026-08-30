@@ -110,6 +110,7 @@ export const Day_36_MODULE: ModuleData = {
           solutionExplanation: 'Ranks top 3 categories by revenue.',
           hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC LIMIT 3;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'categories',
             requireJoin: true,
             requireGroupBy: true,
@@ -135,6 +136,7 @@ export const Day_36_MODULE: ModuleData = {
           solutionExplanation: 'Calculates high-value customers above average threshold.',
           hints: [{ level: 1, text: 'Use `WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             expectedRowCount: 5,
           },
@@ -168,6 +170,7 @@ export const Day_36_MODULE: ModuleData = {
         solutionExplanation: 'Joins across 3 tables and sums revenue per category.',
         hints: [{ level: 1, text: 'Use `ORDER BY category_revenue DESC LIMIT 3;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'categories',
           requireJoin: true,
           requireGroupBy: true,
@@ -193,6 +196,7 @@ export const Day_36_MODULE: ModuleData = {
         solutionExplanation: 'Uses CTE with subquery benchmark to filter high-spending accounts.',
         hints: [{ level: 1, text: 'Use `WITH CustomerTotals AS (...) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals);`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           expectedRowCount: 5,
         },

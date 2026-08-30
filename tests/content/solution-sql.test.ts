@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { ALL_MODULES } from '../../src/content/curriculum-index';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
-import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
+import { validateTaskSolution, isReadOnlySelect } from '../../src/lib/sql-engine/validator';
 
 function fresh() {
   return new SqlExecutor();
@@ -23,7 +23,7 @@ describe('every task answer passes its own validator', () => {
       // DDL (CREATE TABLE / CREATE INDEX) from earlier tasks is present.
       const ex = fresh();
 
-      const runTask = (conceptKey: string, task: { id: string; solutionSql?: string; validation: { expectFailure?: boolean }; databaseLifecycle?: 'fresh' | 'inherit' }) => {
+      const runTask = (conceptKey: string, task: { id: string; solutionSql?: string; validation: { expectFailure?: boolean; requireExactResult?: boolean }; databaseLifecycle?: 'fresh' | 'inherit' }) => {
         // Mirror PracticeView/ChallengeView: reset BEFORE tasks marked 'fresh'.
         if (task.databaseLifecycle === 'fresh') ex.resetDatabase();
         if (task.validation.expectFailure) return; // deliberate-error labs exempt
@@ -32,7 +32,12 @@ describe('every task answer passes its own validator', () => {
           return;
         }
         const result = ex.executeQuery(task.solutionSql);
-        const outcome = validateTaskSolution(task.solutionSql, result, task.validation);
+        // P10.3: exact-result tasks grade against the solution output.
+        const expected =
+          task.validation.requireExactResult && isReadOnlySelect(task.solutionSql)
+            ? ex.executeQuery(task.solutionSql)
+            : undefined;
+        const outcome = validateTaskSolution(task.solutionSql, result, task.validation, expected);
         if (!outcome.passed) {
           failures.push(`${mod.id}/${conceptKey}/${task.id} → ${outcome.feedback ?? result.error ?? 'no feedback'}`);
         }

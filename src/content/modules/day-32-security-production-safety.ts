@@ -152,7 +152,8 @@ export const Day_32_MODULE: ModuleData = {
           hints: [
             { level: 1, text: "SELECT customer_id, name, email FROM customers WHERE name = 'Rafiul Islam';" },
           ],
-          validation: { targetTable: 'customers', requireWhere: true, expectedRowCount: 1 },
+          validation: {
+          requireExactResult: true, targetTable: 'customers', requireWhere: true, expectedRowCount: 1 },
           successMessage: 'Baseline established: 1 honest input, 1 honest row.',
           databaseLifecycle: 'fresh',
         },
@@ -174,7 +175,8 @@ export const Day_32_MODULE: ModuleData = {
             { level: 1, text: "The WHERE clause is: WHERE name = '' OR '1'='1' - the string closes, then an always-true condition is OR-ed on." },
             { level: 2, text: "SELECT customer_id, name, email FROM customers WHERE name = '' OR '1'='1';" },
           ],
-          validation: { targetTable: 'customers', requireWhere: true, expectedRowCount: 15 },
+          validation: {
+          requireExactResult: true, targetTable: 'customers', requireWhere: true, expectedRowCount: 15 },
           successMessage: "Breach confirmed: the always-true condition returned all 15 customers. That is SQL injection, live.",
           databaseLifecycle: 'fresh',
         },
@@ -198,6 +200,7 @@ export const Day_32_MODULE: ModuleData = {
             { level: 2, text: "SELECT name, email FROM customers WHERE name = '' UNION SELECT name, contact_email FROM suppliers;" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireSetOp: 'UNION',
             requiredColumns: ['name', 'email'],
@@ -329,7 +332,8 @@ export const Day_32_MODULE: ModuleData = {
           hints: [
             { level: 1, text: 'SELECT customer_id, name, city FROM customers WHERE customer_id = 3;' },
           ],
-          validation: { targetTable: 'customers', requireWhere: true, expectedRowCount: 1 },
+          validation: {
+          requireExactResult: true, targetTable: 'customers', requireWhere: true, expectedRowCount: 1 },
           successMessage: 'One row, by design: the number was data, not code.',
           databaseLifecycle: 'fresh',
         },
@@ -351,7 +355,8 @@ export const Day_32_MODULE: ModuleData = {
             { level: 1, text: 'The bound value is inert text. Searching for a name nobody has returns an empty result.' },
             { level: 2, text: "SELECT customer_id, name FROM customers WHERE name = 'no such customer';" },
           ],
-          validation: { targetTable: 'customers', requireWhere: true, expectedRowCount: 0 },
+          validation: {
+          requireExactResult: true, targetTable: 'customers', requireWhere: true, expectedRowCount: 0 },
           successMessage: '0 rows - the payload is now just an unusual name. Code and data are separated.',
           databaseLifecycle: 'fresh',
         },
@@ -374,6 +379,7 @@ export const Day_32_MODULE: ModuleData = {
             { level: 1, text: 'SELECT product_id, name, price FROM products WHERE category_id = 1 ORDER BY price ASC;' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requireOrderBy: [{ column: 'price', direction: 'ASC' }],
@@ -569,6 +575,7 @@ export const Day_32_MODULE: ModuleData = {
             { level: 1, text: 'SELECT name, price FROM products WHERE quantity_in_stock < reorder_level;' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requiredColumns: ['name', 'price'],
@@ -603,7 +610,8 @@ export const Day_32_MODULE: ModuleData = {
         hints: [
           { level: 1, text: "WHERE email = '' OR '1'='1' - the payload closes the string, then ORs on an always-true condition." },
         ],
-        validation: { targetTable: 'customers', requireWhere: true, expectedRowCount: 15 },
+        validation: {
+        requireExactResult: true, targetTable: 'customers', requireWhere: true, expectedRowCount: 15 },
         successMessage: 'Breach reproduced: 15 rows through an email lookup. Finding #1 confirmed.',
         databaseLifecycle: 'fresh',
       },
@@ -624,7 +632,8 @@ export const Day_32_MODULE: ModuleData = {
         hints: [
           { level: 1, text: 'SELECT customer_id, name, city FROM customers WHERE customer_id = 7;' },
         ],
-        validation: { targetTable: 'customers', requireWhere: true, expectedRowCount: 1 },
+        validation: {
+        requireExactResult: true, targetTable: 'customers', requireWhere: true, expectedRowCount: 1 },
         successMessage: 'Finding #2 closed: one row by design, the id was data all along.',
         databaseLifecycle: 'fresh',
       },

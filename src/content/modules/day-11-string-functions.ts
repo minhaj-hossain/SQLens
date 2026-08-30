@@ -118,6 +118,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: 'UPPER(name) wraps the column; alias AS name_upper.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'name_upper'],
             requireFunction: 'UPPER',
@@ -143,6 +144,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: "Wrap the column, not the literal: WHERE UPPER(city) = 'DHAKA'." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'city'],
             requireFunction: 'UPPER',
@@ -246,6 +248,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: 'TRIM(city) wraps the column; alias AS clean_city.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'clean_city'],
             requireFunction: 'TRIM',
@@ -271,6 +274,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: "Put the function on the column side of the comparison: WHERE TRIM(city) = 'Dhaka'." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'city'],
             requireFunction: 'TRIM',
@@ -381,6 +385,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: "CONCAT(name, ' <', email, '>') — the literal pieces carry the space, < and >." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['contact'],
             requireFunction: 'CONCAT',
@@ -406,6 +411,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: "Four pieces: name, ' (', city, ')' — then ORDER BY the alias." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['directory_entry'],
             requireFunction: 'CONCAT',
@@ -508,6 +514,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: 'Start at position 1, take 3 characters.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'initials'],
             requireFunction: 'SUBSTRING',
@@ -533,6 +540,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: 'The slice is the same as the theory example — then ORDER BY the alias.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['order_id', 'order_date', 'month_prefix'],
             requireFunction: 'SUBSTRING',
@@ -634,6 +642,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: 'Wrap each column in LENGTH() and alias both.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'name_len', 'email_len'],
             requireFunction: 'LENGTH',
@@ -659,6 +668,7 @@ export const Day_11_MODULE: ModuleData = {
             { level: 1, text: 'Three clauses compose: IS NOT NULL guard → ORDER BY the length alias DESC → LIMIT 5.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'email_len'],
             requireFunction: 'LENGTH',
@@ -697,6 +707,7 @@ export const Day_11_MODULE: ModuleData = {
           { level: 1, text: 'Functions can nest inside CONCAT arguments: LOWER(email) is just another piece.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['contact'],
           requireFunction: 'CONCAT',
@@ -721,6 +732,7 @@ export const Day_11_MODULE: ModuleData = {
           { level: 1, text: 'UPPER in SELECT, then ORDER BY the alias.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['display_name'],
           requireFunction: 'UPPER',
@@ -745,6 +757,7 @@ export const Day_11_MODULE: ModuleData = {
           { level: 1, text: 'SUBSTRING(order_date, 1, 7) is the first CONCAT argument; order_id can be glued directly — it converts to text automatically.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['order_id', 'order_date', 'campaign_tag'],
           requireFunction: 'CONCAT',

@@ -136,6 +136,7 @@ export const Day_13_MODULE: ModuleData = {
             { level: 2, text: 'Add `HAVING AVG(price) > 15 ORDER BY product_count DESC;`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireGroupBy: true,
             requireHaving: true,
@@ -164,6 +165,7 @@ export const Day_13_MODULE: ModuleData = {
             { level: 2, text: 'Use `GROUP BY status ORDER BY order_count DESC;`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['status', 'order_count'],
             requireGroupBy: true,
@@ -193,6 +195,7 @@ export const Day_13_MODULE: ModuleData = {
             { level: 2, text: 'Add `HAVING COUNT(*) >= 4 ORDER BY in_stock_count DESC;`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requireGroupBy: true,
@@ -228,6 +231,7 @@ export const Day_13_MODULE: ModuleData = {
         solutionExplanation: 'Constructs the full multi-clause category overview report.',
         hints: [{ level: 1, text: 'Use `SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 15 ORDER BY product_count DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireGroupBy: true,
           requireHaving: true,

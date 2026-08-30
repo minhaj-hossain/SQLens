@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, TableRow } from '../../types/database';
-import { validateTaskSolution } from '../../lib/sql-engine/validator';
+import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
 import { splitTaskScaffold } from '../../lib/task-scaffold';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
@@ -242,7 +242,14 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     const result = onExecuteSql(currentSql);
     setExecutionResult(result);
 
-    const outcome = validateTaskSolution(currentSql, result, currentTask.validation);
+    // P10.3: grade against the solution's output on the same session executor
+    // (read-only SELECTs only, so this never mutates the database).
+    const expected =
+      currentTask.validation.requireExactResult && !result.error && isReadOnlySelect(currentTask.solutionSql)
+        ? onExecuteSql(currentTask.solutionSql)
+        : undefined;
+
+    const outcome = validateTaskSolution(currentSql, result, currentTask.validation, expected);
 
     if (outcome.passed) {
       setTaskPassed(true);
@@ -399,7 +406,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     isSelected
                       ? 'bg-surface-3 text-text font-semibold border-border'
                       : isTaskDone
-                      ? 'bg-surface text-text border border-border hover:border-text-dim'
+                      ? 'bg-surface text-text border border-border hover:bg-surface-2'
                       : 'bg-surface-2 text-text-dim hover:text-text border border-border'
                   }`}
                 >

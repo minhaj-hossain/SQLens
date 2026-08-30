@@ -100,7 +100,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT product_name, COUNT(*) AS copies FROM fat_orders GROUP BY product_name ORDER BY copies DESC;',
           solutionExplanation: 'Each product name repeats on every order line that mentions it — redundancy made visible as a count.',
           hints: [{ level: 1, text: 'GROUP BY product_name, COUNT(*) the rows per name.' }],
-          validation: { expectedRowCount: 3 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 3 },
           successMessage: 'Redundancy measured: the same fact stored many times over.',
           databaseLifecycle: 'fresh',
         },
@@ -118,7 +119,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT customer_email, COUNT(*) AS copies FROM fat_orders GROUP BY customer_email ORDER BY copies DESC;',
           solutionExplanation: 'Emails repeat on every order — another redundant fact, on every row instead of in one customers table.',
           hints: [{ level: 1, text: 'Same pattern as Task 1, different column.' }],
-          validation: { expectedRowCount: 3 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 3 },
           successMessage: 'Redundancy confirmed in a second column — it is a pattern, not a coincidence.',
           databaseLifecycle: 'fresh',
         },
@@ -211,7 +213,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT DISTINCT product_name FROM fat_orders;',
           solutionExplanation: 'When the last order for a product is deleted, the product itself disappears from reports — even though it still exists in the catalog.',
           hints: [{ level: 1, text: 'COUNT the distinct names before and after a DELETE.' }],
-          validation: { expectedRowCount: 3 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 3 },
           successMessage: 'Delete anomaly confirmed: removing an order removed a product from sight.',
           databaseLifecycle: 'fresh',
         },
@@ -289,7 +292,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: "SELECT name, department FROM students WHERE department = 'CSE';",
           solutionExplanation: "WHERE department = 'CSE' compares whole values. It only works because each cell holds exactly one department.",
           hints: [{ level: 1, text: "Filter students with WHERE department = 'CSE'." }],
-          validation: { expectedRowCount: 3 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 3 },
           successMessage: 'Equality is trustworthy only when cells are atomic - that is 1NF paying you back.',
           databaseLifecycle: 'fresh',
         },
@@ -307,7 +311,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT department, COUNT(*) AS student_count FROM students GROUP BY department ORDER BY student_count DESC;',
           solutionExplanation: 'One row per (student, department) fact makes COUNT a one-liner. Against a comma-string cell this query is simply impossible.',
           hints: [{ level: 1, text: 'GROUP BY department, COUNT(*) the rows, ORDER BY the count.' }],
-          validation: { expectedRowCount: 3 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 3 },
           successMessage: '1NF is not bureaucracy - it is what makes the queries you already know possible.',
           databaseLifecycle: 'fresh',
         },
@@ -388,7 +393,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT product_id, product_name FROM combined_items GROUP BY product_id, product_name;',
           solutionExplanation: 'GROUP BY product_id collapses to one row per product. Whatever survives with it depends on it: product_name.',
           hints: [{ level: 1, text: 'GROUP BY the two columns; the collapse shows what determines what.' }],
-          validation: { expectedRowCount: 2 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 2 },
           successMessage: 'Two products, two rows - product_name depends on product_id alone.',
           databaseLifecycle: 'fresh',
         },
@@ -406,7 +412,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT product_name, COUNT(*) AS rows_holding FROM combined_items GROUP BY product_name ORDER BY rows_holding DESC;',
           solutionExplanation: "Product 101 appears on 2 rows - renaming it means 2 UPDATEs. The fact belongs in products, where it is stored once.",
           hints: [{ level: 1, text: 'Same shape as the C1 tasks, but on combined_items.' }],
-          validation: { expectedRowCount: 2 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 2 },
           successMessage: 'A partial dependency is not abstract: it is a row count you just measured.',
           databaseLifecycle: 'fresh',
         },
@@ -487,7 +494,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: 'SELECT customer_id, customer_name, customer_city, COUNT(*) AS orders FROM combined_orders GROUP BY customer_id, customer_name, customer_city;',
           solutionExplanation: 'The collapse proves order_id -> customer_id -> customer_city. The chain is why 3NF splits customers out of orders.',
           hints: [{ level: 1, text: 'GROUP BY all three customer columns; COUNT(*) shows how many orders each owns.' }],
-          validation: { expectedRowCount: 2 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 2 },
           successMessage: 'City follows the customer, never the order - the transitive dependency, visible in two rows.',
           databaseLifecycle: 'fresh',
         },
@@ -505,7 +513,8 @@ export const Day_30_MODULE: ModuleData = {
           solutionSql: "SELECT customer_city, COUNT(*) AS rows_to_update FROM combined_orders WHERE customer_name = 'Rahim' GROUP BY customer_city;",
           solutionExplanation: 'Rahim holds 2 rows here. In the 3NF design his city sits in exactly one customers row - the anomaly is designed out.',
           hints: [{ level: 1, text: "WHERE customer_name = 'Rahim', then COUNT(*) the rows." }],
-          validation: { expectedRowCount: 1 },
+          validation: {
+          requireExactResult: true, expectedRowCount: 1 },
           successMessage: '2 rows today, 1 row after 3NF - the split is justified by arithmetic, not by a checklist.',
           databaseLifecycle: 'fresh',
         },

@@ -385,8 +385,17 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
         }
         const parts = expr.split(/\s+/);
         const col = parts[0].replace(/[`"']/g, '');
-        const dir = parts[1] && parts[1].toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-        query.orderBy?.push({ column: col, direction: dir });
+        const second = parts[1]?.toUpperCase();
+        const dir = second === 'DESC' ? 'DESC' : 'ASC';
+        // P10.2: `ORDER BY <expression>` (e.g. `price * -1`) is not supported —
+        // mark it so the executor rejects clearly instead of silently
+        // mis-sorting by the first token.
+        const isUnsupportedExpr =
+          parts.length > 2 || (second !== undefined && second !== 'ASC' && second !== 'DESC');
+        query.orderBy?.push({
+          column: isUnsupportedExpr ? '__order_expression__' : col,
+          direction: dir,
+        });
       }
       remaining = remaining.substring(0, orderIdx).trim();
     }

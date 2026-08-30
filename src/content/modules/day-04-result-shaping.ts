@@ -130,6 +130,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: '`ORDER BY price DESC` sorts output from highest price to lowest.',
           hints: [{ level: 1, text: 'Use `ORDER BY price DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireOrderBy: [{ column: 'price', direction: 'DESC' }],
@@ -153,6 +154,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: '`ORDER BY name ASC` lists customers from A to Z.',
           hints: [{ level: 1, text: 'Use `ORDER BY name ASC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'city'],
             requireOrderBy: [{ column: 'name', direction: 'ASC' }],
@@ -283,6 +285,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: '`ORDER BY age ASC, name ASC` sorts youngest first and alphabetically breaks ties (Rahim before Tanvir).',
           hints: [{ level: 1, text: 'Use `ORDER BY age ASC, name ASC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'age'],
             requireOrderBy: [
@@ -309,6 +312,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: '`ORDER BY category_id ASC, price DESC` organizes products by category with highest price items first.',
           hints: [{ level: 1, text: 'Use `ORDER BY category_id ASC, price DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'category_id', 'price'],
             requireOrderBy: [
@@ -433,6 +437,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: '`SELECT DISTINCT city FROM customers;` returns each city name once.',
           hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireDistinct: true,
@@ -455,6 +460,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: 'Returns unique category IDs (1, 2, 3, 4, 5, and null).',
           hints: [{ level: 1, text: 'Use `SELECT DISTINCT category_id FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['category_id'],
             requireDistinct: true,
@@ -579,6 +585,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: 'Sorts ascending by stock count and limits to the top 5.',
           hints: [{ level: 1, text: 'Use `ORDER BY quantity_in_stock ASC LIMIT 5;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock'],
             requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
@@ -603,6 +610,7 @@ export const Day_04_MODULE: ModuleData = {
           solutionExplanation: 'Skips the first 5 customers and returns customers 6 through 10.',
           hints: [{ level: 1, text: 'Use `ORDER BY customer_id ASC LIMIT 5 OFFSET 5;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['customer_id', 'name', 'city'],
             requireOrderBy: [{ column: 'customer_id', direction: 'ASC' }],
@@ -639,6 +647,7 @@ export const Day_04_MODULE: ModuleData = {
         solutionExplanation: '`ORDER BY price DESC` sorts all products starting with the highest price.',
         hints: [{ level: 1, text: 'Use `SELECT * FROM products ORDER BY price DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireOrderBy: [{ column: 'price', direction: 'DESC' }],
           expectedRowCount: 28,
@@ -660,6 +669,7 @@ export const Day_04_MODULE: ModuleData = {
         solutionExplanation: '`DISTINCT city` eliminates duplicate city names.',
         hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['city'],
           requireDistinct: true,
@@ -682,6 +692,7 @@ export const Day_04_MODULE: ModuleData = {
         solutionExplanation: '`ORDER BY quantity_in_stock ASC LIMIT 5` returns the 5 lowest stock items.',
         hints: [{ level: 1, text: 'Use `ORDER BY quantity_in_stock ASC LIMIT 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
           requireLimit: 5,

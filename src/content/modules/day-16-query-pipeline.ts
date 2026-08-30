@@ -198,6 +198,7 @@ export const Day_16_MODULE: ModuleData = {
             { level: 2, text: 'Group by customer and filter groups with `HAVING COUNT(o.order_id) >= 1`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireJoin: true,
             requireWhere: true,
@@ -231,6 +232,7 @@ export const Day_16_MODULE: ModuleData = {
             { level: 2, text: 'Add `HAVING COUNT(p.product_id) >= 2 ORDER BY category_name ASC;`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'categories',
             requireJoin: true,
             requireWhere: true,
@@ -269,6 +271,7 @@ export const Day_16_MODULE: ModuleData = {
         solutionExplanation: 'Executes the complete 7-clause SQL pipeline.',
         hints: [{ level: 1, text: 'Use `WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY active_orders DESC LIMIT 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireWhere: true,

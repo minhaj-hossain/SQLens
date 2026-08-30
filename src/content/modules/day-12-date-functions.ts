@@ -128,6 +128,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'Wrap order_date in YEAR(), MONTH(), DAY() — alias each.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['order_date', 'yr', 'mon', 'dy'],
             requireFunction: 'YEAR',
@@ -153,6 +154,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'Same extractor, different table and column: YEAR(signup_date).' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'signup_date', 'signup_year'],
             requireFunction: 'YEAR',
@@ -273,6 +275,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'GROUP BY the same expression you select: GROUP BY MONTH(order_date).' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['mon', 'order_count'],
             requireFunction: 'MONTH',
@@ -299,6 +302,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'Identical shape to Task 1 — only the component (YEAR) and table change.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['signup_year', 'signups'],
             requireFunction: 'YEAR',
@@ -414,6 +418,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'WHERE order_date >= CURDATE() - INTERVAL 30 DAY — the boundary computes itself.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['order_id', 'order_date'],
             expectedRowCount: 8,
@@ -438,6 +443,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'Same pattern as Task 1 with a bigger interval — wrap it in COUNT(*) for the one-number answer.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['orders_last_90_days'],
             expectedRowCount: 1,
@@ -550,6 +556,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'DATEDIFF(CURDATE(), signup_date) — today first, so the gap counts forward from signup.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'signup_date', 'days_since_signup'],
             requireFunction: 'DATEDIFF',
@@ -575,6 +582,7 @@ export const Day_12_MODULE: ModuleData = {
             { level: 1, text: 'Identical shape to Task 1 — swap the date column to order_date.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requiredColumns: ['order_id', 'order_date', 'order_age'],
             requireFunction: 'DATEDIFF',
@@ -614,6 +622,7 @@ export const Day_12_MODULE: ModuleData = {
           { level: 1, text: 'GROUP BY MONTH(o.order_date); the SUM is the Day-14 revenue expression.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['mon', 'revenue'],
           requireFunction: 'MONTH',
@@ -641,6 +650,7 @@ export const Day_12_MODULE: ModuleData = {
           { level: 1, text: 'MAX(o.order_date) is the last order; the NULL case needs OR MAX(o.order_date) IS NULL because NULL fails any comparison.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'last_order', 'days_since'],
           requireFunction: 'DATEDIFF',
@@ -667,6 +677,7 @@ export const Day_12_MODULE: ModuleData = {
           { level: 1, text: 'Two functions on the same column: YEAR(signup_date) and DATEDIFF(CURDATE(), signup_date). Then sort + limit.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'signup_year', 'days_since_signup'],
           requireFunction: 'DATEDIFF',

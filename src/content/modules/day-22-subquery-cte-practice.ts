@@ -111,6 +111,7 @@ export const Day_22_MODULE: ModuleData = {
             { level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             expectedRowCount: 12,
@@ -136,6 +137,7 @@ export const Day_22_MODULE: ModuleData = {
             { level: 2, text: 'Query `SELECT * FROM CustomerSpend WHERE total_spent > 150 ORDER BY total_spent DESC;`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             expectedRowCount: 2,
           },
@@ -162,6 +164,7 @@ export const Day_22_MODULE: ModuleData = {
             { level: 2, text: 'Join `DeliveredOrders d` with `order_items oi` on `d.order_id = oi.order_id`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requireJoin: true,
             requireGroupBy: true,
@@ -197,6 +200,7 @@ export const Day_22_MODULE: ModuleData = {
         solutionExplanation: 'Executes a correlated subquery per category.',
         hints: [{ level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           expectedRowCount: 12,
@@ -219,6 +223,7 @@ export const Day_22_MODULE: ModuleData = {
         solutionExplanation: 'Constructs the CustomerSpend CTE and filters for total_spent > 150.',
         hints: [{ level: 1, text: 'Use `WITH CustomerSpend AS (...) SELECT * FROM CustomerSpend WHERE total_spent > 150;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           expectedRowCount: 2,
         },

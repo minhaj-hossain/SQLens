@@ -6,7 +6,7 @@ import { TaskInstructions } from './TaskInstructions';
 import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
-import { validateTaskSolution } from '../../lib/sql-engine/validator';
+import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
 import { splitTaskScaffold } from '../../lib/task-scaffold';
 import { ArrowLeft } from 'lucide-react';
 
@@ -77,7 +77,15 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     const result = onExecuteSql(sqlToRun);
     setExecutionResult(result);
 
-    const outcome = validateTaskSolution(sqlToRun, result, task.validation);
+    // P10.3: for exact-result tasks, grade against the solution's output on the
+    // same session executor. Guarded to single read-only SELECTs so computing
+    // the expected dataset never mutates the database.
+    const expected =
+      task.validation.requireExactResult && !result.error && isReadOnlySelect(task.solutionSql)
+        ? onExecuteSql(task.solutionSql)
+        : undefined;
+
+    const outcome = validateTaskSolution(sqlToRun, result, task.validation, expected);
 
     if (outcome.passed) {
       setTaskPassed(true);

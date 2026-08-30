@@ -121,6 +121,7 @@ export const Day_07_MODULE: ModuleData = {
           solutionExplanation: 'Retrieves all registered vendor records.',
           hints: [{ level: 1, text: 'Use `SELECT * FROM suppliers;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'suppliers',
             expectedRowCount: 6,
           },
@@ -143,6 +144,7 @@ export const Day_07_MODULE: ModuleData = {
           solutionExplanation: 'Finds products from LogiTech Direct sorted by price.',
           hints: [{ level: 1, text: 'Use `WHERE supplier_id = 1 ORDER BY price ASC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'quantity_in_stock'],
             requireWhere: true,
@@ -175,6 +177,7 @@ export const Day_07_MODULE: ModuleData = {
         solutionExplanation: 'Lists all supplier records.',
         hints: [{ level: 1, text: 'Use `SELECT * FROM suppliers;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'suppliers',
           expectedRowCount: 6,
         },
@@ -195,6 +198,7 @@ export const Day_07_MODULE: ModuleData = {
         solutionExplanation: 'Filters by supplier_id = 1 and sorts price ascending.',
         hints: [{ level: 1, text: 'Use `WHERE supplier_id = 1 ORDER BY price ASC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           requireOrderBy: [{ column: 'price', direction: 'ASC' }],
@@ -217,6 +221,7 @@ export const Day_07_MODULE: ModuleData = {
         solutionExplanation: 'Lists distinct category names.',
         hints: [{ level: 1, text: 'Use `SELECT DISTINCT name FROM categories;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'categories',
           requireDistinct: true,
           expectedRowCount: 6,
@@ -238,6 +243,7 @@ export const Day_07_MODULE: ModuleData = {
         solutionExplanation: '`ORDER BY price DESC LIMIT 3` retrieves the 3 highest priced items.',
         hints: [{ level: 1, text: 'Use `ORDER BY price DESC LIMIT 3;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireOrderBy: [{ column: 'price', direction: 'DESC' }],
           requireLimit: 3,
@@ -260,6 +266,7 @@ export const Day_07_MODULE: ModuleData = {
         solutionExplanation: 'Paginates to page 2 of the products table.',
         hints: [{ level: 1, text: 'Use `LIMIT 10 OFFSET 10;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireLimit: 10,
           requireOffset: 10,

@@ -137,6 +137,7 @@ export const Day_15_MODULE: ModuleData = {
             { level: 2, text: 'Use `SUM(oi.quantity * oi.unit_price)` to compute total financial spend.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireJoin: true,
             requireGroupBy: true,
@@ -164,6 +165,7 @@ export const Day_15_MODULE: ModuleData = {
             { level: 2, text: 'Group by `c.category_id, c.name`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'categories',
             requireJoin: true,
             requireGroupBy: true,
@@ -199,6 +201,7 @@ export const Day_15_MODULE: ModuleData = {
         solutionExplanation: 'Multi-table join calculating customer spend with distinct order counts.',
         hints: [{ level: 1, text: 'Use `COUNT(DISTINCT o.order_id)` and `SUM(oi.quantity * oi.unit_price)`.' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,

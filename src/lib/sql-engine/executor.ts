@@ -18,6 +18,17 @@ function getRowValue(row: TableRow, colExpr: string): any {
   for (const k of Object.keys(row)) {
     if (k.toLowerCase() === lowerPure) return row[k];
   }
+  // P10.2: projected rows carry a non-enumerable __source__ reference to their
+  // pre-projection source row, so ORDER BY on a column not in the SELECT list
+  // (e.g. SELECT name FROM products ORDER BY price) still sorts correctly.
+  const src = (row as any).__source__;
+  if (src && typeof src === 'object') {
+    if (src[colExpr] !== undefined) return src[colExpr];
+    if (src[colExpr.toLowerCase()] !== undefined) return src[colExpr.toLowerCase()];
+    if (src[pureCol] !== undefined) return src[pureCol];
+    const lowerSrc = pureCol.toLowerCase();
+    for (const k of Object.keys(src)) { if (k.toLowerCase() === lowerSrc) return src[k]; }
+  }
   return undefined;
 }
 
@@ -1370,6 +1381,10 @@ export class SqlExecutor {
               projected[outputCol] = getRowValue(row, srcCol) !== undefined ? getRowValue(row, srcCol) : null;
             }
           });
+          // P10.2: keep a hidden reference to the source row for ORDER BY
+          // evaluation on non-selected columns (non-enumerable so it never
+          // leaks into output columns or hashing).
+          Object.defineProperty(projected, '__source__', { value: row, enumerable: false });
           return projected;
         });
       }
@@ -1499,11 +1514,47 @@ export class SqlExecutor {
 
     // 7. ORDER BY
     if (query.orderBy && query.orderBy.length > 0) {
+      // P10.2: resolve sort keys up front — positional keys resolve to output
+      // columns, unknown keys error clearly instead of silently skipping the
+      // sort (which used to return unsorted rows as if they were correct).
+      const sampleKeys =
+        projectedRows.length > 0 ? Object.keys(projectedRows[0]) : [];
+      const hasKey = (row: TableRow, key: string): boolean =>
+        getRowValue(row, key) !== undefined;
+      for (const ord of query.orderBy) {
+        if (ord.caseExpression) continue;
+        if (/^\d+$/.test(ord.column)) {
+          const idx = parseInt(ord.column, 10) - 1;
+          if (projectedRows.length > 0 && (idx < 0 || idx >= sampleKeys.length)) {
+            throw new Error(
+              `ORDER BY position ${ord.column} is out of range — the query outputs ${sampleKeys.length} column(s).`
+            );
+          }
+          continue;
+        }
+        if (ord.column === '__order_expression__') {
+          throw new Error(
+            'ORDER BY expressions are not supported in this SQL dialect — sort by a column name or position instead.'
+          );
+        }
+        if (projectedRows.length > 0 && !hasKey(projectedRows[0], ord.column)) {
+          throw new Error(`ORDER BY column '${ord.column}' not found in the query output.`);
+        }
+      }
       projectedRows.sort((a, b) => {
+
         for (const ord of query.orderBy!) {
           // Sort key may be a CASE expression (ORDER BY CASE … END)
-          const valA = ord.caseExpression ? this.evaluateCase(ord.caseExpression, a) : getRowValue(a, ord.column);
-          const valB = ord.caseExpression ? this.evaluateCase(ord.caseExpression, b) : getRowValue(b, ord.column);
+          let keyA = ord.column;
+          let keyB = ord.column;
+          if (!ord.caseExpression && /^\d+$/.test(ord.column)) {
+            const idx = parseInt(ord.column, 10) - 1;
+            keyA = Object.keys(a)[idx];
+            keyB = Object.keys(b)[idx];
+          }
+          const valA = ord.caseExpression ? this.evaluateCase(ord.caseExpression, a) : getRowValue(a, keyA);
+          const valB = ord.caseExpression ? this.evaluateCase(ord.caseExpression, b) : getRowValue(b, keyB);
+
           
           if (valA === valB) continue;
           if (valA === null || valA === undefined) return ord.direction === 'ASC' ? 1 : -1;

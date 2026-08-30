@@ -150,6 +150,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "students",
             requiredColumns: ["name", "age", "department"],
             requireWhere: true,
@@ -182,6 +183,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "price", "quantity_in_stock"],
             requireWhere: true,
@@ -327,6 +329,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "students",
             requiredColumns: ["name", "city"],
             requireWhere: true,
@@ -359,6 +362,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "price", "quantity_in_stock"],
             requireWhere: true,
@@ -514,6 +518,7 @@ export const Day_03_MODULE: ModuleData = {
             "Returns Karim (Gazipur), Sumaiya (Chattogram), and Tanvir (Rajshahi).",
           hints: [{ level: 1, text: "Write `WHERE NOT (city = 'Dhaka');`" }],
           validation: {
+            requireExactResult: true,
             targetTable: "students",
             requiredColumns: ["name", "city"],
             requireWhere: true,
@@ -541,6 +546,7 @@ export const Day_03_MODULE: ModuleData = {
             "Returns all 22 catalog products in categories other than 1.",
           hints: [{ level: 1, text: "Use `WHERE NOT (category_id = 1);`" }],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "category_id"],
             requireWhere: true,
@@ -686,6 +692,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "category_id", "price"],
             requireWhere: true,
@@ -728,6 +735,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "category_id", "price"],
             requireWhere: true,
@@ -876,6 +884,7 @@ export const Day_03_MODULE: ModuleData = {
             { level: 1, text: "Use `WHERE price BETWEEN 25.00 AND 100.00;`" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "price"],
             requireWhere: true,
@@ -908,6 +917,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "students",
             requiredColumns: ["name", "age"],
             requireWhere: true,
@@ -940,6 +950,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "price"],
             requireWhere: true,
@@ -1084,6 +1095,7 @@ export const Day_03_MODULE: ModuleData = {
             },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "students",
             requiredColumns: ["name", "department", "city"],
             requireWhere: true,
@@ -1110,6 +1122,7 @@ export const Day_03_MODULE: ModuleData = {
           solutionExplanation: "Retrieves all 12 items in categories 1 and 2.",
           hints: [{ level: 1, text: "Use `WHERE category_id IN (1, 2);`" }],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "category_id", "price"],
             requireWhere: true,
@@ -1253,6 +1266,7 @@ export const Day_03_MODULE: ModuleData = {
             { level: 1, text: "Write `WHERE email LIKE '%@example.com';`" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: "customers",
             requiredColumns: ["name", "email"],
             requireWhere: true,
@@ -1281,6 +1295,7 @@ export const Day_03_MODULE: ModuleData = {
             "Matches 'USB-C Charging Cable' (U is position 1, S is position 2, B is position 3).",
           hints: [{ level: 1, text: "Use `WHERE name LIKE '_SB%';`" }],
           validation: {
+            requireExactResult: true,
             targetTable: "products",
             requiredColumns: ["name", "price"],
             requireWhere: true,
@@ -1417,6 +1432,7 @@ export const Day_03_MODULE: ModuleData = {
             "`WHERE email IS NULL` identifies Tanvir Ahmed and Shakil Ahmed (2 records).",
           hints: [{ level: 1, text: "Use `WHERE email IS NULL;`" }],
           validation: {
+            requireExactResult: true,
             targetTable: "customers",
             requiredColumns: ["name", "city"],
             requireWhere: true,
@@ -1445,6 +1461,7 @@ export const Day_03_MODULE: ModuleData = {
             "Retrieves all 6 active suppliers with recorded emails.",
           hints: [{ level: 1, text: "Use `WHERE contact_email IS NOT NULL;`" }],
           validation: {
+            requireExactResult: true,
             targetTable: "suppliers",
             requiredColumns: ["name", "contact_email"],
             requireWhere: true,
@@ -1472,6 +1489,7 @@ export const Day_03_MODULE: ModuleData = {
             "Replacing `= NULL` with `IS NULL` correctly returns Tanvir Ahmed and Shakil Ahmed.",
           hints: [{ level: 1, text: "Replace `= NULL` with `IS NULL`." }],
           validation: {
+            requireExactResult: true,
             targetTable: "customers",
             requiredColumns: ["name", "city"],
             requireWhere: true,
@@ -1516,6 +1534,7 @@ export const Day_03_MODULE: ModuleData = {
           { level: 1, text: "Use `WHERE price BETWEEN 25.00 AND 100.00;`" },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: "products",
           requiredColumns: ["name", "price"],
           requireWhere: true,
@@ -1550,6 +1569,7 @@ export const Day_03_MODULE: ModuleData = {
           },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: "customers",
           requiredColumns: ["name", "email", "city"],
           requireWhere: true,
@@ -1578,6 +1598,7 @@ export const Day_03_MODULE: ModuleData = {
           "Matches Wireless Mouse, Wireless Doorbell, and Wireless Earbuds.",
         hints: [{ level: 1, text: "Use `WHERE name LIKE 'Wireless%';`" }],
         validation: {
+          requireExactResult: true,
           targetTable: "products",
           requiredColumns: ["name", "price", "quantity_in_stock"],
           requireWhere: true,
@@ -1604,6 +1625,7 @@ export const Day_03_MODULE: ModuleData = {
           "Identifies customers without recorded email (Tanvir Ahmed, Shakil Ahmed).",
         hints: [{ level: 1, text: "Use `WHERE email IS NULL;`" }],
         validation: {
+          requireExactResult: true,
           targetTable: "customers",
           requiredColumns: ["name", "city"],
           requireWhere: true,
@@ -1637,6 +1659,7 @@ export const Day_03_MODULE: ModuleData = {
           },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: "products",
           requiredColumns: [
             "name",

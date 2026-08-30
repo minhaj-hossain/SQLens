@@ -109,6 +109,7 @@ export const Day_35_MODULE: ModuleData = {
           solutionExplanation: 'Preserves all 15 customers with clean 0 counts for inactive accounts.',
           hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireJoin: true,
             requireGroupBy: true,
@@ -133,6 +134,7 @@ export const Day_35_MODULE: ModuleData = {
           solutionExplanation: 'Preserves all 28 products with null-safe COALESCE on SUM.',
           hints: [{ level: 1, text: 'Use `COALESCE(SUM(oi.quantity), 0) AS total_units_sold`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireJoin: true,
             requireGroupBy: true,
@@ -168,6 +170,7 @@ export const Day_35_MODULE: ModuleData = {
         solutionExplanation: 'Preserves all customer accounts using LEFT JOIN.',
         hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,

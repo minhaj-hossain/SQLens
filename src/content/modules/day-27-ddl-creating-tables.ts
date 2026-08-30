@@ -421,6 +421,7 @@ export const Day_27_MODULE: ModuleData = {
         solutionExplanation: 'Joins products to reviews to calculate rating metrics.',
         hints: [{ level: 1, text: 'Use `JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireJoin: true,
           requireGroupBy: true,

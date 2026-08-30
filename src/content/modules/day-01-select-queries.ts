@@ -138,6 +138,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 2, text: 'Write `SELECT name FROM students;` and click Submit.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name'],
             forbiddenColumns: ['id', 'age', 'department', 'city'],
@@ -162,6 +163,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 1, text: 'Start with `SELECT city FROM students;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['city'],
             forbiddenColumns: ['id', 'name', 'age', 'department'],
@@ -289,6 +291,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 2, text: 'Write `SELECT name, department FROM students;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'department'],
             forbiddenColumns: ['id', 'age', 'city'],
@@ -312,6 +315,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 1, text: 'List the 3 columns: `id, name, city`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['id', 'name', 'city'],
             forbiddenColumns: ['age', 'department'],
@@ -440,6 +444,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 2, text: '`SELECT * FROM students;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['id', 'name', 'age', 'department', 'city'],
             expectedRowCount: 5,
@@ -462,6 +467,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 1, text: 'Write `SELECT name, age, city FROM students;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'age', 'city'],
             forbiddenColumns: ['id', 'department'],
@@ -615,6 +621,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 1, text: 'Add `student_name` after the `AS` keyword.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['student_name'],
             requiredAliases: { name: 'student_name' },
@@ -640,6 +647,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 1, text: '`SELECT name AS student_name, department AS student_department FROM students;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['student_name', 'student_department'],
             requiredAliases: { name: 'student_name', department: 'student_department' },
@@ -666,6 +674,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 1, text: '`SELECT id AS student_id, name AS student_name, age AS student_age FROM students;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['student_id', 'student_name', 'student_age'],
             requiredAliases: { id: 'student_id', name: 'student_name', age: 'student_age' },
@@ -694,6 +703,7 @@ export const Day_01_MODULE: ModuleData = {
             { level: 2, text: '`SELECT std_id AS "Student ID", std_nm AS "Student Name", std_age AS "Age", dept AS "Department" FROM student_records;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'student_records',
             expectedRowCount: 5,
             customValidator: (_ast, result) => {
@@ -739,6 +749,7 @@ export const Day_01_MODULE: ModuleData = {
           { level: 1, text: 'Use SELECT name, price, quantity_in_stock FROM products;' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'price', 'quantity_in_stock'],
           expectedRowCount: 28,
@@ -762,6 +773,7 @@ export const Day_01_MODULE: ModuleData = {
           { level: 1, text: 'Use SELECT name, email FROM customers;' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'email'],
           expectedRowCount: 15,
@@ -785,6 +797,7 @@ export const Day_01_MODULE: ModuleData = {
           { level: 1, text: 'SELECT name AS product_name, price AS unit_price, quantity_in_stock AS stock FROM products;' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['product_name', 'unit_price', 'stock'],
           requiredAliases: { name: 'product_name', price: 'unit_price', quantity_in_stock: 'stock' },

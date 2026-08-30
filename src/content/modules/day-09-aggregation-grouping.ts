@@ -124,6 +124,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`COUNT(*)` computes the total number of catalog rows (28).',
           hints: [{ level: 1, text: 'Use `SELECT COUNT(*) AS total_products FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['total_products'],
             expectedRowCount: 1,
@@ -145,6 +146,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`COUNT(email)` ignores NULL email values, returning 13 for 15 customer rows.',
           hints: [{ level: 1, text: 'Use `SELECT COUNT(email) AS customers_with_email FROM customers;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['customers_with_email'],
             expectedRowCount: 1,
@@ -253,6 +255,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`MIN(price)` identifies the lowest catalog price ($4.99).',
           hints: [{ level: 1, text: 'Use `SELECT MIN(price) AS lowest_price FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['lowest_price'],
             expectedRowCount: 1,
@@ -274,6 +277,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`MIN(age)` identifies age 20 (Ayesha).',
           hints: [{ level: 1, text: 'Use `SELECT MIN(age) AS youngest_age FROM students;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['youngest_age'],
             expectedRowCount: 1,
@@ -387,6 +391,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`MAX(price)` identifies the top catalog price ($120.00).',
           hints: [{ level: 1, text: 'Use `SELECT MAX(price) AS highest_price FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['highest_price'],
             expectedRowCount: 1,
@@ -408,6 +413,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`MAX(age)` identifies age 23 (Sumaiya).',
           hints: [{ level: 1, text: 'Use `SELECT MAX(age) AS oldest_age FROM students;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['oldest_age'],
             expectedRowCount: 1,
@@ -519,6 +525,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`SUM(price)` calculates the total value of all catalog item list prices.',
           hints: [{ level: 1, text: 'Use `SELECT SUM(price) AS total_catalog_price FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['total_catalog_price'],
             expectedRowCount: 1,
@@ -540,6 +547,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`SUM(quantity_in_stock)` adds up all inventory counts.',
           hints: [{ level: 1, text: 'Use `SELECT SUM(quantity_in_stock) AS total_units FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['total_units'],
             expectedRowCount: 1,
@@ -655,6 +663,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`AVG(price)` calculates the mean product price.',
           hints: [{ level: 1, text: 'Use `SELECT AVG(price) AS avg_price FROM products;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['avg_price'],
             expectedRowCount: 1,
@@ -676,6 +685,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`AVG(age)` computes the average student age (21.4).',
           hints: [{ level: 1, text: 'Use `SELECT AVG(age) AS avg_age FROM students;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['avg_age'],
             expectedRowCount: 1,
@@ -801,6 +811,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: '`GROUP BY category_id` computes the count for each category.',
           hints: [{ level: 1, text: 'Use `SELECT category_id, COUNT(*) AS total_products FROM products GROUP BY category_id;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireGroupBy: true,
             expectedRowCount: 6,
@@ -823,6 +834,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: 'Groups customers by city and counts them.',
           hints: [{ level: 1, text: 'Use `SELECT city, COUNT(*) AS customer_count FROM customers GROUP BY city;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city', 'customer_count'],
             requireGroupBy: true,
@@ -945,6 +957,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: 'Computes average price per category and sorts descending.',
           hints: [{ level: 1, text: 'Use `GROUP BY category_id ORDER BY avg_price DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireGroupBy: true,
             requireOrderBy: [{ column: 'avg_price', direction: 'DESC' }],
@@ -970,6 +983,7 @@ export const Day_09_MODULE: ModuleData = {
           solutionExplanation: 'Groups by city and uses HAVING to keep cities with >= 2 customers.',
           hints: [{ level: 1, text: 'Use `HAVING COUNT(*) >= 2 ORDER BY customer_count DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city', 'customer_count'],
             requireGroupBy: true,
@@ -1006,6 +1020,7 @@ export const Day_09_MODULE: ModuleData = {
         solutionExplanation: 'Counts total products for each category_id.',
         hints: [{ level: 1, text: 'Use `SELECT category_id, COUNT(*) AS total_products FROM products GROUP BY category_id;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireGroupBy: true,
           expectedRowCount: 6,
@@ -1027,6 +1042,7 @@ export const Day_09_MODULE: ModuleData = {
         solutionExplanation: 'Groups by category, calculates average price, and sorts descending.',
         hints: [{ level: 1, text: 'Use `GROUP BY category_id ORDER BY avg_price DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireGroupBy: true,
           requireOrderBy: [{ column: 'avg_price', direction: 'DESC' }],
@@ -1049,6 +1065,7 @@ export const Day_09_MODULE: ModuleData = {
         solutionExplanation: 'Uses `HAVING AVG(price) > 25` to filter for premium categories.',
         hints: [{ level: 1, text: 'Use `GROUP BY category_id HAVING AVG(price) > 25;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireGroupBy: true,
           requireHaving: true,

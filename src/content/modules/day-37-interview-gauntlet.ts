@@ -156,6 +156,7 @@ export const Day_37_MODULE: ModuleData = {
             { level: 1, text: 'Order prices descending and skip the first row - but make duplicates count as one first.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['price'],
             requireOrderBy: [{ column: 'price', direction: 'DESC' }],
@@ -182,6 +183,7 @@ export const Day_37_MODULE: ModuleData = {
             { level: 1, text: 'WHERE cannot hold an aggregate comparison directly - wrap the average in its own SELECT.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireFunction: 'AVG',
@@ -215,6 +217,7 @@ export const Day_37_MODULE: ModuleData = {
           { level: 1, text: 'Rank inside a CTE, filter outside it - the Top-N per group pattern from Day 23.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'category_id', 'price'],
           requireFunction: 'ROW_NUMBER',
@@ -241,6 +244,7 @@ export const Day_37_MODULE: ModuleData = {
           { level: 1, text: 'Aggregate to months first, then layer both window functions in a second CTE.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['mon', 'revenue', 'running_revenue', 'growth'],
           requireFunction: 'LAG',
@@ -267,6 +271,7 @@ export const Day_37_MODULE: ModuleData = {
           { level: 1, text: 'One order becomes many joined rows - count keys, not rows.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requiredColumns: ['orders_placed'],
           requireFunction: 'COUNT',

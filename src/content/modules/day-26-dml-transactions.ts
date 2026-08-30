@@ -216,6 +216,7 @@ export const Day_26_MODULE: ModuleData = {
           solutionExplanation: 'Retrieval after a DML statement is the classic "verify-with-SELECT" habit - the rows are still there because COMMIT persisted them.',
           hints: [{ level: 1, text: "Filter products by name LIKE 'Flash Sale%' to count your committed batch." }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             expectedRowCount: 3,
@@ -387,6 +388,7 @@ export const Day_26_MODULE: ModuleData = {
           solutionExplanation: 'One row: Wireless Mouse at 15.99. The rollback was complete.',
           hints: [{ level: 1, text: 'Filter products by product_id = 1 and select name and price.' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price'],
             requireWhere: true,
@@ -555,6 +557,7 @@ export const Day_26_MODULE: ModuleData = {
           solutionExplanation: 'Zero rows: the valid insert was undone together with the failed one. The batch was all-or-nothing.',
           hints: [{ level: 1, text: 'ROLLBACK first - then the verification SELECT should return an empty result.' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             expectedRowCount: 0,
@@ -639,6 +642,7 @@ export const Day_26_MODULE: ModuleData = {
         solutionExplanation: 'Three rows returned after the commit - the batch is durable, not provisional.',
         hints: [{ level: 1, text: "Filter by name LIKE 'Flash Sale%' and select name and price." }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'price'],
           requireWhere: true,

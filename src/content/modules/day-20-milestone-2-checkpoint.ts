@@ -118,6 +118,7 @@ export const Day_20_MODULE: ModuleData = {
           solutionExplanation: 'Calculates the sum product of quantity and unit_price for all order items.',
           hints: [{ level: 1, text: 'Use `SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'order_items',
             expectedRowCount: 1,
           },
@@ -141,6 +142,7 @@ export const Day_20_MODULE: ModuleData = {
           solutionExplanation: 'Joins 3 tables and computes revenue per category.',
           hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'categories',
             requireJoin: true,
             requireGroupBy: true,
@@ -176,6 +178,7 @@ export const Day_20_MODULE: ModuleData = {
         solutionExplanation: 'Calculates grand total revenue across all order line items.',
         hints: [{ level: 1, text: 'Use `SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'order_items',
           expectedRowCount: 1,
         },
@@ -197,6 +200,7 @@ export const Day_20_MODULE: ModuleData = {
         solutionExplanation: 'Joins categories -> products -> order_items and sums revenue per category.',
         hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'categories',
           requireJoin: true,
           requireGroupBy: true,
@@ -220,6 +224,7 @@ export const Day_20_MODULE: ModuleData = {
         solutionExplanation: 'Filters aggregated customer spending with `HAVING SUM(...) > 200`.',
         hints: [{ level: 1, text: 'Use `HAVING SUM(oi.quantity * oi.unit_price) > 200 ORDER BY total_spent DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,
@@ -244,6 +249,7 @@ export const Day_20_MODULE: ModuleData = {
         solutionExplanation: 'Anti-join identifying suppliers with zero order item records (Unity Traders BD).',
         hints: [{ level: 1, text: 'Use `GROUP BY s.supplier_id, s.name HAVING COUNT(oi.order_item_id) = 0;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'suppliers',
           requireJoin: true,
           requireGroupBy: true,

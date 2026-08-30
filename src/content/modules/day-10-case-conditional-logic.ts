@@ -140,6 +140,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: "The CASE goes in the SELECT list: CASE WHEN quantity_in_stock = 0 THEN 'Out of Stock' ELSE 'Available' END AS stock_status" },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'stock_status'],
             requireCase: true,
@@ -165,6 +166,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: 'Use `email IS NULL` inside WHEN — never `email = NULL`. Alias AS email_status.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'email', 'email_status'],
             requireCase: true,
@@ -273,6 +275,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: "WHEN price < 25 THEN 'Budget', then WHEN price < 100 THEN 'Standard', then ELSE 'Premium'." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_tier'],
             requireCase: true,
@@ -298,6 +301,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: "First WHEN tests = 0 (equality), second tests < 10, ELSE catches 'Healthy'." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'stock_health'],
             requireCase: true,
@@ -416,6 +420,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: 'Swap the two WHEN branches — narrowest range first.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_tier'],
             requireCase: true,
@@ -441,6 +446,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: 'CASE WHEN price >= 100 THEN \'Luxury\' END — and that is the whole expression.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'tier'],
             requireCase: true,
@@ -560,6 +566,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: 'The CASE goes INSIDE the SUM parentheses — each row contributes 1 or 0.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['category_id', 'out_of_stock', 'total_products'],
             requireCase: true,
@@ -586,6 +593,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: 'COUNT(CASE WHEN email IS NULL THEN 1 END) — non-matching rows produce NULL, which COUNT ignores.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city', 'missing_email'],
             requireCase: true,
@@ -697,6 +705,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: 'ORDER BY CASE WHEN quantity_in_stock = 0 THEN 0 ELSE 1 END, quantity_in_stock ASC' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock'],
             requireCase: true,
@@ -722,6 +731,7 @@ export const Day_10_MODULE: ModuleData = {
             { level: 1, text: "CASE WHEN department = 'CSE' THEN 0 ELSE 1 END, then name ASC." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requiredColumns: ['name', 'department', 'age'],
             requireCase: true,
@@ -760,6 +770,7 @@ export const Day_10_MODULE: ModuleData = {
           { level: 1, text: 'The CASE conditions can reference COUNT(o.order_id) directly — the aggregate is computed per group before the CASE runs.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'order_count', 'loyalty_tier'],
           requireCase: true,
@@ -786,6 +797,7 @@ export const Day_10_MODULE: ModuleData = {
           { level: 1, text: 'Identical to Concept 4\'s pattern — WHERE keeps the clearance item out of every bucket.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['category_id', 'out_of_stock', 'total_products'],
           requireCase: true,
@@ -811,6 +823,7 @@ export const Day_10_MODULE: ModuleData = {
           { level: 1, text: 'Same ORDER BY as the Concept 5 practice — just append LIMIT 5.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'quantity_in_stock'],
           requireCase: true,
@@ -836,6 +849,7 @@ export const Day_10_MODULE: ModuleData = {
           { level: 1, text: 'Each SUM(CASE …) is its own 1/0 flag; the middle tier needs a compound condition: price >= 25 AND price < 100.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['category_id', 'budget_products', 'standard_products', 'premium_products'],
           requireCase: true,

@@ -124,6 +124,7 @@ export const Day_18_MODULE: ModuleData = {
           solutionExplanation: 'Sums item quantities per product and sorts descending.',
           hints: [{ level: 1, text: 'Use `GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireJoin: true,
             requireGroupBy: true,
@@ -149,6 +150,7 @@ export const Day_18_MODULE: ModuleData = {
           solutionExplanation: 'Finds products with 0 recorded purchases.',
           hints: [{ level: 1, text: 'Use `WHERE oi.order_item_id IS NULL;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireJoin: true,
             requireWhere: true,
@@ -185,6 +187,7 @@ export const Day_18_MODULE: ModuleData = {
         solutionExplanation: 'Calculates total units sold for each product.',
         hints: [{ level: 1, text: 'Use `GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireJoin: true,
           requireGroupBy: true,
@@ -209,6 +212,7 @@ export const Day_18_MODULE: ModuleData = {
         solutionExplanation: 'Joins customers -> orders -> order_items, sums spending, and returns top 5.',
         hints: [{ level: 1, text: 'Use `GROUP BY c.customer_id, c.name ORDER BY total_spent DESC LIMIT 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,
@@ -234,6 +238,7 @@ export const Day_18_MODULE: ModuleData = {
         solutionExplanation: 'Anti-join with `WHERE oi.order_item_id IS NULL` finds products that have never appeared in any order.',
         hints: [{ level: 1, text: 'Use `WHERE oi.order_item_id IS NULL;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireJoin: true,
           requireWhere: true,

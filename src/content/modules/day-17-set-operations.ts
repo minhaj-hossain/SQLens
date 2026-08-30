@@ -170,6 +170,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 1, text: "Two complete SELECTs joined by UNION ALL — the literal tags ('Customer' / 'Supplier' AS source) go in each side's SELECT list." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'source'],
             requireSetOp: 'UNION ALL',
@@ -196,6 +197,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 1, text: 'One column per side. The word ALL in UNION ALL means: keep every row, even repeats.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireSetOp: 'UNION ALL',
@@ -346,6 +348,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 1, text: 'Same query as the last task, minus the word ALL.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireSetOp: 'UNION',
@@ -374,6 +377,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 2, text: 'Two customers have NULL emails - add WHERE email IS NOT NULL to the customers side so NULL collapsing does not skew the count.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['contact'],
             requireSetOp: 'UNION',
@@ -512,6 +516,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 2, text: 'Fixed bottom side: SELECT name, NULL AS city FROM suppliers' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'city'],
             requireSetOp: 'UNION ALL',
@@ -538,6 +543,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 1, text: 'Both tables have exactly the columns you need: name and city. Mirror the lists position for position.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'city'],
             requireSetOp: 'UNION ALL',
@@ -686,6 +692,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 1, text: 'The "everything" side (products) goes on the LEFT of EXCEPT; the "already taken" side (order_items) goes on the right.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['product_id'],
             requireSetOp: 'EXCEPT',
@@ -712,6 +719,7 @@ export const Day_17_MODULE: ModuleData = {
             { level: 1, text: 'Which side is "everyone"? All customers. Which side is "has ordered"? The orders. Everyone minus has-ordered.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['customer_id'],
             requireSetOp: 'EXCEPT',
@@ -750,6 +758,7 @@ export const Day_17_MODULE: ModuleData = {
           { level: 1, text: 'The ORDER BY comes after the FINAL SELECT and sorts the whole combined result — one ORDER BY for the union, not one per side.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'source'],
           requireSetOp: 'UNION ALL',
@@ -776,6 +785,7 @@ export const Day_17_MODULE: ModuleData = {
           { level: 1, text: 'Both sides need the SAME two columns in the SAME order: product_id, then name. The right side may be any query — including a JOIN.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['product_id', 'name'],
           requireSetOp: 'EXCEPT',
@@ -802,6 +812,7 @@ export const Day_17_MODULE: ModuleData = {
           { level: 1, text: '"Cities we serve" = customers (left). "Cities the university covers" = students (right). Everything-on-the-left minus the right.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['city'],
           requireSetOp: 'EXCEPT',

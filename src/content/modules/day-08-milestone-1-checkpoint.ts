@@ -135,6 +135,7 @@ export const Day_08_MODULE: ModuleData = {
           solutionExplanation: 'Finds products below reorder level, ordered from lowest stock to highest.',
           hints: [{ level: 1, text: 'Use `WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'reorder_level'],
             requireWhere: true,
@@ -159,6 +160,7 @@ export const Day_08_MODULE: ModuleData = {
           solutionExplanation: 'Returns unique customer cities sorted from A to Z.',
           hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers ORDER BY city ASC;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireDistinct: true,
@@ -194,6 +196,7 @@ export const Day_08_MODULE: ModuleData = {
         solutionExplanation: 'Sorts products below reorder level by stock quantity ascending.',
         hints: [{ level: 1, text: 'Use `WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
@@ -216,6 +219,7 @@ export const Day_08_MODULE: ModuleData = {
         solutionExplanation: '`DISTINCT supplier_id` extracts unique suppliers affected by low stock.',
         hints: [{ level: 1, text: 'Use `SELECT DISTINCT supplier_id FROM products WHERE quantity_in_stock <= reorder_level;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['supplier_id'],
           requireDistinct: true,
@@ -239,6 +243,7 @@ export const Day_08_MODULE: ModuleData = {
         solutionExplanation: '`ORDER BY signup_date DESC LIMIT 1` finds the newest customer signup.',
         hints: [{ level: 1, text: 'Use `ORDER BY signup_date DESC LIMIT 1;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireOrderBy: [{ column: 'signup_date', direction: 'DESC' }],
           requireLimit: 1,
@@ -261,6 +266,7 @@ export const Day_08_MODULE: ModuleData = {
         solutionExplanation: '`ORDER BY price ASC LIMIT 5` returns the 5 lowest priced products.',
         hints: [{ level: 1, text: 'Use `ORDER BY price ASC LIMIT 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireOrderBy: [{ column: 'price', direction: 'ASC' }],
           requireLimit: 5,
@@ -284,6 +290,7 @@ export const Day_08_MODULE: ModuleData = {
         solutionExplanation: 'Orders customers by newest signup first and retrieves Page 2 (skipping 5 with OFFSET 5, taking 5 with LIMIT 5).',
         hints: [{ level: 1, text: 'Use `ORDER BY signup_date DESC LIMIT 5 OFFSET 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireOrderBy: [{ column: 'signup_date', direction: 'DESC' }],
           requireLimit: 5,

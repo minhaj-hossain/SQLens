@@ -105,6 +105,7 @@ export const Day_34_MODULE: ModuleData = {
           solutionExplanation: 'Hydrates the product detail view across 3 joined tables in one round trip.',
           hints: [{ level: 1, text: 'Use `WHERE p.product_id = 1;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireJoin: true,
             requireWhere: true,
@@ -128,6 +129,7 @@ export const Day_34_MODULE: ModuleData = {
           solutionExplanation: 'Calculates high-level executive KPI metrics in a single pass.',
           hints: [{ level: 1, text: 'Use `SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requireJoin: true,
             expectedRowCount: 1,
@@ -162,6 +164,7 @@ export const Day_34_MODULE: ModuleData = {
         solutionExplanation: 'Multi-table join hydrating the full product page payload.',
         hints: [{ level: 1, text: 'Use `WHERE p.product_id = 1;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireJoin: true,
           requireWhere: true,
@@ -185,6 +188,7 @@ export const Day_34_MODULE: ModuleData = {
         solutionExplanation: 'Computes high-level KPI metrics in a single query.',
         hints: [{ level: 1, text: 'Use `SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requireJoin: true,
           expectedRowCount: 1,

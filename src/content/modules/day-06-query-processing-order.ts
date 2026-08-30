@@ -175,6 +175,7 @@ export const Day_06_MODULE: ModuleData = {
             { level: 2, text: 'Keep `ORDER BY taxed_price DESC LIMIT 5;` since ORDER BY runs after SELECT.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requireOrderBy: [{ column: 'taxed_price', direction: 'DESC' }],
@@ -203,6 +204,7 @@ export const Day_06_MODULE: ModuleData = {
             { level: 2, text: "Add `ORDER BY customer_name ASC;`." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['customer_name', 'city'],
             requiredAliases: { name: 'customer_name' },
@@ -239,6 +241,7 @@ export const Day_06_MODULE: ModuleData = {
         solutionExplanation: 'Uses raw column in WHERE and alias in ORDER BY.',
         hints: [{ level: 1, text: 'Use `WHERE price > 40 ORDER BY catalog_price DESC LIMIT 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           requireOrderBy: [{ column: 'catalog_price', direction: 'DESC' }],

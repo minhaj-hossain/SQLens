@@ -555,6 +555,7 @@ export const Day_33_MODULE: ModuleData = {
           solutionExplanation: 'Each foreign key walks one step to readable data: sales→books→authors and sales→books→publishers.',
           hints: [{ level: 1, text: 'FROM sales s JOIN books b ON s.book_id = b.book_id JOIN authors a ON b.author_id = a.author_id JOIN publishers p ON b.publisher_id = p.publisher_id' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'sales',
             requireJoin: true,
             requiredColumns: ['title', 'author', 'publisher', 'quantity', 'unit_price'],
@@ -581,6 +582,7 @@ export const Day_33_MODULE: ModuleData = {
           solutionExplanation: 'Grouping the joined rows by author and summing quantity × unit_price yields revenue per author.',
           hints: [{ level: 1, text: 'SELECT a.name AS author, SUM(s.quantity * s.unit_price) AS revenue FROM … GROUP BY a.name' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'sales',
             requireJoin: true,
             requireGroupBy: true,
@@ -610,6 +612,7 @@ export const Day_33_MODULE: ModuleData = {
             { level: 1, text: 'WITH sold AS (SELECT b.title, SUM(s.quantity) AS total_sold FROM sales s JOIN books b ON s.book_id = b.book_id GROUP BY b.title) SELECT title, total_sold, RANK() OVER (ORDER BY total_sold DESC) AS sales_rank FROM sold;' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'sales',
             requireJoin: true,
             requireGroupBy: true,
@@ -865,6 +868,7 @@ export const Day_33_MODULE: ModuleData = {
         solutionExplanation: 'The 3-way JOIN feeds the GROUP BY: revenue per author, sorted richest-first.',
         hints: [{ level: 1, text: 'SELECT a.name AS author, SUM(s.quantity * s.unit_price) AS revenue FROM sales s JOIN books b ON s.book_id=b.book_id JOIN authors a ON b.author_id=a.author_id GROUP BY a.name ORDER BY revenue DESC;' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'sales',
           requireJoin: true,
           requireGroupBy: true,

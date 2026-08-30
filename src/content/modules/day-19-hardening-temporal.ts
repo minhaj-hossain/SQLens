@@ -127,6 +127,7 @@ export const Day_19_MODULE: ModuleData = {
             { level: 2, text: 'Group by `c.customer_id, c.name ORDER BY recent_spend DESC;`.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireJoin: true,
             requireWhere: true,
@@ -153,6 +154,7 @@ export const Day_19_MODULE: ModuleData = {
           solutionExplanation: 'Preserves all customers with LEFT JOIN and isolates zero-order accounts.',
           hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) = 0;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireJoin: true,
             requireGroupBy: true,
@@ -189,6 +191,7 @@ export const Day_19_MODULE: ModuleData = {
         solutionExplanation: 'Multi-table customer spend report with date interval filter.',
         hints: [{ level: 1, text: 'Use `WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireWhere: true,

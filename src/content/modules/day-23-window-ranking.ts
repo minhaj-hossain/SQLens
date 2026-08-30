@@ -168,6 +168,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'ROW_NUMBER() takes nothing inside its parentheses — the sort lives inside OVER: OVER (ORDER BY price DESC).' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_rank'],
             requireFunction: 'ROW_NUMBER',
@@ -193,6 +194,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'Identical shape to Task 1 — swap price for quantity_in_stock in the OVER clause.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'stock_rank'],
             requireFunction: 'ROW_NUMBER',
@@ -338,6 +340,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'The OVER clause now has two parts: PARTITION BY category_id first, then ORDER BY price DESC — comma-separated, in that order.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'category_id', 'price', 'cat_rank'],
             requireFunction: 'ROW_NUMBER',
@@ -363,6 +366,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'Copy Task 1\'s shape exactly; only the partition column changes to supplier_id. The p. alias is just table aliasing from Day 14.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'supplier_id', 'price', 'sup_rank'],
             requireFunction: 'ROW_NUMBER',
@@ -502,6 +506,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'Identical to Concept 1\'s Task 1 except the function name: RANK instead of ROW_NUMBER.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_rank'],
             requireFunction: 'RANK',
@@ -527,6 +532,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'Rule: N tied rows share rank R and consume positions R through R+N-1. The next distinct value gets R+N.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'stock_rank'],
             requireFunction: 'RANK',
@@ -651,6 +657,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'Same query as the RANK task with one word swapped: DENSE_RANK.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_rank'],
             requireFunction: 'DENSE_RANK',
@@ -676,6 +683,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: 'Each column is an independent window function — three function calls, three OVER clauses, all identical inside.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'rn', 'rk', 'drk'],
             requireFunction: 'DENSE_RANK',
@@ -810,6 +818,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 2, text: 'The outer query must NOT redefine the window — price_rank is already a plain column inside the CTE.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'category_id', 'price'],
             requireFunction: 'ROW_NUMBER',
@@ -837,6 +846,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 1, text: "Stage 1 is the Day 9+14 aggregation you have written many times; stage 2 is Concept 2's PARTITION BY; stage 3 is this concept's filter." },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'order_items',
             requiredColumns: ['name', 'category_id', 'total_sold'],
             requireFunction: 'ROW_NUMBER',
@@ -874,6 +884,7 @@ export const Day_23_MODULE: ModuleData = {
           { level: 1, text: 'One function name decides everything here: DENSE_RANK.' },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requiredColumns: ['name', 'price', 'price_rank'],
           requireFunction: 'DENSE_RANK',
@@ -898,6 +909,7 @@ export const Day_23_MODULE: ModuleData = {
             { level: 2, text: 'One product has category_id NULL. Its NULL partition is rank 1 forever - filter it out with category_id IS NOT NULL to keep the report honest.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'category_id', 'price'],
             requireFunction: 'ROW_NUMBER',
@@ -923,6 +935,7 @@ export const Day_23_MODULE: ModuleData = {
           { level: 1, text: "Identical pipeline to Concept 5's Task 2 — the partition column becomes supplier_id and the cutoff becomes 1." },
         ],
         validation: {
+          requireExactResult: true,
           targetTable: 'order_items',
           requiredColumns: ['name', 'supplier_id', 'total_sold'],
           requireFunction: 'ROW_NUMBER',

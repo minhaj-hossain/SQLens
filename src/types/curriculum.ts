@@ -34,6 +34,14 @@ export interface ValidationRule {
   expectFailure?: boolean;
   expectedRowCount?: number | { min?: number; max?: number };
   customValidator?: (queryAst: any, result: any) => { valid: boolean; message?: string };
+  /**
+   * Compare the returned dataset against the task's solutionSql output
+   * (multiset of row-values; ordered when requireOrderBy is set). This makes
+   * grading content-aware instead of row-count-only, while staying fair to
+   * equivalent approaches (aliasing, operator/spacing/case differences,
+   * `IN` vs `OR`, `<>` vs `!=`, etc.).
+   */
+  requireExactResult?: boolean;
 }
 
 export interface PracticeTask {

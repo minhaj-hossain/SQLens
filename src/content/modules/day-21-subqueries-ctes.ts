@@ -123,6 +123,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Uses a scalar subquery `(SELECT AVG(price) FROM products)` to dynamically filter products.',
           hints: [{ level: 1, text: 'Use `WHERE price > (SELECT AVG(price) FROM products);`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requiredColumns: ['name', 'price'],
@@ -146,6 +147,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'The average student age is 21.4; only Karim (22) and Sumaiya (23) are older.',
           hints: [{ level: 1, text: 'Use `WHERE age > (SELECT AVG(age) FROM students);`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'students',
             requireWhere: true,
             requiredColumns: ['name', 'age'],
@@ -262,6 +264,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Retrieves all 12 customers who have records in the orders table.',
           hints: [{ level: 1, text: 'Use `WHERE customer_id IN (SELECT customer_id FROM orders);`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['customer_id', 'name'],
             requireWhere: true,
@@ -285,6 +288,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Categories 1, 2, 3, 4, 5 each have at least 5 products (27 items total).',
           hints: [{ level: 1, text: 'Use `WHERE category_id IN (SELECT category_id FROM products GROUP BY category_id HAVING COUNT(*) >= 5);`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'category_id', 'price'],
             requireWhere: true,
@@ -406,6 +410,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Safely finds the 6 products that have zero order records.',
           hints: [{ level: 1, text: 'Use `WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requiredColumns: ['name', 'price'],
@@ -430,6 +435,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Adding `WHERE product_id IS NOT NULL` prevents NULL values from destroying the NOT IN logic.',
           hints: [{ level: 1, text: 'Add `WHERE product_id IS NOT NULL` inside the inner subquery.' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requiredColumns: ['name', 'price'],
@@ -572,6 +578,7 @@ export const Day_21_MODULE: ModuleData = {
             { level: 2, text: 'Correlate with `WHERE p2.category_id = p1.category_id` inside the AVG subquery.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requiredColumns: ['name', 'price', 'category_id'],
@@ -595,6 +602,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Calculates category-specific stock averages and filters high-inventory products.',
           hints: [{ level: 1, text: 'Use `WHERE p1.quantity_in_stock > (SELECT AVG(p2.quantity_in_stock) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireWhere: true,
             requiredColumns: ['name', 'quantity_in_stock', 'category_id'],
@@ -709,6 +717,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Uses a Common Table Expression to define active customer IDs.',
           hints: [{ level: 1, text: 'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) ...`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             expectedRowCount: 12,
           },
@@ -729,6 +738,7 @@ export const Day_21_MODULE: ModuleData = {
           solutionExplanation: 'Computes category metrics inside a CTE and filters the resulting set.',
           hints: [{ level: 1, text: 'Use `WITH CategoryStats AS (SELECT category_id, AVG(price) AS avg_price FROM products GROUP BY category_id) SELECT * FROM CategoryStats WHERE avg_price > 25;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             expectedRowCount: 4,
           },
@@ -761,6 +771,7 @@ export const Day_21_MODULE: ModuleData = {
         solutionExplanation: 'Filters products using a scalar subquery.',
         hints: [{ level: 1, text: 'Use `WHERE price > (SELECT AVG(price) FROM products);`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           expectedRowCount: 10,
@@ -782,6 +793,7 @@ export const Day_21_MODULE: ModuleData = {
         solutionExplanation: 'Uses an IN subquery against the orders table.',
         hints: [{ level: 1, text: 'Use `WHERE customer_id IN (SELECT customer_id FROM orders);`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireWhere: true,
           expectedRowCount: 12,
@@ -803,6 +815,7 @@ export const Day_21_MODULE: ModuleData = {
         solutionExplanation: 'Uses a correlated subquery to dynamically calculate the average for each product\'s category.',
         hints: [{ level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           expectedRowCount: 12,
@@ -824,6 +837,7 @@ export const Day_21_MODULE: ModuleData = {
         solutionExplanation: 'Uses a Common Table Expression to define active customer IDs.',
         hints: [{ level: 1, text: 'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) ...`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           expectedRowCount: 12,
         },

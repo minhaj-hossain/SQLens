@@ -142,6 +142,7 @@ export const Day_14_MODULE: ModuleData = {
           solutionExplanation: 'Joins products to categories on category_id.',
           hints: [{ level: 1, text: 'Use `INNER JOIN categories c ON p.category_id = c.category_id;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireJoin: true,
             requiredColumns: ['product_name', 'category_name'],
@@ -166,6 +167,7 @@ export const Day_14_MODULE: ModuleData = {
           solutionExplanation: 'Extracts all orders along with the customer who placed them.',
           hints: [{ level: 1, text: 'Use `FROM orders o INNER JOIN customers c ON o.customer_id = c.customer_id;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'orders',
             requireJoin: true,
             requiredColumns: ['order_id', 'name', 'order_date'],
@@ -286,6 +288,7 @@ export const Day_14_MODULE: ModuleData = {
           solutionExplanation: 'Preserves all customers; non-ordering customers have NULL in order_id (19 rows).',
           hints: [{ level: 1, text: 'Use `SELECT c.name, o.order_id FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requireJoin: true,
             requiredColumns: ['name', 'order_id'],
@@ -309,6 +312,7 @@ export const Day_14_MODULE: ModuleData = {
           solutionExplanation: 'Preserves all suppliers even if a supplier has 0 products.',
           hints: [{ level: 1, text: 'Use `SELECT s.name AS supplier_name, p.name AS product_name FROM suppliers s LEFT JOIN products p ON s.supplier_id = p.supplier_id;`' }],
           validation: {
+            requireExactResult: true,
             targetTable: 'suppliers',
             requireJoin: true,
             requiredColumns: ['supplier_name', 'product_name'],
@@ -344,6 +348,7 @@ export const Day_14_MODULE: ModuleData = {
         solutionExplanation: 'Joins orders to customers to retrieve customer names alongside order details.',
         hints: [{ level: 1, text: 'Use `FROM orders o INNER JOIN customers c ON o.customer_id = c.customer_id;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'orders',
           requireJoin: true,
           requiredColumns: ['order_id', 'name', 'order_date'],
@@ -367,6 +372,7 @@ export const Day_14_MODULE: ModuleData = {
         solutionExplanation: 'LEFT JOIN preserves customers with zero orders; COUNT(o.order_id) counts orders correctly.',
         hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,

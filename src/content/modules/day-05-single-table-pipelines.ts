@@ -136,6 +136,7 @@ export const Day_05_MODULE: ModuleData = {
             { level: 2, text: 'Add `ORDER BY quantity_in_stock ASC;` to sort from lowest stock to highest.' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'reorder_level'],
             requireWhere: true,
@@ -164,6 +165,7 @@ export const Day_05_MODULE: ModuleData = {
             { level: 2, text: 'Use `WHERE email IS NOT NULL ORDER BY name ASC LIMIT 5;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'email', 'city'],
             requireWhere: true,
@@ -192,6 +194,7 @@ export const Day_05_MODULE: ModuleData = {
             { level: 2, text: 'Use `ORDER BY product_id ASC LIMIT 10 OFFSET 10;`' },
           ],
           validation: {
+            requireExactResult: true,
             targetTable: 'products',
             requireOrderBy: [{ column: 'product_id', direction: 'ASC' }],
             requireLimit: 10,
@@ -227,6 +230,7 @@ export const Day_05_MODULE: ModuleData = {
         solutionExplanation: 'Filters for items where quantity_in_stock is exactly 0.',
         hints: [{ level: 1, text: 'Use `WHERE quantity_in_stock = 0;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           whereContainsTerms: ['quantity_in_stock', '=', '0'],
@@ -249,6 +253,7 @@ export const Day_05_MODULE: ModuleData = {
         solutionExplanation: 'Identifies inventory at or below threshold ordered by urgency.',
         hints: [{ level: 1, text: 'Use `WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireWhere: true,
           requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
@@ -270,6 +275,7 @@ export const Day_05_MODULE: ModuleData = {
         solutionExplanation: 'Paginates through products skipping the first 10 rows.',
         hints: [{ level: 1, text: 'Use `ORDER BY product_id ASC LIMIT 10 OFFSET 10;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'products',
           requireLimit: 10,
           requireOffset: 10,
@@ -292,6 +298,7 @@ export const Day_05_MODULE: ModuleData = {
         solutionExplanation: 'Orders customers by signup date descending and limits to top 5.',
         hints: [{ level: 1, text: 'Use `ORDER BY signup_date DESC LIMIT 5;`' }],
         validation: {
+          requireExactResult: true,
           targetTable: 'customers',
           requiredColumns: ['customer_id', 'name', 'signup_date'],
           requireOrderBy: [{ column: 'signup_date', direction: 'DESC' }],
