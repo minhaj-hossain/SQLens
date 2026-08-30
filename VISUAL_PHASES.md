@@ -170,7 +170,9 @@
 - [x] P10.5 Equivalence suite (tests/engine/equivalence.test.ts): operator aliases, IN vs OR, BETWEEN vs range, case/formatting, alias renames, column aliasing, positional ORDER BY, GROUP/HAVING; wrong variants must fail; trap-layer isolation tests
 - Gates: tsc 0 / tests 127/127 / build 0
 
+- P11.1 FIX - Ctrl+Space flash: keyup re-ran updateCursorAndSuggestions which closed the panel the same instant; SQLEditor + challenge editor now ignore the opening combo's keyup (Playground unaffected). Completion page: Roadmap button replaced with Next Module (opens next module's theory via learnUrl(id,'theory')). Gates: tsc 0, 129/129, build 0.
 - P11 COMPLETE (all gates: tsc 0, 129/129 tests, build 0)
+- P11 FIX - first-concept Back now goes to the homepage module card (/?highlight=day-XX) instead of the module overview page; tests updated.
   - P11.1 suggestion contract: ESC stays dismissed (dismissedWord memory), re-opens on new word, Ctrl+Space force-open — SQLEditor + IndependentChallengeView + Playground, header hints updated
   - P11.2 step-chain Back v2: task2 -> task1 -> concept -> previous concept last task -> ... -> module card; useStepBack hook (scroll memory + prefetch); concept footer [<- Back ... Continue ->]; task page Back left of Run & Check; removed Back-to-Lesson card button + bottom Previous dup + top-bar chain-back
   - P11.3 immediate unlock: previous-module-complete unlocks next module instantly; 6 PM cycle behind LEARNING_CONFIG.PACING_MODE (default off)

@@ -535,7 +535,17 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 handleTextChange(e.target.value);
                 updateCursorAndSuggestions(e.target.value, e.target.selectionStart);
               }}
-              onKeyUp={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
+              onKeyUp={(e) => {
+                // Same guard as SQLEditor: Ctrl+Space keyup must not instantly
+                // close the panel it just opened; typing is covered by onChange.
+                const k = e.key;
+                if (
+                  k === 'Control' || k === 'Shift' || k === 'Alt' || k === 'Meta' ||
+                  e.code === 'Space' || k === 'Escape' ||
+                  k === 'ArrowDown' || k === 'ArrowUp'
+                ) return;
+                updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart);
+              }}
               onClick={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
               onKeyDown={handleKeyDown}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}

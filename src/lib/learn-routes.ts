@@ -123,7 +123,7 @@ export function getPreviousStep(
         hint: 'Back to Lesson',
       };
     }
-    return { url: overview, label: 'Back', hint: 'Back to Module' };
+    return { url: roadmapUrl(dayId), label: 'Back', hint: 'Back to Module' };
   }
 
   // challenge
@@ -134,7 +134,7 @@ export function getPreviousStep(
       if (lastTask) return { ...lastTask, label: 'Back' };
       return { url: learnUrl(dayId, 'theory', last), label: 'Back', hint: 'Back to Lesson' };
     }
-    return { url: overview, label: 'Back', hint: 'Back to Module' };
+    return { url: roadmapUrl(dayId), label: 'Back', hint: 'Back to Module' };
   }
 
   // complete

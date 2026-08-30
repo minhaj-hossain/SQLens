@@ -395,7 +395,18 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               onChange(e.target.value);
               updateCursorAndSuggestions(e.target.value, e.target.selectionStart);
             }}
-            onKeyUp={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
+            onKeyUp={(e) => {
+              // Keyup must not recompute right after Ctrl+Space opened the
+              // panel (Space/Ctrl keyup would close it in the same instant).
+              // Plain typing is already covered by onChange; clicks by onClick.
+              const k = e.key;
+              if (
+                k === 'Control' || k === 'Shift' || k === 'Alt' || k === 'Meta' ||
+                e.code === 'Space' || k === 'Escape' ||
+                k === 'ArrowDown' || k === 'ArrowUp'
+              ) return;
+              updateCursorAndSuggestions(value, e.currentTarget.selectionStart);
+            }}
             onClick={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
             onKeyDown={handleKeyDown}
             onBlur={() => {

@@ -5,7 +5,7 @@
  * Gold check-ring hero, milestone progress (mono labels + hairline bar),
  * next-up card driven by getModuleUnlockStatus (immediate unlock under the
  * default PACING_MODE=false; countdown only when pacing/schedule gates),
- * step-chain Back (useStepBack), and `Roadmap — Day N` that lands on the
+ * step-chain Back (useStepBack), and `Next Module` + step-chain Back that lands on the
  * module card via /?highlight= instead of opening the modal.
  */
 import React, { useEffect, useState } from 'react';
@@ -23,7 +23,7 @@ import {
   getEffectiveNow,
   isModuleFullyComplete,
 } from '../../lib/progress/unlock-calculator';
-import { roadmapUrl } from '../../lib/learn-routes';
+import { learnUrl } from '../../lib/learn-routes';
 import { useStepBack } from '../learn/use-step-back';
 
 interface ModuleCompletionViewProps {
@@ -160,7 +160,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
         )}
       </div>
 
-      {/* Secondary nav — step-chain Back + Review + Roadmap */}
+      {/* Secondary nav — step-chain Back + Review + Next Module */}
       <div className='mt-5 flex flex-wrap items-center justify-center gap-3'>
         {backStep && (
           <button
@@ -179,13 +179,16 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
           <Icon name='restart_alt' className='text-[14px]' />
           Review Day
         </button>
-        <button
-          onClick={() => router.push(roadmapUrl(module.id))}
-          className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
-        >
-          <Icon name='map' className='text-[14px]' />
-          Roadmap — {moduleLabel}
-        </button>
+        {nextModule && (
+          <button
+            onClick={() => router.push(learnUrl(nextModule.id, 'theory'))}
+            title={`Open ${getModuleDisplayLabel(nextModule)}`}
+            className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
+          >
+            <Icon name='arrow_forward' className='text-[14px]' />
+            Next Module
+          </button>
+        )}
       </div>
     </motion.div>
   );

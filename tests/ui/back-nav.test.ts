@@ -52,7 +52,7 @@ describe('getPreviousStep — deterministic back chain (P11.2)', () => {
 
   it('first theory goes back to the module card', () => {
     const s = getPreviousStep('day-01', '/learn/day-01/theory/select-basics', concepts, null, tasksByConcept);
-    expect(s).toEqual({ url: '/learn/day-01', label: 'Back', hint: 'Back to Module' });
+    expect(s).toEqual({ url: '/?highlight=day-01', label: 'Back', hint: 'Back to Module' });
   });
 
   it('challenge goes back to the last concept last task', () => {
