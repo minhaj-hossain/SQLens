@@ -73,7 +73,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
       className="mx-auto max-w-3xl space-y-6 text-center py-4"
     >
       {/* Completion Icon */}
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_16px_rgba(0,173,181,0.3)]">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-container/20 text-primary border border-primary-container/40 shadow-[0_0_16px_rgba(244,196,48,0.3)]">
         <Icon name="check" className="text-[28px]" />
       </div>
 
@@ -171,7 +171,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
               {isUnlockedNow && onContinueNextDay && (
                 <button
                   onClick={onContinueNextDay}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary-container px-5 py-2 font-label-sm text-xs font-semibold text-on-primary-container hover:brightness-110 active:scale-95 transition cursor-pointer shadow-[0_0_8px_rgba(0,173,181,0.25)]"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary-container px-5 py-2 font-label-sm text-xs font-semibold text-on-primary-container hover:brightness-110 active:scale-95 transition cursor-pointer shadow-[0_0_8px_rgba(244,196,48,0.25)]"
                 >
                   <span>Start {getModuleDisplayLabel(nextModule!)}</span>
                   <Icon name="arrow_forward" className="text-[15px]" />

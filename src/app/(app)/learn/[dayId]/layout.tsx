@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 /**
- * /learn/[dayId] layout — the DAY boundary (Phase 3).
- *  - Validates dayId against the curriculum (invalid → 404).
+ * /learn/[dayId] layout â€” the DAY boundary (Phase 3).
+ *  - Validates dayId against the curriculum (invalid â†’ 404).
  *  - Owns the executor reset boundary: the in-memory SQL database resets when
  *    the learner enters a DIFFERENT day (not on concept/task navigation, so
  *    DML/DDL continuity is preserved within a day's flow).
- *  - Renders the breadcrumb bar ("Back to Learning Path" + "Day N of 25").
+ *  - Renders the breadcrumb bar ("Back to Learning Path" + "Day N of 38").
  */
 import React, { useEffect } from 'react';
 import { useParams, usePathname, useRouter, notFound } from 'next/navigation';
@@ -29,9 +29,9 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
   const { backToRoadmap } = useLearningNavigation();
 
   // Explicit reset boundaries (Phase 3): the in-memory DB resets when the
-  // learner enters a DIFFERENT DAY or a DIFFERENT CONCEPT. Theory→practice of
-  // the same concept and task→task within a concept keep continuity.
-  // (Content audit: Day 19 DML / Day 20 DDL need cross-concept isolation —
+  // learner enters a DIFFERENT DAY or a DIFFERENT CONCEPT. Theoryâ†’practice of
+  // the same concept and taskâ†’task within a concept keep continuity.
+  // (Content audit: Day 19 DML / Day 20 DDL need cross-concept isolation â€”
   // e.g. re-running a Day 20 CREATE TABLE task must not hit "table exists".)
   const conceptId = conceptIdFromPathname(pathname);
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="font-label-sm text-label-sm bg-surface-container text-text-muted px-2.5 py-1 rounded border border-outline-variant/60 whitespace-nowrap">
-            Day {mod.day} of 25
+            Day {mod.day} of {ALL_MODULES.length}
           </span>
         </div>
       </div>

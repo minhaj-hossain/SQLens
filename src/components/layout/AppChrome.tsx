@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 /**
- * AppChrome — the (app) route-group shell UI (Phase 3).
+ * AppChrome â€” the (app) route-group shell UI (Phase 3).
  * Renders the Header above route content and owns the blocked-account gate.
  * The header's view title and current-module context are derived from the
- * ROUTE (pathname), not from provider state — the URL is the position.
+ * ROUTE (pathname), not from provider state â€” the URL is the position.
  */
 import React from 'react';
 import { usePathname } from 'next/navigation';
@@ -36,7 +36,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased selection:bg-primary-container/30 selection:text-primary">
+    <div className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased">
       <Header
         userState={userState}
         currentModule={pathModule ?? getModuleById('day-01')!}
@@ -51,7 +51,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         activeViewTitle={activeViewTitle}
       />
 
-      {/* Main Content Area — header is sticky (in flow), so no top offset needed */}
+      {/* Main Content Area â€” header is sticky (in flow), so no top offset needed */}
       <main className="relative w-full bg-surface-base min-h-screen">{children}</main>
     </div>
   );

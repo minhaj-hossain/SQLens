@@ -37,24 +37,18 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 w-full z-50 bg-ink/90 backdrop-blur-md pt-safe border-b border-border-soft">
       <div className="h-14 px-3 sm:px-6 flex items-center justify-between max-w-5xl mx-auto w-full gap-2 sm:gap-4">
 
-        {/* Left: Brand Icon + SQLens Name â€” links home (route since Phase 3) */}
+        {/* Left: brand dot + wordmark + current-route label (links home) */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition text-left focus:outline-none group"
+          className="flex items-center gap-[9px] min-w-0 hover:opacity-85 transition text-left focus:outline-none group"
           title="Return to Curriculum Homepage"
           aria-label="Return to Curriculum Homepage"
         >
-          <svg width="22" height="22" viewBox="0 0 30 30" fill="none" className="shrink-0 sm:w-[26px] sm:h-[26px] transition-transform duration-200 group-hover:scale-105">
-            <circle cx="12.5" cy="12.5" r="9" stroke="#38BDF8" strokeWidth="2" />
-            <line x1="19" y1="19" x2="26" y2="26" stroke="#38BDF8" strokeWidth="2.4" strokeLinecap="round" />
-            <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#60A5FA" strokeWidth="1.6" strokeLinecap="round" />
-            <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#60A5FA" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
-          </svg>
-          <span className="font-display font-bold text-sm sm:text-lg tracking-tight text-text whitespace-nowrap">
-            SQL<span className="text-func">ens</span>
+          <span className="w-[7px] h-[7px] rounded-full bg-func shrink-0" aria-hidden="true" />
+          <span className="font-mono font-bold text-[15px] tracking-tight text-text whitespace-nowrap">
+            SQLens
           </span>
-          <span className="hidden sm:inline-block text-border font-mono text-xs">/</span>
-          <span className="hidden sm:inline-block font-body text-xs text-text-dim truncate group-hover:text-text transition-colors">
+          <span className="hidden sm:inline-block font-body text-xs text-text-faint truncate pl-[9px] border-l border-border ml-[2px]">
             {activeViewTitle}
           </span>
         </Link>
@@ -90,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
             href="/playground"
             title="Open SQL Playground"
             aria-label="Open SQL Playground"
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-func hover:border-func/40 transition-all duration-150"
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150"
           >
             <Icon name="terminal" className="text-[16px]" />
           </Link>
@@ -132,15 +126,15 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setUserMenuOpen((v) => !v)}
                   aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
                   aria-expanded={userMenuOpen}
-                  className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
+                  className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-2 border border-border cursor-pointer focus:outline-none"
                 >
-                {/* Rotating conic ring â€” cyanâ†’sky shades only (matches --func brand) */}
+                {/* Rotating conic ring - grayscale (matches border system) */}
                 <motion.span
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full"
                   style={{
                     background:
-                      'conic-gradient(from 140deg, #67E8F9, #38BDF8, #0284C7, #7DD3FC, #22D3EE, #67E8F9)',
+                      'conic-gradient(from 140deg, #262626, #3d3d3d, #262626, #333333, #262626, #262626)',
                   }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, ease: 'linear', repeat: Infinity }}
@@ -149,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="absolute inset-[2px] rounded-full bg-ink" />
                 {/* Inner disc with initial */}
                 <span className="absolute inset-[3px] rounded-full bg-surface-2 flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <span className="font-display font-bold text-func text-xs sm:text-sm select-none drop-shadow-[0_0_6px_rgba(56,189,248,0.45)]">
+                  <span className="font-display font-bold text-text text-xs sm:text-sm select-none">
                     {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
                   </span>
                 </span>

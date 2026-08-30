@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 
@@ -14,7 +14,7 @@ export function StatusBadge({ status, role }: { status: string; role: string }) 
       <span
         className={`font-mono text-[10px] px-2 py-0.5 rounded-full border uppercase tracking-wider ${
           status === 'active'
-            ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
+            ? 'border-border text-text bg-surface'
             : status === 'blocked'
               ? 'border-error/50 text-error bg-error/10'
               : 'border-border text-text-dim bg-surface-2'

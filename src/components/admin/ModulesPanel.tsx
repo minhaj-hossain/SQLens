@@ -17,12 +17,12 @@ const MODE_META: Record<
   automatic: {
     label: 'Automatic',
     hint: 'Default 6 PM cycle after the previous day is fully completed.',
-    badge: 'bg-zinc-500/10 text-text-dim border-border',
+    badge: 'bg-surface text-text-dim border-border',
   },
   manual: {
     label: 'Unlocked now',
     hint: 'Open for everyone immediately, regardless of progression.',
-    badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+    badge: 'bg-surface text-text border-border',
   },
   scheduled: {
     label: 'Scheduled',
@@ -273,7 +273,7 @@ function ModuleRows({
                   <button
                     disabled={isBusy}
                     onClick={() => void onApply(id, { unlockMode: 'manual' })}
-                    className="font-mono text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-40 transition"
+                    className="font-mono text-[11px] px-2.5 py-1 rounded-lg bg-surface-2 text-text border border-border hover:bg-surface-3 disabled:opacity-40 transition"
                   >
                     Unlock now
                   </button>

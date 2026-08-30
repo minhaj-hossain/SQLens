@@ -1,84 +1,132 @@
 @import "tailwindcss";
 
+/* ============================================================
+   SQLENS DESIGN TOKENS — "execution plan" visual system
+   Monochrome grays carry structure & hierarchy. ONE warm gold
+   accent (#f4c430) marks "you are here". Red is reserved for
+   errors only. No other hues exist in the UI.
+   ============================================================ */
+
 :root {
-  /* ============ TOKENS ============ */
-  --ink: #0A0D12;
-  --surface: #121722;
-  --surface-2: #1A2130;
-  --surface-3: #212A3D;
-  --border: #262F42;
-  --border-soft: #1D2434;
-  --text: #EAEDF4;
-  --text-dim: #8D96AC;
-  --text-faint: #545C71;
+  /* surfaces */
+  --ink: #0a0a0a;
+  --surface: #131313;
+  --surface-2: #1a1a1a;
+  --surface-3: #212121;
+  --border: #262626;
+  --border-soft: #1c1c1c;
 
-  /* syntax-highlight accent system */
-  --keyword: #60A5FA;   /* SELECT / WHERE / FROM — clean bright blue */
-  --string:  #F59E0B;   /* string literal amber */
-  --func:    #38BDF8;   /* primary brand sky blue */
-  --comment: #94A3B8;   /* cool slate neutral */
+  /* text */
+  --text: #f2f2f0;
+  --text-dim: #93938e;
+  --text-faint: #55554f;
 
-  --font-display: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
-  --font-body: var(--font-manrope), 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
+  /* the single accent — gold ("you are here") */
+  --func: #f4c430;
+  --accent: #f4c430;
+  --accent-dim: rgba(244, 196, 48, 0.13);
+  --accent-line: rgba(244, 196, 48, 0.33);
+  --done: #d8d8d3;
 
+  /* legacy semantic names remapped onto the new system so the
+     codebase keeps working while components migrate (P2–P7) */
+  --primary: #f4c430;
+  --primary-container: #f4c430;
+  --on-primary: #0a0a0a;
+  --on-primary-container: #0a0a0a;
+  --string: #f4c430;   /* was amber "active" — now the gold accent */
+  --keyword: #d8d8d3;  /* was blue syntax — now neutral light gray */
+  --comment: #55554f;  /* was slate — now the muted gray */
+
+  /* editor (shared by SQLEditor / challenge editor / Playground) */
+  --editor-bg: #101010;
+  --editor-text: #e6e6e2;
+  --editor-comment: #55554f;
+  --editor-caret: #f4c430;
+  --editor-selection: rgba(244, 196, 48, 0.12);
+  --editor-active-line: rgba(255, 255, 255, 0.03);
+
+  /* functional error — the only non-gray, non-gold color */
+  --error: #e06c5b;
+  --danger: #e06c5b;
+
+  /* radii */
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  /* fonts */
+  --font-display: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
 }
 
 @theme {
-  --color-ink: #0A0D12;
-  --color-surface-base: #0A0D12;
-  --color-surface: #121722;
-  --color-surface-container: #121722;
-  --color-surface-container-high: #1A2130;
-  --color-surface-container-highest: #212A3D;
-  --color-surface-variant: #1A2130;
-  --color-surface-dim: #0A0D12;
+  /* surfaces */
+  --color-ink: #0a0a0a;
+  --color-surface-base: #0a0a0a;
+  --color-surface: #131313;
+  --color-surface-container: #131313;
+  --color-surface-container-high: #1a1a1a;
+  --color-surface-container-highest: #212121;
+  --color-surface-variant: #1a1a1a;
+  --color-surface-dim: #0a0a0a;
+  --color-surface-2: #1a1a1a;
+  --color-surface-3: #212121;
 
-  --color-text: #EAEDF4;
-  --color-on-surface: #EAEDF4;
-  --color-on-surface-variant: #8D96AC;
-  --color-text-muted: #8D96AC;
-  --color-text-faint: #545C71;
+  /* text */
+  --color-text: #f2f2f0;
+  --color-on-surface: #f2f2f0;
+  --color-on-surface-variant: #93938e;
+  --color-text-muted: #93938e;
+  --color-text-dim: #93938e;
+  --color-text-faint: #55554f;
 
-  --color-keyword: #60A5FA;
-  --color-string: #F59E0B;
-  --color-func: #38BDF8;
-  --color-comment: #94A3B8;
+  /* the accent */
+  --color-func: #f4c430;
+  --color-accent: #f4c430;
+  --color-primary: #f4c430;
+  --color-primary-container: #f4c430;
+  --color-on-primary: #0a0a0a;
+  --color-on-primary-container: #0a0a0a;
+  --color-string: #f4c430;
+  --color-keyword: #d8d8d3;
+  --color-comment: #55554f;
+  --color-done: #d8d8d3;
 
-  --color-primary: #38BDF8;
-  --color-primary-container: #38BDF8;
-  --color-on-primary: #0A0D12;
-  --color-on-primary-container: #0A0D12;
+  /* borders */
+  --color-border: #262626;
+  --color-border-soft: #1c1c1c;
+  --color-border-subtle: #1c1c1c;
+  --color-outline-variant: #262626;
+  --color-outline: #55554f;
 
-  --color-border: #262F42;
-  --color-border-soft: #1D2434;
-  --color-border-subtle: #1D2434;
-  --color-outline-variant: #262F42;
-  --color-outline: #545C71;
+  /* editor (shared by SQLEditor / challenge editor / Playground) */
+  --color-editor-bg: #101010;
+  --color-editor-gutter: #0c0c0c;
+  --color-editor-text: #e6e6e2;
+  --color-editor-comment: #55554f;
+  --color-editor-active-line: rgba(255, 255, 255, 0.03);
+  --color-editor-caret: #f4c430;
+  --color-editor-selection: rgba(244, 196, 48, 0.12);
+  /* error */
+  --color-error: #e06c5b;
+  --color-error-container: #43150d;
+  --color-danger: #e06c5b;
 
-  --color-error: #ff6b6b;
-  --color-error-container: #93000a;
-
-  /* Flat aliases so bg-surface-2, bg-surface-3, bg-ink, text-error etc. work */
-  --color-surface-2: #1A2130;
-  --color-surface-3: #212A3D;
-  --color-text-dim: #8D96AC;
-  --color-border-soft: #1D2434;
-
-  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
-  --font-headline-lg: var(--font-space-grotesk), "Space Grotesk", sans-serif;
-  --font-headline-md: var(--font-space-grotesk), "Space Grotesk", sans-serif;
-  --font-headline-sm: var(--font-space-grotesk), "Space Grotesk", sans-serif;
-  --font-body: var(--font-manrope), "Manrope", sans-serif;
-  --font-body-lg: var(--font-manrope), "Manrope", sans-serif;
-  --font-body-md: var(--font-manrope), "Manrope", sans-serif;
+  /* fonts */
+  --font-display: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-headline-lg: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-headline-md: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-headline-sm: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-body-lg: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-body-md: var(--font-inter), "Inter", system-ui, sans-serif;
   --font-label-md: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
   --font-label-sm: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 
+  /* spacing scale (kept from the previous system) */
   --spacing-margin-mobile: 16px;
   --spacing-card-padding: 24px;
   --spacing-margin-desktop: 48px;
@@ -105,8 +153,8 @@
   }
 
   ::selection {
-    background: var(--func);
-    color: var(--ink);
+    background: rgba(244, 196, 48, 0.22);
+    color: var(--text);
   }
 
   :focus-visible {
@@ -183,27 +231,27 @@
 }
 
 .day-node-done .node-dot-connector {
-  background: var(--func);
-  border-color: var(--func);
+  background: var(--done);
+  border-color: var(--done);
   color: var(--ink);
 }
 .day-node-done .node-dot-connector::after {
-  background: var(--func);
+  background: var(--done);
 }
 
 .day-node-active .node-dot-connector {
-  border-color: var(--string);
-  color: var(--string);
-  box-shadow: 0 0 0 4px rgba(240, 168, 96, 0.12);
+  border-color: var(--func);
+  color: var(--func);
+  box-shadow: 0 0 0 4px var(--accent-dim);
   animation: pulse-ring 2s ease-in-out infinite;
 }
 .day-node-active .node-dot-connector::after {
-  background: var(--string);
+  background: var(--func);
 }
 
 @keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(240, 168, 96, 0.12); }
-  50% { box-shadow: 0 0 0 8px rgba(240, 168, 96, 0.04); }
+  0%, 100% { box-shadow: 0 0 0 4px var(--accent-dim); }
+  50% { box-shadow: 0 0 0 8px rgba(244, 196, 48, 0.05); }
 }
 
 /* Concept Node Title 2-Line Truncation */
@@ -235,5 +283,3 @@
   height: 5px;
   display: none;
 }
-
-

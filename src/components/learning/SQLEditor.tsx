@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 
@@ -210,7 +210,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       const ph = `___TOKEN_${tokens.length}___`;
       tokens.push({
         placeholder: ph,
-        html: `<span class="text-zinc-400 italic">${match}</span>`,
+        html: `<span class="text-editor-comment italic">${match}</span>`,
       });
       return ph;
     });
@@ -220,12 +220,12 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       const ph = `___TOKEN_${tokens.length}___`;
       tokens.push({
         placeholder: ph,
-        html: `<span class="text-emerald-400 font-medium">${match}</span>`,
+        html: `<span class="text-editor-text font-medium">${match}</span>`,
       });
       return ph;
     });
 
-    // 3. SQL Keywords — single-pass combined regex to prevent HTML attribute corruption
+    // 3. SQL Keywords â€” single-pass combined regex to prevent HTML attribute corruption
     // Sort longest first so multi-word keywords (e.g. "LEFT JOIN") match before sub-words
     const sortedKws = [...SQL_KEYWORDS].sort((a, b) => b.length - a.length);
     const kwPattern = sortedKws.map(kw => kw.replace(/\s+/g, '\\s+')).join('|');
@@ -234,17 +234,17 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       const ph = `___TOKEN_${tokens.length}___`;
       tokens.push({
         placeholder: ph,
-        html: `<span class="text-cyan-400 font-bold">${match.toUpperCase()}</span>`,
+        html: `<span class="text-editor-text font-semibold">${match.toUpperCase()}</span>`,
       });
       return ph;
     });
 
-    // 4. Numbers — also stash to avoid being re-touched
+    // 4. Numbers â€” also stash to avoid being re-touched
     escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
       const ph = `___TOKEN_${tokens.length}___`;
       tokens.push({
         placeholder: ph,
-        html: `<span class="text-amber-300 font-semibold">${match}</span>`,
+        html: `<span class="text-editor-text">${match}</span>`,
       });
       return ph;
     });
@@ -313,19 +313,19 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
-    <div id="sql-editor-container" className="flex flex-col bg-[#121820] rounded-xl border border-zinc-700/60 shadow-xl text-zinc-100 relative">
+    <div id="sql-editor-container" className="flex flex-col bg-editor-bg rounded-xl border border-border shadow-xl text-editor-text relative">
       {/* Editor Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#0d1217] border-b border-zinc-700/60 select-none rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-surface-2 border-b border-border-soft select-none rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 mr-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-text-faint/60 inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-border inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-surface-3 inline-block"></span>
           </div>
-          <span className="text-[11px] font-mono text-cyan-400 font-semibold tracking-wide">
+          <span className="text-[11px] font-mono text-text font-semibold tracking-wide">
             query.sql
           </span>
-          <span className="hidden sm:inline-block text-[10px] text-zinc-400 px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50">
+          <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border">
             Active: {tableName}
           </span>
         </div>
@@ -335,23 +335,23 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <button
             id="format-sql-btn"
             onClick={handleFormat}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-zinc-300 hover:text-cyan-300 hover:bg-zinc-800 rounded transition cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface rounded transition cursor-pointer"
             title="Format uppercase SQL keywords"
           >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <Sparkles className="w-3.5 h-3.5 text-text-dim" />
             <span className="hidden sm:inline">Format</span>
           </button>
 
           <button
             id="copy-sql-btn"
             onClick={handleCopy}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 rounded transition cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface rounded transition cursor-pointer"
             title="Copy SQL to clipboard"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400">Copied</span>
+                <Check className="w-3.5 h-3.5 text-text" />
+                <span className="text-text">Copied</span>
               </>
             ) : (
               <>
@@ -364,7 +364,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <button
             id="reset-sql-btn"
             onClick={() => onChange(`SELECT * FROM ${tableName};`)}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition cursor-pointer"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono text-text-faint hover:text-text hover:bg-surface rounded transition cursor-pointer"
             title="Reset to default query"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -373,14 +373,14 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Code Editor Surface */}
-      <div className="relative min-h-[160px] max-h-[280px] flex font-mono text-[13px] leading-[22px] bg-[#0e141b]">
+      <div className="relative min-h-[160px] max-h-[280px] flex font-mono text-[13px] leading-[22px] bg-editor-bg">
         {/* Line Numbers Gutter */}
-        <div className="w-11 select-none py-3 bg-[#0d1217] text-zinc-500 text-right pr-3 font-mono border-r border-zinc-800/80 flex flex-col shrink-0">
+        <div className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft flex flex-col shrink-0">
           {lines.map((ln) => (
             <div
               key={ln}
               className={`h-[22px] text-[11px] font-medium transition-colors ${
-                ln === activeLine ? 'text-cyan-400 font-bold bg-cyan-950/40 -mr-3 pr-3' : ''
+                ln === activeLine ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3' : ''
               }`}
             >
               {ln}
@@ -394,7 +394,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <div
             ref={highlightRef}
             aria-hidden="true"
-            className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-zinc-100 z-0"
+            className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
             dangerouslySetInnerHTML={{ __html: highlightedCode + (value.endsWith('\n') ? '<br />&nbsp;' : '') }}
           />
 
@@ -424,22 +424,22 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             style={{
               tabSize: 2,
               color: 'transparent',
-              caretColor: '#22d3ee',
+              caretColor: '#f4c430',
               WebkitTextFillColor: 'transparent',
             }}
-            className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-zinc-500 placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-cyan-500/30 whitespace-pre-wrap break-words z-10"
+            className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"
           />
 
           {/* Autocomplete Popup: fully visible, sharp, opaque, never cut off */}
           {showSuggestions && suggestions.length > 0 && (
             <div
               id="autocomplete-dropdown"
-              className="absolute z-50 bg-[#1c1c20] border border-zinc-700 rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px] backdrop-blur-none"
+              className="absolute z-50 bg-surface-2 border border-border rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px] backdrop-blur-none"
               style={{ top: `${suggestionCoords.top}px`, left: `${suggestionCoords.left}px` }}
             >
-              <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-zinc-300 font-bold bg-[#141417] border-b border-zinc-700 flex items-center justify-between">
+              <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between">
                 <span>Suggestions</span>
-                <span className="text-[9px] text-zinc-400 font-normal">Tab ⇥</span>
+                <span className="text-[9px] text-text-faint font-normal">Tab â‡¥</span>
               </div>
               {suggestions.map((sug, idx) => (
                 <div
@@ -450,12 +450,12 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
                   }}
                   className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
                     idx === selectedSuggestionIdx
-                      ? 'bg-cyan-500/30 text-cyan-200 font-bold'
-                      : 'text-zinc-200 hover:bg-zinc-800/80 hover:text-white'
+                      ? 'bg-func/15 text-text font-bold'
+                      : 'text-text-dim hover:bg-surface hover:text-text'
                   }`}
                 >
                   <span className="font-semibold">{sug}</span>
-                  <span className="text-[9px] text-zinc-400 px-1.5 py-0.2 rounded bg-zinc-800 border border-zinc-700/60">
+                  <span className="text-[9px] text-text-faint px-1.5 py-0.2 rounded bg-surface border border-border">
                     {SQL_KEYWORDS.includes(sug.toUpperCase()) ? 'SQL' : 'COL'}
                   </span>
                 </div>
@@ -466,8 +466,8 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Helper Quick Chips */}
-      <div className="flex items-center gap-1.5 px-3 py-2 bg-[#0d1217] border-t border-zinc-800/80 overflow-x-auto text-xs scrollbar-none">
-        <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mr-1 shrink-0">
+      <div className="flex items-center gap-1.5 px-3 py-2 bg-surface border-t border-border-soft overflow-x-auto text-xs scrollbar-none">
+        <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
           Quick:
         </span>
         {['SELECT', 'FROM', 'WHERE', 'ORDER BY', 'LIMIT', 'JOIN'].map((chip) => (
@@ -479,7 +479,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               onChange(appended);
               if (textareaRef.current) textareaRef.current.focus();
             }}
-            className="px-2 py-0.5 rounded bg-zinc-800/90 hover:bg-cyan-950/60 hover:text-cyan-300 text-zinc-300 text-[11px] font-mono border border-zinc-700/60 transition shrink-0 cursor-pointer"
+            className="px-2 py-0.5 rounded bg-surface-2 hover:bg-surface hover:text-text text-text-dim text-[11px] font-mono border border-border transition shrink-0 cursor-pointer"
           >
             {chip}
           </button>
@@ -487,22 +487,22 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Bottom Action Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[#11171f] border-t border-zinc-800">
-        <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-          <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-surface-2 border-t border-border-soft">
+        <div className="flex items-center gap-2 text-xs text-text-faint font-mono">
+          <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-dim text-[10px]">
             Ctrl + Enter
           </kbd>
           <span className="hidden sm:inline">to run &amp; check</span>
         </div>
 
-        {/* Single Smart Button: Run → Check → Next */}
+        {/* Single Smart Button: Run â†’ Check â†’ Next */}
         <div className="flex items-center gap-2.5">
           {evaluationState === 'correct' && onNextAction ? (
             <button
               id="next-task-btn"
               type="button"
               onClick={onNextAction}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 transition cursor-pointer animate-pulse active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-func hover:brightness-110 text-ink shadow-lg shadow-black/30 transition cursor-pointer animate-pulse active:scale-95"
             >
               <span>{nextActionLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -512,10 +512,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               id="run-check-btn"
               type="button"
               onClick={() => onRunAndCheck(value)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono text-white transition cursor-pointer shadow-md active:scale-95 ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono text-ink transition cursor-pointer shadow-md active:scale-95 ${
                 evaluationState === 'wrong'
-                  ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-950/40'
-                  : 'bg-cyan-600 hover:bg-cyan-500 shadow-cyan-950/40'
+                  ? 'bg-error hover:bg-error/90 shadow-black/30'
+                  : 'bg-func hover:brightness-110 shadow-black/30'
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />

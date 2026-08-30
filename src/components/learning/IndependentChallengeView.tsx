@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, TableRow } from '../../types/database';
@@ -31,7 +31,7 @@ interface IndependentChallengeViewProps {
   onFinishAllChallenges: () => void;
   onBackToPractice?: () => void;
   /** v2: called on every task switch so the host can honor the challenge's
-   *  lifecycle (fresh → reset DB; inherit → keep mutated state). */
+   *  lifecycle (fresh â†’ reset DB; inherit â†’ keep mutated state). */
   onSelectedTaskChange?: (taskId: string) => void;
 }
 
@@ -128,21 +128,21 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     // 2. String literals
     escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
       const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({ placeholder: ph, html: `<span class="text-string font-medium">${match}</span>` });
+      tokens.push({ placeholder: ph, html: `<span class="text-editor-text font-medium">${match}</span>` });
       return ph;
     });
 
     // 3. Numbers
     escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
       const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({ placeholder: ph, html: `<span class="text-string font-semibold">${match}</span>` });
+      tokens.push({ placeholder: ph, html: `<span class="text-editor-text font-semibold">${match}</span>` });
       return ph;
     });
 
     // 4. SQL Keywords (single combined regex pass)
     const kwPattern = new RegExp(`\\b(${SQL_KEYWORDS.map((k) => k.replace(/ /g, '\\s+')).join('|')})\\b`, 'gi');
     escaped = escaped.replace(kwPattern, (match) =>
-      `<span class="text-keyword font-bold">${match.toUpperCase()}</span>`
+      `<span class="text-editor-text font-bold">${match.toUpperCase()}</span>`
     );
 
     // 5. Restore tokens
@@ -189,7 +189,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
     // Hint 2: Columns / Filtering requirements
     if (reqCols && reqCols.length > 0) {
-      list.push(`The columns you need to output are:\n${reqCols.map((c) => `• ${c}`).join('\n')}`);
+      list.push(`The columns you need to output are:\n${reqCols.map((c) => `â€¢ ${c}`).join('\n')}`);
     } else if (currentTask.validation.requireWhere) {
       list.push(`Make sure to use a WHERE clause to filter the rows correctly.`);
     } else {
@@ -390,7 +390,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             </span>
             {challenge.tasks.length > 1 && (
               <span className="text-xs font-mono text-text-dim">
-                • Task {selectedTaskIdx + 1} of {challenge.tasks.length}
+                â€¢ Task {selectedTaskIdx + 1} of {challenge.tasks.length}
               </span>
             )}
           </div>
@@ -432,12 +432,12 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     isSelected
                       ? 'bg-string/20 text-string font-bold border border-string'
                       : isTaskDone
-                      ? 'bg-func/10 text-func border border-func/40 hover:bg-func/20'
+                      ? 'bg-surface text-text border border-border hover:border-text-dim'
                       : 'bg-surface-2 text-text-dim hover:text-text border border-border'
                   }`}
                 >
                   {isTaskDone && (
-                    <span className="text-func font-bold text-xs">✓</span>
+                    <span className="text-func font-bold text-xs">âœ“</span>
                   )}
                   <span>Task {idx + 1}</span>
                 </button>
@@ -450,7 +450,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       {/* 2. SQL EDITOR CENTERPIECE */}
       <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-lg">
         {/* Editor Top Bar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-ink border-b border-border select-none">
+        <div className="flex items-center justify-between px-4 py-2 bg-surface-2 border-b border-border-soft select-none">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono text-text-faint font-semibold tracking-wide">
               SQL
@@ -493,15 +493,15 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         {/* Code Editor Surface */}
         <div
           onClick={() => textareaRef.current?.focus()}
-          className="relative min-h-[160px] flex font-mono text-[13px] leading-[22px] bg-ink cursor-text"
+          className="relative min-h-[160px] flex font-mono text-[13px] leading-[22px] bg-editor-bg cursor-text"
         >
           {/* Line Numbers Gutter */}
-          <div className="w-11 select-none py-3 bg-ink text-text-faint text-right pr-3 font-mono border-r border-border flex flex-col shrink-0">
+          <div className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft flex flex-col shrink-0">
             {lines.map((ln) => (
               <div
                 key={ln}
                 className={`h-[22px] text-[11px] font-medium transition-colors ${
-                  ln === activeLine ? 'text-func font-bold bg-func/10 -mr-3 pr-3' : ''
+                  ln === activeLine ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3' : ''
                 }`}
               >
                 {ln}
@@ -515,7 +515,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             <div
               ref={highlightRef}
               aria-hidden="true"
-              className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-zinc-100 z-0"
+              className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
               dangerouslySetInnerHTML={{ __html: highlightedCode + (currentSql.endsWith('\n') ? '<br />&nbsp;' : '') }}
             />
 
@@ -594,7 +594,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               onClick={handleNextAction}
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold font-mono bg-func hover:bg-func/80 text-ink shadow-md shadow-func/20 transition cursor-pointer active:scale-95"
             >
-              <span>{isLastTask ? 'Finish Challenge 🏆' : 'Next Task →'}</span>
+              <span>{isLastTask ? 'Finish Challenge ðŸ†' : 'Next Task â†’'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
@@ -625,7 +625,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               <div className="p-4 rounded-xl bg-func/10 border border-func/40 flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-func shrink-0 mt-0.5" />
                 <div className="space-y-0.5 text-left">
-                  <h3 className="font-display text-sm font-bold text-func">✓ Correct!</h3>
+                  <h3 className="font-display text-sm font-bold text-func">âœ“ Correct!</h3>
                   <p className="text-xs text-text leading-relaxed">
                     {cleanBackticks(currentTask.successMessage) || 'Your query returned the expected result.'}
                   </p>
@@ -638,7 +638,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               <div className="p-4 rounded-xl bg-error/10 border border-error/30 flex items-start gap-3">
                 <XCircle className="w-5 h-5 text-error shrink-0 mt-0.5" />
                 <div className="space-y-1 text-left">
-                  <h3 className="font-display text-sm font-bold text-error">✕ Not quite</h3>
+                  <h3 className="font-display text-sm font-bold text-error">âœ• Not quite</h3>
                   <p className="text-xs text-text leading-relaxed font-mono">
                     {validationFeedback}
                   </p>
@@ -708,7 +708,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                   onClick={() => setRevealedHintLevel((prev) => Math.min(prev + 1, maxHints))}
                   className="text-xs font-mono text-string hover:underline transition cursor-pointer font-semibold"
                 >
-                  Stronger Hint →
+                  Stronger Hint â†’
                 </button>
               )}
             </div>
@@ -788,7 +788,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     className="px-2 py-0.5 rounded bg-surface hover:bg-surface-3 hover:text-keyword text-text border border-border transition cursor-pointer whitespace-nowrap"
                     title="Click to copy column name"
                   >
-                    {copiedColumn === c.name ? `✓ ${c.name}` : c.name}
+                    {copiedColumn === c.name ? `âœ“ ${c.name}` : c.name}
                   </button>
                 ))}
               </div>

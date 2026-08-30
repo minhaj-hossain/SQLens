@@ -47,7 +47,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-soft bg-ink px-5 py-3">
           <div className="flex items-center gap-2.5">
-            <Icon name="map" className="text-[20px] text-string" />
+            <Icon name="map" className="text-[20px] text-text-dim" />
             <div>
               <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-text">
                 38-day Curriculum Map
@@ -83,7 +83,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                     </span>
                     <span className="text-xs text-text-dim font-body">({milestone.subtitle})</span>
                     {isMilestoneDone && (
-                      <span className="font-mono text-[11px] text-func font-medium">
+                      <span className="font-mono text-[11px] text-done font-medium">
                         [Complete]
                       </span>
                     )}
@@ -113,7 +113,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                           isCurrent
                             ? 'border-string bg-string/10 text-text font-medium'
                             : isCompleted
-                            ? 'border-func/40 bg-surface-2 text-text hover:border-func cursor-pointer'
+                            ? 'border-border bg-surface-2 text-text hover:border-text-dim cursor-pointer'
                             : isUnlocked
                             ? 'border-border bg-surface-2/50 text-text-dim hover:border-keyword/40 cursor-pointer'
                             : 'border-border-soft bg-surface/20 text-text-faint cursor-not-allowed'
@@ -124,9 +124,9 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                             {getModuleDisplayLabel(module)}
                           </span>
                           {isCompleted ? (
-                            <Icon name="check_circle" className="text-[14px] text-func" />
+                            <Icon name="check_circle" className="text-[14px] text-done" />
                           ) : isUnlocked ? (
-                            <Icon name="play_circle" className="text-[14px] text-keyword" />
+                            <Icon name="play_circle" className="text-[14px] text-text-dim" />
                           ) : (
                             <Icon name="lock" className="text-[14px] text-text-faint" />
                           )}

@@ -73,10 +73,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ mode, onSetMode, onBack, onS
 function BrandMark() {
   return (
     <svg width="28" height="28" viewBox="0 0 30 30" fill="none" className="shrink-0">
-      <circle cx="12.5" cy="12.5" r="9" stroke="#48D8C8" strokeWidth="2" />
-      <line x1="19" y1="19" x2="26" y2="26" stroke="#48D8C8" strokeWidth="2.4" strokeLinecap="round" />
-      <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#7C9BFF" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#7C9BFF" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
+      <circle cx="12.5" cy="12.5" r="9" stroke="#f4c430" strokeWidth="2" />
+      <line x1="19" y1="19" x2="26" y2="26" stroke="#f4c430" strokeWidth="2.4" strokeLinecap="round" />
+      <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#d8d8d3" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#d8d8d3" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
     </svg>
   );
 }
@@ -119,10 +119,10 @@ function OAuthButtons() {
         className="w-full flex items-center justify-center gap-2.5 bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm font-medium text-text hover:bg-surface-2 transition cursor-pointer"
       >
         <svg width="17" height="17" viewBox="0 0 48 48">
-          <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z" />
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.6 16.3 44 24 44z" />
-          <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z" />
+          <path fill="#e6e6e2" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z" />
+          <path fill="#55554f" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+          <path fill="#93938e" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.6 16.3 44 24 44z" />
+          <path fill="#d8d8d3" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z" />
         </svg>
         <span>Continue with Google</span>
       </button>
@@ -154,7 +154,7 @@ function ErrorMessage({ message }: { message: string | null }) {
   return (
     <div
       role="alert"
-      className="flex items-start gap-2 font-mono text-xs text-[#E9676B] bg-[#E9676B]/10 border border-[#E9676B]/30 px-3 py-2 rounded-[8px]"
+      className="flex items-start gap-2 font-mono text-xs text-error bg-error/10 border border-error/30 px-3 py-2 rounded-[8px]"
     >
       <AlertCircle className="w-[14px] h-[14px] shrink-0 mt-px" strokeWidth={2.5} />
       <span className="leading-snug">{message}</span>
@@ -221,7 +221,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(72,216,200,0.12)] transition"
+          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
         />
       </div>
 
@@ -236,7 +236,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(72,216,200,0.12)] transition"
+            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
           />
           <button
             type="button"
@@ -269,7 +269,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_rgba(72,216,200,0.45)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_rgba(72,216,200,0.6)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
+        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_rgba(244,196,48,0.4)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_rgba(244,196,48,0.55)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
       >
         {loading ? (
           <span className="w-[15px] h-[15px] rounded-full border-2 border-[rgba(10,13,18,0.25)] border-t-ink animate-spin" />
@@ -293,7 +293,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
 /* ========================================================================== */
 
 const strengthNames = ['', 'Weak', 'Good', 'Strong'];
-const strengthColors = ['', '#E9676B', '#EFC15A', '#4FCB78'];
+const strengthColors = ['', '#e06c5b', '#93938e', '#f4c430'];
 
 function getPasswordStrength(pw: string): number {
   if (!pw) return 0;
@@ -358,7 +358,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(72,216,200,0.12)] transition"
+          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
         />
       </div>
 
@@ -371,7 +371,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(72,216,200,0.12)] transition"
+          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
         />
       </div>
 
@@ -387,7 +387,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
             minLength={8}
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(72,216,200,0.12)] transition"
+            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
           />
           <button
             type="button"
@@ -427,7 +427,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
             required
             value={pw2}
             onChange={(e) => setPw2(e.target.value)}
-            className={`w-full bg-surface border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(72,216,200,0.12)] transition ${pw2.length > 0 && pw2 !== pw ? 'border-[#E9676B]' : 'border-border'}`}
+            className={`w-full bg-surface border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition ${pw2.length > 0 && pw2 !== pw ? 'border-error' : 'border-border'}`}
           />
           <button
             type="button"
@@ -439,7 +439,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           </button>
         </div>
         {pw2.length > 0 && pw2 !== pw && (
-          <span className="font-mono text-[11.5px] text-[#E9676B]">Passwords don't match.</span>
+          <span className="font-mono text-[11.5px] text-error">Passwords don't match.</span>
         )}
       </div>
 
@@ -455,7 +455,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_rgba(72,216,200,0.45)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_rgba(72,216,200,0.6)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
+        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_rgba(244,196,48,0.4)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_rgba(244,196,48,0.55)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
       >
         {loading ? (
           <span className="w-[15px] h-[15px] rounded-full border-2 border-[rgba(10,13,18,0.25)] border-t-ink animate-spin" />

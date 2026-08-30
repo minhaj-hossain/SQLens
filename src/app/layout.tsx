@@ -1,21 +1,15 @@
 ﻿import type { Metadata, Viewport } from 'next';
 import React from 'react';
-import { Space_Grotesk, Manrope, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 // Self-hosted via next/font: preloaded, non-blocking, zero layout shift.
-// Only families + weights actually referenced by globals.css are loaded
-// (the previous Google Fonts URL also shipped unused Hanken Grotesk & Inter).
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-space-grotesk',
-  display: 'swap',
-});
-const manrope = Manrope({
+// Inter (display + body) + JetBrains Mono (code / labels) — the only two
+// families in the visual system.
+const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-manrope',
+  variable: '--font-inter',
   display: 'swap',
 });
 const jetbrainsMono = JetBrains_Mono({
@@ -26,7 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
-const TITLE = 'SQLens â€” Learn SQL by Doing, 38 Days Hands-On';
+const TITLE = 'SQLens — Learn SQL by Doing, 38 Days Hands-On';
 const DESCRIPTION =
   'Master SQL in 38 Days through visual mental models, an interactive in-browser query engine, guided practice tasks and independent challenges. No setup required.';
 
@@ -34,7 +28,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: '%s Â· SQLens',
+    template: '%s · SQLens',
   },
   description: DESCRIPTION,
   applicationName: 'SQLens',
@@ -72,7 +66,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0A0D12',
+  themeColor: '#0a0a0a',
   width: 'device-width',
   initialScale: 1,
 };
@@ -85,7 +79,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${spaceGrotesk.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -107,9 +101,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-zinc-950 text-zinc-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
-        {children}
-      </body>
+      <body className="bg-ink text-text antialiased">{children}</body>
     </html>
   );
 }

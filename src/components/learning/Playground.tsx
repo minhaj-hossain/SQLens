@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Play, RotateCcw, Eraser, X, Download, Database, History } from 'lucide-react';
@@ -26,7 +26,7 @@ const SQL_KEYWORDS = [
   'NULL', 'IS NULL', 'IN', 'BETWEEN', 'LIKE', 'ASC', 'DESC', 'WITH',
 ];
 
-/** Levenshtein distance — powers the "did you mean" typo hint. */
+/** Levenshtein distance â€” powers the "did you mean" typo hint. */
 function editDistance(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -62,31 +62,31 @@ function didYouMean(word: string): string | null {
 function friendlyError(raw: string): string {
   let msg = raw;
 
-  // Unknown table typos → suggest closest table
+  // Unknown table typos â†’ suggest closest table
   const tableMatch = msg.match(/Table '([^']+)' does not exist/i);
   if (tableMatch) {
     const hint = didYouMean(tableMatch[1]);
-    if (hint) msg += `\n\n💡 Did you mean '${hint}'?`;
+    if (hint) msg += `\n\nðŸ’¡ Did you mean '${hint}'?`;
     return msg;
   }
   const joinTableMatch = msg.match(/Table '([^']+)' in JOIN clause does not exist/i);
   if (joinTableMatch) {
     const hint = didYouMean(joinTableMatch[1]);
-    if (hint) msg += `\n\n💡 Did you mean '${hint}'?`;
+    if (hint) msg += `\n\nðŸ’¡ Did you mean '${hint}'?`;
     return msg;
   }
 
   const genericMap: [RegExp, string][] = [
     [/Unsupported or unparseable SQL/i,
-      'We could not understand this statement.\nCheck the spelling of clauses (SELECT…FROM…WHERE) and make sure the statement is supported.'],
+      'We could not understand this statement.\nCheck the spelling of clauses (SELECTâ€¦FROMâ€¦WHERE) and make sure the statement is supported.'],
     [/Empty query/i,
       'This statement is empty after removing comments. Did you forget to write SQL?'],
     [/foreign key constraint fails/i,
       'Foreign key violation: the referenced value does not exist in the parent table.\nInsert or reference an existing parent record first.'],
     [/Invalid set-operation/i,
-      'Set operations need a valid query on each side of UNION / INTERSECT / EXCEPT, e.g.\n(SELECT … ) UNION (SELECT …)'],
+      'Set operations need a valid query on each side of UNION / INTERSECT / EXCEPT, e.g.\n(SELECT â€¦ ) UNION (SELECT â€¦)'],
     [/Invalid Common Table Expression/i,
-      'CTE syntax is: WITH name AS (SELECT …) SELECT … FROM name;'],
+      'CTE syntax is: WITH name AS (SELECT â€¦) SELECT â€¦ FROM name;'],
     [/Unsupported statement type/i,
       'This statement type is not supported yet. Supported: SELECT, INSERT, UPDATE, DELETE, CREATE/ALTER/DROP TABLE, WITH (CTE), EXPLAIN.'],
   ];
@@ -98,7 +98,7 @@ function friendlyError(raw: string): string {
   const colMatch = msg.match(/(?:column|Column) '([^']+)'/);
   if (colMatch) {
     const hint = didYouMean(colMatch[1]);
-    if (hint) msg += `\n\n💡 Did you mean '${hint}'?`;
+    if (hint) msg += `\n\nðŸ’¡ Did you mean '${hint}'?`;
   }
   return msg;
 }
@@ -128,7 +128,7 @@ function decodeSqlFromUrl(encoded: string): string | null {
 }
 
 /** Splits a SQL script on top-level `;` (quote/paren aware) so each statement
- *  can be executed in order — multi-statement script support. */
+ *  can be executed in order â€” multi-statement script support. */
 function splitStatements(sql: string): string[] {
   const out: string[] = [];
   let current = '';
@@ -208,7 +208,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
       try {
         setHistory(JSON.parse(saved));
       } catch {
-        /* corrupted history — ignore */
+        /* corrupted history â€” ignore */
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -253,14 +253,14 @@ export default function Playground({ onClose }: PlaygroundProps) {
       try {
         localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
       } catch {
-        /* storage full — skip */
+        /* storage full â€” skip */
       }
       return next;
     });
     setShowHistory(false);
   }, [sql, dbMode]);
 
-  /** Ctrl+Space autocomplete — suggests keywords, tables, and columns matching
+  /** Ctrl+Space autocomplete â€” suggests keywords, tables, and columns matching
    *  the word currently being typed. */
   const showSuggestions = useCallback(() => {
     const ta = textareaRef.current;
@@ -436,7 +436,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
               } disabled:opacity-40 disabled:cursor-not-allowed`}
               title="Copy a link that opens this exact query"
             >
-              {shareCopied ? 'Link copied ✓' : 'Share'}
+              {shareCopied ? 'Link copied âœ“' : 'Share'}
             </button>
             <button
               onClick={onClose}
@@ -463,7 +463,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
             <div className="max-h-[60vh] overflow-y-auto p-2 space-y-1.5">
               {tableNames.map((t) => (
                 <div key={t} className="text-xs">
-                  <div className="font-mono font-semibold text-func/90 px-1 py-0.5">{t}</div>
+                  <div className="font-mono font-semibold text-text px-1 py-0.5">{t}</div>
                   <div className="px-3 space-y-0.5 text-text-faint font-mono text-[10.5px]">
                     {DATABASE_SCHEMAS[t]?.columns.map((c) => (
                       <div key={c.name} className="flex items-center justify-between gap-2">
@@ -483,10 +483,10 @@ export default function Playground({ onClose }: PlaygroundProps) {
 
         {/* Editor + results column */}
         <div className="flex flex-col gap-4 min-w-0">
-          <div className="relative rounded-xl border border-border bg-[#0B0F17] overflow-visible">
+          <div className="relative rounded-xl border border-border bg-editor-bg overflow-visible">
             <div className="flex items-center justify-between px-4 py-2.5 bg-surface/80 border-b border-border/60 rounded-t-xl">
               <span className="font-mono text-[11px] text-text-dim">
-                {dbMode === 'lesson' ? 'sqlens.db — lesson dataset' : 'sqlens.db — scratch space'}
+                {dbMode === 'lesson' ? 'sqlens.db â€” lesson dataset' : 'sqlens.db â€” scratch space'}
               </span>
               <button
                 onClick={clearEditor}
@@ -505,14 +505,15 @@ export default function Playground({ onClose }: PlaygroundProps) {
               onBlur={() => setTimeout(() => setSuggestions([]), 150)}
               onKeyDown={handleKeyDown}
               spellCheck={false}
-              className="w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-primary leading-relaxed outline-none resize-y"
-              placeholder="Write SQL here… separate multiple statements with ;  (Ctrl+Space for suggestions)"
+              style={{ caretColor: '#f4c430' }}
+              className="w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-editor-text leading-relaxed outline-none resize-y"
+              placeholder="Write SQL hereâ€¦ separate multiple statements with ;  (Ctrl+Space for suggestions)"
             />
             {/* Autocomplete suggestions */}
             {suggestions.length > 0 && (
               <div className="absolute z-20 mt-[-8px] ml-4 rounded-xl border border-border bg-surface shadow-xl overflow-hidden w-64">
                 <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-text-faint bg-surface-2 border-b border-border">
-                  Ctrl+Space suggestions — click or keep typing
+                  Ctrl+Space suggestions â€” click or keep typing
                 </div>
                 {suggestions.map((s) => (
                   <button
@@ -531,7 +532,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 ))}
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[#11171f] border-t border-border">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-surface-2 border-t border-border">
               <div className="flex items-center gap-2 text-xs text-text-dim font-mono">
                 <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-border text-text-faint text-[10px]">Ctrl+Enter</kbd>
                 <span>run</span>
@@ -611,7 +612,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                       className="text-[11px] font-mono text-text-dim hover:text-text px-2 py-0.5 rounded hover:bg-ink transition cursor-pointer"
                       title="Copy as CSV"
                     >
-                      {copiedKey === `${idx}` ? 'Copied ✓' : 'Copy'}
+                      {copiedKey === `${idx}` ? 'Copied âœ“' : 'Copy'}
                     </button>
                     <button
                       onClick={() => downloadResult(`${idx}`, r)}
@@ -622,11 +623,11 @@ export default function Playground({ onClose }: PlaygroundProps) {
                     </button>
                     {r.affectedRows !== undefined ? (
                       <span className="font-mono text-[10.5px] text-text-faint">
-                        {r.affectedRows} affected · {r.executionTimeMs}ms
+                        {r.affectedRows} affected Â· {r.executionTimeMs}ms
                       </span>
                     ) : (
                       <span className="font-mono text-[10.5px] text-text-faint">
-                        {r.rowCount} rows · {r.executionTimeMs}ms
+                        {r.rowCount} rows Â· {r.executionTimeMs}ms
                       </span>
                     )}
                   </div>
@@ -638,7 +639,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                   </div>
                 ) : r.rows.length === 0 ? (
                   <div className="p-4 text-text-dim font-mono text-xs text-center">
-                    Executed successfully — no result set
+                    Executed successfully â€” no result set
                     {r.affectedRows !== undefined ? ` (${r.affectedRows} rows affected)` : ''}.
                   </div>
                 ) : (

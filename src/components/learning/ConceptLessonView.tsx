@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { Concept } from '../../types/curriculum';
@@ -21,7 +21,7 @@ interface ConceptLessonViewProps {
  * - Stacked Question Cards: `QUESTION_BLOCK::LABEL::QUESTION`
  * - Section Headings: `### Heading` (with body properly separated)
  * - Execution Order / Numbered Step Pipelines: `1. **...**`
- * - Bullet Lists: `• item` or `- item`
+ * - Bullet Lists: `â€¢ item` or `- item`
  * - Monospace SQL & Diagram Code Blocks with Copy Button
  * - Inline code chips and bold text
  */
@@ -83,7 +83,7 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
             <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
-        <div className="p-4 font-mono text-xs sm:text-sm text-cyan-300 whitespace-pre overflow-x-auto">
+        <div className="p-4 font-mono text-xs sm:text-sm text-editor-text whitespace-pre overflow-x-auto">
           <code>{codeContent}</code>
         </div>
       </div>
@@ -160,7 +160,7 @@ const RenderSubContent: React.FC<{ text: string }> = ({ text }) => {
                     {lang.toUpperCase()}
                   </span>
                 </div>
-                <div className="p-3.5 font-mono text-xs sm:text-sm text-cyan-300 whitespace-pre overflow-x-auto">
+                <div className="p-3.5 font-mono text-xs sm:text-sm text-editor-text whitespace-pre overflow-x-auto">
                   <code>{codeContent}</code>
                 </div>
               </div>
@@ -278,19 +278,19 @@ const RenderStructuredLines: React.FC<{ text: string }> = ({ text }) => {
           );
         }
 
-        // Check if paragraph is a bullet list (• ..., - ..., * ...)
+        // Check if paragraph is a bullet list (â€¢ ..., - ..., * ...)
         const isBulletList =
-          lines.length > 0 && lines.every((l) => /^[•\-\*]\s+/.test(l));
+          lines.length > 0 && lines.every((l) => /^[â€¢\-\*]\s+/.test(l));
 
         if (isBulletList) {
           return (
             <ul key={pIdx} className="space-y-1.5 pl-1 my-2">
               {lines.map((line, lIdx) => {
-                const bulletContent = line.replace(/^[•\-\*]\s+/, '');
+                const bulletContent = line.replace(/^[â€¢\-\*]\s+/, '');
                 return (
                   <li key={lIdx} className="flex items-start gap-2 text-xs sm:text-sm">
                     <span className="text-primary font-bold text-base leading-none select-none mt-0.5">
-                      •
+                      â€¢
                     </span>
                     <span className="flex-1 leading-relaxed text-on-surface/90">
                       {renderInlineFormatted(bulletContent)}
@@ -328,7 +328,7 @@ function renderInlineFormatted(text: string): React.ReactNode {
       return (
         <code
           key={pIdx}
-          className="font-mono text-xs text-cyan-300 bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/50 mx-0.5 font-medium"
+          className="font-mono text-xs text-editor-text bg-surface-container px-1.5 py-0.5 rounded border border-outline-variant/50 mx-0.5 font-medium"
         >
           {part.slice(1, -1)}
         </code>
@@ -554,12 +554,12 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
 
                   <div className="p-4 space-y-3">
                     {/* Smart explanation renderer:
-                        Multi-line row evaluations → pill grid; single line → plain paragraph */}
+                        Multi-line row evaluations â†’ pill grid; single line â†’ plain paragraph */}
                     {step.explanation.includes('\n') ? (
                       <div className="flex flex-col gap-1.5">
                         {step.explanation.split('\n').filter(Boolean).map((line, lIdx) => {
-                          const isTrue = line.includes('TRUE') || line.includes('✅');
-                          const isFalse = line.includes('FALSE') || line.includes('❌');
+                          const isTrue = line.includes('TRUE') || line.includes('âœ…');
+                          const isFalse = line.includes('FALSE') || line.includes('âŒ');
                           return (
                             <div
                               key={lIdx}
@@ -572,10 +572,10 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                               }`}
                             >
                               <span className={`shrink-0 text-base leading-none ${isTrue ? 'text-func font-bold' : isFalse ? 'text-text-faint' : ''}`}>
-                                {isTrue ? '✓' : isFalse ? '✕' : '•'}
+                                {isTrue ? 'âœ“' : isFalse ? 'âœ•' : 'â€¢'}
                               </span>
                               <span className="leading-snug">
-                                {line.replace('✅', '').replace('❌', '').trim()}
+                                {line.replace('âœ…', '').replace('âŒ', '').trim()}
                               </span>
                             </div>
                           );
@@ -789,7 +789,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             <div className="rounded-xl bg-surface-base border border-outline-variant/70 p-5 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 text-primary font-label-sm text-xs uppercase tracking-wider font-bold border-b border-outline-variant/50 pb-2.5">
                 <Icon name="quiz" className="text-[18px]" />
-                <span>MCQ — Test Yourself</span>
+                <span>MCQ â€” Test Yourself</span>
               </div>
 
               <div className="space-y-4">
@@ -821,10 +821,10 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                           } else {
                             if (isOptionCorrect) {
                               btnClasses +=
-                                'bg-emerald-500/20 border-emerald-500/60 text-emerald-300 font-semibold';
+                                'bg-func/15 border-func/60 text-text font-semibold';
                             } else if (isOptionSelected && !isCorrect) {
                               btnClasses +=
-                                'bg-rose-500/20 border-rose-500/60 text-rose-300 font-semibold';
+                                'bg-error/10 border-error/60 text-error font-medium';
                             } else {
                               btnClasses +=
                                 'bg-surface-container/50 border-outline-variant/30 text-text-muted opacity-60';
@@ -844,10 +844,10 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                             >
                               <span>{opt}</span>
                               {hasAnswered && isOptionCorrect && (
-                                <Icon name="check_circle" className="text-[16px] text-emerald-400" />
+                                <Icon name="check_circle" className="text-[16px] text-func" />
                               )}
                               {hasAnswered && isOptionSelected && !isCorrect && (
-                                <Icon name="cancel" className="text-[16px] text-rose-400" />
+                                <Icon name="cancel" className="text-[16px] text-error" />
                               )}
                             </button>
                           );
@@ -858,8 +858,8 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                         <div
                           className={`p-3 rounded-lg text-xs leading-relaxed ${
                             isCorrect
-                              ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                              : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
+                              ? 'bg-func/10 text-text border border-func/25'
+                              : 'bg-error/10 text-error border border-error/25'
                           }`}
                         >
                           <span className="font-bold">
@@ -890,15 +890,15 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             )}
 
             {theory.commonMistakes && theory.commonMistakes.length > 0 && (
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 p-4 space-y-2">
-                <h3 className="font-label-sm text-xs font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <div className="rounded-xl bg-surface border border-border p-4 space-y-2">
+                <h3 className="font-label-sm text-xs font-semibold uppercase tracking-wider text-text-dim flex items-center gap-1.5">
                   <Icon name="warning" className="text-[16px]" />
                   <span>Watch Out For</span>
                 </h3>
                 <ul className="space-y-1 text-xs text-on-surface/90">
                   {theory.commonMistakes.map((mistake, idx) => (
                     <li key={idx} className="flex items-start gap-1.5 leading-relaxed">
-                      <span className="text-amber-400 font-mono font-bold">•</span>
+                      <span className="text-text-faint font-mono font-bold">â€¢</span>
                       <span>{mistake}</span>
                     </li>
                   ))}

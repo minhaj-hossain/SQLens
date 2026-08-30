@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
@@ -40,7 +40,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-soft bg-ink px-4 py-3">
           <div className="flex items-center gap-2">
-            <Icon name="database" className="text-[20px] text-func" />
+            <Icon name="database" className="text-[20px] text-text-dim" />
             <div>
               <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-text">
                 Database Schema Reference
@@ -74,7 +74,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
                     onClick={() => setSelectedTable(tKey)}
                     className={`w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-mono transition cursor-pointer ${
                       isSelected
-                        ? 'bg-surface text-func font-medium border border-func/40'
+                        ? 'bg-surface text-text font-medium border border-text-dim'
                         : 'text-text-dim hover:bg-surface/50 hover:text-text'
                     }`}
                   >
@@ -95,13 +95,13 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
           <div className="md:col-span-8 p-4 space-y-4 overflow-y-auto bg-surface">
             <div className="flex items-center justify-between border-b border-border pb-2">
               <div>
-                <h3 className="font-display text-sm font-semibold text-keyword flex items-center gap-2 font-mono">
+                <h3 className="font-display text-sm font-semibold text-text flex items-center gap-2 font-mono">
                   <span>{currentSchema.name}</span>
                 </h3>
                 <p className="text-xs text-text-dim mt-0.5 font-body">{currentSchema.description}</p>
               </div>
               <span className="text-xs font-mono text-text-faint">
-                {currentRows.length} rows · {currentSchema.columns.length} columns
+                {currentRows.length} rows Â· {currentSchema.columns.length} columns
               </span>
             </div>
 
@@ -114,8 +114,8 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
                 <table className="w-full text-left text-xs font-mono">
                   <thead className="bg-surface-2 text-[11px] text-text-dim border-b border-border">
                     <tr>
-                      <th className="px-3 py-1.5 font-medium text-keyword">Column</th>
-                      <th className="px-3 py-1.5 font-medium text-string">Type</th>
+                      <th className="px-3 py-1.5 font-medium text-text">Column</th>
+                      <th className="px-3 py-1.5 font-medium text-text-dim">Type</th>
                       <th className="px-3 py-1.5 font-medium">Key</th>
                       <th className="px-3 py-1.5 font-medium">Description</th>
                     </tr>
@@ -123,11 +123,11 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
                   <tbody className="divide-y divide-border text-[11px] bg-ink">
                     {currentSchema.columns.map((col) => (
                       <tr key={col.name} className="hover:bg-surface-2/50">
-                        <td className="px-3 py-1.5 font-medium text-keyword">{col.name}</td>
-                        <td className="px-3 py-1.5 text-string">{col.type}</td>
+                        <td className="px-3 py-1.5 font-medium text-text">{col.name}</td>
+                        <td className="px-3 py-1.5 text-text-dim">{col.type}</td>
                         <td className="px-3 py-1.5">
                           {col.primaryKey ? (
-                            <span className="text-func font-bold">[PK]</span>
+                            <span className="text-text font-bold">[PK]</span>
                           ) : col.foreignKey ? (
                             <span className="text-comment">[FK]</span>
                           ) : (
