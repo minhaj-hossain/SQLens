@@ -7,7 +7,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C2 FOREIGN KEY - relationships the engine enforces
 //   C3 DROP TABLE IF EXISTS - safe teardown for reproducible scripts
 // =============================================================================
-export const DDL_SCHEMA_EVOLUTION_MODULE: ModuleData = {
+export const Day_29_MODULE: ModuleData = {
   id: 'ddl-schema-evolution',
   slug: 'ddl-schema-evolution',
   day: 0, // ordering uses curriculumOrder (Day 29)

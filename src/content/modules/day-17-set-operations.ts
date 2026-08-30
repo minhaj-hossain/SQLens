@@ -6,7 +6,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C1 UNION ALL (stack) → C2 UNION (stack + dedupe) →
 //   C3 Shape compatibility (error lab) → C4 EXCEPT (declarative anti-join)
 // =============================================================================
-export const SET_OPERATIONS_MODULE: ModuleData = {
+export const Day_17_MODULE: ModuleData = {
   id: 'set-operations',
   slug: 'set-operations',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 17)

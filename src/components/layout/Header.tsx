@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
+import { ALL_MODULES } from '../../content/curriculum-index';
+
+const TOTAL_MODULES = ALL_MODULES.length;
 
 interface HeaderProps {
   userState: UserLearningState;
@@ -28,13 +31,13 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
-  const progressPct = Math.round((completedCount / 25) * 100);
+  const progressPct = Math.round((completedCount / TOTAL_MODULES) * 100);
 
   return (
     <header className="sticky top-0 w-full z-50 bg-ink/90 backdrop-blur-md pt-safe border-b border-border-soft">
       <div className="h-14 px-3 sm:px-6 flex items-center justify-between max-w-5xl mx-auto w-full gap-2 sm:gap-4">
 
-        {/* Left: Brand Icon + SQLens Name — links home (route since Phase 3) */}
+        {/* Left: Brand Icon + SQLens Name â€” links home (route since Phase 3) */}
         <Link
           href="/"
           className="flex items-center gap-2.5 min-w-0 hover:opacity-85 transition text-left focus:outline-none group"
@@ -62,13 +65,13 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Streak Pill */}
           <div
             className="flex items-center gap-1.5 sm:gap-2 bg-surface-2 border border-border px-2 sm:px-3 py-1 rounded-full font-mono text-[11px] sm:text-xs text-text-dim whitespace-nowrap"
-            title={`${completedCount} of 25 modules completed`}
-            aria-label={`Curriculum progress: ${completedCount} out of 25 days completed`}
+            title={`${completedCount} of ${TOTAL_MODULES} modules completed`}
+            aria-label={`Curriculum progress: ${completedCount} out of 38 Days completed`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-func">
               <path d="M12 2C12 2 6 9 6 14a6 6 0 0012 0c0-2-1-3.5-1-3.5s-.5 2-2 2c1-3-1-6-3-6.5 0 0 1 2.5-1 4.5-1.5 1-2 2.5-2 3.5" />
             </svg>
-            <span><strong className="text-func font-semibold">{completedCount}/25</strong><span className="hidden min-[380px]:inline"> days</span></span>
+            <span><strong className="text-func font-semibold">{completedCount}/{TOTAL_MODULES}</strong><span className="hidden min-[380px]:inline"> days</span></span>
           </div>
 
           {/* Database Schema */}
@@ -82,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Icon name="database" className="text-[16px]" />
           </button>
 
-          {/* SQL Playground — real route since Phase 1 */}
+          {/* SQL Playground â€” real route since Phase 1 */}
           <Link
             href="/playground"
             title="Open SQL Playground"
@@ -117,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
               {/* Avatar + popover share one hover wrapper so the mouse can move
                   from the circle into the menu without closing it. The admin
-                  shield stays OUTSIDE this wrapper — hovering it never opens
+                  shield stays OUTSIDE this wrapper â€” hovering it never opens
                   the account menu. */}
               <div
                 className="relative"
@@ -131,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-expanded={userMenuOpen}
                   className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none"
                 >
-                {/* Rotating conic ring — cyan→sky shades only (matches --func brand) */}
+                {/* Rotating conic ring â€” cyanâ†’sky shades only (matches --func brand) */}
                 <motion.span
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full"
@@ -158,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 />
               </button>
-              {/* Profile popover — opens on hover/tap */}
+              {/* Profile popover â€” opens on hover/tap */}
               <AnimatePresence>
                 {userMenuOpen && (
                   <>

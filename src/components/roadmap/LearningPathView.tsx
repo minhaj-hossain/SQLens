@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ALL_MODULES } from '../../content/curriculum-index';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import {
@@ -169,14 +169,14 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       <section className="max-w-[840px] mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-8 pb-8 sm:pb-10">
         <div className="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-func uppercase mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-func shadow-[0_0_8px_rgba(56,189,248,0.6)] shrink-0" />
-          <span>SQLens · Curriculum Roadmap</span>
+          <span>SQLens Â· Curriculum Roadmap</span>
         </div>
 
         <h1 className="font-display font-semibold text-3xl sm:text-4xl lg:text-[44px] leading-tight tracking-tight text-text max-w-xl mb-4">
           Go from SELECT * to shipped.
         </h1>
         <p className="text-text-dim text-sm sm:text-base max-w-lg mb-7">
-          25 days of hands-on SQL — because 'I sort of know JOINs' isn't a personality trait.
+          38 Days of hands-on SQL â€” because 'I sort of know JOINs' isn't a personality trait.
         </p>
 
         {/* Query Box with Premium Terminal Syntax Highlighting */}
@@ -252,7 +252,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 className="h-full bg-func rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]"
               />
             </div>
-            <span>{completedDaysCount} / {totalDays} days · {overallPercent}%</span>
+            <span>{completedDaysCount} / {totalDays} days Â· {overallPercent}%</span>
           </div>
         </div>
       </section>
@@ -266,7 +266,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
               <span>Curriculum Roadmap</span>
             </div>
             <h2 className="font-display font-semibold text-lg sm:text-xl text-text">
-              25-Day SQL Mastery Journey
+              38-day SQL Mastery Journey
             </h2>
             <p className="text-text-dim text-xs sm:text-sm max-w-md">
               3 structured milestones taking you from single-table querying to production backend relational architecture.
@@ -330,10 +330,10 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 </div>
                 <div>
                   <h3 className="font-display text-base font-semibold text-text-dim mb-1">
-                    {milestone.title} — {milestone.subtitle}
+                    {milestone.title} â€” {milestone.subtitle}
                   </h3>
                   <p className="font-mono text-xs text-text-faint">
-                    Unlocks after {ROADMAP_MILESTONES[milestoneIdx - 1].title} · {milestone.daysRange}
+                    Unlocks after {ROADMAP_MILESTONES[milestoneIdx - 1].title} Â· {milestone.daysRange}
                   </p>
                 </div>
               </div>
@@ -350,7 +350,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
               <div className="mb-2">
                 <div className="flex items-center gap-3 mb-2 flex-wrap">
                   <span className="font-mono text-xs tracking-wider text-string bg-string/10 border border-string/30 px-2.5 py-1 rounded-full whitespace-nowrap uppercase">
-                    {milestone.title} · {milestone.daysRange}
+                    {milestone.title} Â· {milestone.daysRange}
                   </span>
                   <span className="flex items-center gap-1.5 font-mono text-xs text-text-dim">
                     <Icon
@@ -360,7 +360,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                     <span>
                       {isMilestoneCompleted
                         ? 'Completed'
-                        : `In progress · ${completedInMilestone}/${milestoneModules.length} days done`}
+                        : `In progress Â· ${completedInMilestone}/${milestoneModules.length} days done`}
                     </span>
                   </span>
                 </div>
@@ -385,7 +385,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   const completedConceptsCount = module.concepts.filter((c) =>
                     isConceptCompleted(c, module.id, userState)
                   ).length;
-                  // Task-granular progress — some days pack many tasks into one
+                  // Task-granular progress â€” some days pack many tasks into one
                   // concept, so concept-count alone would show a misleading 0/1.
                   const taskProgress = getModuleProgressCounts(module, userState);
 
@@ -452,7 +452,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                 !isUnlocked ? 'text-text-faint' : 'text-text'
                               }`}
                             >
-                              {getModuleDisplayLabel(module)} — {module.shortTitle || module.title}
+                              {getModuleDisplayLabel(module)} â€” {module.shortTitle || module.title}
                             </h4>
                           </div>
 
@@ -478,7 +478,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   onClick={() => onSelectModuleAndConcept(module.id, targetConceptId, 'theory')}
                                   className="font-mono text-xs text-ink bg-func font-bold px-3 py-1 rounded-lg hover:brightness-110 transition cursor-pointer"
                                 >
-                                  Continue →
+                                  Continue â†’
                                 </button>
                               </>
                             ) : isUnlocked ? (
@@ -625,7 +625,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                 {isChallengeCompleted
                                   ? `${module.challenge.tasks.length}/${module.challenge.tasks.length} done`
                                   : isChallengeUnlocked
-                                  ? 'Ready to Start →'
+                                  ? 'Ready to Start â†’'
                                   : `${taskProgress.done}/${taskProgress.total} tasks done`}
                               </span>
                             </div>

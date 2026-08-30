@@ -6,7 +6,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C1 Basic CASE → C2 Multi-branch → C3 Evaluation order →
 //   C4 CASE in aggregates → C5 CASE in ORDER BY
 // =============================================================================
-export const CASE_CONDITIONAL_LOGIC_MODULE: ModuleData = {
+export const Day_10_MODULE: ModuleData = {
   id: 'case-conditional-logic',
   slug: 'case-conditional-logic',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 10)

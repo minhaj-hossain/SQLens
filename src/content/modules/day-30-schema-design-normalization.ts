@@ -7,7 +7,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C3 1NF (atomic values) -> C4 Functional dependency (the foundation) ->
 //   C5 2NF & 3NF (the splits the dependencies justify)
 // =============================================================================
-export const SCHEMA_DESIGN_NORMALIZATION_MODULE: ModuleData = {
+export const Day_30_MODULE: ModuleData = {
   id: 'schema-design-normalization',
   slug: 'schema-design-normalization',
   day: 0, // ordering uses curriculumOrder (Day 30)
@@ -103,7 +103,7 @@ export const SCHEMA_DESIGN_NORMALIZATION_MODULE: ModuleData = {
           validation: { expectedRowCount: 3 },
           successMessage: 'Redundancy measured: the same fact stored many times over.',
           databaseLifecycle: 'fresh',
-        },,
+        },
         {
           id: 'norm-c1-t2',
           title: 'Task 2 (Independent): Redundancy in customers',
@@ -196,7 +196,7 @@ export const SCHEMA_DESIGN_NORMALIZATION_MODULE: ModuleData = {
           validation: { expectedRowCount: 1 },
           successMessage: 'Update anomaly triggered: the table now contradicts itself.',
           databaseLifecycle: 'fresh',
-        },,
+        },
         {
           id: 'norm-c2-t2',
           title: 'Task 2 (Independent): The delete anomaly',
@@ -292,7 +292,7 @@ export const SCHEMA_DESIGN_NORMALIZATION_MODULE: ModuleData = {
           validation: { expectedRowCount: 3 },
           successMessage: 'Equality is trustworthy only when cells are atomic - that is 1NF paying you back.',
           databaseLifecycle: 'fresh',
-        },,
+        },
         {
           id: 'norm-c3-t2',
           title: 'Task 2 (Independent): Atomic rows make counting natural',
@@ -391,7 +391,7 @@ export const SCHEMA_DESIGN_NORMALIZATION_MODULE: ModuleData = {
           validation: { expectedRowCount: 2 },
           successMessage: 'Two products, two rows - product_name depends on product_id alone.',
           databaseLifecycle: 'fresh',
-        },,
+        },
         {
           id: 'norm-c4-t2',
           title: 'Task 2 (Independent): Measure the partial dependency',
@@ -490,7 +490,7 @@ export const SCHEMA_DESIGN_NORMALIZATION_MODULE: ModuleData = {
           validation: { expectedRowCount: 2 },
           successMessage: 'City follows the customer, never the order - the transitive dependency, visible in two rows.',
           databaseLifecycle: 'fresh',
-        },,
+        },
         {
           id: 'norm-c5-t2',
           title: 'Task 2 (Independent): Price the transitive dependency',

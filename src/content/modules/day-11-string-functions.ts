@@ -4,7 +4,7 @@ import { ModuleData } from '../../types/curriculum';
 // DAY 11 — String Functions  (id: string-functions · order 11)
 // Atomic chain: C1 UPPER/LOWER → C2 TRIM → C3 CONCAT → C4 SUBSTRING → C5 LENGTH
 // =============================================================================
-export const STRING_FUNCTIONS_MODULE: ModuleData = {
+export const Day_11_MODULE: ModuleData = {
   id: 'string-functions',
   slug: 'string-functions',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 11)

@@ -1,5 +1,15 @@
 # SQLens — Full Website Performance & Maintenance Audit Report
 
+> **RESOLUTION UPDATE (post-expansion, 2026):** this audit drove the improvement roadmap and
+> its findings have since been addressed. Status: ① engine test suite **added** (Vitest,
+> 93 tests / 8 files + `test:engine` 46-case suite + CI workflow); ② code splitting in place
+> (`RoadmapModal` dynamically imported); ③ DB state reset verified via lifecycle policy
+> (`test:db-lifecycle`, 34 assertions); ④ `CURDATE()` anchored to the 2026 seed data
+> (`src/config/simulated-date.ts`); ⑤ curriculum auditor DDL false positives fixed;
+> ⑥ dead dependencies re-checked — `better-auth`/`mongodb` are used (auth), remaining deps
+> in use. Curriculum has since expanded from 25 to **38 days** (see
+> `curriculum_master_plan.md` §7). The report below is preserved as the original baseline.
+
 **Project:** SQL Interactive Learning Platform ("SQLens")
 **Root:** `sql_learning/`
 **Stack:** React 19 + Vite 6 + TypeScript + Tailwind 4 + `motion` (SPA, statically exported)

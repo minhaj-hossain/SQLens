@@ -7,7 +7,7 @@ import { ModuleData } from '../../types/curriculum';
 // Canonical dialect: YEAR()/MONTH()/DAY()/EXTRACT(), CURDATE(), DATEDIFF()
 // (docs/DIALECT.md §4). Anchor: SIMULATED_TODAY = 2026-08-24.
 // =============================================================================
-export const DATE_FUNCTIONS_MODULE: ModuleData = {
+export const Day_12_MODULE: ModuleData = {
   id: 'date-functions',
   slug: 'date-functions',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 12)

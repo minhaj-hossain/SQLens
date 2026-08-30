@@ -13,7 +13,7 @@ import { ModuleData } from '../../types/curriculum';
 // The EXPLAIN output is the real engine simulation (docs/DIALECT.md §6) —
 // type ALL → ref / range → const as indexes are created and dropped.
 // =============================================================================
-export const PERFORMANCE_INDEXING_MODULE: ModuleData = {
+export const Day_31_MODULE: ModuleData = {
   id: 'day-21',
   slug: 'performance-indexing',
   day: 21,

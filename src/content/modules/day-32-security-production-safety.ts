@@ -15,7 +15,7 @@ import { ModuleData } from '../../types/curriculum';
 // Challenge (independent, fresh per task): replay the breach, ship the fix,
 // then run a guarded migration drill.
 // =============================================================================
-export const SECURITY_PRODUCTION_SAFETY_MODULE: ModuleData = {
+export const Day_32_MODULE: ModuleData = {
   id: 'security-production-safety',
   slug: 'security-production-safety',
   day: 0, // ordering uses curriculumOrder (Day 32)

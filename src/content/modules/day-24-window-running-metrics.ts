@@ -8,7 +8,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C3 Advanced Preview (OPTIONAL) — window frames & moving averages (conceptual)
 // Spiral: Day 9 SUM/GROUP BY, Day 12 DATEDIFF, Day 3/17 NULL semantics, Day 23 PARTITION BY.
 // =============================================================================
-export const WINDOW_RUNNING_METRICS_MODULE: ModuleData = {
+export const Day_24_MODULE: ModuleData = {
   id: 'window-running-metrics',
   slug: 'window-running-metrics',
   day: 0, // ordering uses curriculumOrder (Day 24)

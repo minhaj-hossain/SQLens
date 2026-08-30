@@ -7,7 +7,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C3 RANK (ties leave gaps) → C4 DENSE_RANK (ties, no gaps) →
 //   C5 Pattern Lab: Top-N per group
 // =============================================================================
-export const WINDOW_RANKING_MODULE: ModuleData = {
+export const Day_23_MODULE: ModuleData = {
   id: 'window-ranking',
   slug: 'window-ranking',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 23)

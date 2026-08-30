@@ -171,3 +171,59 @@ The implementation has been successfully executed and verified across all batche
 - [x] Run automated curriculum test script (`npm run verify:curriculum`) -> **100% Passing (0 missing target queries)**.
 - [x] Run full application production build (`npm run build`) -> **0 TypeScript errors, bundle generated in 10.48s**.
 
+---
+
+## 7. Curriculum Expansion Record — 25 → 38 Days (COMPLETE)
+
+The 25-day spine was reviewed, audited against the **atomic-rule** (one new mental model per
+concept: explain → visualize → MCQ → 2 tasks, before the next concept; integration only on
+practice/project/checkpoint days), and expanded to a **38-day, 4-milestone curriculum** with
+**spiral reinforcement** (every new concept's tasks force reuse of earlier skills — old
+knowledge returns as a tool, never as a re-lecture). Identity is decoupled from position:
+legacy `day-NN` module IDs are frozen (localStorage/admin safety) while
+`curriculumOrder` / `displayLabel` (`src/config/curriculum-order.ts`) control sequence.
+
+### Repairs (Batch 0–2)
+- [x] `CURDATE()` anchored to the 2026 seed dataset via `src/config/simulated-date.ts` (temporal exercises honest again).
+- [x] DB lifecycle verified end-to-end; curriculum auditor no longer false-positives on DDL-created tables.
+- [x] Content fixes: Day 1/2 summaries, Day 9 HAVING example, Day 23 `COALESCE(SUM(...), 0)` demo (engine bug found & fixed alongside).
+- [x] Position-independent ordering (`module-order.ts`) + regression gate `npm run test:module-order`.
+- [x] `docs/DIALECT.md` — the normative dialect spec (features, in/out of scope, EXPLAIN simulation contract).
+- [x] Vitest installed; engine regression suites (93 tests / 8 files).
+
+### New modules (semantic IDs, authored to the atomic rule)
+- [x] **Day 10** `case-conditional-logic` — CASE: basic → multi-branch → evaluation order → in aggregates → in ORDER BY.
+- [x] **Day 11** `string-functions` — UPPER/LOWER → TRIM → CONCAT → SUBSTRING → LENGTH.
+- [x] **Day 12** `date-functions` — components → grouping by components → date arithmetic → DATEDIFF.
+- [x] **Day 17** `set-operations` — UNION ALL → UNION → shape compatibility → EXCEPT (INTERSECT deliberately not implemented — no module teaches it).
+- [x] **Day 23** `window-ranking` — ROW_NUMBER → PARTITION BY → RANK → DENSE_RANK → Pattern Lab: Top-N per group.
+- [x] **Day 24** `window-running-metrics` — running totals → LAG/LEAD (+ optional frames preview).
+- [x] **Day 26** `dml-transactions` — BEGIN/COMMIT → ROLLBACK → atomic failure (Day 19's DML split from transactions).
+- [x] **Days 28–29** `ddl-column-constraints`, `ddl-schema-evolution` — the old Day-20 DDL overload split into three atomic days (with `day-20` Creating Tables).
+- [x] **Day 30** `schema-design-normalization` — Redundancy → Update anomaly → 1NF → Functional dependency → 2NF → 3NF, with anti-pattern teaching tables (`fat_orders`, …).
+- [x] **Day 31** `performance-indexing` (reworked legacy `day-21`) — scans → indexes & reading plans → the EXPLAIN loop, on a defined simulation model.
+- [x] **Day 32** `security-production-safety` — live SQL-injection demo, parameterized defense, production safety drills.
+- [x] **Day 33** `capstone-bookstore` — greenfield 4-table bookstore: design → create → seed → query (joins/windows) → evolve (ALTER, index + EXPLAIN, transaction).
+- [x] **Day 37** `interview-gauntlet` — timed, no-hints classic patterns (second-highest, above-average, top-N per group, revenue trend, fan-out) + trap MCQs.
+- [x] Legacy `day-25` relabeled **Day 38 — Graduation & Portfolio**.
+
+### Retrofit (spiral pass over the original 25 days)
+- [x] Interleaved recall MCQs injected (Day 2→1, Day 3→2, Day 8→2, Day 14→3, Day 19→9) — checkpoints deliberately re-test earlier milestones.
+
+### Engine additions driven by pedagogy
+- [x] CASE (incl. in aggregates/ORDER BY), string & date functions, UNION/UNION ALL/EXCEPT,
+      window functions (ROW_NUMBER/RANK/DENSE_RANK/LAG/LEAD/running aggregates),
+      BEGIN/COMMIT/ROLLBACK snapshot transactions, multi-row INSERT, EXPLAIN simulation,
+      AUTO_INCREMENT + runtime DDL, UPDATE SET string-value fix, COALESCE-with-aggregate fix.
+
+### Final verified state
+- **38 modules · 38 days · 110 concepts · 341 tasks · 172 MCQs** across 4 milestones.
+- Gates: `tsc` 0 errors · Vitest 93/93 · `test:engine` 46/46 · `test:module-order` verified ·
+  `test:db-lifecycle` 34/34 · `verify:curriculum` 0 missing target queries ·
+  `audit-all-tasks` 0 failures · production build green (50 static pages) · CI workflow (`.github/workflows/ci.yml`).
+- File layout: **one `day-NN-<semantic>.ts` file per module** under `src/content/modules/`
+  (NN = canonical display day; e.g. `day-15-fanout-debug-lab.ts`, `day-30-schema-design-normalization.ts`),
+  re-exported through the `modules/index.ts` barrel. Module **ids** are unchanged from the
+  original registration (legacy `day-NN` ids frozen); the split was verified structurally
+  drift-free (`scripts/split-module-files.ts` snapshot → split → verify, since removed).
+

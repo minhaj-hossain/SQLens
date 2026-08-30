@@ -30,8 +30,8 @@ function assert(name: string, cond: boolean, detail = '') {
 }
 
 // ── 1. Legacy sequence preserved ─────────────────────────────────────────────
-// 33 modules before this batch + security (Day 32) = 34 total.
-assert('35 modules loaded', ALL_MODULES.length === 35, String(ALL_MODULES.length));
+// 35 registered modules + 3 newly-registered DDL/schema-design modules (Days 28-30) = 38 total.
+assert('38 modules loaded', ALL_MODULES.length === 38, String(ALL_MODULES.length));
 const newModuleIds = [
   'case-conditional-logic',
   'string-functions',
@@ -40,6 +40,9 @@ const newModuleIds = [
   'window-ranking',
   'window-running-metrics',
   'dml-transactions',
+  'ddl-column-constraints',
+  'ddl-schema-evolution',
+  'schema-design-normalization',
   'security-production-safety',
   'capstone-bookstore',
   'interview-gauntlet',
@@ -75,19 +78,26 @@ assert(
   ordered[26]?.id ?? 'undefined'
 );
 assert(
+  'orders 28-30 are the DDL + normalization modules (after day-20, before day-21/performance)',
+  ordered[27].id === 'ddl-column-constraints' &&
+    ordered[28].id === 'ddl-schema-evolution' &&
+    ordered[29].id === 'schema-design-normalization',
+  [ordered[27]?.id, ordered[28]?.id, ordered[29]?.id].join(',')
+);
+assert(
   'order 32 is security-production-safety (after Day 31 performance, before capstone)',
-  ordered[28].id === 'security-production-safety',
-  ordered[28]?.id ?? 'undefined'
+  ordered[31].id === 'security-production-safety',
+  ordered[31]?.id ?? 'undefined'
 );
 assert(
   'order 33 is capstone-bookstore (after Day 32 security, before day-22)',
-  ordered[29].id === 'capstone-bookstore',
-  ordered[29]?.id ?? 'undefined'
+  ordered[32].id === 'capstone-bookstore',
+  ordered[32]?.id ?? 'undefined'
 );
 assert(
   'order 37 is interview-gauntlet (after day-24, before day-25 graduation)',
-  ordered[33].id === 'interview-gauntlet',
-  ordered[33]?.id ?? 'undefined'
+  ordered[36].id === 'interview-gauntlet',
+  ordered[36]?.id ?? 'undefined'
 );
 
 // ── 2. Legacy modules keep their original relative order ─────────────────────
@@ -106,7 +116,7 @@ assert(
 // modules slot exactly where intended (10/11/12).
 const orders = getModulesByOrder(ALL_MODULES).map((m) => getModuleOrder(m));
 assert(
-  'all 35 module orders are unique',
+  'all 38 module orders are unique',
   new Set(orders).size === orders.length,
   orders.join(',')
 );
@@ -152,7 +162,7 @@ assert('case-conditional-logic now follows the probe', getNextModule(probe, expa
 assert('first module unchanged after insertion', isFirstModule(expanded[0], expanded) && getModuleOrder(expanded[0]) === 1);
 const day25Module = ALL_MODULES.find((m) => m.id === 'day-25');
 assert('last module unchanged after insertion', !!day25Module && isLastModule(day25Module, expanded), day25Module ? String(isLastModule(day25Module, expanded)) : 'day-25 missing');
-assert('original 35 modules untouched by probe test', ALL_MODULES.length === 35, String(ALL_MODULES.length));
+assert('original 38 modules untouched by probe test', ALL_MODULES.length === 38, String(ALL_MODULES.length));
 
 console.log(failures === 0 ? '\n✅ Module order system verified.' : `\n❌ ${failures} check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);

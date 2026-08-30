@@ -18,7 +18,7 @@ import { ModuleData } from '../../types/curriculum';
 // pipeline is a single continuous session. The final 4-task challenge replays the
 // whole migration standalone as the assessment.
 // =============================================================================
-export const CAPSTONE_BOOKSTORE_MODULE: ModuleData = {
+export const Day_33_MODULE: ModuleData = {
   id: 'capstone-bookstore',
   slug: 'sqlens-bookstore',
   day: 0, // ordering uses curriculumOrder (Day 32)

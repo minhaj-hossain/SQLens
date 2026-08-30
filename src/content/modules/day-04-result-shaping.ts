@@ -1,0 +1,694 @@
+import { ModuleData } from '../../types/curriculum';
+
+export const Day_04_MODULE: ModuleData = {
+  id: 'day-04',
+  slug: 'result-shaping',
+  day: 4,
+  title: 'Day 4 — Result Shaping',
+  shortTitle: 'Result Shaping',
+  type: 'module',
+  milestoneId: 'milestone-1',
+  description: 'Shape and organize output rows using DISTINCT to eliminate duplicates, ORDER BY for ascending and descending sorts, and LIMIT with OFFSET for pagination.',
+  estimatedMinutes: 45,
+  completionLearnings: [
+    'Sort output records alphabetically, numerically, and chronologically with ORDER BY (ASC and DESC)',
+    'Eliminate duplicate values from result sets using DISTINCT',
+    'Cap output record counts using LIMIT',
+    'Skip preceding rows for pagination using OFFSET',
+  ],
+  concepts: [
+    // =========================================================================
+    // CONCEPT 1a: Single-Column Sorting with ORDER BY (ASC & DESC)
+    // =========================================================================
+    {
+      id: 'order-by-single-column',
+      order: 1,
+      title: '1. Single-Column Sorting (ASC & DESC)',
+      shortDescription: 'Sort query results by a single column in ascending or descending order.',
+      theory: {
+        summary: 'Without an ORDER BY clause, relational databases return rows in arbitrary storage order. ORDER BY allows you to sort records explicitly.',
+        introTable: {
+          tableName: 'products',
+          description: 'Inventory items with price and stock levels.',
+          columns: ['product_id', 'name', 'price', 'quantity_in_stock'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99, 40],
+            [2, 'Bluetooth Speaker', 45.50, 3],
+            [3, 'USB-C Charging Cable', 9.99, 0],
+            [4, 'Mechanical Keyboard', 65.00, 12],
+            [14, 'Office Chair', 120.00, 5],
+          ],
+        },
+        explanation: [
+          '### 1. Ascending vs Descending Order',
+          '`ORDER BY price ASC` sorts from lowest to highest (`ASC` is the default direction).',
+          '`ORDER BY price DESC` sorts from highest to lowest (useful for "top expensive" or "newest").',
+          'ORDER BY is always placed at the end of single-table queries after any WHERE conditions.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nORDER BY price DESC;',
+          explanation: 'Sort all products by price starting from the highest price down to the lowest.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: FROM products (Unordered rows)',
+            sqlSnippet: 'FROM products',
+            explanation: 'SQL reads the products table in storage order.',
+            tableData: {
+              tableName: 'products (Source Rows)',
+              columns: ['product_id', 'name', 'price'],
+              rows: [
+                [1, 'Wireless Mouse', 15.99],
+                [2, 'Bluetooth Speaker', 45.50],
+                [4, 'Mechanical Keyboard', 65.00],
+                [14, 'Office Chair', 120.00],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: ORDER BY price DESC (Sort highest first)',
+            sqlSnippet: 'ORDER BY price DESC',
+            explanation: 'SQL arranges all rows starting from highest price ($120.00) down to lowest ($15.99).',
+            tableData: {
+              tableName: 'Final Sorted Result',
+              columns: ['name', 'price'],
+              highlightedColumns: ['price'],
+              highlightedRows: [0, 1, 2, 3],
+              rows: [
+                ['Office Chair', 120.00],
+                ['Mechanical Keyboard', 65.00],
+                ['Bluetooth Speaker', 45.50],
+                ['Wireless Mouse', 15.99],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Sorting descending by price',
+            sql: 'SELECT name, price\nFROM products\nORDER BY price DESC;',
+            description: 'Sorts output in descending order by price.',
+          },
+          {
+            title: 'Ascending alphabetical sort',
+            sql: 'SELECT name, city\nFROM customers\nORDER BY name ASC;',
+            description: 'Sorts names alphabetically from A to Z.',
+          },
+        ],
+        keyTakeaway: 'Use ORDER BY column ASC for lowest-to-highest and ORDER BY column DESC for highest-to-lowest.',
+        exampleQuery: 'SELECT name, price FROM products ORDER BY price DESC;',
+        exampleQueryExplanation: 'Sorts products by price highest first.',
+        liveDemoSql: 'SELECT name, price FROM products ORDER BY price DESC LIMIT 5;',
+        liveDemoNotes: 'Displays top 5 most expensive products.',
+        mcqs: [
+          {
+            question: 'What is the default sort direction if neither ASC nor DESC is specified?',
+            options: ['A. Descending (DESC)', 'B. Ascending (ASC)', 'C. Random order', 'D. Insertion order'],
+            correctIndex: 1,
+            explanation: 'In SQL, ASC (ascending) is the default sort order.',
+          },
+        ],
+        masteryPoints: ['Use ORDER BY with ASC and DESC', 'Sort by numbers, dates, and text'],
+      },
+      tasks: [
+        {
+          id: 'day04-c1a-t1',
+          title: 'Task 1: Sort Products by Price Descending',
+          description: 'Sort all products by price starting with the highest price.',
+          instructions: [
+            'Select `name` and `price` from `products`.',
+            'Order by `price DESC`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Write your SQL query here\n',
+          solutionSql: 'SELECT name, price FROM products ORDER BY price DESC;',
+          solutionExplanation: '`ORDER BY price DESC` sorts output from highest price to lowest.',
+          hints: [{ level: 1, text: 'Use `ORDER BY price DESC;`' }],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'price'],
+            requireOrderBy: [{ column: 'price', direction: 'DESC' }],
+            expectedRowCount: 28,
+          },
+          successMessage: 'Products sorted by price descending!',
+        },
+        {
+          id: 'day04-c1a-t2',
+          title: 'Task 2: Customers Alphabetical Directory',
+          description: 'Show customer name and city, sorted alphabetically by name from A to Z.',
+          instructions: [
+            'Query the `customers` table.',
+            'Select `name` and `city`.',
+            'Order by `name ASC`.',
+          ],
+          type: 'independent',
+          primaryTable: 'customers',
+          initialSql: '-- Write your SQL query here\n',
+          solutionSql: 'SELECT name, city FROM customers ORDER BY name ASC;',
+          solutionExplanation: '`ORDER BY name ASC` lists customers from A to Z.',
+          hints: [{ level: 1, text: 'Use `ORDER BY name ASC;`' }],
+          validation: {
+            targetTable: 'customers',
+            requiredColumns: ['name', 'city'],
+            requireOrderBy: [{ column: 'name', direction: 'ASC' }],
+            expectedRowCount: 15,
+          },
+          successMessage: 'Perfect! Customer directory sorted alphabetically.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 1b: Multi-Column Sorting (Tie-Breaking)
+    // =========================================================================
+    {
+      id: 'order-by-multi-column',
+      order: 2,
+      title: '2. Multi-Column Sorting (Tie-Breaking)',
+      shortDescription: 'How to use secondary sort columns to resolve identical values.',
+      theory: {
+        summary: 'When multiple rows share the same value in the primary sort column, secondary sort columns resolve ties.',
+        introTable: {
+          tableName: 'students',
+          description: 'Students table with shared ages',
+          columns: ['id', 'name', 'age', 'department'],
+          rows: [
+            [1, 'Rahim', 21, 'CSE'],
+            [2, 'Karim', 22, 'EEE'],
+            [3, 'Ayesha', 20, 'CSE'],
+            [4, 'Sumaiya', 23, 'BBA'],
+            [5, 'Tanvir', 21, 'CSE'],
+          ],
+        },
+        explanation: [
+          '### 1. Why Secondary Columns Matter',
+          'Notice that both Rahim and Tanvir are age 21. If we sort only by `age ASC`, SQL puts them in an arbitrary tie order.',
+          '### 2. Resolving Ties with Comma Separation',
+          'Adding a second column tells SQL: *"Sort by age first; whenever two students have the same age, sort them alphabetically by name"*:\n`ORDER BY age ASC, name ASC;`',
+          '### 3. Independent Directions per Column',
+          'Each column can have its own sort direction: `ORDER BY category_id ASC, price DESC` groups categories from 1 to 5, and shows the most expensive products first within each category.',
+        ],
+        targetQuery: {
+          sql: "SELECT name, age\nFROM students\nORDER BY age ASC, name ASC;",
+          explanation: "Sort students youngest first; when ages match, sort alphabetically by name.",
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Primary Sort on age ASC',
+            sqlSnippet: 'ORDER BY age ASC',
+            explanation: 'Students ordered by age: Ayesha (20), then age 21 tie, Karim (22), Sumaiya (23).',
+            tableData: {
+              tableName: 'Primary Sort (Age Groups)',
+              columns: ['name', 'age'],
+              rows: [
+                ['Ayesha', 20],
+                ['Rahim', 21],
+                ['Tanvir', 21],
+                ['Karim', 22],
+                ['Sumaiya', 23],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Secondary Tiebreaker on name ASC',
+            sqlSnippet: 'ORDER BY age ASC, name ASC',
+            explanation: 'On the age 21 tie, Rahim (R) precedes Tanvir (T) alphabetically.',
+            tableData: {
+              tableName: 'Final Tiebroken Result',
+              columns: ['name', 'age'],
+              highlightedColumns: ['name', 'age'],
+              highlightedRows: [1, 2],
+              rows: [
+                ['Ayesha', 20],
+                ['Rahim', 21],
+                ['Tanvir', 21],
+                ['Karim', 22],
+                ['Sumaiya', 23],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Multi-column sort syntax',
+            sql: 'SELECT name, category_id, price\nFROM products\nORDER BY category_id ASC, price DESC;',
+            description: 'Groups by category ascending, then sorts price descending within each category.',
+          },
+        ],
+        keyTakeaway: 'In ORDER BY col1, col2, col2 acts as a tiebreaker whenever col1 values are identical.',
+        exampleQuery: 'SELECT name, age FROM students ORDER BY age ASC, name ASC;',
+        exampleQueryExplanation: 'Sorts by age youngest first, breaking ties alphabetically.',
+        liveDemoSql: 'SELECT name, category_id, price FROM products ORDER BY category_id ASC, price DESC LIMIT 6;',
+        liveDemoNotes: 'Displays categories in order with highest priced items first.',
+        mcqs: [
+          {
+            question: 'In `ORDER BY category_id ASC, price DESC`, which column resolves ties when two products have the same category_id?',
+            options: [
+              'A. category_id',
+              'B. price',
+              'C. product_id',
+              'D. name',
+            ],
+            correctIndex: 1,
+            explanation: 'The secondary column (`price`) acts as the tiebreaker when primary `category_id` values match.',
+          },
+        ],
+        masteryPoints: [
+          'Use comma-separated column lists in ORDER BY',
+          'Specify distinct ASC/DESC directions for each column',
+        ],
+      },
+      tasks: [
+        {
+          id: 'day04-c1b-t1',
+          title: 'Task 1: Students Sorted by Age and Name',
+          description: 'Show student name and age, sorted youngest first (age ASC), and alphabetically by name (name ASC) for any age ties.',
+          instructions: [
+            'Select `name` and `age` from `students`.',
+            'Order by `age ASC, name ASC`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'students',
+          initialSql: '-- Sort by age then name\n',
+          solutionSql: 'SELECT name, age FROM students ORDER BY age ASC, name ASC;',
+          solutionExplanation: '`ORDER BY age ASC, name ASC` sorts youngest first and alphabetically breaks ties (Rahim before Tanvir).',
+          hints: [{ level: 1, text: 'Use `ORDER BY age ASC, name ASC;`' }],
+          validation: {
+            targetTable: 'students',
+            requiredColumns: ['name', 'age'],
+            requireOrderBy: [
+              { column: 'age', direction: 'ASC' },
+              { column: 'name', direction: 'ASC' },
+            ],
+            expectedRowCount: 5,
+          },
+          successMessage: 'Great job! You resolved sorting ties with multi-column ORDER BY.',
+        },
+        {
+          id: 'day04-c1b-t2',
+          title: 'Task 2: Products by Category and Price',
+          description: 'Show name, category_id, and price from products, sorted by category_id ascending, and price descending within each category.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `name`, `category_id`, and `price`.',
+            'Order by `category_id ASC, price DESC`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Sort by category then price descending\n',
+          solutionSql: 'SELECT name, category_id, price FROM products ORDER BY category_id ASC, price DESC;',
+          solutionExplanation: '`ORDER BY category_id ASC, price DESC` organizes products by category with highest price items first.',
+          hints: [{ level: 1, text: 'Use `ORDER BY category_id ASC, price DESC;`' }],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'category_id', 'price'],
+            requireOrderBy: [
+              { column: 'category_id', direction: 'ASC' },
+              { column: 'price', direction: 'DESC' },
+            ],
+            expectedRowCount: 28,
+          },
+          successMessage: 'Well done! You applied multi-column sorting with mixed directions.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 2: Deduplication with DISTINCT
+    // =========================================================================
+    {
+      id: 'distinct-deduplication',
+      order: 3,
+      title: '3. Deduplication with DISTINCT',
+      shortDescription: 'Eliminate duplicate rows to discover unique values.',
+      theory: {
+        summary: 'When multiple rows contain the same value in a column (e.g. several customers residing in "Dhaka"), `DISTINCT` collapses duplicates into a single unique list.',
+        introTable: {
+          tableName: 'customers',
+          description: 'Customer list with overlapping cities.',
+          columns: ['customer_id', 'name', 'city'],
+          rows: [
+            [1, 'Rafiul Islam', 'Dhaka'],
+            [2, 'Priya Akter', 'Dhaka'],
+            [3, 'Tanvir Ahmed', 'Chittagong'],
+            [4, 'Nusrat Jahan', 'Chittagong'],
+            [5, 'Kamal Hossain', 'Sylhet'],
+          ],
+        },
+        explanation: [
+          '### 1. Finding Unique Values',
+          '`SELECT DISTINCT city FROM customers;` examines all rows and discards duplicate values so each city appears only once.',
+          'Notice: DISTINCT is purely for row deduplication — it does not calculate totals or summaries.',
+        ],
+        targetQuery: {
+          sql: 'SELECT DISTINCT city\nFROM customers;',
+          explanation: 'Find all unique cities where customers live, discarding duplicate entries.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: FROM customers (Raw column values with duplicates)',
+            sqlSnippet: 'FROM customers',
+            explanation: 'SQL scans the city column for all customers.',
+            tableData: {
+              tableName: 'customers (Raw Cities)',
+              columns: ['name', 'city'],
+              rows: [
+                ['Rafiul Islam', 'Dhaka'],
+                ['Priya Akter', 'Dhaka'],
+                ['Tanvir Ahmed', 'Chittagong'],
+                ['Nusrat Jahan', 'Chittagong'],
+                ['Kamal Hossain', 'Sylhet'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: SELECT DISTINCT city (Collapse duplicates)',
+            sqlSnippet: 'SELECT DISTINCT city',
+            explanation: 'Duplicates of Dhaka and Chittagong are removed, producing unique city names.',
+            tableData: {
+              tableName: 'Final Unique Cities',
+              columns: ['city'],
+              highlightedColumns: ['city'],
+              highlightedRows: [0, 1, 2],
+              rows: [
+                ['Dhaka'],
+                ['Chittagong'],
+                ['Sylhet'],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Deduplicating rows with DISTINCT',
+            sql: 'SELECT DISTINCT column_name\nFROM table_name;',
+            description: 'Returns only unique values in the specified column.',
+          },
+        ],
+        keyTakeaway: 'DISTINCT removes duplicate output rows across the selected columns.',
+        exampleQuery: 'SELECT DISTINCT city FROM customers;',
+        exampleQueryExplanation: 'Lists every unique city where customers live.',
+        liveDemoSql: 'SELECT DISTINCT city FROM customers ORDER BY city ASC;',
+        liveDemoNotes: 'Returns alphabetical list of unique cities.',
+        mcqs: [
+          {
+            question: 'Where must the DISTINCT keyword be placed in a SQL query?',
+            options: [
+              'A. At the very end after WHERE',
+              'B. Immediately following SELECT before column names',
+              'C. Inside the FROM clause',
+              'D. Before the database name',
+            ],
+            correctIndex: 1,
+            explanation: 'DISTINCT is written right after SELECT (e.g. `SELECT DISTINCT column FROM table`).',
+          },
+        ],
+        masteryPoints: ['Use DISTINCT to extract unique categories and locations'],
+      },
+      tasks: [
+        {
+          id: 'day04-c2-t1',
+          title: 'Task 1: Distinct Customer Cities',
+          description: 'Get a unique list of all cities where customers are based.',
+          instructions: [
+            'Select `DISTINCT city` from `customers`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'customers',
+          initialSql: '-- Write your SQL query here\n',
+          solutionSql: 'SELECT DISTINCT city FROM customers;',
+          solutionExplanation: '`SELECT DISTINCT city FROM customers;` returns each city name once.',
+          hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers;`' }],
+          validation: {
+            targetTable: 'customers',
+            requiredColumns: ['city'],
+            requireDistinct: true,
+            expectedRowCount: 6,
+          },
+          successMessage: 'Distinct cities listed!',
+        },
+        {
+          id: 'day04-c2-t2',
+          title: 'Task 2: Distinct Product Categories',
+          description: 'Show a unique list of all category_id values present in the products table.',
+          instructions: [
+            'Query the `products` table.',
+            'Select `DISTINCT category_id`.',
+          ],
+          type: 'independent',
+          primaryTable: 'products',
+          initialSql: '-- Write your SQL query here\n',
+          solutionSql: 'SELECT DISTINCT category_id FROM products;',
+          solutionExplanation: 'Returns unique category IDs (1, 2, 3, 4, 5, and null).',
+          hints: [{ level: 1, text: 'Use `SELECT DISTINCT category_id FROM products;`' }],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['category_id'],
+            requireDistinct: true,
+            expectedRowCount: 6,
+          },
+          successMessage: 'Perfect! Unique categories identified.',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 3: Pagination with LIMIT and OFFSET
+    // =========================================================================
+    {
+      id: 'limit-and-offset',
+      order: 4,
+      title: '4. Pagination with LIMIT & OFFSET',
+      shortDescription: 'Restrict row counts and skip rows for multi-page displays.',
+      theory: {
+        summary: 'Web applications rarely display thousands of records at once. `LIMIT` restricts how many rows to return, and `OFFSET` skips a specified number of rows before returning results.',
+        introTable: {
+          tableName: 'products',
+          description: 'Product catalog rows 1 through 6',
+          columns: ['product_id', 'name', 'price'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99],
+            [2, 'Bluetooth Speaker', 45.50],
+            [3, 'USB-C Charging Cable', 9.99],
+            [4, 'Mechanical Keyboard', 65.00],
+            [14, 'Office Chair', 120.00],
+            [15, 'Filing Cabinet', 89.99],
+          ],
+        },
+        explanation: [
+          '### 1. LIMIT and OFFSET Syntax',
+          '`LIMIT 5` returns at most 5 rows.',
+          '`LIMIT 10 OFFSET 10` returns 10 rows starting from row 11 (Page 2).',
+          'Pagination Formula: Page $N$ with size $S$ is `LIMIT S OFFSET (N - 1) * S`.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, price\nFROM products\nORDER BY price DESC\nLIMIT 3 OFFSET 0;',
+          explanation: 'Retrieve the top 3 most expensive products (Page 1).',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: FROM products ORDER BY price DESC (Full sorted list)',
+            sqlSnippet: 'FROM products ORDER BY price DESC',
+            explanation: 'SQL sorts the catalog highest price first.',
+            tableData: {
+              tableName: 'Sorted Catalog',
+              columns: ['name', 'price'],
+              rows: [
+                ['Office Chair', 120.00],
+                ['Filing Cabinet', 89.99],
+                ['Mechanical Keyboard', 65.00],
+                ['Bluetooth Speaker', 45.50],
+                ['Wireless Mouse', 15.99],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: LIMIT 3 OFFSET 0 (Slice Page 1)',
+            sqlSnippet: 'LIMIT 3 OFFSET 0',
+            explanation: 'Slices the first 3 most expensive products.',
+            tableData: {
+              tableName: 'Page 1 (Top 3 Items)',
+              columns: ['name', 'price'],
+              highlightedColumns: ['name', 'price'],
+              highlightedRows: [0, 1, 2],
+              rows: [
+                ['Office Chair', 120.00],
+                ['Filing Cabinet', 89.99],
+                ['Mechanical Keyboard', 65.00],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Slicing and paginating results',
+            sql: 'SELECT * FROM products ORDER BY price DESC LIMIT 5 OFFSET 0;\nSELECT * FROM products ORDER BY price DESC LIMIT 5 OFFSET 5;',
+            description: 'Page 1 and Page 2 with 5 items per page.',
+          },
+        ],
+        keyTakeaway: 'LIMIT controls batch size; OFFSET specifies how many rows to skip.',
+        exampleQuery: 'SELECT name, quantity_in_stock FROM products ORDER BY quantity_in_stock ASC LIMIT 5;',
+        exampleQueryExplanation: 'Returns the 5 lowest stock items.',
+        liveDemoSql: 'SELECT name, quantity_in_stock FROM products ORDER BY quantity_in_stock ASC LIMIT 5;',
+        liveDemoNotes: 'Displays lowest-stock products.',
+        mcqs: [
+          {
+            question: 'How do you query Page 3 of a table with 10 records per page?',
+            options: [
+              'A. LIMIT 10 OFFSET 30',
+              'B. LIMIT 10 OFFSET 20',
+              'C. OFFSET 10 LIMIT 3',
+              'D. LIMIT 30 OFFSET 10',
+            ],
+            correctIndex: 1,
+            explanation: 'Page 3 skips 20 rows (2 * 10) and takes 10: `LIMIT 10 OFFSET 20`.',
+          },
+        ],
+        masteryPoints: ['Use LIMIT to cap result sizes', 'Use OFFSET for pagination'],
+      },
+      tasks: [
+        {
+          id: 'day04-c3-t1',
+          title: 'Task 1: Top 5 Lowest Stock Products',
+          description: 'Find the 5 products with the lowest stock quantities.',
+          instructions: [
+            'Select `name` and `quantity_in_stock` from `products`.',
+            'Order by `quantity_in_stock ASC` with `LIMIT 5`.',
+            'End with a semicolon (;).',
+          ],
+          type: 'guided',
+          primaryTable: 'products',
+          initialSql: '-- Write your SQL query here\n',
+          solutionSql: 'SELECT name, quantity_in_stock FROM products ORDER BY quantity_in_stock ASC LIMIT 5;',
+          solutionExplanation: 'Sorts ascending by stock count and limits to the top 5.',
+          hints: [{ level: 1, text: 'Use `ORDER BY quantity_in_stock ASC LIMIT 5;`' }],
+          validation: {
+            targetTable: 'products',
+            requiredColumns: ['name', 'quantity_in_stock'],
+            requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
+            requireLimit: 5,
+            expectedRowCount: 5,
+          },
+          successMessage: 'Lowest stock products identified!',
+        },
+        {
+          id: 'day04-c3-t2',
+          title: 'Task 2: Page 2 of Customers (5 per page)',
+          description: 'Fetch page 2 of customer records (5 per page), sorted by customer_id ascending.',
+          instructions: [
+            'Query the `customers` table.',
+            'Select `customer_id`, `name`, and `city`.',
+            'Order by `customer_id ASC` with `LIMIT 5 OFFSET 5`.',
+          ],
+          type: 'independent',
+          primaryTable: 'customers',
+          initialSql: '-- Fetch Page 2 of customers (LIMIT 5 OFFSET 5)\n',
+          solutionSql: 'SELECT customer_id, name, city FROM customers ORDER BY customer_id ASC LIMIT 5 OFFSET 5;',
+          solutionExplanation: 'Skips the first 5 customers and returns customers 6 through 10.',
+          hints: [{ level: 1, text: 'Use `ORDER BY customer_id ASC LIMIT 5 OFFSET 5;`' }],
+          validation: {
+            targetTable: 'customers',
+            requiredColumns: ['customer_id', 'name', 'city'],
+            requireOrderBy: [{ column: 'customer_id', direction: 'ASC' }],
+            requireLimit: 5,
+            requireOffset: 5,
+            expectedRowCount: 5,
+          },
+          successMessage: 'Spot on! You paginated to Page 2 of customers.',
+        },
+      ],
+    },
+  ],
+
+  // ===========================================================================
+  // DAY 4 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // ===========================================================================
+  challenge: {
+    id: 'day-04-homework',
+    title: 'Day 4 — Result Shaping (Homework)',
+    scenario: 'Apply sorting, deduplication, and row slicing to real inventory queries:',
+    tasks: [
+      {
+        id: 'day04-hw-1',
+        title: 'Task 1: Products sorted by price, highest first',
+        description: 'Products sorted by price, highest first.',
+        instructions: [
+          'Select from `products` and sort by `price DESC`.',
+          'End with a semicolon (;).',
+        ],
+        type: 'challenge',
+        primaryTable: 'products',
+        initialSql: '-- Task 1: Products sorted by price, highest first\n',
+        solutionSql: 'SELECT * FROM products ORDER BY price DESC;',
+        solutionExplanation: '`ORDER BY price DESC` sorts all products starting with the highest price.',
+        hints: [{ level: 1, text: 'Use `SELECT * FROM products ORDER BY price DESC;`' }],
+        validation: {
+          targetTable: 'products',
+          requireOrderBy: [{ column: 'price', direction: 'DESC' }],
+          expectedRowCount: 28,
+        },
+        successMessage: 'Task 1 completed! Products sorted highest first.',
+      },
+      {
+        id: 'day04-hw-2',
+        title: 'Task 2: Distinct list of cities customers are based in',
+        description: 'Distinct list of cities customers are based in.',
+        instructions: [
+          'Select `DISTINCT city` from `customers`.',
+          'End with a semicolon (;).',
+        ],
+        type: 'challenge',
+        primaryTable: 'customers',
+        initialSql: '-- Task 2: Distinct list of cities customers are based in\n',
+        solutionSql: 'SELECT DISTINCT city FROM customers;',
+        solutionExplanation: '`DISTINCT city` eliminates duplicate city names.',
+        hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers;`' }],
+        validation: {
+          targetTable: 'customers',
+          requiredColumns: ['city'],
+          requireDistinct: true,
+          expectedRowCount: 6,
+        },
+        successMessage: 'Task 2 completed! Distinct cities listed.',
+      },
+      {
+        id: 'day04-hw-3',
+        title: 'Task 3: The 5 lowest-stock products',
+        description: 'The 5 lowest-stock products (ORDER BY + LIMIT).',
+        instructions: [
+          'Select from `products` ordered by `quantity_in_stock ASC` with `LIMIT 5`.',
+          'End with a semicolon (;).',
+        ],
+        type: 'challenge',
+        primaryTable: 'products',
+        initialSql: '-- Task 3: The 5 lowest-stock products\n',
+        solutionSql: 'SELECT * FROM products ORDER BY quantity_in_stock ASC LIMIT 5;',
+        solutionExplanation: '`ORDER BY quantity_in_stock ASC LIMIT 5` returns the 5 lowest stock items.',
+        hints: [{ level: 1, text: 'Use `ORDER BY quantity_in_stock ASC LIMIT 5;`' }],
+        validation: {
+          targetTable: 'products',
+          requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
+          requireLimit: 5,
+          expectedRowCount: 5,
+        },
+        successMessage: 'Task 3 completed! 5 lowest-stock products retrieved.',
+      },
+    ],
+  },
+};

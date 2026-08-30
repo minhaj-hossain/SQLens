@@ -1,16 +1,16 @@
-import RoadmapPage from '@/components/roadmap/RoadmapPage';
+﻿import RoadmapPage from '@/components/roadmap/RoadmapPage';
 import { legacyNavigationToRoute, LegacySearchParams } from '@/lib/legacy-routes';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-  title: 'Learning Path — 25 Days of Hands-On SQL',
+  title: 'Learning Path â€” 38 Days of Hands-On SQL',
   description:
-    'Your visual roadmap through 25 days of SQL: mental models, guided practice tasks and independent challenges in the in-browser query engine.',
+    'Your visual roadmap through 38 Days of SQL: mental models, guided practice tasks and independent challenges in the in-browser query engine.',
 };
 
 /**
- * `/` — the roadmap (Phase 3). Server component so it can honour legacy
- * lesson deep links (?day=N&stage=…) with a proper redirect before render;
+ * `/` â€” the roadmap (Phase 3). Server component so it can honour legacy
+ * lesson deep links (?day=N&stage=â€¦) with a proper redirect before render;
  * see src/lib/legacy-routes.ts for the mapping table.
  */
 export default async function HomePage({

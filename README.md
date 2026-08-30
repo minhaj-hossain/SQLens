@@ -2,7 +2,7 @@
 
 # 🎓 SQLens
 
-### Master SQL — 25 Days, One Browser Tab
+### Master SQL — 38 Days, One Browser Tab
 
 **An interactive, self-contained SQL learning platform with a custom-built in-browser SQL engine.**
 Write real queries. Get real results. No database server required.
@@ -44,7 +44,7 @@ Write real queries. Get real results. No database server required.
 
 ## 🔍 What is SQLens?
 
-SQLens is a **complete 25-day SQL curriculum** wrapped around a custom SQL engine
+SQLens is a **complete 38-day SQL curriculum** wrapped around a custom SQL engine
 that runs entirely in your browser — parser, executor, and validator are all written
 from scratch in TypeScript, with zero external query libraries.
 
@@ -81,7 +81,8 @@ Every day of the course follows the same loop:
 <details open>
 <summary><b>🎓 Curriculum & Learning</b></summary>
 
-- **25 structured days** — from basic `SELECT` through joins, aggregation, subqueries, CTEs, window functions, and DDL
+- **38 structured days, 4 milestones** — from basic `SELECT` through conditional logic (`CASE`), string & date functions, set operations, joins, aggregation, subqueries & CTEs, window functions, transactions, DDL & schema design/normalization, indexing & EXPLAIN, security, a greenfield capstone project, and a timed interview gauntlet
+- **Spiral reinforcement** — every new concept's tasks force reuse of earlier skills (joins, NULL semantics, aggregation), so old knowledge returns as a tool, never as a re-lecture
 - Guided practice with step-by-step hints, attempt tracking, and optional solutions
 - Independent challenge sets per module
 - **Real App Router routes** — every lesson is a URL (`/learn/day-07/theory/aggregates`, `/learn/day-07/practice/aggregates?task=1`, `/learn/day-07/challenge`) with its own metadata, canonical URL and prefetch; module overviews are statically prerendered; browser Back/Forward and shared links land exactly on the lesson step
@@ -97,11 +98,14 @@ Every day of the course follows the same loop:
 - Joins: **INNER · LEFT · LEFT OUTER · RIGHT · FULL · CROSS**
 - Aggregates (`COUNT/SUM/AVG/MIN/MAX`) with GROUP BY / HAVING
 - Correlated & scalar **subqueries**, IN / BETWEEN / LIKE / IS NULL / INTERVAL
-- **CTEs** (`WITH name AS (...)`), set operations (**UNION / UNION ALL / INTERSECT / EXCEPT**)
-- **CASE WHEN** expressions in SELECT / WHERE / ORDER BY
-- DML: INSERT / UPDATE / DELETE (+ foreign-key awareness)
-- DDL: CREATE TABLE / ALTER TABLE ADD COLUMN / DROP TABLE IF EXISTS, plus UNIQUE·CHECK·DEFAULT·NOT NULL basics
-- EXPLAIN output rendered as a plan table
+- **CTEs** (`WITH name AS (...)`), set operations (**UNION / UNION ALL / EXCEPT**)
+- **CASE WHEN** expressions in SELECT / WHERE / ORDER BY / aggregates
+- **Window functions**: ROW_NUMBER / RANK / DENSE_RANK / LAG / LEAD, running aggregates (`SUM() OVER (ORDER BY …)`)
+- **Transactions**: BEGIN / COMMIT / ROLLBACK with snapshot semantics
+- String & date functions: CONCAT, UPPER/LOWER, TRIM, SUBSTRING, LENGTH, YEAR/MONTH/DAY, EXTRACT, DATEDIFF, date arithmetic
+- DML: INSERT / UPDATE / DELETE (+ foreign-key awareness, multi-row INSERT)
+- DDL: CREATE TABLE / ALTER TABLE ADD COLUMN / DROP TABLE IF EXISTS, plus UNIQUE·CHECK·DEFAULT·NOT NULL·AUTO_INCREMENT
+- EXPLAIN output rendered as a plan table (defined simulation model — see `docs/DIALECT.md`)
 
 </details>
 
@@ -410,7 +414,7 @@ sql_learning/
 │   │   └── auth-client.ts          # browser auth client
 │   ├── content/
 │   │   ├── curriculum-index.ts     # module ordering & lookups
-│   │   ├── modules/                # day-by-day curriculum data
+│   │   ├── modules/                # one day-NN-<semantic>.ts file per module + index.ts barrel
 │   │   └── database/               # sample schema + seed rows
 │   ├── types/                      # shared TypeScript contracts
 │   └── config/                     # learning + schedule constants
@@ -427,8 +431,8 @@ sql_learning/
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 | `npm run lint` | TypeScript strict pass (`tsc --noEmit`) |
-| `npm run test:engine` | 21-case regression suite covering the SQL engine |
-| `npm run verify:curriculum` | Audits all 25 days — every task's solution is executed through the engine |
+| `npm run test:engine` | 46-case regression suite covering the SQL engine |
+| `npm run verify:curriculum` | Audits all 35 modules / 38 days — every task's solution is executed through the engine |
 | `npm run clean` | Remove build artifacts |
 
 ---
@@ -516,19 +520,25 @@ Adding a custom domain? Point `BETTER_AUTH_URL` (plus canonical/sitemap defaults
 ## ✅ Quality & Testing
 
 ```text
+$ npm test            # Vitest: 93 tests across 8 suites (engine, windows, set-ops,
+                      # transactions, EXPLAIN, DDL constraints, scripts, module order)
+  ✔ 93 passed, 0 failed
+
 $ npm run test:engine
-  ✔ 21 passed, 0 failed
+  ✔ 46 passed, 0 failed
 
 $ npm run verify:curriculum
-  Day 01 ✔ … Day 25 ✔
+  35 modules · 38 days · 98 concepts · 309 tasks · 153 MCQs
   ========================================================
-  ALL DAYS VERIFIED — solutions execute cleanly end-to-end
+  ALL MODULES VERIFIED — solutions execute cleanly end-to-end
 ```
 
 Recommended release checklist:
 
-- [ ] `tsc --noEmit` clean
+- [ ] `npx tsc --noEmit` clean
+- [ ] `npm test` green (Vitest)
 - [ ] `test:engine` green
+- [ ] `test:module-order` green (identity/ordering regression)
 - [ ] `verify:curriculum` green
 - [ ] Manual smoke test: guest learns → signs up → merges → continues cross-device
 - [ ] Admin smoke test: block/unblock + lock one module before granting admin roles

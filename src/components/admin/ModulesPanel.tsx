@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
   adminSetModule,
   AdminApiError,
 } from '../../lib/admin-api';
+import { ALL_MODULES } from '../../content/curriculum-index';
 
 const MODE_META: Record<
   ModuleAvailability['unlockMode'],
@@ -30,13 +31,13 @@ const MODE_META: Record<
   },
   locked: {
     label: 'Locked',
-    hint: 'Closed for everyone — even users who finished the previous day.',
+    hint: 'Closed for everyone â€” even users who finished the previous day.',
     badge: 'bg-error/10 text-error border-error/30',
   },
 };
 
 /**
- * Curriculum Control tab — global unlock configuration for all 25 days.
+ * Curriculum Control tab â€” global unlock configuration for all 38 Days.
  * The database is authoritative; this panel only writes config via the
  * admin API (which re-verifies role/status on every request).
  */
@@ -49,12 +50,14 @@ export default function ModulesPanel() {
   const [days, setDays] = useState<{ id: string; day: number }[]>([]);
 
   useEffect(() => {
-    // Build the day list client-side using the same naming scheme as content.
+    // Build the module list from the single source of truth: every module in
+    // the curriculum (legacy day-NN IDs and semantic-ID modules alike),
+    // numbered by its canonical curriculum order (display day).
     setDays(
-      Array.from({ length: 25 }, (_, i) => {
-        const id = `day-${String(i + 1).padStart(2, '0')}`;
-        return { id, day: i + 1 };
-      }),
+      ALL_MODULES.map((m) => ({
+        id: m.id,
+        day: m.day || m.curriculumOrder || 0,
+      })).sort((a, b) => a.day - b.day),
     );
     adminListModules()
       .then(setMap)
@@ -93,7 +96,7 @@ export default function ModulesPanel() {
   };
 
   if (!map && !error) {
-    return <p className="font-mono text-xs text-text-dim animate-pulse py-12 text-center">Loading…</p>;
+    return <p className="font-mono text-xs text-text-dim animate-pulse py-12 text-center">Loadingâ€¦</p>;
   }
 
   if (error && !map) {
@@ -161,7 +164,7 @@ function ModulesList({
         <div>
           <h2 className="font-display font-bold text-lg text-text">Curriculum Control</h2>
           <p className="font-mono text-[11px] text-text-dim mt-0.5">
-            Global module availability · {overrides} override{overrides === 1 ? '' : 's'} active
+            Global module availability Â· {overrides} override{overrides === 1 ? '' : 's'} active
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -251,7 +254,7 @@ function ModuleRows({
 
               {mode === 'scheduled' && rec?.unlockAt && (
                 <span className="font-mono text-[11px] text-func">
-                  → {new Date(rec.unlockAt).toLocaleString()}
+                  â†’ {new Date(rec.unlockAt).toLocaleString()}
                 </span>
               )}
 

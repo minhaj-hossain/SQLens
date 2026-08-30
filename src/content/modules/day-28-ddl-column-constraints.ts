@@ -6,7 +6,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C1 NOT NULL - mandatory fields   C2 UNIQUE - no duplicates
 //   C3 DEFAULT - automatic values    C4 CHECK - business rules at the DB level
 // =============================================================================
-export const DDL_COLUMN_CONSTRAINTS_MODULE: ModuleData = {
+export const Day_28_MODULE: ModuleData = {
   id: 'ddl-column-constraints',
   slug: 'ddl-column-constraints',
   day: 0, // ordering uses curriculumOrder (Day 28)

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Check, Lock, ChevronRight } from 'lucide-react';
 import { UserLearningState } from '../../types/progress';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
@@ -36,7 +36,7 @@ export const RoadmapSidebar: React.FC<RoadmapSidebarProps> = ({
           onClick={onToggle}
           className="rounded p-1 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 md:hidden"
         >
-          ✕
+          âœ•
         </button>
       </div>
 
@@ -82,14 +82,14 @@ export const RoadmapSidebar: React.FC<RoadmapSidebarProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        {/* Minimalist Progression Node: ✓ Completed, ◉ Current, ○ Inactive, 🔒 Locked */}
+                        {/* Minimalist Progression Node: âœ“ Completed, â—‰ Current, â—‹ Inactive, ðŸ”’ Locked */}
                         <span className="shrink-0 flex items-center justify-center w-4 text-center font-mono">
                           {isCompleted ? (
-                            <span className="text-emerald-400 text-xs">✓</span>
+                            <span className="text-emerald-400 text-xs">âœ“</span>
                           ) : isCurrent ? (
-                            <span className="text-emerald-400 text-sm font-bold">◉</span>
+                            <span className="text-emerald-400 text-sm font-bold">â—‰</span>
                           ) : isUnlocked ? (
-                            <span className="text-zinc-500 text-sm">○</span>
+                            <span className="text-zinc-500 text-sm">â—‹</span>
                           ) : (
                             <Lock className="h-3 w-3 text-zinc-700" />
                           )}
@@ -123,7 +123,7 @@ export const RoadmapSidebar: React.FC<RoadmapSidebarProps> = ({
       <div className="border-t border-zinc-800/80 px-4 py-3 bg-zinc-950">
         <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono">
           <span>Daily 6:00 PM Cycle</span>
-          <span className="text-zinc-400">25 Days</span>
+          <span className="text-zinc-400">38 Days</span>
         </div>
       </div>
     </aside>

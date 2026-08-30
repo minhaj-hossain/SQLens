@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+﻿import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
@@ -50,7 +50,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
             <Icon name="map" className="text-[20px] text-string" />
             <div>
               <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-text">
-                25-Day Curriculum Map
+                38-day Curriculum Map
               </h2>
             </div>
           </div>

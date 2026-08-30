@@ -8,7 +8,7 @@ import { ModuleData } from '../../types/curriculum';
 //   C3 Atomic failure - all-or-nothing (a failed step, then ROLLBACK)
 // Spiral: Day 19 INSERT/UPDATE safety, Day 20 FK constraints, Day 1 verify-with-SELECT.
 // =============================================================================
-export const DML_TRANSACTIONS_MODULE: ModuleData = {
+export const Day_26_MODULE: ModuleData = {
   id: 'dml-transactions',
   slug: 'dml-transactions',
   day: 0, // ordering uses curriculumOrder (Day 26)

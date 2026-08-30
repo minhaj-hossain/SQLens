@@ -17,7 +17,7 @@ import { ModuleData } from '../../types/curriculum';
 const GAUNTLET_TREND_SQL =
   'WITH monthly AS (SELECT MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY MONTH(o.order_date)), trend AS (SELECT mon, revenue, SUM(revenue) OVER (ORDER BY mon) AS running_revenue, LAG(revenue) OVER (ORDER BY mon) AS prev_revenue FROM monthly) SELECT mon, revenue, running_revenue, revenue - prev_revenue AS growth FROM trend ORDER BY mon;';
 
-export const INTERVIEW_GAUNTLET_MODULE: ModuleData = {
+export const Day_37_MODULE: ModuleData = {
   id: 'interview-gauntlet',
   slug: 'interview-gauntlet',
   day: 0, // ordering uses curriculumOrder (Day 37)

@@ -1,6 +1,6 @@
 import { ModuleData } from '../../types/curriculum';
 
-export const DAY_03_MODULE: ModuleData = {
+export const Day_03_MODULE: ModuleData = {
   id: "day-03",
   slug: "specialized-filtering",
   day: 3,

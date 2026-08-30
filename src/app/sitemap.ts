@@ -4,7 +4,7 @@ import { ALL_MODULES } from '../content/curriculum-index';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
 
 /**
- * Home + /learn resume + all 25 module overview pages. Stage pages
+ * Home + /learn resume + all module overview pages. Stage pages
  * (theory/practice/challenge/complete) are excluded: they are client-gated
  * practice surfaces behind unlock rules, not useful standalone SEO targets.
  */

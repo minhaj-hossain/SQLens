@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next';
+﻿import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import { Space_Grotesk, Manrope, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
@@ -26,15 +26,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
-const TITLE = 'SQLens — Learn SQL by Doing, 25 Days Hands-On';
+const TITLE = 'SQLens â€” Learn SQL by Doing, 38 Days Hands-On';
 const DESCRIPTION =
-  'Master SQL in 25 days through visual mental models, an interactive in-browser query engine, guided practice tasks and independent challenges. No setup required.';
+  'Master SQL in 38 Days through visual mental models, an interactive in-browser query engine, guided practice tasks and independent challenges. No setup required.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: '%s · SQLens',
+    template: '%s Â· SQLens',
   },
   description: DESCRIPTION,
   applicationName: 'SQLens',
