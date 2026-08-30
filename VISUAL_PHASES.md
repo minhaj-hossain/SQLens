@@ -129,3 +129,23 @@
 - [x] IndependentChallengeView re-tokened to the locked palette: FINAL CHALLENGE crumb / task tabs / hints / ms pills / icons moved off gold + legacy string/keyword tokens to gray tiers; active task tab = surface-3 (design segmented pattern); Run/Finish buttons = design .btn-gold (sans, semibold, no glow shadow); gold now only on Run buttons, active-line gutter, autocomplete accent and the Correct banner
 - [x] App-wide mojibake purge: 47 lines across 13 files re-decoded (cp1252 reverse-map + UTF-8 validation, iterative for double-encoded runs) — ✓ ✕ — → ← … · “” and the 🏆 emoji all render properly now; 0 mojibake lines remain in src
 - [x] Gates: tsc exit 0; 105/105 tests; build exit 0
+---
+
+## P9.5 - Back navigation + glyph purge
+
+- [x] Back button in /learn/[dayId] top bar: deterministic step chain (getPreviousStep in learn-routes.ts) - back to previous task / lesson / concept / module card / challenge
+- [x] First concept theory -> back goes to the module card (the requested flow)
+- [x] Smooth: scroll-position memory (sessionStorage, one-shot restore) + prefetch of the back target so clicks are instant
+- [x] Tick marks: challenge done-task pill shows real check; Correct heading shows check (weird symbols removed)
+- [x] Glyph purge: replaced corrupted/cp1252-encoded chars (>220 replacements across 30 files) - turned-F, smart-curly, phone/ballot boxes, emoji check/cross, heavy arrows, keycaps; kept intentional glyphs (arrows, check/cross, >= <=, warning, box-drawing README)
+- [x] 7 new unit tests for back-chain (112 total green)
+- [x] Gates: tsc exit 0, tests 112/112, build exit 0
+
+---
+### P9.6 - Table consistency + engine fixes (COMPLETE)
+- [x] DataTable: removed per-column highlight styling; uniform text-dim cells + subtle cell borders (hairline column separators)
+- [x] splitStatements: comment-only chunks skipped; executor short-circuits empty statement lists (fixes SQL Error: Empty query after trailing comments)
+- [x] Content guard test added: no task initialSql passes its own validator (engine-run, all 38 modules, expectFailure labs exempt)
+- [x] Rewrote pre-filled-answer initialSql (day-05/10/12/13/21/22/31/38 tasks) to partial scaffolding
+- [x] day17-c1c-t2: fixed solutionSql (was missing IS NOT NULL) + customValidator AST guard on whereClause
+- Gates: tsc 0 / tests 117/117 / build 0

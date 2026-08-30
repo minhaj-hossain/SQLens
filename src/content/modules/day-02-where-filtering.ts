@@ -77,7 +77,7 @@ export const Day_02_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: 'Step 2: WHERE age = 21 (Row-by-Row check)',
             sqlSnippet: 'WHERE age = 21',
-            explanation: 'Row 1 (21 = 21): TRUE ✅\nRow 2 (22 = 21): FALSE ❌\nRow 3 (20 = 21): FALSE ❌\nRow 4 (23 = 21): FALSE ❌\nRow 5 (21 = 21): TRUE ✅',
+            explanation: 'Row 1 (21 = 21): TRUE ✓\nRow 2 (22 = 21): FALSE ✕\nRow 3 (20 = 21): FALSE ✕\nRow 4 (23 = 21): FALSE ✕\nRow 5 (21 = 21): TRUE ✓',
             tableData: {
               tableName: 'Surviving Rows (age = 21)',
               columns: ['id', 'name', 'age', 'department', 'city'],
@@ -270,7 +270,7 @@ export const Day_02_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: "Step 2: WHERE department != 'EEE' (Exclude EEE)",
             sqlSnippet: "WHERE department != 'EEE'",
-            explanation: "Rahim ('CSE' != 'EEE'): TRUE ✅\nKarim ('EEE' != 'EEE'): FALSE ❌\nAyesha ('CSE' != 'EEE'): TRUE ✅\nSumaiya ('BBA' != 'EEE'): TRUE ✅\nTanvir ('CSE' != 'EEE'): TRUE ✅",
+            explanation: "Rahim ('CSE' != 'EEE'): TRUE ✓\nKarim ('EEE' != 'EEE'): FALSE ✕\nAyesha ('CSE' != 'EEE'): TRUE ✓\nSumaiya ('BBA' != 'EEE'): TRUE ✓\nTanvir ('CSE' != 'EEE'): TRUE ✓",
             tableData: {
               tableName: 'Surviving Rows (department != EEE)',
               columns: ['id', 'name', 'department'],
@@ -441,7 +441,7 @@ export const Day_02_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: 'Step 2: WHERE price > 50.00 (Strict Boundary Check)',
             sqlSnippet: 'WHERE price > 50.00',
-            explanation: 'Wireless Mouse ($15.99 > 50.00): FALSE ❌\nBluetooth Speaker ($45.50 > 50.00): FALSE ❌\nMechanical Keyboard ($65.00 > 50.00): TRUE ✅\nOffice Chair ($120.00 > 50.00): TRUE ✅',
+            explanation: 'Wireless Mouse ($15.99 > 50.00): FALSE ✕\nBluetooth Speaker ($45.50 > 50.00): FALSE ✕\nMechanical Keyboard ($65.00 > 50.00): TRUE ✓\nOffice Chair ($120.00 > 50.00): TRUE ✓',
             tableData: {
               tableName: 'Surviving Rows (price > 50.00)',
               columns: ['product_id', 'name', 'price'],
@@ -607,7 +607,7 @@ export const Day_02_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: 'Step 2: WHERE price >= 55.00 (Inclusive Boundary Check)',
             sqlSnippet: 'WHERE price >= 55.00',
-            explanation: 'Mechanical Keyboard ($65.00 >= 55.00): TRUE ✅\nStainless Steel Pan Set ($55.00 >= 55.00): TRUE ✅ (Boundary included)\nTennis Racket ($55.00 >= 55.00): TRUE ✅ (Boundary included)',
+            explanation: 'Mechanical Keyboard ($65.00 >= 55.00): TRUE ✓\nStainless Steel Pan Set ($55.00 >= 55.00): TRUE ✓ (Boundary included)\nTennis Racket ($55.00 >= 55.00): TRUE ✓ (Boundary included)',
             tableData: {
               tableName: 'Surviving Rows (price >= 55.00)',
               columns: ['product_id', 'name', 'price'],
@@ -779,7 +779,7 @@ export const Day_02_MODULE: ModuleData = {
         explanation: [
           'In SQL, numbers are written directly, but **text values (strings) MUST ALWAYS be enclosed in single quotes (\'...\')**.',
           '### 1. Column Names vs. String Literals\nIf you write `WHERE city = Dhaka` without quotes, SQL assumes `Dhaka` is the name of another **column**!\n\nBecause no column named `Dhaka` exists in `students`, SQL stops with an error (`Unknown column \'Dhaka\'`).',
-          '| Identifier Type | Quoting Rule | Example | Status |\n|---|---|---|---|\n| Column Name | **Never quoted** | `name`, `city`, `age` | ✅ Valid column reference |\n| String Value | **Always single quotes** | `\'Dhaka\'`, `\'CSE\'`, `\'Electronics\'` | ✅ Valid text literal |\n| Number Value | **Never quoted** | `21`, `50.00`, `100` | ✅ Valid numeric literal |',
+          '| Identifier Type | Quoting Rule | Example | Status |\n|---|---|---|---|\n| Column Name | **Never quoted** | `name`, `city`, `age` | ✓ Valid column reference |\n| String Value | **Always single quotes** | `\'Dhaka\'`, `\'CSE\'`, `\'Electronics\'` | ✓ Valid text literal |\n| Number Value | **Never quoted** | `21`, `50.00`, `100` | ✓ Valid numeric literal |',
           '### Notice: The Golden Rule for Text\nAlways use **single quotes** (`\'...\'`) for text literals in SQL.',
         ],
         targetQuery: {
@@ -809,7 +809,7 @@ export const Day_02_MODULE: ModuleData = {
             stepNumber: 2,
             stepTitle: "Step 2: WHERE city = 'Dhaka' (Check text matches)",
             sqlSnippet: "WHERE city = 'Dhaka'",
-            explanation: "Rahim ('Dhaka' = 'Dhaka'): TRUE ✅\nKarim ('Gazipur' = 'Dhaka'): FALSE ❌\nAyesha ('Dhaka' = 'Dhaka'): TRUE ✅\nSumaiya ('Chattogram' = 'Dhaka'): FALSE ❌\nTanvir ('Rajshahi' = 'Dhaka'): FALSE ❌",
+            explanation: "Rahim ('Dhaka' = 'Dhaka'): TRUE ✓\nKarim ('Gazipur' = 'Dhaka'): FALSE ✕\nAyesha ('Dhaka' = 'Dhaka'): TRUE ✓\nSumaiya ('Chattogram' = 'Dhaka'): FALSE ✕\nTanvir ('Rajshahi' = 'Dhaka'): FALSE ✕",
             tableData: {
               tableName: 'Surviving Rows (city = Dhaka)',
               columns: ['id', 'name', 'age', 'department', 'city'],

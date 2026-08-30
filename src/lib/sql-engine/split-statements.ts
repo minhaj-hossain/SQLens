@@ -34,12 +34,20 @@ export function splitStatements(sql: string): string[] {
       continue;
     }
     if (ch === ';' && parenDepth === 0) {
-      if (current.trim()) out.push(current.trim());
+      if (hasRealSql(current)) out.push(current.trim());
       current = '';
       continue;
     }
     current += ch;
   }
-  if (current.trim()) out.push(current.trim());
+  if (hasRealSql(current)) out.push(current.trim());
   return out;
+}
+
+/** A chunk is a real statement only if it contains actual SQL (non-comment). */
+function hasRealSql(chunk: string): boolean {
+  // Strip `-- ...` line comments and `/* ... */` block comments, then test non-whitespace.
+  const withoutLine = chunk.replace(/--[^\n]*/g, ' ');
+  const withoutBlock = withoutLine.replace(/\/\*[\s\S]*?\*\//g, ' ');
+  return withoutBlock.trim().length > 0;
 }

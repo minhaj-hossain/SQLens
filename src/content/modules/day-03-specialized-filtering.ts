@@ -48,7 +48,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         explanation: [
           "`AND` narrows down your results. A row survives only if **every condition** evaluates to `TRUE`.",
-          "### 1. AND Logic Table\n• `TRUE AND TRUE` ---> **TRUE** ✅\n• `TRUE AND FALSE` ---> **FALSE** ❌\n• `FALSE AND TRUE` ---> **FALSE** ❌\n• `FALSE AND FALSE` ---> **FALSE** ❌",
+          "### 1. AND Logic Table\n• `TRUE AND TRUE` ---> **TRUE** ✓\n• `TRUE AND FALSE` ---> **FALSE** ✕\n• `FALSE AND TRUE` ---> **FALSE** ✕\n• `FALSE AND FALSE` ---> **FALSE** ✕",
           "Let's see how SQL checks each student against both criteria simultaneously.",
         ],
         targetQuery: {
@@ -80,7 +80,7 @@ export const Day_03_MODULE: ModuleData = {
             stepTitle: "Step 2: WHERE department = 'CSE' AND age = 21",
             sqlSnippet: "WHERE department = 'CSE' AND age = 21",
             explanation:
-              "1. Rahim: (CSE = TRUE) AND (21 = TRUE) ➔ TRUE ✅\n2. Karim: (EEE = FALSE) ➔ FALSE ❌\n3. Ayesha: (CSE = TRUE) AND (20 = FALSE) ➔ FALSE ❌\n4. Sumaiya: (BBA = FALSE) ➔ FALSE ❌\n5. Tanvir: (CSE = TRUE) AND (21 = TRUE) ➔ TRUE ✅",
+              "1. Rahim: (CSE = TRUE) AND (21 = TRUE) → TRUE ✓\n2. Karim: (EEE = FALSE) → FALSE ✕\n3. Ayesha: (CSE = TRUE) AND (20 = FALSE) → FALSE ✕\n4. Sumaiya: (BBA = FALSE) → FALSE ✕\n5. Tanvir: (CSE = TRUE) AND (21 = TRUE) → TRUE ✓",
             tableData: {
               tableName: "Surviving Rows (CSE & 21)",
               columns: ["name", "age", "department"],
@@ -228,7 +228,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         explanation: [
           "`OR` broadens your results. A row survives if **at least one** condition passes (either condition 1, condition 2, or both).",
-          "### 1. OR Logic Table\n• `TRUE OR TRUE` ---> **TRUE** ✅\n• `TRUE OR FALSE` ---> **TRUE** ✅\n• `FALSE OR TRUE` ---> **TRUE** ✅\n• `FALSE OR FALSE` ---> **FALSE** ❌",
+          "### 1. OR Logic Table\n• `TRUE OR TRUE` ---> **TRUE** ✓\n• `TRUE OR FALSE` ---> **TRUE** ✓\n• `FALSE OR TRUE` ---> **TRUE** ✓\n• `FALSE OR FALSE` ---> **FALSE** ✕",
         ],
         targetQuery: {
           sql: "SELECT name, city\nFROM students\nWHERE city = 'Dhaka' OR city = 'Gazipur';",
@@ -260,7 +260,7 @@ export const Day_03_MODULE: ModuleData = {
               "Step 2: WHERE city = 'Dhaka' OR city = 'Gazipur' (Evaluate either location)",
             sqlSnippet: "WHERE city = 'Dhaka' OR city = 'Gazipur'",
             explanation:
-              "1. Rahim: ('Dhaka' = TRUE) ➔ TRUE ✅\n2. Karim: ('Gazipur' = TRUE) ➔ TRUE ✅\n3. Ayesha: ('Dhaka' = TRUE) ➔ TRUE ✅\n4. Sumaiya: ('Chattogram' = FALSE) ➔ FALSE ❌\n5. Tanvir: ('Rajshahi' = FALSE) ➔ FALSE ❌",
+              "1. Rahim: ('Dhaka' = TRUE) → TRUE ✓\n2. Karim: ('Gazipur' = TRUE) → TRUE ✓\n3. Ayesha: ('Dhaka' = TRUE) → TRUE ✓\n4. Sumaiya: ('Chattogram' = FALSE) → FALSE ✕\n5. Tanvir: ('Rajshahi' = FALSE) → FALSE ✕",
             tableData: {
               tableName: "Surviving Rows (Dhaka or Gazipur)",
               columns: ["name", "city"],
@@ -435,7 +435,7 @@ export const Day_03_MODULE: ModuleData = {
             stepTitle: "Step 2: WHERE NOT (city = 'Dhaka') (Invert matches)",
             sqlSnippet: "WHERE NOT (city = 'Dhaka')",
             explanation:
-              "1. Rahim: NOT ('Dhaka' = 'Dhaka') ➔ NOT (TRUE) ➔ FALSE ❌\n2. Karim: NOT ('Gazipur' = 'Dhaka') ➔ NOT (FALSE) ➔ TRUE ✅\n3. Ayesha: NOT ('Dhaka' = 'Dhaka') ➔ NOT (TRUE) ➔ FALSE ❌\n4. Sumaiya: NOT ('Chattogram' = 'Dhaka') ➔ NOT (FALSE) ➔ TRUE ✅\n5. Tanvir: NOT ('Rajshahi' = 'Dhaka') ➔ NOT (FALSE) ➔ TRUE ✅",
+              "1. Rahim: NOT ('Dhaka' = 'Dhaka') → NOT (TRUE) → FALSE ✕\n2. Karim: NOT ('Gazipur' = 'Dhaka') → NOT (FALSE) → TRUE ✓\n3. Ayesha: NOT ('Dhaka' = 'Dhaka') → NOT (TRUE) → FALSE ✕\n4. Sumaiya: NOT ('Chattogram' = 'Dhaka') → NOT (FALSE) → TRUE ✓\n5. Tanvir: NOT ('Rajshahi' = 'Dhaka') → NOT (FALSE) → TRUE ✓",
             tableData: {
               tableName: "Surviving Rows (city NOT Dhaka)",
               columns: ["name", "city"],
@@ -804,7 +804,7 @@ export const Day_03_MODULE: ModuleData = {
               "Step 2: WHERE price BETWEEN 25.00 AND 100.00 (Inclusive check)",
             sqlSnippet: "WHERE price BETWEEN 25.00 AND 100.00",
             explanation:
-              "Wireless Mouse ($15.99): FALSE ❌\nBluetooth Speaker ($45.50): TRUE ✅\nMechanical Keyboard ($65.00): TRUE ✅\nOffice Chair ($120.00): FALSE ❌",
+              "Wireless Mouse ($15.99): FALSE ✕\nBluetooth Speaker ($45.50): TRUE ✓\nMechanical Keyboard ($65.00): TRUE ✓\nOffice Chair ($120.00): FALSE ✕",
             tableData: {
               tableName: "Final Query Result",
               columns: ["name", "price"],

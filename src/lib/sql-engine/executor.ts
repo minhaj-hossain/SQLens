@@ -315,6 +315,18 @@ export class SqlExecutor {
     // scripts) execute sequentially on the same database state; the result of
     // the LAST statement is returned. Any statement failing aborts the script.
     const statements = splitStatements(sql);
+    // A script that is empty or comment-only yields no statements — report a
+    // distinct, honest error instead of the parser's generic "Empty query".
+    if (statements.length === 0) {
+      return {
+        success: false,
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        executionTimeMs: 0,
+        error: 'Empty script',
+      };
+    }
     if (statements.length > 1) {
       let last: QueryExecutionResult | null = null;
       let lastData: QueryExecutionResult | null = null;

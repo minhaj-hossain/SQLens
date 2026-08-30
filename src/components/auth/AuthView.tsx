@@ -11,7 +11,7 @@ interface AuthViewProps {
 }
 
 /**
- * Auth pages ‐ a faithful port of the provided HTML design, mapped onto the
+ * Auth pages — a faithful port of the provided HTML design, mapped onto the
  * app's existing design tokens. Rendered as its own full page (no left brand
  * panel, no modal overlay): a top-left back arrow + a centered brand and
  * tabbed Sign In / Create Account form. Wired to Better Auth (email/password,
@@ -32,7 +32,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ mode, onSetMode, onBack, onS
       transition={{ duration: 0.2 }}
       className="min-h-screen bg-ink flex flex-col"
     >
-      {/* Top-left back arrow ⅎ returns to the homepage */}
+      {/* Top-left back arrow → returns to the homepage */}
       <header className="w-full max-w-[460px] mx-auto px-6 pt-6">
         <button
           onClick={onBack}
@@ -193,7 +193,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         setLoading(false);
         return;
       }
-      // Success ‐ component unmounts as the app navigates back home.
+      // Success — component unmounts as the app navigates back home.
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
@@ -205,7 +205,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
     <form className="flex flex-col gap-[18px]" onSubmit={handleSubmit} noValidate>
       <div>
         <h2 className="font-display font-semibold text-[22px] mb-1">Welcome back</h2>
-        <p className="text-text-dim text-[13.5px] mb-1">Day 2 is waiting ‐ pick up right where you left off.</p>
+        <p className="text-text-dim text-[13.5px] mb-1">Day 2 is waiting — pick up right where you left off.</p>
       </div>
 
       <OAuthButtons />
@@ -330,7 +330,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         setLoading(false);
         return;
       }
-      // Success ‐ component unmounts as the app navigates back home.
+      // Success — component unmounts as the app navigates back home.
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create your account. Please try again.');

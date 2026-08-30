@@ -487,7 +487,6 @@ return (
                       tableName={step.tableData.tableName}
                       columns={step.tableData.columns}
                       rows={step.tableData.rows}
-                      highlightedColumns={step.tableData.highlightedColumns}
                     />
                   )}
                 </div>

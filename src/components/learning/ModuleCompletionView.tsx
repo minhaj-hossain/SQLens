@@ -100,7 +100,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
               key={idx}
               className="flex items-start gap-2 text-xs text-on-surface bg-surface-dim p-2.5 rounded-lg border border-outline-variant/60"
             >
-              <span className="text-primary font-mono">☏</span>
+              <span className="text-primary font-mono">✓</span>
               <span className="leading-relaxed font-body-md">{learning}</span>
             </div>
           ))}

@@ -403,7 +403,7 @@ export const Day_17_MODULE: ModuleData = {
         },
         explanation: [
           'The rule: **both sides must return the same number of columns**, and each column pair must be type-compatible — text with text, number with number.',
-          '```sql\n-- ❌ 2 columns on top, 1 below — this ERRORS:\nSELECT name, city FROM customers\nUNION ALL\nSELECT name FROM suppliers;\n```',
+          '```sql\n-- ✕ 2 columns on top, 1 below — this ERRORS:\nSELECT name, city FROM customers\nUNION ALL\nSELECT name FROM suppliers;\n```',
           'QUESTION_BLOCK::SHAPE::Why does the engine refuse instead of padding with NULLs?',
           'Why so strict? Silently padding a missing column with NULLs would produce a directory where every supplier has a mystery city. Hiding a shape mistake would corrupt reports — so the engine errors with the exact counts: "left side: 2, right side: 1".',
           "Read the error like a mechanic: it tells you **which operator** failed and **both sides' column counts**. Count your two SELECT lists and make them agree.",
@@ -452,7 +452,7 @@ export const Day_17_MODULE: ModuleData = {
         syntaxBlocks: [
           {
             title: 'The compatibility checklist',
-            sql: 'SELECT colA, colB FROM t1\nUNION ALL\nSELECT colX, colY FROM t2;  -- ✅ 2 ↔ 2, types align',
+            sql: 'SELECT colA, colB FROM t1\nUNION ALL\nSELECT colX, colY FROM t2;  -- ✓ 2 ↔ 2, types align',
             description: 'Same column count per side; each position must be type-compatible.',
           },
         ],

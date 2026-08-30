@@ -13,7 +13,7 @@ import { StatusBadge } from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 import type { ConfirmState } from './confirm-types';
 
-/** Users tab ‐ searchable list with block/unblock/delete (confirmation-gated). */
+/** Users tab — searchable list with block/unblock/delete (confirmation-gated). */
 export default function UsersPanel({
   initial,
   onChanged,
@@ -79,7 +79,7 @@ export default function UsersPanel({
       />
 
       {rowError && (
-        <p className="font-mono text-[11px] text-error mb-3">âš  {rowError}</p>
+        <p className="font-mono text-[11px] text-error mb-3">⚠  {rowError}</p>
       )}
 
       <ul className="divide-y divide-border-soft border border-border rounded-xl overflow-hidden">
@@ -87,7 +87,7 @@ export default function UsersPanel({
           <li key={u.id} className="bg-surface px-4 py-3.5 flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1 basis-48">
               <div className="flex items-center gap-2">
-                <p className="text-sm text-text truncate">{u.name ?? '‐'}</p>
+                <p className="text-sm text-text truncate">{u.name ?? '—'}</p>
               </div>
               <p className="font-mono text-[11px] text-text-dim truncate">{u.email}</p>
               <p className="font-mono text-[10px] text-text-faint mt-0.5">
@@ -129,7 +129,7 @@ export default function UsersPanel({
         ))}
         {filtered.length === 0 && (
           <li className="bg-surface px-4 py-8 text-center font-mono text-xs text-text-dim">
-            No users match ‘{query}⬝.
+            No users match "{query}".
           </li>
         )}
       </ul>

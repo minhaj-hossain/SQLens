@@ -104,7 +104,7 @@ export const Day_35_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders'],
-          initialSql: '-- Null-safe customer order audit\nSELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;',
+          initialSql: '-- Null-safe customer order audit\nSELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE ;',
           solutionSql: 'SELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;',
           solutionExplanation: 'Preserves all 15 customers with clean 0 counts for inactive accounts.',
           hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],

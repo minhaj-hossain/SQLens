@@ -327,7 +327,7 @@ export const Day_10_MODULE: ModuleData = {
         },
         explanation: [
           'Compare these two orderings of the same tiers:',
-          '```sql\n-- ✔ correct: specific (narrow) bound first\nCASE WHEN price < 25 THEN \'Budget\'\n     WHEN price < 100 THEN \'Standard\' ELSE \'Premium\' END\n\n-- ✘ broken: greedy bound first\nCASE WHEN price < 100 THEN \'Standard\'\n     WHEN price < 25 THEN \'Budget\' ELSE \'Premium\' END\n```',
+          '```sql\n-- ✓ correct: specific (narrow) bound first\nCASE WHEN price < 25 THEN \'Budget\'\n     WHEN price < 100 THEN \'Standard\' ELSE \'Premium\' END\n\n-- ✕ broken: greedy bound first\nCASE WHEN price < 100 THEN \'Standard\'\n     WHEN price < 25 THEN \'Budget\' ELSE \'Premium\' END\n```',
           'In the broken version, every price under 100 — including 4.99 — matches the first WHEN. The `WHEN price < 25` branch can never run: **4.99 shows Standard, not Budget.** No error, no warning — just wrong labels.',
           'One more rule: if nothing matches and there is **no ELSE**, CASE outputs **NULL** (three-valued logic from Day 3 again).',
         ],
@@ -347,8 +347,8 @@ export const Day_10_MODULE: ModuleData = {
               columns: ['name', 'price', 'WHEN price < 100', 'result'],
               highlightedRows: [0],
               rows: [
-                ['Sticky Notes Pack', 4.99, 'TRUE', 'Standard ✘ (should be Budget)'],
-                ['Knife Sharpener', 12.50, 'TRUE', 'Standard ✘ (should be Budget)'],
+                ['Sticky Notes Pack', 4.99, 'TRUE', 'Standard ✕ (should be Budget)'],
+                ['Knife Sharpener', 12.50, 'TRUE', 'Standard ✕ (should be Budget)'],
                 ['Office Chair', 120.00, 'FALSE → FALSE', 'Premium (ELSE)'],
               ],
             },

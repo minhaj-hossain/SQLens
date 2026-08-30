@@ -81,15 +81,12 @@ export function DataTable({
   description,
   columns,
   rows,
-  highlightedColumns,
 }: {
   tableName?: string;
   description?: string;
   columns: string[];
   rows: (string | number | null)[][];
-  highlightedColumns?: string[];
 }) {
-  const hl = new Set(highlightedColumns || []);
   return (
     <div className="rounded-lg overflow-hidden border border-border bg-surface">
       {tableName && (
@@ -114,9 +111,7 @@ export function DataTable({
               {columns.map((col) => (
                 <th
                   key={col}
-                  className={`text-left font-semibold text-text px-3.5 py-2 bg-surface-2 border-b border-border whitespace-nowrap ${
-                    hl.has(col) ? 'text-ink bg-done' : ''
-                  }`}
+                  className="text-left font-semibold text-text px-3.5 py-2 bg-surface-2 border-b border-border-soft whitespace-nowrap"
                 >
                   {col}
                 </th>
@@ -128,16 +123,13 @@ export function DataTable({
               <tr key={rIdx} className="hover:bg-surface-2 transition-colors">
                 {row.map((cell, cIdx) => {
                   const col = columns[cIdx];
-                  const isHl = hl.has(col);
                   const isId = cIdx === 0 && col.toLowerCase() === 'id';
                   const cellText = cell === null || cell === undefined ? 'NULL' : String(cell);
                   return (
                     <td
                       key={cIdx}
-                      className={`px-3.5 py-2 border-b border-border-soft whitespace-nowrap ${
-                        isHl
-                          ? 'text-text font-semibold'
-                          : isId
+                      className={`px-3.5 py-2 border-b border-border-soft border-r border-border-soft/60 last:border-r-0 whitespace-nowrap ${
+                        isId
                           ? 'text-text-faint'
                           : cell === null || cell === undefined
                           ? 'text-text-faint italic'

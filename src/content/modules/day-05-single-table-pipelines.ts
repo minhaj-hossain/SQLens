@@ -128,7 +128,7 @@ export const Day_05_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Task 1: High Guidance - Low stock inventory worst-first\nSELECT name, quantity_in_stock, reorder_level\nFROM products\nWHERE quantity_in_stock <= reorder_level\nORDER BY quantity_in_stock ASC;',
+          initialSql: '-- Task 1: High Guidance - Low stock inventory worst-first\nSELECT name, quantity_in_stock, reorder_level\nFROM products\nWHERE ;',
           solutionSql: 'SELECT name, quantity_in_stock, reorder_level FROM products WHERE quantity_in_stock <= reorder_level ORDER BY quantity_in_stock ASC;',
           solutionExplanation: 'Filters for items at or below the reorder threshold and sorts lowest stock first.',
           hints: [

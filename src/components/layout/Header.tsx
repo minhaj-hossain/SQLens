@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Icon name="database" className="text-[16px]" />
           </button>
 
-          {/* SQL Playground ‐ real route since Phase 1 */}
+          {/* SQL Playground — real route since Phase 1 */}
           <Link
             href="/playground"
             title="Open SQL Playground"
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
               {/* Avatar + popover share one hover wrapper so the mouse can move
                   from the circle into the menu without closing it. The admin
-                  shield stays OUTSIDE this wrapper ‐ hovering it never opens
+                  shield stays OUTSIDE this wrapper — hovering it never opens
                   the account menu. */}
               <div
                 className="relative"
@@ -155,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 />
               </button>
-              {/* Profile popover ‐ opens on hover/tap */}
+              {/* Profile popover — opens on hover/tap */}
               <AnimatePresence>
                 {userMenuOpen && (
                   <>

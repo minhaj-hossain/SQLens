@@ -214,13 +214,13 @@ Coverage highlights (all covered by tests):
 
 | Capability | 👻 Guest | 👤 User | 🛡️ Admin |
 |---|:---:|:---:|:---:|
-| Browse all lessons & curriculum | ✅ | ✅ | ✅ |
-| Run queries / playground | ✅ | ✅ | ✅ |
-| Progress saved across refreshes | ✅ local | ✅ local | ✅ local |
-| Progress synced across devices | ❌ | ✅ | ✅ |
-| Unlock modules by schedule | ✅ | ✅ | ✅ |
-| Manage users / roles | ❌ | ❌ | ✅ |
-| Access `/admin` dashboard | ❌ redirect | ❌ redirect | ✅ |
+| Browse all lessons & curriculum | ✓ | ✓ | ✓ |
+| Run queries / playground | ✓ | ✓ | ✓ |
+| Progress saved across refreshes | ✓ local | ✓ local | ✓ local |
+| Progress synced across devices | ✕ | ✓ | ✓ |
+| Unlock modules by schedule | ✓ | ✓ | ✓ |
+| Manage users / roles | ✕ | ✕ | ✓ |
+| Access `/admin` dashboard | ✕ redirect | ✕ redirect | ✓ |
 
 ```mermaid
 flowchart LR
@@ -294,9 +294,9 @@ focused workspace and remembers your draft + history between visits.
 │  …            │ └─────────────────────────────────────────────┘ │
 │               │ [Ctrl+Enter run] [Ctrl+Space suggest]    Run ▶  │
 │               ├─────────────────────────────────────────────────┤
-│               │ #1 ✔ executed ······ 0 rows affected            │
-│               │ #2 ✔ executed ······ 2 rows affected            │
-│               │ #3 ✔ 1 row · 0ms          [Copy] [CSV]          │
+│               │ #1 ✓ executed ······ 0 rows affected            │
+│               │ #2 ✓ executed ······ 2 rows affected            │
+│               │ #3 ✓ 1 row · 0ms          [Copy] [CSV]          │
 │               │      total                                      │
 │               │      -----                                      │
 │               │      2                                          │
@@ -363,9 +363,9 @@ Create a `.env` file (never commit it) based on `.env.example`:
 
 | Variable | Required | Purpose |
 |---|:---:|---|
-| `BETTER_AUTH_SECRET` | ✅ | Session/token signing secret — generate with `openssl rand -base64 32` |
-| `BETTER_AUTH_URL` | ✅ | Public base URL; must match your deployment (cookies + redirects depend on it) |
-| `MONGODB_URI` | ✅ | Official-driver connection string — Atlas: `mongodb+srv://…`, local: `mongodb://localhost:27017/sqlens` |
+| `BETTER_AUTH_SECRET` | ✓ | Session/token signing secret — generate with `openssl rand -base64 32` |
+| `BETTER_AUTH_URL` | ✓ | Public base URL; must match your deployment (cookies + redirects depend on it) |
+| `MONGODB_URI` | ✓ | Official-driver connection string — Atlas: `mongodb+srv://…`, local: `mongodb://localhost:27017/sqlens` |
 | `MONGODB_DB_NAME` | ➖ | Optional db-name override (defaults to the URI's last path segment) |
 
 Without valid MongoDB settings the app still renders and guests still work — only auth/sync
@@ -517,15 +517,15 @@ Adding a custom domain? Point `BETTER_AUTH_URL` (plus canonical/sitemap defaults
 
 ---
 
-## ✅ Quality & Testing
+## ✓ Quality & Testing
 
 ```text
 $ npm test            # Vitest: 93 tests across 8 suites (engine, windows, set-ops,
                       # transactions, EXPLAIN, DDL constraints, scripts, module order)
-  ✔ 93 passed, 0 failed
+  ✓ 93 passed, 0 failed
 
 $ npm run test:engine
-  ✔ 46 passed, 0 failed
+  ✓ 46 passed, 0 failed
 
 $ npm run verify:curriculum
   35 modules · 38 days · 98 concepts · 309 tasks · 153 MCQs

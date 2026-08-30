@@ -31,13 +31,13 @@ const MODE_META: Record<
   },
   locked: {
     label: 'Locked',
-    hint: 'Closed for everyone ‐ even users who finished the previous day.',
+    hint: 'Closed for everyone — even users who finished the previous day.',
     badge: 'bg-error/10 text-error border-error/30',
   },
 };
 
 /**
- * Curriculum Control tab ‐ global unlock configuration for all 38 Days.
+ * Curriculum Control tab — global unlock configuration for all 38 Days.
  * The database is authoritative; this panel only writes config via the
  * admin API (which re-verifies role/status on every request).
  */
@@ -254,7 +254,7 @@ function ModuleRows({
 
               {mode === 'scheduled' && rec?.unlockAt && (
                 <span className="font-mono text-[11px] text-func">
-                  ⅎ {new Date(rec.unlockAt).toLocaleString()}
+                  → {new Date(rec.unlockAt).toLocaleString()}
                 </span>
               )}
 

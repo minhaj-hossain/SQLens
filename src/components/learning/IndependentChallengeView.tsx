@@ -31,7 +31,7 @@ interface IndependentChallengeViewProps {
   onFinishAllChallenges: () => void;
   onBackToPractice?: () => void;
   /** v2: called on every task switch so the host can honor the challenge's
-   *  lifecycle (fresh ⅎ reset DB; inherit ⅎ keep mutated state). */
+   *  lifecycle (fresh → reset DB; inherit → keep mutated state). */
   onSelectedTaskChange?: (taskId: string) => void;
 }
 
@@ -395,7 +395,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                   }`}
                 >
                   {isTaskDone && (
-                    <span className="text-done font-bold text-xs">☏</span>
+                    <span className="text-done font-bold text-xs">✓</span>
                   )}
                   <span>Task {idx + 1}</span>
                 </button>
@@ -552,7 +552,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               onClick={handleNextAction}
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
             >
-              <span>{isLastTask ? 'Finish Challenge 𚏅' : 'Next Task ⅎ'}</span>
+              <span>{isLastTask ? 'Finish Challenge' : 'Next Task'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
@@ -583,7 +583,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               <div className="p-4 rounded-xl bg-func/10 border border-func/40 flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-func shrink-0 mt-0.5" />
                 <div className="space-y-0.5 text-left">
-                  <h3 className="font-display text-sm font-bold text-func">☏ Correct!</h3>
+                  <h3 className="font-display text-sm font-bold text-func">✓ Correct!</h3>
                   <p className="text-xs text-text leading-relaxed">
                     {cleanBackticks(currentTask.successMessage) || 'Your query returned the expected result.'}
                   </p>
@@ -596,7 +596,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               <div className="p-4 rounded-xl bg-error/10 border border-error/30 flex items-start gap-3">
                 <XCircle className="w-5 h-5 text-error shrink-0 mt-0.5" />
                 <div className="space-y-1 text-left">
-                  <h3 className="font-display text-sm font-bold text-error">☑ Not quite</h3>
+                  <h3 className="font-display text-sm font-bold text-error">Not quite</h3>
                   <p className="text-xs text-text leading-relaxed font-mono">
                     {validationFeedback}
                   </p>
@@ -666,7 +666,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                   onClick={() => setRevealedHintLevel((prev) => Math.min(prev + 1, maxHints))}
                   className="text-xs font-mono text-text-dim hover:text-text transition cursor-pointer font-semibold"
                 >
-                  Stronger Hint ⅎ
+                  Stronger Hint →
                 </button>
               )}
             </div>
@@ -746,7 +746,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     className="px-2 py-0.5 rounded bg-surface hover:bg-surface-3 hover:text-text text-text border border-border transition cursor-pointer whitespace-nowrap"
                     title="Click to copy column name"
                   >
-                    {copiedColumn === c.name ? `☏ ${c.name}` : c.name}
+                    {copiedColumn === c.name ? `✓ ${c.name}` : c.name}
                   </button>
                 ))}
               </div>

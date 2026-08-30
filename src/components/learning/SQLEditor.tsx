@@ -375,7 +375,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             >
               <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between">
                 <span>Suggestions</span>
-                <span className="text-[9px] text-text-faint font-normal">Tab ↥</span>
+                <span className="text-[9px] text-text-faint font-normal">Tab ↑</span>
               </div>
               {suggestions.map((sug, idx) => (
                 <div
@@ -431,7 +431,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <span className="hidden sm:inline">to run &amp; check</span>
         </div>
 
-        {/* Single Smart Button: Run ⅎ Check ⅎ Next */}
+        {/* Single Smart Button: Run → Check → Next */}
         <div className="flex items-center gap-2.5">
           {evaluationState === 'correct' && onNextAction ? (
             <button

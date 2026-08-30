@@ -190,7 +190,7 @@ export const Day_16_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders'],
-          initialSql: '-- Task 1: Complete 7-clause query pipeline\nSELECT c.name, COUNT(o.order_id) AS valid_orders\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nWHERE o.status != \'cancelled\'\nGROUP BY c.customer_id, c.name\nHAVING COUNT(o.order_id) >= 1\nORDER BY valid_orders DESC\nLIMIT 5;',
+          initialSql: '-- Task 1: Complete 7-clause query pipeline\nSELECT c.name, COUNT(o.order_id) AS valid_orders\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nWHERE o.status != \'cancelled\'\nGROUP BY c.customer_id, c.name\nHAVING COUNT(o.order_id) >= 1\nORDER BY valid_orders ;',
           solutionSql: 'SELECT c.name, COUNT(o.order_id) AS valid_orders FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY valid_orders DESC LIMIT 5;',
           solutionExplanation: 'Demonstrates the complete 7-clause logical pipeline.',
           hints: [

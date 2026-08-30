@@ -119,7 +119,7 @@ export const Day_19_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders', 'order_items'],
-          initialSql: '-- Task 1: Recent customer spend with date filter\nSELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE o.order_date >= \'2026-06-25\'\nGROUP BY c.customer_id, c.name\nORDER BY recent_spend DESC;',
+          initialSql: '-- Task 1: Recent customer spend with date filter\nSELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE ;',
           solutionSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;',
           solutionExplanation: 'Filters by date range, joins line items, and sums total spend per customer.',
           hints: [

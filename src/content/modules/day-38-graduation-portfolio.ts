@@ -105,7 +105,7 @@ export const Day_38_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Exploration 1: Rank products inside categories\nSELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank\nFROM products;\n',
+          initialSql: '-- Exploration 1: Rank products inside categories\nSELECT name, category_id, price\nFROM products;',
           solutionSql: 'SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank FROM products;',
           solutionExplanation: 'Ranks products by price within each category.',
           hints: [{ level: 1, text: 'Use `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank`' }],

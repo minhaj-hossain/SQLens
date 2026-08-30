@@ -128,7 +128,7 @@ export const Day_13_MODULE: ModuleData = {
           ],
           type: 'guided',
           primaryTable: 'products',
-          initialSql: '-- Task 1: High Guidance - Category overview widget\nSELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 15\nORDER BY product_count DESC;',
+          initialSql: '-- Task 1: High Guidance - Category overview widget\nSELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price\nFROM products\nGROUP BY category_id\nHAVING AVG(price) > 15\nORDER BY product_count ;',
           solutionSql: 'SELECT category_id, COUNT(*) AS product_count, AVG(price) AS avg_price FROM products GROUP BY category_id HAVING AVG(price) > 15 ORDER BY product_count DESC;',
           solutionExplanation: 'Computes metrics, filters categories averaging > $15, and sorts by count descending.',
           hints: [

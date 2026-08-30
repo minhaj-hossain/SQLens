@@ -321,7 +321,7 @@ export const Day_21_MODULE: ModuleData = {
           '### 2. The Three-Valued Logic NULL Trap',
           '1. In SQL three-valued logic, `product_id != NULL` evaluates to **UNKNOWN**.\n2. In boolean algebra: `TRUE AND UNKNOWN` evaluates to **UNKNOWN**.\n3. Because `WHERE` only retains rows evaluating to `TRUE`, the query **silently drops ALL rows and returns 0 results!**',
           '### 3. The Safe Pattern: Always Filter Out NULLs in Inner Queries',
-          '```sql\n-- ✅ Always include WHERE col IS NOT NULL in subqueries used with NOT IN:\nSELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);\n```',
+          '```sql\n-- ✓ Always include WHERE col IS NOT NULL in subqueries used with NOT IN:\nSELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);\n```',
         ],
         targetQuery: {
           sql: 'SELECT name, price\nFROM products\nWHERE product_id NOT IN (\n  SELECT product_id FROM order_items WHERE product_id IS NOT NULL\n);',
@@ -366,9 +366,9 @@ export const Day_21_MODULE: ModuleData = {
           },
         ],
         keyTakeaway: 'Always add WHERE column IS NOT NULL inside a NOT IN subquery to prevent the three-valued logic NULL trap.',
-        exampleQuery: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+        exampleQuery: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);',
         exampleQueryExplanation: 'Finds products that have never been ordered.',
-        liveDemoSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+        liveDemoSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);',
         liveDemoNotes: 'Displays the 6 products with zero sales history.',
         mcqs: [
           {
@@ -402,7 +402,7 @@ export const Day_21_MODULE: ModuleData = {
           primaryTable: 'products',
           secondaryTables: ['order_items'],
           initialSql: '-- Safe NOT IN subquery\n',
-          solutionSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
+          solutionSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);',
           solutionExplanation: 'Safely finds the 6 products that have zero order records.',
           hints: [{ level: 1, text: 'Use `WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);`' }],
           validation: {
@@ -425,7 +425,7 @@ export const Day_21_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'products',
           secondaryTables: ['order_items'],
-          initialSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);\n',
+          initialSql: '-- Fix: the NULL trap. Make the subquery skip NULL product IDs.\nSELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);\n',
           solutionSql: 'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);',
           solutionExplanation: 'Adding `WHERE product_id IS NOT NULL` prevents NULL values from destroying the NOT IN logic.',
           hints: [{ level: 1, text: 'Add `WHERE product_id IS NOT NULL` inside the inner subquery.' }],
@@ -434,6 +434,17 @@ export const Day_21_MODULE: ModuleData = {
             requireWhere: true,
             requiredColumns: ['name', 'price'],
             expectedRowCount: 6,
+            // Result-count alone cannot distinguish the broken starter (the
+            // seeded order_items happen to contain no NULLs), so guard the
+            // AST: the NOT IN subquery MUST contain the IS NOT NULL filter.
+            customValidator: (queryAst) => {
+              const where = String(queryAst?.whereClause ?? '');
+              if (/IS\s+NOT\s+NULL/i.test(where)) return { valid: true };
+              return {
+                valid: false,
+                message: 'The inner subquery must skip NULL product IDs — add `WHERE product_id IS NOT NULL` inside the subquery.',
+              };
+            },
           },
           successMessage: 'Spot on! You defeated the classic three-valued logic NOT IN NULL trap.',
         },

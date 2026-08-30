@@ -55,7 +55,7 @@ function didYouMean(word: string): string | null {
 function friendlyError(raw: string): string {
   let msg = raw;
 
-  // Unknown table typos ⅎ suggest closest table
+  // Unknown table typos → suggest closest table
   const tableMatch = msg.match(/Table '([^']+)' does not exist/i);
   if (tableMatch) {
     const hint = didYouMean(tableMatch[1]);
@@ -121,7 +121,7 @@ function decodeSqlFromUrl(encoded: string): string | null {
 }
 
 /** Splits a SQL script on top-level `;` (quote/paren aware) so each statement
- *  can be executed in order ‐ multi-statement script support. */
+ *  can be executed in order — multi-statement script support. */
 function splitStatements(sql: string): string[] {
   const out: string[] = [];
   let current = '';
@@ -201,7 +201,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
       try {
         setHistory(JSON.parse(saved));
       } catch {
-        /* corrupted history ‐ ignore */
+        /* corrupted history — ignore */
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -246,14 +246,14 @@ export default function Playground({ onClose }: PlaygroundProps) {
       try {
         localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
       } catch {
-        /* storage full ‐ skip */
+        /* storage full — skip */
       }
       return next;
     });
     setShowHistory(false);
   }, [sql, dbMode]);
 
-  /** Ctrl+Space autocomplete ‐ suggests keywords, tables, and columns matching
+  /** Ctrl+Space autocomplete — suggests keywords, tables, and columns matching
    *  the word currently being typed. */
   const showSuggestions = useCallback(() => {
     const ta = textareaRef.current;
@@ -429,7 +429,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
               } disabled:opacity-40 disabled:cursor-not-allowed`}
               title="Copy a link that opens this exact query"
             >
-              {shareCopied ? 'Link copied ☏' : 'Share'}
+              {shareCopied ? 'Link copied ✓' : 'Share'}
             </button>
             <button
               onClick={onClose}
@@ -620,7 +620,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                       className="text-[11px] font-mono text-text-dim hover:text-text px-2 py-0.5 rounded hover:bg-ink transition cursor-pointer"
                       title="Copy as CSV"
                     >
-                      {copiedKey === `${idx}` ? 'Copied ☏' : 'Copy'}
+                      {copiedKey === `${idx}` ? 'Copied ✓' : 'Copy'}
                     </button>
                     <button
                       onClick={() => downloadResult(`${idx}`, r)}
@@ -647,7 +647,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                   </div>
                 ) : r.rows.length === 0 ? (
                   <div className="p-4 text-text-dim font-mono text-xs text-center">
-                    Executed successfully ‐ no result set
+                    Executed successfully — no result set
                     {r.affectedRows !== undefined ? ` (${r.affectedRows} rows affected)` : ''}.
                   </div>
                 ) : (

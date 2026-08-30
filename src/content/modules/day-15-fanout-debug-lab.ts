@@ -41,9 +41,9 @@ export const Day_15_MODULE: ModuleData = {
           '• Rahim placed **2 orders** (Order #1 and Order #14).',
           '• Order #1 has 2 line items $\\rightarrow$ creates 2 rows.',
           '• Order #14 has 3 line items $\\rightarrow$ creates 3 rows.',
-          '• Running `COUNT(o.order_id)` returns **5** ❌ (it counts duplicate joined rows!).',
+          '• Running `COUNT(o.order_id)` returns **5** ✕ (it counts duplicate joined rows!).',
           '### 2. The Solution: COUNT(DISTINCT o.order_id)',
-          '`COUNT(DISTINCT o.order_id)` ignores duplicate order IDs and returns **2** ✅.',
+          '`COUNT(DISTINCT o.order_id)` ignores duplicate order IDs and returns **2** ✓.',
           'Whenever you aggregate parent entities while joining down a one-to-many relationship, ALWAYS use `COUNT(DISTINCT parent_pk)`.',
         ],
         targetQuery: {
@@ -129,7 +129,7 @@ export const Day_15_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'customers',
           secondaryTables: ['orders', 'order_items'],
-          initialSql: '-- Fix the overcounting query below\nSELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY c.customer_id, c.name;',
+          initialSql: '-- Fix the overcounting query below\nSELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent\nFROM customers c\nJOIN orders o ON c.customer_id = o.customer_id\nJOIN order_items oi ON o.order_id = oi.order_id\nWHERE ;',
           solutionSql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name;',
           solutionExplanation: 'Multi-table join calculating accurate customer order totals using COUNT(DISTINCT).',
           hints: [
