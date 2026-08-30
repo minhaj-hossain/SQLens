@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 /**
- * TheoryView — client view for /learn/[dayId]/theory/[conceptId].
+ * TheoryView â€” client view for /learn/[dayId]/theory/[conceptId].
  * Extracted from the page (Phase 4) so the page can be a server component
  * with generateMetadata while this component stays client-side (module data
  * contains non-serializable validators and imports directly here).
@@ -10,7 +10,8 @@ import { useRouter, notFound } from 'next/navigation';
 import { getModuleById } from '@/content/curriculum-index';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { learnUrl } from '@/lib/learn-routes';
-import { ConceptLessonView } from '@/components/learning/ConceptLessonView';
+import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
+
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -46,6 +47,9 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
       concept={concept}
       conceptIndex={conceptIndex}
       totalConcepts={mod.concepts.length}
+      conceptDots={mod.concepts.map((cc) =>
+        isConceptCompleted(cc, mod.id, userState) ? 'done' : cc.id === concept.id ? 'current' : 'todo',
+      )}
       onStartPractice={() => nav.startPractice(mod.id, concept.id)}
       onExecuteSql={executeQuery}
       onPrevious={() => {

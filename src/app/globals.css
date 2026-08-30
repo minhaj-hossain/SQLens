@@ -46,6 +46,11 @@
   --editor-selection: rgba(244, 196, 48, 0.12);
   --editor-active-line: rgba(255, 255, 255, 0.03);
 
+  /* grayscale SQL syntax (concept/syntax blocks - weight + lightness, not hue) */
+  --code-kw: #ffffff;    /* SQL keywords - white, weight 700 */
+  --code-ident: #a9a9a3; /* identifiers / literals - mid gray */
+  --code-punc: #6b6b65;  /* ; , ( ) etc - dim gray */
+
   /* functional error — the only non-gray, non-gold color */
   --error: #e06c5b;
   --danger: #e06c5b;
@@ -109,6 +114,12 @@
   --color-editor-active-line: rgba(255, 255, 255, 0.03);
   --color-editor-caret: #f4c430;
   --color-editor-selection: rgba(244, 196, 48, 0.12);
+
+  /* grayscale SQL syntax tokens */
+  --color-code-kw: #ffffff;
+  --color-code-ident: #a9a9a3;
+  --color-code-punc: #6b6b65;
+  --color-code-comment: #55554f;
   /* error */
   --color-error: #e06c5b;
   --color-error-container: #43150d;

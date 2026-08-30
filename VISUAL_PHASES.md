@@ -85,4 +85,13 @@
 - P6 COMPLETE - Auth+Admin neutral/gold; error-red reserved; brand mark + Google G monochrome.
 - P7 COMPLETE - full monochrome sweep (incl. inline styles); dead sidebar deleted; canvas-confetti removed.
 - P8 COMPLETE - tsc 0, 93/93 tests, build green (heap bump needed on this machine).
+- P9 COMPLETE - concept page rebuilt to SQL Lesson design (grayscale code tokens, dots, pills, steps, demo, MCQ); AST-level brace fix; tsc green.
 
+
+
+### P9 - Concept (lesson) page redesign (SQL Lesson design)
+- [x] globals.css: grayscale code tokens added (--code-kw #ffffff / --code-ident #a9a9a3 / --code-punc #6b6b65 / --code-comment #55554f)
+- [x] sql-blocks.tsx created: highlightSql() grayscale tokenizer + shared code/table recipes
+- [x] ConceptLessonView rebuilt: 760px lesson card, crumb + progress dots (done/current/todo), gold Next, concept pill grid, step-by-step tables, live demo card, lettered MCQ states, gold-rail takeaway
+- [x] TheoryView wired: real per-concept dots from userState
+- [x] Brace-imbalance bug fixed (ExplanationItem missing close swallowed file; found via TS AST walk); tsc exit 0
