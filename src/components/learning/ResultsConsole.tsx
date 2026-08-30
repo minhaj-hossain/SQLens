@@ -88,14 +88,14 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   return (
     <div
       id="results-console-container"
-      className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden shadow-lg ${className}`}
+      className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden ${className}`}
     >
       {/* Console Header & Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 bg-ink border-b border-border">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-4 py-3.5 bg-surface border-b border-border-soft">
         <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-func" />
-          <span className="font-mono text-xs font-bold text-text uppercase tracking-wider">
-            Query Results
+          <Terminal className="w-4 h-4 text-text-dim" />
+          <span className="font-mono text-[12px] font-semibold text-text-dim uppercase tracking-wider">
+            &gt;_ Query Results
           </span>
 
           {/* Execution Metadata Pills */}
@@ -104,25 +104,25 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
                 {totalRows} {totalRows === 1 ? 'row' : 'rows'}
               </span>
-              <span className="px-2 py-0.5 rounded bg-surface-2 text-string text-[10px] font-mono border border-border">
+              <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
                 {result.columns?.length || 0} cols
               </span>
-              <span className="px-2 py-0.5 rounded bg-surface-2 text-func text-[10px] font-mono border border-border">
+              <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
                 {result.executionTimeMs?.toFixed(1) || '1.2'}ms
               </span>
             </div>
           )}
         </div>
 
-        {/* Console View Tabs */}
+        {/* Segmented View Switch (design `.segmented` / `.seg`) */}
         <div className="flex items-center bg-surface-2 p-0.5 rounded-lg border border-border text-xs">
           <button
             id="tab-result-table-btn"
             onClick={() => setActiveTab('results')}
             className={`px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
               activeTab === 'results'
-                ? 'bg-func/20 text-func font-bold border border-func/30'
-                : 'text-text-dim hover:text-text'
+                ? 'bg-surface-3 text-text font-semibold'
+                : 'text-text-faint hover:text-text-dim'
             }`}
           >
             Output Grid
@@ -132,11 +132,11 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             onClick={() => setActiveTab('explain')}
             className={`flex items-center gap-1 px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
               activeTab === 'explain'
-                ? 'bg-func/20 text-func font-bold border border-func/30'
-                : 'text-text-dim hover:text-text'
+                ? 'bg-surface-3 text-text font-semibold'
+                : 'text-text-faint hover:text-text-dim'
             }`}
           >
-            <Sparkles className="w-3 h-3 text-func" />
+            <Sparkles className="w-3 h-3 text-text-dim" />
             <span>Explain Query</span>
           </button>
         </div>
@@ -173,14 +173,14 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             <span>← Swipe horizontally to view all columns →</span>
           </div>
         )}
-        <div className="min-h-[160px] max-h-[300px] overflow-auto bg-ink scrollbar-thin">
+        <div className="min-h-[160px] max-h-[300px] overflow-auto bg-surface scrollbar-thin">
           {activeTab === 'explain' ? (
             <div className="p-4 space-y-3 font-mono text-xs">
               <div className="text-text flex items-center gap-2 font-bold">
                 <Sparkles className="w-4 h-4 text-func" />
                 <span>Query Execution Breakdown</span>
               </div>
-              <p className="p-3 bg-surface rounded-lg border border-border text-text leading-relaxed font-normal">
+              <p className="p-3 bg-surface-2 rounded-lg border border-border text-text leading-relaxed font-normal">
                 {getQueryExplanation(sqlQuery)}
               </p>
               <div className="text-[11px] text-text-dim">
@@ -188,10 +188,10 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               </div>
             </div>
           ) : !result ? (
-            /* Empty / Initial State */
-            <div className="flex flex-col items-center justify-center py-12 text-center text-text-dim space-y-2">
-              <Terminal className="w-8 h-8 text-text-faint" />
-              <p className="text-xs font-mono">Run your query to preview rows and inspect execution output.</p>
+            /* Empty / Initial State (design `.results-empty`) */
+            <div className="flex flex-col items-center justify-center py-14 text-center space-y-3">
+              <div className="font-mono text-[26px] leading-none text-text-faint">&gt;_</div>
+              <p className="text-[12.5px] text-text-dim max-w-[320px]">Run your query to preview rows and inspect execution output.</p>
             </div>
           ) : result.error ? (
             /* Error Display */
@@ -244,7 +244,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
 
       {/* Pagination Footer (if more than 8 rows) */}
       {result && totalRows > pageSize && activeTab === 'results' && (
-        <div className="flex items-center justify-between px-3 py-2 bg-ink border-t border-border text-xs text-text-dim font-mono">
+        <div className="flex items-center justify-between px-3 py-2 bg-surface-2 border-t border-border-soft text-xs text-text-dim font-mono">
           <span>
             Page {page + 1} of {totalPages} ({totalRows} total records)
           </span>

@@ -13,7 +13,7 @@ import { StatusBadge } from './StatusBadge';
 import ConfirmDialog from './ConfirmDialog';
 import type { ConfirmState } from './confirm-types';
 
-/** Users tab â€” searchable list with block/unblock/delete (confirmation-gated). */
+/** Users tab ‐ searchable list with block/unblock/delete (confirmation-gated). */
 export default function UsersPanel({
   initial,
   onChanged,
@@ -74,7 +74,7 @@ export default function UsersPanel({
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by name or emailâ€¦"
+        placeholder="Search by name or email⬦"
         className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func/50 mb-4"
       />
 
@@ -87,7 +87,7 @@ export default function UsersPanel({
           <li key={u.id} className="bg-surface px-4 py-3.5 flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1 basis-48">
               <div className="flex items-center gap-2">
-                <p className="text-sm text-text truncate">{u.name ?? 'â€”'}</p>
+                <p className="text-sm text-text truncate">{u.name ?? '‐'}</p>
               </div>
               <p className="font-mono text-[11px] text-text-dim truncate">{u.email}</p>
               <p className="font-mono text-[10px] text-text-faint mt-0.5">
@@ -129,7 +129,7 @@ export default function UsersPanel({
         ))}
         {filtered.length === 0 && (
           <li className="bg-surface px-4 py-8 text-center font-mono text-xs text-text-dim">
-            No users match â€œ{query}â€.
+            No users match ‘{query}⬝.
           </li>
         )}
       </ul>

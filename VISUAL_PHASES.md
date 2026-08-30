@@ -1,4 +1,4 @@
-﻿# SQLens Visual System - Phase Tracker
+# SQLens Visual System - Phase Tracker
 
 > Live status file for the visual-system redesign (approved plan, Amendments 1-4).
 > Basis: monochrome grays + ONE gold accent (#f4c430) that only marks "you are here";
@@ -10,7 +10,7 @@
 | bg | #0a0a0a |
 | surface / surface-2 / surface-3 | #131313 / #1a1a1a / #212121 |
 | border / border-soft | #262626 / #1c1c1c |
-| text / text-dim / text-faint | #f2f2f0 / #93938e / #55554f |
+| text / text-dim / text-faint | #f2f2f0 / #93938e / #83837c (P9.2 lift) |
 | accent (gold) | #f4c430 (+ 13% dim / 33% line alphas) |
 | done (filled node) | #d8d8d3 |
 | error (errors only) | #e06c5b |
@@ -95,3 +95,37 @@
 - [x] ConceptLessonView rebuilt: 760px lesson card, crumb + progress dots (done/current/todo), gold Next, concept pill grid, step-by-step tables, live demo card, lettered MCQ states, gold-rail takeaway
 - [x] TheoryView wired: real per-concept dots from userState
 - [x] Brace-imbalance bug fixed (ExplanationItem missing close swallowed file; found via TS AST walk); tsc exit 0
+- P9.1 FIX - highlightSql placeholder leak (___TOKEN_n___ rendered in UI): tokenizer extracted to src/lib/highlight-sql.ts, identifier/number passes now guard against re-stashing placeholders, restore made LIFO, HTML entities stashed (were being split into literal text); 10 regression tests added (103 total green).
+
+---
+
+## P9.2 - Contrast balance + ONE highlighter (pure white banned)
+
+- [x] text-faint lift: #55554f -> #83837c (:root + @theme) — passes AA on all surfaces (4.2-5.2:1 vs prior 2.2-2.6:1); fixes lesson crumb, table desc, code-card titles, section labels app-wide, consistently
+- [x] Pure white banned: --code-kw #ffffff -> #f2f2f0 (same as headings); ConfirmDialog error buttons text-white -> text-ink (3.25:1 -> 6.1:1); zero #ffffff / text-white left in src
+- [x] Role upgrades: demo "How it works" hint + DataTable top-right description -> text-dim (informational, not chrome)
+- [x] ONE highlighter: highlightSql + SQL_KEYWORDS exported from @/lib/highlight-sql; SQLEditor + IndependentChallengeView inline tokenizers deleted; Playground textarea got the overlay (was unhighlighted); case preserved as typed (toUpperCase removed)
+- [x] Demo duplicate fixed (P9.2d): query renders once — highlighted layer visible, input transparent-text + gold caret stacked over it (scroll-synced)
+- [x] Mojibake purged from src (0 files) incl. Playground db-mode label / suggestion header / placeholder
+- [x] Gates: tsc exit 0; 105/105 tests; build exit 0
+
+---
+
+## P9.3 - Task (practice) page rebuilt to the 2-column workbench design
+
+- [x] TaskInstructions: design task card — crumb TASK N/M + concept title (faint/dim), Done badge (gray tick circle) + ghost Lesson badge, 19px semibold statement, mono meta strip (TABLE / COLUMNS / EXPECTED ROWS with hairline dividers), collapsible help row (hints/solution logic kept)
+- [x] DatabaseExplorer: surface header (db-select + rows · cols meta), underline Preview/Schema/ER-Graph tabs (active = text + white underline, NOT gold), PK/FK key-tags + type line in table headers, required-column gold underline kept, editor-bg replaced with surface
+- [x] SQLEditor: flat card (shadows dropped), surface header/footer bars, sans-serif gold Run & Check / Next buttons (design `.btn-gold`)
+- [x] ResultsConsole: `>_ QUERY RESULTS` dim mono header, neutral metadata pills (no gold), segmented Output Grid / Explain switch (active = surface-3, NOT gold), `>_` empty state, surface content area
+- [x] PracticeTaskView: max-w 1440, gap-5 two-column grid (mobile order Task -> Editor -> Results -> Explorer preserved)
+- [x] Colors = the P9.2 token set (kw #f2f2f0, faint #83837c) — zero new colors; gold still only marks active/required/correct/run
+- [x] Mojibake swipe-hint lines replaced with real ←/→ arrows
+- [x] Gates: tsc exit 0; 105/105 tests; build exit 0
+
+---
+
+## P9.4 - Final challenge palette + app-wide mojibake purge
+
+- [x] IndependentChallengeView re-tokened to the locked palette: FINAL CHALLENGE crumb / task tabs / hints / ms pills / icons moved off gold + legacy string/keyword tokens to gray tiers; active task tab = surface-3 (design segmented pattern); Run/Finish buttons = design .btn-gold (sans, semibold, no glow shadow); gold now only on Run buttons, active-line gutter, autocomplete accent and the Correct banner
+- [x] App-wide mojibake purge: 47 lines across 13 files re-decoded (cp1252 reverse-map + UTF-8 validation, iterative for double-encoded runs) — ✓ ✕ — → ← … · “” and the 🏆 emoji all render properly now; 0 mojibake lines remain in src
+- [x] Gates: tsc exit 0; 105/105 tests; build exit 0

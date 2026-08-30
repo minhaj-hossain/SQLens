@@ -532,9 +532,13 @@ return (
               </div>
 
               <div className="mx-4 mt-3">
-                <div className="bg-surface border border-border-soft rounded-lg px-3 py-2 font-mono text-[13px]">
+                <div className="relative bg-surface border border-border-soft rounded-lg px-3 py-2 font-mono text-[13px] min-h-[38px]">
+                  {/* P9.2d — the query renders ONCE: this highlighted layer is
+                      the only visible text; the input below has transparent
+                      text + gold caret stacked over it. */}
                   <div
-                    className="whitespace-pre overflow-x-auto"
+                    aria-hidden
+                    className="whitespace-pre overflow-x-hidden pointer-events-none select-none"
                     dangerouslySetInnerHTML={{ __html: highlightSql(demoSql) }}
                   />
                   <input
@@ -544,7 +548,11 @@ return (
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleRunDemo();
                     }}
-                    className="w-full bg-transparent outline-none text-editor-text font-mono text-[13px]"
+                    onScroll={(e) => {
+                      const el = e.currentTarget.previousElementSibling as HTMLDivElement | null;
+                      if (el) el.scrollLeft = e.currentTarget.scrollLeft;
+                    }}
+                    className="absolute inset-0 w-full bg-transparent outline-none text-transparent font-mono text-[13px] px-3 py-2 placeholder:text-text-faint"
                     style={{ caretColor: '#f4c430' }}
                     placeholder="Enter a SQL query..."
                     aria-label="SQL demo query"
@@ -553,8 +561,8 @@ return (
               </div>
 
               {(theory.liveDemoNotes || theory.exampleQueryExplanation) && (
-                <p className="mx-4 mt-2 text-[11.5px] leading-relaxed text-text-faint font-sans">
-                  <b className="text-text-dim font-semibold">How it works:</b>{' '}
+                <p className="mx-4 mt-2 text-[11.5px] leading-relaxed text-text-dim font-sans">
+                  <b className="text-text font-semibold">How it works:</b>{' '}
                   {theory.liveDemoNotes || theory.exampleQueryExplanation}
                 </p>
               )}

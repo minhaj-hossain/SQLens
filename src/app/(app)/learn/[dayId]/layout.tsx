@@ -1,7 +1,7 @@
 ﻿'use client';
 /**
- * /learn/[dayId] layout â€” the DAY boundary (Phase 3).
- *  - Validates dayId against the curriculum (invalid â†’ 404).
+ * /learn/[dayId] layout ‐ the DAY boundary (Phase 3).
+ *  - Validates dayId against the curriculum (invalid ⅎ 404).
  *  - Owns the executor reset boundary: the in-memory SQL database resets when
  *    the learner enters a DIFFERENT day (not on concept/task navigation, so
  *    DML/DDL continuity is preserved within a day's flow).
@@ -29,9 +29,9 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
   const { backToRoadmap } = useLearningNavigation();
 
   // Explicit reset boundaries (Phase 3): the in-memory DB resets when the
-  // learner enters a DIFFERENT DAY or a DIFFERENT CONCEPT. Theoryâ†’practice of
-  // the same concept and taskâ†’task within a concept keep continuity.
-  // (Content audit: Day 19 DML / Day 20 DDL need cross-concept isolation â€”
+  // learner enters a DIFFERENT DAY or a DIFFERENT CONCEPT. Theoryⅎpractice of
+  // the same concept and taskⅎtask within a concept keep continuity.
+  // (Content audit: Day 19 DML / Day 20 DDL need cross-concept isolation ‐
   // e.g. re-running a Day 20 CREATE TABLE task must not hit "table exists".)
   const conceptId = conceptIdFromPathname(pathname);
   useEffect(() => {

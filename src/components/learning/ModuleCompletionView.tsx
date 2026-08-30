@@ -79,7 +79,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
 
       <div className="space-y-2">
         <div className="font-label-sm text-xs text-primary font-medium uppercase tracking-wider">
-          {getModuleDisplayLabel(module)} Complete Â· {module.title}
+          {getModuleDisplayLabel(module)} Complete · {module.title}
         </div>
         <h1 className="font-headline-lg text-2xl sm:text-3xl font-bold tracking-tight text-on-surface">
           Module Mastered
@@ -100,7 +100,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
               key={idx}
               className="flex items-start gap-2 text-xs text-on-surface bg-surface-dim p-2.5 rounded-lg border border-outline-variant/60"
             >
-              <span className="text-primary font-mono">âœ“</span>
+              <span className="text-primary font-mono">☏</span>
               <span className="leading-relaxed font-body-md">{learning}</span>
             </div>
           ))}

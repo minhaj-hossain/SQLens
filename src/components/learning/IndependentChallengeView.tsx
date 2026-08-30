@@ -31,16 +31,12 @@ interface IndependentChallengeViewProps {
   onFinishAllChallenges: () => void;
   onBackToPractice?: () => void;
   /** v2: called on every task switch so the host can honor the challenge's
-   *  lifecycle (fresh â†’ reset DB; inherit â†’ keep mutated state). */
+   *  lifecycle (fresh ⅎ reset DB; inherit ⅎ keep mutated state). */
   onSelectedTaskChange?: (taskId: string) => void;
 }
 
-const SQL_KEYWORDS = [
-  'SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN',
-  'ON', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'AS', 'DISTINCT',
-  'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'ILIKE', 'IS NULL', 'IS NOT NULL',
-  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'COALESCE', 'ASC', 'DESC'
-];
+
+import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
 
 /**
  * Strips raw markdown backtick delimiters (`column` -> column)
@@ -108,49 +104,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     return schema ? schema.columns.map((c) => c.name) : [];
   }, [currentTask.primaryTable]);
 
-  // Syntax highlight (single-pass tokenizer)
+  // Syntax highlight — the shared grayscale tokenizer (P9.2c: ONE highlighter
+  // app-wide; same recipe as SQLEditor / lesson pages / playground).
   const highlightedCode = useMemo(() => {
     if (!currentSql) return '';
-    let escaped = currentSql
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    const tokens: { placeholder: string; html: string }[] = [];
-
-    // 1. Comments
-    escaped = escaped.replace(/(--[^\n]*)/g, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({ placeholder: ph, html: `<span class="text-comment italic">${match}</span>` });
-      return ph;
-    });
-
-    // 2. String literals
-    escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({ placeholder: ph, html: `<span class="text-editor-text font-medium">${match}</span>` });
-      return ph;
-    });
-
-    // 3. Numbers
-    escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({ placeholder: ph, html: `<span class="text-editor-text font-semibold">${match}</span>` });
-      return ph;
-    });
-
-    // 4. SQL Keywords (single combined regex pass)
-    const kwPattern = new RegExp(`\\b(${SQL_KEYWORDS.map((k) => k.replace(/ /g, '\\s+')).join('|')})\\b`, 'gi');
-    escaped = escaped.replace(kwPattern, (match) =>
-      `<span class="text-editor-text font-bold">${match.toUpperCase()}</span>`
-    );
-
-    // 5. Restore tokens
-    tokens.forEach(({ placeholder, html }) => {
-      escaped = escaped.replace(placeholder, html);
-    });
-
-    return escaped;
+    return highlightSql(currentSql);
   }, [currentSql]);
 
   // Sync state when selected task changes (tracked by currentTask.id)
@@ -189,7 +147,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
     // Hint 2: Columns / Filtering requirements
     if (reqCols && reqCols.length > 0) {
-      list.push(`The columns you need to output are:\n${reqCols.map((c) => `â€¢ ${c}`).join('\n')}`);
+      list.push(`The columns you need to output are:\n${reqCols.map((c) => `⬢ ${c}`).join('\n')}`);
     } else if (currentTask.validation.requireWhere) {
       list.push(`Make sure to use a WHERE clause to filter the rows correctly.`);
     } else {
@@ -382,15 +340,15 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       className="w-full max-w-3xl mx-auto space-y-5"
     >
       {/* 1. TOP HEADER & QUESTION */}
-      <div className="bg-surface rounded-xl border border-border p-5 shadow-md space-y-3">
+      <div className="bg-surface rounded-xl border border-border p-5 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-bold text-string uppercase tracking-wider">
+            <span className="text-[11px] font-mono font-bold text-text-faint uppercase tracking-wider">
               FINAL CHALLENGE
             </span>
             {challenge.tasks.length > 1 && (
               <span className="text-xs font-mono text-text-dim">
-                â€¢ Task {selectedTaskIdx + 1} of {challenge.tasks.length}
+                ⬢ Task {selectedTaskIdx + 1} of {challenge.tasks.length}
               </span>
             )}
           </div>
@@ -405,7 +363,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono text-text bg-surface-2 hover:bg-surface-3 hover:text-text border border-border transition cursor-pointer"
             title="Inspect table schema and rows"
           >
-            <Database className="w-3.5 h-3.5 text-func" />
+            <Database className="w-3.5 h-3.5 text-text-dim" />
             <span>Database: <strong className="text-text">{currentTask.primaryTable}</strong></span>
             <span className="hidden sm:inline text-[10px] text-text-faint">({tableRowCount} rows)</span>
             <ChevronDown className="w-3 h-3 text-text-faint ml-0.5" />
@@ -430,14 +388,14 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                   onClick={() => setSelectedTaskIdx(idx)}
                   className={`px-3 py-1 rounded-lg text-xs font-mono transition cursor-pointer flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-string/20 text-string font-bold border border-string'
+                      ? 'bg-surface-3 text-text font-semibold border-border'
                       : isTaskDone
                       ? 'bg-surface text-text border border-border hover:border-text-dim'
                       : 'bg-surface-2 text-text-dim hover:text-text border border-border'
                   }`}
                 >
                   {isTaskDone && (
-                    <span className="text-func font-bold text-xs">âœ“</span>
+                    <span className="text-done font-bold text-xs">☏</span>
                   )}
                   <span>Task {idx + 1}</span>
                 </button>
@@ -460,10 +418,10 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           <div className="flex items-center gap-2">
             <button
               onClick={handleFormatSql}
-              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-func hover:bg-surface-2 rounded transition cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
               title="Capitalize SQL keywords"
             >
-              <Sparkles className="w-3 h-3 text-func" />
+              <Sparkles className="w-3 h-3 text-text-dim" />
               <span>Format</span>
             </button>
 
@@ -472,7 +430,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
               title="Copy SQL"
             >
-              {copiedSql ? <Check className="w-3 h-3 text-func" /> : <Copy className="w-3 h-3" />}
+              {copiedSql ? <Check className="w-3 h-3 text-text" /> : <Copy className="w-3 h-3" />}
               <span>{copiedSql ? 'Copied' : 'Copy'}</span>
             </button>
 
@@ -563,7 +521,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     onMouseDown={(e) => { e.preventDefault(); applySuggestion(sug); }}
                     className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
                       idx === selectedSuggestionIdx
-                        ? 'bg-func/20 text-func font-bold'
+                        ? 'bg-func/15 text-text font-semibold'
                         : 'text-text hover:bg-surface-3 hover:text-text'
                     }`}
                   >
@@ -592,16 +550,16 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             <button
               id="challenge-next-btn"
               onClick={handleNextAction}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold font-mono bg-func hover:bg-func/80 text-ink shadow-md shadow-func/20 transition cursor-pointer active:scale-95"
+              className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
             >
-              <span>{isLastTask ? 'Finish Challenge ðŸ†' : 'Next Task â†’'}</span>
+              <span>{isLastTask ? 'Finish Challenge 𚏅' : 'Next Task ⅎ'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               id="challenge-run-btn"
               onClick={handleRunQuery}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold font-mono bg-func hover:bg-func/80 text-ink shadow-md shadow-func/20 transition cursor-pointer active:scale-95"
+              className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>{validationFeedback ? 'Try Again' : 'Run Query'}</span>
@@ -625,7 +583,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               <div className="p-4 rounded-xl bg-func/10 border border-func/40 flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-func shrink-0 mt-0.5" />
                 <div className="space-y-0.5 text-left">
-                  <h3 className="font-display text-sm font-bold text-func">âœ“ Correct!</h3>
+                  <h3 className="font-display text-sm font-bold text-func">☏ Correct!</h3>
                   <p className="text-xs text-text leading-relaxed">
                     {cleanBackticks(currentTask.successMessage) || 'Your query returned the expected result.'}
                   </p>
@@ -638,7 +596,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               <div className="p-4 rounded-xl bg-error/10 border border-error/30 flex items-start gap-3">
                 <XCircle className="w-5 h-5 text-error shrink-0 mt-0.5" />
                 <div className="space-y-1 text-left">
-                  <h3 className="font-display text-sm font-bold text-error">âœ• Not quite</h3>
+                  <h3 className="font-display text-sm font-bold text-error">☑ Not quite</h3>
                   <p className="text-xs text-text leading-relaxed font-mono">
                     {validationFeedback}
                   </p>
@@ -649,9 +607,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             {/* Query Results Table */}
             {executionResult && executionResult.success && executionResult.rows.length > 0 && (
               <div className="bg-surface rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 bg-ink border-b border-border text-xs font-mono text-text-dim">
+                <div className="flex items-center justify-between px-4 py-2 bg-surface-2 border-b border-border-soft text-xs font-mono text-text-dim">
                   <span>Output ({executionResult.rowCount} rows)</span>
-                  <span className="text-[11px] text-func">{executionResult.executionTimeMs.toFixed(1)}ms</span>
+                  <span className="text-[11px] text-text-dim">{executionResult.executionTimeMs.toFixed(1)}ms</span>
                 </div>
 
                 <div className="overflow-x-auto max-h-[220px] scrollbar-thin">
@@ -659,7 +617,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     <thead>
                       <tr className="bg-surface-2 border-b border-border sticky top-0 z-10">
                         {executionResult.columns.map((col) => (
-                          <th key={col} className="px-3.5 py-2 font-semibold text-keyword">
+                          <th key={col} className="px-3.5 py-2 font-semibold text-text">
                             {col}
                           </th>
                         ))}
@@ -690,30 +648,30 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           <button
             id="challenge-hint-trigger-btn"
             onClick={() => setRevealedHintLevel(1)}
-            className="flex items-center gap-1.5 text-xs font-mono text-text-dim hover:text-string transition cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-mono text-text-dim hover:text-text transition cursor-pointer"
           >
-            <Lightbulb className="w-3.5 h-3.5 text-string" />
+            <Lightbulb className="w-3.5 h-3.5 text-text-dim" />
             <span>Need a hint?</span>
           </button>
         ) : (
-          <div className="p-4 rounded-xl bg-surface border border-string/30 space-y-2.5">
+          <div className="p-4 rounded-xl bg-surface border border-border-soft space-y-2.5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-mono font-bold text-string">
-                <Lightbulb className="w-4 h-4 text-string" />
+              <div className="flex items-center gap-2 text-xs font-mono font-semibold text-text-dim">
+                <Lightbulb className="w-4 h-4 text-text-dim" />
                 <span>Hint {revealedHintLevel} of {maxHints}</span>
               </div>
 
               {revealedHintLevel < maxHints && (
                 <button
                   onClick={() => setRevealedHintLevel((prev) => Math.min(prev + 1, maxHints))}
-                  className="text-xs font-mono text-string hover:underline transition cursor-pointer font-semibold"
+                  className="text-xs font-mono text-text-dim hover:text-text transition cursor-pointer font-semibold"
                 >
-                  Stronger Hint â†’
+                  Stronger Hint ⅎ
                 </button>
               )}
             </div>
 
-            <div className="text-xs text-text font-mono leading-relaxed bg-ink p-3 rounded-lg border border-border whitespace-pre-wrap">
+            <div className="text-xs text-text font-mono leading-relaxed bg-surface-2 p-3 rounded-lg border border-border whitespace-pre-wrap">
               {taskHints[revealedHintLevel - 1]}
             </div>
           </div>
@@ -732,9 +690,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 bg-ink border-b border-border">
+            <div className="flex items-center justify-between p-4 bg-surface-2 border-b border-border-soft">
               <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-func" />
+                <Database className="w-4 h-4 text-text-dim" />
                 {/* Table Switcher */}
                 <div className="relative inline-block">
                   <select
@@ -785,10 +743,10 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                       setCopiedColumn(c.name);
                       setTimeout(() => setCopiedColumn(null), 1200);
                     }}
-                    className="px-2 py-0.5 rounded bg-surface hover:bg-surface-3 hover:text-keyword text-text border border-border transition cursor-pointer whitespace-nowrap"
+                    className="px-2 py-0.5 rounded bg-surface hover:bg-surface-3 hover:text-text text-text border border-border transition cursor-pointer whitespace-nowrap"
                     title="Click to copy column name"
                   >
-                    {copiedColumn === c.name ? `âœ“ ${c.name}` : c.name}
+                    {copiedColumn === c.name ? `☏ ${c.name}` : c.name}
                   </button>
                 ))}
               </div>
@@ -800,7 +758,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 <thead>
                   <tr className="bg-surface-2 border-b border-border sticky top-0 z-10">
                     {activeSchema.columns.map((col) => (
-                      <th key={col.name} className="px-3.5 py-2 font-semibold text-keyword">
+                      <th key={col.name} className="px-3.5 py-2 font-semibold text-text">
                         <div className="flex items-center gap-1">
                           <span>{col.name}</span>
                           <span className="text-[10px] text-comment font-normal">({col.type})</span>

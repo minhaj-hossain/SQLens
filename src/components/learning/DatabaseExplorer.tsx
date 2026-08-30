@@ -51,10 +51,10 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   return (
     <div
       id="database-explorer-container"
-      className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden shadow-lg ${className}`}
+      className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden ${className}`}
     >
       {/* Header & Table Selector */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3.5 bg-surface-2 border-b border-border-soft">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-4 py-3.5 bg-surface border-b border-border-soft">
         <div className="flex items-center gap-2">
           <Database className="w-4 h-4 text-text-dim" />
           <div className="relative inline-block">
@@ -65,7 +65,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                 setActiveTable(e.target.value);
                 setSearchFilter('');
               }}
-              className="appearance-none font-mono text-xs font-bold text-text bg-surface border border-border rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-func transition cursor-pointer"
+              className="appearance-none font-mono text-xs font-bold text-text bg-surface-2 border border-border rounded-md pl-3 pr-7 py-1.5 focus:outline-none focus:border-func transition cursor-pointer"
             >
               {allTableNames.map((tName) => (
                 <option key={tName} value={tName} className="bg-surface text-text-dim">
@@ -75,22 +75,22 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-text-faint absolute right-2 top-2.5 pointer-events-none" />
           </div>
-          <span className="text-[11px] font-mono text-text-faint hidden sm:inline">
-            {schema.columns.length} cols
+          <span className="text-[11.5px] font-mono text-text-faint hidden sm:inline">
+            {INITIAL_TABLES[activeTable]?.length || 0} rows · {schema.columns.length} cols
           </span>
         </div>
 
         {/* Right: Tabs */}
-        <div className="flex items-center gap-2">
-          {/* Segmented Tabs */}
-          <div className="flex items-center bg-surface-2 p-0.5 rounded-lg border border-border text-[11px] font-mono">
+        <div className="flex items-center gap-4">
+          {/* Underline Tabs (design `.tabs` / `.tab`) */}
+          <div className="flex items-center gap-4 text-[11.5px] font-mono">
             <button
               id="tab-data-preview-btn"
               onClick={() => setActiveTab('preview')}
-              className={`flex items-center gap-1 px-2.5 py-0.5 rounded transition cursor-pointer ${
+              className={`flex items-center gap-1 pb-1 border-b-2 transition cursor-pointer ${
                 activeTab === 'preview'
-                  ? 'bg-surface text-text font-semibold border border-border'
-                  : 'text-text-faint hover:text-text'
+                  ? 'text-text font-semibold border-text'
+                  : 'text-text-faint hover:text-text-dim border-transparent'
               }`}
             >
               <Table className="w-3 h-3" />
@@ -99,10 +99,10 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
             <button
               id="tab-schema-types-btn"
               onClick={() => setActiveTab('schema')}
-              className={`flex items-center gap-1 px-2.5 py-0.5 rounded transition cursor-pointer ${
+              className={`flex items-center gap-1 pb-1 border-b-2 transition cursor-pointer ${
                 activeTab === 'schema'
-                  ? 'bg-surface text-text font-semibold border border-border'
-                  : 'text-text-faint hover:text-text'
+                  ? 'text-text font-semibold border-text'
+                  : 'text-text-faint hover:text-text-dim border-transparent'
               }`}
             >
               <Key className="w-3 h-3" />
@@ -111,10 +111,10 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
             <button
               id="tab-schema-graph-btn"
               onClick={() => setActiveTab('graph')}
-              className={`flex items-center gap-1 px-2.5 py-0.5 rounded transition cursor-pointer ${
+              className={`flex items-center gap-1 pb-1 border-b-2 transition cursor-pointer ${
                 activeTab === 'graph'
-                  ? 'bg-surface text-text font-semibold border border-border'
-                  : 'text-text-faint hover:text-text'
+                  ? 'text-text font-semibold border-text'
+                  : 'text-text-faint hover:text-text-dim border-transparent'
               }`}
             >
               <Network className="w-3 h-3" />
@@ -127,9 +127,9 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
       {/* Main Body Grid */}
       <div className="relative">
         <div className="sm:hidden px-3 py-1 bg-surface-2 text-[10px] font-mono text-text-faint border-b border-border-soft flex items-center justify-between">
-          <span>â† Swipe horizontally to view all columns â†’</span>
+            <span>← Swipe horizontally to view all columns →</span>
         </div>
-        <div className="overflow-auto max-h-[320px] min-h-[160px] bg-editor-bg scrollbar-thin text-xs">
+        <div className="overflow-auto max-h-[320px] min-h-[160px] bg-surface scrollbar-thin text-xs">
           {activeTab === 'preview' ? (
             <table className="min-w-full text-left font-mono border-collapse">
             <thead className="sticky top-0 z-10 bg-surface-2 border-b border-border">
@@ -142,10 +142,10 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                       <th
                         key={col.name}
                         onClick={() => handleCopyColName(col.name)}
-                        className={`px-3 py-2 text-[11px] font-semibold select-none cursor-pointer group transition ${
+                        className={`px-4 py-2.5 text-[11.5px] font-semibold select-none cursor-pointer group transition bg-surface-2 border-b ${
                           isHighlighted
-                            ? 'bg-editor-active-line text-text border-b-2 border-func'
-                            : 'text-text-dim hover:bg-surface'
+                            ? 'text-text border-b-2 border-b-func'
+                            : 'text-text-dim border-border hover:bg-surface-3'
                         }`}
                         title="Click to copy / insert column name"
                       >
@@ -184,7 +184,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                   filteredRows.slice(0, 40).map((row, idx) => (
                     <tr
                       key={idx}
-                      className="hover:bg-surface-2/50 transition-colors"
+                      className="hover:bg-surface-2 transition-colors"
                     >
                       {schema.columns.map((col) => {
                         const isHighlighted = highlightedColumns.some(
@@ -193,7 +193,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                         return (
                           <td
                             key={col.name}
-                            className={`px-3 py-1.5 whitespace-nowrap ${
+                            className={`px-4 py-2 whitespace-nowrap ${
                               isHighlighted ? 'bg-func/10 text-text font-medium' : ''
                             }`}
                           >

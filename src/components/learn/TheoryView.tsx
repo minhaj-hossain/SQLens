@@ -1,6 +1,6 @@
 ﻿'use client';
 /**
- * TheoryView â€” client view for /learn/[dayId]/theory/[conceptId].
+ * TheoryView ‐ client view for /learn/[dayId]/theory/[conceptId].
  * Extracted from the page (Phase 4) so the page can be a server component
  * with generateMetadata while this component stays client-side (module data
  * contains non-serializable validators and imports directly here).

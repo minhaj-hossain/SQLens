@@ -19,7 +19,7 @@
   /* text */
   --text: #f2f2f0;
   --text-dim: #93938e;
-  --text-faint: #55554f;
+  --text-faint: #83837c;
 
   /* the single accent — gold ("you are here") */
   --func: #f4c430;
@@ -46,8 +46,9 @@
   --editor-selection: rgba(244, 196, 48, 0.12);
   --editor-active-line: rgba(255, 255, 255, 0.03);
 
-  /* grayscale SQL syntax (concept/syntax blocks - weight + lightness, not hue) */
-  --code-kw: #ffffff;    /* SQL keywords - white, weight 700 */
+  /* grayscale SQL syntax (concept/syntax blocks - weight + lightness, not hue).
+     Keywords cap at #f2f2f0 (same as headings) — pure white is banned app-wide. */
+  --code-kw: #f2f2f0;    /* SQL keywords - heading white, weight 700 */
   --code-ident: #a9a9a3; /* identifiers / literals - mid gray */
   --code-punc: #6b6b65;  /* ; , ( ) etc - dim gray */
 
@@ -85,7 +86,7 @@
   --color-on-surface-variant: #93938e;
   --color-text-muted: #93938e;
   --color-text-dim: #93938e;
-  --color-text-faint: #55554f;
+  --color-text-faint: #83837c;
 
   /* the accent */
   --color-func: #f4c430;
@@ -116,7 +117,7 @@
   --color-editor-selection: rgba(244, 196, 48, 0.12);
 
   /* grayscale SQL syntax tokens */
-  --color-code-kw: #ffffff;
+  --color-code-kw: #f2f2f0;
   --color-code-ident: #a9a9a3;
   --color-code-punc: #6b6b65;
   --color-code-comment: #55554f;

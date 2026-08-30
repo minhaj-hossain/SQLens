@@ -101,7 +101,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
                 <p className="text-xs text-text-dim mt-0.5 font-body">{currentSchema.description}</p>
               </div>
               <span className="text-xs font-mono text-text-faint">
-                {currentRows.length} rows Â· {currentSchema.columns.length} columns
+                {currentRows.length} rows · {currentSchema.columns.length} columns
               </span>
             </div>
 

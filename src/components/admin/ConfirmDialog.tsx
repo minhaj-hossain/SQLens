@@ -64,8 +64,8 @@ export default function ConfirmDialog({
             disabled={busy}
             className={`font-mono text-xs px-4 py-2 rounded-lg transition disabled:opacity-40 ${
               isDelete
-                ? 'bg-error text-white hover:bg-error/90'
-                : 'bg-error/80 text-white hover:bg-error'
+                ? 'bg-error text-ink hover:bg-error/90'
+                : 'bg-error/80 text-ink hover:bg-error'
             }`}
           >
             {busy ? 'Working…' : isDelete ? 'Delete User' : 'Block User'}

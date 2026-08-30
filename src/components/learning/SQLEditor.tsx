@@ -1,6 +1,7 @@
 ﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
 
 interface SQLEditorProps {
   value: string;
@@ -12,15 +13,6 @@ interface SQLEditorProps {
   onNextAction?: () => void;
   readOnly?: boolean;
 }
-
-const SQL_KEYWORDS = [
-  'SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN',
-  'ON', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'AS', 'DISTINCT',
-  'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'ILIKE', 'IS NULL', 'IS NOT NULL',
-  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'COALESCE',
-  'UNION', 'UNION ALL', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'ASC', 'DESC',
-  'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'CREATE TABLE', 'DROP TABLE'
-];
 
 export const SQLEditor: React.FC<SQLEditorProps> = ({
   value,
@@ -194,67 +186,11 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     }
   };
 
-  // Syntax highlighting with dimmed comments and safe tokenization
+  // Syntax highlighting — the shared grayscale tokenizer (P9.2c: ONE
+  // highlighter app-wide; same recipe as lesson pages / challenge / playground).
   const highlightedCode = useMemo(() => {
     if (!value) return '';
-
-    // Escape HTML special characters
-    let escaped = value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // 1. Stash comments with placeholders
-    const tokens: { placeholder: string; html: string }[] = [];
-    escaped = escaped.replace(/(--[^\n]*)/g, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({
-        placeholder: ph,
-        html: `<span class="text-editor-comment italic">${match}</span>`,
-      });
-      return ph;
-    });
-
-    // 2. Stash string literals with placeholders
-    escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({
-        placeholder: ph,
-        html: `<span class="text-editor-text font-medium">${match}</span>`,
-      });
-      return ph;
-    });
-
-    // 3. SQL Keywords â€” single-pass combined regex to prevent HTML attribute corruption
-    // Sort longest first so multi-word keywords (e.g. "LEFT JOIN") match before sub-words
-    const sortedKws = [...SQL_KEYWORDS].sort((a, b) => b.length - a.length);
-    const kwPattern = sortedKws.map(kw => kw.replace(/\s+/g, '\\s+')).join('|');
-    const kwRegex = new RegExp(`\\b(${kwPattern})\\b`, 'gi');
-    escaped = escaped.replace(kwRegex, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({
-        placeholder: ph,
-        html: `<span class="text-editor-text font-semibold">${match.toUpperCase()}</span>`,
-      });
-      return ph;
-    });
-
-    // 4. Numbers â€” also stash to avoid being re-touched
-    escaped = escaped.replace(/\b(\d+(\.\d+)?)\b/g, (match) => {
-      const ph = `___TOKEN_${tokens.length}___`;
-      tokens.push({
-        placeholder: ph,
-        html: `<span class="text-editor-text">${match}</span>`,
-      });
-      return ph;
-    });
-
-    // 5. Restore all stashed tokens in a single pass
-    tokens.forEach(t => {
-      escaped = escaped.replace(t.placeholder, t.html);
-    });
-
-    return escaped;
+    return highlightSql(value);
   }, [value]);
 
   const handleCopy = () => {
@@ -313,9 +249,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
-    <div id="sql-editor-container" className="flex flex-col bg-editor-bg rounded-xl border border-border shadow-xl text-editor-text relative">
+    <div id="sql-editor-container" className="flex flex-col bg-editor-bg rounded-xl border border-border text-editor-text relative">
       {/* Editor Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-surface-2 border-b border-border-soft select-none rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-border-soft select-none rounded-t-xl">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 mr-2">
             <span className="w-2.5 h-2.5 rounded-full bg-text-faint/60 inline-block"></span>
@@ -439,7 +375,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             >
               <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between">
                 <span>Suggestions</span>
-                <span className="text-[9px] text-text-faint font-normal">Tab â‡¥</span>
+                <span className="text-[9px] text-text-faint font-normal">Tab ↥</span>
               </div>
               {suggestions.map((sug, idx) => (
                 <div
@@ -487,7 +423,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Bottom Action Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-surface-2 border-t border-border-soft">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 bg-surface border-t border-border-soft">
         <div className="flex items-center gap-2 text-xs text-text-faint font-mono">
           <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-dim text-[10px]">
             Ctrl + Enter
@@ -495,14 +431,14 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <span className="hidden sm:inline">to run &amp; check</span>
         </div>
 
-        {/* Single Smart Button: Run â†’ Check â†’ Next */}
+        {/* Single Smart Button: Run ⅎ Check ⅎ Next */}
         <div className="flex items-center gap-2.5">
           {evaluationState === 'correct' && onNextAction ? (
             <button
               id="next-task-btn"
               type="button"
               onClick={onNextAction}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-func hover:brightness-110 text-ink shadow-lg shadow-black/30 transition cursor-pointer animate-pulse active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:brightness-110 text-ink transition cursor-pointer animate-pulse active:scale-95"
             >
               <span>{nextActionLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -512,10 +448,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               id="run-check-btn"
               type="button"
               onClick={() => onRunAndCheck(value)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono text-ink transition cursor-pointer shadow-md active:scale-95 ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans text-ink transition cursor-pointer active:scale-95 ${
                 evaluationState === 'wrong'
-                  ? 'bg-error hover:bg-error/90 shadow-black/30'
-                  : 'bg-func hover:brightness-110 shadow-black/30'
+                  ? 'bg-error hover:bg-error/90'
+                  : 'bg-func hover:brightness-110'
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />

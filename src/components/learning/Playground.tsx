@@ -1,11 +1,12 @@
 ﻿'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Play, RotateCcw, Eraser, X, Download, Database, History } from 'lucide-react';
 import { SqlExecutor } from '@/lib/sql-engine/executor';
 import { QueryExecutionResult } from '@/types/database';
 import { DATABASE_SCHEMAS } from '@/content/database/schema';
 import { INITIAL_TABLES } from '@/content/database/tables';
+import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
 
 const HISTORY_KEY = 'sqlens_playground_history_v1';
 const DRAFT_KEY = 'sqlens_playground_draft_v1';
@@ -17,16 +18,8 @@ const ALL_TABLES = Object.keys(DATABASE_SCHEMAS);
 const ALL_COLUMNS = Array.from(
   new Set(ALL_TABLES.flatMap((t) => DATABASE_SCHEMAS[t]?.columns.map((c) => c.name) ?? [])),
 );
-const SQL_KEYWORDS = [
-  'SELECT', 'FROM', 'WHERE', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET',
-  'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'CROSS JOIN', 'ON', 'AS',
-  'DISTINCT', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'CASE WHEN', 'THEN', 'ELSE', 'END',
-  'UNION', 'UNION ALL', 'INTERSECT', 'EXCEPT', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET',
-  'DELETE FROM', 'CREATE TABLE', 'ALTER TABLE', 'DROP TABLE', 'AND', 'OR', 'NOT',
-  'NULL', 'IS NULL', 'IN', 'BETWEEN', 'LIKE', 'ASC', 'DESC', 'WITH',
-];
 
-/** Levenshtein distance â€” powers the "did you mean" typo hint. */
+/** Levenshtein distance — powers the "did you mean" typo hint. */
 function editDistance(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -62,31 +55,31 @@ function didYouMean(word: string): string | null {
 function friendlyError(raw: string): string {
   let msg = raw;
 
-  // Unknown table typos â†’ suggest closest table
+  // Unknown table typos ⅎ suggest closest table
   const tableMatch = msg.match(/Table '([^']+)' does not exist/i);
   if (tableMatch) {
     const hint = didYouMean(tableMatch[1]);
-    if (hint) msg += `\n\nðŸ’¡ Did you mean '${hint}'?`;
+    if (hint) msg += `\n\n𚎡 Did you mean '${hint}'?`;
     return msg;
   }
   const joinTableMatch = msg.match(/Table '([^']+)' in JOIN clause does not exist/i);
   if (joinTableMatch) {
     const hint = didYouMean(joinTableMatch[1]);
-    if (hint) msg += `\n\nðŸ’¡ Did you mean '${hint}'?`;
+    if (hint) msg += `\n\n𚎡 Did you mean '${hint}'?`;
     return msg;
   }
 
   const genericMap: [RegExp, string][] = [
     [/Unsupported or unparseable SQL/i,
-      'We could not understand this statement.\nCheck the spelling of clauses (SELECTâ€¦FROMâ€¦WHERE) and make sure the statement is supported.'],
+      'We could not understand this statement.\nCheck the spelling of clauses (SELECT⬦FROM⬦WHERE) and make sure the statement is supported.'],
     [/Empty query/i,
       'This statement is empty after removing comments. Did you forget to write SQL?'],
     [/foreign key constraint fails/i,
       'Foreign key violation: the referenced value does not exist in the parent table.\nInsert or reference an existing parent record first.'],
     [/Invalid set-operation/i,
-      'Set operations need a valid query on each side of UNION / INTERSECT / EXCEPT, e.g.\n(SELECT â€¦ ) UNION (SELECT â€¦)'],
+      'Set operations need a valid query on each side of UNION / INTERSECT / EXCEPT, e.g.\n(SELECT ⬦ ) UNION (SELECT ⬦)'],
     [/Invalid Common Table Expression/i,
-      'CTE syntax is: WITH name AS (SELECT â€¦) SELECT â€¦ FROM name;'],
+      'CTE syntax is: WITH name AS (SELECT ⬦) SELECT ⬦ FROM name;'],
     [/Unsupported statement type/i,
       'This statement type is not supported yet. Supported: SELECT, INSERT, UPDATE, DELETE, CREATE/ALTER/DROP TABLE, WITH (CTE), EXPLAIN.'],
   ];
@@ -98,7 +91,7 @@ function friendlyError(raw: string): string {
   const colMatch = msg.match(/(?:column|Column) '([^']+)'/);
   if (colMatch) {
     const hint = didYouMean(colMatch[1]);
-    if (hint) msg += `\n\nðŸ’¡ Did you mean '${hint}'?`;
+    if (hint) msg += `\n\n𚎡 Did you mean '${hint}'?`;
   }
   return msg;
 }
@@ -128,7 +121,7 @@ function decodeSqlFromUrl(encoded: string): string | null {
 }
 
 /** Splits a SQL script on top-level `;` (quote/paren aware) so each statement
- *  can be executed in order â€” multi-statement script support. */
+ *  can be executed in order ‐ multi-statement script support. */
 function splitStatements(sql: string): string[] {
   const out: string[] = [];
   let current = '';
@@ -208,7 +201,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
       try {
         setHistory(JSON.parse(saved));
       } catch {
-        /* corrupted history â€” ignore */
+        /* corrupted history ‐ ignore */
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -253,14 +246,14 @@ export default function Playground({ onClose }: PlaygroundProps) {
       try {
         localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
       } catch {
-        /* storage full â€” skip */
+        /* storage full ‐ skip */
       }
       return next;
     });
     setShowHistory(false);
   }, [sql, dbMode]);
 
-  /** Ctrl+Space autocomplete â€” suggests keywords, tables, and columns matching
+  /** Ctrl+Space autocomplete ‐ suggests keywords, tables, and columns matching
    *  the word currently being typed. */
   const showSuggestions = useCallback(() => {
     const ta = textareaRef.current;
@@ -436,7 +429,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
               } disabled:opacity-40 disabled:cursor-not-allowed`}
               title="Copy a link that opens this exact query"
             >
-              {shareCopied ? 'Link copied âœ“' : 'Share'}
+              {shareCopied ? 'Link copied ☏' : 'Share'}
             </button>
             <button
               onClick={onClose}
@@ -486,7 +479,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
           <div className="relative rounded-xl border border-border bg-editor-bg overflow-visible">
             <div className="flex items-center justify-between px-4 py-2.5 bg-surface/80 border-b border-border/60 rounded-t-xl">
               <span className="font-mono text-[11px] text-text-dim">
-                {dbMode === 'lesson' ? 'sqlens.db â€” lesson dataset' : 'sqlens.db â€” scratch space'}
+                {dbMode === 'lesson' ? 'sqlens.db — lesson dataset' : 'sqlens.db — scratch space'}
               </span>
               <button
                 onClick={clearEditor}
@@ -495,25 +488,40 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 <Eraser className="w-3 h-3" /> Clear
               </button>
             </div>
-            <textarea
-              ref={textareaRef}
-              value={sql}
-              onChange={(e) => {
-                setSql(e.target.value);
-                setSuggestions([]);
-              }}
-              onBlur={() => setTimeout(() => setSuggestions([]), 150)}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              style={{ caretColor: '#f4c430' }}
-              className="w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-editor-text leading-relaxed outline-none resize-y"
-              placeholder="Write SQL hereâ€¦ separate multiple statements with ;  (Ctrl+Space for suggestions)"
-            />
+            {/* Syntax-highlight layer under the textarea (P9.2c — one highlighter app-wide) */}
+            <div className="relative">
+              <div
+                aria-hidden
+                className="absolute inset-0 p-4 font-mono text-xs sm:text-sm text-editor-text leading-relaxed pointer-events-none select-none overflow-hidden whitespace-pre-wrap break-words"
+                dangerouslySetInnerHTML={{ __html: highlightSql(sql) }}
+              />
+              <textarea
+                ref={textareaRef}
+                value={sql}
+                onChange={(e) => {
+                  setSql(e.target.value);
+                  setSuggestions([]);
+                }}
+                onScroll={(e) => {
+                  const el = e.currentTarget.previousElementSibling as HTMLDivElement | null;
+                  if (el) {
+                    el.scrollTop = e.currentTarget.scrollTop;
+                    el.scrollLeft = e.currentTarget.scrollLeft;
+                  }
+                }}
+                onBlur={() => setTimeout(() => setSuggestions([]), 150)}
+                onKeyDown={handleKeyDown}
+                spellCheck={false}
+                style={{ caretColor: '#f4c430' }}
+                className="relative w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-transparent leading-relaxed outline-none resize-y placeholder:text-text-faint"
+                placeholder="Write SQL here… separate multiple statements with ;  (Ctrl+Space for suggestions)"
+              />
+            </div>
             {/* Autocomplete suggestions */}
             {suggestions.length > 0 && (
               <div className="absolute z-20 mt-[-8px] ml-4 rounded-xl border border-border bg-surface shadow-xl overflow-hidden w-64">
                 <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-text-faint bg-surface-2 border-b border-border">
-                  Ctrl+Space suggestions â€” click or keep typing
+                  Ctrl+Space suggestions — click or keep typing
                 </div>
                 {suggestions.map((s) => (
                   <button
@@ -612,7 +620,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                       className="text-[11px] font-mono text-text-dim hover:text-text px-2 py-0.5 rounded hover:bg-ink transition cursor-pointer"
                       title="Copy as CSV"
                     >
-                      {copiedKey === `${idx}` ? 'Copied âœ“' : 'Copy'}
+                      {copiedKey === `${idx}` ? 'Copied ☏' : 'Copy'}
                     </button>
                     <button
                       onClick={() => downloadResult(`${idx}`, r)}
@@ -623,11 +631,11 @@ export default function Playground({ onClose }: PlaygroundProps) {
                     </button>
                     {r.affectedRows !== undefined ? (
                       <span className="font-mono text-[10.5px] text-text-faint">
-                        {r.affectedRows} affected Â· {r.executionTimeMs}ms
+                        {r.affectedRows} affected · {r.executionTimeMs}ms
                       </span>
                     ) : (
                       <span className="font-mono text-[10.5px] text-text-faint">
-                        {r.rowCount} rows Â· {r.executionTimeMs}ms
+                        {r.rowCount} rows · {r.executionTimeMs}ms
                       </span>
                     )}
                   </div>
@@ -639,7 +647,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                   </div>
                 ) : r.rows.length === 0 ? (
                   <div className="p-4 text-text-dim font-mono text-xs text-center">
-                    Executed successfully â€” no result set
+                    Executed successfully ‐ no result set
                     {r.affectedRows !== undefined ? ` (${r.affectedRows} rows affected)` : ''}.
                   </div>
                 ) : (

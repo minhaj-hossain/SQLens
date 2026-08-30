@@ -49,22 +49,22 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   return (
     <div
       id="task-instructions-container"
-      className="flex flex-col bg-surface rounded-xl border border-border p-4 sm:p-5 shadow-lg relative text-text"
+      className="flex flex-col bg-surface rounded-xl border border-border p-5 relative text-text"
     >
       {/* Top Header: Muted Secondary Metadata & Lesson Link */}
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pb-2.5 border-b border-border-soft text-xs">
-        <div className="flex items-center gap-1.5 font-mono text-text-dim min-w-0">
-          <span className="text-func font-bold tracking-wider shrink-0">
+        <div className="flex items-center gap-1.5 font-mono text-[11.5px] text-text-faint min-w-0">
+          <span className="tracking-wider shrink-0">
             TASK {taskIndex + 1}/{totalTasks}
           </span>
-          <span className="text-text-faint shrink-0">â€¢</span>
-          <span className="truncate">{concept.title}</span>
+          <span className="shrink-0">·</span>
+          <b className="text-text-dim font-medium truncate">{concept.title}</b>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {isCompleted && (
-            <div className="flex items-center gap-1 text-[11px] font-medium text-text-dim bg-surface-2 px-2 py-0.5 rounded-full border border-border">
-              <CheckCircle2 className="w-3 h-3 text-text" />
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-text-dim bg-surface-2 px-2.5 py-1 rounded-md border border-border">
+              <span className="w-3 h-3 rounded-full bg-done text-ink flex items-center justify-center text-[8px] font-bold leading-none">✓</span>
               <span>Done</span>
             </div>
           )}
@@ -72,7 +72,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
           {onBackToLesson && (
             <button
               onClick={onBackToLesson}
-              className="flex items-center gap-1 text-text-dim hover:text-text text-[11px] font-mono px-2 py-0.5 rounded hover:bg-surface-2 transition cursor-pointer"
+              className="flex items-center gap-1.5 text-text-dim hover:text-text text-[11px] font-mono px-2.5 py-1 rounded-md border border-border bg-transparent hover:bg-surface-2 transition cursor-pointer"
               title="Review concept lesson"
             >
               <BookOpen className="w-3 h-3 text-text-dim" />
@@ -84,37 +84,37 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
 
       {/* Main Single Task Statement (Prominent Visual Focus) */}
       <div className="py-3.5">
-        <h2 className="font-display text-base sm:text-lg font-bold text-text leading-snug tracking-tight">
+        <h2 className="font-display text-[19px] font-semibold text-text leading-snug tracking-tight">
           {taskStatement}
         </h2>
       </div>
 
-      {/* Compact Secondary Reference Chips */}
-      <div className="flex flex-wrap items-center gap-2 pb-3 pt-1 text-xs font-mono">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-text-dim">
-          <span className="text-text-faint">table:</span>
-          <span className="text-keyword font-semibold">{task.primaryTable}</span>
-        </span>
+      {/* Meta strip — TABLE / COLUMNS / EXPECTED ROWS (design `.meta-row`) */}
+      <div className="mt-4 flex flex-wrap items-center font-mono text-xs bg-surface-2 border border-border-soft rounded-lg px-4 py-2.5">
+        <div className="flex items-center gap-2 pr-4 mr-4 border-r border-border">
+          <span className="text-text-faint tracking-wider">TABLE</span>
+          <span className="text-text font-semibold">{task.primaryTable}</span>
+        </div>
 
         {task.validation.requiredColumns && task.validation.requiredColumns.length > 0 && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-text-dim">
-            <span className="text-text-faint">cols:</span>
-            <span className="text-string font-semibold">
+          <div className="flex items-center gap-2 pr-4 mr-4 border-r border-border">
+            <span className="text-text-faint tracking-wider">COLUMNS</span>
+            <span className="text-text font-semibold">
               {task.validation.requiredColumns.join(', ')}
             </span>
-          </span>
+          </div>
         )}
 
         {task.validation.expectedRowCount !== undefined && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-text-dim">
-            <span className="text-text-faint">expected rows:</span>
-            <span className="text-func font-semibold">{String(task.validation.expectedRowCount)}</span>
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-text-faint tracking-wider">EXPECTED ROWS</span>
+            <span className="text-text font-semibold">{String(task.validation.expectedRowCount)}</span>
+          </div>
         )}
       </div>
 
       {/* Single Unified "Need Help?" Progressive Disclosure Section */}
-      <div className="mt-1 pt-2.5 border-t border-border-soft">
+      <div className="mt-4 pt-3.5 border-t border-border-soft">
         <button
           id="toggle-help-btn"
           onClick={() => {
@@ -124,7 +124,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
               if (onUseHint) onUseHint(1);
             }
           }}
-          className="flex items-center justify-between w-full text-xs font-mono text-text-dim hover:text-text transition py-1 cursor-pointer"
+          className="flex items-center justify-between w-full text-[12.5px] font-body text-text-dim hover:text-text transition py-1 cursor-pointer"
         >
           <div className="flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
