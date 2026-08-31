@@ -97,9 +97,9 @@ export const Day_15_MODULE: ModuleData = {
         ],
         keyTakeaway: 'Use COUNT(DISTINCT) when joining one-to-many relationships to avoid overcounting parent entities.',
         exampleQuery: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name;',
-        exampleQueryExplanation: 'Accurately calculates order count and spend per customer.',
+        exampleQueryExplanation: 'Each customer\'s order count and total spend, counted once — no phantom rows.',
         liveDemoSql: 'SELECT c.name, COUNT(DISTINCT o.order_id) AS order_count, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name LIMIT 5;',
-        liveDemoNotes: 'Displays customer spend metrics with fan-out prevention.',
+        liveDemoNotes: 'A clean per-customer spend table, with fan-out kept in check.',
         mcqs: [
           {
             question: 'Why does COUNT(o.order_id) overcount when joining orders with order_items?',

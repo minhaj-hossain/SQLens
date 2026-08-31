@@ -72,7 +72,7 @@ export const Day_34_MODULE: ModuleData = {
         exampleQuery: 'SELECT p.product_id, p.name, c.name AS category_name, s.name AS supplier_name FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.product_id = 1;',
         exampleQueryExplanation: 'Hydrates detail view for product 1.',
         liveDemoSql: 'SELECT p.product_id, p.name, c.name AS category_name, s.name AS supplier_name FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.product_id = 1;',
-        liveDemoNotes: 'Displays product detail payload.',
+        liveDemoNotes: 'The full product-detail payload in one round-trip — name plus category and supplier names.',
         mcqs: [
           {
             question: 'Why is it preferable to fetch all product page details in a single joined query rather than multiple separate queries?',

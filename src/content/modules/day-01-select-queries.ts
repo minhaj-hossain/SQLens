@@ -97,9 +97,9 @@ export const Day_01_MODULE: ModuleData = {
         ],
         keyTakeaway: 'FROM identifies the data source, and SELECT chooses which column to extract. Every row in that column is returned.',
         exampleQuery: 'SELECT name FROM students;',
-        exampleQueryExplanation: 'From the students table, retrieve only the name column.',
+        exampleQueryExplanation: 'The query answers "who is in the class?" — every student\'s name, and nothing else.',
         liveDemoSql: 'SELECT name FROM students;',
-        liveDemoNotes: 'Executes `SELECT name FROM students;` and retrieves only the name column for all 5 students.',
+        liveDemoNotes: 'Run it and the grid shows exactly five names — one per student — with no other columns cluttering the view.',
         mcqs: [
           {
             question: 'What does this query do?\nSELECT age\nFROM students;',
@@ -251,7 +251,7 @@ export const Day_01_MODULE: ModuleData = {
         ],
         keyTakeaway: 'Separate column names with commas in the SELECT list. The order in SELECT dictates the order in the output.',
         exampleQuery: 'SELECT name, age FROM students;',
-        exampleQueryExplanation: 'Retrieves `name` and `age` columns from `students`.',
+        exampleQueryExplanation: 'Two columns side by side — exactly the fields a class roster needs.',
         liveDemoSql: 'SELECT name, age FROM students;',
         liveDemoNotes: 'Notice that only the 2 requested columns appear in the output table.',
         mcqs: [
@@ -404,7 +404,7 @@ export const Day_01_MODULE: ModuleData = {
         ],
         keyTakeaway: '* is a shorthand for all columns. Use it to inspect tables quickly.',
         exampleQuery: 'SELECT * FROM students;',
-        exampleQueryExplanation: 'Returns every column and every row stored in students.',
+        exampleQueryExplanation: 'A raw dump — every column and every row. Handy for a quick look, wasteful for real reports.',
         liveDemoSql: 'SELECT * FROM students;',
         liveDemoNotes: 'Dumps the complete table structure and data.',
         mcqs: [

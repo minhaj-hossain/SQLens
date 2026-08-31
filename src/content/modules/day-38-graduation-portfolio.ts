@@ -78,7 +78,7 @@ export const Day_38_MODULE: ModuleData = {
         exampleQuery: 'SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank FROM products;',
         exampleQueryExplanation: 'Ranks products within each category.',
         liveDemoSql: 'SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank FROM products LIMIT 10;',
-        liveDemoNotes: 'Displays window function category rankings.',
+        liveDemoNotes: 'Each product ranked within its own category, without collapsing a single row.',
         mcqs: [
           {
             question: 'What is the main conceptual difference between GROUP BY and a Window Function with PARTITION BY?',

@@ -27,7 +27,7 @@
 ## Phase 2 — Concept Theory & Explanation Tone Pass (P1)
 > Goal: eliminate remaining robotic/spec-sheet language in the theory **bodies**. (Measure: only 9 theory-level lines changed vs 131 header lines in the language commits.)
 - [x] **Tier A — quick wins:** Day 2 Concept 1 shortDescription rewritten (`"How SQL filters specific rows based on exact matches."` → `"Find rows that match your criteria exactly — the WHERE clause's most direct tool."`)
-- [x] **Tier B — batch 1 (12 rewrites):** Days 1, 2, 4, 18, 19, 22, 25, 34 `solutionExplanation`/step/`liveDemoNotes` micro-copy rewritten (e.g., Day 25: `"Creates a new row…"` → capability + why-it-matters phrasing). **Remaining ~36 + Days 11–38 sweep still open.**
+- [x] **Tier B — complete (43 rewrites total):** Days 1–4, 9, 15, 18–20, 22, 25, 27, 34, 36, 38 `solutionExplanation`/`exampleQueryExplanation`/`liveDemoNotes` micro-copy rewritten to capability + why-it-matters phrasing. `npm test` + `tsc` green after every batch.
 - [ ] **Tier C — dry summaries:** scenario-first one-liners for spec-sheet `summary:` fields where flagged
 - [x] Guardrails: never touch `solutionSql`/`initialSql`/`validation`; `npm test` re-run green after each batch; skip modules already strong (Day 9, Day 33 voice)
 

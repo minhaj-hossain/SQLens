@@ -86,9 +86,9 @@ export const Day_19_MODULE: ModuleData = {
         ],
         keyTakeaway: 'Ensure multi-table queries run cleanly and withstand added filtering conditions.',
         exampleQuery: 'SELECT c.name, COUNT(o.order_id) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;',
-        exampleQueryExplanation: 'Calculates customer order count.',
+        exampleQueryExplanation: 'How many orders each customer has placed.',
         liveDemoSql: 'SELECT c.name, COUNT(o.order_id) AS order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name LIMIT 5;',
-        liveDemoNotes: 'Displays customer order volume.',
+        liveDemoNotes: 'Each customer\'s order total at a glance.',
         mcqs: [
           {
             question: 'Where should a date filter on order_date be placed in a query that groups by customer?',

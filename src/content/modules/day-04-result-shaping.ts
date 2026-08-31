@@ -100,9 +100,9 @@ export const Day_04_MODULE: ModuleData = {
         ],
         keyTakeaway: 'Use ORDER BY column ASC for lowest-to-highest and ORDER BY column DESC for highest-to-lowest.',
         exampleQuery: 'SELECT name, price FROM products ORDER BY price DESC;',
-        exampleQueryExplanation: 'Sorts products by price highest first.',
+        exampleQueryExplanation: 'Highest price leads the list — descending order for the "most expensive first" view.',
         liveDemoSql: 'SELECT name, price FROM products ORDER BY price DESC LIMIT 5;',
-        liveDemoNotes: 'Displays top 5 most expensive products.',
+        liveDemoNotes: 'Only the five priciest items surface — a quick ranking of the top of the catalog.',
         mcqs: [
           {
             question: 'What is the default sort direction if neither ASC nor DESC is specified?',
@@ -249,7 +249,7 @@ export const Day_04_MODULE: ModuleData = {
         exampleQuery: 'SELECT name, age FROM students ORDER BY age ASC, name ASC;',
         exampleQueryExplanation: 'Sorts by age youngest first, breaking ties alphabetically.',
         liveDemoSql: 'SELECT name, category_id, price FROM products ORDER BY category_id ASC, price DESC LIMIT 6;',
-        liveDemoNotes: 'Displays categories in order with highest priced items first.',
+        liveDemoNotes: 'Categories walk 1→5, and inside each one the priciest product leads.',
         mcqs: [
           {
             question: 'In `ORDER BY category_id ASC, price DESC`, which column resolves ties when two products have the same category_id?',
@@ -405,7 +405,7 @@ export const Day_04_MODULE: ModuleData = {
         exampleQuery: 'SELECT DISTINCT city FROM customers;',
         exampleQueryExplanation: 'Lists every unique city where customers live.',
         liveDemoSql: 'SELECT DISTINCT city FROM customers ORDER BY city ASC;',
-        liveDemoNotes: 'Returns alphabetical list of unique cities.',
+        liveDemoNotes: 'Unique cities, each listed once, alphabetically.',
         mcqs: [
           {
             question: 'Where must the DISTINCT keyword be placed in a SQL query?',
@@ -550,9 +550,9 @@ export const Day_04_MODULE: ModuleData = {
         ],
         keyTakeaway: 'LIMIT controls batch size; OFFSET specifies how many rows to skip.',
         exampleQuery: 'SELECT name, quantity_in_stock FROM products ORDER BY quantity_in_stock ASC LIMIT 5;',
-        exampleQueryExplanation: 'Returns the 5 lowest stock items.',
+        exampleQueryExplanation: 'The five lowest-stock products — the ones needing a reorder first.',
         liveDemoSql: 'SELECT name, quantity_in_stock FROM products ORDER BY quantity_in_stock ASC LIMIT 5;',
-        liveDemoNotes: 'Displays lowest-stock products.',
+        liveDemoNotes: 'The five most nearly-out-of-stock items jump to the top of the list.',
         mcqs: [
           {
             question: 'How do you query Page 3 of a table with 10 records per page?',

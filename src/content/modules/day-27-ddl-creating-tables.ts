@@ -70,9 +70,9 @@ export const Day_27_MODULE: ModuleData = {
         ],
         keyTakeaway: 'CREATE TABLE defines the column blueprint for your database entity.',
         exampleQuery: 'CREATE TABLE product_tags ( tag_id INT, tag_name VARCHAR(50) );',
-        exampleQueryExplanation: 'Creates a simple tag table.',
+        exampleQueryExplanation: 'Defines the product_tags blueprint — two columns, ready for rows.',
         liveDemoSql: 'SELECT * FROM categories LIMIT 1;',
-        liveDemoNotes: 'Displays existing table structure.',
+        liveDemoNotes: 'A peek at an existing table to see what a CREATE TABLE blueprint should produce.',
         mcqs: [
           {
             question: 'What is the minimum requirement to create a table in SQL?',
@@ -194,9 +194,9 @@ export const Day_27_MODULE: ModuleData = {
         ],
         keyTakeaway: 'Always use DECIMAL for financial currency and appropriate string lengths for VARCHAR.',
         exampleQuery: 'CREATE TABLE product_metrics ( product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME );',
-        exampleQueryExplanation: 'Creates a multi-type metrics table.',
+        exampleQueryExplanation: 'A table mixing INT, DECIMAL, BOOLEAN, and DATETIME — the column types you\'ll reach for again and again.',
         liveDemoSql: 'SELECT product_id, price FROM products LIMIT 3;',
-        liveDemoNotes: 'Displays DECIMAL price columns.',
+        liveDemoNotes: 'Shows why prices belong in DECIMAL — exact two-decimal values, no rounding drift.',
         mcqs: [
           {
             question: 'Why should monetary prices always use DECIMAL(10,2) instead of FLOAT?',
@@ -310,9 +310,9 @@ export const Day_27_MODULE: ModuleData = {
         ],
         keyTakeaway: 'A PRIMARY KEY guarantees uniqueness and provides a permanent identity for each record.',
         exampleQuery: 'CREATE TABLE categories_new ( category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) );',
-        exampleQueryExplanation: 'Creates category table with auto-incrementing primary key.',
+        exampleQueryExplanation: 'A PRIMARY KEY that hands out its own IDs — no manual number-typing.',
         liveDemoSql: 'SELECT customer_id, name FROM customers LIMIT 3;',
-        liveDemoNotes: 'Displays customer primary key IDs.',
+        liveDemoNotes: 'Sequential customer IDs — the auto-incrementing pattern in action.',
         mcqs: [
           {
             question: 'Can a PRIMARY KEY column contain NULL values?',
@@ -418,7 +418,7 @@ export const Day_27_MODULE: ModuleData = {
         secondaryTables: ['reviews'],
         initialSql: '-- Task 2: Average rating per product\n',
         solutionSql: 'SELECT p.product_id, p.name, AVG(r.rating) AS avg_rating, COUNT(r.review_id) AS total_reviews FROM products p JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;',
-        solutionExplanation: 'Joins products to reviews to calculate rating metrics.',
+        solutionExplanation: 'Links each product to its reviews and rolls them up into an average rating and review count.',
         hints: [{ level: 1, text: 'Use `JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;`' }],
         validation: {
           requireExactResult: true,

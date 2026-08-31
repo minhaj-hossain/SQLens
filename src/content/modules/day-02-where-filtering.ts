@@ -854,7 +854,7 @@ export const Day_02_MODULE: ModuleData = {
         ],
         keyTakeaway: "Always enclose string literals in single quotes ('...'). Never quote column names.",
         exampleQuery: "SELECT name, city FROM students WHERE city = 'Dhaka';",
-        exampleQueryExplanation: "Retrieves only students who live in Dhaka.",
+        exampleQueryExplanation: 'Only the Dhaka students make the cut — the exact criteria winnow the whole table down.',
         liveDemoSql: "SELECT name, department, city FROM students WHERE city = 'Dhaka';",
         liveDemoNotes: "Returns Rahim and Ayesha, both residing in Dhaka.",
         mcqs: [
@@ -955,7 +955,7 @@ export const Day_02_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 1: Products priced under $50\n',
         solutionSql: 'SELECT name, price FROM products WHERE price < 50;',
-        solutionExplanation: '`WHERE price < 50` selects all products priced strictly under $50.',
+        solutionExplanation: 'The comparison keeps every catalog item priced under $50 and drops the pricier ones.',
         hints: [
           { level: 1, text: 'Use `SELECT name, price FROM products WHERE price < 50;`' },
         ],
@@ -981,7 +981,7 @@ export const Day_02_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 2: Products with quantity_in_stock greater than 20\n',
         solutionSql: 'SELECT name, quantity_in_stock FROM products WHERE quantity_in_stock > 20;',
-        solutionExplanation: '`WHERE quantity_in_stock > 20` retrieves well-stocked items.',
+        solutionExplanation: 'A rough "healthy stock" filter — anything with more than 20 units on hand qualifies.',
         hints: [
           { level: 1, text: 'Use `SELECT name, quantity_in_stock FROM products WHERE quantity_in_stock > 20;`' },
         ],

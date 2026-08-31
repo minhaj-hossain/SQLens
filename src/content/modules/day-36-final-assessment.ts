@@ -75,7 +75,7 @@ export const Day_36_MODULE: ModuleData = {
         exampleQuery: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS rev FROM categories c JOIN products p ON c.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY c.category_id, c.name ORDER BY rev DESC LIMIT 3;',
         exampleQueryExplanation: 'Top 3 categories by total revenue.',
         liveDemoSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS rev FROM categories c JOIN products p ON c.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY c.category_id, c.name ORDER BY rev DESC LIMIT 3;',
-        liveDemoNotes: 'Displays top 3 revenue categories.',
+        liveDemoNotes: 'The three revenue leaders, ranked.',
         mcqs: [
           {
             question: 'What combination of tools enables optimal read performance in high-scale relational databases?',
@@ -133,7 +133,7 @@ export const Day_36_MODULE: ModuleData = {
           secondaryTables: ['orders', 'order_items'],
           initialSql: '-- High-spending customer benchmark\n',
           solutionSql: 'WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;',
-          solutionExplanation: 'Calculates high-value customers above average threshold.',
+          solutionExplanation: 'Finds customers whose spend beats the catalog average — a benchmark comparison, not a fixed cutoff.',
           hints: [{ level: 1, text: 'Use `WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;`' }],
           validation: {
             requireExactResult: true,
@@ -167,7 +167,7 @@ export const Day_36_MODULE: ModuleData = {
         secondaryTables: ['products', 'order_items'],
         initialSql: '-- Deliverable 1: Top 3 categories by revenue\n',
         solutionSql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC LIMIT 3;',
-        solutionExplanation: 'Joins across 3 tables and sums revenue per category.',
+        solutionExplanation: 'Walks categories → products → order_items and tallies revenue per category, keeping only the top three.',
         hints: [{ level: 1, text: 'Use `ORDER BY category_revenue DESC LIMIT 3;`' }],
         validation: {
           requireExactResult: true,

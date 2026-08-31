@@ -88,9 +88,9 @@ export const Day_20_MODULE: ModuleData = {
         ],
         keyTakeaway: 'Demonstrate multi-table JOIN and aggregation mastery.',
         exampleQuery: 'SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;',
-        exampleQueryExplanation: 'Calculates grand total revenue.',
+        exampleQueryExplanation: 'One number: the company\'s total revenue across every order.',
         liveDemoSql: 'SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;',
-        liveDemoNotes: 'Displays grand total revenue across all orders.',
+        liveDemoNotes: 'The headline revenue figure for the whole store.',
         mcqs: [
           {
             question: 'Which supplier in the seed dataset has products that have never been ordered?',

@@ -227,9 +227,9 @@ export const Day_09_MODULE: ModuleData = {
         ],
         keyTakeaway: 'MIN(column) finds the lowest value in a column across all non-NULL rows.',
         exampleQuery: 'SELECT MIN(price) AS lowest_price FROM products;',
-        exampleQueryExplanation: 'Returns the cheapest product price in inventory.',
+        exampleQueryExplanation: 'The single lowest price across the whole catalog.',
         liveDemoSql: 'SELECT MIN(price) AS lowest_price FROM products;',
-        liveDemoNotes: 'Displays lowest catalog price ($4.99).',
+        liveDemoNotes: 'The cheapest item rings in at $4.99.',
         mcqs: [
           {
             question: 'What does `SELECT MIN(price) FROM products;` return if prices are $15, $4.99, and $120?',
@@ -358,9 +358,9 @@ export const Day_09_MODULE: ModuleData = {
         ],
         keyTakeaway: 'MAX(column) finds the highest value in a column across all non-NULL rows.',
         exampleQuery: 'SELECT MAX(price) AS highest_price FROM products;',
-        exampleQueryExplanation: 'Returns the most expensive product price in inventory.',
+        exampleQueryExplanation: 'The single highest price across the whole catalog.',
         liveDemoSql: 'SELECT MAX(price) AS highest_price FROM products;',
-        liveDemoNotes: 'Displays highest catalog price ($120.00).',
+        liveDemoNotes: 'The priciest item tops out at $120.00.',
         mcqs: [
           {
             question: 'Which query finds the maximum inventory quantity across all products?',
@@ -630,9 +630,9 @@ export const Day_09_MODULE: ModuleData = {
         ],
         keyTakeaway: 'AVG(column) divides the sum of non-NULL values by the count of non-NULL values.',
         exampleQuery: 'SELECT AVG(price) AS avg_price FROM products;',
-        exampleQueryExplanation: 'Calculates the average product price in the catalog.',
+        exampleQueryExplanation: 'The typical price tag — a single number that summarizes the whole catalog.',
         liveDemoSql: 'SELECT AVG(price) AS avg_price FROM products;',
-        liveDemoNotes: 'Displays average catalog price.',
+        liveDemoNotes: 'One figure that sizes up the entire catalog.',
         mcqs: [
           {
             question: 'Prices are $10, $20, NULL, and $30. What does `AVG(price)` return?',
