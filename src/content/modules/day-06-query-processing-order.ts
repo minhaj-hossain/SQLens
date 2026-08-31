@@ -4,23 +4,23 @@ export const Day_06_MODULE: ModuleData = {
   id: 'day-06',
   slug: 'logical-query-processing-simple',
   day: 6,
-  title: 'Day 6 — Visual Concept Lab: Logical Query Processing Order (Simple Pass)',
-  shortTitle: 'Logical Query Processing (Simple)',
+  title: 'Day 6 — How SQL Really Executes Your Query',
+  shortTitle: 'Query Execution Order (Logical Model)',
   type: 'conceptual_session',
   milestoneId: 'milestone-1',
-  description: 'Understand the 5-step logical execution order: FROM → WHERE → SELECT → ORDER BY → LIMIT, and why WHERE cannot reference SELECT column aliases.',
+  description: 'SQL reads like SELECT first, but executes in a different order: FROM -> WHERE -> SELECT -> ORDER BY -> LIMIT. Learn why, so you understand why some things work and others don\'t (like using SELECT aliases in WHERE).',
   estimatedMinutes: 45,
   completionLearnings: [
-    'Explain the 5-step simple logical query processing order: FROM → WHERE → SELECT → ORDER BY → LIMIT',
-    'Understand why WHERE cannot reference aliases defined in SELECT',
-    'Distinguish between the standard logical execution model and database-specific syntax extensions (like MySQL)',
+    'Understand the 5-step execution order so you can predict query behavior',
+    'Explain why WHERE cannot use SELECT aliases (WHERE runs first!)',
+    'Recognize the difference between syntax order (what you type) and logical execution order',
   ],
   concepts: [
     {
       id: 'simple-logical-order',
       order: 1,
-      title: '1. The 5-Step Evaluation Lifecycle & Alias Visibility',
-      shortDescription: 'FROM → WHERE → SELECT → ORDER BY → LIMIT.',
+      title: '1. Execution Order: FROM -> WHERE -> SELECT -> ORDER BY -> LIMIT',
+      shortDescription: 'The engine runs queries differently than you write them — learn why to debug weird behavior.',
       theory: {
         summary: 'SQL queries are written starting with SELECT, but the database engine evaluates them in a completely different logical order. Understanding this lifecycle explains why column aliases created in SELECT cannot be used in WHERE.',
         introTable: {

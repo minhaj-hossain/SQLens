@@ -4,23 +4,23 @@ export const Day_07_MODULE: ModuleData = {
   id: 'day-07',
   slug: 'project-part-1-explore-schema',
   day: 7,
-  title: 'Day 7 — Applied Project: Full Schema Exploration',
-  shortTitle: 'Project: Schema Exploration',
+  title: 'Day 7 — Real Project: E-Commerce Database Audit',
+  shortTitle: 'Project: Database Audit',
   type: 'project_part',
   milestoneId: 'milestone-1',
-  description: 'Join the E-Commerce Data Team to audit and explore the full 6-table database schema (suppliers, categories, products, customers, orders, order_items) using single-table queries.',
+  description: 'Your first real data engineering task: audit a 6-table e-commerce database. Explore suppliers, categories, products, customers, and orders independently to understand the schema before you start working with joins.',
   estimatedMinutes: 75,
   completionLearnings: [
-    'Navigate the full 6-table e-commerce relational schema independently',
-    'Query suppliers, products, and categories using targeted single-table audits',
-    'Identify primary key and foreign key reference columns across entities',
+    'Navigate a 6-table relational database schema independently',
+    'Write targeted queries to explore each table and understand what data exists',
+    'Identify primary key and foreign key columns to understand table relationships',
   ],
   concepts: [
     {
       id: 'schema-navigation',
       order: 1,
-      title: '1. E-Commerce Data Team Onboarding & Schema Audit',
-      shortDescription: 'Hands-on exploration of the complete relational schema.',
+      title: '1. Explore the Database Schema Like a Real Data Engineer',
+      shortDescription: 'Your first data engineering task: audit the 6-table e-commerce database independently.',
       theory: {
         summary: 'Welcome to the data engineering team! Before running analytical joins or modifying records, your onboarding mission is to audit and inspect all tables in the production e-commerce database.',
         introTable: {

@@ -4,17 +4,17 @@ export const Day_04_MODULE: ModuleData = {
   id: 'day-04',
   slug: 'result-shaping',
   day: 4,
-  title: 'Day 4 — Result Shaping',
-  shortTitle: 'Result Shaping',
+  title: 'Day 4 — Sort, Deduplicate & Paginate',
+  shortTitle: 'Sort, Deduplicate & Paginate',
   type: 'module',
   milestoneId: 'milestone-1',
-  description: 'Shape and organize output rows using DISTINCT to eliminate duplicates, ORDER BY for ascending and descending sorts, and LIMIT with OFFSET for pagination.',
+  description: 'Organize your query results the way you want them: sort ascending or descending, remove duplicate rows, and paginate large result sets with LIMIT and OFFSET.',
   estimatedMinutes: 45,
   completionLearnings: [
-    'Sort output records alphabetically, numerically, and chronologically with ORDER BY (ASC and DESC)',
-    'Eliminate duplicate values from result sets using DISTINCT',
-    'Cap output record counts using LIMIT',
-    'Skip preceding rows for pagination using OFFSET',
+    'Sort output rows alphabetically, numerically, or chronologically using ORDER BY (ASC and DESC)',
+    'Remove duplicate rows from results using DISTINCT (avoid seeing the same name twice)',
+    'Limit output to N rows using LIMIT for smaller, manageable result sets',
+    'Skip N rows using OFFSET for pagination (show me results 11–20 on page 2)',
   ],
   concepts: [
     // =========================================================================
@@ -23,8 +23,8 @@ export const Day_04_MODULE: ModuleData = {
     {
       id: 'order-by-single-column',
       order: 1,
-      title: '1. Single-Column Sorting (ASC & DESC)',
-      shortDescription: 'Sort query results by a single column in ascending or descending order.',
+      title: '1. Sort Results with ORDER BY (ASC and DESC)',
+      shortDescription: 'Arrange output rows alphabetically, numerically, or by date — lowest to highest or vice versa.',
       theory: {
         summary: 'Without an ORDER BY clause, relational databases return rows in arbitrary storage order. ORDER BY allows you to sort records explicitly.',
         introTable: {

@@ -4,22 +4,22 @@ export const Day_03_MODULE: ModuleData = {
   id: "day-03",
   slug: "specialized-filtering",
   day: 3,
-  title: "Day 3 — Specialized Filtering",
-  shortTitle: "Specialized Filtering",
+  title: "Day 3 — Advanced Filtering Techniques",
+  shortTitle: "Advanced Filtering",
   type: "module",
   milestoneId: "milestone-1",
   description:
-    "Master advanced filtering: compound logic (AND, OR, NOT, Parentheses), discrete sets (IN), continuous intervals (BETWEEN), wildcard patterns (LIKE with % and _), and NULL safety (IS NULL / IS NOT NULL).",
+    "Combine conditions with AND/OR, filter by sets with IN, check ranges with BETWEEN, search text with LIKE wildcards, and handle NULL values safely. Stop writing WHERE age = 21 OR age = 22 — you'll learn cleaner ways.",
   estimatedMinutes: 60,
   completionLearnings: [
-    "Narrow down query results using AND intersection logic",
-    "Expand candidate results using OR union logic",
-    "Invert boolean conditions safely using NOT (condition)",
-    "Enforce evaluation order and avoid operator precedence bugs with parentheses",
-    "Filter inclusive intervals on numbers and dates using BETWEEN ... AND ...",
-    "Replace verbose chained OR equality checks with clean IN (...) lists",
-    "Perform partial string searches using LIKE with % (any length) and _ (single character)",
-    "Safely detect missing data with IS NULL and IS NOT NULL without = NULL failures",
+    "Combine multiple filters with AND to narrow results (both conditions must be true)",
+    "Combine conditions with OR to expand results (at least one condition must be true)",
+    "Use NOT to invert a condition (negate logic)",
+    "Control evaluation order with parentheses to avoid logic bugs",
+    "Use BETWEEN for cleaner range queries instead of chaining comparisons",
+    "Use IN to replace verbose chains of OR with a concise set list",
+    "Search partial text matches with LIKE: % for any characters, _ for exactly one",
+    "Detect missing data safely with IS NULL and IS NOT NULL (never = NULL)",
   ],
   concepts: [
     // =========================================================================
@@ -28,9 +28,9 @@ export const Day_03_MODULE: ModuleData = {
     {
       id: "where-and-intersection",
       order: 1,
-      title: "1. Combining Conditions with AND (Intersection)",
+      title: "1. Combine Filters with AND (Both Conditions Must Be True)",
       shortDescription:
-        "How to require multiple conditions to be TRUE simultaneously.",
+        "Narrow down results by requiring multiple conditions simultaneously: age = 21 AND department = CSE",
       theory: {
         summary:
           "In real applications, decisions depend on multiple conditions simultaneously. What if we want CSE students who are also 21 years old?",

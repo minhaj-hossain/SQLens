@@ -4,24 +4,24 @@ export const Day_05_MODULE: ModuleData = {
   id: 'day-05',
   slug: 'practice-retrieval-filtering-shaping',
   day: 5,
-  title: 'Day 5 — Guided Practice: Retrieval, Filtering & Shaping',
-  shortTitle: 'Practice: Single-Table Pipelines',
+  title: 'Day 5 — Complete Single-Table Queries',
+  shortTitle: 'Complete Single-Table Queries',
   type: 'practice_day',
   milestoneId: 'milestone-1',
-  description: 'Consolidate single-table query construction by combining condition filtering, multi-column sorting, and pagination across inventory and customer operational pipelines.',
+  description: 'Put it all together: filter rows with WHERE, sort results with ORDER BY, and paginate with LIMIT/OFFSET. Build real operational queries that inventory teams and managers actually run.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Assemble complete single-table operational pipelines (SELECT ... FROM ... WHERE ... ORDER BY ... LIMIT ... OFFSET)',
-    'Filter inventory with thresholds like quantity_in_stock = 0 and <= reorder_level',
-    'Paginate multi-page catalog datasets using LIMIT and OFFSET calculations',
-    'Filter null-safe records and sort chronologically with LIMIT',
+    'Assemble complete queries combining FROM, WHERE, SELECT, ORDER BY, LIMIT, and OFFSET',
+    'Query inventory: find low-stock items, sort by urgency, show 10 per page',
+    'Paginate results correctly using LIMIT/OFFSET arithmetic',
+    'Sort by date, number, and text columns in both ascending and descending order',
   ],
   concepts: [
     {
       id: 'day-05-pipelines',
       order: 1,
-      title: '1. Assembling Full Single-Table Query Pipelines',
-      shortDescription: 'From isolated keywords to complete operational pipelines.',
+      title: '1. Combine Clauses into Real Operational Queries',
+      shortDescription: 'Write complete queries that filter, sort, and paginate — the real SQL you see in production applications.',
       theory: {
         summary: 'In real applications, you do not write isolated clauses. You construct unified query pipelines that filter records on multiple business conditions, sort by priority, and paginate for UI displays.',
         introTable: {
