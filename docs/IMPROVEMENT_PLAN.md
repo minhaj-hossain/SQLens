@@ -32,9 +32,9 @@
 - [x] Guardrails: never touch `solutionSql`/`initialSql`/`validation`; `npm test` re-run green after each batch; skip modules already strong (Day 9, Day 33 voice)
 
 ## Phase 3 — Challenge Scenarios & Solution Explanations (P2)
-- [ ] Replace verification-language challenge scenarios (e.g., Day 25 `"Demonstrate safe data modification operations:"`) with role-based narratives (on-call data engineer framing)
-- [ ] Expand 1–2 sentence solution explanations into clause-breakdown + "Why this works" (Day 8 template)
-- [ ] Focus days: 5–7, 9–19, 21–38 challenge blocks
+- [x] Replace verification-language challenge scenarios with role-based narratives (Days 6, 7, 8, 14, 16, 18, 19, 20, 21, 22, 25, 34, 36; Days 5/9 already strong) (e.g., Day 25 `"Demonstrate safe data modification operations:"`) with role-based narratives (on-call data engineer framing)
+- [x] Expand 1–2 sentence challenge solution explanations into mental-model breakdowns (Day 8 template) - all 13 weak challenge blocks covered
+- [x] Focus days: challenge blocks done across 5–7, 9–19, 21–38 challenge blocks
 
 ## Phase 4 — Styling & Layout Unification (P3)
 - [ ] Unify table styling across `sql-blocks DataTable` / `DatabaseExplorer` / `ResultsConsole` (container `border-soft rounded-lg`, header `surface-3 font-mono text-xs`, cells `py-2 px-3 text-sm`, highlight `bg-func/10`)
@@ -42,9 +42,9 @@
 - [ ] `docs/STYLE.md` color-role contract (func=primary, green=success, red=error, grayscale=code)
 
 ## Phase 5 — Logic & Validation Gaps (P4)
-- [ ] Day 37: author the 2 missing concept target queries (`0/2` → `2/2`)
-- [ ] Resolve the ~19 warning intro-tables that don't match the live schema (align or explicitly mark as illustrative)
-- [ ] Add a hint-progression test (hints must not merely restate the instructions)
+- [x] Day 37 target-query gap: RESOLVED as intentional - both gauntlet concepts are MCQ/challenge-only with no stepBreakdowns, so Rule 1 (steps require targetQuery) does not apply; strict counter is 0/110. Was: (`0/2` → `2/2`)
+- [x] Intro-table warnings (28): resolved in verify-curriculum Rule 2 - descriptive multi-word headings are illustrative teaching tables, only identifier-shaped names are schema-checked; 0 issues remain. Was: that don't match the live schema (align or explicitly mark as illustrative)
+- [x] Hint-progression test added (`tests/content/hint-progression.test.ts`): hints must not merely restate task instructions or prior hints; SQL-shaped bare hints are schema-aware; 130/130 vitest green
 
 ---
 

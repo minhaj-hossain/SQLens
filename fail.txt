@@ -1,7 +1,0 @@
-day-17/subqueries-not-in-null-trap/day17-c1c-t2
-day-21/perf-scan-problem/perf-c1-t1
-day-21/perf-index-lookup/perf-c2-t2
-day-21/perf-optimization-loop/perf-c3-t1
-day-17/subqueries-not-in-null-trap/day17-c1c-t2
-day-17/subqueries-not-in-null-trap/day17-c1c-t2
-day-17/subqueries-not-in-null-trap/day17-c1c-t2
