@@ -10,6 +10,7 @@
  *   comments   -> #55554f (dim, italic)
  */
 import React from 'react';
+import { DataGrid } from './DataGrid';
 
 /**
  * highlightSql now lives in `@/lib/highlight-sql` (pure + unit-tested under
@@ -104,47 +105,13 @@ export function DataTable({
           )}
         </div>
       )}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse font-mono text-[12.5px]">
-          <thead>
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col}
-                  className="text-left font-semibold text-text px-3.5 py-2 bg-surface-2 border-b border-border whitespace-nowrap"
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rIdx) => (
-              <tr key={rIdx} className="hover:bg-surface-2 transition-colors">
-                {row.map((cell, cIdx) => {
-                  const col = columns[cIdx];
-                  const isId = cIdx === 0 && col.toLowerCase() === 'id';
-                  const cellText = cell === null || cell === undefined ? 'NULL' : String(cell);
-                  return (
-                    <td
-                      key={cIdx}
-                      className={`px-3.5 py-2 border-b border-border-soft border-r border-border-soft/60 last:border-r-0 whitespace-nowrap ${
-                        isId
-                          ? 'text-text-faint'
-                          : cell === null || cell === undefined
-                          ? 'text-text-faint italic'
-                          : 'text-text-dim'
-                      }`}
-                    >
-                      {cellText}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataGrid
+        columns={columns}
+        rows={rows}
+        schemaName={tableName}
+        bare
+        showRowCount
+      />
     </div>
   );
 }

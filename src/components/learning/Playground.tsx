@@ -7,6 +7,8 @@ import { QueryExecutionResult } from '@/types/database';
 import { DATABASE_SCHEMAS } from '@/content/database/schema';
 import { INITIAL_TABLES } from '@/content/database/tables';
 import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
+import { formatExecutionTime } from '@/lib/format-execution-time';
+import { DataGrid } from './DataGrid';
 
 const HISTORY_KEY = 'sqlens_playground_history_v1';
 const DRAFT_KEY = 'sqlens_playground_draft_v1';
@@ -655,11 +657,11 @@ export default function Playground({ onClose }: PlaygroundProps) {
                     </button>
                     {r.affectedRows !== undefined ? (
                       <span className="font-mono text-[10.5px] text-text-faint">
-                        {r.affectedRows} affected · {r.executionTimeMs}ms
+                        {r.affectedRows} affected · {formatExecutionTime(r.executionTimeMs)}
                       </span>
                     ) : (
                       <span className="font-mono text-[10.5px] text-text-faint">
-                        {r.rowCount} rows · {r.executionTimeMs}ms
+                        {r.rowCount} rows · {formatExecutionTime(r.executionTimeMs)}
                       </span>
                     )}
                   </div>
@@ -675,34 +677,13 @@ export default function Playground({ onClose }: PlaygroundProps) {
                     {r.affectedRows !== undefined ? ` (${r.affectedRows} rows affected)` : ''}.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse font-mono text-xs">
-                      <thead>
-                        <tr className="bg-surface-2">
-                          {r.columns.map((c) => (
-                            <th key={c} className="text-left px-3.5 py-2 text-[11px] text-text font-semibold border-b border-border whitespace-nowrap">
-                              {c}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border-soft">
-                        {r.rows.map((row, ri) => (
-                          <tr key={ri} className="hover:bg-surface-2/50">
-                            {r.columns.map((c) => (
-                              <td key={c} className="px-3.5 py-2 text-text-dim whitespace-nowrap">
-                                {row[c] === null || row[c] === undefined ? (
-                                  <span className="text-text-faint italic">NULL</span>
-                                ) : (
-                                  String(row[c])
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataGrid
+                    columns={r.columns}
+                    rows={r.rows}
+                    pageSize={50}
+                    maxHeight="max-h-[420px]"
+                    bare
+                  />
                 )}
               </div>
             ))}

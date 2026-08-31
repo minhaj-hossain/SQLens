@@ -3,6 +3,7 @@ import { Table, Database, Key, Search, ChevronDown, Check, Info, Network, ArrowR
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { TableRow } from '../../types/database';
+import { DataGrid } from './DataGrid';
 
 interface DatabaseExplorerProps {
   initialTableName?: string;
@@ -126,90 +127,49 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
 
       {/* Main Body Grid */}
       <div className="relative">
-        <div className="sm:hidden px-3 py-1 bg-surface-2 text-[10px] font-mono text-text-faint border-b border-border-soft flex items-center justify-between">
-            <span>← Swipe horizontally to view all columns →</span>
-        </div>
-        <div className="overflow-auto max-h-[320px] min-h-[160px] bg-surface scrollbar-thin text-xs">
+        <div className="min-h-[160px] bg-surface">
           {activeTab === 'preview' ? (
-            <table className="min-w-full text-left font-mono border-collapse">
-            <thead className="sticky top-0 z-10 bg-surface-2 border-b border-border">
-                <tr>
-                  {schema.columns.map((col) => {
-                    const isHighlighted = highlightedColumns.some(
-                      (hc) => hc.toLowerCase() === col.name.toLowerCase()
-                    );
-                    return (
-                      <th
-                        key={col.name}
-                        onClick={() => handleCopyColName(col.name)}
-                        className={`px-4 py-2.5 text-[11.5px] font-semibold select-none cursor-pointer group transition bg-surface-2 border-b ${
-                          isHighlighted
-                            ? 'text-text border-b-2 border-b-func'
-                            : 'text-text-dim border-border hover:bg-surface-3'
-                        }`}
-                        title="Click to copy / insert column name"
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span className="group-hover:text-text">{col.name}</span>
-                          {col.primaryKey && (
-                            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-surface text-text border border-border">
-                              PK
-                            </span>
-                          )}
-                          {col.foreignKey && (
-                            <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-surface text-text-dim border border-border">
-                              FK
-                            </span>
-                          )}
-                          {copiedCol === col.name && (
-                            <Check className="w-3 h-3 text-text ml-1" />
-                          )}
-                        </div>
-                        <span className="text-[9px] font-normal text-text-faint block mt-0.5">
-                          {col.type}
-                        </span>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-            <tbody className="divide-y divide-border-soft text-[11.5px] text-text-dim">
-                {filteredRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={schema.columns.length} className="py-8 text-center text-text-faint">
-                      No records found matching "{searchFilter}"
-                    </td>
-                  </tr>
-                ) : (
-                  filteredRows.slice(0, 40).map((row, idx) => (
-                    <tr
-                      key={idx}
-                      className="hover:bg-surface-2 transition-colors"
-                    >
-                      {schema.columns.map((col) => {
-                        const isHighlighted = highlightedColumns.some(
-                          (hc) => hc.toLowerCase() === col.name.toLowerCase()
-                        );
-                        return (
-                          <td
-                            key={col.name}
-                            className={`px-4 py-2 whitespace-nowrap ${
-                              isHighlighted ? 'bg-func/10 text-text font-medium' : ''
-                            }`}
-                          >
-                            {row[col.name] !== null && row[col.name] !== undefined ? (
-                              String(row[col.name])
-                            ) : (
-                              <span className="text-text-faint italic">NULL</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <DataGrid
+              columns={schema.columns.map((c) => c.name)}
+              rows={filteredRows}
+              schemaName={activeTable}
+              highlightColumns={highlightedColumns}
+              onColumnClick={handleCopyColName}
+              columnBadges={(colName) => {
+                const colInfo = schema.columns.find(
+                  (c) => c.name.toLowerCase() === colName.toLowerCase(),
+                );
+                if (!colInfo) return null;
+                return (
+                  <>
+                    {colInfo.primaryKey && (
+                      <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-surface text-text border border-border">
+                        PK
+                      </span>
+                    )}
+                    {colInfo.foreignKey && (
+                      <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-surface text-text-dim border border-border">
+                        FK
+                      </span>
+                    )}
+                    {copiedCol === colName && (
+                      <Check className="w-3 h-3 text-text ml-0.5" />
+                    )}
+                    <span className="text-[9px] font-normal text-text-faint">
+                      {colInfo.type}
+                    </span>
+                  </>
+                );
+              }}
+              rowCap={40}
+              maxHeight="max-h-[320px]"
+              bare
+              emptyMessage={
+                searchFilter
+                  ? `No records found matching "${searchFilter}"`
+                  : 'No rows to display.'
+              }
+            />
           ) : activeTab === 'schema' ? (
             /* Schema & Types List View */
             <div className="p-3 divide-y divide-border-soft">

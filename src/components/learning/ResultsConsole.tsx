@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { QueryExecutionResult } from '../../types/database';
-import { CheckCircle2, AlertCircle, Terminal, HelpCircle, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Terminal, HelpCircle, Sparkles } from 'lucide-react';
 import { explainQuery } from '../../lib/sql-explain';
 import { formatExecutionTime } from '../../lib/format-execution-time';
+import { DataGrid } from './DataGrid';
 
 interface ResultsConsoleProps {
   result: QueryExecutionResult | null;
@@ -20,12 +21,8 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   className = '',
 }) => {
   const [activeTab, setActiveTab] = useState<'results' | 'explain'>('results');
-  const [page, setPage] = useState(0);
-  const pageSize = 8;
 
   const totalRows = result?.rows.length || 0;
-  const totalPages = Math.ceil(totalRows / pageSize);
-  const displayedRows = result?.rows ? result.rows.slice(page * pageSize, (page + 1) * pageSize) : [];
   // Honest timing (tracker item 11): real value only — never a fabricated
   // fallback number like the old '1.2'.
   const timeDisplay = result ? formatExecutionTime(result.executionTimeMs) : null;
@@ -113,14 +110,9 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
         </div>
       )}
 
-      {/* Main Console Content with Mobile Scroll Indicator */}
+      {/* Main Console Content */}
       <div className="relative">
-        {result && !result.error && totalRows > 0 && activeTab === 'results' && (
-          <div className="sm:hidden px-3 py-1 bg-surface-2 text-[10px] font-mono text-text-faint border-b border-border flex items-center justify-between">
-            <span>← Swipe horizontally to view all columns →</span>
-          </div>
-        )}
-        <div className="min-h-[160px] max-h-[300px] overflow-auto bg-surface scrollbar-thin">
+        <div className="min-h-[160px] bg-surface">
           {activeTab === 'explain' ? (
             <div className="p-4 space-y-3 font-mono text-xs">
               <div className="text-text flex items-center gap-2 font-bold">
@@ -158,61 +150,19 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               <p className="text-text-faint text-[11px]">Check your WHERE filter conditions or table records.</p>
             </div>
           ) : (
-            /* Results Table Grid */
-            <table className="min-w-full text-left font-mono border-collapse text-xs">
-            <thead className="sticky top-0 z-10 bg-surface-2 border-b border-border text-text">
-              <tr>
-                {result.columns?.map((field) => (
-                  <th key={field} className="px-3.5 py-2 text-[11px] font-semibold select-none whitespace-nowrap bg-surface-2 text-text">
-                    {field}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-soft text-[12px] text-text-dim">
-              {displayedRows.map((row, rIdx) => (
-                <tr key={rIdx} className="hover:bg-surface-2/50 transition-colors">
-                  {result.columns?.map((field) => (
-                    <td key={field} className="px-3.5 py-2 whitespace-nowrap">
-                      {row[field] !== null && row[field] !== undefined ? (
-                        String(row[field])
-                      ) : (
-                        <span className="text-text-faint italic">NULL</span>
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            /* Results Table Grid — shared DataGrid (types + pagination) */
+            <DataGrid
+              columns={result.columns ?? []}
+              rows={result.rows}
+              maxHeight="max-h-[300px]"
+              pageSize={15}
+              bare
+              className="min-h-[160px]"
+            />
         )}
         </div>
       </div>
 
-      {/* Pagination Footer (if more than 8 rows) */}
-      {result && totalRows > pageSize && activeTab === 'results' && (
-        <div className="flex items-center justify-between px-3 py-2 bg-surface-2 border-t border-border-soft text-xs text-text-dim font-mono">
-          <span>
-            Page {page + 1} of {totalPages} ({totalRows} total records)
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="p-1 rounded bg-surface-2 hover:bg-surface-3 disabled:opacity-40 text-text-dim transition cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              className="p-1 rounded bg-surface-2 hover:bg-surface-3 disabled:opacity-40 text-text-dim transition cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
   );
 };

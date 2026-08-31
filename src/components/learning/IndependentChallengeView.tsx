@@ -41,6 +41,8 @@ interface IndependentChallengeViewProps {
 
 
 import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
+import { formatExecutionTime } from '@/lib/format-execution-time';
+import { DataGrid } from './DataGrid';
 
 /**
  * Strips raw markdown backtick delimiters (`column` -> column)
@@ -687,38 +689,23 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               </div>
             )}
 
-            {/* Query Results Table */}
+            {/* Query Results Table — shared DataGrid */}
             {executionResult && executionResult.success && executionResult.rows.length > 0 && (
               <div className="bg-surface rounded-xl border border-border overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2 bg-surface-2 border-b border-border-soft text-xs font-mono text-text-dim">
                   <span>Output ({executionResult.rowCount} rows)</span>
-                  <span className="text-[11px] text-text-dim">{executionResult.executionTimeMs.toFixed(1)}ms</span>
+                  <span className="text-[11px] text-text-dim">
+                    {formatExecutionTime(executionResult.executionTimeMs)}
+                  </span>
                 </div>
 
-                <div className="overflow-x-auto max-h-[220px] scrollbar-thin">
-                  <table className="w-full text-left font-mono text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-surface-2 border-b border-border sticky top-0 z-10">
-                        {executionResult.columns.map((col) => (
-                          <th key={col} className="px-3.5 py-2 text-[11px] font-semibold text-text">
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-soft text-text-dim">
-                      {executionResult.rows.map((row, rIdx) => (
-                        <tr key={rIdx} className="hover:bg-surface-2/50 transition">
-                          {executionResult.columns.map((col) => (
-                            <td key={col} className="px-3.5 py-2 whitespace-nowrap">
-                              {String(row[col] ?? 'NULL')}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataGrid
+                  columns={executionResult.columns}
+                  rows={executionResult.rows}
+                  pageSize={50}
+                  maxHeight="max-h-[220px]"
+                  bare
+                />
               </div>
             )}
           </motion.div>
@@ -835,38 +822,31 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               </div>
             </div>
 
-            {/* Data Grid */}
-            <div className="overflow-auto flex-1 p-0 scrollbar-thin">
-              <table className="w-full text-left font-mono text-xs border-collapse">
-                <thead>
-                  <tr className="bg-surface-2 border-b border-border sticky top-0 z-10">
-                    {activeSchema.columns.map((col) => (
-                      <th key={col.name} className="px-3.5 py-2 text-[11px] font-semibold text-text">
-                        <div className="flex items-center gap-1">
-                          <span>{col.name}</span>
-                          <span className="text-[10px] text-comment font-normal">({col.type})</span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-soft text-text-dim">
-                  {filteredRows.slice(0, 50).map((row, rIdx) => (
-                    <tr key={rIdx} className="hover:bg-surface-2/50 transition">
-                      {activeSchema.columns.map((col) => (
-                        <td key={col.name} className="px-3.5 py-2 whitespace-nowrap">
-                          {String(row[col.name] ?? 'NULL')}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Data Grid — shared DataGrid */}
+            <DataGrid
+              columns={activeSchema.columns.map((c) => c.name)}
+              rows={filteredRows}
+              schemaName={inspectTable}
+              rowCap={50}
+              maxHeight="max-h-[220px]"
+              bare
+              showRowCount
+              columnBadges={(colName) => {
+                const colInfo = activeSchema.columns.find(
+                  (c) => c.name.toLowerCase() === colName.toLowerCase(),
+                );
+                return colInfo ? (
+                  <span className="text-[10px] text-comment font-normal">
+                    ({colInfo.type})
+                  </span>
+                ) : null;
+              }}
+              emptyMessage="No records found."
+            />
 
             {/* Modal Footer */}
             <div className="p-3 bg-ink border-t border-border flex items-center justify-between text-xs text-text-dim font-mono">
-              <span>Showing {filteredRows.length} rows</span>
+              <span className="text-text-faint">Tap a column chip to copy its name</span>
               <button
                 onClick={() => setShowDatabaseModal(false)}
                 className="px-3.5 py-1 rounded-lg bg-surface-2 hover:bg-surface-3 text-text font-semibold transition cursor-pointer"

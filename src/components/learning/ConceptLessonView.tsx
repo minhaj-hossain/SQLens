@@ -14,6 +14,8 @@ import { motion } from 'motion/react';
 import { Concept } from '../../types/curriculum';
 import { QueryExecutionResult } from '../../types/database';
 import { DataTable, CodeCard, highlightSql } from './sql-blocks';
+import { DataGrid } from './DataGrid';
+import { formatExecutionTime } from '../../lib/format-execution-time';
 import Icon from '@/components/ui/Icon';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
@@ -188,31 +190,13 @@ function SubLineBlocks({ text }: { text: string }) {
             l.split('|').slice(1, -1).map((c) => c.trim()),
           );
           return (
-            <div key={idx} className="rounded-lg border border-border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono border-collapse">
-                  <thead className="bg-surface-2 border-b border-border">
-                    <tr>
-                      {headers.map((h, hIdx) => (
-                        <th key={hIdx} className="px-3.5 py-2 text-[11px] font-semibold text-text whitespace-nowrap">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, rIdx) => (
-                      <tr key={rIdx} className="hover:bg-surface-2/50">
-                        {row.map((cell, cIdx) => (
-                          <td key={cIdx} className="px-3.5 py-2 text-text-dim border-t border-border-soft whitespace-nowrap">
-                            <InlineContent text={cell} />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div key={idx} className="rounded-lg border border-border overflow-hidden bg-surface">
+              <DataGrid
+                columns={headers}
+                rows={rows}
+                bare
+                renderCell={(value) => <InlineContent text={String(value)} />}
+              />
             </div>
           );
         }
@@ -573,39 +557,18 @@ return (
               )}
 
               {demoResult && demoResult.columns && demoResult.columns.length > 0 && (
-                <div className="mx-4 my-4 border border-border-soft rounded-lg overflow-hidden">
+                <div className="mx-4 my-4 border border-border-soft rounded-lg overflow-hidden bg-surface">
                   <div className="flex items-center justify-between px-3 py-2 bg-surface font-mono text-[10.5px] text-text-faint">
                     <span>RESULT — {demoResult.rowCount} rows</span>
-                    <span>{demoResult.executionTimeMs?.toFixed(1)}ms</span>
+                    <span>{formatExecutionTime(demoResult.executionTimeMs)}</span>
                   </div>
-                  <div className="overflow-x-auto max-h-64">
-                    <table className="w-full text-left font-mono text-[12.5px] border-collapse">
-                      <thead className="bg-surface-2">
-                        <tr>
-                          {demoResult.columns.map((col, cIdx) => (
-                            <th key={cIdx} className="px-3.5 py-2 text-[11px] font-semibold text-text whitespace-nowrap border-b border-border">
-                              {col}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {demoResult.rows.map((row, rIdx) => (
-                          <tr key={rIdx} className="hover:bg-surface-2/50">
-                            {demoResult.columns.map((col, cIdx) => (
-                              <td key={cIdx} className="px-3.5 py-2 text-text-dim border-b border-border-soft whitespace-nowrap">
-                                {row[col] === null || row[col] === undefined ? (
-                                  <span className="text-text-faint italic">NULL</span>
-                                ) : (
-                                  String(row[col])
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataGrid
+                    columns={demoResult.columns}
+                    rows={demoResult.rows}
+                    maxHeight="max-h-64"
+                    bare
+                    showRowCount
+                  />
                 </div>
               )}
             </div>

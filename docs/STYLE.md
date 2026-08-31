@@ -33,20 +33,36 @@ Rules of thumb:
 
 ## 3. Table Styling Spec (unified)
 
-All data tables — `DataTable` (`sql-blocks.tsx`), `DatabaseExplorer`,
-`ResultsConsole`, and any future table — follow one spec:
+All data tables render through the **`DataGrid`** primitive
+(`src/components/learning/DataGrid.tsx`). `ResultsConsole`, `DatabaseExplorer`,
+`sql-blocks` `DataTable`, the `ConceptLessonView` live demo + markdown tables,
+`Playground` and `IndependentChallengeView` (incl. its inspector modal) are all
+thin consumers of it. **Do not hand-write a `<table>` for query/data output** —
+feature requests go on `DataGrid`.
+
+Visual contract (implemented once, in `DataGrid`):
 
 ```
 container:   border border-border rounded-lg overflow-hidden
-header row:  bg-surface-3 font-mono text-xs text-left
-cells:       py-2 px-3 text-sm font-mono
-zebra (opt): odd rows bg-surface-2/50
-highlight:   bg-func/10 border-l-2 border-l-func
+header row:  sticky bg-surface-3, mono 11px, text-left
+cells:       px-3 py-2, mono 13px
+zebra:       odd rows bg-surface-2/40, hover bg-surface-2/70
+highlight:   header border-b-2 border-b-func + cell bg-func/10
+NULL:        muted mono chip (bg-surface-2 border-border, uppercase italic)
 ```
 
-- Headers are mono and small (they are identifiers, not prose).
-- Cell padding is uniform: `py-2 px-3`.
-- Numeric right-alignment is allowed, but the mono font and padding do not change.
+Cell formatting is **type-aware and never inlined** — it lives in
+`src/lib/format-cell.ts`:
+- numbers → right-aligned `tabular-nums`; float dust stripped
+- money-lookalike columns (`price`, `unit_price`, …) → fixed 2 decimals
+  (a stored `120.00` must never render as `120`)
+- schema `decimal` → 2dp only when fractional
+- dates → stable ISO, `tabular-nums`
+
+Row honesty:
+- `pageSize > 0` → built-in pagination + `Showing N–M of K` footer
+- `rowCap > 0` → hard cap + `Showing first N of M` footer
+- Prefer `DataGrid` pagination over hand-rolled chunked tables.
 
 ## 4. Spacing Contract
 
