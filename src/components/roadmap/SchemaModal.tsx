@@ -112,20 +112,20 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
               </span>
               <div className="rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-surface-2 text-[11px] text-text-dim border-b border-border">
+                  <thead className="bg-surface-2 text-[11px] border-b border-border">
                     <tr>
-                      <th className="px-3 py-1.5 font-medium text-text">Column</th>
-                      <th className="px-3 py-1.5 font-medium text-text-dim">Type</th>
-                      <th className="px-3 py-1.5 font-medium">Key</th>
-                      <th className="px-3 py-1.5 font-medium">Description</th>
+                      <th className="px-3.5 py-2 font-semibold text-text">Column</th>
+                      <th className="px-3.5 py-2 font-semibold text-text">Type</th>
+                      <th className="px-3.5 py-2 font-semibold text-text">Key</th>
+                      <th className="px-3.5 py-2 font-semibold text-text">Description</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border text-[11px] bg-ink">
                     {currentSchema.columns.map((col) => (
                       <tr key={col.name} className="hover:bg-surface-2/50">
-                        <td className="px-3 py-1.5 font-medium text-text">{col.name}</td>
-                        <td className="px-3 py-1.5 text-text-dim">{col.type}</td>
-                        <td className="px-3 py-1.5">
+                        <td className="px-3.5 py-2 font-semibold text-text">{col.name}</td>
+                        <td className="px-3.5 py-2 text-text-dim">{col.type}</td>
+                        <td className="px-3.5 py-2">
                           {col.primaryKey ? (
                             <span className="text-text font-bold">[PK]</span>
                           ) : col.foreignKey ? (
@@ -134,7 +134,7 @@ export const SchemaModal: React.FC<SchemaModalProps> = ({ isOpen, onClose }) => 
                             <span className="text-text-faint">-</span>
                           )}
                         </td>
-                        <td className="px-3 py-1.5 text-text-dim font-body">
+                        <td className="px-3.5 py-2 text-text-dim font-body">
                           {col.description || '-'}
                         </td>
                       </tr>

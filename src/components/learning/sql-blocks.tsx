@@ -111,7 +111,7 @@ export function DataTable({
               {columns.map((col) => (
                 <th
                   key={col}
-                  className="text-left font-semibold text-text px-3.5 py-2 bg-surface-2 border-b border-border-soft whitespace-nowrap"
+                  className="text-left font-semibold text-text px-3.5 py-2 bg-surface-2 border-b border-border whitespace-nowrap"
                 >
                   {col}
                 </th>

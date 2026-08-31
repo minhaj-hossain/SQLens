@@ -202,7 +202,7 @@ function SubLineBlocks({ text }: { text: string }) {
                   </thead>
                   <tbody>
                     {rows.map((row, rIdx) => (
-                      <tr key={rIdx} className="hover:bg-surface-2/40">
+                      <tr key={rIdx} className="hover:bg-surface-2/50">
                         {row.map((cell, cIdx) => (
                           <td key={cIdx} className="px-3.5 py-2 text-text-dim border-t border-border-soft whitespace-nowrap">
                             <InlineContent text={cell} />
@@ -460,7 +460,7 @@ return (
         {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
           <>
             <SectionLabel>Step-by-step SQL processing</SectionLabel>
-            <div className="space-y-5">
+            <div className="space-y-4">
               {theory.stepBreakdowns.map((step, sIdx) => (
                 <div key={sIdx} className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
@@ -583,7 +583,7 @@ return (
                       <thead className="bg-surface-2">
                         <tr>
                           {demoResult.columns.map((col, cIdx) => (
-                            <th key={cIdx} className="px-3 py-1.5 text-[11px] font-semibold text-text whitespace-nowrap border-b border-border">
+                            <th key={cIdx} className="px-3.5 py-2 text-[11px] font-semibold text-text whitespace-nowrap border-b border-border">
                               {col}
                             </th>
                           ))}
@@ -591,9 +591,9 @@ return (
                       </thead>
                       <tbody>
                         {demoResult.rows.map((row, rIdx) => (
-                          <tr key={rIdx} className="hover:bg-surface-2/40">
+                          <tr key={rIdx} className="hover:bg-surface-2/50">
                             {demoResult.columns.map((col, cIdx) => (
-                              <td key={cIdx} className="px-3 py-1.5 text-text-dim border-b border-border-soft whitespace-nowrap">
+                              <td key={cIdx} className="px-3.5 py-2 text-text-dim border-b border-border-soft whitespace-nowrap">
                                 {row[col] === null || row[col] === undefined ? (
                                   <span className="text-text-faint italic">NULL</span>
                                 ) : (
@@ -625,7 +625,7 @@ return (
                 const qLine = qParts[0] || mcq.question;
                 const qCode = qParts.slice(1).filter((l) => l.trim());
                 return (
-                  <div key={mIdx} className="rounded-xl bg-surface-2 border border-border p-5">
+                  <div key={mIdx} className="rounded-xl bg-surface-2 border border-border p-6">
                     <div className="font-mono text-[10.5px] text-text-faint uppercase tracking-[0.06em] mb-3">
                       MCQ · Question {mIdx + 1}
                     </div>

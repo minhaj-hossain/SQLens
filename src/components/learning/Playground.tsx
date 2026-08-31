@@ -678,19 +678,19 @@ export default function Playground({ onClose }: PlaygroundProps) {
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse font-mono text-xs">
                       <thead>
-                        <tr className="bg-surface-2/60">
+                        <tr className="bg-surface-2">
                           {r.columns.map((c) => (
-                            <th key={c} className="text-left px-3 py-2 text-text-faint font-medium border-b border-border whitespace-nowrap">
+                            <th key={c} className="text-left px-3.5 py-2 text-[11px] text-text font-semibold border-b border-border whitespace-nowrap">
                               {c}
                             </th>
                           ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y divide-border-soft">
                         {r.rows.map((row, ri) => (
-                          <tr key={ri} className="hover:bg-surface-2/40">
+                          <tr key={ri} className="hover:bg-surface-2/50">
                             {r.columns.map((c) => (
-                              <td key={c} className="px-3 py-1.5 text-text-dim whitespace-nowrap">
+                              <td key={c} className="px-3.5 py-2 text-text-dim whitespace-nowrap">
                                 {row[c] === null || row[c] === undefined ? (
                                   <span className="text-text-faint italic">NULL</span>
                                 ) : (

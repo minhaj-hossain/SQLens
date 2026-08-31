@@ -385,10 +385,10 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.18 }}
-      className="w-full max-w-3xl mx-auto space-y-5"
+      className="w-full max-w-3xl mx-auto space-y-6"
     >
       {/* 1. TOP HEADER & QUESTION */}
-      <div className="bg-surface rounded-xl border border-border p-5 space-y-3">
+      <div className="bg-surface rounded-xl border border-border p-6 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono font-bold text-text-faint uppercase tracking-wider">
@@ -676,17 +676,17 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     <thead>
                       <tr className="bg-surface-2 border-b border-border sticky top-0 z-10">
                         {executionResult.columns.map((col) => (
-                          <th key={col} className="px-3.5 py-2 font-semibold text-text">
+                          <th key={col} className="px-3.5 py-2 text-[11px] font-semibold text-text">
                             {col}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border text-text-dim">
+                    <tbody className="divide-y divide-border-soft text-text-dim">
                       {executionResult.rows.map((row, rIdx) => (
                         <tr key={rIdx} className="hover:bg-surface-2/50 transition">
                           {executionResult.columns.map((col) => (
-                            <td key={col} className="px-3.5 py-1.5 whitespace-nowrap">
+                            <td key={col} className="px-3.5 py-2 whitespace-nowrap">
                               {String(row[col] ?? 'NULL')}
                             </td>
                           ))}
@@ -817,7 +817,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 <thead>
                   <tr className="bg-surface-2 border-b border-border sticky top-0 z-10">
                     {activeSchema.columns.map((col) => (
-                      <th key={col.name} className="px-3.5 py-2 font-semibold text-text">
+                      <th key={col.name} className="px-3.5 py-2 text-[11px] font-semibold text-text">
                         <div className="flex items-center gap-1">
                           <span>{col.name}</span>
                           <span className="text-[10px] text-comment font-normal">({col.type})</span>
@@ -826,11 +826,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border text-text-dim">
+                <tbody className="divide-y divide-border-soft text-text-dim">
                   {filteredRows.slice(0, 50).map((row, rIdx) => (
                     <tr key={rIdx} className="hover:bg-surface-2/50 transition">
                       {activeSchema.columns.map((col) => (
-                        <td key={col.name} className="px-3.5 py-1.5 whitespace-nowrap">
+                        <td key={col.name} className="px-3.5 py-2 whitespace-nowrap">
                           {String(row[col.name] ?? 'NULL')}
                         </td>
                       ))}

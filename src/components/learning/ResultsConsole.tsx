@@ -216,17 +216,17 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             <thead className="sticky top-0 z-10 bg-surface-2 border-b border-border text-text">
               <tr>
                 {result.columns?.map((field) => (
-                  <th key={field} className="px-3 py-2 text-[11px] font-bold select-none whitespace-nowrap bg-surface-2 text-keyword">
+                  <th key={field} className="px-3.5 py-2 text-[11px] font-semibold select-none whitespace-nowrap bg-surface-2 text-text">
                     {field}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border text-[11.5px] text-text-dim">
+            <tbody className="divide-y divide-border-soft text-[12px] text-text-dim">
               {displayedRows.map((row, rIdx) => (
                 <tr key={rIdx} className="hover:bg-surface-2/50 transition-colors">
                   {result.columns?.map((field) => (
-                    <td key={field} className="px-3 py-1.5 whitespace-nowrap">
+                    <td key={field} className="px-3.5 py-2 whitespace-nowrap">
                       {row[field] !== null && row[field] !== undefined ? (
                         String(row[field])
                       ) : (
