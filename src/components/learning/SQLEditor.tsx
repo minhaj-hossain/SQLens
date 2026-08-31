@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
+import { buildSuggestions } from '@/lib/autocomplete';
 
 interface SQLEditorProps {
   value: string;
@@ -46,28 +47,17 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
 
-  // Available auto-complete items for active table and keywords
-  const autocompleteList = useMemo(() => {
-    const list: { text: string; type: 'keyword' | 'column' | 'table' }[] = [];
-    
-    // Keywords
-    SQL_KEYWORDS.forEach(kw => list.push({ text: kw, type: 'keyword' }));
-    
-    // Tables
-    Object.keys(DATABASE_SCHEMAS).forEach(tName => {
-      list.push({ text: tName, type: 'table' });
-    });
-
-    // Columns of active and related tables
-    const activeSchema = DATABASE_SCHEMAS[tableName.toLowerCase()];
-    if (activeSchema) {
-      activeSchema.columns.forEach(col => {
-        list.push({ text: col.name, type: 'column' });
-      });
-    }
-
-    return list;
-  }, [tableName]);
+  // Context-aware autocomplete lives in the pure buildSuggestions() module
+  // (tracker item 12): tables stay in FROM/JOIN, columns belong to the tables
+  // actually referenced, and clause keywords appear only at clause boundaries.
+  const computeMatches = (word: string, textBefore: string) =>
+    buildSuggestions({
+      prefix: word,
+      queryBeforeCursor: textBefore,
+      schemas: DATABASE_SCHEMAS,
+      fallbackTable: tableName,
+      limit: 5,
+    }).map((i) => i.text);
 
   // Sync scrolling between textarea and syntax highlight overlay
   const handleScroll = () => {
@@ -96,10 +86,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         return;
       }
       if (dismissedWord !== null) setDismissedWord(null); // different word -> re-open
-      const matched = autocompleteList
-        .filter(item => item.text.toUpperCase().startsWith(currentWord) && item.text.toUpperCase() !== currentWord)
-        .slice(0, 5)
-        .map(i => i.text);
+      const matched = computeMatches(currentWord, textBeforeCursor);
 
       if (matched.length > 0) {
         setSuggestions(matched);
@@ -189,13 +176,11 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       const selStart = e.currentTarget.selectionStart;
       const m = value.slice(0, selStart).match(/([a-zA-Z0-9_]+)$/);
       const prefix = m ? m[1].toUpperCase() : '';
-      let matched = prefix
-        ? autocompleteList
-            .filter(i => i.text.toUpperCase().startsWith(prefix) && i.text.toUpperCase() !== prefix)
-            .slice(0, 5)
-            .map(i => i.text)
-        : [];
-      if (matched.length === 0) matched = autocompleteList.slice(0, 5).map(i => i.text);
+      const matched = computeMatches(prefix, value.slice(0, selStart));
+      if (matched.length === 0 && prefix) {
+        // Empty prefix forces the panel open; keep it cheap and context-aware.
+        setSuggestions([]);
+      }
       setDismissedWord(null);
       setSuggestions(matched);
       setSelectedSuggestionIdx(0);
@@ -453,7 +438,11 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
                 >
                   <span className="font-semibold">{sug}</span>
                   <span className="text-[9px] text-text-faint px-1.5 py-0.2 rounded bg-surface border border-border">
-                    {SQL_KEYWORDS.includes(sug.toUpperCase()) ? 'SQL' : 'COL'}
+                    {SQL_KEYWORDS.includes(sug.toUpperCase())
+                      ? 'SQL'
+                      : DATABASE_SCHEMAS[sug.toLowerCase()]
+                        ? 'TBL'
+                        : 'COL'}
                   </span>
                 </div>
               ))}

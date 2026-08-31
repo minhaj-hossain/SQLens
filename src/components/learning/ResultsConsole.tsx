@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { QueryExecutionResult } from '../../types/database';
 import { CheckCircle2, AlertCircle, Terminal, HelpCircle, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { explainQuery } from '../../lib/sql-explain';
+import { formatExecutionTime } from '../../lib/format-execution-time';
 
 interface ResultsConsoleProps {
   result: QueryExecutionResult | null;
@@ -24,66 +26,9 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   const totalRows = result?.rows.length || 0;
   const totalPages = Math.ceil(totalRows / pageSize);
   const displayedRows = result?.rows ? result.rows.slice(page * pageSize, (page + 1) * pageSize) : [];
-
-  // Plain-English explanation generator for common SQL constructs
-  const getQueryExplanation = (sql: string) => {
-    if (!sql.trim()) return 'No SQL query entered yet.';
-    const normalized = sql.trim();
-    const explanations: string[] = [];
-
-    // Match SELECT
-    const selectMatch = normalized.match(/SELECT\s+(DISTINCT\s+)?([\s\S]+?)\s+FROM/i);
-    if (selectMatch) {
-      const distinct = Boolean(selectMatch[1]);
-      const cols = selectMatch[2].trim();
-      if (cols === '*') {
-        explanations.push(`Retrieves ${distinct ? 'distinct ' : 'all '}columns from the source dataset.`);
-      } else {
-        explanations.push(`Selects specific columns (${cols})${distinct ? ' removing duplicate values' : ''}.`);
-      }
-    }
-
-    // Match FROM
-    const fromMatch = normalized.match(/FROM\s+([a-zA-Z0-9_]+)/i);
-    if (fromMatch) {
-      explanations.push(`Reads data from table '${fromMatch[1]}'.`);
-    }
-
-    // Match JOIN
-    const joinMatch = normalized.match(/(INNER\s+|LEFT\s+|RIGHT\s+)?JOIN\s+([a-zA-Z0-9_]+)\s+ON\s+([\s\S]+?)(WHERE|GROUP|ORDER|LIMIT|;|$)/i);
-    if (joinMatch) {
-      const joinType = (joinMatch[1] || 'INNER').trim().toUpperCase();
-      explanations.push(`Performs a ${joinType} JOIN with table '${joinMatch[2]}' on condition (${joinMatch[3].trim()}).`);
-    }
-
-    // Match WHERE
-    const whereMatch = normalized.match(/WHERE\s+([\s\S]+?)(GROUP\s+BY|ORDER\s+BY|LIMIT|;|$)/i);
-    if (whereMatch) {
-      explanations.push(`Filters records where condition (${whereMatch[1].trim()}) is satisfied.`);
-    }
-
-    // Match GROUP BY
-    const groupMatch = normalized.match(/GROUP\s+BY\s+([\s\S]+?)(HAVING|ORDER\s+BY|LIMIT|;|$)/i);
-    if (groupMatch) {
-      explanations.push(`Aggregates rows grouped by (${groupMatch[1].trim()}).`);
-    }
-
-    // Match ORDER BY
-    const orderMatch = normalized.match(/ORDER\s+BY\s+([\s\S]+?)(LIMIT|;|$)/i);
-    if (orderMatch) {
-      explanations.push(`Sorts final results by (${orderMatch[1].trim()}).`);
-    }
-
-    // Match LIMIT
-    const limitMatch = normalized.match(/LIMIT\s+(\d+)/i);
-    if (limitMatch) {
-      explanations.push(`Limits output to at most ${limitMatch[1]} row(s).`);
-    }
-
-    return explanations.length > 0
-      ? explanations.join(' ')
-      : 'Executes standard SQL data retrieval operations.';
-  };
+  // Honest timing (tracker item 11): real value only — never a fabricated
+  // fallback number like the old '1.2'.
+  const timeDisplay = result ? formatExecutionTime(result.executionTimeMs) : null;
 
   return (
     <div
@@ -107,9 +52,11 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
                 {result.columns?.length || 0} cols
               </span>
-              <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
-                {result.executionTimeMs?.toFixed(1) || '1.2'}ms
-              </span>
+              {timeDisplay && (
+                <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
+                  {timeDisplay}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -181,7 +128,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
                 <span>Query Execution Breakdown</span>
               </div>
               <p className="p-3 bg-surface-2 rounded-lg border border-border text-text leading-relaxed font-normal">
-                {getQueryExplanation(sqlQuery)}
+                {explainQuery(sqlQuery).join(' ')}
               </p>
               <div className="text-[11px] text-text-dim">
                 Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-keyword">EXPLAIN</code> keyword shows the query execution plan and table scans.
