@@ -535,7 +535,8 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
     if (aggCaseMatch) {
       col.aggregate = aggCaseMatch[1].toUpperCase() as any;
       col.aggregateArg = aggCaseMatch[2].trim();
-      col.alias = aggCaseMatch[3]?.replace(/[`"']/g, '') || `${col.aggregate.toLowerCase()}_case_result`;
+      const alias3 = aggCaseMatch[3]?.replace(/[`"']/g, '');
+      col.alias = alias3 || `${(col.aggregate as string).toLowerCase()}_case_result`;
       col.expression = col.alias;
       cols.push(col);
       continue;
@@ -582,7 +583,9 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
       col.aggregate = aggMatch[1].toUpperCase() as any;
       col.aggregateArg = aggMatch[2].trim().replace(/[`"']/g, '');
       if (!col.alias) {
-        col.alias = `${col.aggregate.toLowerCase()}_${col.aggregateArg.replace(/[^a-zA-Z0-9_]/g, '')}`;
+        const aggLower = (col.aggregate as string).toLowerCase();
+        const argClean = (col.aggregateArg ?? '').replace(/[^a-zA-Z0-9_]/g, '');
+        col.alias = `${aggLower}_${argClean}`;
       }
     } else {
       // COALESCE-wrapped aggregate: COALESCE(SUM(col), 0) — the standard
@@ -596,7 +599,7 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
         col.aggregateArg = coalesceAggMatch[2].trim().replace(/[`"']/g, '');
         col.coalesceFallback = coalesceAggMatch[3].trim();
         if (!col.alias) {
-          col.alias = `coalesce_${col.aggregate.toLowerCase()}_${col.aggregateArg.replace(/[^a-zA-Z0-9_]/g, '')}`;
+          col.alias = `coalesce_${(col.aggregate as string).toLowerCase()}_${(col.aggregateArg ?? '').replace(/[^a-zA-Z0-9_]/g, '')}`;
         }
       }
     }

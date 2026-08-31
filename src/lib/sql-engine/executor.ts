@@ -353,7 +353,12 @@ export class SqlExecutor {
         if (!/^(BEGIN|COMMIT|ROLLBACK)\b/i.test(stmt.trim())) lastData = r;
       }
       const endControl = /^(BEGIN|COMMIT|ROLLBACK)\b/i.test(statements[statements.length - 1].trim());
-      if (endControl && lastData) return { ...lastData, executionTimeMs: last.executionTimeMs };
+      if (
+        endControl &&
+        lastData &&
+        (last ?? null) !== null
+      )
+        return { ...lastData, executionTimeMs: last!.executionTimeMs };
       return (
         last ?? {
           success: false,

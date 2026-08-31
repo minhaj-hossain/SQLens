@@ -87,7 +87,7 @@ export default function ModulesPanel() {
         e instanceof AdminApiError
           ? e.code === 'invalid_unlock_at'
             ? 'invalid_datetime'
-            : e.code
+            : (e.code ?? 'request_failed')
           : 'request_failed',
       );
     } finally {

@@ -22,12 +22,12 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "strict": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "strict": false,
     "incremental": true,
     "esModuleInterop": true,
     "resolveJsonModule": true

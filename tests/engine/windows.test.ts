@@ -25,7 +25,7 @@ describe('ROW_NUMBER — global ranking (Day 23 · C1)', () => {
     expect(r.rowCount).toBe(all.rowCount); // rows preserved (unlike GROUP BY)
     // The most expensive product (Office Chair, 120.00) is rank 1.
     const chair = r.rows!.find((x: any) => x.price === 120);
-    expect(chair.price_rank).toBe(1);
+    expect(chair?.price_rank).toBe(1);
     const ranks = r.rows!.map((x: any) => x.price_rank);
     expect(new Set(ranks).size).toBe(r.rowCount); // unique, no ties in ROW_NUMBER
   });

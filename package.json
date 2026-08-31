@@ -1,11 +1,11 @@
 {
-  "name": "react-example",
+  "name": "sqlens",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/build.mjs",
     "start": "next start",
     "clean": "rm -rf dist server.js .next",
     "lint": "tsc --noEmit",
