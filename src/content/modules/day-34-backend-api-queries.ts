@@ -22,7 +22,7 @@ export const Day_34_MODULE: ModuleData = {
       title: '1. Production Backend API Query Patterns',
       shortDescription: 'Product detail pages, customer profiles, and executive KPIs.',
       theory: {
-        summary: 'In real full-stack web applications, backend route handlers issue rich SQL queries to hydrate entire UI screens in a single database round trip, avoiding chatty network calls.',
+        summary: 'A product detail page shows the product, its category, and its supplier — three pieces of data, one screen. A well-built backend fetches them all in a single round trip with one rich query, instead of firing three slow network calls and stitching the results together.',
         introTable: {
           tableName: 'products & categories & suppliers',
           description: 'Data sources for single-payload Product Detail View',

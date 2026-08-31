@@ -28,7 +28,7 @@
 > Goal: eliminate remaining robotic/spec-sheet language in the theory **bodies**. (Measure: only 9 theory-level lines changed vs 131 header lines in the language commits.)
 - [x] **Tier A — quick wins:** Day 2 Concept 1 shortDescription rewritten (`"How SQL filters specific rows based on exact matches."` → `"Find rows that match your criteria exactly — the WHERE clause's most direct tool."`)
 - [x] **Tier B — complete (43 rewrites total):** Days 1–4, 9, 15, 18–20, 22, 25, 27, 34, 36, 38 `solutionExplanation`/`exampleQueryExplanation`/`liveDemoNotes` micro-copy rewritten to capability + why-it-matters phrasing. `npm test` + `tsc` green after every batch.
-- [ ] **Tier C — dry summaries:** scenario-first one-liners for spec-sheet `summary:` fields where flagged
+- [x] **Tier C — dry summaries (35 rewrites):** scenario-first one-liners for spec-sheet `summary:` fields where flagged. Covered Days 1–5, 9, 13, 14, 21, 22, 25, 27, 34–36, 38 (Day 9 scenario hooks layered onto its definitions — body untouched per guardrail). Also de-25-day'd Day 38: summary, explanation progression, both successMessages, masteryPoints → "38-day", metadata.json app description → "38-day structured curriculum", stale `// DAY 25` comment → `// DAY 38`. Gate: tsc 0, vitest 129/129, `test:module-order` ✅, `verify:curriculum` — only pre-existing illustrative-table warnings + Day 37 target-query gap (both already tracked in Phase 5).
 - [x] Guardrails: never touch `solutionSql`/`initialSql`/`validation`; `npm test` re-run green after each batch; skip modules already strong (Day 9, Day 33 voice)
 
 ## Phase 3 — Challenge Scenarios & Solution Explanations (P2)

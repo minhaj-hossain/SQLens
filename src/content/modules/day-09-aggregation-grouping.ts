@@ -27,7 +27,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '1. Count Rows & Values with COUNT',
       shortDescription: 'COUNT(*) counts all rows; COUNT(column) counts only non-NULL values.',
       theory: {
-        summary: '`COUNT(*)` counts every row in a table. `COUNT(column)` counts only rows where that specific column is NOT NULL.',
+        summary: 'The board asks: "how many customers do we have — and how many actually gave us their email?" COUNT(*) answers with every row; COUNT(column) answers with only the rows where that column is filled in. Same keyword, two honest numbers.',
         introTable: {
           tableName: 'customers',
           description: 'Customers snapshot with optional emails',
@@ -166,7 +166,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '2. Finding the Smallest Value with MIN',
       shortDescription: 'Find the lowest numerical, alphabetical, or chronological value.',
       theory: {
-        summary: '`MIN(column)` scans all non-NULL values in a column and returns the single lowest scalar value.',
+        summary: 'Which product has the lowest price, which order is the oldest, which name sorts first? MIN(column) scans a column and returns the single smallest value — numerically, alphabetically, or chronologically — while skipping NULLs along the way.',
         introTable: {
           tableName: 'products',
           description: 'Products price scan',
@@ -297,7 +297,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '3. Finding the Largest Value with MAX',
       shortDescription: 'Find the highest numerical, alphabetical, or latest chronological value.',
       theory: {
-        summary: '`MAX(column)` scans all non-NULL values in a column and returns the single highest scalar value.',
+        summary: 'What is the most expensive product, the newest order, the largest order value? MAX(column) scans a column and returns the single largest value — the mirror image of MIN, with the same NULL-skipping rule.',
         introTable: {
           tableName: 'products',
           description: 'Products price scan',
@@ -433,7 +433,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '4. Adding Values with SUM',
       shortDescription: 'Calculate the mathematical sum of numeric values across rows.',
       theory: {
-        summary: '`SUM(column)` adds together all non-NULL numeric values in a column, outputting a single total scalar value.',
+        summary: 'Total revenue, total units in stock, total order value — SUM(column) adds every non-NULL numeric value in a column into one number. One column in, one grand total out.',
         introTable: {
           tableName: 'products',
           description: 'Products price list',
@@ -567,7 +567,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '5. Calculating an Average with AVG',
       shortDescription: 'Calculate the arithmetic mean across non-NULL numeric values.',
       theory: {
-        summary: '`AVG(column)` divides the sum of all non-NULL values by the count of non-NULL values.',
+        summary: 'What does the typical customer spend, or a typical product cost? AVG(column) takes the sum of a column and divides it by the count of values that went in — the arithmetic mean, computed over non-NULL values only.',
         introTable: {
           tableName: 'students',
           description: 'Students age table',
@@ -705,7 +705,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '6. Grouping Rows with GROUP BY',
       shortDescription: 'Segment calculations by category, status, or location.',
       theory: {
-        summary: 'When combined with `GROUP BY`, aggregate calculations are performed separately for each category or bucket.',
+        summary: 'A single "average price" hides the truth that electronics and office chairs cost differently. GROUP BY splits the table into buckets — one per category, city, or status — and runs the aggregation separately inside each one.',
         introTable: {
           tableName: 'products',
           description: 'Products grouped by category_id',
@@ -855,7 +855,7 @@ export const Day_09_MODULE: ModuleData = {
       title: '7. Filtering Groups with HAVING',
       shortDescription: 'Filter aggregate summaries after grouping.',
       theory: {
-        summary: '`WHERE` filters individual rows BEFORE grouping. `HAVING` filters aggregate group values AFTER grouping.',
+        summary: 'WHERE filters rows before they are grouped; HAVING filters the groups after the math runs. "Only categories with more than 10 products" cannot be a WHERE clause — no row knows its group size yet — so HAVING exists for exactly that question.',
         introTable: {
           tableName: 'products',
           description: 'Aggregated category pricing',

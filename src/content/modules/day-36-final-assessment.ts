@@ -23,7 +23,7 @@ export const Day_36_MODULE: ModuleData = {
       title: '1. Milestone 3 Capstone Skill Verification',
       shortDescription: 'Final comprehensive SQL certification assessment across all 38 days.',
       theory: {
-        summary: 'Milestone 3 Capstone: Prove full database engineering proficiency across multi-table JOINs, subqueries, Common Table Expressions, schema architecture, and query optimization.',
+        summary: 'The certification exam has arrived — no templates, no scaffold. Prove full database engineering: rank categories by revenue across three joined tables, find above-average customers with CTEs, migrate a live schema with ALTER TABLE,and create an index that EXPLAIN confirms. Four production-grade deliverables, one final assessment.',
         introTable: {
           tableName: 'categories & products & order_items',
           description: 'Multi-table revenue aggregation pipeline',

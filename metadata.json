@@ -1,6 +1,6 @@
 {
   "name": "SQL Interactive Learning Platform",
-  "description": "A hands-on, sequential SQL learning platform with real-time query execution, visual mental models, progressive hints, and a 25-day structured curriculum.",
+  "description": "A hands-on, sequential SQL learning platform with real-time query execution, visual mental models, progressive hints, and a 38-day structured curriculum.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

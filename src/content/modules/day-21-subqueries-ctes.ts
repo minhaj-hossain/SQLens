@@ -25,7 +25,7 @@ export const Day_21_MODULE: ModuleData = {
       title: '1. Single-Value Subqueries: Compare Rows Against Aggregates',
       shortDescription: 'Compare individual rows dynamically against whole-table aggregates.',
       theory: {
-        summary: 'A subquery is a query nested inside another SQL statement. A scalar subquery returns exactly one value (one row and one column), allowing you to use it wherever a constant or literal value is expected.',
+        summary: '"Show me every product above the average price." The average is a number you do not know until you ask the database — so you place one query inside another. A scalar subquery returns exactly one value (one row, one column) and stands in wherever you would otherwise write a plain number.',
         introTable: {
           tableName: 'products',
           description: 'Comparing items against table-wide average price.',
@@ -167,7 +167,7 @@ export const Day_21_MODULE: ModuleData = {
       title: '2. Set Membership Subqueries with IN',
       shortDescription: 'Filter rows against dynamic lists produced by inner queries.',
       theory: {
-        summary: 'When a subquery returns a column of multiple values, you can use `IN` to check if a row\'s column matches any value in that dynamic list.',
+        summary: 'A scalar subquery returns one number, but "customers with active orders" is a list — hundreds of values that change on every run. IN matches a row against that whole dynamic list, so the filter follows the database wherever those orders actually exist.',
         introTable: {
           tableName: 'customers & orders',
           description: 'Identifying customers with active orders',
@@ -308,7 +308,7 @@ export const Day_21_MODULE: ModuleData = {
       title: '3. Exclusion Subqueries with NOT IN & The NULL Trap',
       shortDescription: 'Exclude matching rows safely and avoid the three-valued logic NULL trap.',
       theory: {
-        summary: '`NOT IN` excludes rows that match values in a subquery. However, if the subquery returns even a single NULL value, the entire NOT IN condition collapses to UNKNOWN and returns 0 rows!',
+        summary: 'NOT IN answers "products nobody ordered" — until the subquery slips in even one NULL value, and the whole filter collapses to UNKNOWN, returning nothing at all. The trap is silent, which makes it a classic production bug — and now you know exactly what to check for.',
         introTable: {
           tableName: 'products & order_items',
           description: 'Products checking for presence in order items',
@@ -466,7 +466,7 @@ export const Day_21_MODULE: ModuleData = {
       title: '4. Correlated Subqueries (Per-Row Dynamic Benchmarks)',
       shortDescription: 'Compare each row dynamically against its own category or parent benchmark.',
       theory: {
-        summary: 'Unlike an independent subquery that runs once, a correlated subquery references a column from the outer query table. It re-evaluates dynamically for every single row of the outer query.',
+        summary: 'Is this product cheaper than its own category average? An independent subquery runs once for the whole table; a correlated subquery references a column from the outer query and re-evaluates for every single row. Each product gets its own personal benchmark.',
         introTable: {
           tableName: 'products (p1 vs p2)',
           description: 'Comparing product price against category-specific average',
@@ -622,7 +622,7 @@ export const Day_21_MODULE: ModuleData = {
       title: '5. Common Table Expressions (WITH syntax)',
       shortDescription: 'Readable, modular multi-stage query architecture.',
       theory: {
-        summary: 'A Common Table Expression (CTE) defined with `WITH name AS (...)` provides a named, readable temporary result set that exists for the duration of a single query.',
+        summary: 'A four-stage query reads like a chain of nested parentheses — until you name each stage. WITH name AS (...) gives a temporary result a name and its own place in the query, turning one beast into a pipeline of named steps that live only as long as the query runs.',
         introTable: {
           tableName: 'orders & customers',
           description: 'CTE pipeline input data',

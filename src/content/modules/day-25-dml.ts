@@ -26,7 +26,7 @@ export const Day_25_MODULE: ModuleData = {
       title: '1. Inserting New Records with INSERT INTO',
       shortDescription: 'Add new rows of data into existing database tables.',
       theory: {
-        summary: '`INSERT INTO table (col1, col2) VALUES (val1, val2)` appends new records into a database table.',
+        summary: 'The warehouse just received 200 wireless mice — they are not in the database until someone inserts them. INSERT INTO table (col1, col2) VALUES (val1, val2) appends a new row, spelling out exactly which columns receive which values.',
         introTable: {
           tableName: 'products (before insert)',
           description: 'Products table before appending new record',
@@ -154,7 +154,7 @@ export const Day_25_MODULE: ModuleData = {
       title: '2. Modifying Rows Safely with UPDATE ... SET ... WHERE',
       shortDescription: 'Update specific records and avoid unintended table-wide modifications.',
       theory: {
-        summary: '`UPDATE table SET col = new_value WHERE condition` modifies existing data. Always verify the WHERE condition first, because omitting WHERE mutates EVERY row in the entire table!',
+        summary: 'The Bluetooth Speaker price changed — but only for that one product. UPDATE table SET col = new_value WHERE condition rewrites existing rows, and WHERE is the entire safety system: forget it and EVERY row in the table gets the new value.',
         introTable: {
           tableName: 'products (before update)',
           description: 'Product 1 before targeted price change',
@@ -276,7 +276,7 @@ export const Day_25_MODULE: ModuleData = {
       title: '3. Removing Rows Safely with DELETE FROM ... WHERE',
       shortDescription: 'Remove specific rows and prevent accidental table wipes.',
       theory: {
-        summary: '`DELETE FROM table WHERE condition` removes targeted rows. Omitting WHERE wipes all data in the table.',
+        summary: 'A temporary test order needs to go, and nothing else. DELETE FROM table WHERE condition removes exactly the rows the condition names; without WHERE there is no condition, and the delete targets the whole table.',
         introTable: {
           tableName: 'orders (before deletion)',
           description: 'Orders table with temporary test order 18',

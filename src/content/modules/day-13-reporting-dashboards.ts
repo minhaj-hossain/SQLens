@@ -22,7 +22,7 @@ export const Day_13_MODULE: ModuleData = {
       title: '1. Build Multi-Metric Dashboard Queries',
       shortDescription: 'Combine multiple aggregates to build real business reports.',
       theory: {
-        summary: 'Real dashboards do not show single numbers - they show multiple metrics side-by-side. One query computes item count, average price, and total stock simultaneously. HAVING filters the results to show only the interesting groups.',
+        summary: 'An executive dashboard never shows one number — it shows item count, average price, and total stock side by side on the same screen. One query produces all of them at once, and HAVING trims the result to the groups the business actually cares about.',
         introTable: {
           tableName: 'products',
           description: 'Inventory metrics snapshot per category',

@@ -26,7 +26,7 @@ export const Day_14_MODULE: ModuleData = {
       title: '1. Primary & Foreign Keys, INNER JOIN Basics',
       shortDescription: 'Connect tables where records match — understand one-to-many relationships.',
       theory: {
-        summary: 'A primary key (PK) uniquely identifies a row in its own table. A foreign key (FK) points to the primary key of another table to establish a relationship.',
+        summary: 'Every product belongs to exactly one category — yet the products table stores only a category_id number. The categories table uses that id as its primary key, one unique identity per row, and the foreign key inside products points at it. That single pointer is what turns two tables into one connected system.',
         introTable: {
           tableName: 'products & categories',
           description: 'Related product and category records.',
@@ -186,7 +186,7 @@ export const Day_14_MODULE: ModuleData = {
       title: '2. Preserving All Left Rows with LEFT JOIN',
       shortDescription: 'Keep every row from the left table even when no right-table match exists.',
       theory: {
-        summary: 'A `LEFT JOIN` returns ALL rows from the left table. If there is no match in the right table, columns from the right table are filled with `NULL`.',
+        summary: 'A customer with no orders still deserves a row — INNER JOIN would silently drop them. LEFT JOIN keeps every row from the left table no matter what, and fills in NULL where the right side has no match. Customers who never ordered stop disappearing from reports.',
         introTable: {
           tableName: 'customers & orders',
           description: 'Left join showing customer records with optional order IDs',

@@ -335,7 +335,7 @@ export const Day_01_MODULE: ModuleData = {
       title: '3. SELECT *',
       shortDescription: 'The asterisk (*) shorthand to retrieve all columns at once.',
       theory: {
-        summary: 'The * means: Select all columns.',
+        summary: 'You just want to see the whole table — every row, every column — without listing each name. That is what the * wildcard means: all columns, no list written, the fastest first look at your data.',
         introTable: {
           tableName: 'students',
           description: 'Full table in database (5 columns)',

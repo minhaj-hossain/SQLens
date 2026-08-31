@@ -23,7 +23,7 @@ export const Day_05_MODULE: ModuleData = {
       title: '1. Combine Clauses into Real Operational Queries',
       shortDescription: 'Write complete queries that filter, sort, and paginate — the real SQL you see in production applications.',
       theory: {
-        summary: 'In real applications, you do not write isolated clauses. You construct unified query pipelines that filter records on multiple business conditions, sort by priority, and paginate for UI displays.',
+        summary: 'The support desk needs open tickets, sorted by urgency, with only the first screen of them shown. That is not one clause — it is WHERE, ORDER BY, and LIMIT in a single pipeline. Working SQL combines clauses into one statement, the way production screens actually need it.',
         introTable: {
           tableName: 'products',
           description: 'Full inventory snapshot for operations dashboard',

@@ -23,7 +23,7 @@ export const Day_38_MODULE: ModuleData = {
       title: '1. Beyond the Course: Window Functions Preview',
       shortDescription: 'Calculate analytical ranks and running metrics without collapsing rows.',
       theory: {
-        summary: 'Congratulations on reaching Day 25! Today is a celebration and a bridge to advanced SQL: preview Window Functions, which calculate rankings and running totals across rows while keeping every individual row visible in the result.',
+        summary: 'Thirty-eight days of SQL are behind you — today is graduation. It closes with a preview of what production development reaches for next: window functions, which rank and total rows without collapsing a single one. Then your SQL crosses the bridge into the backend stacks — Drizzle, Prisma, pg, mysql2 — where those queries run for real.',
         introTable: {
           tableName: 'products (Ranked in Category)',
           description: 'Window function category partition output',
@@ -42,7 +42,7 @@ export const Day_38_MODULE: ModuleData = {
           '### 2. Bridging SQL to Full-Stack Production Development',
           'In modern TypeScript/Node.js stacks, your SQL mastery translates directly into production database workflows using tools like **Drizzle ORM**, **Prisma**, **Kysely**, and raw drivers like **pg** and **mysql2**.',
           '### 3. Graduation Celebration 🎓',
-          'You have progressed through 25 comprehensive days: from single-table retrieval and filtering, to multi-table joins, relational aggregation, subqueries, CTEs, DML mutations, DDL schema architecture, and performance indexing!',
+          'You have progressed through 38 comprehensive days: from single-table retrieval and filtering, to multi-table joins, relational aggregation, subqueries & CTEs, DML mutations, DDL schema architecture, performance indexing, security,& a capstone project!',
         ],
         targetQuery: {
           sql: 'SELECT name, category_id, price,\n       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank\nFROM products;',
@@ -92,7 +92,7 @@ export const Day_38_MODULE: ModuleData = {
             explanation: 'Window functions compute partition metrics while preserving all individual rows.',
           },
         ],
-        masteryPoints: ['Write Window Functions using PARTITION BY and ORDER BY', 'Graduate with full 25-day SQL relational mastery'],
+        masteryPoints: ['Write Window Functions using PARTITION BY and ORDER BY', 'Graduate with full 38-day SQL relational mastery'],
       },
       tasks: [
         {
@@ -136,14 +136,14 @@ export const Day_38_MODULE: ModuleData = {
             targetTable: 'products',
             expectedRowCount: 11,
           },
-          successMessage: 'Congratulations! You have completed the entire 25-Day SQL Master Curriculum!',
+          successMessage: 'Congratulations! You have completed the SQLens SQL Master Curriculum!',
         },
       ],
     },
   ],
 
   // ===========================================================================
-  // DAY 25: OPTIONAL EXPLORATION SANDBOX (GRADUATION)
+  // DAY 38: OPTIONAL EXPLORATION SANDBOX (GRADUATION)
   // ===========================================================================
   challenge: {
     id: 'day-38-homework',
@@ -170,7 +170,7 @@ export const Day_38_MODULE: ModuleData = {
           targetTable: 'products',
           expectedRowCount: 11,
         },
-        successMessage: 'Congratulations on graduating the 25-Day SQL Master Curriculum! 🎓',
+        successMessage: 'Congratulations on graduating the SQLens SQL Master Curriculum! 🎓',
       },
     ],
   },

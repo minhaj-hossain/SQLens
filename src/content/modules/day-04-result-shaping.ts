@@ -26,7 +26,7 @@ export const Day_04_MODULE: ModuleData = {
       title: '1. Sort Results with ORDER BY (ASC and DESC)',
       shortDescription: 'Arrange output rows alphabetically, numerically, or by date — lowest to highest or vice versa.',
       theory: {
-        summary: 'Without an ORDER BY clause, relational databases return rows in arbitrary storage order. ORDER BY allows you to sort records explicitly.',
+        summary: 'SQL never promises row order — run the same query twice and the "cheapest first" list you saw once may come back scrambled. ORDER BY is the only way to make a sort a guarantee rather than a coincidence.',
         introTable: {
           tableName: 'products',
           description: 'Inventory items with price and stock levels.',
@@ -174,7 +174,7 @@ export const Day_04_MODULE: ModuleData = {
       title: '2. Multi-Column Sorting (Tie-Breaking)',
       shortDescription: 'How to use secondary sort columns to resolve identical values.',
       theory: {
-        summary: 'When multiple rows share the same value in the primary sort column, secondary sort columns resolve ties.',
+        summary: 'Half the sales report ties at 1,000 in total sales — and ties left alone come back in arbitrary order. A second sort column, like the product name, breaks the tie deliberately so the same query always yields the same, findable report.',
         introTable: {
           tableName: 'students',
           description: 'Students table with shared ages',
@@ -480,7 +480,7 @@ export const Day_04_MODULE: ModuleData = {
       title: '4. Pagination with LIMIT & OFFSET',
       shortDescription: 'Restrict row counts and skip rows for multi-page displays.',
       theory: {
-        summary: 'Web applications rarely display thousands of records at once. `LIMIT` restricts how many rows to return, and `OFFSET` skips a specified number of rows before returning results.',
+        summary: 'No product catalog page shows every row at once — it shows page 1, then page 2. `LIMIT` cuts the result to a fixed row count and `OFFSET` jumps past the rows the previous page already displayed. Together they are pagination.',
         introTable: {
           tableName: 'products',
           description: 'Product catalog rows 1 through 6',

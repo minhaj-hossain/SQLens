@@ -1319,7 +1319,7 @@ export const Day_03_MODULE: ModuleData = {
         "How to safely handle missing data and avoid three-valued logic traps.",
       theory: {
         summary:
-          "In SQL databases, missing or unrecorded data is represented as NULL. Testing NULL requires special syntax.",
+          "An order shipped without a tracking number, a customer who never gave an email — the database stores missing data as NULL, and NULL refuses to behave like a normal value. It never equals anything, not even another NULL, so testing it needs syntax made for it: IS NULL and IS NOT NULL.",
         introTable: {
           tableName: "customers",
           description: "Customer profiles with optional email addresses",

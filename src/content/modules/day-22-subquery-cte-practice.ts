@@ -22,7 +22,7 @@ export const Day_22_MODULE: ModuleData = {
       title: '1. Row-by-Row Comparisons: Correlate Subqueries to Outer Context',
       shortDescription: 'Category benchmarks and tiered spend CTEs.',
       theory: {
-        summary: 'Reinforce advanced subqueries and CTEs: compare items against localized category averages using correlated subqueries, build tiered analytical customer segments, and refactor nested queries into clean CTEs.',
+        summary: 'This is the drill day for Day 21 techniques: compare each product against its own category average with correlated subqueries, cut customers into spending tiers with CTEs, and refactor a deeply nested query into a readable pipeline. The tools are yours — now they need repetition.',
         introTable: {
           tableName: 'products (p1 vs p2)',
           description: 'Comparing product price against category-specific average',

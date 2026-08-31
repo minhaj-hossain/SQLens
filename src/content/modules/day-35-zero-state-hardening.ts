@@ -22,7 +22,7 @@ export const Day_35_MODULE: ModuleData = {
       title: '1. Zero-State Hardening & NULL-Safe Aggregates',
       shortDescription: 'LEFT JOIN, COUNT natural 0s, and COALESCE with SUM.',
       theory: {
-        summary: 'Production queries must handle zero-state edge cases gracefully: customers with 0 orders and products never ordered must not vanish from business reports. We master LEFT JOIN and understand the crucial difference between COUNT() and SUM() NULL behavior.',
+        summary: 'Every customer with zero orders must still appear in the business report — a customer who vanishes from analytics might as well never have signed up. Production SQL keeps those zero-state rows with LEFT JOIN, and counts them correctly by knowing what COUNT() and SUM()do with NULL.',
         introTable: {
           tableName: 'customers & orders (Canonical Schema)',
           description: 'Customer records with and without orders',

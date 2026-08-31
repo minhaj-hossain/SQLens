@@ -25,7 +25,7 @@ export const Day_27_MODULE: ModuleData = {
       title: '1. Creating a Table with CREATE TABLE',
       shortDescription: 'Define table structure and allocate new database entities.',
       theory: {
-        summary: '`CREATE TABLE table_name (col1 type, col2 type)` creates a new empty table structure in your database.',
+        summary: 'The store needs a product_tags table that does not exist yet. CREATE TABLE name (col1 type, col2 type) draws the blueprint — every column, its type, and the value rules — and creates an empty structure ready for data.',
         introTable: {
           tableName: 'product_tags (blueprint)',
           description: 'Blueprint for tagging inventory items',
@@ -143,7 +143,7 @@ export const Day_27_MODULE: ModuleData = {
       title: '2. Choosing Column Data Types',
       shortDescription: 'INT, VARCHAR, DECIMAL, DATETIME, and MySQL BOOLEAN / TINYINT(1).',
       theory: {
-        summary: 'Choosing the correct data type ensures storage efficiency, query speed, and data accuracy.',
+        summary: 'Store a price as VARCHAR and numeric sorting breaks; store an ISBN as INT and the leading zeros vanish. The data type you choose decides how much space a column eats, how fast it compares, and whether the data stays honest.',
         introTable: {
           tableName: 'Common SQL Data Types',
           description: 'Standard SQL data types comparison',
@@ -267,7 +267,7 @@ export const Day_27_MODULE: ModuleData = {
       title: '3. The PRIMARY KEY Constraint',
       shortDescription: 'Uniquely identify every row and configure AUTO_INCREMENT.',
       theory: {
-        summary: 'A `PRIMARY KEY` uniquely identifies each record in a table. It cannot contain NULL values, cannot have duplicates, and creates an automatic clustered index.',
+        summary: 'Every product, customer, and order needs one identity that can never repeat and never be empty. The PRIMARY KEY is exactly that — unique, non-NULL, and built for fast lookups — the anchor every other table foreign key points back to.',
         introTable: {
           tableName: 'categories_new',
           description: 'Primary key identity demo',

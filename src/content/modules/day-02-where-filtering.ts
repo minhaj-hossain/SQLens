@@ -400,7 +400,7 @@ export const Day_02_MODULE: ModuleData = {
       title: '3. Strict Range Comparisons (> and <)',
       shortDescription: 'Filter numeric columns strictly above or below a threshold.',
       theory: {
-        summary: 'Now let\'s explore filtering data with strict comparison thresholds:',
+        summary: 'The store wants products above 50 and below 100 — but a product priced at exactly 50.00 does not make the list. Those are strict thresholds, and SQL expresses them with > and <, which leave the boundary value out.',
         introTable: {
           tableName: 'products',
           description: 'Sample inventory items',
@@ -570,7 +570,7 @@ export const Day_02_MODULE: ModuleData = {
       title: '4. Inclusive Range Comparisons (>= and <=)',
       shortDescription: 'Filter numeric columns with inclusive boundary thresholds.',
       theory: {
-        summary: 'Now let\'s explore inclusive threshold comparisons:',
+        summary: 'Ops needs every product at 50.00 or above included — a report that silently skipped the product sitting exactly on the threshold would be wrong. >= and <= include that boundary, which is why pricing floors and stock ceilings behave so naturally.',
         introTable: {
           tableName: 'products',
           description: 'Sample products snapshot',
@@ -772,7 +772,7 @@ export const Day_02_MODULE: ModuleData = {
       title: '5. Filtering Text with Single Quotes',
       shortDescription: 'How to filter rows by string and text values safely.',
       theory: {
-        summary: 'Now let\'s look at filtering text columns like city or department:',
+        summary: '"Which city?", the team asks — and the answer lives in a text column like city or department. Filtering words works almost exactly like filtering numbers, with one extra rule: the value goes in single quotes, because SQL needs to know where the text ends.',
         introTable: {
           tableName: 'students',
           description: 'Full table in database (5 students across Dhaka, Gazipur, Chattogram, Rajshahi)',
