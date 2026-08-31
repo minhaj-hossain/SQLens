@@ -102,9 +102,22 @@ for (const module of ALL_MODULES) {
     }
 
     // Rule 2: Intro table validation
+    // introTable.tableName may be either a real data table ("products") or a
+    // purely illustrative heading ("Monthly revenue, before the magic column").
+    // Descriptive multi-word names are teaching illustrations, not schema
+    // references — only identifier-shaped names are checked against the schema.
     if (theory.introTable) {
-      const tName = theory.introTable.tableName?.toLowerCase().split(/[\s,&]+/)[0];
-      if (tName && !DATABASE_SCHEMAS[tName] && !INITIAL_TABLES[tName] && !moduleCreatedTables.has(tName) && !['result', 'inner', 'primary', 'category', 'custom', 'students', 'student_records'].includes(tName)) {
+      const rawName = (theory.introTable.tableName ?? '').trim();
+      const isIllustrativeHeading = /\s/.test(rawName);
+      const tName = rawName.toLowerCase().split(/[\s,&]+/)[0];
+      if (
+        tName &&
+        !isIllustrativeHeading &&
+        !DATABASE_SCHEMAS[tName] &&
+        !INITIAL_TABLES[tName] &&
+        !moduleCreatedTables.has(tName) &&
+        !['result', 'inner', 'primary', 'category', 'custom', 'students', 'student_records'].includes(tName)
+      ) {
         issues.push(`⚠️ Intro table '${theory.introTable.tableName}' might not match standard schema`);
       }
     }
