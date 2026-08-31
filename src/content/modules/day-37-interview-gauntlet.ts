@@ -62,7 +62,7 @@ export const Day_37_MODULE: ModuleData = {
         exampleQueryExplanation: 'The IS NULL form from Day 3 - a reminder that NULL has its own comparison syntax, and that forgetting it is the root of most interview traps.',
         mcqs: [
         {
-          question: 'A subquery used with NOT IN returns the values 4, 7, NULL. What does `WHERE id NOT IN (subquery)` return?',
+          question: 'A subquery returns these values:\n• 4\n• 7\n• NULL\n\nWhat does `WHERE id NOT IN (subquery)` return?',
           options: [
             'A. Every row whose id is not 4 or 7',
             'B. Only rows whose id is not 4, 7, or NULL',
@@ -79,7 +79,7 @@ export const Day_37_MODULE: ModuleData = {
           explanation: 'DENSE_RANK shares ranks with no gaps: 1, 1, 1, then 2 (Day 23). RANK would jump to 4; ROW_NUMBER would have forced 1, 2, 3.',
         },
         {
-          question: 'A table has 10 rows; the `email` column is NULL in 4 of them. What does COUNT(email) return?',
+          question: 'A table has 10 rows:\n• 6 rows have a value in `email`\n• 4 rows have NULL in `email`\n\nWhat does `COUNT(email)` return?',
           options: ['A. 10', 'B. 4', 'C. 6', 'D. NULL'],
           correctIndex: 2,
           explanation: 'COUNT(column) skips NULLs: 10 - 4 = 6 (Day 9). COUNT(*) counts all 10 rows.',

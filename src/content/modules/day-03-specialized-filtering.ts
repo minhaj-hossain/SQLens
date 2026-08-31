@@ -112,7 +112,7 @@ export const Day_03_MODULE: ModuleData = {
         mcqs: [
           {
             question:
-              "A table has 4 students: 2 in CSE, 3 aged >= 21, and only 1 student who is BOTH in CSE and aged >= 21. How many rows does `WHERE department = 'CSE' AND age >= 21` return?",
+              "A table has 4 students:\n• 2 in CSE\n• 3 aged >= 21\n• Only 1 student who is BOTH in CSE and aged >= 21\n\nHow many rows does `WHERE department = 'CSE' AND age >= 21` return?",
             options: ["A. 1 row", "B. 2 rows", "C. 3 rows", "D. 4 rows"],
             correctIndex: 0,
             explanation:

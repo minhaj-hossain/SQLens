@@ -16,6 +16,10 @@ import { QueryExecutionResult } from '../../types/database';
 import { DataTable, CodeCard, highlightSql } from './sql-blocks';
 import { DataGrid } from './DataGrid';
 import { formatExecutionTime } from '../../lib/format-execution-time';
+import { splitEvalBlock } from '../../lib/parse-truth-eval';
+import { parseMcqQuestion } from '../../lib/parse-mcq-question';
+import { InlineContent } from './InlineContent';
+import { ExplanationEvalContent, StepExplanation } from './TruthEval';
 import Icon from '@/components/ui/Icon';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
@@ -38,34 +42,74 @@ interface ConceptLessonViewProps {
 /*  QUESTION_BLOCK pill cards, bold + inline-code. All grayscale + gold.      */
 /* ========================================================================= */
 
-/** Inline bold + code chips. */
-function InlineContent({ text }: { text: string }) {
-  const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return (
-            <strong key={i} className="font-semibold text-text">
-              {part.slice(2, -2)}
-            </strong>
-          );
-        }
-        if (part.startsWith('`') && part.endsWith('`')) {
-          return (
-            <code
-              key={i}
-              className="font-mono text-xs text-editor-text bg-surface-2 px-1.5 py-0.5 rounded border border-border-soft mx-0.5 font-medium"
-            >
-              {part.slice(1, -1)}
-            </code>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
-    </>
-  );
+/* ========================================================================= */
+/*  StepTimeline — renders "**Step N: `CLAUSE`** — description" numbered      */
+/*  lists (e.g. the SQL evaluation order) as a connected vertical timeline:  */
+/*  numbered node → clause chip → description, with (*notes*) as muted text. */
+/* ========================================================================= */
+
+interface StepItem {
+  number: string;
+  clause: string;
+  heading: string;
+  description: string;
 }
+
+function parseStepItem(item: string): StepItem | null {
+  const m = item.match(/^\*\*Step\s*(\d+):?\s*(.+?)\*\*\s*[—–-]+\s*(.+)$/);
+  if (!m) return null;
+  const clauseMatch = m[2].match(/`([^`]+)`/);
+  const clause = clauseMatch ? clauseMatch[1] : '';
+  const heading = clause
+    ? m[2].replace(/`[^`]+`/g, '').replace(/^[\s:]+|[\s:]+$/g, '')
+    : m[2];
+  return { number: m[1], clause, heading, description: m[3] };
+}
+
+const StepTimeline: React.FC<{ items: string[] }> = ({ items }) => {
+  const parsed = items.map(parseStepItem);
+  return (
+    <div className="relative ml-1 py-1">
+      {/* connector line running through the numbered nodes */}
+      <div className="absolute left-[15px] top-4 bottom-4 w-px bg-border" aria-hidden="true" />
+      <div className="space-y-4">
+        {parsed.map((step, sIdx) => {
+          if (!step) {
+            // Unrecognized item: render as plain text so nothing is lost.
+            return (
+              <p key={sIdx} className="relative z-10 pl-10 text-[13px] leading-relaxed text-text-dim">
+                <InlineContent text={items[sIdx]} />
+              </p>
+            );
+          }
+          return (
+            <div key={sIdx} className="relative flex items-start gap-3.5">
+              <span className="relative z-10 w-[31px] h-[31px] rounded-full bg-surface-3 border border-border text-text-dim flex items-center justify-center font-mono text-[12px] font-bold shrink-0">
+                {step.number}
+              </span>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                  {step.clause && (
+                    <code className="font-mono text-[12px] text-editor-text bg-editor-bg border border-border px-2 py-1 rounded-md whitespace-pre">
+                      {step.clause}
+                    </code>
+                  )}
+                  {step.heading && (
+                    <span className="text-[13px] font-semibold text-text">{step.heading}</span>
+                  )}
+                </div>
+                <p className="mt-1 text-[13px] leading-relaxed text-text-dim font-sans">
+                  <InlineContent text={step.description} />
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 /* A single explanation item: QUESTION_BLOCK card, code fence, heading, or body. */
 const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
   // 1. Stacked Question Cards: `QUESTION_BLOCK::LABEL::QUESTION`
@@ -83,6 +127,14 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
         </p>
       </div>
     );
+  }
+
+  // 1.5 Boolean evaluation rows (truth tables / row-by-row verdicts):
+  // `TRUE AND TRUE ---> TRUE ✓`, `Rahim: (CSE = TRUE) AND (21 = TRUE) → TRUE ✓`
+  // render as visual cards instead of run-on bullet text.
+  const evalParsed = splitEvalBlock(rawText);
+  if (evalParsed) {
+    return <ExplanationEvalContent parsed={evalParsed} />;
   }
 
   const lines = rawText.split('\n');
@@ -203,6 +255,11 @@ function SubLineBlocks({ text }: { text: string }) {
 
         // Numbered step list
         if (paraLines.every((l) => /^\d+\.\s+/.test(l))) {
+          const stepItems = paraLines.map((l) => l.replace(/^\d+\.\s+/, ''));
+          // SQL evaluation-order timeline: "**Step N: `CLAUSE`** — description"
+          if (stepItems.every((s) => /^\*\*Step\s*\d+/.test(s))) {
+            return <StepTimeline key={idx} items={stepItems} />;
+          }
           return (
             <div key={idx} className="space-y-2">
               {paraLines.map((line, lIdx) => {
@@ -461,11 +518,7 @@ return (
                       />
                     )}
                   </div>
-                  {step.explanation && (
-                    <p className="text-[13px] leading-relaxed text-text-dim font-sans">
-                      {step.explanation}
-                    </p>
-                  )}
+                  {step.explanation && <StepExplanation text={step.explanation} />}
                   {step.tableData && (
                     <DataTable
                       tableName={step.tableData.tableName}
@@ -583,21 +636,54 @@ return (
                 const selected = selectedAnswers[mIdx];
                 const hasAnswered = selected !== undefined;
                 const isCorrect = selected === mcq.correctIndex;
-                // Question may include trailing SQL code lines after the first line.
-                const qParts = mcq.question.split('\n');
-                const qLine = qParts[0] || mcq.question;
-                const qCode = qParts.slice(1).filter((l) => l.trim());
+                // Structured question: lead (setup) + fact chips + emphasized ask,
+                // or the legacy layout of a question line followed by SQL code.
+                const pq = parseMcqQuestion(mcq.question);
                 return (
                   <div key={mIdx} className="rounded-xl bg-surface-2 border border-border p-6">
                     <div className="font-mono text-[10.5px] text-text-faint uppercase tracking-[0.06em] mb-3">
                       MCQ · Question {mIdx + 1}
                     </div>
-                    <p className="text-[13.5px] font-semibold text-text leading-snug font-sans">{qLine}</p>
-                    {qCode.length > 0 && (
+                    {pq.lead && (
+                      <p
+                        className={`text-[13.5px] leading-relaxed font-sans ${
+                          pq.facts.length > 0 ? 'text-text-dim' : 'font-semibold text-text'
+                        }`}
+                      >
+                        <InlineContent text={pq.lead} />
+                      </p>
+                    )}
+                    {pq.facts.length > 0 && (
+                      <ul className="mt-2.5 space-y-1.5">
+                        {pq.facts.map((fact, fIdx) => (
+                          <li
+                            key={fIdx}
+                            className="flex items-start gap-2.5 text-[13px] leading-relaxed text-text font-sans"
+                          >
+                            <span className="mt-[7px] w-1.5 h-1.5 rounded-[2px] bg-func shrink-0" />
+                            <span className="flex-1">
+                              <InlineContent text={fact} />
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {pq.code.length > 0 && (
                       <div
                         className="mt-2 mb-3 font-mono text-[12.5px] text-text-dim whitespace-pre overflow-x-auto"
-                        dangerouslySetInnerHTML={{ __html: highlightSql(qCode.join('\n')) }}
+                        dangerouslySetInnerHTML={{ __html: highlightSql(pq.code.join('\n')) }}
                       />
+                    )}
+                    {pq.question && (
+                      <p
+                        className={`text-[13.5px] font-semibold text-text leading-snug font-sans ${
+                          pq.lead || pq.facts.length > 0
+                            ? 'mt-3.5 rounded-r-lg border-l-2 border-l-func bg-surface-3/40 pl-3 pr-2 py-2'
+                            : ''
+                        }`}
+                      >
+                        <InlineContent text={pq.question} />
+                      </p>
                     )}
                     <div className="space-y-2 mt-3">
                       {mcq.options.map((opt, oIdx) => {
@@ -659,7 +745,7 @@ return (
                         <span className="font-bold">
                           {isCorrect ? 'Correct! ' : 'Explanation: '}
                         </span>
-                        {mcq.explanation}
+                        <InlineContent text={mcq.explanation} />
                       </div>
                     )}
                   </div>

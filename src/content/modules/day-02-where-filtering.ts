@@ -317,7 +317,7 @@ export const Day_02_MODULE: ModuleData = {
         liveDemoNotes: 'Excludes the EEE department record.',
         mcqs: [
           {
-            question: "The students table has 5 rows: 3 in 'CSE', 1 in 'EEE', and 1 in 'BBA'. How many rows does `WHERE department != 'EEE'` return?",
+            question: "The students table has 5 rows:\n• 3 in 'CSE'\n• 1 in 'EEE'\n• 1 in 'BBA'\n\nHow many rows does `WHERE department != 'EEE'` return?",
             options: [
               'A. 1 row',
               'B. 4 rows',

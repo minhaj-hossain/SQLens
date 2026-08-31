@@ -635,7 +635,7 @@ export const Day_09_MODULE: ModuleData = {
         liveDemoNotes: 'One figure that sizes up the entire catalog.',
         mcqs: [
           {
-            question: 'Prices are $10, $20, NULL, and $30. What does `AVG(price)` return?',
+            question: 'The price column contains these values:\n• $10\n• $20\n• NULL\n• $30\n\nWhat does `AVG(price)` return?',
             options: [
               'A. $15.00 (sum 60 / 4)',
               'B. $20.00 (sum 60 / 3, since NULL is excluded from count)',
