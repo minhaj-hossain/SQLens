@@ -173,12 +173,12 @@ export const Day_19_MODULE: ModuleData = {
   challenge: {
     id: 'day-19-homework',
     title: 'Day 19 — Fix Broken & Date-Constrained Queries (Ending Activity)',
-    scenario: 'Polish and refine your multi-table reporting queries:',
+    scenario: 'The spend report shipped, but finance added a constraint overnight: only purchases from the cutoff date onward count. Rebuild the multi-table report with the date range baked in — and make sure the zero-state still behaves:',
     tasks: [
       {
         id: 'day15-hw-1',
         title: 'Task 1: Polish multi-table customer spend report with date range',
-        description: 'Verify and run the multi-table customer spend report with date range constraints.',
+        description: 'Rebuild the multi-table customer spend report so only orders from the cutoff date onward count — then run it and sanity-check the totals against the raw orders.',
         instructions: [
           'Select `c.name`, `SUM(oi.quantity * oi.unit_price) AS recent_spend` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` WHERE `o.order_date >= \'2026-06-25\'` GROUP BY `c.customer_id`, `c.name` ORDER BY `recent_spend DESC`.',
           'End with a semicolon (;).',

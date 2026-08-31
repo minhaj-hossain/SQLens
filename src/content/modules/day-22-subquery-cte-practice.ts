@@ -183,7 +183,7 @@ export const Day_22_MODULE: ModuleData = {
   challenge: {
     id: 'day-22-homework',
     title: 'Day 22 — Subqueries & CTEs Pipeline Challenge (Ending Activity)',
-    scenario: 'Complete these 2 analytical challenges independently:',
+    scenario: 'Two challenges, blank editor: a correlated subquery benchmark and a CTE spend report. You built both yesterday with a walkthrough — today the scaffolding is gone:',
     tasks: [
       {
         id: 'day18-hw-1',
@@ -197,7 +197,7 @@ export const Day_22_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 1: Products priced above their own category average\n',
         solutionSql: 'SELECT p1.name, p1.price FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
-        solutionExplanation: 'Executes a correlated subquery per category.',
+        solutionExplanation: 'For every product row, the subquery re-averages that product’s own category — five categories, five different benchmarks, one query. No join needed; the correlation does the partitioning.',
         hints: [{ level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
         validation: {
           requireExactResult: true,

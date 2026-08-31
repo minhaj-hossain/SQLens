@@ -163,7 +163,7 @@ export const Day_07_MODULE: ModuleData = {
   challenge: {
     id: 'day-07-homework',
     title: 'Day 7 — Schema Exploration Mission Checklist (Ending Activity)',
-    scenario: 'Execute these 5 single-table audits across the e-commerce schema:',
+    scenario: 'Day one on the storefront support desk: before anyone trusts the numbers, you audit the data yourself. Run these five single-table checks across the schema — suppliers, pricing, taxonomy, top shelf, pagination — so you know exactly what you inherited:',
     tasks: [
       {
         id: 'day07-hw-1',
@@ -174,7 +174,7 @@ export const Day_07_MODULE: ModuleData = {
         primaryTable: 'suppliers',
         initialSql: '-- Task 1: List all suppliers\n',
         solutionSql: 'SELECT * FROM suppliers;',
-        solutionExplanation: 'Lists all supplier records.',
+        solutionExplanation: '`SELECT *` on suppliers hands back the complete partner directory — every column, every row, nothing filtered. The baseline every later audit is measured against.',
         hints: [{ level: 1, text: 'Use `SELECT * FROM suppliers;`' }],
         validation: {
           requireExactResult: true,
@@ -195,7 +195,7 @@ export const Day_07_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 2: Products from supplier #1 sorted by price\n',
         solutionSql: 'SELECT * FROM products WHERE supplier_id = 1 ORDER BY price ASC;',
-        solutionExplanation: 'Filters by supplier_id = 1 and sorts price ascending.',
+        solutionExplanation: 'WHERE narrows the catalog to supplier 1 first, then ORDER BY price ASC lays out their line cheapest-to-priciest — filter before sort, exactly the execution order Day 6 established.',
         hints: [{ level: 1, text: 'Use `WHERE supplier_id = 1 ORDER BY price ASC;`' }],
         validation: {
           requireExactResult: true,
@@ -218,7 +218,7 @@ export const Day_07_MODULE: ModuleData = {
         primaryTable: 'categories',
         initialSql: '-- Task 3: Distinct categories in the system\n',
         solutionSql: 'SELECT DISTINCT name FROM categories;',
-        solutionExplanation: 'Lists distinct category names.',
+        solutionExplanation: 'DISTINCT collapses the one-category-per-product rows into the unique taxonomy — a one-query structural census of how the catalog is organized.',
         hints: [{ level: 1, text: 'Use `SELECT DISTINCT name FROM categories;`' }],
         validation: {
           requireExactResult: true,
@@ -240,7 +240,7 @@ export const Day_07_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 4: The 3 most expensive products\n',
         solutionSql: 'SELECT * FROM products ORDER BY price DESC LIMIT 3;',
-        solutionExplanation: '`ORDER BY price DESC LIMIT 3` retrieves the 3 highest priced items.',
+        solutionExplanation: 'Sorting the whole catalog by price DESC parades every product past the podium; LIMIT 3 stops the parade right after the top shelf — no need to drag the remaining rows back.',
         hints: [{ level: 1, text: 'Use `ORDER BY price DESC LIMIT 3;`' }],
         validation: {
           requireExactResult: true,
@@ -263,7 +263,7 @@ export const Day_07_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 5: Page 2 of the full product catalog\n',
         solutionSql: 'SELECT * FROM products ORDER BY product_id ASC LIMIT 10 OFFSET 10;',
-        solutionExplanation: 'Paginates to page 2 of the products table.',
+        solutionExplanation: 'LIMIT 10 OFFSET 10 skips the first page entirely and returns rows 11–20 — the same pagination contract the storefront catalog page relies on.',
         hints: [{ level: 1, text: 'Use `LIMIT 10 OFFSET 10;`' }],
         validation: {
           requireExactResult: true,

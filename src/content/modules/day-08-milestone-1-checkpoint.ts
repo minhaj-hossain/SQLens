@@ -214,7 +214,7 @@ export const Day_08_MODULE: ModuleData = {
   challenge: {
     id: 'day-08-homework',
     title: 'Day 8 — Milestone 1 Mastery Checkpoint (Ending Activity)',
-    scenario: 'Complete all 5 deliverables independently to verify Milestone 1 mastery:',
+    scenario: 'The warehouse manager needs five answers before the morning stand-up — no hints, no walkthroughs. Each deliverable draws on one skill from Days 1–7; land all five and Milestone 1 is yours:',
     tasks: [
       {
         id: 'day08-hw-1',

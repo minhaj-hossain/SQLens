@@ -329,7 +329,7 @@ export const Day_14_MODULE: ModuleData = {
   challenge: {
     id: 'day-14-homework',
     title: 'Day 14 — JOINs (Homework)',
-    scenario: 'Master multi-table queries with INNER JOIN and LEFT JOIN:',
+    scenario: 'Orders are meaningless without customer names, and customers who never ordered vanish under an INNER JOIN. Write both join types and watch what each one keeps — and what each one drops:',
     tasks: [
       {
         id: 'day11-hw-1',
@@ -344,7 +344,7 @@ export const Day_14_MODULE: ModuleData = {
         secondaryTables: ['customers'],
         initialSql: '-- Task 1: Every order with customer name and date\n',
         solutionSql: 'SELECT o.order_id, c.name, o.order_date FROM orders o INNER JOIN customers c ON o.customer_id = c.customer_id;',
-        solutionExplanation: 'Joins orders to customers to retrieve customer names alongside order details.',
+        solutionExplanation: 'The join walks each order row to its matching customer via customer_id, so the report reads like an invoice: what was ordered, by whom, and when — without the reader ever seeing a customer_id.',
         hints: [{ level: 1, text: 'Use `FROM orders o INNER JOIN customers c ON o.customer_id = c.customer_id;`' }],
         validation: {
           requireExactResult: true,

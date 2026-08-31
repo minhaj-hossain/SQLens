@@ -152,7 +152,7 @@ export const Day_36_MODULE: ModuleData = {
   challenge: {
     id: 'day-36-homework',
     title: 'Day 36 — Milestone 3 Capstone Assessment (Ending Activity)',
-    scenario: 'Complete all 4 capstone deliverables independently to achieve SQL certification:',
+    scenario: 'Four deliverables spanning the whole 38-day journey — multi-table retrieval, CTE analysis, a schema change, and an index optimization. Fresh mindset, no hints: everything before this was practice, this is the assessment:',
     tasks: [
       {
         id: 'day24-hw-1',
@@ -193,7 +193,7 @@ export const Day_36_MODULE: ModuleData = {
         secondaryTables: ['orders', 'order_items'],
         initialSql: '-- Deliverable 2: Customers with above-average total spend\n',
         solutionSql: 'WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;',
-        solutionExplanation: 'Uses CTE with subquery benchmark to filter high-spending accounts.',
+        solutionExplanation: 'The CTE totals each customer’s spend once, then the comparison against the overall average keeps only above-benchmark accounts — the Day 22 pattern, applied at capstone scale.',
         hints: [{ level: 1, text: 'Use `WITH CustomerTotals AS (...) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals);`' }],
         validation: {
           requireExactResult: true,
@@ -214,7 +214,7 @@ export const Day_36_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Deliverable 3: Alter table products add status column\n',
         solutionSql: 'ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';',
-        solutionExplanation: 'Alters products table schema by appending the status column with default value.',
+        solutionExplanation: 'ALTER TABLE ADD COLUMN extends products in place, and the DEFAULT back-fills every existing row with ‘active’ so no legacy product is left with a NULL status.',
         hints: [{ level: 1, text: 'Use `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`' }],
         validation: {
           targetTable: 'products',
@@ -234,7 +234,7 @@ export const Day_36_MODULE: ModuleData = {
         primaryTable: 'orders',
         initialSql: '-- Deliverable 4: Create index on orders(customer_id)\n',
         solutionSql: 'CREATE INDEX idx_orders_customer_id ON orders(customer_id);',
-        solutionExplanation: 'Creates a B-tree index on orders foreign key customer_id.',
+        solutionExplanation: 'The FK column gets a B-tree index, so the frequent orders-by-this-customer lookup stops scanning every order row — the exact transformation Day 31 proved with EXPLAIN turning ALL into ref.',
         hints: [{ level: 1, text: 'Use `CREATE INDEX idx_orders_customer_id ON orders(customer_id);`' }],
         validation: {
           targetTable: 'orders',

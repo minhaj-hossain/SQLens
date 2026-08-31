@@ -160,7 +160,7 @@ export const Day_20_MODULE: ModuleData = {
   challenge: {
     id: 'day-20-homework',
     title: 'Day 20 — Milestone 2 Mastery Checkpoint (Ending Activity)',
-    scenario: 'Complete all 4 deliverables independently to verify Milestone 2 relational mastery:',
+    scenario: 'Four deliverables, one schema, no hints: a grand total, a per-category breakdown, a HAVING-filtered VIP list, and an anti-join. Land all four and Milestone 2 is officially yours:',
     tasks: [
       {
         id: 'day16-hw-1',
@@ -174,7 +174,7 @@ export const Day_20_MODULE: ModuleData = {
         primaryTable: 'order_items',
         initialSql: '-- Deliverable 1: Total revenue\n',
         solutionSql: 'SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;',
-        solutionExplanation: 'Calculates grand total revenue across all order line items.',
+        solutionExplanation: 'SUM(quantity * price) over order_items folds every line item into one number — the same fold the storefront’s daily ledger does, but computed live from the data.',
         hints: [{ level: 1, text: 'Use `SELECT SUM(quantity * unit_price) AS total_revenue FROM order_items;`' }],
         validation: {
           requireExactResult: true,
@@ -196,7 +196,7 @@ export const Day_20_MODULE: ModuleData = {
         secondaryTables: ['products', 'order_items'],
         initialSql: '-- Deliverable 2: Revenue by category\n',
         solutionSql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue FROM categories cat JOIN products p ON cat.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;',
-        solutionExplanation: 'Joins categories -> products -> order_items and sums revenue per category.',
+        solutionExplanation: 'The three-hop join chains categories to the money: products inherit their category, order_items carry the spend, and GROUP BY category folds each chain into one revenue number.',
         hints: [{ level: 1, text: 'Use `GROUP BY cat.category_id, cat.name ORDER BY category_revenue DESC;`' }],
         validation: {
           requireExactResult: true,
@@ -220,7 +220,7 @@ export const Day_20_MODULE: ModuleData = {
         secondaryTables: ['orders', 'order_items'],
         initialSql: '-- Deliverable 3: Customers who spent more than $200\n',
         solutionSql: 'SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name HAVING SUM(oi.quantity * oi.unit_price) > 200 ORDER BY total_spent DESC;',
-        solutionExplanation: 'Filters aggregated customer spending with `HAVING SUM(...) > 200`.',
+        solutionExplanation: 'The per-customer SUM is computed first, then HAVING keeps only buckets above $200 — the filter runs after aggregation, which is exactly why WHERE could never do this job.',
         hints: [{ level: 1, text: 'Use `HAVING SUM(oi.quantity * oi.unit_price) > 200 ORDER BY total_spent DESC;`' }],
         validation: {
           requireExactResult: true,
@@ -245,7 +245,7 @@ export const Day_20_MODULE: ModuleData = {
         secondaryTables: ['products', 'order_items'],
         initialSql: '-- Deliverable 4: Suppliers whose products have never been ordered\n',
         solutionSql: 'SELECT s.supplier_id, s.name FROM suppliers s LEFT JOIN products p ON s.supplier_id = p.supplier_id LEFT JOIN order_items oi ON p.product_id = oi.product_id GROUP BY s.supplier_id, s.name HAVING COUNT(oi.order_item_id) = 0;',
-        solutionExplanation: 'Anti-join identifying suppliers with zero order item records (Unity Traders BD).',
+        solutionExplanation: 'LEFT JOIN keeps every supplier row and fills order_item columns with NULL where nothing matches; IS NULL then keeps only the empty ones — Unity Traders BD surfaces as the supplier whose catalog never sells.',
         hints: [{ level: 1, text: 'Use `GROUP BY s.supplier_id, s.name HAVING COUNT(oi.order_item_id) = 0;`' }],
         validation: {
           requireExactResult: true,

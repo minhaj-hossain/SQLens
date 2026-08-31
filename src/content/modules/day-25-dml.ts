@@ -394,7 +394,7 @@ export const Day_25_MODULE: ModuleData = {
   challenge: {
     id: 'day-25-homework',
     title: 'Day 25 — DML Operations (Homework)',
-    scenario: 'Demonstrate safe data modification operations:',
+    scenario: 'You’re the on-call data engineer and the supplier’s shipment just landed: a new Precision Stylus Pen needs to hit the catalog and product 1’s price needs a 10% adjustment. Every statement guarded — one missing WHERE clause is a career-ending story:',
     databaseLifecycle: 'inherit',
     tasks: [
       {
@@ -409,7 +409,7 @@ export const Day_25_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 1: Insert a new product into products\n',
         solutionSql: 'INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES (\'Precision Stylus Pen\', 1, 1, 29.99, 80, 15);',
-        solutionExplanation: 'Inserts new product with complete column attributes.',
+        solutionExplanation: 'Every non-auto column is supplied explicitly — name, supplier, category, price, stock, reorder level — so the new row lands complete instead of riddled with NULLs the catalog page would have to apologize for later.',
         hints: [{ level: 1, text: 'Use `INSERT INTO products (...) VALUES (...);`' }],
         validation: {
           targetTable: 'products',
@@ -429,7 +429,7 @@ export const Day_25_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 2: Update the price of product 1 by 10%\n',
         solutionSql: 'UPDATE products SET price = price * 1.10 WHERE product_id = 1;',
-        solutionExplanation: 'Safely applies targeted 10% price increase using WHERE product_id = 1.',
+        solutionExplanation: 'The arithmetic (price * 1.10) touches only the row WHERE product_id = 1 selects — the other 26 products keep their prices because the guard is part of the statement, not a step you meant to add later.',
         hints: [{ level: 1, text: 'Use `UPDATE products SET price = price * 1.10 WHERE product_id = 1;`' }],
         validation: {
           targetTable: 'products',

@@ -146,7 +146,7 @@ export const Day_34_MODULE: ModuleData = {
   challenge: {
     id: 'day-34-homework',
     title: 'Day 34 — Deliver the Backend API Endpoint Query Suite (Ending Activity)',
-    scenario: 'Construct the production backend integration queries independently:',
+    scenario: 'The backend team needs two endpoints wired to real SQL today: the product detail page and the executive KPI call. Write both queries the API will ship — production expectations, no starter code:',
     tasks: [
       {
         id: 'day22-hw-1',
@@ -161,7 +161,7 @@ export const Day_34_MODULE: ModuleData = {
         secondaryTables: ['categories', 'suppliers'],
         initialSql: '-- Endpoint 1: Product Detail Page query\n',
         solutionSql: 'SELECT p.product_id, p.name, p.price, c.name AS category_name, s.name AS supplier_name FROM products p JOIN categories c ON p.category_id = c.category_id JOIN suppliers s ON p.supplier_id = s.supplier_id WHERE p.product_id = 1;',
-        solutionExplanation: 'Multi-table join hydrating the full product page payload.',
+        solutionExplanation: 'One query hydrates the whole product page — the product row plus its category name plus its supplier name — three tables joined so the API makes a single round trip instead of three.',
         hints: [{ level: 1, text: 'Use `WHERE p.product_id = 1;`' }],
         validation: {
           requireExactResult: true,
@@ -185,7 +185,7 @@ export const Day_34_MODULE: ModuleData = {
         secondaryTables: ['order_items'],
         initialSql: '-- Endpoint 2: Executive Dashboard KPI Query\n',
         solutionSql: 'SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;',
-        solutionExplanation: 'Computes high-level KPI metrics in a single query.',
+        solutionExplanation: 'SUM and COUNT(DISTINCT) ride in one pass over the data, shipping revenue and true order count together — because two round trips for two dashboard numbers is exactly what this endpoint exists to avoid.',
         hints: [{ level: 1, text: 'Use `SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;`' }],
         validation: {
           requireExactResult: true,

@@ -224,7 +224,7 @@ export const Day_06_MODULE: ModuleData = {
   challenge: {
     id: 'day-06-homework',
     title: 'Day 6 — Prediction & Alias Tracing Test (Ending Activity)',
-    scenario: 'Demonstrate your mastery of the 5-step query processing order:',
+    scenario: 'One query, but it exercises the whole engine: filter on the raw column, sort on the alias, cap the output. Nail it and you have internalized the order SQL actually executes a SELECT — not the order it reads on screen:',
     tasks: [
       {
         id: 'day06-hw-1',
@@ -238,7 +238,7 @@ export const Day_06_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 1: Trace execution order with WHERE and ORDER BY\n',
         solutionSql: 'SELECT name, price AS catalog_price FROM products WHERE price > 40 ORDER BY catalog_price DESC LIMIT 5;',
-        solutionExplanation: 'Uses raw column in WHERE and alias in ORDER BY.',
+        solutionExplanation: 'WHERE reads the raw price column at Step 2 — before any alias exists — while ORDER BY reads the catalog_price alias at Step 4, after SELECT has created it. One query, both sides of the execution-order divide.',
         hints: [{ level: 1, text: 'Use `WHERE price > 40 ORDER BY catalog_price DESC LIMIT 5;`' }],
         validation: {
           requireExactResult: true,

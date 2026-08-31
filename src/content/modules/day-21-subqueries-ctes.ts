@@ -714,7 +714,7 @@ export const Day_21_MODULE: ModuleData = {
           secondaryTables: ['orders'],
           initialSql: '-- Write your SQL query here\n',
           solutionSql: 'WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) SELECT c.customer_id, c.name FROM customers c JOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;',
-          solutionExplanation: 'Uses a Common Table Expression to define active customer IDs.',
+          solutionExplanation: 'WITH computes the active-customer id list once, names it, and lets the main query treat it like a reusable table — same result as the subquery version, but the intent is readable at the top of the query.',
           hints: [{ level: 1, text: 'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) ...`' }],
           validation: {
             requireExactResult: true,
@@ -754,7 +754,7 @@ export const Day_21_MODULE: ModuleData = {
   challenge: {
     id: 'day-21-homework',
     title: 'Day 21 — Subqueries & CTEs (Homework)',
-    scenario: 'Solve these complex analytical queries using subqueries and CTEs:',
+    scenario: 'The four hardest questions the storefront team has been asked this quarter — each needs a query inside a query, and the last one reads best as a named CTE:',
     tasks: [
       {
         id: 'day17-hw-1',
@@ -768,7 +768,7 @@ export const Day_21_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 1: Products priced above overall average\n',
         solutionSql: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);',
-        solutionExplanation: 'Filters products using a scalar subquery.',
+        solutionExplanation: 'The inner SELECT computes the catalog-wide average price once; the outer WHERE then holds every product against that single number — a scalar subquery acting as a live benchmark, not a hard-coded one.',
         hints: [{ level: 1, text: 'Use `WHERE price > (SELECT AVG(price) FROM products);`' }],
         validation: {
           requireExactResult: true,
@@ -790,7 +790,7 @@ export const Day_21_MODULE: ModuleData = {
         primaryTable: 'customers',
         initialSql: '-- Task 2: Customers who placed at least one order (IN subquery)\n',
         solutionSql: 'SELECT customer_id, name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders);',
-        solutionExplanation: 'Uses an IN subquery against the orders table.',
+        solutionExplanation: 'The subquery collects every customer_id that appears in orders; IN keeps only customers whose id is in that set — customers who never ordered simply never appear, so they drop out for free.',
         hints: [{ level: 1, text: 'Use `WHERE customer_id IN (SELECT customer_id FROM orders);`' }],
         validation: {
           requireExactResult: true,
@@ -812,7 +812,7 @@ export const Day_21_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '-- Task 3: Correlated subquery per category\n',
         solutionSql: 'SELECT p1.name, p1.price FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);',
-        solutionExplanation: 'Uses a correlated subquery to dynamically calculate the average for each product\'s category.',
+        solutionExplanation: 'The subquery references the outer row (p.category_id), so it re-runs per category: each product is judged against its own category’s average, not the catalog-wide one — that per-row dependency is what makes it correlated.',
         hints: [{ level: 1, text: 'Use `WHERE p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id);`' }],
         validation: {
           requireExactResult: true,
@@ -834,7 +834,7 @@ export const Day_21_MODULE: ModuleData = {
         primaryTable: 'customers',
         initialSql: '-- Task 4: Customer order query rewritten as CTE\n',
         solutionSql: 'WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) SELECT c.customer_id, c.name FROM customers c JOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;',
-        solutionExplanation: 'Uses a Common Table Expression to define active customer IDs.',
+        solutionExplanation: 'WITH computes the active-customer id list once, names it, and lets the main query treat it like a reusable table — same result as the subquery version, but the intent is readable at the top of the query.',
         hints: [{ level: 1, text: 'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) ...`' }],
         validation: {
           requireExactResult: true,

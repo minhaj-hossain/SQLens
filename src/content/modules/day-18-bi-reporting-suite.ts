@@ -169,7 +169,7 @@ export const Day_18_MODULE: ModuleData = {
   challenge: {
     id: 'day-18-homework',
     title: 'Day 18 — Deliver the 3-Part Executive BI Reporting Suite (Ending Activity)',
-    scenario: 'Construct all 3 core multi-table reports independently:',
+    scenario: 'Three reports land on your desk at once: a volume ranking for merchandising, a VIP leaderboard for the loyalty team, and a dead-stock list for the warehouse. Each is a multi-table build — joins, aggregates, and one anti-join — with no starter SQL this time:',
     tasks: [
       {
         id: 'day14-hw-1',

@@ -253,7 +253,7 @@ export const Day_16_MODULE: ModuleData = {
   challenge: {
     id: 'day-16-homework',
     title: 'Day 16 — Full 7-Clause Pipeline Assembly (Ending Activity)',
-    scenario: 'Solidify your mastery of relational design and query execution order:',
+    scenario: 'One query, all seven clauses, written in the exact pipeline order the engine expects. If it runs first try, the 7-stage execution model is locked in:',
     tasks: [
       {
         id: 'day13-hw-1',
@@ -268,7 +268,7 @@ export const Day_16_MODULE: ModuleData = {
         secondaryTables: ['orders'],
         initialSql: '-- Challenge: Complete 7-clause SQL pipeline\n',
         solutionSql: 'SELECT c.name, COUNT(o.order_id) AS active_orders FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY active_orders DESC LIMIT 5;',
-        solutionExplanation: 'Executes the complete 7-clause SQL pipeline.',
+        solutionExplanation: 'Every stage in execution order: FROM and JOIN assemble the rows, WHERE filters them raw, GROUP BY buckets, HAVING keeps buckets with at least one order, ORDER BY sorts the alias WHERE could not see, LIMIT caps the output — the full pipeline in one statement.',
         hints: [{ level: 1, text: 'Use `WHERE o.status != \'cancelled\' GROUP BY c.customer_id, c.name HAVING COUNT(o.order_id) >= 1 ORDER BY active_orders DESC LIMIT 5;`' }],
         validation: {
           requireExactResult: true,
