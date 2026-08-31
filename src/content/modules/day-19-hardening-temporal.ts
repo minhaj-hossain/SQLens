@@ -1,26 +1,26 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_19_MODULE: ModuleData = {
-  id: 'day-15',
+  id: 'day-19',
   slug: 'independent-work-debug',
-  day: 15,
-  title: 'Day 15 — Debugging Lab: Query Hardening & Temporal Filters',
-  shortTitle: 'Debug: Temporal Filters & Audits',
+  day: 19,
+  title: 'Day 19 — Debugging Lab: Harden Queries & Temporal Filters',
+  shortTitle: 'Debug: Temporal Filters',
   type: 'practice_day',
   milestoneId: 'milestone-2',
-  description: 'Harden multi-table queries with date range boundaries and audit inactive customer accounts before Milestone 2 assessment.',
+  description: 'Production queries need date ranges and edge case handling. Add temporal constraints to your multi-table reports and audit inactive customers before the Milestone 2 checkpoint.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Add date-range constraints to multi-table joined reporting queries',
-    'Audit inactive zero-order customer accounts using LEFT JOIN and HAVING',
-    'Harden query logic against data edge cases before assessment checkpoints',
+    'Add WHERE constraints with date ranges to multi-table joined queries',
+    'Find inactive zero-order customers using LEFT JOIN and HAVING aggregate filters',
+    'Harden real queries against edge cases before they hit production',
   ],
   concepts: [
     {
       id: 'query-debugging-polish',
       order: 1,
-      title: '1. Query Hardening & Date Range Constraints',
-      shortDescription: 'Refine multi-table queries and add temporal filters.',
+      title: '1. Production Query Hardening: Dates, Ranges & Audits',
+      shortDescription: 'Add temporal constraints and edge case handling to multi-table queries.',
       theory: {
         summary: 'Production queries frequently require temporal constraints (such as orders placed in the last 60 days) and inactive account audits. Today we harden existing queries against these real-world requirements.',
         introTable: {

@@ -1,26 +1,26 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_15_MODULE: ModuleData = {
-  id: 'day-12',
+  id: 'day-15',
   slug: 'practice-joins-aggregates',
-  day: 12,
-  title: 'Day 12 — Debugging Lab: Multi-Table Aggregation & Fan-Out',
-  shortTitle: 'Debug: Fan-Out & Aggregations',
+  day: 15,
+  title: 'Day 15 — Debug Join Pitfalls: Row Duplication & COUNT(DISTINCT)',
+  shortTitle: 'Debug: Join Pitfalls',
   type: 'practice_day',
   milestoneId: 'milestone-2',
-  description: 'Diagnose and fix cartesian fan-out row multiplication bugs when joining one-to-many tables, and master COUNT(DISTINCT) for safe multi-table aggregations.',
+  description: 'Learn why one-to-many JOINs duplicate rows, how this breaks counting, and how COUNT(DISTINCT) saves the day. This is a real production bug that catches everyone.',
   estimatedMinutes: 75,
   completionLearnings: [
-    'Diagnose cartesian fan-out row multiplication when joining one-to-many parent and child tables',
-    'Understand why COUNT(o.order_id) overcounts and how COUNT(DISTINCT o.order_id) guarantees accurate metrics',
-    'Calculate per-customer order counts and financial spend totals across 3 joined tables',
+    'Diagnose cartesian fan-out when joining one-to-many tables',
+    'Understand why COUNT(*) and COUNT(column) overcount in multi-table queries',
+    'Use COUNT(DISTINCT column) to count distinct values accurately across joins',
   ],
   concepts: [
     {
       id: 'fan-out-and-distinct-counts',
       order: 1,
-      title: '1. Diagnosing Row Multiplication & Fan-Out Bugs',
-      shortDescription: 'Why joining multiple one-to-many tables duplicates rows.',
+      title: '1. The Row Duplication Problem (and the Solution)',
+      shortDescription: 'Why JOINs multiply rows, why normal COUNT breaks, and how COUNT(DISTINCT) fixes it.',
       theory: {
         summary: 'When you join customers → orders → order_items, each order row is duplicated for every line item it contains. Running COUNT(o.order_id) counts joined result rows, inflating order counts! Fix: COUNT(DISTINCT o.order_id) counts distinct orders accurately.',
         introTable: {

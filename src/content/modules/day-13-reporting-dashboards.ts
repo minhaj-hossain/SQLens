@@ -1,28 +1,28 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_13_MODULE: ModuleData = {
-  id: 'day-10',
+  id: 'day-13',
   slug: 'practice-reporting',
-  day: 10,
-  title: 'Day 10 — Guided Practice: Reporting & Aggregation',
-  shortTitle: 'Practice: Reporting & Aggregation',
+  day: 13,
+  title: 'Day 13 — Build Reporting Dashboards with Aggregates',
+  shortTitle: 'Practice: Dashboards & Reporting',
   type: 'practice_day',
   milestoneId: 'milestone-2',
-  description: 'Construct multi-metric reporting widgets and dashboards combining COUNT, SUM, AVG, GROUP BY, and HAVING post-aggregation thresholds.',
+  description: 'Combine multiple aggregate functions to build real dashboards: count products, calculate totals, find averages, and filter groups with HAVING. This is how real BI dashboards are built.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Construct multi-metric category and inventory summary reports combining multiple aggregates in a single SELECT',
-    'Differentiate between row-level WHERE filters and group-level HAVING filters in the same query',
-    'Apply post-aggregation thresholds using HAVING to isolate high-volume categories',
+    'Combine multiple aggregates (COUNT, SUM, AVG) in one query to build multi-metric reports',
+    'Understand the difference: WHERE filters rows before grouping, HAVING filters groups after',
+    'Use HAVING to isolate high-performing categories for focus and investment',
   ],
   concepts: [
     {
       id: 'reporting-widgets',
       order: 1,
-      title: '1. Multi-Metric Reporting Queries & Dashboards',
-      shortDescription: 'Combine multiple aggregates into business summary widgets.',
+      title: '1. Build Multi-Metric Dashboard Queries',
+      shortDescription: 'Combine multiple aggregates to build real business reports.',
       theory: {
-        summary: 'Reporting queries combine multiple aggregate calculations (counts, totals, averages) with group-level filtering (HAVING) and sorting to power executive dashboards.',
+        summary: 'Real dashboards do not show single numbers - they show multiple metrics side-by-side. One query computes item count, average price, and total stock simultaneously. HAVING filters the results to show only the interesting groups.',
         introTable: {
           tableName: 'products',
           description: 'Inventory metrics snapshot per category',

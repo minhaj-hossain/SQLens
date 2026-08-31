@@ -1,26 +1,26 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_16_MODULE: ModuleData = {
-  id: 'day-13',
+  id: 'day-16',
   slug: 'relational-thinking-logical-order-expanded',
-  day: 13,
-  title: 'Day 13 — Visual Concept Lab: Relational Architecture & 7-Stage Pipeline',
-  shortTitle: 'Relational Thinking & Full Execution Order',
+  day: 16,
+  title: 'Day 16 — The Full Query Execution Model (7 Stages)',
+  shortTitle: 'Full Execution Order',
   type: 'conceptual_session',
   milestoneId: 'milestone-2',
-  description: 'Master the full 7-step logical query processing order (FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT) and understand relational schema architecture.',
+  description: 'Now that you know JOINs, GROUP BY, and HAVING, here is the complete picture: all 7 stages of query execution. This single model explains almost everything that puzzles you.',
   estimatedMinutes: 45,
   completionLearnings: [
-    'Master the expanded 7-step logical query processing order across all SQL clauses',
-    'Trace multi-table queries through all 7 stages to eliminate clause ordering bugs',
-    'Distinguish standard logical visibility rules from database-specific convenience extensions (such as MySQL)',
+    'Understand the complete 7-step execution order: FROM/JOIN -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY -> LIMIT',
+    'Trace multi-table queries through all 7 stages to eliminate logic bugs',
+    'Know which clauses can reference which earlier stages',
   ],
   concepts: [
     {
       id: 'expanded-logical-order',
       order: 1,
-      title: '1. The Full 7-Step Logical Execution Lifecycle',
-      shortDescription: 'FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT.',
+      title: '1. The Complete 7-Stage Execution Pipeline',
+      shortDescription: 'FROM/JOIN -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY -> LIMIT',
       theory: {
         summary: 'Now that JOINs, GROUP BY, and HAVING are in our toolkit, we integrate all 7 clauses into a single unified execution model. Understanding this lifecycle ensures you know when data is created, filtered, and sorted.',
         introTable: {

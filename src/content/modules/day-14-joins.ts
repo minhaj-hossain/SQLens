@@ -1,21 +1,20 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_14_MODULE: ModuleData = {
-  id: 'day-11',
+  id: 'day-14',
   slug: 'joins-relational-data',
-  day: 11,
-  title: 'Day 11 — JOINs',
+  day: 14,
+  title: 'Day 14 — Connect Tables with JOINs',
   shortTitle: 'JOINs (INNER & LEFT)',
   type: 'module',
   milestoneId: 'milestone-2',
-  description: 'Understand relational keys (PK & FK), connect tables using INNER JOIN and LEFT JOIN, and master the Anti-JOIN pattern for finding unmatched rows.',
+  description: 'Connect related tables using INNER JOIN to find matching records, LEFT JOIN to preserve unmatched rows, and master anti-JOINs to find data that does not exist. This is how real analytics happens.',
   estimatedMinutes: 90,
   completionLearnings: [
-    'Understand primary keys (PK) and foreign keys (FK) in one-to-many relationships',
-    'Combine matching rows across tables using INNER JOIN',
-    'Preserve unmatched left-table records using LEFT JOIN',
-    'Master the Anti-JOIN pattern (LEFT JOIN ... WHERE right.pk IS NULL) to isolate unmatched rows',
-    'Use clean table aliases (e.g. customers c, orders o)',
+    'Understand primary keys (PK) and foreign keys (FK) in relationships',
+    'Use INNER JOIN to combine matching rows across tables',
+    'Use LEFT JOIN when you want unmatched rows from the left table too',
+    'Master anti-JOIN (LEFT JOIN ... WHERE right.pk IS NULL) to find missing relationships',
   ],
   concepts: [
     // =========================================================================
@@ -24,8 +23,8 @@ export const Day_14_MODULE: ModuleData = {
     {
       id: 'relational-keys-inner-join',
       order: 1,
-      title: '1. Relational Keys (PK/FK) & INNER JOIN',
-      shortDescription: 'Connect records across tables wherever keys match.',
+      title: '1. Primary & Foreign Keys, INNER JOIN Basics',
+      shortDescription: 'Connect tables where records match — understand one-to-many relationships.',
       theory: {
         summary: 'A primary key (PK) uniquely identifies a row in its own table. A foreign key (FK) points to the primary key of another table to establish a relationship.',
         introTable: {

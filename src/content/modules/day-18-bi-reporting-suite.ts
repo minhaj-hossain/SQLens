@@ -1,26 +1,26 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_18_MODULE: ModuleData = {
-  id: 'day-14',
+  id: 'day-18',
   slug: 'project-part-2-multi-table-reporting',
-  day: 14,
-  title: 'Day 14 — Applied Project: Business Intelligence Reporting Suite',
-  shortTitle: 'Project: BI Reporting Suite',
+  day: 18,
+  title: 'Day 18 — Applied Project: Build a BI Analytics Dashboard',
+  shortTitle: 'Project: BI Dashboard',
   type: 'project_part',
   milestoneId: 'milestone-2',
-  description: 'As a BI Analyst, build production-ready analytics reports: product sales volume rankings, VIP customer leaderboard, and discover unpurchased inventory via anti-joins.',
+  description: 'Real BI analyst role: build three production-ready reports — top-selling products, VIP customer leaderboard by spend, and discover dead inventory (products never ordered). Master aggregates, JOINs, and anti-JOINs in a real project.',
   estimatedMinutes: 90,
   completionLearnings: [
-    'Aggregate line-item sales across products and order_items',
-    'Rank top customers by total monetary spend across 3 joined tables',
-    'Identify unpurchased inventory using the LEFT JOIN + IS NULL anti-join pattern',
+    'Aggregate order items to rank products by total sales volume',
+    'Join 3+ tables to calculate VIP customer revenue and identify top spenders',
+    'Use anti-JOINs (LEFT JOIN + WHERE IS NULL) to find items that do not exist in related tables',
   ],
   concepts: [
     {
       id: 'multi-table-reporting-patterns',
       order: 1,
-      title: '1. Multi-Table Business Analytics & Anti-Joins',
-      shortDescription: 'Sales volume, revenue rankings, and unpurchased item discovery.',
+      title: '1. Production BI Reports: Sales Volume, VIP Rankings & Dead Inventory',
+      shortDescription: 'Aggregate products by sales, rank customers by spend, find items never ordered.',
       theory: {
         summary: 'Welcome to the Business Intelligence (BI) team! Today you build three key executive reports: sales volume by product, top spending VIP customers, and identifying catalog items that have never been ordered using anti-joins.',
         introTable: {
