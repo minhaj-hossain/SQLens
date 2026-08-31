@@ -1,15 +1,24 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Play, CheckCircle2, RotateCcw, Copy, Check, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
-import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
-import { buildSuggestions } from '@/lib/autocomplete';
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import {
+  Play,
+  CheckCircle2,
+  RotateCcw,
+  Copy,
+  Check,
+  Sparkles,
+  ArrowRight,
+  ArrowLeft,
+} from "lucide-react";
+import { DATABASE_SCHEMAS } from "../../content/database/schema";
+import { highlightSql, SQL_KEYWORDS } from "@/lib/highlight-sql";
+import { buildSuggestions } from "@/lib/autocomplete";
 
 interface SQLEditorProps {
   value: string;
   onChange: (value: string) => void;
   onRunAndCheck: (sql: string) => void;
   tableName?: string;
-  evaluationState?: 'idle' | 'wrong' | 'correct';
+  evaluationState?: "idle" | "wrong" | "correct";
   nextActionLabel?: string;
   onNextAction?: () => void;
   readOnly?: boolean;
@@ -24,14 +33,14 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   value,
   onChange,
   onRunAndCheck,
-  tableName = 'products',
-  evaluationState = 'idle',
-  nextActionLabel = 'Next Task',
+  tableName = "products",
+  evaluationState = "idle",
+  nextActionLabel = "Next Task",
   onNextAction,
   readOnly = false,
   placeholder,
   onBack,
-  backLabel = 'Back',
+  backLabel = "Back",
 }) => {
   const [copied, setCopied] = useState(false);
   const [cursorPos, setCursorPos] = useState(0);
@@ -70,10 +79,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   // Update active line and suggestions based on cursor
   const updateCursorAndSuggestions = (text: string, selectionStart: number) => {
     setCursorPos(selectionStart);
-    
+
     // Calculate active line
     const textBeforeCursor = text.slice(0, selectionStart);
-    const lineNum = textBeforeCursor.split('\n').length;
+    const lineNum = textBeforeCursor.split("\n").length;
     setActiveLine(lineNum);
 
     // Extract current word
@@ -94,15 +103,16 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         // otherwise ArrowUp/ArrowDown keyup re-runs this and snaps the
         // selection back to the first item (bug: could not navigate with arrows).
         const sameList =
-          matched.length === suggestions.length && matched.every((m, i) => m === suggestions[i]);
+          matched.length === suggestions.length &&
+          matched.every((m, i) => m === suggestions[i]);
         setSelectedSuggestionIdx(sameList ? selectedSuggestionIdx : 0);
         setShowSuggestions(true);
-        
+
         // Calculate safe position inside editor
-        const lines = textBeforeCursor.split('\n');
+        const lines = textBeforeCursor.split("\n");
         const currLineIdx = lines.length - 1;
         const colIdx = lines[currLineIdx].length;
-        
+
         // If cursor is at line 3 or lower, position dropdown above line to avoid clipping
         const dropdownHeight = matched.length * 30 + 36;
         const isNearBottom = currLineIdx >= 3;
@@ -125,11 +135,22 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     if (!textareaRef.current) return;
     const textBeforeCursor = value.slice(0, cursorPos);
     const textAfterCursor = value.slice(cursorPos);
-    
+
+    // Replace the region the suggestion actually completes. When the user typed
+    // the SECOND word of a multi-word keyword (`ORDER B` -> ORDER BY), the
+    // suggestion covers both tokens — swap them as a unit, not just the last.
     const wordMatch = textBeforeCursor.match(/([a-zA-Z0-9_]+)$/);
     if (wordMatch) {
-      const wordLength = wordMatch[1].length;
-      const newBefore = textBeforeCursor.slice(0, -wordLength) + suggestion;
+      const typedWord = wordMatch[1];
+      const typedBefore = textBeforeCursor.slice(0, -typedWord.length);
+      const prevMatch = typedBefore.match(/([a-zA-Z0-9_]+)$/);
+      const bothTyped = prevMatch ? `${prevMatch[1]} ${typedWord}` : typedWord;
+      const su = suggestion.toUpperCase();
+      const replaceBoth =
+        !!prevMatch && su.startsWith(bothTyped.toUpperCase()) && bothTyped.includes(' ');
+      const replaceLen = replaceBoth ? bothTyped.length : typedWord.length;
+
+      const newBefore = textBeforeCursor.slice(0, -replaceLen) + suggestion;
       const newValue = newBefore + textAfterCursor;
       onChange(newValue);
       setShowSuggestions(false);
@@ -147,35 +168,39 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Autocomplete Navigation
     if (showSuggestions && suggestions.length > 0) {
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedSuggestionIdx(prev => (prev + 1) % suggestions.length);
+        setSelectedSuggestionIdx((prev) => (prev + 1) % suggestions.length);
         return;
       }
-      if (e.key === 'ArrowUp') {
+      if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedSuggestionIdx(prev => (prev - 1 + suggestions.length) % suggestions.length);
+        setSelectedSuggestionIdx(
+          (prev) => (prev - 1 + suggestions.length) % suggestions.length,
+        );
         return;
       }
-      if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) {
+      if (e.key === "Tab" || (e.key === "Enter" && !e.ctrlKey && !e.metaKey)) {
         e.preventDefault();
         applySuggestion(suggestions[selectedSuggestionIdx]);
         return;
       }
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setShowSuggestions(false);
-        const m = value.slice(0, e.currentTarget.selectionStart).match(/([a-zA-Z0-9_]+)$/);
+        const m = value
+          .slice(0, e.currentTarget.selectionStart)
+          .match(/([a-zA-Z0-9_]+)$/);
         setDismissedWord(m ? m[1].toUpperCase() : null);
         return;
       }
     }
 
     // Ctrl+Space -> force-open suggestions (even after Esc, even with no prefix)
-    if (e.ctrlKey && e.code === 'Space') {
+    if (e.ctrlKey && e.code === "Space") {
       e.preventDefault();
       const selStart = e.currentTarget.selectionStart;
       const m = value.slice(0, selStart).match(/([a-zA-Z0-9_]+)$/);
-      const prefix = m ? m[1].toUpperCase() : '';
+      const prefix = m ? m[1].toUpperCase() : "";
       const matched = computeMatches(prefix, value.slice(0, selStart));
       if (matched.length === 0 && prefix) {
         // Empty prefix forces the panel open; keep it cheap and context-aware.
@@ -185,20 +210,26 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       setSuggestions(matched);
       setSelectedSuggestionIdx(0);
       setShowSuggestions(true);
-      const lines = value.slice(0, selStart).split('\n');
+      const lines = value.slice(0, selStart).split("\n");
       const currLineIdx = lines.length - 1;
       const colIdx = lines[currLineIdx].length;
       const dropdownHeight = matched.length * 30 + 36;
-      const topPos = currLineIdx >= 3 ? Math.max(8, currLineIdx * 22 - dropdownHeight) : currLineIdx * 22 + 30;
-      setSuggestionCoords({ top: topPos, left: Math.min(Math.max(colIdx * 8 + 12, 12), 220) });
+      const topPos =
+        currLineIdx >= 3
+          ? Math.max(8, currLineIdx * 22 - dropdownHeight)
+          : currLineIdx * 22 + 30;
+      setSuggestionCoords({
+        top: topPos,
+        left: Math.min(Math.max(colIdx * 8 + 12, 12), 220),
+      });
       return;
     }
 
     // Ctrl+Enter or Cmd+Enter -> Run & Check (or go Next if already correct)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       setShowSuggestions(false); // always dismiss autocomplete first
-      if (evaluationState === 'correct' && onNextAction) {
+      if (evaluationState === "correct" && onNextAction) {
         onNextAction();
       } else {
         onRunAndCheck(value);
@@ -207,15 +238,16 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     }
 
     // Tab key indent
-    if (e.key === 'Tab') {
+    if (e.key === "Tab") {
       e.preventDefault();
       const start = e.currentTarget.selectionStart;
       const end = e.currentTarget.selectionEnd;
-      const newValue = value.substring(0, start) + '  ' + value.substring(end);
+      const newValue = value.substring(0, start) + "  " + value.substring(end);
       onChange(newValue);
       setTimeout(() => {
         if (textareaRef.current) {
-          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
+          textareaRef.current.selectionStart =
+            textareaRef.current.selectionEnd = start + 2;
         }
       }, 0);
     }
@@ -224,7 +256,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   // Syntax highlighting — the shared grayscale tokenizer (P9.2c: ONE
   // highlighter app-wide; same recipe as lesson pages / challenge / playground).
   const highlightedCode = useMemo(() => {
-    if (!value) return '';
+    if (!value) return "";
     return highlightSql(value);
   }, [value]);
 
@@ -238,7 +270,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     if (!value.trim()) return;
 
     let formatted = value;
-    
+
     // Protect string literals
     const stringLiterals: string[] = [];
     formatted = formatted.replace(/'(?:[^'\\]|\\.)*'/g, (match) => {
@@ -248,18 +280,31 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
     // Uppercase keywords
     SQL_KEYWORDS.forEach((kw) => {
-      const regex = new RegExp(`\\b${kw}\\b`, 'gi');
+      const regex = new RegExp(`\\b${kw}\\b`, "gi");
       formatted = formatted.replace(regex, kw);
     });
 
     // Format major clause starts on new lines if currently on one line
     const majorClauses = [
-      'SELECT', 'FROM', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'JOIN',
-      'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'UNION', 'WITH'
+      "SELECT",
+      "FROM",
+      "INNER JOIN",
+      "LEFT JOIN",
+      "RIGHT JOIN",
+      "FULL JOIN",
+      "JOIN",
+      "WHERE",
+      "GROUP BY",
+      "HAVING",
+      "ORDER BY",
+      "LIMIT",
+      "OFFSET",
+      "UNION",
+      "WITH",
     ];
 
     majorClauses.forEach((clause) => {
-      const regex = new RegExp(`(?<!\\n)\\b${clause}\\b`, 'g');
+      const regex = new RegExp(`(?<!\\n)\\b${clause}\\b`, "g");
       formatted = formatted.replace(regex, (match, offset) => {
         return offset === 0 ? match : `\n${match}`;
       });
@@ -267,24 +312,29 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
     // Restore string literals
     formatted = formatted.replace(/__STR_LITERAL_(\d+)__/g, (_, idx) => {
-      return stringLiterals[Number(idx)] || '';
+      return stringLiterals[Number(idx)] || "";
     });
 
     // Normalize spacing
     formatted = formatted
-      .split('\n')
-      .map(line => line.trim())
-      .filter((line, i, arr) => line.length > 0 || (i > 0 && arr[i - 1].length > 0))
-      .join('\n');
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(
+        (line, i, arr) => line.length > 0 || (i > 0 && arr[i - 1].length > 0),
+      )
+      .join("\n");
 
     onChange(formatted);
   };
 
-  const lineCount = Math.max(value.split('\n').length, 4);
+  const lineCount = Math.max(value.split("\n").length, 4);
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
-    <div id="sql-editor-container" className="flex flex-col bg-editor-bg rounded-xl border border-border text-editor-text relative">
+    <div
+      id="sql-editor-container"
+      className="flex flex-col bg-editor-bg rounded-xl border border-border text-editor-text relative"
+    >
       {/* Editor Header Bar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-border-soft select-none rounded-t-xl">
         <div className="flex items-center gap-2">
@@ -351,7 +401,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             <div
               key={ln}
               className={`h-[22px] text-[11px] font-medium transition-colors ${
-                ln === activeLine ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3' : ''
+                ln === activeLine
+                  ? "text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3"
+                  : ""
               }`}
             >
               {ln}
@@ -366,7 +418,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             ref={highlightRef}
             aria-hidden="true"
             className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
-            dangerouslySetInnerHTML={{ __html: highlightedCode + (value.endsWith('\n') ? '<br />&nbsp;' : '') }}
+            dangerouslySetInnerHTML={{
+              __html:
+                highlightedCode + (value.endsWith("\n") ? "<br />&nbsp;" : ""),
+            }}
           />
 
           {/* Interactive Native Textarea */}
@@ -378,7 +433,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             onScroll={handleScroll}
             onChange={(e) => {
               onChange(e.target.value);
-              updateCursorAndSuggestions(e.target.value, e.target.selectionStart);
+              updateCursorAndSuggestions(
+                e.target.value,
+                e.target.selectionStart,
+              );
             }}
             onKeyUp={(e) => {
               // Keyup must not recompute right after Ctrl+Space opened the
@@ -386,28 +444,39 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               // Plain typing is already covered by onChange; clicks by onClick.
               const k = e.key;
               if (
-                k === 'Control' || k === 'Shift' || k === 'Alt' || k === 'Meta' ||
-                e.code === 'Space' || k === 'Escape' ||
-                k === 'ArrowDown' || k === 'ArrowUp'
-              ) return;
+                k === "Control" ||
+                k === "Shift" ||
+                k === "Alt" ||
+                k === "Meta" ||
+                e.code === "Space" ||
+                k === "Escape" ||
+                k === "ArrowDown" ||
+                k === "ArrowUp"
+              )
+                return;
               updateCursorAndSuggestions(value, e.currentTarget.selectionStart);
             }}
-            onClick={(e) => updateCursorAndSuggestions(value, e.currentTarget.selectionStart)}
+            onClick={(e) =>
+              updateCursorAndSuggestions(value, e.currentTarget.selectionStart)
+            }
             onKeyDown={handleKeyDown}
             onBlur={() => {
               // Small delay so autocomplete item mousedown can fire before we close it
               setTimeout(() => setShowSuggestions(false), 100);
             }}
-            placeholder={placeholder ?? `-- Type your SQL query here\nSELECT * FROM ${tableName};`}
+            placeholder={
+              placeholder ??
+              `-- Type your SQL query here\nSELECT * FROM ${tableName};`
+            }
             spellCheck={false}
             autoCapitalize="none"
             autoComplete="off"
             autoCorrect="off"
             style={{
               tabSize: 2,
-              color: 'transparent',
-              caretColor: '#f4c430',
-              WebkitTextFillColor: 'transparent',
+              color: "transparent",
+              caretColor: "#f4c430",
+              WebkitTextFillColor: "transparent",
             }}
             className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"
           />
@@ -417,11 +486,13 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             <div
               id="autocomplete-dropdown"
               className="absolute z-50 bg-surface-2 border border-border rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px] backdrop-blur-none"
-              style={{ top: `${suggestionCoords.top}px`, left: `${suggestionCoords.left}px` }}
+              style={{
+                top: `${suggestionCoords.top}px`,
+                left: `${suggestionCoords.left}px`,
+              }}
             >
               <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between">
                 <span>Suggestions</span>
-                <span className="text-[9px] text-text-faint font-normal">Esc · Ctrl+Space</span>
               </div>
               {suggestions.map((sug, idx) => (
                 <div
@@ -432,17 +503,17 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
                   }}
                   className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
                     idx === selectedSuggestionIdx
-                      ? 'bg-func/15 text-text font-bold'
-                      : 'text-text-dim hover:bg-surface hover:text-text'
+                      ? "bg-func/15 text-text font-bold"
+                      : "text-text-dim hover:bg-surface hover:text-text"
                   }`}
                 >
                   <span className="font-semibold">{sug}</span>
                   <span className="text-[9px] text-text-faint px-1.5 py-0.2 rounded bg-surface border border-border">
                     {SQL_KEYWORDS.includes(sug.toUpperCase())
-                      ? 'SQL'
+                      ? "SQL"
                       : DATABASE_SCHEMAS[sug.toLowerCase()]
-                        ? 'TBL'
-                        : 'COL'}
+                        ? "TBL"
+                        : "COL"}
                   </span>
                 </div>
               ))}
@@ -456,20 +527,24 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
           Quick:
         </span>
-        {['SELECT', 'FROM', 'WHERE', 'ORDER BY', 'LIMIT', 'JOIN'].map((chip) => (
-          <button
-            key={chip}
-            type="button"
-            onClick={() => {
-              const appended = value.trim() ? `${value} ${chip} ` : `${chip} `;
-              onChange(appended);
-              if (textareaRef.current) textareaRef.current.focus();
-            }}
-            className="px-2 py-0.5 rounded bg-surface-2 hover:bg-surface hover:text-text text-text-dim text-[11px] font-mono border border-border transition shrink-0 cursor-pointer"
-          >
-            {chip}
-          </button>
-        ))}
+        {["SELECT", "FROM", "WHERE", "ORDER BY", "LIMIT", "JOIN"].map(
+          (chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => {
+                const appended = value.trim()
+                  ? `${value} ${chip} `
+                  : `${chip} `;
+                onChange(appended);
+                if (textareaRef.current) textareaRef.current.focus();
+              }}
+              className="px-2 py-0.5 rounded bg-surface-2 hover:bg-surface hover:text-text text-text-dim text-[11px] font-mono border border-border transition shrink-0 cursor-pointer"
+            >
+              {chip}
+            </button>
+          ),
+        )}
       </div>
 
       {/* Bottom Action Footer */}
@@ -494,7 +569,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               <span>Back</span>
             </button>
           )}
-          {evaluationState === 'correct' && onNextAction ? (
+          {evaluationState === "correct" && onNextAction ? (
             <button
               id="next-task-btn"
               type="button"
@@ -510,13 +585,15 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               type="button"
               onClick={() => onRunAndCheck(value)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans text-ink transition cursor-pointer active:scale-95 ${
-                evaluationState === 'wrong'
-                  ? 'bg-error hover:bg-error/90'
-                  : 'bg-func hover:brightness-110'
+                evaluationState === "wrong"
+                  ? "bg-error hover:bg-error/90"
+                  : "bg-func hover:brightness-110"
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>{evaluationState === 'wrong' ? 'Try Again' : 'Run & Check'}</span>
+              <span>
+                {evaluationState === "wrong" ? "Try Again" : "Run & Check"}
+              </span>
             </button>
           )}
         </div>

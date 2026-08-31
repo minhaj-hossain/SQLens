@@ -8,7 +8,7 @@ import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
 import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
-import { splitTaskScaffold } from '../../lib/task-scaffold';
+import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
 
 interface PracticeTaskViewProps {
   task: PracticeTask;
@@ -189,7 +189,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
             <SQLEditor
               value={currentSql}
               tableName={task.primaryTable}
-              placeholder={taskScaffold.placeholder || undefined}
+              placeholder={buildEditorPlaceholder(task)}
               onChange={(newVal) => {
                 setCurrentSql(newVal);
                 if (evaluationState === 'wrong') {

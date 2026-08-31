@@ -4,7 +4,7 @@ import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, TableRow, DatabaseState } from '../../types/database';
 import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
 import { gradeFinalState } from '../../lib/sql-engine/state-verification';
-import { splitTaskScaffold } from '../../lib/task-scaffold';
+import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { INITIAL_TABLES } from '../../content/database/tables';
@@ -573,7 +573,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               onClick={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
               onKeyDown={handleKeyDown}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-              placeholder={taskScaffold.placeholder || `-- Type your SQL query here\nSELECT name, price\nFROM ${currentTask.primaryTable};`}
+              placeholder={buildEditorPlaceholder(currentTask)}
               spellCheck={false}
               autoCapitalize="none"
               autoComplete="off"
