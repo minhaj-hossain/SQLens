@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 28 - DDL II: Column Constraints (id: ddl-column-constraints - order 28)
+// DAY 28 - DDL II: Column Constraints (id: day-28 - order 28)
 // Split out of the old day-20 DDL mega-module (atomic-rule fix). Atomic chain:
 //   C1 NOT NULL - mandatory fields   C2 UNIQUE - no duplicates
 //   C3 DEFAULT - automatic values    C4 CHECK - business rules at the DB level
@@ -468,7 +468,7 @@ export const Day_28_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'ddl2-homework',
+    id: 'day-28-homework',
     title: 'Day 28 - Constraint Challenge (Ending Activity)',
     scenario: 'Design the review system schema with every constraint it needs - then prove the CHECK actually guards the data.',
     databaseLifecycle: 'fresh',

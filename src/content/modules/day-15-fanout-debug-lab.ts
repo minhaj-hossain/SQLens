@@ -181,8 +181,8 @@ export const Day_15_MODULE: ModuleData = {
   // DAY 12 CHALLENGE: DEBUG THE PRODUCTION OVERCOUNTING BUG (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-12-homework',
-    title: 'Day 12 — Debug the Production Overcounting Bug (Ending Activity)',
+    id: 'day-15-homework',
+    title: 'Day 15 — Debug the Production Overcounting Bug (Ending Activity)',
     scenario: 'Solve these multi-table reporting queries with fan-out prevention:',
     tasks: [
       {

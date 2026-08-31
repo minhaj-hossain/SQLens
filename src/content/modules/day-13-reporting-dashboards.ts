@@ -209,11 +209,11 @@ export const Day_13_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 10 CHALLENGE: BUILD AN EXECUTIVE DASHBOARD WIDGET (ENDING ACTIVITY)
+  // DAY 13 CHALLENGE: BUILD AN EXECUTIVE DASHBOARD WIDGET (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-10-homework',
-    title: 'Day 10 — Build an Executive Dashboard Widget (Ending Activity)',
+    id: 'day-13-homework',
+    title: 'Day 13 — Build an Executive Dashboard Widget (Ending Activity)',
     scenario: 'Build the Category Overview dashboard widget independently (business requirements only):',
     tasks: [
       {

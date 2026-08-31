@@ -752,8 +752,8 @@ export const Day_21_MODULE: ModuleData = {
   // DAY 17 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
   // ===========================================================================
   challenge: {
-    id: 'day-17-homework',
-    title: 'Day 17 — Subqueries & CTEs (Homework)',
+    id: 'day-21-homework',
+    title: 'Day 21 — Subqueries & CTEs (Homework)',
     scenario: 'Solve these complex analytical queries using subqueries and CTEs:',
     tasks: [
       {

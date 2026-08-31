@@ -251,8 +251,8 @@ export const Day_16_MODULE: ModuleData = {
   // DAY 13 CHALLENGE: FULL 7-CLAUSE PIPELINE ASSEMBLY (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-13-homework',
-    title: 'Day 13 — Full 7-Clause Pipeline Assembly (Ending Activity)',
+    id: 'day-16-homework',
+    title: 'Day 16 — Full 7-Clause Pipeline Assembly (Ending Activity)',
     scenario: 'Solidify your mastery of relational design and query execution order:',
     tasks: [
       {

@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 32 - SECURITY & PRODUCTION SAFETY (id: security-production-safety, order 32)
+// DAY 32 - SECURITY & PRODUCTION SAFETY (id: day-32, order 32)
 // -----------------------------------------------------------------------------
 // The "ship it safely" day. Everything runs against the live seed database so
 // the injection demos are REAL: the attack queries actually execute, return
@@ -588,7 +588,7 @@ export const Day_32_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'security-production-safety-challenge',
+    id: 'day-32-homework',
     title: 'Day 32 - Security & Production Safety (Ending Activity)',
     scenario:
       'The security review came back with three findings on the storefront: the search endpoint concatenates input, the profile endpoint needs a parameterized rewrite, and the ops team ships UPDATEs with no rehearsal. Fix all three - replay the breach, ship the bound fix, and drill the guarded migration.',

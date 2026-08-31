@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 24 — Window Functions II: Running Metrics  (id: window-running-metrics · order 24)
+// DAY 24 — Window Functions II: Running Metrics  (id: day-24 · order 24)
 // Inserts after Day 23 (window-ranking). Atomic chain:
 //   C1 Running totals — SUM() OVER (ORDER BY …)  → the frame grows per row
 //   C2 LAG / LEAD — compare each row to its neighbor without a self-join
@@ -536,7 +536,7 @@ export const Day_24_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'window-metrics-homework',
+    id: 'day-24-homework',
     title: 'Day 24 — Running-Metrics Challenge (Ending Activity)',
     scenario:
       'Two production deliverables for the trend dashboard — the first is the executive revenue trend with a running total AND month-over-month growth in one query; the second extends the same thinking to customer order cadence. The optional frame preview stays a stretch goal.',

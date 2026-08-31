@@ -158,8 +158,8 @@ export const Day_20_MODULE: ModuleData = {
   // DAY 16 CHALLENGE: MILESTONE 2 MASTERY CHECKPOINT (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-16-homework',
-    title: 'Day 16 — Milestone 2 Mastery Checkpoint (Ending Activity)',
+    id: 'day-20-homework',
+    title: 'Day 20 — Milestone 2 Mastery Checkpoint (Ending Activity)',
     scenario: 'Complete all 4 deliverables independently to verify Milestone 2 relational mastery:',
     tasks: [
       {

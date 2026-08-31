@@ -181,8 +181,8 @@ export const Day_22_MODULE: ModuleData = {
   // DAY 18 CHALLENGE: SUBQUERIES & CTES PIPELINE CHALLENGE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-18-homework',
-    title: 'Day 18 — Subqueries & CTEs Pipeline Challenge (Ending Activity)',
+    id: 'day-22-homework',
+    title: 'Day 22 — Subqueries & CTEs Pipeline Challenge (Ending Activity)',
     scenario: 'Complete these 2 analytical challenges independently:',
     tasks: [
       {

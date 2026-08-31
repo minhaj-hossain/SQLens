@@ -150,8 +150,8 @@ export const Day_35_MODULE: ModuleData = {
   // DAY 23 CHALLENGE: ZERO-STATE HARDENING CHALLENGE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-23-homework',
-    title: 'Day 23 — Zero-State Hardening Challenge (Ending Activity)',
+    id: 'day-35-homework',
+    title: 'Day 35 — Zero-State Hardening Challenge (Ending Activity)',
     scenario: 'Harden analytical reporting queries against zero-state edge cases:',
     tasks: [
       {

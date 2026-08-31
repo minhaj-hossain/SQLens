@@ -32,8 +32,10 @@ function challengeShouldReset(challengeLifecycle: 'fresh' | 'inherit' | undefine
   return challengeLifecycle === 'fresh';
 }
 
-const day19 = getModuleById('day-19')!;
-const day20 = getModuleById('day-20')!;
+// DML now lives at Day 25 and DDL I (creating tables) at Day 27 after the
+// 2026 id consolidation; the pre-rename day-19/day-20 ids no longer exist.
+const day19 = getModuleById('day-25')!;
+const day20 = getModuleById('day-27')!;
 
 // ---- 1. Fresh practice tasks reset, inherit/undefined don't ----------------
 {

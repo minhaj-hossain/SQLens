@@ -21,7 +21,7 @@ export const Day_36_MODULE: ModuleData = {
       id: 'capstone-evaluation',
       order: 1,
       title: '1. Milestone 3 Capstone Skill Verification',
-      shortDescription: 'Final comprehensive SQL certification assessment across all 24 days.',
+      shortDescription: 'Final comprehensive SQL certification assessment across all 38 days.',
       theory: {
         summary: 'Milestone 3 Capstone: Prove full database engineering proficiency across multi-table JOINs, subqueries, Common Table Expressions, schema architecture, and query optimization.',
         introTable: {
@@ -150,8 +150,8 @@ export const Day_36_MODULE: ModuleData = {
   // DAY 24 CHALLENGE: MILESTONE 3 CAPSTONE ASSESSMENT (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-24-homework',
-    title: 'Day 24 — Milestone 3 Capstone Assessment (Ending Activity)',
+    id: 'day-36-homework',
+    title: 'Day 36 — Milestone 3 Capstone Assessment (Ending Activity)',
     scenario: 'Complete all 4 capstone deliverables independently to achieve SQL certification:',
     tasks: [
       {

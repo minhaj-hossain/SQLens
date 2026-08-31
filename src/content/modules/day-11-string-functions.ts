@@ -1,13 +1,13 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 11 — String Functions  (id: string-functions · order 11)
+// DAY 11 — String Functions  (id: day-11 · order 11)
 // Atomic chain: C1 UPPER/LOWER → C2 TRIM → C3 CONCAT → C4 SUBSTRING → C5 LENGTH
 // =============================================================================
 export const Day_11_MODULE: ModuleData = {
-  id: 'string-functions',
+  id: 'day-11',
   slug: 'string-functions',
-  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 11)
+  day: 11,
   title: 'Day 11 — Transform Text with String Functions',
   shortTitle: 'String Functions',
   type: 'module',
@@ -685,7 +685,7 @@ export const Day_11_MODULE: ModuleData = {
   // DAY 11 CHALLENGE: TEXT SHAPING FOR A REAL DELIVERABLE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'string-functions-homework',
+    id: 'day-11-homework',
     title: 'Day 11 — String Functions Challenge (Ending Activity)',
     scenario: 'The email platform needs a clean import file. Assemble, normalize, and audit — all in queries:',
     databaseLifecycle: 'fresh',

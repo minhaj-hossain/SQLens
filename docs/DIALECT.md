@@ -62,9 +62,10 @@ isolation levels beyond the taught atomicity model.
 
 ## 3. Naming and identity rules (engine-adjacent)
 
-- Curriculum module **IDs are semantic and immutable** (`case-conditional-logic`),
-  never positional. Ordering uses `curriculumOrder`
-  (`src/lib/curriculum/module-order.ts`).
+- Curriculum module **IDs are positional** (`day-NN`) after the 2026
+  consolidation. Ordering still flows through `curriculumOrder`
+  (`src/lib/curriculum/module-order.ts`) so future modules can slot in
+  between days without re-keying.
 - The 25 legacy IDs (`day-01` … `day-25`) are grandfathered and frozen — stored
   progress references them.
 

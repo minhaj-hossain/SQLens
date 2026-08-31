@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 32 - CAPSTONE PROJECT: SQLens Bookstore (id: capstone-bookstore, order 32)
+// DAY 33 - CAPSTONE PROJECT: SQLens Bookstore (id: day-33, order 33)
 // -----------------------------------------------------------------------------
 // The finale: the learner APPLIES every skill across the 31-day curriculum by
 // building a brand-new domain schema from scratch — the very flow the engine's
@@ -801,8 +801,8 @@ export const Day_33_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'capstone-bookstore-challenge',
-    title: 'Day 32 Capstone - SQLens Bookstore (Ending Activity)',
+    id: 'day-33-homework',
+    title: 'Day 33 — SQLens Bookstore Capstone (Ending Activity)',
     scenario:
       'The COO wants one clean, replayable migration that rebuilds the Bookstore from scratch: create the full 4-table schema, seed it, answer the leadership revenue dashboard, and keep the catalog fast. Prove the whole pipeline end to end.',
     databaseLifecycle: 'inherit',

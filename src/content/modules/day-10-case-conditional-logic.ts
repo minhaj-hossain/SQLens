@@ -1,15 +1,15 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 10 — CASE & Conditional Logic  (id: case-conditional-logic · order 10)
+// DAY 10 — CASE & Conditional Logic  (id: day-10 · order 10)
 // Inserts after Day 9 (Aggregation & Grouping). Atomic chain:
 //   C1 Basic CASE → C2 Multi-branch → C3 Evaluation order →
 //   C4 CASE in aggregates → C5 CASE in ORDER BY
 // =============================================================================
 export const Day_10_MODULE: ModuleData = {
-  id: 'case-conditional-logic',
+  id: 'day-10',
   slug: 'case-conditional-logic',
-  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 10)
+  day: 10,
   title: 'Day 10 — Conditional Logic with CASE',
   shortTitle: 'Conditional Logic with CASE',
   type: 'module',
@@ -748,7 +748,7 @@ export const Day_10_MODULE: ModuleData = {
   // DAY 10 CHALLENGE: CONDITIONAL LOGIC IN PRODUCTION REPORTS (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'case-logic-homework',
+    id: 'day-10-homework',
     title: 'Day 10 — Conditional Logic Challenge (Ending Activity)',
     scenario: 'Combine CASE with everything from Milestone 2 so far — GROUP BY, LEFT JOIN, multi-key sorting:',
     databaseLifecycle: 'fresh',

@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 26 - DML + Transactions (id: dml-transactions - order 26)
+// DAY 26 - DML + Transactions (id: day-26 - order 26)
 // Inserts right after day-19 (DML) and before day-20 (DDL). Atomic chain:
 //   C1 Transaction boundaries - BEGIN / COMMIT (provisional until committed)
 //   C2 ROLLBACK - the undo (restores the pre-BEGIN snapshot)
@@ -569,7 +569,7 @@ export const Day_26_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'dml-transactions-homework',
+    id: 'day-26-homework',
     title: 'Day 26 - Transaction Challenge (Ending Activity)',
     scenario:
       'Flash-sale go-live. The catalog update must land as ONE atomic unit: open a transaction, seed the three sale products with a single multi-row INSERT, commit, and then prove durability by querying the batch back.',

@@ -389,11 +389,11 @@ export const Day_25_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 19 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 25 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
   // ===========================================================================
   challenge: {
-    id: 'day-19-homework',
-    title: 'Day 19 — DML Operations (Homework)',
+    id: 'day-25-homework',
+    title: 'Day 25 — DML Operations (Homework)',
     scenario: 'Demonstrate safe data modification operations:',
     databaseLifecycle: 'inherit',
     tasks: [

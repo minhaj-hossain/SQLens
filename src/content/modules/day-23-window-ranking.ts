@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 23 — Window Functions I: Ranking  (id: window-ranking · order 23)
+// DAY 23 — Window Functions I: Ranking  (id: day-23 · order 23)
 // Inserts after Day 22 (Practice: Subqueries & CTEs). Atomic chain:
 //   C1 ROW_NUMBER (rank without collapsing) → C2 PARTITION BY →
 //   C3 RANK (ties leave gaps) → C4 DENSE_RANK (ties, no gaps) →
@@ -862,7 +862,7 @@ export const Day_23_MODULE: ModuleData = {
   // DAY 23 CHALLENGE: LEADERBOARDS IN PRODUCTION (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'window-ranking-homework',
+    id: 'day-23-homework',
     title: 'Day 23 — Ranking Challenge (Ending Activity)',
     scenario: 'Two required leaderboard deliverables and one stretch goal — all built from the ranking toolkit:',
     databaseLifecycle: 'fresh',

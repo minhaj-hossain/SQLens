@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 29 - DDL III: Schema Evolution (id: ddl-schema-evolution - order 29)
+// DAY 29 - DDL III: Schema Evolution (id: day-29 - order 29)
 // Split out of the old day-20 DDL mega-module (atomic-rule fix). Atomic chain:
 //   C1 ALTER TABLE - evolve a schema without losing data
 //   C2 FOREIGN KEY - relationships the engine enforces
@@ -373,7 +373,7 @@ export const Day_29_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'ddl3-homework',
+    id: 'day-29-homework',
     title: 'Day 29 - Evolution Challenge (Ending Activity)',
     scenario:
       'A schema migration from start to finish: create a child table with enforced relationships, extend an existing table, and tear down a temp table - all replayable.',

@@ -419,7 +419,7 @@ export const Day_31_MODULE: ModuleData = {
   // DAY 31 CHALLENGE: PERFORMANCE & INDEXING LAB (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-21-homework',
+    id: 'day-31-homework',
     title: 'Day 31 — Performance & Indexing Lab (Ending Activity)',
     scenario: 'You are the DBA on call. A slow dashboard query filters orders by customer_id. Run the full optimization loop: confirm the scan, add the index, watch the plan change, clean it up, then verify a PRIMARY KEY lookup stays fast.',
     tasks: [

@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 37 - INTERVIEW GAUNTLET (id: interview-gauntlet, order 37)
+// DAY 37 - INTERVIEW GAUNTLET (id: day-37, order 37)
 // -----------------------------------------------------------------------------
 // Pure retrieval under pressure. No new teaching - every task only combines
 // skills from Days 1-36. Modelled on real SQL interviews: classic patterns,
@@ -195,7 +195,7 @@ export const Day_37_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'interview-gauntlet-final',
+    id: 'day-37-homework',
     title: 'Day 37 — Gauntlet Finals (Timed)',
     scenario: 'Three deliverables, fresh database each, hints off. These are the queries that decide real interviews:',
     databaseLifecycle: 'fresh',

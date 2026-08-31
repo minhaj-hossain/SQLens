@@ -1,16 +1,16 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 12 — Date Functions  (id: date-functions · order 12)
+// DAY 12 — Date Functions  (id: day-12 · order 12)
 // Atomic chain: C1 Date components → C2 Grouping by components →
 //               C3 Date arithmetic (last N days) → C4 Date difference
 // Canonical dialect: YEAR()/MONTH()/DAY()/EXTRACT(), CURDATE(), DATEDIFF()
 // (docs/DIALECT.md §4). Anchor: SIMULATED_TODAY = 2026-08-24.
 // =============================================================================
 export const Day_12_MODULE: ModuleData = {
-  id: 'date-functions',
+  id: 'day-12',
   slug: 'date-functions',
-  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 12)
+  day: 12,
   title: 'Day 12 — Work with Dates Like a Pro',
   shortTitle: 'Date Functions',
   type: 'module',
@@ -598,7 +598,7 @@ export const Day_12_MODULE: ModuleData = {
   // DAY 12 CHALLENGE: TEMPORAL REPORTING SUITE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'date-functions-homework',
+    id: 'day-12-homework',
     title: 'Day 12 — Date Functions Challenge (Ending Activity)',
     scenario: 'Three real temporal deliverables, each fusing dates with earlier milestone skills:',
     databaseLifecycle: 'fresh',

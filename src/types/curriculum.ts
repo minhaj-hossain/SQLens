@@ -194,8 +194,8 @@ export interface ModuleData {
    * Position-independent sort key controlling the canonical curriculum order
    * (unlock sequence, roadmap ordering, prev/next navigation). Existing
    * modules may omit it — `day` is used as the fallback. New modules MUST set
-   * it explicitly: IDs must never encode position (semantic IDs like
-   * `case-conditional-logic` + fractional orders like 10.5 are the pattern).
+   * it explicitly. Module ids are consistently `day-NN`; fractional orders like
+   * 10.5 remain available when inserting content between days.
    */
   curriculumOrder?: number;
   /**

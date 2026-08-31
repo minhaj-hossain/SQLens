@@ -171,8 +171,8 @@ export const Day_19_MODULE: ModuleData = {
   // DAY 15 CHALLENGE: FIX BROKEN & DATE-CONSTRAINED QUERIES (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-15-homework',
-    title: 'Day 15 — Fix Broken & Date-Constrained Queries (Ending Activity)',
+    id: 'day-19-homework',
+    title: 'Day 19 — Fix Broken & Date-Constrained Queries (Ending Activity)',
     scenario: 'Polish and refine your multi-table reporting queries:',
     tasks: [
       {

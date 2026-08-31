@@ -144,8 +144,8 @@ export const Day_34_MODULE: ModuleData = {
   // DAY 22 CHALLENGE: DELIVER THE BACKEND API ENDPOINT QUERY SUITE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-22-homework',
-    title: 'Day 22 — Deliver the Backend API Endpoint Query Suite (Ending Activity)',
+    id: 'day-34-homework',
+    title: 'Day 34 — Deliver the Backend API Endpoint Query Suite (Ending Activity)',
     scenario: 'Construct the production backend integration queries independently:',
     tasks: [
       {

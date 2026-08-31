@@ -324,11 +324,11 @@ export const Day_14_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 11 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 14 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
   // ===========================================================================
   challenge: {
-    id: 'day-11-homework',
-    title: 'Day 11 — JOINs (Homework)',
+    id: 'day-14-homework',
+    title: 'Day 14 — JOINs (Homework)',
     scenario: 'Master multi-table queries with INNER JOIN and LEFT JOIN:',
     tasks: [
       {

@@ -164,11 +164,11 @@ export const Day_18_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 14 CHALLENGE: DELIVER THE 3-PART EXECUTIVE BI REPORTING SUITE (ENDING ACTIVITY)
+  // DAY 18 CHALLENGE: DELIVER THE 3-PART EXECUTIVE BI REPORTING SUITE (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'day-14-homework',
-    title: 'Day 14 — Deliver the 3-Part Executive BI Reporting Suite (Ending Activity)',
+    id: 'day-18-homework',
+    title: 'Day 18 — Deliver the 3-Part Executive BI Reporting Suite (Ending Activity)',
     scenario: 'Construct all 3 core multi-table reports independently:',
     tasks: [
       {

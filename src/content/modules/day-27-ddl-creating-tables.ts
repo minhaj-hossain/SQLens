@@ -377,10 +377,10 @@ export const Day_27_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 20 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // DAY 27 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
   // ===========================================================================
   challenge: {
-    id: 'day-20-homework',
+    id: 'day-27-homework',
     title: 'Day 27 — DDL I Challenge: Creating Tables (Ending Activity)',
     scenario: 'Design a new table schema, then analyze the seeded review data:',
     databaseLifecycle: 'inherit',

@@ -14,8 +14,10 @@
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
 import { getModuleById } from '../src/content/curriculum-index';
 
-const day19 = getModuleById('day-19')!;
-const day20 = getModuleById('day-20')!;
+// DML now lives at Day 25 and DDL I (creating tables) at Day 27 after the
+// 2026 id consolidation; the pre-rename day-19/day-20 ids no longer exist.
+const day19 = getModuleById('day-25')!;
+const day20 = getModuleById('day-27')!;
 
 let pass = 0;
 let fail = 0;

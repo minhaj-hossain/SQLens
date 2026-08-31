@@ -1,15 +1,15 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 17 — Set Operations  (id: set-operations · order 17)
+// DAY 17 — Set Operations  (id: day-17 · order 17)
 // Inserts after Day 16 (7-Stage Pipeline Lab). Atomic chain:
 //   C1 UNION ALL (stack) → C2 UNION (stack + dedupe) →
 //   C3 Shape compatibility (error lab) → C4 EXCEPT (declarative anti-join)
 // =============================================================================
 export const Day_17_MODULE: ModuleData = {
-  id: 'set-operations',
+  id: 'day-17',
   slug: 'set-operations',
-  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 17)
+  day: 17,
   title: 'Day 17 — Set Operations: UNION & EXCEPT',
   shortTitle: 'Set Operations',
   type: 'module',
@@ -735,7 +735,7 @@ export const Day_17_MODULE: ModuleData = {
   // DAY 17 CHALLENGE: COMBINE & SUBTRACT (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
-    id: 'set-ops-homework',
+    id: 'day-17-homework',
     title: 'Day 17 — Set Operations Challenge (Ending Activity)',
     scenario: "Three deliverables that stack, tag, and subtract across the whole schema — combining today's operators with everything from Milestone 2:",
     databaseLifecycle: 'fresh',

@@ -146,8 +146,8 @@ export const Day_38_MODULE: ModuleData = {
   // DAY 25: OPTIONAL EXPLORATION SANDBOX (GRADUATION)
   // ===========================================================================
   challenge: {
-    id: 'day-25-homework',
-    title: 'Day 25 — Optional Exploration Sandbox (Graduation)',
+    id: 'day-38-homework',
+    title: 'Day 38 — Optional Exploration Sandbox (Graduation)',
     scenario: 'Optional Exploration: Run the final Window Function query to complete your graduation portfolio:',
     tasks: [
       {

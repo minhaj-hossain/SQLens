@@ -1,7 +1,7 @@
 import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
-// DAY 30 - Schema Design & Normalization (id: schema-design-normalization - order 30)
+// DAY 30 - Schema Design & Normalization (id: day-30 - order 30)
 // The dependency chain (why, not memorization):
 //   C1 Redundancy (the disease) -> C2 Update anomaly (the symptom) ->
 //   C3 1NF (atomic values) -> C4 Functional dependency (the foundation) ->
@@ -522,7 +522,7 @@ export const Day_30_MODULE: ModuleData = {
     },
   ],
   challenge: {
-    id: 'norm-homework',
+    id: 'day-30-homework',
     title: 'Day 30 - Design Challenge (Ending Activity)',
     scenario:
       'You measured the redundancy, caused the anomalies, and traced the dependencies. Now design the cure: build the normalized schema that fat_orders should have been, with every fact stored exactly once and every rule enforced by the database itself.',
