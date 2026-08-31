@@ -1,8 +1,9 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
-import { QueryExecutionResult, TableRow } from '../../types/database';
+import { QueryExecutionResult, TableRow, DatabaseState } from '../../types/database';
 import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
+import { gradeFinalState } from '../../lib/sql-engine/state-verification';
 import { splitTaskScaffold } from '../../lib/task-scaffold';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
@@ -28,6 +29,8 @@ interface IndependentChallengeViewProps {
   completedTaskIds: string[];
   savedTaskSqls?: Record<string, string>;
   onExecuteSql: (sql: string) => QueryExecutionResult;
+  /** F1: snapshot hook — mutation tasks grade by final database state. */
+  getDatabaseState?: () => DatabaseState;
   onChallengeTaskSuccess: (taskId: string, userSql: string) => void;
   onFinishAllChallenges: () => void;
   onBackToPractice?: () => void;
@@ -53,6 +56,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   completedTaskIds,
   savedTaskSqls = {},
   onExecuteSql,
+  getDatabaseState,
   onChallengeTaskSuccess,
   onFinishAllChallenges,
   onBackToPractice,
@@ -247,6 +251,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       return;
     }
 
+    // F1: snapshot BEFORE the statement runs, so mutation tasks can be graded
+    // against the expected final database state (sandbox replay).
+    const preState = getDatabaseState?.();
     const result = onExecuteSql(currentSql);
     setExecutionResult(result);
 
@@ -257,7 +264,24 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         ? onExecuteSql(currentTask.solutionSql)
         : undefined;
 
-    const outcome = validateTaskSolution(currentSql, result, currentTask.validation, expected);
+    let outcome = validateTaskSolution(currentSql, result, currentTask.validation, expected);
+
+    // F1: mutation/DDL tasks grade on final database state — replay the
+    // solution on a sandbox clone and compare (wrong-row/wrong-value UPDATEs
+    // report identical affectedRows but leave a different state behind).
+    if (
+      outcome.passed &&
+      preState && getDatabaseState && currentTask.solutionSql &&
+      !isReadOnlySelect(currentTask.solutionSql) && !result.error
+    ) {
+      const stateCheck = gradeFinalState(preState, currentTask.solutionSql, getDatabaseState());
+      if (!stateCheck.ok) {
+        outcome = {
+          passed: false,
+          feedback: stateCheck.message || 'The statement ran, but the resulting database state does not match the expected outcome.',
+        };
+      }
+    }
 
     if (outcome.passed) {
       setTaskPassed(true);

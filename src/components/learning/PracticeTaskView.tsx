@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { PracticeTask, Concept } from '../../types/curriculum';
-import { QueryExecutionResult } from '../../types/database';
+import { QueryExecutionResult, DatabaseState } from '../../types/database';
+import { gradeFinalState } from '../../lib/sql-engine/state-verification';
 import { TaskInstructions } from './TaskInstructions';
 import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
@@ -19,6 +20,8 @@ interface PracticeTaskViewProps {
   isCompleted?: boolean;
   savedSql?: string;
   onExecuteSql: (sql: string) => QueryExecutionResult;
+  /** F1: snapshot hook — mutation tasks grade by final database state. */
+  getDatabaseState?: () => DatabaseState;
   onTaskSuccess: (userSql: string, hintsUsed: number, viewedSolution: boolean) => void;
   onNextTask?: () => void;
   /** P11.2: step-chain Back (task N -> task N-1 -> lesson -> prev-concept task). */
@@ -37,6 +40,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   isCompleted = false,
   savedSql,
   onExecuteSql,
+  getDatabaseState,
   onTaskSuccess,
   onNextTask,
   onBack,
@@ -72,6 +76,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
 
   // Submit & Validate
   const handleSubmitAndValidate = (sqlToRun: string = currentSql) => {
+    // F1: snapshot BEFORE the statement runs, so mutation tasks can be graded
+    // against the expected final database state (sandbox replay).
+    const preState = getDatabaseState?.();
     const result = onExecuteSql(sqlToRun);
     setExecutionResult(result);
 
@@ -83,7 +90,24 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
         ? onExecuteSql(task.solutionSql)
         : undefined;
 
-    const outcome = validateTaskSolution(sqlToRun, result, task.validation, expected);
+    let outcome = validateTaskSolution(sqlToRun, result, task.validation, expected);
+
+    // F1: mutation/DDL tasks grade on final database state — an UPDATE on the
+    // wrong row reports the same affectedRows as the right one, but the state
+    // differs. Replay the solution on a sandbox clone and compare.
+    if (
+      outcome.passed &&
+      preState && getDatabaseState && task.solutionSql &&
+      !isReadOnlySelect(task.solutionSql) && !result.error
+    ) {
+      const stateCheck = gradeFinalState(preState, task.solutionSql, getDatabaseState());
+      if (!stateCheck.ok) {
+        outcome = {
+          passed: false,
+          feedback: stateCheck.message || 'The statement ran, but the resulting database state does not match the expected outcome.',
+        };
+      }
+    }
 
     if (outcome.passed) {
       setTaskPassed(true);

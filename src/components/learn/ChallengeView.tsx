@@ -27,7 +27,7 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
   if (!mod) notFound();
 
   const { userState, markChallengeTaskComplete } = useLearning();
-  const { executeQuery, resetDatabase } = useSqlExecutor();
+  const { executeQuery, resetDatabase, getDatabaseState } = useSqlExecutor();
   const nav = useLearningNavigation();
   const router = useRouter();
 
@@ -53,6 +53,7 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
       challenge={mod.challenge}
       completedTaskIds={completedTaskIds}
       onExecuteSql={executeQuery}
+      getDatabaseState={getDatabaseState}
       onChallengeTaskSuccess={(taskId, userSql) =>
         markChallengeTaskComplete({ taskId, moduleId: mod.id, userSql })
       }

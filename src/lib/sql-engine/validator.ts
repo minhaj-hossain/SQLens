@@ -30,7 +30,8 @@ const knownIdentifiers: Set<string> = (() => {
 /** Serialize a cell value deterministically for dataset comparison (NULL-safe). */
 function serializeValue(v: unknown): string {
   if (v === null || v === undefined) return String.fromCharCode(0) + 'NULL';
-  if (typeof v === 'number') return 'n:' + String(v);
+  if (typeof v === 'number')
+    return 'n:' + (Number.isFinite(v) ? String(Number(v.toPrecision(12))) : String(v));
   if (v instanceof Date) return 'd:' + v.toISOString();
   return 's:' + String(v);
 }
@@ -433,9 +434,12 @@ export function validateTaskSolution(
       };
     }
     if (rule.whereContainsTerms) {
-      const upperSql = userSql.toUpperCase();
+      // Operator/whitespace-normalized containment: `city <> 'Dhaka'` must
+      // satisfy a task phrased with `!=` (same semantics, different spelling).
+      const norm = (s: string) => s.toUpperCase().replace(/<>/g, '!=').replace(/\s+/g, ' ').trim();
+      const normSql = norm(userSql);
       for (const term of rule.whereContainsTerms) {
-        if (!upperSql.includes(term.toUpperCase())) {
+        if (!normSql.includes(norm(term))) {
           return {
             passed: false,
             feedback: `Your filter should use '${term}' to check the condition.`,

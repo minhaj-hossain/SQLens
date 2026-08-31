@@ -12,6 +12,8 @@ import { SqlExecutor } from '@/lib/sql-engine/executor';
 interface SqlExecutorContextValue {
   executeQuery: (sql: string) => ReturnType<SqlExecutor['executeQuery']>;
   resetDatabase: () => void;
+  /** F1: live database snapshot for mutation-task state verification. */
+  getDatabaseState: () => ReturnType<SqlExecutor['getDatabaseState']>;
 }
 
 const SqlExecutorContext = createContext<SqlExecutorContextValue | null>(null);
@@ -28,9 +30,14 @@ export function SqlExecutorProvider({ children }: { children: React.ReactNode })
     executor.resetDatabase();
   }, [executor]);
 
+  const getDatabaseState = useCallback(
+    () => executor.getDatabaseState(),
+    [executor],
+  );
+
   const value = useMemo(
-    () => ({ executeQuery, resetDatabase }),
-    [executeQuery, resetDatabase],
+    () => ({ executeQuery, resetDatabase, getDatabaseState }),
+    [executeQuery, resetDatabase, getDatabaseState],
   );
 
   return (
