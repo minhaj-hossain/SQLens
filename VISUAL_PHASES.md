@@ -78,16 +78,9 @@
 
 ---
 
-## Changelog (append one line per phase completion)
-- F0 COMPLETE - breadcrumb day count fixed (38); layout.tsx metadata mojibake + body/theme colors re-tokened.
-- P1 COMPLETE - globals.css rewritten to grayscale+gold token system (incl. shared --editor-* vars); fonts switched to Inter + JetBrains Mono; themeColor #0a0a0a; tsc green.
-- P2 COMPLETE - Header gold-dot brand + grayscale avatar/controls; token-driven gold on loading/error/not-found; tsc green.
-- P3 COMPLETE - homepage rebuilt to execution-plan design, data-wired (ring %, stage %, leaf states, callout); modals neutralized; tsc green.
-- P5 COMPLETE - Playground re-tokened (editor bg, gold caret/run, neutral chrome).
-- P6 COMPLETE - Auth+Admin neutral/gold; error-red reserved; brand mark + Google G monochrome.
-- P7 COMPLETE - full monochrome sweep (incl. inline styles); dead sidebar deleted; canvas-confetti removed.
-- P8 COMPLETE - tsc 0, 93/93 tests, build green (heap bump needed on this machine).
-- P9 COMPLETE - concept page rebuilt to SQL Lesson design (grayscale code tokens, dots, pills, steps, demo, MCQ); AST-level brace fix; tsc green.
+## Changelog
+
+The phase-by-phase visual-system changelog moved to **[CHANGELOG.md](./CHANGELOG.md)** (see the "Visual phases" section). Append new entries there.
 
 
 
