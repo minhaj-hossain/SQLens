@@ -4,9 +4,9 @@ export const ROADMAP_MILESTONES: MilestoneData[] = [
   {
     id: 'milestone-1',
     number: 1,
-    title: 'Milestone 1',
-    subtitle: 'Core Retrieval, Filtering & Shaping',
-    description: 'Master single-table operations: SELECT syntax, precise column selection, conditional filtering, ranges, pattern matching, sorting, and pagination.',
+    title: 'Foundations',
+    subtitle: 'Ask the Right Questions — Single-Table Mastery',
+    description: 'Learn to ask the database precisely what you need: retrieve specific columns, filter rows by condition, shape results the way you want them, and retrieve data in the order that matters. By Day 8, you\'ll write confident single-table queries without second-guessing.',
     daysRange: 'Days 1–8',
     moduleIds: [
       'day-01',
@@ -22,9 +22,9 @@ export const ROADMAP_MILESTONES: MilestoneData[] = [
   {
     id: 'milestone-2',
     number: 2,
-    title: 'Milestone 2',
-    subtitle: 'Aggregation & Relationships',
-    description: 'Combine tables and summarize insights: aggregate metrics, group-by slicing, multi-table JOINs, relational modeling, and fan-out prevention.',
+    title: 'Analysis',
+    subtitle: 'See the Big Picture — Multi-Table Insights & Reporting',
+    description: 'Connect the dots across tables, summarize data into actionable metrics, and build the queries that power dashboards and reports. You\'ll combine tables with JOINs, count and sum across groups, and answer real business questions that require data from multiple sources. Welcome to the role of analyst.',
     daysRange: 'Days 9–20',
     moduleIds: [
       'day-09',
@@ -44,9 +44,9 @@ export const ROADMAP_MILESTONES: MilestoneData[] = [
   {
     id: 'milestone-3',
     number: 3,
-    title: 'Milestone 3',
-    subtitle: 'Modification, Advanced Queries & Transactions',
-    description: 'Safely modify data, craft subqueries and CTEs, protect multi-step operations with transactions, and build complete production-grade backend queries.',
+    title: 'Mastery',
+    subtitle: 'Build & Defend — Data Modification, Schema Design & Production Safety',
+    description: 'Move beyond querying to building: design your own tables, modify data safely using transactions, craft sophisticated multi-step queries with subqueries and CTEs, and secure your database against common pitfalls. You\'ll complete a capstone project and defend your SQL knowledge against real-world interview questions. By Day 38, you\'re production-ready.',
     daysRange: 'Days 21–38',
     moduleIds: [
       'day-17',

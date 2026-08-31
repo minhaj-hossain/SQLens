@@ -10,24 +10,25 @@ export const Day_10_MODULE: ModuleData = {
   id: 'case-conditional-logic',
   slug: 'case-conditional-logic',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 10)
-  title: 'Day 10 — CASE & Conditional Logic',
-  shortTitle: 'CASE & Conditional Logic',
+  title: 'Day 10 — Conditional Logic with CASE',
+  shortTitle: 'Conditional Logic with CASE',
   type: 'module',
   milestoneId: 'milestone-2',
-  description: 'Produce different output values depending on row conditions: transform raw values into business labels, build multi-branch tiers, control evaluation order, count conditionally inside aggregates, and sort by computed priority.',
+  description: 'Compute custom output columns on the fly: turn raw inventory numbers into \'In Stock\' / \'Out of Stock\' labels, build multi-branch priority tiers, and count specific conditions. CASE is how SQL asks "IF this condition, THEN show this label, ELSE show something else."',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Transform row values into labels with CASE WHEN … THEN … ELSE … END',
-    'Build multi-branch tier systems and control first-match evaluation order',
-    'Count conditionally inside aggregates with SUM(CASE …) / COUNT(CASE …)',
-    'Sort by computed business priority using CASE in ORDER BY',
+    'Write CASE expressions inside SELECT to produce computed columns',
+    'Build multi-branch tiers: use multiple WHEN conditions in a single CASE',
+    'Understand evaluation order: SQL tests each WHEN top-to-bottom and stops at the first TRUE',
+    'Use CASE inside aggregate functions (SUM, COUNT) to answer complex questions conditionally',
+    'Sort and prioritize by computed CASE output, not stored data',
   ],
   concepts: [
     {
       id: 'case-basic',
       order: 1,
-      title: '1. Basic CASE: Produce a Value Conditionally',
-      shortDescription: 'Create an output value that depends on a row condition.',
+      title: '1. Create Computed Columns with CASE',
+      shortDescription: 'Turn row conditions into output labels — "If quantity = 0, show \'Out of Stock\', otherwise \'Available\'".',
       theory: {
         summary: 'The marketing team wants products labeled \'Out of Stock\' or \'Available\' — but no such column exists. Labels are not stored data; they are computed. CASE is SQL\'s way of producing a different output value depending on each row\'s condition.',
         introTable: {
@@ -180,8 +181,8 @@ export const Day_10_MODULE: ModuleData = {
     {
       id: 'case-multi-branch',
       order: 2,
-      title: '2. Multi-branch CASE: Ranges into Tiers',
-      shortDescription: 'Chain multiple WHEN clauses to build tier systems.',
+      title: '2. Build Multi-Branch Tiers with Stacked WHEN',
+      shortDescription: 'Chain multiple WHEN conditions to classify rows into tiers (Budget / Standard / Premium).',
       theory: {
         summary: 'Two labels are rarely enough. Finance wants every product classified as Budget, Standard, or Premium by price. One WHEN per tier — chained top to bottom — turns a raw number column into a tier system.',
         introTable: {

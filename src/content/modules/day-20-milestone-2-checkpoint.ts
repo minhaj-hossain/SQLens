@@ -1,29 +1,29 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_20_MODULE: ModuleData = {
-  id: 'day-16',
+  id: 'day-20',
   slug: 'milestone-2-assessment',
-  day: 16,
-  title: 'Day 16 — Milestone 2: Relational Mastery Checkpoint',
-  shortTitle: 'Milestone 2 Checkpoint',
+  day: 20,
+  title: 'Day 20 — Milestone 2 Challenge: Multi-Table Analyst',
+  shortTitle: 'Milestone 2 Challenge',
   type: 'assignment',
   milestoneId: 'milestone-2',
-  description: 'Independent competency verification for Milestone 2: prove proficiency in multi-table relational queries, financial aggregations, and anti-joins.',
+  description: 'The CFO walks in with a stack of questions: "How much revenue did we make? Which categories are our stars? Who are our best customers? Which suppliers should we follow up with?" Write multi-table JOINs, financial aggregations, and anti-joins to answer real business questions — no hand-holding. You\'re now working like an analyst.',
   estimatedMinutes: 90,
   completionLearnings: [
-    'Calculate total database revenue across order line items',
-    'Aggregate multi-table revenue breakdowns by product category',
-    'Filter high-value customers with spend thresholds using HAVING',
-    'Discover suppliers whose products have never been ordered using anti-joins',
+    'Calculate total revenue across multi-table order data',
+    'Break revenue down by category to identify which product lines drive profit',
+    'Find high-value customers using GROUP BY and HAVING',
+    'Use anti-JOINs to discover suppliers whose products have never been ordered',
   ],
   concepts: [
     {
       id: 'milestone-2-eval',
       order: 1,
-      title: '1. Milestone 2 Core Competency Verification',
-      shortDescription: 'Independent multi-table skill verification across Days 9–15.',
+      title: '1. Real Financial Scenario: Multi-Table Revenue Analysis',
+      shortDescription: 'The CFO four questions; multi-table JOINs and aggregations required; no templates.',
       theory: {
-        summary: 'Milestone 2 Skill Verification: Prove your ability to independently answer real-world business questions using multi-table JOINs, financial aggregations, and anti-joins without templates or assistance.',
+        summary: 'The CFO asks four questions: (1) What\'s our total revenue? (2) Which categories are revenue leaders? (3) High-value customers? (4) Suppliers we haven\'t ordered from? You have all the tools from Days 9–19. No templates. No hints. This is what the analyst role looks like.',
         introTable: {
           tableName: 'order_items',
           description: 'Line item financial transactions',
@@ -35,11 +35,10 @@ export const Day_20_MODULE: ModuleData = {
           ],
         },
         explanation: [
-          '### 1. Milestone 2 Verification Objectives',
-          '• **Core Skill**: Total database revenue calculation across all order line items.',
-          '• **Combination**: Multi-table revenue breakdown by product category (`categories` $\\rightarrow$ `products` $\\rightarrow$ `order_items`).',
-          '• **Transfer**: High-value customers filtering with post-aggregation thresholds (`HAVING total_spent > 200`).',
-          '• **Hard Problem**: Anti-join discovery of suppliers with zero ordered products (find Unity Traders BD).',
+          '### The Business Scenario',
+          'Friday morning. The CFO asks:\n1. **"What\'s our total revenue?"** — SUM across all line items.\n2. **"Which categories are revenue leaders?"** — Group by category, SUM by category.\n3. **"High-value customers?"** — Aggregate by customer, filter with HAVING.\n4. **"Suppliers we haven\'t ordered from?"** — Anti-JOIN: suppliers NOT in the order data.',
+          '',
+          'You have all the tools from Days 9–19. No templates. No hints. This is what the analyst role looks like.',
         ],
         targetQuery: {
           sql: 'SELECT cat.name, SUM(oi.quantity * oi.unit_price) AS category_revenue\nFROM categories cat\nJOIN products p ON cat.category_id = p.category_id\nJOIN order_items oi ON p.product_id = oi.product_id\nGROUP BY cat.category_id, cat.name\nORDER BY category_revenue DESC;',

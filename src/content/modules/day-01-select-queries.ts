@@ -4,18 +4,18 @@ export const Day_01_MODULE: ModuleData = {
   id: 'day-01',
   slug: 'retrieving-data',
   day: 1,
-  title: 'Day 1 — SELECT queries 101',
-  shortTitle: 'SELECT queries 101',
+  title: 'Day 1 — SELECT Queries 101',
+  shortTitle: 'SELECT Queries 101',
   type: 'module',
   milestoneId: 'milestone-1',
-  description: 'Master the fundamentals of SQL queries: SELECT, FROM, selecting multiple columns, SELECT *, and column aliasing with AS using intuitive mental models.',
+  description: 'Retrieve exactly the data you need — learn to pinpoint columns, peek at all data with SELECT *, and rename output for clarity. Build the mental model for every query you\'ll ever write.',
   estimatedMinutes: 45,
   completionLearnings: [
-    'Understand how FROM identifies the source table and SELECT picks the columns',
-    'Select single and multiple specific columns from tables',
-    'Retrieve all columns at once using the asterisk (*) wildcard',
-    'Rename output columns cleanly in result sets using the AS keyword',
-    'Understand that SELECT controls columns, while WHERE controls rows',
+    'Learn the query pattern: FROM (where), then SELECT (which columns)',
+    'Pick one or many specific columns from a table',
+    'Use * to retrieve all columns at once — when and why you\'d do this',
+    'Rename columns in your output using the AS keyword for readability',
+    'Understand the query foundation: SELECT controls columns; WHERE (coming next) controls rows',
   ],
   concepts: [
     // =========================================================================
@@ -24,8 +24,8 @@ export const Day_01_MODULE: ModuleData = {
     {
       id: 'select-and-from',
       order: 1,
-      title: 'SELECT and FROM',
-      shortDescription: 'The foundational building blocks of every SQL query.',
+      title: '1. Find a Table, Pick Your Columns',
+      shortDescription: 'Every query asks two simple questions: where is my data (FROM), and which columns do I want (SELECT)?',
       theory: {
         summary: 'Every SQL query answers two questions: WHERE does the data come from, and WHICH columns do you want back? Imagine we have a database containing a table called students:',
         introTable: {
@@ -122,20 +122,20 @@ export const Day_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day01-c1-t1',
-          title: 'Task 1: Show only name',
-          description: 'Show only the name column from the students table.',
+          title: 'List all student names',
+          description: 'The guidance counselor wants a simple list of student names to send out notices. Write a query to retrieve just the name column.',
           instructions: [
-            'Write a query to retrieve only the `name` column from `students`.',
-            'End your query with a semicolon (;).',
+            'Select the `name` column from the `students` table',
+            'Add a semicolon (;) at the end',
           ],
           type: 'guided',
           primaryTable: 'students',
-          initialSql: '-- Write your SQL query here\n',
+          initialSql: '-- Retrieve just the name column from students\n',
           solutionSql: 'SELECT name FROM students;',
-          solutionExplanation: '`SELECT name FROM students;` retrieves the name column for every row.',
+          solutionExplanation: '`SELECT name FROM students;` retrieves the name column for every student.\n\n**Why this works:** SQL executes FROM first (find the students table), then SELECT second (extract only the name column). The result is a single-column table with 5 rows.',
           hints: [
-            { level: 1, text: 'Use `SELECT name FROM students;`' },
-            { level: 2, text: 'Write `SELECT name FROM students;` and click Submit.' },
+            { level: 1, text: 'Start with SELECT, then specify which column you want' },
+            { level: 2, text: 'The pattern is: SELECT [column_name] FROM [table_name];' },
           ],
           validation: {
             requireExactResult: true,
