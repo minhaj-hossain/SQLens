@@ -1,19 +1,19 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_34_MODULE: ModuleData = {
-  id: 'day-22',
+  id: 'day-34',
   slug: 'project-part-3-integration-queries',
-  day: 22,
-  title: 'Day 22 — Applied Project: Full-Stack Backend Integration Queries',
+  day: 34,
+  title: 'Day 34 - Apply Skills to Backend API: Production Integration Queries',
   shortTitle: 'Project: Backend API Queries',
   type: 'project_part',
   milestoneId: 'milestone-3',
-  description: 'As a Backend API Engineer, write production-ready integration queries: product detail view payload, customer profile order history, and executive dashboard KPIs in single round trips.',
+  description: 'Write production-ready integration queries: product detail view payloads, customer profile order histories, and executive dashboard KPIs delivered in single round trips - eliminating chatty network calls.',
   estimatedMinutes: 120,
   completionLearnings: [
-    'Build a single-payload Product Detail Page query joining products, categories, and suppliers',
-    'Hydrate customer profile screens with distinct order counts and monetary spend',
-    'Generate single-query executive KPI dashboard metrics to eliminate API round-trip latency',
+    'Build single-payload Product Detail Page queries joining products, categories, and suppliers',
+    'Hydrate customer profile screens with distinct order counts and monetary spend metrics',
+    'Generate executive KPI dashboards in one query to eliminate API round-trip latency',
   ],
   concepts: [
     {

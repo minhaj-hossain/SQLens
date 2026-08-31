@@ -1,20 +1,20 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_36_MODULE: ModuleData = {
-  id: 'day-24',
+  id: 'day-36',
   slug: 'milestone-3-final-assessment',
-  day: 24,
-  title: 'Day 24 — Milestone 3: Comprehensive Final Assessment',
+  day: 36,
+  title: 'Day 36 - Comprehensive Skills Assessment: Milestone 3 Finale',
   shortTitle: 'Milestone 3 Final Assessment',
   type: 'assignment',
   milestoneId: 'milestone-3',
-  description: 'Comprehensive capstone assessment covering advanced multi-table CTEs, correlated subqueries, schema DDL modifications, index creation, and DML data integrity.',
+  description: 'Comprehensive capstone assessment covering advanced CTEs, correlated subqueries, schema DDL modifications, index creation, and DML data integrity. Prove full database engineering proficiency.',
   estimatedMinutes: 120,
   completionLearnings: [
-    'Write top-category revenue rankings with multi-table joins',
-    'Calculate correlated customer spend benchmarks using Common Table Expressions',
-    'Execute schema DDL alterations (ALTER TABLE with column defaults)',
-    'Create targeted performance B-tree indexes for query optimization',
+    'Write complex multi-table queries with CTEs and window functions',
+    'Calculate correlated metrics using Common Table Expressions',
+    'Execute schema modifications with ALTER TABLE',
+    'Create targeted performance indexes and validate with EXPLAIN',
   ],
   concepts: [
     {

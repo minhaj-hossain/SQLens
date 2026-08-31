@@ -9,20 +9,20 @@ import { ModuleData } from '../../types/curriculum';
 // Spiral: Day 19 INSERT/UPDATE safety, Day 20 FK constraints, Day 1 verify-with-SELECT.
 // =============================================================================
 export const Day_26_MODULE: ModuleData = {
-  id: 'dml-transactions',
+  id: 'day-26',
   slug: 'dml-transactions',
-  day: 0, // ordering uses curriculumOrder (Day 26)
-  title: 'Day 26 - DML + Transactions',
+  day: 26,
+  title: 'Day 26 - Control Transaction Boundaries: All-or-Nothing Safety',
   shortTitle: 'Transactions & Atomicity',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Group multiple data-modification statements into one atomic unit. Changes stay provisional until you COMMIT, ROLLBACK undoes everything since BEGIN, and a failed statement inside a transaction leaves nothing half-applied.',
+  description: 'Group multiple data-modification statements into one atomic unit using BEGIN and COMMIT. Changes stay provisional until COMMIT; ROLLBACK undoes everything. Ensure multi-statement operations succeed together or fail together.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Open a transaction with BEGIN and make its changes permanent with COMMIT',
-    'Undo everything since BEGIN with ROLLBACK - it restores the exact pre-transaction state',
-    'Explain why a failed statement inside a transaction is not half-applied but all-or-nothing',
-    'Write a multi-row INSERT to seed a batch of records in one statement',
+    'Group data changes into transactions with BEGIN and COMMIT',
+    'Undo all changes since BEGIN with ROLLBACK - restoring the exact pre-transaction state',
+    'Guarantee all-or-nothing execution: if any statement fails, nothing is applied',
+    'Write multi-row INSERTs to seed record batches in one atomic statement',
   ],
   concepts: [
     {

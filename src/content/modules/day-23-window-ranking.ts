@@ -8,26 +8,26 @@ import { ModuleData } from '../../types/curriculum';
 //   C5 Pattern Lab: Top-N per group
 // =============================================================================
 export const Day_23_MODULE: ModuleData = {
-  id: 'window-ranking',
+  id: 'day-23',
   slug: 'window-ranking',
-  day: 0, // legacy positional field — ordering uses curriculumOrder (Day 23)
-  title: 'Day 23 — Window Functions I: Ranking',
+  day: 23,
+  title: 'Day 23 - Rank Rows Without Collapsing: Window Functions I',
   shortTitle: 'Window Functions: Ranking',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Append rank numbers to rows without collapsing them, restart rankings per group with PARTITION BY, master tie behavior with RANK and DENSE_RANK, and assemble the famous Top-N-per-group pattern.',
+  description: 'Append ranking columns to rows without merging them using ROW_NUMBER(), RANK(), and DENSE_RANK(). Restart rankings per group with PARTITION BY and assemble the Top-N-per-group pattern essential for sales and usage analytics.',
   estimatedMinutes: 65,
   completionLearnings: [
-    'Rank rows with ROW_NUMBER() OVER (ORDER BY …) — rows preserved, no GROUP BY collapse',
-    'Restart a ranking within each group using PARTITION BY',
-    'Choose correctly between RANK (gaps after ties) and DENSE_RANK (no gaps)',
-    'Build Top-N per group with a ranking CTE plus an outer filter',
+    'Rank rows with ROW_NUMBER() OVER (ORDER BY ...) - rows preserved, no GROUP BY collapse',
+    'Restart rankings within each group using PARTITION BY',
+    'Choose between RANK (gaps after ties) and DENSE_RANK (no gaps) based on reporting needs',
+    'Build Top-N per group by ranking within groups and filtering in an outer query',
   ],
   concepts: [
     {
       id: 'row-number-basics',
       order: 1,
-      title: '1. ROW_NUMBER(): Rank Without Collapsing',
+      title: '1. ROW_NUMBER(): Append Rankings Without Removing Rows',
       shortDescription: 'A leaderboard column appended to every row.',
       theory: {
         summary: "Day 9's GROUP BY answered 'how many products per category' but destroyed the rows. Now the question is different: keep every product AND give each one its price rank. ROW_NUMBER() OVER (ORDER BY …) appends a 1, 2, 3… column sorted by your chosen order — without removing a single row.",

@@ -1,20 +1,20 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_38_MODULE: ModuleData = {
-  id: 'day-25',
+  id: 'day-38',
   slug: 'graduation-real-world-bridge',
-  day: 25,
-  title: 'Day 25 — Beyond the Course: Window Functions Preview & Graduation',
-  shortTitle: 'Graduation & Window Functions',
+  day: 38,
+  title: 'Day 38 - Graduation: Bridge to Production Development',
+  shortTitle: 'Graduation & Real-World SQL',
   type: 'project_part',
   milestoneId: 'milestone-3',
-  description: 'Celebrate your 25-day SQL journey! Preview advanced Window Functions (ROW_NUMBER OVER PARTITION BY) and bridge your skills to Node.js/TypeScript backend production development.',
+  description: 'Celebrate your complete SQL journey! Bridge your skills to Node.js/TypeScript backend development with production libraries (Drizzle, Prisma, pg, mysql2). Review the progression from table basics to full relational engineering.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Understand the difference between GROUP BY (collapses rows) and Window Functions (preserves all rows while appending analytical ranks)',
-    'Write modern Window Functions using ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)',
-    'Bridge SQL skills to backend Node.js / TypeScript libraries (Drizzle, Prisma, pg, mysql2)',
-    'Review the complete progression from Day 1 table basics to Day 25 full relational engineering',
+    'Understand the difference between GROUP BY (collapses rows) and Window Functions (preserves all rows)',
+    'Write Window Functions using ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)',
+    'Bridge SQL skills to backend Node.js/TypeScript libraries (Drizzle, Prisma, pg, mysql2)',
+    'Review the complete progression from Day 1 basics to Day 38 advanced database engineering',
   ],
   concepts: [
     {

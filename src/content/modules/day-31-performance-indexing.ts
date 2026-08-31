@@ -14,20 +14,20 @@ import { ModuleData } from '../../types/curriculum';
 // type ALL → ref / range → const as indexes are created and dropped.
 // =============================================================================
 export const Day_31_MODULE: ModuleData = {
-  id: 'day-21',
+  id: 'day-31',
   slug: 'performance-indexing',
-  day: 21,
-  title: 'Day 31 — Performance, Indexing & EXPLAIN',
+  day: 31,
+  title: 'Day 31 - Optimize Slow Queries: Performance, Indexing & EXPLAIN',
   shortTitle: 'Performance & Indexing',
   type: 'conceptual_session',
   milestoneId: 'milestone-3',
   description:
-    'Discover why queries get slow (full table scans), learn the mental model of index lookups, read EXPLAIN plans like a DBA, and run the optimization loop: EXPLAIN → CREATE INDEX → EXPLAIN.',
+    'Understand why queries get slow (full table scans), read EXPLAIN plans like a DBA to identify bottlenecks, and run the optimization loop: EXPLAIN - CREATE INDEX - EXPLAIN to watch query types improve.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Explain why a full table scan is O(N) and when it becomes a bottleneck',
-    'Read an EXPLAIN plan: type ALL / ref / range / const, possible_keys, key, rows',
-    'Create a B-tree index and watch the plan type change in the real engine simulation',
+    'Understand why full table scans are O(N) and become a bottleneck as data grows',
+    'Read an EXPLAIN plan: recognize type ALL/ref/range/const, possible_keys, key, rows',
+    'Create a B-tree index and watch the plan type change in the simulation engine',
   ],
   concepts: [
     {

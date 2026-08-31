@@ -8,20 +8,20 @@ import { ModuleData } from '../../types/curriculum';
 //   C5 2NF & 3NF (the splits the dependencies justify)
 // =============================================================================
 export const Day_30_MODULE: ModuleData = {
-  id: 'schema-design-normalization',
+  id: 'day-30',
   slug: 'schema-design-normalization',
-  day: 0, // ordering uses curriculumOrder (Day 30)
-  title: 'Day 30 - Schema Design & Normalization',
+  day: 30,
+  title: 'Day 30 - Design Better Schemas: Normalization Fundamentals',
   shortTitle: 'Schema Design & Normal Forms',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Design schemas instead of just consuming them. Feel why duplicated facts rot data, then fix it step by step: 1NF atomic values, functional dependencies, and the 2NF/3NF splits they justify. Every rule is derived from a problem you can see, never memorized.',
+  description: 'Design schemas instead of just consuming them. Understand why redundant facts rot data and lead to update anomalies, then fix problems step by step: 1NF atomic values, functional dependencies, and the 2NF/3NF splits they justify.',
   estimatedMinutes: 65,
   completionLearnings: [
-    'Explain redundancy and the update anomalies it causes',
-    'Check a table for 1NF: atomic values, no repeating groups',
-    'Trace functional dependencies before splitting any table',
-    'Justify 2NF and 3NF decompositions from dependencies, not from a checklist',
+    'Identify redundancy and the update anomalies it causes',
+    'Check tables for 1NF: atomic values, no repeating groups',
+    'Trace functional dependencies before decomposing any table',
+    'Justify 2NF and 3NF splits from dependencies, not from checklists',
   ],
   concepts: [
     {

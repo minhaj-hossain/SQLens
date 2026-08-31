@@ -1,25 +1,25 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_22_MODULE: ModuleData = {
-  id: 'day-18',
+  id: 'day-22',
   slug: 'practice-subqueries-ctes',
-  day: 18,
-  title: 'Day 18 — Guided Practice: Advanced Subqueries & CTEs',
+  day: 22,
+  title: 'Day 22 - Apply Correlated Subqueries & CTEs: Practice Lab',
   shortTitle: 'Practice: Correlated Subqueries & CTEs',
   type: 'practice_day',
   milestoneId: 'milestone-3',
-  description: 'Practice writing correlated subqueries, multi-stage CTE aggregations, and refactoring nested subqueries into clean Common Table Expressions.',
+  description: 'Practice writing correlated subqueries that link row-by-row conditions, build multi-stage CTE pipelines with aggregations, and refactor deeply nested subqueries into clean, readable staged logic.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Write correlated subqueries linking inner and outer table references with table aliases',
-    'Calculate customer financial spend inside a CTE and extract tier segments',
-    'Refactor nested subqueries into maintainable, staged Common Table Expressions',
+    'Write correlated subqueries where inner queries reference outer row context',
+    'Build multi-stage CTEs that aggregate, filter, and segment data progressively',
+    'Refactor nested subquery chains into maintainable Common Table Expressions',
   ],
   concepts: [
     {
       id: 'correlated-and-staged-ctes',
       order: 1,
-      title: '1. Correlated Subqueries & CTE Refactoring',
+      title: '1. Row-by-Row Comparisons: Correlate Subqueries to Outer Context',
       shortDescription: 'Category benchmarks and tiered spend CTEs.',
       theory: {
         summary: 'Reinforce advanced subqueries and CTEs: compare items against localized category averages using correlated subqueries, build tiered analytical customer segments, and refactor nested queries into clean CTEs.',

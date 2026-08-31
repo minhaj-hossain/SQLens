@@ -16,18 +16,18 @@ import { ModuleData } from '../../types/curriculum';
 // then run a guarded migration drill.
 // =============================================================================
 export const Day_32_MODULE: ModuleData = {
-  id: 'security-production-safety',
+  id: 'day-32',
   slug: 'security-production-safety',
-  day: 0, // ordering uses curriculumOrder (Day 32)
-  title: 'Day 32 - Security & Production Safety',
+  day: 32,
+  title: 'Day 32 - Ship It Safely: Security & Production Practices',
   shortTitle: 'Security & Production',
   type: 'module',
   milestoneId: 'milestone-3',
   description:
-    'See a SQL injection attack actually succeed against a live database, then shut it down with parameterized queries and whitelisting - and pick up the production safety drills (transaction dry-runs, least privilege) that keep real systems safe.',
+    'See SQL injection attack actually succeed against a live database, then shut it down with parameterized queries and whitelisting. Master the production safety drills (transaction dry-runs, least privilege) that keep real systems safe.',
   estimatedMinutes: 70,
   completionLearnings: [
-    'Explain how string concatenation lets attacker input become executable SQL',
+    'Understand how string concatenation lets attacker input become executable SQL',
     'Run a real authentication-bypass and a UNION-based data exfiltration query',
     'Rewrite vulnerable queries the way a parameterized driver would execute them',
     'Whitelist the places user input can never be parameterized (ORDER BY, table names)',

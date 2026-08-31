@@ -1,19 +1,19 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_21_MODULE: ModuleData = {
-  id: 'day-17',
+  id: 'day-21',
   slug: 'subqueries-ctes',
-  day: 17,
-  title: 'Day 17 — Subqueries & CTEs',
+  day: 21,
+  title: 'Day 21 - Decompose Complex Queries with Subqueries & CTEs',
   shortTitle: 'Subqueries & CTEs',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Master scalar subqueries, IN list subqueries, and Common Table Expressions (CTEs) using the WITH syntax to write modular, readable analytical queries.',
+  description: 'Write modular, readable queries by nesting queries inside queries (subqueries) or breaking complex logic into named steps (CTEs). Master scalar subqueries for dynamic comparisons, IN subqueries for filtering against result sets, and the WITH syntax for staging multi-step analytical pipelines.',
   estimatedMinutes: 75,
   completionLearnings: [
-    'Write scalar subqueries to compare individual rows against whole-table aggregates',
+    'Compare individual rows against whole-table aggregates using scalar subqueries',
     'Filter rows against dynamic result sets using IN subqueries',
-    'Structure complex multi-stage queries using Common Table Expressions (WITH syntax)',
+    'Structure multi-stage analytical queries with Common Table Expressions (CTEs)',
   ],
   concepts: [
     // =========================================================================
@@ -22,7 +22,7 @@ export const Day_21_MODULE: ModuleData = {
     {
       id: 'subqueries-scalar',
       order: 1,
-      title: '1. Scalar Subqueries (Single-Value Comparison)',
+      title: '1. Single-Value Subqueries: Compare Rows Against Aggregates',
       shortDescription: 'Compare individual rows dynamically against whole-table aggregates.',
       theory: {
         summary: 'A subquery is a query nested inside another SQL statement. A scalar subquery returns exactly one value (one row and one column), allowing you to use it wherever a constant or literal value is expected.',

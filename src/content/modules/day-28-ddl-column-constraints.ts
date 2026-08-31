@@ -7,19 +7,19 @@ import { ModuleData } from '../../types/curriculum';
 //   C3 DEFAULT - automatic values    C4 CHECK - business rules at the DB level
 // =============================================================================
 export const Day_28_MODULE: ModuleData = {
-  id: 'ddl-column-constraints',
+  id: 'day-28',
   slug: 'ddl-column-constraints',
-  day: 0, // ordering uses curriculumOrder (Day 28)
-  title: 'Day 28 - DDL II: Column Constraints',
+  day: 28,
+  title: 'Day 28 - Enforce Data Quality at the Database: Column Constraints',
   shortTitle: 'DDL II (Constraints)',
   type: 'module',
   milestoneId: 'milestone-3',
   description: 'Teach the database to guard its own data: NOT NULL for mandatory fields, UNIQUE for no-duplicate guarantees, DEFAULT for automatic values, and CHECK for business rules enforced on every write.',
   estimatedMinutes: 55,
   completionLearnings: [
-    'Make fields mandatory with NOT NULL so no record is ever half-filled',
-    'Guarantee no duplicates with UNIQUE (and know how it differs from PRIMARY KEY)',
-    'Give columns automatic values with DEFAULT',
+    'Make fields mandatory with NOT NULL so no record is ever half-complete',
+    'Prevent duplicates with UNIQUE constraints (distinct from PRIMARY KEY)',
+    'Populate columns automatically with DEFAULT values',
     'Encode business rules with CHECK constraints the engine enforces on every write',
   ],
   concepts: [

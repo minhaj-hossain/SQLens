@@ -1,19 +1,19 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_35_MODULE: ModuleData = {
-  id: 'day-23',
+  id: 'day-35',
   slug: 'project-part-4-edge-cases-performance',
-  day: 23,
-  title: 'Day 23 — Debugging Lab & Polish: Zero-State Hardening & Edge Cases',
+  day: 35,
+  title: 'Day 35 - Harden Production Queries: Edge Cases & NULL Safety',
   shortTitle: 'Debug: Zero-State Hardening',
   type: 'project_part',
   milestoneId: 'milestone-3',
-  description: 'Harden production queries against zero-state edge cases: preserve inactive customers and unpurchased products using LEFT JOIN and understand when COALESCE is needed for SUM aggregates.',
+  description: 'Harden production queries against zero-state edge cases using LEFT JOIN to preserve inactive customers and unpurchased products. Understand when COALESCE is required for SUM aggregates vs COUNT natural 0-behavior.',
   estimatedMinutes: 90,
   completionLearnings: [
-    'Handle 0-order customer edge cases using LEFT JOIN so inactive accounts remain in audits',
-    'Understand COUNT() natural 0-behavior vs SUM() NULL-behavior and when to use COALESCE(SUM(...), 0)',
-    'Harden analytical reporting pipelines against zero-record edge cases across the canonical 6-table schema',
+    'Handle 0-order customer edge cases with LEFT JOIN so inactive accounts remain in audits',
+    'Understand COUNT() natural 0-behavior vs SUM() NULL-behavior and when COALESCE(SUM(...), 0) is needed',
+    'Harden analytical reporting pipelines against zero-record edge cases across the schema',
   ],
   concepts: [
     {

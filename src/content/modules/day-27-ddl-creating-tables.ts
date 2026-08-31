@@ -1,19 +1,19 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_27_MODULE: ModuleData = {
-  id: 'day-20',
+  id: 'day-27',
   slug: 'ddl-schema-design',
-  day: 20,
-  title: 'Day 27 — DDL I: Creating Tables',
+  day: 27,
+  title: 'Day 27 - Blueprint Tables and Schema: DDL Foundations',
   shortTitle: 'DDL I (Creating Tables)',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Foundations of Data Definition Language: blueprint a new table with CREATE TABLE, choose the right column data types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN), and give every row a durable identity with PRIMARY KEY (plus AUTO_INCREMENT as the usual implementation detail).',
+  description: 'Learn Data Definition Language: create table structures with CREATE TABLE, choose the right column data types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN), and give every row a durable identity with PRIMARY KEY and AUTO_INCREMENT.',
   estimatedMinutes: 50,
   completionLearnings: [
-    'Create structured tables with CREATE TABLE',
+    'Create structured tables using CREATE TABLE with column definitions',
     'Choose appropriate column data types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN)',
-    'Enforce entity identity with PRIMARY KEY and AUTO_INCREMENT',
+    'Enforce row identity with PRIMARY KEY and AUTO_INCREMENT for surrogate keys',
   ],
   concepts: [
     // =========================================================================

@@ -1,20 +1,20 @@
 import { ModuleData } from '../../types/curriculum';
 
 export const Day_25_MODULE: ModuleData = {
-  id: 'day-19',
+  id: 'day-25',
   slug: 'dml-insert-update-delete',
-  day: 19,
-  title: 'Day 19 — DML: INSERT, UPDATE, DELETE',
+  day: 25,
+  title: 'Day 25 - Modify Data Safely: INSERT, UPDATE, DELETE',
   shortTitle: 'DML (Data Modification)',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Learn safe data modification commands (INSERT, UPDATE, DELETE), the critical danger of missing WHERE clauses, and transaction safety.',
+  description: 'Learn the critical discipline of safe data modification. Master INSERT to add rows, UPDATE to change values, and DELETE to remove records - and why the missing WHERE clause is the costliest mistake in databases.',
   estimatedMinutes: 75,
   completionLearnings: [
     'Insert single and multi-row records using INSERT INTO',
     'Safely modify records using UPDATE ... SET ... WHERE',
     'Safely delete records using DELETE FROM ... WHERE',
-    'Recognize and prevent catastrophic unbounded table mutations',
+    'Understand and prevent catastrophic unbounded table mutations',
   ],
   concepts: [
     // =========================================================================

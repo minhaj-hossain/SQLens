@@ -19,22 +19,22 @@ import { ModuleData } from '../../types/curriculum';
 // whole migration standalone as the assessment.
 // =============================================================================
 export const Day_33_MODULE: ModuleData = {
-  id: 'capstone-bookstore',
+  id: 'day-33',
   slug: 'sqlens-bookstore',
-  day: 0, // ordering uses curriculumOrder (Day 32)
-  title: 'Day 32 - Capstone Project: SQLens Bookstore',
+  day: 33,
+  title: 'Day 33 - Capstone: Build a Complete Database From Scratch',
   shortTitle: 'Capstone: Bookstore',
   type: 'project_part',
   milestoneId: 'milestone-3',
   description:
-    'Design, build, seed, query, and evolve a complete Bookstore from an empty database — the capstone that stitches together every skill in the course: schema design, DDL constraints, AUTO_INCREMENT seeding, multi-table joins, aggregation, window ranking, indexing, and transactions.',
+    'Design, build, seed, query, and evolve a complete Bookstore from an empty database. Stitches together every skill in the course: schema design, DDL constraints, AUTO_INCREMENT seeding, multi-table joins, aggregation, window ranking, indexing, and transactions.',
   estimatedMinutes: 95,
   completionLearnings: [
-    'Plan a normalized schema and justify every table, key, and relationship before writing SQL',
+    'Plan a normalized schema and justify every table, key, and relationship before SQL',
     'Create a 4-table schema with PRIMARY KEY, AUTO_INCREMENT, NOT NULL, UNIQUE, CHECK, DEFAULT, and FOREIGN KEY',
-    'Seed a parent→child graph with multi-row INSERTs relying on AUTO_INCREMENT ids',
-    'Answer business questions with 3-way JOINs, per-group aggregation, and window-based best-seller ranking',
-    'Evolve a live schema with ALTER, prove an index with EXPLAIN, and protect a batch with a transaction',
+    'Seed a parent-to-child graph with multi-row INSERTs using AUTO_INCREMENT ids',
+    'Answer business questions with 3-way JOINs, per-group aggregation, and window-based ranking',
+    'Evolve a live schema with ALTER, prove an index with EXPLAIN, and protect batches with transactions',
   ],
   concepts: [
     {

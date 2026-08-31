@@ -18,15 +18,15 @@ const GAUNTLET_TREND_SQL =
   'WITH monthly AS (SELECT MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY MONTH(o.order_date)), trend AS (SELECT mon, revenue, SUM(revenue) OVER (ORDER BY mon) AS running_revenue, LAG(revenue) OVER (ORDER BY mon) AS prev_revenue FROM monthly) SELECT mon, revenue, running_revenue, revenue - prev_revenue AS growth FROM trend ORDER BY mon;';
 
 export const Day_37_MODULE: ModuleData = {
-  id: 'interview-gauntlet',
+  id: 'day-37',
   slug: 'interview-gauntlet',
-  day: 0, // ordering uses curriculumOrder (Day 37)
-  title: 'Day 37 - Interview Gauntlet',
+  day: 37,
+  title: 'Day 37 - Test Your Skills: Interview Gauntlet Challenge',
   shortTitle: 'Interview Gauntlet',
   type: 'assignment',
   milestoneId: 'milestone-3',
   description:
-    'A timed, no-hints run through the classic SQL interview patterns - second-highest, above-average, top-N per group, running trends, and the traps (NULL, ties, fan-out) that filter candidates. Nothing new is taught: everything here is a skill you already own, under pressure.',
+    'Under pressure, apply classic SQL interview patterns - second-highest value, above-average rows, top-N per group, running trends. No new teaching: every skill comes from Days 1-36. Patterns and traps that filter candidates.',
   estimatedMinutes: 45,
   completionLearnings: [
     'Solve the classic interview patterns (second-highest, above-average, top-N per group) without templates',

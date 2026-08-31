@@ -9,26 +9,26 @@ import { ModuleData } from '../../types/curriculum';
 // Spiral: Day 9 SUM/GROUP BY, Day 12 DATEDIFF, Day 3/17 NULL semantics, Day 23 PARTITION BY.
 // =============================================================================
 export const Day_24_MODULE: ModuleData = {
-  id: 'window-running-metrics',
+  id: 'day-24',
   slug: 'window-running-metrics',
-  day: 0, // ordering uses curriculumOrder (Day 24)
-  title: 'Day 24 — Window Functions II: Running Metrics',
+  day: 24,
+  title: 'Day 24 - Track Trends with Running Metrics: Window Functions II',
   shortTitle: 'Window Functions: Running Metrics',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Compute values that grow as you move through the result: cumulative running totals with SUM() OVER (ORDER BY …) and month-over-month comparisons with LAG/LEAD — the trend dashboard toolkit. Ends with an optional preview of window frames and moving averages.',
+  description: 'Compute values that accumulate as you move through rows: running totals with SUM() OVER (ORDER BY ...) and month-to-month comparisons with LAG/LEAD. Build the trend dashboards executives depend on.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Build a running total with SUM() OVER (ORDER BY …) — the frame grows row by row',
-    'Read the previous or next row with LAG() / LEAD() — no self-join needed',
-    'Explain why the first row of a LAG has no predecessor (NULL) and handle it',
-    'Combine running totals + LAG into a real executive trend report',
+    'Build running totals that grow row by row with SUM() OVER (ORDER BY ...)',
+    'Compare each row to its neighbor using LAG() and LEAD() without self-joins',
+    'Handle NULL values for edge rows (first/last) correctly',
+    'Combine running metrics and LAG into executive trend reports',
   ],
   concepts: [
     {
       id: 'running-totals',
       order: 1,
-      title: '1. SUM() OVER (ORDER BY …): The Running Total',
+      title: '1. SUM() OVER (ORDER BY ...): Build Cumulative Running Totals',
       shortDescription: 'A cumulative column that grows row by row — revenue to date.',
       theory: {
         summary:

@@ -8,19 +8,19 @@ import { ModuleData } from '../../types/curriculum';
 //   C3 DROP TABLE IF EXISTS - safe teardown for reproducible scripts
 // =============================================================================
 export const Day_29_MODULE: ModuleData = {
-  id: 'ddl-schema-evolution',
+  id: 'day-29',
   slug: 'ddl-schema-evolution',
-  day: 0, // ordering uses curriculumOrder (Day 29)
-  title: 'Day 29 - DDL III: Schema Evolution & Relationships',
+  day: 29,
+  title: 'Day 29 - Evolve Schemas and Define Relationships: DDL III',
   shortTitle: 'DDL III (Evolution & FK)',
   type: 'module',
   milestoneId: 'milestone-3',
-  description: 'Schemas are living things: add columns without losing data via ALTER TABLE, make relationships enforceable with FOREIGN KEY, and tear down temporary schemas safely with DROP TABLE IF EXISTS.',
+  description: 'Schemas are living things: add columns to live tables using ALTER TABLE, connect tables with FOREIGN KEY to make relationships enforceable, and tear down schemas safely with DROP TABLE IF EXISTS.',
   estimatedMinutes: 50,
   completionLearnings: [
-    'Add new columns to a live table with ALTER TABLE ... ADD COLUMN (no data loss)',
+    'Add new columns to live tables with ALTER TABLE ... ADD COLUMN (no data loss)',
     'Connect tables with FOREIGN KEY so orphaned records become impossible',
-    'Tear down tables safely with DROP TABLE IF EXISTS in reproducible scripts',
+    'Safely tear down tables with DROP TABLE IF EXISTS for reproducible scripts',
   ],
   concepts: [
     {
