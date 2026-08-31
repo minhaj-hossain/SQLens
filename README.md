@@ -520,9 +520,10 @@ Adding a custom domain? Point `BETTER_AUTH_URL` (plus canonical/sitemap defaults
 ## ✓ Quality & Testing
 
 ```text
-$ npm test            # Vitest: 93 tests across 8 suites (engine, windows, set-ops,
-                      # transactions, EXPLAIN, DDL constraints, scripts, module order)
-  ✓ 93 passed, 0 failed
+$ npm test            # Vitest: 173 tests across 18 suites (engine, windows, set-ops,
+                      # transactions, EXPLAIN, DDL constraints, state-verification,
+                      # ui, content, module order)
+  ✓ 173 passed, 0 failed
 
 $ npm run test:engine
   ✓ 46 passed, 0 failed

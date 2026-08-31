@@ -66,7 +66,9 @@
 ### P7 - Monochrome sweep (Amendment 4 widened)
 - [x] Repo-wide sweep clean: single hue-source file was dead RoadmapSidebar.tsx -> deleted; remaining hexes are palette-intentional (gold + grays)
 - [x] Deleted RoadmapSidebar.tsx; npm-uninstalled unused canvas-confetti
-- [ ] Final grep clean: palette = grays + gold + error only
+- [x] Final grep clean: palette = grays + gold + error only
+      (verified 2026-08-31: all hex colors in src/ are grayscale tokens,
+      gold #f4c430, or error reds #e06c5b/#43150d; no stray hues)
 
 ### P8 - Verification
 - [x] npx tsc --noEmit (exit 0)

@@ -2,7 +2,9 @@
  * Module Order & Identity Regression Check
  * ─────────────────────────────────────────────────────────────────────────────
  * Verifies the position-independent curriculum ordering system:
- *   1. The 25 legacy modules keep their exact original sequence.
+ *   1. All 38 modules keep a canonical, strictly increasing order that is
+ *      exactly `day-01`…`day-38` (IDs are day-based and must never encode
+ *      anything beyond the day).
  *   2. Order-based prev/next navigation is identical to the old day±1 logic.
  *   3. Gate-0 (always-unlocked) resolves to the first module only.
  *   4. NEW: a synthetic module with curriculumOrder 9.5 slots cleanly between
@@ -29,7 +31,7 @@ function assert(name: string, cond: boolean, detail = '') {
   console.log(`${cond ? 'PASS' : 'FAIL'} — ${name}${cond || !detail ? '' : ` (${detail})`}`);
 }
 
-// ── 1. Legacy sequence preserved ─────────────────────────────────────────────
+// ── 1. Canonical order: exactly day-01..day-38 ─────────────────────────────
 // 38 modules loaded.
 assert('38 modules loaded', ALL_MODULES.length === 38, String(ALL_MODULES.length));
 const dayId = (n: number) => `day-${String(n).padStart(2, '0')}`;
@@ -96,7 +98,7 @@ const existingIds = new Set(ALL_MODULES.map((m) => m.id));
 assert('probe ID is genuinely new', !existingIds.has('probe-insertion-test'));
 
 const expanded = [...ALL_MODULES, probe];
-// day-09 in legacy module order is ALL_MODULES[8] (order 9).
+// day-09 sits at ALL_MODULES[8] (zero-based index 8, i.e. order 9).
 assert('probe (order 9.5) lands right after day-09', getNextModule(ALL_MODULES[8], expanded)?.id === 'probe-insertion-test', getNextModule(ALL_MODULES[8], expanded)?.id ?? 'undefined');
 assert("probe's prev is day-09", getPreviousModule(probe, expanded)?.id === 'day-09');
 // Probe is inserted directly BEFORE day-10 (order 10).
