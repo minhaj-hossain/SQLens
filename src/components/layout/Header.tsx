@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 import { ALL_MODULES } from '../../content/curriculum-index';
@@ -88,6 +89,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Icon name="terminal" className="text-[16px]" />
           </Link>
+
+          {/* Color theme switcher (graphite / sky) */}
+          <ThemeToggle />
 
           {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
           {isAuthPending ? (

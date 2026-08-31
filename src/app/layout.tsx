@@ -1,6 +1,7 @@
 ﻿import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import './globals.css';
 
 // Self-hosted via next/font: preloaded, non-blocking, zero layout shift.
@@ -85,6 +86,14 @@ export default function RootLayout({
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* FOUC guard: apply the persisted theme BEFORE first paint so the
+            palette never flashes. Runs pre-hydration; ThemeProvider adopts
+            the attribute on mount. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('sqlens:theme');if(t==='sky'){document.documentElement.setAttribute('data-theme','sky');}}catch(e){}})();`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -101,7 +110,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-ink text-text antialiased">{children}</body>
+      <body className="bg-ink text-text antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

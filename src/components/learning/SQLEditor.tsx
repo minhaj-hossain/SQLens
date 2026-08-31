@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { DATABASE_SCHEMAS } from "../../content/database/schema";
 import { highlightSql, SQL_KEYWORDS } from "@/lib/highlight-sql";
+import { EDITOR_TEXT_STYLE } from "@/lib/editor-text-style";
 import { buildSuggestions } from "@/lib/autocomplete";
 
 interface SQLEditorProps {
@@ -133,8 +134,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
   const applySuggestion = (suggestion: string) => {
     if (!textareaRef.current) return;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const textAfterCursor = value.slice(cursorPos);
+    // Live caret position — the `cursorPos` state can be stale between renders.
+    const caret = textareaRef.current.selectionStart ?? cursorPos;
+    const textBeforeCursor = value.slice(0, caret);
+    const textAfterCursor = value.slice(caret);
 
     // Replace the region the suggestion actually completes. When the user typed
     // the SECOND word of a multi-word keyword (`ORDER B` -> ORDER BY), the
@@ -418,6 +421,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             ref={highlightRef}
             aria-hidden="true"
             className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
+            style={EDITOR_TEXT_STYLE}
             dangerouslySetInnerHTML={{
               __html:
                 highlightedCode + (value.endsWith("\n") ? "<br />&nbsp;" : ""),
@@ -473,9 +477,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             autoComplete="off"
             autoCorrect="off"
             style={{
-              tabSize: 2,
+              ...EDITOR_TEXT_STYLE,
               color: "transparent",
-              caretColor: "#f4c430",
+              caretColor: "var(--func)",
               WebkitTextFillColor: "transparent",
             }}
             className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"

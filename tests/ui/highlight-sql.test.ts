@@ -48,9 +48,10 @@ describe('highlightSql', () => {
     expect(out).toContain('<span class="text-code-comment italic">-- get names</span>');
   });
 
-  it('stashes and restores string literals inside ident spans', () => {
+  it('stashes and restores string literals as text-code-str spans', () => {
     const out = highlightSql("SELECT name FROM students WHERE city = 'Dhaka';");
     expect(out).toContain("'Dhaka'");
+    expect(out).toContain("<span class=\"text-code-str font-medium\">'Dhaka'</span>");
     expect(out).not.toMatch(/___TOKEN_\d+___/);
   });
 

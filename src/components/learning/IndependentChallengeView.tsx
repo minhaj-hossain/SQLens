@@ -41,6 +41,7 @@ interface IndependentChallengeViewProps {
 
 
 import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
+import { EDITOR_TEXT_STYLE } from '@/lib/editor-text-style';
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from './DataGrid';
 
@@ -548,6 +549,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               ref={highlightRef}
               aria-hidden="true"
               className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
+              style={EDITOR_TEXT_STYLE}
               dangerouslySetInnerHTML={{ __html: highlightedCode + (currentSql.endsWith('\n') ? '<br />&nbsp;' : '') }}
             />
 
@@ -581,7 +583,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               autoComplete="off"
               autoCorrect="off"
               style={{
-                tabSize: 2,
+                ...EDITOR_TEXT_STYLE,
                 color: 'transparent',
                 caretColor: 'var(--func)',
                 WebkitTextFillColor: 'transparent',

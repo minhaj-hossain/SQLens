@@ -51,10 +51,17 @@
   --code-kw: #f2f2f0;    /* SQL keywords - heading white, weight 700 */
   --code-ident: #a9a9a3; /* identifiers / literals - mid gray */
   --code-punc: #6b6b65;  /* ; , ( ) etc - dim gray */
+  --code-str: #a9a9a3;   /* string literals - same gray as ident (amber on sky theme) */
 
   /* functional error — the only non-gray, non-gold color */
   --error: #e06c5b;
   --danger: #e06c5b;
+
+  /* alpha helpers (tokenized so a theme can re-hue selection + keyframes) */
+  --selection-bg: rgba(244, 196, 48, 0.22);
+  --pulse-mid: rgba(244, 196, 48, 0.05);
+  --pulse-strong: rgba(244, 196, 48, 0.45);
+  --pulse-fade: rgba(244, 196, 48, 0);
 
   /* radii */
   --radius-sm: 8px;
@@ -65,6 +72,125 @@
   --font-display: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ============================================================
+   THEME: SKY — the previous SQLens palette, restored from git
+   history (commit 902874c): dark navy surfaces, sky-blue accent,
+   blue SQL keywords, amber string literals, slate comments.
+   Activated via <html data-theme="sky"> (ThemeToggle / ThemeProvider).
+   Every raw token AND its @theme mirror is overridden so utilities
+   (bg-*, text-*, border-*), the base layer, keyframes and inline
+   var() usages all re-theme with zero component changes.
+   ============================================================ */
+:root[data-theme='sky'] {
+  /* surfaces */
+  --ink: #0a0d12;
+  --surface: #121722;
+  --surface-2: #1a2130;
+  --surface-3: #212a3d;
+  --border: #262f42;
+  --border-soft: #1d2434;
+
+  /* text */
+  --text: #eaedf4;
+  --text-dim: #8d96ac;
+  --text-faint: #545c71;
+
+  /* the single accent — sky blue ("you are here") */
+  --func: #38bdf8;
+  --accent: #38bdf8;
+  --accent-dim: rgba(56, 189, 248, 0.13);
+  --accent-line: rgba(56, 189, 248, 0.33);
+  --done: #c2d3f0;
+
+  /* legacy semantic names */
+  --primary: #38bdf8;
+  --primary-container: #38bdf8;
+  --on-primary: #0a0d12;
+  --on-primary-container: #0a0d12;
+  --string: #f59e0b;   /* string literal amber — classic editor look */
+  --keyword: #60a5fa;  /* clean bright blue keywords */
+  --comment: #94a3b8;  /* cool slate */
+
+  /* editor (SQLEditor / challenge editor / Playground) */
+  --editor-bg: #0d1322;
+  --editor-text: #e6ecf5;
+  --editor-comment: #94a3b8;
+  --editor-caret: #38bdf8;
+  --editor-selection: rgba(56, 189, 248, 0.15);
+  --editor-active-line: rgba(255, 255, 255, 0.04);
+
+  /* SQL syntax — the original colored editor theme */
+  --code-kw: #60a5fa;
+  --code-ident: #aeb9d6;
+  --code-punc: #5b6b8c;
+  --code-comment: #94a3b8;
+  --code-str: #f59e0b;
+
+  /* functional error */
+  --error: #ff6b6b;
+  --danger: #ff6b6b;
+
+  /* alpha helpers */
+  --selection-bg: rgba(56, 189, 248, 0.25);
+  --pulse-mid: rgba(56, 189, 248, 0.05);
+  --pulse-strong: rgba(56, 189, 248, 0.45);
+  --pulse-fade: rgba(56, 189, 248, 0);
+
+  /* ---- @theme mirrors (Tailwind utilities read these) ---- */
+  --color-ink: #0a0d12;
+  --color-surface-base: #0a0d12;
+  --color-surface: #121722;
+  --color-surface-container: #121722;
+  --color-surface-container-high: #1a2130;
+  --color-surface-container-highest: #212a3d;
+  --color-surface-variant: #1a2130;
+  --color-surface-dim: #0a0d12;
+  --color-surface-2: #1a2130;
+  --color-surface-3: #212a3d;
+
+  --color-text: #eaedf4;
+  --color-on-surface: #eaedf4;
+  --color-on-surface-variant: #8d96ac;
+  --color-text-muted: #8d96ac;
+  --color-text-dim: #8d96ac;
+  --color-text-faint: #545c71;
+
+  --color-func: #38bdf8;
+  --color-accent: #38bdf8;
+  --color-primary: #38bdf8;
+  --color-primary-container: #38bdf8;
+  --color-on-primary: #0a0d12;
+  --color-on-primary-container: #0a0d12;
+  --color-string: #f59e0b;
+  --color-keyword: #60a5fa;
+  --color-comment: #94a3b8;
+  --color-done: #c2d3f0;
+
+  --color-border: #262f42;
+  --color-border-soft: #1d2434;
+  --color-border-subtle: #1d2434;
+  --color-outline-variant: #262f42;
+  --color-outline: #545c71;
+
+  --color-editor-bg: #0d1322;
+  --color-editor-gutter: #0a101c;
+  --color-editor-text: #e6ecf5;
+  --color-editor-comment: #94a3b8;
+  --color-editor-active-line: rgba(255, 255, 255, 0.04);
+  --color-editor-caret: #38bdf8;
+  --color-editor-selection: rgba(56, 189, 248, 0.15);
+
+  --color-code-kw: #60a5fa;
+  --color-code-ident: #aeb9d6;
+  --color-code-punc: #5b6b8c;
+  --color-code-comment: #94a3b8;
+  --color-code-str: #f59e0b;
+
+  --color-error: #ff6b6b;
+  --color-error-container: #93000a;
+  --color-danger: #ff6b6b;
 }
 
 @theme {
@@ -121,6 +247,7 @@
   --color-code-ident: #a9a9a3;
   --color-code-punc: #6b6b65;
   --color-code-comment: #55554f;
+  --color-code-str: #a9a9a3;
   /* error */
   --color-error: #e06c5b;
   --color-error-container: #43150d;
@@ -165,7 +292,7 @@
   }
 
   ::selection {
-    background: rgba(244, 196, 48, 0.22);
+    background: var(--selection-bg);
     color: var(--text);
   }
 
@@ -263,7 +390,7 @@
 
 @keyframes pulse-ring {
   0%, 100% { box-shadow: 0 0 0 4px var(--accent-dim); }
-  50% { box-shadow: 0 0 0 8px rgba(244, 196, 48, 0.05); }
+  50% { box-shadow: 0 0 0 8px var(--pulse-mid); }
 }
 
 /* Concept Node Title 2-Line Truncation */
@@ -298,8 +425,8 @@
 
 /* Stage-card arrival pulse (roadmap highlight deep-link) */
 @keyframes stage-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(244, 196, 48, 0.45); }
-  70% { box-shadow: 0 0 0 10px rgba(244, 196, 48, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(244, 196, 48, 0); }
+  0% { box-shadow: 0 0 0 0 var(--pulse-strong); }
+  70% { box-shadow: 0 0 0 10px var(--pulse-fade); }
+  100% { box-shadow: 0 0 0 0 var(--pulse-fade); }
 }
 .stage-pulse { animation: stage-pulse 0.9s ease-out 2; border-radius: 9999px; }

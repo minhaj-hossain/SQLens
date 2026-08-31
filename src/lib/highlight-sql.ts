@@ -57,10 +57,11 @@ export function highlightSql(sql: string): string {
     return stash(`<span class="text-code-comment italic">${match}</span>`);
   });
 
-  // 2. Stash string literals with placeholders
+  // 2. Stash string literals with placeholders (amber `--code-str` on the sky
+  //    theme; same neutral gray as identifiers on the default graphite theme).
   escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
     if (PLACEHOLDER_RE.test(match)) return match;
-    return stash(`<span class="text-code-ident font-medium">${match}</span>`);
+    return stash(`<span class="text-code-str font-medium">${match}</span>`);
   });
 
   // 3. SQL Keywords — single-pass combined regex; sorted longest first so

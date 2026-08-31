@@ -21,6 +21,35 @@ Rules of thumb:
 - Accent intensity is expressed with the `/10`–`/20` opacity suffixes
   (`bg-func/10`, `border-l-func`) rather than new colors.
 
+## 1b. Theme System
+
+Two palettes ship, defined entirely in `src/app/globals.css` as CSS custom
+properties (raw `--*` tokens + Tailwind v4 `@theme` mirrors):
+
+| Theme | `data-theme` | Look |
+|---|---|---|
+| **Graphite** (default) | absent / `graphite` | Monochrome grays + gold `#f4c430` accent |
+| **Sky** | `sky` | The original SQLens palette (restored from git `902874c`): navy surfaces `#121722`–`#212A3D`, sky-blue `#38BDF8` accent, **blue SQL keywords `#60A5FA`, amber strings `#F59E0B`, slate comments `#94A3B8`**, navy editor `#0D1322` |
+
+Mechanics:
+- `:root` holds graphite values; `:root[data-theme='sky']` overrides **every**
+  raw token AND its `--color-*` mirror. Because Tailwind v4 utilities resolve
+  to `var(--color-*)`, the whole UI re-themes with zero component changes.
+- `src/lib/theme-system.ts` — registry (`THEMES`, `DEFAULT_THEME`,
+  `STORAGE_KEY='sqlens:theme'`, `THEME_COLORS`).
+- `src/components/providers/ThemeProvider.tsx` — applies `data-theme` to
+  `<html>`, persists to localStorage, syncs `meta[name=theme-color]`. A FOUC
+  script in the root layout applies the saved theme pre-hydration.
+- `src/components/ui/ThemeToggle.tsx` — one-click toggle (each click cycles
+  graphite ↔ sky; active palette shown as an accent dot on the button; also
+  floated on the auth pages, which have no header chrome).
+
+Rules for new code:
+- Never hardcode hex colors or gold/sky rgba in components or CSS — add a
+  token to `:root`, mirror it in `@theme`, and define it in BOTH theme scopes.
+- Selection/pulse alpha colors are tokenized (`--selection-bg`, `--pulse-*`)
+  so animations re-hue per theme; do not reintroduce raw `rgba(244,…)`.
+
 ## 2. Surface & Border Tokens
 
 | Token | Role |
