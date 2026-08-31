@@ -52,7 +52,7 @@ export const Day_25_MODULE: ModuleData = {
             stepNumber: 1,
             stepTitle: 'Step 1: Appending New Record (INSERT INTO)',
             sqlSnippet: "INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Ultra Wireless Mouse', 1, 1, 49.99, 100, 20);",
-            explanation: 'Creates a new row in the products table with the specified attributes.',
+            explanation: 'The engine builds one new row and fills in the six values you listed — product_id stays empty because AUTO_INCREMENT assigns it the moment the row lands.',
             tableData: {
               tableName: 'Newly Inserted Product Row',
               columns: ['name', 'supplier_id', 'category_id', 'price', 'quantity_in_stock'],
@@ -70,9 +70,9 @@ export const Day_25_MODULE: ModuleData = {
         ],
         keyTakeaway: 'INSERT INTO adds new rows. Match the order of values to the specified column list.',
         exampleQuery: 'INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES (\'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20);',
-        exampleQueryExplanation: 'Appends a new mouse record to the catalog.',
+        exampleQueryExplanation: 'Proof the INSERT worked — a fresh catalog entry sitting right there in the data.',
         liveDemoSql: 'SELECT * FROM products ORDER BY product_id DESC LIMIT 1;',
-        liveDemoNotes: 'Displays the most recently added product.',
+        liveDemoNotes: 'Sort by newest first and grab the top row — instant proof your INSERT actually landed.',
         mcqs: [
           {
             question: 'Spiral check from Day 9: right after an INSERT, what is the fastest way to prove the row actually landed?',
@@ -231,7 +231,7 @@ export const Day_25_MODULE: ModuleData = {
           primaryTable: 'products',
           initialSql: '-- Targeted price update\n',
           solutionSql: 'UPDATE products SET price = price * 1.10 WHERE product_id = 1;',
-          solutionExplanation: 'Safely applies a 10% price increase specifically to product 1.',
+          solutionExplanation: 'UPDATE ... SET ... WHERE pinpoints product 1 only — the WHERE clause is what keeps the other 26 products untouched.',
           hints: [{ level: 1, text: 'Use `UPDATE products SET price = price * 1.10 WHERE product_id = 1;`' }],
           validation: {
             targetTable: 'products',

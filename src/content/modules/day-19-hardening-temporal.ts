@@ -188,7 +188,7 @@ export const Day_19_MODULE: ModuleData = {
         secondaryTables: ['orders', 'order_items'],
         initialSql: '-- Challenge: Multi-table customer spend with date filter\n',
         solutionSql: 'SELECT c.name, SUM(oi.quantity * oi.unit_price) AS recent_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;',
-        solutionExplanation: 'Multi-table customer spend report with date interval filter.',
+        solutionExplanation: 'Chains customers → orders → order_items and keeps only purchases on or after the cutoff — a true recency-weighted spend report.',
         hints: [{ level: 1, text: 'Use `WHERE o.order_date >= \'2026-06-25\' GROUP BY c.customer_id, c.name ORDER BY recent_spend DESC;`' }],
         validation: {
           requireExactResult: true,

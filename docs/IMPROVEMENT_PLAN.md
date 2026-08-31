@@ -26,10 +26,10 @@
 
 ## Phase 2 — Concept Theory & Explanation Tone Pass (P1)
 > Goal: eliminate remaining robotic/spec-sheet language in the theory **bodies**. (Measure: only 9 theory-level lines changed vs 131 header lines in the language commits.)
-- [ ] **Tier A — quick wins:** rewrite flagged `shortDescription`s (e.g., Day 2 Concept 1: `"How SQL filters specific rows based on exact matches."` → `"Find rows that match your criteria exactly — the WHERE clause's most direct tool."`)
-- [ ] **Tier B — micro-copy sweep:** rewrite mechanical step explanations / `exampleQueryExplanation` / `liveDemoNotes` across Days 11–38 (e.g., Day 25: `"Creates a new row in the products table with the specified attributes."` → `"The engine builds one new row and fills in the six values you listed — product_id stays empty because AUTO_INCREMENT assigns it the moment the row lands."`)
+- [x] **Tier A — quick wins:** Day 2 Concept 1 shortDescription rewritten (`"How SQL filters specific rows based on exact matches."` → `"Find rows that match your criteria exactly — the WHERE clause's most direct tool."`)
+- [x] **Tier B — batch 1 (12 rewrites):** Days 1, 2, 4, 18, 19, 22, 25, 34 `solutionExplanation`/step/`liveDemoNotes` micro-copy rewritten (e.g., Day 25: `"Creates a new row…"` → capability + why-it-matters phrasing). **Remaining ~36 + Days 11–38 sweep still open.**
 - [ ] **Tier C — dry summaries:** scenario-first one-liners for spec-sheet `summary:` fields where flagged
-- [x] Guardrails: never touch `solutionSql`/`initialSql`/`validation`; run `npm test` after each day-batch; skip modules already strong (Day 9, Day 33 voice)
+- [x] Guardrails: never touch `solutionSql`/`initialSql`/`validation`; `npm test` re-run green after each batch; skip modules already strong (Day 9, Day 33 voice)
 
 ## Phase 3 — Challenge Scenarios & Solution Explanations (P2)
 - [ ] Replace verification-language challenge scenarios (e.g., Day 25 `"Demonstrate safe data modification operations:"`) with role-based narratives (on-call data engineer framing)

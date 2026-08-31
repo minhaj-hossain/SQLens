@@ -744,7 +744,7 @@ export const Day_01_MODULE: ModuleData = {
         primaryTable: 'products',
         initialSql: '',
         solutionSql: 'SELECT name, price, quantity_in_stock FROM products;',
-        solutionExplanation: 'Retrieves the three specified columns from products table.',
+        solutionExplanation: 'SELECT lists exactly these three columns; every other column in products stays out of the picture — pin-pointing what the catalog page actually needs.',
         hints: [
           { level: 1, text: 'Use SELECT name, price, quantity_in_stock FROM products;' },
         ],
@@ -768,7 +768,7 @@ export const Day_01_MODULE: ModuleData = {
         primaryTable: 'customers',
         initialSql: '',
         solutionSql: 'SELECT name, email FROM customers;',
-        solutionExplanation: 'Retrieves customer names and email addresses.',
+        solutionExplanation: 'A focused two-column snapshot — just the fields the outreach list needs, nothing else.',
         hints: [
           { level: 1, text: 'Use SELECT name, email FROM customers;' },
         ],

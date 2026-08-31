@@ -184,7 +184,7 @@ export const Day_18_MODULE: ModuleData = {
         secondaryTables: ['order_items'],
         initialSql: '-- Report 1: Products with total units sold\n',
         solutionSql: 'SELECT p.name, SUM(oi.quantity) AS total_units_sold FROM products p JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;',
-        solutionExplanation: 'Calculates total units sold for each product.',
+        solutionExplanation: 'SUM(oi.quantity) per product measures raw units demanded — the ranking the merchandising team reviews each week.',
         hints: [{ level: 1, text: 'Use `GROUP BY p.product_id, p.name ORDER BY total_units_sold DESC;`' }],
         validation: {
           requireExactResult: true,

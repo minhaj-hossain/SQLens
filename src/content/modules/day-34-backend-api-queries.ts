@@ -126,7 +126,7 @@ export const Day_34_MODULE: ModuleData = {
           secondaryTables: ['order_items'],
           initialSql: '-- Executive dashboard summary\n',
           solutionSql: 'SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;',
-          solutionExplanation: 'Calculates high-level executive KPI metrics in a single pass.',
+          solutionExplanation: 'Two aggregates in a single pass — total orders and total revenue — so the dashboard gets its headline numbers without extra round-trips.',
           hints: [{ level: 1, text: 'Use `SELECT COUNT(DISTINCT o.order_id) AS total_orders, SUM(oi.quantity * oi.unit_price) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id;`' }],
           validation: {
             requireExactResult: true,

@@ -127,7 +127,7 @@ export const Day_04_MODULE: ModuleData = {
           primaryTable: 'products',
           initialSql: '-- Write your SQL query here\n',
           solutionSql: 'SELECT name, price FROM products ORDER BY price DESC;',
-          solutionExplanation: '`ORDER BY price DESC` sorts output from highest price to lowest.',
+          solutionExplanation: 'ORDER BY price DESC sorts from highest to lowest — the ranking your storefront\'s "price high → low" filter relies on.',
           hints: [{ level: 1, text: 'Use `ORDER BY price DESC;`' }],
           validation: {
             requireExactResult: true,

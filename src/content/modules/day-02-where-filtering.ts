@@ -26,7 +26,7 @@ export const Day_02_MODULE: ModuleData = {
       id: 'where-exact-equality',
       order: 1,
       title: '1. Filtering Rows with WHERE and Exact Equality (=)',
-      shortDescription: 'How SQL filters specific rows based on exact matches.',
+      shortDescription: 'Find rows that match your criteria exactly — the WHERE clause\'s most direct tool.',
       theory: {
         summary: 'WHERE is SQL\'s row filter: it tests a condition against every row and keeps only the rows where the condition is TRUE. We begin with exact matching using the = operator, on our familiar students table:',
         introTable: {
