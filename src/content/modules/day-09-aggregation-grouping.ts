@@ -4,17 +4,18 @@ export const Day_09_MODULE: ModuleData = {
   id: 'day-09',
   slug: 'aggregation-grouping',
   day: 9,
-  title: 'Day 9 — Aggregation & Grouping',
+  title: 'Day 9 — Summarize Data with Aggregation & Grouping',
   shortTitle: 'Aggregation & Grouping',
   type: 'module',
   milestoneId: 'milestone-2',
-  description: 'Learn aggregate functions (COUNT, SUM, AVG, MIN, MAX), group calculations using GROUP BY, filter aggregate results with HAVING, and understand how GROUP BY handles NULL values.',
+  description: 'Turn raw data into business metrics: count rows, sum totals, find averages, minimums, and maximums. Then slice by category using GROUP BY — this is how dashboards work.',
   estimatedMinutes: 75,
   completionLearnings: [
-    'Calculate counts, totals, averages, minimums, and maximums across datasets',
-    'Group rows by common categories using GROUP BY',
-    'Filter grouped aggregate results using HAVING (and know when to use WHERE vs HAVING)',
-    'Understand how GROUP BY handles NULL category values',
+    'Count rows and non-NULL values using COUNT(*) and COUNT(column)',
+    'Calculate totals (SUM), averages (AVG), minimums, and maximums across datasets',
+    'Group rows by category and calculate metrics per group (e.g., revenue per product)',
+    'Filter groups after aggregation using HAVING (different from WHERE)',
+    'Understand how NULL values interact with GROUP BY and aggregate functions',
   ],
   concepts: [
     // =========================================================================
@@ -23,8 +24,8 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'aggregate-count',
       order: 1,
-      title: '1. Counting Rows with COUNT',
-      shortDescription: 'Count total rows and non-NULL column values.',
+      title: '1. Count Rows & Values with COUNT',
+      shortDescription: 'COUNT(*) counts all rows; COUNT(column) counts only non-NULL values.',
       theory: {
         summary: '`COUNT(*)` counts every row in a table. `COUNT(column)` counts only rows where that specific column is NOT NULL.',
         introTable: {

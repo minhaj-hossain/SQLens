@@ -11,24 +11,24 @@ export const Day_12_MODULE: ModuleData = {
   id: 'date-functions',
   slug: 'date-functions',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 12)
-  title: 'Day 12 — Date Functions: Thinking in Time',
+  title: 'Day 12 — Work with Dates Like a Pro',
   shortTitle: 'Date Functions',
   type: 'module',
   milestoneId: 'milestone-2',
-  description: 'Treat dates as time, not text: extract components, group by them, compute relative windows like "the last 30 days", and measure gaps with DATEDIFF.',
+  description: 'Stop treating dates as text. Extract components, calculate time windows (last 30 days), group by time periods, and measure gaps between dates — fundamental for time-series analysis.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Extract date components with YEAR(), MONTH(), DAY() and EXTRACT()',
-    'Group and aggregate by date components',
-    'Compute relative windows with CURDATE() - INTERVAL n DAY',
-    'Measure gaps between dates with DATEDIFF()',
+    'Extract year, month, day from dates using YEAR(), MONTH(), DAY()',
+    'Group and aggregate queries by time components (e.g., sales per month)',
+    'Calculate relative time windows like "last 30 days" with CURDATE() - INTERVAL',
+    'Measure days between dates using DATEDIFF()',
   ],
   concepts: [
     {
       id: 'date-components',
       order: 1,
-      title: '1. Date Components: YEAR, MONTH, DAY',
-      shortDescription: 'A date is not a string — pull its parts out.',
+      title: '1. Extract Date Components: YEAR, MONTH, DAY',
+      shortDescription: 'Pull out year, month, day from dates to group or filter by time periods.',
       theory: {
         summary: "You saw on Day 11 that SUBSTRING(order_date, 1, 7) can slice '2026-08' out of a date — but that treats a date like text. Dates are their own data type with a real internal value, and SQL gives you purpose-built extractors: YEAR(), MONTH(), DAY(). They are clearer, safer, and signal intent.",
         introTable: {

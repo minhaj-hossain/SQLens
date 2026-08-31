@@ -8,24 +8,24 @@ export const Day_11_MODULE: ModuleData = {
   id: 'string-functions',
   slug: 'string-functions',
   day: 0, // legacy positional field — ordering uses curriculumOrder (Day 11)
-  title: 'Day 11 — String Functions: Shaping Text',
+  title: 'Day 11 — Transform Text with String Functions',
   shortTitle: 'String Functions',
   type: 'module',
   milestoneId: 'milestone-2',
-  description: 'Transform text at query time: normalize case, clean whitespace, assemble display strings, extract substrings, and measure text length — without ever modifying the stored data.',
+  description: 'Transform text dynamically inside queries: normalize case (uppercase shipping labels, lowercase emails), clean whitespace, combine columns for display, extract substrings, and measure text length.',
   estimatedMinutes: 60,
   completionLearnings: [
-    'Normalize case with UPPER() and LOWER(), in SELECT and in WHERE',
-    'Clean whitespace with TRIM()',
-    'Assemble display strings from columns and literals with CONCAT()',
-    'Extract text portions with SUBSTRING() and measure them with LENGTH()',
+    'Normalize text case with UPPER() and LOWER() without changing stored data',
+    'Clean whitespace with TRIM() for consistent data quality checks',
+    'Combine columns with CONCAT() to build display strings (e.g., "First Last")',
+    'Extract substrings with SUBSTRING() and measure text length with LENGTH()',
   ],
   concepts: [
     {
       id: 'upper-lower',
       order: 1,
-      title: '1. UPPER / LOWER: Controlling Case',
-      shortDescription: 'Normalize text case at query time.',
+      title: '1. Normalize Case with UPPER & LOWER',
+      shortDescription: 'Transform text case dynamically without changing stored data.',
       theory: {
         summary: 'The email client needs every name in CAPITALS for a shipping manifest; the analytics sheet needs emails lowercased. The database stores names as typed ("Rafiul Islam") — rewriting 15 rows for one report would be madness. Case is a display concern, and display belongs in the query.',
         introTable: {
