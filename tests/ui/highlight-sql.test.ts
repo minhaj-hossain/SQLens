@@ -34,6 +34,14 @@ describe('highlightSql', () => {
     expect(out).toContain('<span class="text-code-punc">;</span>');
   });
 
+  it('wraps numbers in dedicated text-code-num spans (amber, semibold on sky theme)', () => {
+    const out = highlightSql('SELECT * FROM students WHERE age > 21 LIMIT 10;');
+    expect(out).toContain('<span class="text-code-num font-semibold">21</span>');
+    expect(out).toContain('<span class="text-code-num font-semibold">10</span>');
+    const outMoney = highlightSql('SELECT price FROM products WHERE price > 100.50;');
+    expect(outMoney).toContain('<span class="text-code-num font-semibold">100.50</span>');
+  });
+
   it('matches multi-word keywords before sub-words and lower-cased input', () => {
     const out = highlightSql('select id from students order by age desc;');
     // P9.2: case is preserved as typed — no uppercase forcing

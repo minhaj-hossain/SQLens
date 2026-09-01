@@ -50,8 +50,9 @@
      Keywords cap at #f2f2f0 (same as headings) — pure white is banned app-wide. */
   --code-kw: #f2f2f0;    /* SQL keywords - heading white, weight 700 */
   --code-ident: #a9a9a3; /* identifiers / literals - mid gray */
+  --code-num: #a9a9a3;   /* numbers - same gray as ident (amber on sky theme) */
   --code-punc: #6b6b65;  /* ; , ( ) etc - dim gray */
-  --code-str: #a9a9a3;   /* string literals - same gray as ident (amber on sky theme) */
+  --code-str: #a9a9a3;   /* string literals - same gray as ident (emerald on sky theme) */
 
   /* functional error — the only non-gray, non-gold color */
   --error: #e06c5b;
@@ -84,7 +85,8 @@
 /* ============================================================
    THEME: SKY — the previous SQLens palette, restored from git
    history (commit 902874c): dark navy surfaces, sky-blue accent,
-   blue SQL keywords, amber string literals, slate comments.
+   cyan SQL keywords, emerald string literals, amber numbers,
+   zinc-gray comments, near-white identifiers.
    Activated via <html data-theme="sky"> (ThemeToggle / ThemeProvider).
    Every raw token AND its @theme mirror is overridden so utilities
    (bg-*, text-*, border-*), the base layer, keyframes and inline
@@ -122,18 +124,21 @@
 
   /* editor (SQLEditor / challenge editor / Playground) */
   --editor-bg: #0d1322;
-  --editor-text: #e6ecf5;
-  --editor-comment: #94a3b8;
+  --editor-text: #f4f4f5;
+  --editor-comment: #a1a1aa;
   --editor-caret: #38bdf8;
   --editor-selection: rgba(56, 189, 248, 0.15);
   --editor-active-line: rgba(255, 255, 255, 0.04);
 
-  /* SQL syntax — the original colored editor theme */
-  --code-kw: #60a5fa;
-  --code-ident: #aeb9d6;
-  --code-punc: #5b6b8c;
-  --code-comment: #94a3b8;
-  --code-str: #f59e0b;
+  /* SQL syntax — the original colored editor theme restored from the
+     pre-graphite SQLEditor tokenizer (commit 902874c): cyan keywords,
+     emerald strings, amber numbers, zinc-gray comments, near-white rest. */
+  --code-kw: #22d3ee;    /* SQL keywords - cyan  */
+  --code-ident: #f4f4f5; /* identifiers / literals - near-white */
+  --code-num: #fcd34d;   /* numbers - amber */
+  --code-punc: #f4f4f5;  /* ; , ( ) etc - near-white */
+  --code-comment: #a1a1aa; /* comments - zinc gray */
+  --code-str: #34d399;   /* string literals - emerald */
 
   /* functional error */
   --error: #ff6b6b;
@@ -191,17 +196,18 @@
 
   --color-editor-bg: #0d1322;
   --color-editor-gutter: #0a101c;
-  --color-editor-text: #e6ecf5;
-  --color-editor-comment: #94a3b8;
+  --color-editor-text: #f4f4f5;
+  --color-editor-comment: #a1a1aa;
   --color-editor-active-line: rgba(255, 255, 255, 0.04);
   --color-editor-caret: #38bdf8;
   --color-editor-selection: rgba(56, 189, 248, 0.15);
 
-  --color-code-kw: #60a5fa;
-  --color-code-ident: #aeb9d6;
-  --color-code-punc: #5b6b8c;
-  --color-code-comment: #94a3b8;
-  --color-code-str: #f59e0b;
+  --color-code-kw: #22d3ee;
+  --color-code-ident: #f4f4f5;
+  --color-code-num: #fcd34d;
+  --color-code-punc: #f4f4f5;
+  --color-code-comment: #a1a1aa;
+  --color-code-str: #34d399;
 
   --color-error: #ff6b6b;
   --color-error-container: #93000a;
@@ -260,6 +266,7 @@
   /* grayscale SQL syntax tokens */
   --color-code-kw: #f2f2f0;
   --color-code-ident: #a9a9a3;
+  --color-code-num: #a9a9a3;
   --color-code-punc: #6b6b65;
   --color-code-comment: #55554f;
   --color-code-str: #a9a9a3;

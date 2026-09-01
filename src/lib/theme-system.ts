@@ -7,8 +7,9 @@
  *   graphite (default) — monochrome grays + gold #f4c430 accent
  *   sky                — the ORIGINAL SQLens palette restored from git
  *                        history (commit 902874c): dark navy surfaces,
- *                        sky-blue #38BDF8 accent, blue SQL keywords,
- *                        amber string literals, slate comments.
+ *                        sky-blue #38BDF8 accent, cyan SQL keywords,
+ *                        emerald string literals, amber numbers,
+ *                        zinc-gray comments, near-white identifiers.
  *
  * A theme is activated by setting `data-theme="<id>"` on <html>. `:root`
  * holds the graphite values, `:root[data-theme='sky']` overrides every

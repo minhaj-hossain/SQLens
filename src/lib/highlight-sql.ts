@@ -4,8 +4,10 @@
  *
  *   keywords    -> #f2f2f0 (heading white, bold)  .text-code-kw  — pure white banned
  *   identifiers -> #a9a9a3 (mid gray)      .text-code-ident
+ *   numbers     -> #a9a9a3 (mid gray)      .text-code-num   (amber on sky theme)
  *   punctuation -> #6b6b65 (dim gray)      .text-code-punc
  *   comments    -> #55554f (dim, italic)   .text-code-comment
+ *   strings     -> #a9a9a3 (mid gray)      .text-code-str   (emerald on sky theme)
  *
  * NOTE ON THE PLACEHOLDER LIFECYCLE (this exact setup once leaked raw
  * `___TOKEN_0___` text into the UI): stashed tokens are replaced with
@@ -57,8 +59,8 @@ export function highlightSql(sql: string): string {
     return stash(`<span class="text-code-comment italic">${match}</span>`);
   });
 
-  // 2. Stash string literals with placeholders (amber `--code-str` on the sky
-  //    theme; same neutral gray as identifiers on the default graphite theme).
+  // 2. Stash string literals with placeholders (emerald `--code-str` on the
+  //    sky theme; same neutral gray as identifiers on the default graphite theme).
   escaped = escaped.replace(/('(?:[^'\\]|\\.)*')/g, (match) => {
     if (PLACEHOLDER_RE.test(match)) return match;
     return stash(`<span class="text-code-str font-medium">${match}</span>`);
@@ -73,10 +75,11 @@ export function highlightSql(sql: string): string {
     stash(`<span class="text-code-kw font-bold">${match}</span>`),
   );
 
-  // 4. Numbers — stash to avoid re-touching
+  // 4. Numbers — stash to avoid re-touching (amber `--code-num` on the sky
+  //    theme; same neutral gray as identifiers on the default graphite theme).
   escaped = escaped.replace(/\b(\d+(?:\.\d+)?)\b/g, (match) => {
     if (PLACEHOLDER_RE.test(match)) return match;
-    return stash(`<span class="text-code-ident">${match}</span>`);
+    return stash(`<span class="text-code-num font-semibold">${match}</span>`);
   });
 
   // 5. Remaining words -> identifiers (mid gray); punctuation -> dim gray.
