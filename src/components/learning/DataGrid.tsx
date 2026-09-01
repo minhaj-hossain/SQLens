@@ -140,7 +140,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
           <thead className="sticky top-0 z-10">
             <tr>
               {rowNumbers && (
-                <th className="px-3 py-2 text-right text-[11px] font-semibold text-text-faint bg-surface-3 border-b border-border select-none whitespace-nowrap">
+                <th className="px-3 py-2 text-right text-[11px] font-semibold bg-(--table-head-bg) text-(--table-head-text) border-b border-border select-none whitespace-nowrap">
                   #
                 </th>
               )}
@@ -154,8 +154,8 @@ export const DataGrid: React.FC<DataGridProps> = ({
                     title={
                       clickable ? 'Click to copy / insert column name' : undefined
                     }
-                    className={`px-3.5 py-2 text-left text-[11px] font-semibold select-none whitespace-nowrap bg-surface-3 border-b border-border ${
-                      isHigh ? 'text-text border-b-2 border-b-func' : 'text-text'
+                    className={`px-3.5 py-2 text-left text-[11px] font-semibold select-none whitespace-nowrap bg-(--table-head-bg) border-b border-border ${
+                      isHigh ? 'text-text border-b-2 border-b-func' : 'text-(--table-head-text)'
                     } ${clickable ? 'cursor-pointer group hover:bg-surface-2' : ''}`}
                   >
                     <div className="flex items-center gap-1.5">
@@ -175,7 +175,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
               return (
                 <tr
                   key={rIdx}
-                  className="odd:bg-surface-2/40 hover:bg-surface-2/70 transition-colors border-b border-border-soft last:border-b-0"
+                  className="odd:bg-(--table-zebra) hover:bg-(--table-hover) transition-colors border-b border-(--table-row-border) last:border-b-0"
                 >
                   {rowNumbers && (
                     <td className="px-3 py-2 text-right text-[11px] text-text-faint tabular-nums select-none whitespace-nowrap">

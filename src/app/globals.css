@@ -63,6 +63,13 @@
   --pulse-strong: rgba(244, 196, 48, 0.45);
   --pulse-fade: rgba(244, 196, 48, 0);
 
+  /* data-table recipe (DataGrid) — graphite keeps the current look */
+  --table-head-bg: #212121;
+  --table-head-text: #f2f2f0;
+  --table-row-border: #1c1c1c;
+  --table-zebra: rgba(26, 26, 26, 0.4);
+  --table-hover: rgba(26, 26, 26, 0.7);
+
   /* radii */
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -137,6 +144,14 @@
   --pulse-mid: rgba(56, 189, 248, 0.05);
   --pulse-strong: rgba(56, 189, 248, 0.45);
   --pulse-fade: rgba(56, 189, 248, 0);
+
+  /* data-table recipe — faithful to the ORIGINAL sky-era tables:
+     navy header band, accent column titles, hairline row dividers, no zebra */
+  --table-head-bg: #1a2130;
+  --table-head-text: #38bdf8;
+  --table-row-border: rgba(38, 47, 66, 0.4);
+  --table-zebra: transparent;
+  --table-hover: rgba(56, 189, 248, 0.07);
 
   /* ---- @theme mirrors (Tailwind utilities read these) ---- */
   --color-ink: #0a0d12;

@@ -73,9 +73,11 @@ Visual contract (implemented once, in `DataGrid`):
 
 ```
 container:   border border-border rounded-lg overflow-hidden
-header row:  sticky bg-surface-3, mono 11px, text-left
+header row:  sticky bg-(--table-head-bg) + text-(--table-head-text), mono 11px, text-left
 cells:       px-3 py-2, mono 13px
-zebra:       odd rows bg-surface-2/40, hover bg-surface-2/70
+zebra:       odd rows bg-(--table-zebra), hover bg-(--table-hover), rules
+             border-(--table-row-border) — per-theme tokens (graphite bands
+             rows; sky = flat navy rows, accent column titles, hairline rules)
 highlight:   header border-b-2 border-b-func + cell bg-func/10
 NULL:        muted mono chip (bg-surface-2 border-border, uppercase italic)
 ```
