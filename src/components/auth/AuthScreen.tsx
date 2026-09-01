@@ -24,12 +24,21 @@ export default function AuthScreen({ mode }: AuthScreenProps) {
 
   const handleBack = useCallback(() => router.push('/'), [router]);
 
+  // Sign-up now lands on the themed verification hub (check inbox / resend);
+  // sign-in goes straight into the app.
+  const handleSuccess = useCallback(
+    (origin: 'signin' | 'signup') => {
+      router.push(origin === 'signup' ? '/verify-email' : '/');
+    },
+    [router],
+  );
+
   return (
     <AuthView
       mode={mode}
       onSetMode={handleSetMode}
       onBack={handleBack}
-      onSuccess={handleBack}
+      onSuccess={handleSuccess}
     />
   );
 }

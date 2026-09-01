@@ -1,13 +1,14 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { AlertCircle, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check, Eye, EyeOff, Mail } from 'lucide-react';
 import { authClient } from '../../lib/auth-client';
 
 interface AuthViewProps {
   mode: 'signin' | 'signup' | null;
   onSetMode: (mode: 'signin' | 'signup') => void;
   onBack: () => void;
-  onSuccess: () => void;
+  /** Called after a successful sign-in/sign-up; origin tells which form fired. */
+  onSuccess: (origin: 'signin' | 'signup') => void;
 }
 
 /**
@@ -166,24 +167,32 @@ function ErrorMessage({ message }: { message: string | null }) {
 /* Sign In                                                                     */
 /* ========================================================================== */
 
-function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: () => void }) {
+function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: (origin: 'signin' | 'signup') => void }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
     setError(null);
+    setNeedsVerification(false);
     try {
       const res = await authClient.signIn.email({ email, password, rememberMe });
       if (res.error) {
+        // Unverified email — the server refuses sign-in until the inbox link
+        // has been clicked; point the user at the verification hub.
+        if (res.error.message === 'EMAIL_NOT_VERIFIED') {
+          setNeedsVerification(true);
+          setError('Please verify your email address before signing in. We sent you a link when you signed up.');
+        }
         // Blocked accounts are rejected server-side with ACCOUNT_BLOCKED.
-        if (res.error.message === 'ACCOUNT_BLOCKED' || res.error.status === 403) {
+        else if (res.error.message === 'ACCOUNT_BLOCKED' || res.error.status === 403) {
           setError(
             'This account has been suspended by an administrator. If you believe this is a mistake, contact the site administrator.'
           );
@@ -194,7 +203,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         return;
       }
       // Success — component unmounts as the app navigates back home.
-      onSuccess();
+      onSuccess('signin');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
       setLoading(false);
@@ -264,6 +273,19 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         </button>
       </div>
 
+      {/* Unverified email → themed notice with a link to the verification hub */}
+      {needsVerification && (
+        <a
+          href={`/verify-email?email=${encodeURIComponent(email)}`}
+          className="flex items-start gap-2 font-mono text-xs text-text-dim bg-surface-2 border border-[var(--accent-line)] px-3 py-2.5 rounded-[8px] hover:bg-surface-3 transition"
+        >
+          <Mail className="w-[14px] h-[14px] shrink-0 mt-px text-func" strokeWidth={2.5} />
+          <span className="leading-snug">
+            Need the link again? <span className="text-func">Resend your verification email →</span>
+          </span>
+        </a>
+      )}
+
       <ErrorMessage message={error} />
 
       <button
@@ -303,7 +325,7 @@ function getPasswordStrength(pw: string): number {
   return score;
 }
 
-function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: () => void }) {
+function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: (origin: 'signin' | 'signup') => void }) {
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -330,8 +352,9 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         setLoading(false);
         return;
       }
-      // Success — component unmounts as the app navigates back home.
-      onSuccess();
+      // Success — component unmounts as the app navigates to the themed
+      // verification hub (check your inbox / resend).
+      onSuccess('signup');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create your account. Please try again.');
       setLoading(false);

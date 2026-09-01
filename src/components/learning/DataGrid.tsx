@@ -193,11 +193,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                         className={`px-3.5 py-2 whitespace-nowrap align-top ${cellAlign(
                           type,
                         )} ${
-                          isNull
-                            ? 'text-text-faint'
-                            : type === 'string'
-                              ? 'text-text-dim'
-                              : 'text-text'
+                          isNull ? 'text-text-faint' : 'text-text-dim'
                         } ${isHigh ? 'bg-func/10 font-medium text-text' : ''}`}
                       >
                         {renderCell ? (

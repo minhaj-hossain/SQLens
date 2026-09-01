@@ -367,9 +367,13 @@ Create a `.env` file (never commit it) based on `.env.example`:
 | `BETTER_AUTH_URL` | ✓ | Public base URL; must match your deployment (cookies + redirects depend on it) |
 | `MONGODB_URI` | ✓ | Official-driver connection string — Atlas: `mongodb+srv://…`, local: `mongodb://localhost:27017/sqlens` |
 | `MONGODB_DB_NAME` | ➖ | Optional db-name override (defaults to the URI's last path segment) |
+| `RESEND_API_KEY` | ➖ | Resend API key for verification emails. Unset → dev mode (links print to the server console) |
+| `EMAIL_FROM` | ➖ | Verified sender, e.g. `SQLens <no-reply@yourdomain.com>` (defaults to `onboarding@resend.dev`) |
+| `EMAIL_VERIFICATION_REQUIRED` | ➖ | `false` disables the must-verify-before-sign-in gate (default: required) |
 
 Without valid MongoDB settings the app still renders and guests still work — only auth/sync
-endpoints fail fast.
+endpoints fail fast. Without `RESEND_API_KEY`, sign-up still works: verification links are
+logged server-side so local flows can be tested end-to-end.
 
 ---
 
