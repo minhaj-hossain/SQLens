@@ -470,7 +470,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             }}
             placeholder={
               placeholder ??
-              `-- Type your SQL query here\nSELECT * FROM ${tableName};`
+              `Type your SQL query here\nSELECT * FROM ${tableName};`
             }
             spellCheck={false}
             autoCapitalize="none"

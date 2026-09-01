@@ -34,7 +34,7 @@ describe('highlightSql', () => {
     expect(out).toContain('<span class="text-code-punc">;</span>');
   });
 
-  it('wraps numbers in dedicated text-code-num spans (amber, semibold on sky theme)', () => {
+  it('wraps numbers in dedicated text-code-num spans (semibold)', () => {
     const out = highlightSql('SELECT * FROM students WHERE age > 21 LIMIT 10;');
     expect(out).toContain('<span class="text-code-num font-semibold">21</span>');
     expect(out).toContain('<span class="text-code-num font-semibold">10</span>');

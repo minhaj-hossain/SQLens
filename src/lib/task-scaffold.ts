@@ -1,15 +1,15 @@
 /**
  * Task editor scaffold (P9.7).
  *
- * Task `initialSql` strings lead with `--` instruction comments that, until now,
- * sat inside the editor as if the learner had typed them. The instruction text
- * belongs in the editor PLACEHOLDER (dim, disappears on first keystroke, comes
- * back when cleared); only the real code scaffolding belongs in the editor.
+ * Task `initialSql` strings lead with `--` instruction comments. Those comments
+ * are stripped out of the editor entirely — the editor starts clean with only
+ * the real code scaffolding (see buildEditorPlaceholder, which intentionally
+ * renders no `--` hint lines). Guidance lives in the task card instead.
  */
 import type { PracticeTask } from '../types/curriculum';
 
 export interface TaskScaffold {
-  /** Leading full-line `--` comments (the task guidance), for the placeholder. */
+  /** Leading full-line `--` comments stripped from the code (kept for reference). */
   placeholder: string;
   /** The actual starting code, with leading comments/blank lines stripped. */
   code: string;
@@ -32,25 +32,15 @@ export function splitTaskScaffold(initialSql: string | undefined): TaskScaffold 
 }
 
 /**
- * Dynamic editor placeholder built from the task's own metadata.
+ * Dynamic editor placeholder — intentionally empty.
  *
- * The instruction text must never sit inside the editor as typed-in comments —
- * it renders in the placeholder instead (dim, vanishes on first keystroke,
- * returns when the editor is cleared). Built live from title/description/
- * instructions so content edits in the curriculum flow through automatically.
+ * Task guidance no longer renders as `--` comment lines inside the editor;
+ * the editor starts clean. The task card (TaskInstructions) carries the
+ * instructions, and any leading `--` comments in `initialSql` are already
+ * split out by splitTaskScaffold so only real code lands in the editor.
  */
 export function buildEditorPlaceholder(
-  task: Pick<PracticeTask, 'title' | 'description' | 'instructions'>,
+  _task: Pick<PracticeTask, 'title' | 'description' | 'instructions'>,
 ): string {
-  const lines: string[] = [];
-  const title = task.title?.trim() ?? '';
-  if (title) lines.push(`-- ${title}`);
-  const description = task.description?.trim() ?? '';
-  if (description && description !== title) lines.push(`-- ${description}`);
-  for (const instruction of task.instructions ?? []) {
-    const text = instruction.trim();
-    if (text) lines.push(`-- ${text}`);
-  }
-  if (lines.length === 0) return '-- Write your SQL query here\n';
-  return lines.join('\n') + '\n';
+  return '';
 }

@@ -29,7 +29,7 @@ properties (raw `--*` tokens + Tailwind v4 `@theme` mirrors):
 | Theme | `data-theme` | Look |
 |---|---|---|
 | **Graphite** (default) | absent / `graphite` | Monochrome grays + gold `#f4c430` accent |
-| **Sky** | `sky` | The original SQLens palette (restored from git `902874c`): navy surfaces `#121722`–`#212A3D`, sky-blue `#38BDF8` accent, **cyan SQL keywords `#22D3EE`, emerald strings `#34D399`, amber numbers `#FCD34D`, zinc-gray comments `#A1A1AA`, near-white code `#F4F4F5`**, navy editor `#0D1322` |
+| **Sky** | `sky` | The original SQLens palette (restored from git `902874c`): navy surfaces `#121722`–`#212A3D`, sky-blue `#38BDF8` accent, **cyan SQL keywords `#22D3EE` only — every other code token follows the graphite grayscale (`#A9A9A3` identifiers/strings/numbers, `#6B6B65` punctuation, `#55554F` comments)**; navy editor `#0D1322` |
 
 Mechanics:
 - `:root` holds graphite values; `:root[data-theme='sky']` overrides **every**
