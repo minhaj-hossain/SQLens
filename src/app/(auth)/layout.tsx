@@ -12,10 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function AuthGroupLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
   const session = await auth.api.getSession({ headers: h });
-  // Only fully-verified users are bounced back to the app — an unverified
-  // session must still be able to reach /verify-email (check inbox / resend /
-  // post-link-click success state).
-  if (session?.user?.emailVerified) redirect('/');
+  if (session?.user) redirect('/');
 
   return (
     <div className="min-h-screen bg-ink">

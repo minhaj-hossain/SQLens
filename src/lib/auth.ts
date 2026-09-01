@@ -2,7 +2,6 @@ import { betterAuth } from 'better-auth';
 import { MongoClient } from 'mongodb';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { APIError, createAuthMiddleware } from 'better-auth/api';
-import { sendVerificationEmail } from './server/email';
 
 /**
  * Server-side Better Auth instance (never import this file from the client —
@@ -88,32 +87,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
-    // Users must verify their email before they can sign in. Set
-    // EMAIL_VERIFICATION_REQUIRED="false" to relax this (e.g. while migrating
-    // existing accounts that were created before verification existed).
-    requireEmailVerification: process.env.EMAIL_VERIFICATION_REQUIRED !== 'false',
-  },
-  emailVerification: {
-    // Send the verification link automatically at sign-up.
-    sendOnSignUp: true,
-    // Visiting the verification link verifies the email AND signs the user in,
-    // then redirects to the themed /verify-email page.
-    autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url }) => {
-      // Route the click through our themed /verify-email page instead of the
-      // homepage default: Better Auth's API route verifies the token, signs
-      // the user in, then redirects to the given callbackURL.
-      const verifyUrl = new URL(url);
-      verifyUrl.searchParams.set('callbackURL', '/verify-email');
-
-      // Fire-and-forget per the Better Auth guidance (avoid awaiting to
-      // prevent timing attacks on account enumeration).
-      void sendVerificationEmail({
-        to: user.email,
-        subject: 'Verify your email address — SQLens',
-        verificationUrl: verifyUrl.toString(),
-      });
-    },
   },
   hooks: {
     // Block sign-in at the door for suspended accounts. Existing/live sessions
