@@ -152,18 +152,18 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         <div className="flex flex-col items-center bg-surface border border-border rounded-[18px] p-7 px-5 md:order-none order-first">
           <div className="relative w-[150px] h-[150px]">
             <svg viewBox="0 0 150 150" className="w-full h-full -rotate-90">
-              <circle cx="75" cy="75" r="64" fill="none" stroke="#262626" strokeWidth="7" />
+              <circle cx="75" cy="75" r="64" fill="none" stroke="var(--border)" strokeWidth="7" />
               <circle
                 cx="75"
                 cy="75"
                 r="64"
                 fill="none"
-                stroke="#f4c430"
+                stroke="var(--func)"
                 strokeWidth="7"
                 strokeLinecap="round"
                 strokeDasharray={RING_CIRCUMFERENCE}
                 strokeDashoffset={ringOffset}
-                style={{ filter: 'drop-shadow(0 0 6px rgba(244,196,48,0.33))' }}
+                style={{ filter: 'drop-shadow(0 0 6px var(--accent-line))' }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -301,9 +301,9 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
 
                 {/* callout — hangs off the active stage, shows the current day */}
                 {isActiveStage && activeModuleInStage && (
-                  <div className="max-w-[480px] mx-auto mt-[26px] bg-surface-2 border border-[rgba(244,196,48,0.33)] rounded-xl p-[18px] px-5 relative">
+                  <div className="max-w-[480px] mx-auto mt-[26px] bg-surface-2 border border-(--accent-line) rounded-xl p-[18px] px-5 relative">
                     <div
-                      className="absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t border-[rgba(244,196,48,0.33)]"
+                      className="absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t border-(--accent-line)"
                       aria-hidden="true"
                     />
                     <div className="flex items-center justify-between mb-3 gap-2">

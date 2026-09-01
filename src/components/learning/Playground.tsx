@@ -538,7 +538,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 onBlur={() => setTimeout(() => setSuggestions([]), 150)}
                 onKeyDown={handleKeyDown}
                 spellCheck={false}
-                style={{ caretColor: '#f4c430' }}
+                style={{ caretColor: 'var(--func)' }}
                 className="relative w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-transparent leading-relaxed outline-none resize-y placeholder:text-text-faint"
                 placeholder="Write SQL here… separate multiple statements with ;  (Ctrl+Space for suggestions)"
               />

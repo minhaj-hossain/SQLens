@@ -73,8 +73,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ mode, onSetMode, onBack, onS
 function BrandMark() {
   return (
     <svg width="28" height="28" viewBox="0 0 30 30" fill="none" className="shrink-0">
-      <circle cx="12.5" cy="12.5" r="9" stroke="#f4c430" strokeWidth="2" />
-      <line x1="19" y1="19" x2="26" y2="26" stroke="#f4c430" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="12.5" cy="12.5" r="9" stroke="var(--func)" strokeWidth="2" />
+      <line x1="19" y1="19" x2="26" y2="26" stroke="var(--func)" strokeWidth="2.4" strokeLinecap="round" />
       <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#d8d8d3" strokeWidth="1.6" strokeLinecap="round" />
       <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#d8d8d3" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
     </svg>
@@ -293,7 +293,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
 /* ========================================================================== */
 
 const strengthNames = ['', 'Weak', 'Good', 'Strong'];
-const strengthColors = ['', '#e06c5b', '#93938e', '#f4c430'];
+const strengthColors = ['', 'var(--error)', 'var(--text-dim)', 'var(--func)'];
 
 function getPasswordStrength(pw: string): number {
   if (!pw) return 0;

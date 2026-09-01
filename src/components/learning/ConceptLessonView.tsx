@@ -589,7 +589,7 @@ return (
                       if (el) el.scrollLeft = e.currentTarget.scrollLeft;
                     }}
                     className="absolute inset-0 w-full bg-transparent outline-none text-transparent font-mono text-[13px] px-3 py-2 placeholder:text-text-faint"
-                    style={{ caretColor: '#f4c430' }}
+                    style={{ caretColor: 'var(--func)' }}
                     placeholder="Enter a SQL query..."
                     aria-label="SQL demo query"
                   />
