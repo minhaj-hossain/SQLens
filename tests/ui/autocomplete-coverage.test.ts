@@ -84,4 +84,47 @@ describe('autocomplete keyword coverage (every syntax discoverable)', () => {
     const items = suggest('SELECT * FROM products FULL');
     expect(items).not.toContain('FULL JOIN');
   });
+
+  // ---- Expanded keyword coverage (engine-supported syntax stays discoverable) ----
+
+  it('OFFERS ILIKE and NOT IN inside a WHERE expression', () => {
+    expect(suggest('SELECT name FROM products WHERE name IL')).toContain('ILIKE');
+    expect(suggest('SELECT name FROM products WHERE id NOT ')).toContain('NOT IN');
+  });
+
+  it('OFFERS string scalar functions in SELECT expressions', () => {
+    const items = suggest('SELECT UP');
+    expect(items).toContain('UPPER');
+    expect(suggest('SELECT TR')).toContain('TRIM');
+    expect(suggest('SELECT LEN')).toContain('LENGTH');
+    expect(suggest('SELECT SUB')).toContain('SUBSTRING');
+  });
+
+  it('OFFERS date functions in SELECT/expression contexts', () => {
+    expect(suggest('SELECT YE')).toContain('YEAR');
+    expect(suggest('SELECT EXTR')).toContain('EXTRACT');
+    expect(suggest('SELECT DATEDI')).toContain('DATEDIFF');
+    expect(suggest('SELECT CUR')).toContain('CURDATE');
+    expect(suggest('SELECT * FROM products WHERE order_date > CUR')).toContain('CURDATE');
+  });
+
+  it('OFFERS window functions by prefix inside a SELECT list', () => {
+    const items = suggest('SELECT ROW_');
+    expect(items).toContain('ROW_NUMBER');
+    expect(suggest('SELECT RAN')).toContain('RANK');
+    expect(suggest('SELECT DENSE_')).toContain('DENSE_RANK');
+  });
+
+  it('OFFERS transactions + EXPLAIN by prefix', () => {
+    expect(suggest('BEG')).toContain('BEGIN');
+    expect(suggest('COM')).toContain('COMMIT');
+    expect(suggest('ROLL')).toContain('ROLLBACK');
+    expect(suggest('EXPLA')).toContain('EXPLAIN');
+  });
+
+  it('OFFERS TRUE/FALSE keywords', () => {
+    const items = suggest('SELECT * FROM products WHERE in_stock = TR');
+    expect(items).toContain('TRUE');
+    expect(suggest('SELECT * FROM products WHERE in_stock = FA')).toContain('FALSE');
+  });
 });

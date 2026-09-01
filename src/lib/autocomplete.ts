@@ -41,11 +41,18 @@ const DDL_KWS = [
 const TXN_KWS = ['BEGIN', 'COMMIT', 'ROLLBACK', 'START TRANSACTION'];
 
 const EXPR_CONTINUATION = [
-  'AS', 'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'IS NULL', 'IS NOT NULL',
+  'AS', 'AND', 'OR', 'NOT', 'IN', 'NOT IN', 'BETWEEN', 'LIKE', 'ILIKE', 'IS NULL', 'IS NOT NULL',
   'ASC', 'DESC', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'DISTINCT',
-  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'COALESCE', 'UPPER', 'LOWER',
-  'CONCAT', 'SUBSTRING', 'YEAR', 'MONTH', 'DATEDIFF',
-  'ROW_NUMBER', 'RANK', 'DENSE_RANK', 'LAG', 'LEAD',
+  // Aggregates
+  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'COALESCE',
+  // Scalar string functions
+  'UPPER', 'LOWER', 'TRIM', 'LENGTH', 'CONCAT', 'SUBSTRING',
+  // Date functions
+  'YEAR', 'MONTH', 'DAY', 'EXTRACT', 'DATEDIFF', 'CURDATE', 'INTERVAL',
+  // Window functions
+  'ROW_NUMBER', 'RANK', 'DENSE_RANK', 'LAG', 'LEAD', 'PARTITION BY', 'OVER',
+  // Boolean literals
+  'TRUE', 'FALSE',
 ];
 
 const KW_SET = new Set(SQL_KEYWORDS.map((k) => k.toUpperCase()));

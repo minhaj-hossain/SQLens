@@ -20,11 +20,24 @@
 export const SQL_KEYWORDS = [
   'SELECT', 'FROM', 'WHERE', 'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN',
   'ON', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 'AS', 'DISTINCT',
-  'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'ILIKE', 'IS NULL', 'IS NOT NULL',
+  'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'ILIKE', 'IS NULL', 'IS NOT NULL', 'NOT IN',
   'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'COALESCE',
   'UNION', 'UNION ALL', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'ASC', 'DESC',
   'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'CREATE TABLE', 'DROP TABLE',
   'ALTER TABLE', 'CROSS JOIN', 'INTERSECT', 'EXCEPT', 'NULL', 'WITH',
+  // Scalar string functions
+  'UPPER', 'LOWER', 'TRIM', 'LENGTH', 'CONCAT', 'SUBSTRING',
+  // Date functions
+  'YEAR', 'MONTH', 'DAY', 'EXTRACT', 'DATEDIFF', 'CURDATE', 'INTERVAL',
+  // Window functions
+  'ROW_NUMBER', 'RANK', 'DENSE_RANK', 'LAG', 'LEAD', 'PARTITION BY', 'OVER',
+  // DDL constraints / keywords
+  'CREATE INDEX', 'DROP INDEX', 'ADD COLUMN', 'DROP COLUMN', 'PRIMARY KEY', 'FOREIGN KEY',
+  'REFERENCES', 'NOT NULL', 'DEFAULT', 'AUTO_INCREMENT', 'UNIQUE',
+  // Transactions
+  'BEGIN', 'COMMIT', 'ROLLBACK', 'START TRANSACTION',
+  // Other
+  'EXPLAIN', 'TRUE', 'FALSE',
 ];
 
 const PLACEHOLDER_RE = /___TOKEN_\d+___/;
