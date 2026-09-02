@@ -195,7 +195,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                         )} ${
                           isNull
                             ? 'text-text-faint'
-                            : type === 'string'
+                            : type === 'string' || 'number'
                               ? 'text-text-dim'
                               : 'text-text'
                         } ${isHigh ? 'bg-func/10 font-medium text-text' : ''}`}
