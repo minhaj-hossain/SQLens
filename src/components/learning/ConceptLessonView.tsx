@@ -690,16 +690,15 @@ return (
                         const isOptSelected = selected === oIdx;
                         const isOptCorrect = oIdx === mcq.correctIndex;
                         let cls =
-                          'flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg border text-[13px] font-sans transition-all cursor-pointer ';
+                          'flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg border text-[13px] font-sans transition-all ';
                         if (!hasAnswered) {
-                          // Subtle hover: smooth background lift + tiny raise, no border pop
-                          cls += 'border-border text-text-dim hover:bg-surface hover:-translate-y-px';
+                          cls += 'border-border text-text hover:border-func hover:bg-surface-2 cursor-pointer ';
                         } else if (isOptCorrect) {
-                          cls += 'border-func/60 bg-func/10 text-text font-medium';
+                          cls += 'border-success-border bg-success-bg text-success-text font-semibold ';
                         } else if (isOptSelected && !isCorrect) {
-                          cls += 'border-error/60 bg-error/10 text-error';
+                          cls += 'border-error-border bg-error-bg text-error-text ';
                         } else {
-                          cls += 'border-border-soft text-text-faint opacity-60';
+                          cls += 'border-border-soft text-text-faint opacity-60 ';
                         }
                         const letter = String.fromCharCode(65 + oIdx);
                         return (
@@ -715,9 +714,9 @@ return (
                             <span
                               className={`w-5 h-5 rounded-full border flex items-center justify-center font-mono text-[10.5px] shrink-0 ${
                                 hasAnswered && isOptCorrect
-                                  ? 'border-func text-ink bg-func'
+                                  ? 'border-success-border text-ink bg-success'
                                   : hasAnswered && isOptSelected && !isCorrect
-                                  ? 'border-error text-error'
+                                  ? 'border-error-border text-error-text'
                                   : 'border-border text-text-faint'
                               }`}
                             >
@@ -725,10 +724,10 @@ return (
                             </span>
                             <span>{opt.replace(/^[A-D]\.\s*/, '')}</span>
                             {hasAnswered && isOptSelected && isOptCorrect && (
-                              <Icon name="check_circle" className="text-[15px] text-func ml-auto shrink-0" />
+                              <Icon name="check_circle" className="text-[15px] text-success-text ml-auto shrink-0" />
                             )}
                             {hasAnswered && isOptSelected && !isOptCorrect && (
-                              <Icon name="cancel" className="text-[15px] text-error ml-auto shrink-0" />
+                              <Icon name="cancel" className="text-[15px] text-error-text ml-auto shrink-0" />
                             )}
                           </button>
                         );
@@ -738,8 +737,8 @@ return (
                       <div
                         className={`mt-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed border font-sans ${
                           isCorrect
-                            ? 'bg-func/10 border-func/25 text-text'
-                            : 'bg-error/10 border-error/25 text-error'
+                            ? 'bg-success-bg border-success-border text-success-text'
+                            : 'bg-error-bg border-error-border text-error-text'
                         }`}
                       >
                         <span className="font-bold">

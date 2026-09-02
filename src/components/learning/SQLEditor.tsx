@@ -578,7 +578,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               id="next-task-btn"
               type="button"
               onClick={onNextAction}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:brightness-110 text-ink transition cursor-pointer animate-pulse active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:brightness-110 text-ink shadow-[0_0_14px_var(--accent-dim)] transition cursor-pointer active:scale-95"
             >
               <span>{nextActionLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
@@ -138,7 +138,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="absolute inset-0 rounded-full"
                   style={{
                     background:
-                      'conic-gradient(from 140deg, #262626, #3d3d3d, #262626, #333333, #262626, #262626)',
+                      'conic-gradient(from 140deg, var(--border), var(--border-strong), var(--border), var(--border-soft), var(--border))',
                   }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, ease: 'linear', repeat: Infinity }}

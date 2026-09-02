@@ -8,73 +8,99 @@
    ============================================================ */
 
 :root {
-  /* surfaces */
-  --ink: #0a0a0a;
-  --surface: #131313;
-  --surface-2: #1a1a1a;
-  --surface-3: #212121;
-  --border: #262626;
-  --border-soft: #1c1c1c;
+  /* surfaces — strict 5-level elevation system */
+  --ink: #09090b;       /* Canvas: viewport base & page background */
+  --surface: #121215;   /* Surface 1: panels, default cards, sidebar */
+  --surface-2: #18181c; /* Surface 2: nested cards, active list items, inputs */
+  --surface-3: #222228; /* Surface 3: dropdown menus, elevated panels, modal backgrounds */
+  --surface-4: #2a2a32; /* Surface 4: overlays, popovers, tooltips */
+  --border: rgba(255, 255, 255, 0.12);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.22);
 
-  /* text */
-  --text: #f2f2f0;
-  --text-dim: #93938e;
-  --text-faint: #83837c;
+  /* text — high-contrast WCAG AAA/AA calibrated */
+  --text: #f4f4f5;      /* Primary text & headings (AAA contrast) */
+  --text-dim: #a1a1aa;  /* Secondary text & labels (AAA contrast) */
+  --text-faint: #71717a;/* Metadata, line numbers & hints (AA contrast) */
 
-  /* the single accent — gold ("you are here") */
+  /* brand accent — warm gold ("you are here") */
   --func: #f4c430;
   --accent: #f4c430;
-  --accent-dim: rgba(244, 196, 48, 0.13);
-  --accent-line: rgba(244, 196, 48, 0.33);
-  --done: #d8d8d3;
+  --accent-dim: rgba(244, 196, 48, 0.12);
+  --accent-line: rgba(244, 196, 48, 0.35);
+  --on-accent: #09090b;
 
-  /* legacy semantic names remapped onto the new system so the
-     codebase keeps working while components migrate (P2–P7) */
+  /* restrained semantic status tokens */
+  --success: #22c55e;
+  --success-text: #4ade80;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --success-border: rgba(34, 197, 94, 0.3);
+  --error: #ef4444;
+  --error-text: #f87171;
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.3);
+  --danger: #ef4444;
+  --danger-text: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.3);
+  --warning: #f59e0b;
+  --warning-text: #fbbf24;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.3);
+  --done: #4ade80;
+
+  /* legacy aliases for backwards compatibility */
   --primary: #f4c430;
   --primary-container: #f4c430;
-  --on-primary: #0a0a0a;
-  --on-primary-container: #0a0a0a;
-  --string: #f4c430;   /* was amber "active" — now the gold accent */
-  --keyword: #d8d8d3;  /* was blue syntax — now neutral light gray */
-  --comment: #55554f;  /* was slate — now the muted gray */
+  --on-primary: #09090b;
+  --on-primary-container: #09090b;
+  --string: #f4c430;
+  --keyword: #f4f4f5;
+  --comment: #71717a;
 
   /* editor (shared by SQLEditor / challenge editor / Playground) */
-  --editor-bg: #101010;
-  --editor-text: #e6e6e2;
-  --editor-comment: #55554f;
+  --editor-bg: #0d0d10;
+  --editor-text: #f4f4f5;
+  --editor-comment: #71717a;
   --editor-caret: #f4c430;
-  --editor-selection: rgba(244, 196, 48, 0.12);
+  --editor-selection: rgba(244, 196, 48, 0.18);
   --editor-active-line: rgba(255, 255, 255, 0.03);
 
-  /* grayscale SQL syntax (concept/syntax blocks - weight + lightness, not hue).
-     Keywords cap at #f2f2f0 (same as headings) — pure white is banned app-wide. */
-  --code-kw: #f2f2f0;    /* SQL keywords - heading white, weight 700 */
-  --code-ident: #a9a9a3; /* identifiers / literals - mid gray */
-  --code-num: #a9a9a3;   /* numbers - same gray as ident (amber on sky theme) */
-  --code-punc: #6b6b65;  /* ; , ( ) etc - dim gray */
-  --code-str: #a9a9a3;   /* string literals - same gray as ident (emerald on sky theme) */
+  /* SQL syntax tokens — weight 600 for keywords, high contrast */
+  --code-kw: #f4f4f5;    /* SQL keywords - crisp, weight 600 */
+  --code-ident: #a1a1aa; /* identifiers / literals - mid gray */
+  --code-num: #a1a1aa;   /* numbers - tabular mono */
+  --code-punc: #71717a;  /* ; , ( ) - dim gray */
+  --code-str: #f4c430;   /* string literals - warm amber tint */
+  --code-comment: #71717a;
 
-  /* functional error — the only non-gray, non-gold color */
-  --error: #e06c5b;
-  --danger: #e06c5b;
-
-  /* alpha helpers (tokenized so a theme can re-hue selection + keyframes) */
+  /* alpha helpers */
   --selection-bg: rgba(244, 196, 48, 0.22);
   --pulse-mid: rgba(244, 196, 48, 0.05);
   --pulse-strong: rgba(244, 196, 48, 0.45);
   --pulse-fade: rgba(244, 196, 48, 0);
 
-  /* data-table recipe (DataGrid) — graphite keeps the current look */
-  --table-head-bg: #212121;
-  --table-head-text: #f2f2f0;
-  --table-row-border: #1c1c1c;
-  --table-zebra: rgba(26, 26, 26, 0.4);
-  --table-hover: rgba(26, 26, 26, 0.7);
+  /* data-table recipe (DataGrid) */
+  --table-head-bg: #18181c;
+  --table-head-text: #f4f4f5;
+  --table-row-border: rgba(255, 255, 255, 0.06);
+  --table-zebra: rgba(255, 255, 255, 0.02);
+  --table-hover: rgba(244, 196, 48, 0.06);
 
   /* radii */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* motion tokens */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --disabled-opacity: 0.45;
 
   /* fonts */
   --font-display: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -83,67 +109,75 @@
 }
 
 /* ============================================================
-   THEME: SKY — the previous SQLens palette, restored from git
-   history (commit 902874c): dark navy surfaces, sky-blue accent,
-   cyan SQL keywords; every OTHER SQL token follows the graphite
-   grayscale so code bodies stay neutral gray.
-   Activated via <html data-theme="sky"> (ThemeToggle / ThemeProvider).
-   Every raw token AND its @theme mirror is overridden so utilities
-   (bg-*, text-*, border-*), the base layer, keyframes and inline
-   var() usages all re-theme with zero component changes.
+   THEME: SKY — Midnight navy surfaces + electric sky-blue accent
    ============================================================ */
 :root[data-theme='sky'] {
-  /* surfaces */
-  --ink: #0a0d12;
-  --surface: #121722;
-  --surface-2: #1a2130;
-  --surface-3: #212a3d;
-  --border: #262f42;
-  --border-soft: #1d2434;
+  /* surfaces — strict 5-level elevation system */
+  --ink: #080c14;       /* Canvas: deep midnight navy */
+  --surface: #0f1726;   /* Surface 1: navy panel */
+  --surface-2: #162032; /* Surface 2: interactive elements, inputs */
+  --surface-3: #1f2d45; /* Surface 3: elevated, modals, dropdowns */
+  --surface-4: #293b59; /* Surface 4: overlays, popovers */
+  --border: rgba(56, 189, 248, 0.16);
+  --border-soft: rgba(56, 189, 248, 0.08);
+  --border-subtle: rgba(56, 189, 248, 0.08);
+  --border-strong: rgba(56, 189, 248, 0.28);
 
   /* text */
-  --text: #eaedf4;
-  --text-dim: #8d96ac;
-  --text-faint: #545c71;
+  --text: #f0f6fc;      /* High contrast primary text */
+  --text-dim: #94a3b8;  /* Muted slate secondary text */
+  --text-faint: #64748b;/* Tertiary metadata */
 
-  /* the single accent — sky blue ("you are here") */
+  /* brand accent — electric sky blue ("you are here") */
   --func: #38bdf8;
   --accent: #38bdf8;
-  --accent-dim: rgba(56, 189, 248, 0.13);
-  --accent-line: rgba(56, 189, 248, 0.33);
-  --done: #c2d3f0;
+  --accent-dim: rgba(56, 189, 248, 0.12);
+  --accent-line: rgba(56, 189, 248, 0.35);
+  --on-accent: #080c14;
+
+  /* restrained semantic status tokens */
+  --success: #10b981;
+  --success-text: #34d399;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --success-border: rgba(16, 185, 129, 0.3);
+  --error: #f43f5e;
+  --error-text: #fb7185;
+  --error-bg: rgba(244, 63, 94, 0.12);
+  --error-border: rgba(244, 63, 94, 0.3);
+  --danger: #f43f5e;
+  --danger-text: #fb7185;
+  --danger-bg: rgba(244, 63, 94, 0.12);
+  --danger-border: rgba(244, 63, 94, 0.3);
+  --warning: #f59e0b;
+  --warning-text: #fbbf24;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.3);
+  --done: #34d399;
 
   /* legacy semantic names */
   --primary: #38bdf8;
   --primary-container: #38bdf8;
-  --on-primary: #0a0d12;
-  --on-primary-container: #0a0d12;
-  --string: #f59e0b;   /* string literal amber — classic editor look */
-  --keyword: #60a5fa;  /* clean bright blue keywords */
-  --comment: #94a3b8;  /* cool slate */
+  --on-primary: #080c14;
+  --on-primary-container: #080c14;
+  --string: #38bdf8;
+  --keyword: #60a5fa;
+  --comment: #64748b;
 
   /* editor (SQLEditor / challenge editor / Playground) */
-  --editor-bg: #0d1322;
-  --editor-text: #f4f4f5;
-  --editor-comment: #a1a1aa;
+  --editor-bg: #0a101d;
+  --editor-text: #f0f6fc;
+  --editor-comment: #64748b;
   --editor-caret: #38bdf8;
-  --editor-selection: rgba(56, 189, 248, 0.15);
+  --editor-selection: rgba(56, 189, 248, 0.2);
   --editor-active-line: rgba(255, 255, 255, 0.04);
 
-  /* SQL syntax — keywords keep the sky cyan accent; every other token uses
-     the same grayscale as the graphite theme so code bodies stay neutral
-     gray (identifiers/strings/numbers #a9a9a3, punctuation #6b6b65,
-     comments #55554f). */
-  --code-kw: #22d3ee;    /* SQL keywords - cyan (sky accent) */
-  --code-ident: #a9a9a3; /* identifiers / literals - mid gray */
-  --code-num: #a9a9a3;   /* numbers - mid gray */
-  --code-punc: #6b6b65;  /* ; , ( ) etc - dim gray */
-  --code-comment: #55554f; /* comments - dim gray (plain, no hue) */
-  --code-str: #a9a9a3;   /* string literals - mid gray */
-
-  /* functional error */
-  --error: #ff6b6b;
-  --danger: #ff6b6b;
+  /* SQL syntax */
+  --code-kw: #38bdf8;    /* SQL keywords - sky cyan accent */
+  --code-ident: #94a3b8; /* identifiers / literals - mid gray */
+  --code-num: #94a3b8;   /* numbers */
+  --code-punc: #64748b;  /* ; , ( ) */
+  --code-comment: #64748b;
+  --code-str: #38bdf8;
 
   /* alpha helpers */
   --selection-bg: rgba(56, 189, 248, 0.25);
@@ -151,130 +185,162 @@
   --pulse-strong: rgba(56, 189, 248, 0.45);
   --pulse-fade: rgba(56, 189, 248, 0);
 
-  /* data-table recipe — faithful to the ORIGINAL sky-era tables:
-     navy header band, accent column titles, hairline row dividers, no zebra */
-  --table-head-bg: #1a2130;
+  /* data-table recipe */
+  --table-head-bg: #162032;
   --table-head-text: #38bdf8;
-  --table-row-border: rgba(38, 47, 66, 0.4);
-  --table-zebra: transparent;
-  --table-hover: rgba(56, 189, 248, 0.07);
+  --table-row-border: rgba(56, 189, 248, 0.1);
+  --table-zebra: rgba(56, 189, 248, 0.02);
+  --table-hover: rgba(56, 189, 248, 0.08);
 
   /* ---- @theme mirrors (Tailwind utilities read these) ---- */
-  --color-ink: #0a0d12;
-  --color-surface-base: #0a0d12;
-  --color-surface: #121722;
-  --color-surface-container: #121722;
-  --color-surface-container-high: #1a2130;
-  --color-surface-container-highest: #212a3d;
-  --color-surface-variant: #1a2130;
-  --color-surface-dim: #0a0d12;
-  --color-surface-2: #1a2130;
-  --color-surface-3: #212a3d;
+  --color-ink: #080c14;
+  --color-surface-base: #080c14;
+  --color-surface: #0f1726;
+  --color-surface-container: #0f1726;
+  --color-surface-container-high: #162032;
+  --color-surface-container-highest: #1f2d45;
+  --color-surface-variant: #162032;
+  --color-surface-dim: #080c14;
+  --color-surface-2: #162032;
+  --color-surface-3: #1f2d45;
+  --color-surface-4: #293b59;
 
-  --color-text: #eaedf4;
-  --color-on-surface: #eaedf4;
-  --color-on-surface-variant: #8d96ac;
-  --color-text-muted: #8d96ac;
-  --color-text-dim: #8d96ac;
-  --color-text-faint: #545c71;
+  --color-text: #f0f6fc;
+  --color-on-surface: #f0f6fc;
+  --color-on-surface-variant: #94a3b8;
+  --color-text-muted: #94a3b8;
+  --color-text-dim: #94a3b8;
+  --color-text-faint: #64748b;
 
   --color-func: #38bdf8;
   --color-accent: #38bdf8;
   --color-primary: #38bdf8;
   --color-primary-container: #38bdf8;
-  --color-on-primary: #0a0d12;
-  --color-on-primary-container: #0a0d12;
-  --color-string: #f59e0b;
+  --color-on-primary: #080c14;
+  --color-on-primary-container: #080c14;
+  --color-string: #38bdf8;
   --color-keyword: #60a5fa;
-  --color-comment: #94a3b8;
-  --color-done: #c2d3f0;
+  --color-comment: #64748b;
+  --color-done: #34d399;
 
-  --color-border: #262f42;
-  --color-border-soft: #1d2434;
-  --color-border-subtle: #1d2434;
-  --color-outline-variant: #262f42;
-  --color-outline: #545c71;
+  --color-success: #10b981;
+  --color-success-text: #34d399;
+  --color-success-bg: rgba(16, 185, 129, 0.12);
+  --color-success-border: rgba(16, 185, 129, 0.3);
+  --color-error: #f43f5e;
+  --color-error-text: #fb7185;
+  --color-error-bg: rgba(244, 63, 94, 0.12);
+  --color-error-border: rgba(244, 63, 94, 0.3);
+  --color-error-container: rgba(244, 63, 94, 0.15);
+  --color-danger: #f43f5e;
+  --color-danger-text: #fb7185;
+  --color-danger-bg: rgba(244, 63, 94, 0.12);
+  --color-danger-border: rgba(244, 63, 94, 0.3);
+  --color-warning: #f59e0b;
+  --color-warning-text: #fbbf24;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
 
-  --color-editor-bg: #0d1322;
-  --color-editor-gutter: #0a101c;
-  --color-editor-text: #f4f4f5;
-  --color-editor-comment: #a1a1aa;
+  --color-border: rgba(56, 189, 248, 0.16);
+  --color-border-soft: rgba(56, 189, 248, 0.08);
+  --color-border-subtle: rgba(56, 189, 248, 0.08);
+  --color-border-strong: rgba(56, 189, 248, 0.28);
+  --color-outline-variant: rgba(56, 189, 248, 0.16);
+  --color-outline: #64748b;
+
+  --color-editor-bg: #0a101d;
+  --color-editor-gutter: #080c14;
+  --color-editor-text: #f0f6fc;
+  --color-editor-comment: #64748b;
   --color-editor-active-line: rgba(255, 255, 255, 0.04);
   --color-editor-caret: #38bdf8;
-  --color-editor-selection: rgba(56, 189, 248, 0.15);
+  --color-editor-selection: rgba(56, 189, 248, 0.2);
 
-  --color-code-kw: #22d3ee;
-  --color-code-ident: #a9a9a3;
-  --color-code-num: #a9a9a3;
-  --color-code-punc: #6b6b65;
-  --color-code-comment: #55554f;
-  --color-code-str: #a9a9a3;
-
-  --color-error: #ff6b6b;
-  --color-error-container: #93000a;
-  --color-danger: #ff6b6b;
+  --color-code-kw: #38bdf8;
+  --color-code-ident: #94a3b8;
+  --color-code-num: #94a3b8;
+  --color-code-punc: #64748b;
+  --color-code-comment: #64748b;
+  --color-code-str: #38bdf8;
 }
 
 @theme {
   /* surfaces */
-  --color-ink: #0a0a0a;
-  --color-surface-base: #0a0a0a;
-  --color-surface: #131313;
-  --color-surface-container: #131313;
-  --color-surface-container-high: #1a1a1a;
-  --color-surface-container-highest: #212121;
-  --color-surface-variant: #1a1a1a;
-  --color-surface-dim: #0a0a0a;
-  --color-surface-2: #1a1a1a;
-  --color-surface-3: #212121;
+  --color-ink: #09090b;
+  --color-surface-base: #09090b;
+  --color-surface: #121215;
+  --color-surface-container: #121215;
+  --color-surface-container-high: #18181c;
+  --color-surface-container-highest: #222228;
+  --color-surface-variant: #18181c;
+  --color-surface-dim: #09090b;
+  --color-surface-2: #18181c;
+  --color-surface-3: #222228;
+  --color-surface-4: #2a2a32;
 
   /* text */
-  --color-text: #f2f2f0;
-  --color-on-surface: #f2f2f0;
-  --color-on-surface-variant: #93938e;
-  --color-text-muted: #93938e;
-  --color-text-dim: #93938e;
-  --color-text-faint: #83837c;
+  --color-text: #f4f4f5;
+  --color-on-surface: #f4f4f5;
+  --color-on-surface-variant: #a1a1aa;
+  --color-text-muted: #a1a1aa;
+  --color-text-dim: #a1a1aa;
+  --color-text-faint: #71717a;
 
   /* the accent */
   --color-func: #f4c430;
   --color-accent: #f4c430;
   --color-primary: #f4c430;
   --color-primary-container: #f4c430;
-  --color-on-primary: #0a0a0a;
-  --color-on-primary-container: #0a0a0a;
+  --color-on-primary: #09090b;
+  --color-on-primary-container: #09090b;
   --color-string: #f4c430;
-  --color-keyword: #d8d8d3;
-  --color-comment: #55554f;
-  --color-done: #d8d8d3;
+  --color-keyword: #f4f4f5;
+  --color-comment: #71717a;
+  --color-done: #4ade80;
+
+  /* status tokens */
+  --color-success: #22c55e;
+  --color-success-text: #4ade80;
+  --color-success-bg: rgba(34, 197, 94, 0.12);
+  --color-success-border: rgba(34, 197, 94, 0.3);
+  --color-error: #ef4444;
+  --color-error-text: #f87171;
+  --color-error-bg: rgba(239, 68, 68, 0.12);
+  --color-error-border: rgba(239, 68, 68, 0.3);
+  --color-error-container: rgba(239, 68, 68, 0.15);
+  --color-danger: #ef4444;
+  --color-danger-text: #f87171;
+  --color-danger-bg: rgba(239, 68, 68, 0.12);
+  --color-danger-border: rgba(239, 68, 68, 0.3);
+  --color-warning: #f59e0b;
+  --color-warning-text: #fbbf24;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.3);
 
   /* borders */
-  --color-border: #262626;
-  --color-border-soft: #1c1c1c;
-  --color-border-subtle: #1c1c1c;
-  --color-outline-variant: #262626;
-  --color-outline: #55554f;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-soft: rgba(255, 255, 255, 0.06);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+  --color-outline-variant: rgba(255, 255, 255, 0.12);
+  --color-outline: #71717a;
 
   /* editor (shared by SQLEditor / challenge editor / Playground) */
-  --color-editor-bg: #101010;
-  --color-editor-gutter: #0c0c0c;
-  --color-editor-text: #e6e6e2;
-  --color-editor-comment: #55554f;
+  --color-editor-bg: #0d0d10;
+  --color-editor-gutter: #09090b;
+  --color-editor-text: #f4f4f5;
+  --color-editor-comment: #71717a;
   --color-editor-active-line: rgba(255, 255, 255, 0.03);
   --color-editor-caret: #f4c430;
-  --color-editor-selection: rgba(244, 196, 48, 0.12);
+  --color-editor-selection: rgba(244, 196, 48, 0.18);
 
   /* grayscale SQL syntax tokens */
-  --color-code-kw: #f2f2f0;
-  --color-code-ident: #a9a9a3;
-  --color-code-num: #a9a9a3;
-  --color-code-punc: #6b6b65;
-  --color-code-comment: #55554f;
-  --color-code-str: #a9a9a3;
-  /* error */
-  --color-error: #e06c5b;
-  --color-error-container: #43150d;
-  --color-danger: #e06c5b;
+  --color-code-kw: #f4f4f5;
+  --color-code-ident: #a1a1aa;
+  --color-code-num: #a1a1aa;
+  --color-code-punc: #71717a;
+  --color-code-comment: #71717a;
+  --color-code-str: #f4c430;
 
   /* fonts */
   --font-display: var(--font-inter), "Inter", system-ui, sans-serif;
@@ -288,7 +354,7 @@
   --font-label-sm: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 
-  /* spacing scale (kept from the previous system) */
+  /* spacing scale */
   --spacing-margin-mobile: 16px;
   --spacing-card-padding: 24px;
   --spacing-margin-desktop: 48px;
@@ -312,6 +378,7 @@
 
   h1, h2, h3, h4, h5, h6, .font-display {
     font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
 
   ::selection {
@@ -321,7 +388,7 @@
 
   :focus-visible {
     outline: 2px solid var(--func);
-    outline-offset: 3px;
+    outline-offset: 2px;
     border-radius: 4px;
   }
 
@@ -333,6 +400,20 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* Long-form learning/reading content typography */
+.learning-content {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.learning-content p {
+  margin-bottom: 1rem;
+}
+.learning-content strong {
+  font-weight: 600;
+  color: var(--text);
 }
 
 /* ============ ER-STYLE TIMELINE & NODE STYLES ============ */
@@ -379,6 +460,7 @@
   border: 2px solid var(--border);
   color: var(--text-faint);
   z-index: 2;
+  transition: border-color var(--duration-fast, 150ms), box-shadow var(--duration-fast, 150ms);
 }
 
 .node-dot-connector::after {
@@ -401,11 +483,11 @@
   background: var(--done);
 }
 
+/* Static, elegant accent focus instead of perpetual CPU-heavy pulsing */
 .day-node-active .node-dot-connector {
   border-color: var(--func);
   color: var(--func);
-  box-shadow: 0 0 0 4px var(--accent-dim);
-  animation: pulse-ring 2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px var(--accent-dim), 0 0 10px var(--accent-dim);
 }
 .day-node-active .node-dot-connector::after {
   background: var(--func);

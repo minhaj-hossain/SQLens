@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ALL_MODULES, getModuleById } from '../../content/curriculum-index';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import {
@@ -284,12 +284,12 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-all duration-150 ${
                           isDone
-                            ? 'bg-done border-[1.5px] border-done text-ink font-bold hover:-translate-y-0.5 hover:shadow-[0_0_0_4px_rgba(216,216,211,0.15)] cursor-pointer'
+                            ? 'bg-done border-[1.5px] border-done text-ink font-bold hover:-translate-y-0.5 hover:shadow-[0_0_0_4px_var(--success-bg)] cursor-pointer'
                             : isCurrent
-                            ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_6px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
+                            ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_5px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
                             : isUnlocked
-                            ? 'bg-surface border-[1.5px] border-border text-text-dim hover:-translate-y-0.5 cursor-pointer'
-                            : 'bg-surface border-[1.5px] border-border text-text-faint cursor-not-allowed'
+                            ? 'bg-surface border-[1.5px] border-border text-text-dim hover:text-text hover:border-border-strong hover:-translate-y-0.5 cursor-pointer'
+                            : 'bg-surface border-[1.5px] border-border-soft text-text-faint opacity-50 cursor-not-allowed'
                         }`}
                       >
                         {isDone ? '✓' : dayNum}

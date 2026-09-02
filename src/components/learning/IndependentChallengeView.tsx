@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, TableRow, DatabaseState } from '../../types/database';
@@ -588,7 +588,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 caretColor: 'var(--func)',
                 WebkitTextFillColor: 'transparent',
               }}
-              className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-func/20 whitespace-pre-wrap break-words z-10"
+              className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"
             />
 
             {/* Autocomplete Popup */}

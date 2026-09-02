@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Play, RotateCcw, Eraser, X, Download, Database, History } from 'lucide-react';
@@ -539,7 +539,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 onKeyDown={handleKeyDown}
                 spellCheck={false}
                 style={{ caretColor: 'var(--func)' }}
-                className="relative w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-transparent leading-relaxed outline-none resize-y placeholder:text-text-faint"
+                className="relative w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-transparent leading-relaxed outline-none resize-y placeholder:text-text-faint selection:bg-editor-selection"
                 placeholder="Write SQL here… separate multiple statements with ;  (Ctrl+Space for suggestions)"
               />
             </div>

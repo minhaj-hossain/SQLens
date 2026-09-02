@@ -92,14 +92,14 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
           id="validation-feedback-banner"
           className={`p-3 text-xs font-mono flex items-start gap-2.5 border-b ${
             evaluationState === 'correct'
-              ? 'bg-func/10 text-func border-func/40'
-              : 'bg-error/10 text-error border-error/40'
+              ? 'bg-success-bg text-success-text border-success-border'
+              : 'bg-error-bg text-error-text border-error-border'
           }`}
         >
           {evaluationState === 'correct' ? (
-            <CheckCircle2 className="w-4 h-4 text-func shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-success-text shrink-0 mt-0.5" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-error shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-error-text shrink-0 mt-0.5" />
           )}
           <div className="flex-1">
             <span className="font-bold">
@@ -134,12 +134,12 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             </div>
           ) : result.error ? (
             /* Error Display */
-            <div className="p-4 bg-error/10 text-error font-mono text-xs space-y-2">
-              <div className="flex items-center gap-2 font-bold text-error">
+            <div className="p-4 bg-error-bg text-error-text font-mono text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-error-text">
                 <AlertCircle className="w-4 h-4" />
                 <span>SQL Execution Error</span>
               </div>
-              <p className="p-3 bg-error/20 rounded border border-error/40 leading-relaxed">
+              <p className="p-3 bg-surface-2 rounded border border-error-border leading-relaxed text-error-text">
                 {result.error}
               </p>
             </div>

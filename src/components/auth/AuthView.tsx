@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { AlertCircle, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react';
 import { authClient } from '../../lib/auth-client';
@@ -221,7 +221,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
+          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-func/20 transition"
         />
       </div>
 
@@ -236,7 +236,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
+            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-func/20 transition"
           />
           <button
             type="button"
@@ -269,7 +269,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_rgba(244,196,48,0.4)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_rgba(244,196,48,0.55)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
+        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_var(--accent-dim)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_var(--accent-line)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
       >
         {loading ? (
           <span className="w-[15px] h-[15px] rounded-full border-2 border-[rgba(10,13,18,0.25)] border-t-ink animate-spin" />
@@ -358,7 +358,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
+          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-func/20 transition"
         />
       </div>
 
@@ -371,7 +371,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
+          className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-func/20 transition"
         />
       </div>
 
@@ -387,7 +387,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
             minLength={8}
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition"
+            className="w-full bg-surface border border-border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-func/20 transition"
           />
           <button
             type="button"
@@ -427,7 +427,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
             required
             value={pw2}
             onChange={(e) => setPw2(e.target.value)}
-            className={`w-full bg-surface border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-[rgba(244,196,48,0.18)] transition ${pw2.length > 0 && pw2 !== pw ? 'border-error' : 'border-border'}`}
+            className={`w-full bg-surface border rounded-[8px] px-3.5 py-2.5 pr-10 text-sm text-text placeholder:text-text-faint focus:outline-none focus:border-func focus:ring-[3px] focus:ring-func/20 transition ${pw2.length > 0 && pw2 !== pw ? 'border-error' : 'border-border'}`}
           />
           <button
             type="button"
@@ -455,7 +455,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_rgba(244,196,48,0.4)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_rgba(244,196,48,0.55)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
+        className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_var(--accent-dim)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_var(--accent-line)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
       >
         {loading ? (
           <span className="w-[15px] h-[15px] rounded-full border-2 border-[rgba(10,13,18,0.25)] border-t-ink animate-spin" />

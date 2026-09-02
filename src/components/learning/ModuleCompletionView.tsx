@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 /**
  * ModuleCompletionView — P11.4 rebuild on the current design system.
  *
@@ -90,7 +90,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
         <div className='mt-5 font-mono text-[11px] uppercase tracking-[0.08em] text-text-faint'>
           {moduleLabel} · Complete
         </div>
-        <h1 className='mt-2 font-mono text-[26px] font-bold tracking-tight text-text'>
+        <h1 className='mt-2 font-display text-[26px] font-bold tracking-tight text-text'>
           {module.title}
         </h1>
         <p className='mt-2 text-sm text-text-dim'>
