@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 import { ALL_MODULES } from '../../content/curriculum-index';
@@ -41,14 +42,11 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left: brand dot + wordmark + current-route label (links home) */}
         <Link
           href="/"
-          className="flex items-center gap-[9px] min-w-0 hover:opacity-85 transition text-left focus:outline-none group"
+          className="flex items-center gap-[9px] min-w-0 hover:opacity-90 transition text-left focus:outline-none group"
           title="Return to Curriculum Homepage"
           aria-label="Return to Curriculum Homepage"
         >
-          <span className="w-[7px] h-[7px] rounded-full bg-func shrink-0" aria-hidden="true" />
-          <span className="font-mono font-bold text-[15px] tracking-tight text-text whitespace-nowrap">
-            SQLens
-          </span>
+          <BrandLogo size="sm" />
           <span className="hidden sm:inline-block font-body text-xs text-text-faint truncate pl-[9px] border-l border-border ml-[2px]">
             {activeViewTitle}
           </span>

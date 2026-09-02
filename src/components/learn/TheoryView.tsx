@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 /**
  * TheoryView — client view for /learn/[dayId]/theory/[conceptId].
  * Extracted from the page (Phase 4) so the page can be a server component
@@ -10,7 +10,6 @@ import { useRouter, notFound } from 'next/navigation';
 import { getModuleById } from '@/content/curriculum-index';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
-
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -46,6 +45,7 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
 
   return (
     <ConceptLessonView
+      moduleId={mod.id}
       concept={concept}
       conceptIndex={conceptIndex}
       totalConcepts={mod.concepts.length}

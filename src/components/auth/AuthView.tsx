@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { AlertCircle, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react';
 import { authClient } from '../../lib/auth-client';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 interface AuthViewProps {
   mode: 'signin' | 'signup' | null;
@@ -46,11 +47,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ mode, onSetMode, onBack, onS
       {/* Centered brand + tabbed form */}
       <main className="flex items-center justify-center px-6 sm:px-10 py-10 sm:py-14 flex-1">
         <div className="w-full max-w-[400px]">
-          <div className="flex items-center justify-center gap-2.5 mb-8">
-            <BrandMark />
-            <span className="font-display font-bold text-[19px] tracking-tight text-text">
-              SQL<span className="text-func">ens</span>
-            </span>
+          <div className="flex items-center justify-center mb-8">
+            <BrandLogo size="md" />
           </div>
 
           <AuthTabs tab={tab} onTabChange={setTab} />
@@ -70,16 +68,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ mode, onSetMode, onBack, onS
 /* Shared bits                                                                 */
 /* ========================================================================== */
 
-function BrandMark() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 30 30" fill="none" className="shrink-0">
-      <circle cx="12.5" cy="12.5" r="9" stroke="var(--func)" strokeWidth="2" />
-      <line x1="19" y1="19" x2="26" y2="26" stroke="var(--func)" strokeWidth="2.4" strokeLinecap="round" />
-      <line x1="8" y1="10.5" x2="17" y2="10.5" stroke="#d8d8d3" strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="8" y1="14.5" x2="15" y2="14.5" stroke="#d8d8d3" strokeWidth="1.6" strokeLinecap="round" opacity="0.65" />
-    </svg>
-  );
-}
+
 
 function AuthTabs({ tab, onTabChange }: { tab: 'signin' | 'signup'; onTabChange: (t: 'signin' | 'signup') => void }) {
   return (

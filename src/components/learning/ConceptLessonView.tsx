@@ -21,10 +21,13 @@ import { parseMcqQuestion } from '../../lib/parse-mcq-question';
 import { InlineContent } from './InlineContent';
 import { ExplanationEvalContent, StepExplanation } from './TruthEval';
 import Icon from '@/components/ui/Icon';
+import { ConceptMentalModel, shouldSuppressTopIntroTable } from './mental-models/ConceptMentalModel';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
 
 interface ConceptLessonViewProps {
+  /** The day/module ID used to resolve the concept archetype. */
+  moduleId: string;
   concept: Concept;
   conceptIndex: number;
   totalConcepts: number;
@@ -340,6 +343,7 @@ const FormattedExplanation: React.FC<{ content: string[] }> = ({ content }) => {
 /* ========================================================================= */
 
 export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
+  moduleId,
   concept,
   conceptIndex,
   totalConcepts,
@@ -462,8 +466,15 @@ return (
           </p>
         )}
 
-        {/* intro table */}
-        {theory.introTable && (
+        {/* Adaptive Concept Mental Model Visualizer
+             For diagram-driven archetypes (Days 6, 9, 14–17, 21–32, 35+),
+             replace the forced introTable with a purpose-built interactive
+             visualization. For tabular-projection concepts (Days 1–5, 34),
+             the actual introTable is shown below as before. */}
+        <ConceptMentalModel moduleId={moduleId} concept={concept} />
+
+        {/* intro table — only shown for tabular-projection archetypes */}
+        {theory.introTable && !shouldSuppressTopIntroTable(moduleId) && (
           <div className="mt-4">
             <DataTable
               tableName={theory.introTable.tableName}
