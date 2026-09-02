@@ -19,6 +19,10 @@ export default function AdminShell({ adminName, children }: { adminName: string;
     { href: '/admin', label: 'overview' },
     { href: '/admin/modules', label: 'curriculum' },
     { href: '/admin/users', label: `users${data ? ` (${data.total})` : ''}` },
+    { href: '/admin/analytics', label: 'analytics' },
+    { href: '/admin/query-debug', label: 'query debug' },
+    { href: '/admin/announcements', label: 'announcements' },
+    { href: '/admin/system', label: 'system' },
   ];
 
   return (
@@ -44,7 +48,7 @@ export default function AdminShell({ adminName, children }: { adminName: string;
           </Link>
         </div>
         {/* Tab navigation — real routes */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex gap-1">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto scrollbar-none whitespace-nowrap">
           {tabs.map((t) => {
             const active = pathname === t.href;
             return (

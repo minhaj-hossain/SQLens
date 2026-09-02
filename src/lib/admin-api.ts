@@ -115,3 +115,130 @@ export async function adminSetModule(
   });
   return assertOk(res, 'request_failed');
 }
+
+// ─── Analytics ─────────────────────────────────────────────────────────────
+
+export interface AdminAnalyticsData {
+  totalLearners: number;
+  activeLearners7d: number;
+  completedCurriculumCount: number;
+  medianDayReached: number;
+  streakDistribution: {
+    streak0to3: number;
+    streak4to7: number;
+    streak8to14: number;
+    streak15plus: number;
+  };
+  milestones: {
+    id: string;
+    number: number;
+    title: string;
+    subtitle: string;
+    totalModules: number;
+    completedCount: number;
+    completionRate: number;
+  }[];
+  modules: {
+    id: string;
+    day: number;
+    title: string;
+    milestoneId: string;
+    completedCount: number;
+    completionRate: number;
+    dropoffRate: number;
+  }[];
+  dropoffCliffs: { moduleId: string; day: number; title: string; dropCount: number }[];
+}
+
+export async function adminGetAnalytics(): Promise<AdminAnalyticsData> {
+  const res = await fetch('/api/admin/analytics', { credentials: 'same-origin' });
+  const body = (await assertOk(res, 'request_failed')) as { analytics: AdminAnalyticsData };
+  return body.analytics;
+}
+
+// ─── Announcements ─────────────────────────────────────────────────────────
+
+export interface AdminAnnouncement {
+  id: string;
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'maintenance' | 'success';
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function adminListAnnouncements(): Promise<AdminAnnouncement[]> {
+  const res = await fetch('/api/admin/announcements', { credentials: 'same-origin' });
+  const body = (await assertOk(res, 'request_failed')) as { announcements: AdminAnnouncement[] };
+  return body.announcements;
+}
+
+export async function adminCreateAnnouncement(payload: {
+  title: string;
+  message: string;
+  severity: AdminAnnouncement['severity'];
+  active?: boolean;
+}): Promise<AdminAnnouncement> {
+  const res = await fetch('/api/admin/announcements', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify(payload),
+  });
+  const body = (await assertOk(res, 'request_failed')) as { announcement: AdminAnnouncement };
+  return body.announcement;
+}
+
+export async function adminToggleAnnouncement(id: string, active: boolean): Promise<void> {
+  const res = await fetch(`/api/admin/announcements/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ active }),
+  });
+  await assertOk(res, 'request_failed');
+}
+
+export async function adminDeleteAnnouncement(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/announcements/${id}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+  });
+  await assertOk(res, 'request_failed');
+}
+
+// ─── System Telemetry ──────────────────────────────────────────────────────
+
+export interface AdminSystemHealth {
+  serverTime: string;
+  uptimeSeconds: number;
+  nodeVersion: string;
+  platform: string;
+  arch: string;
+  environment: string;
+  memory: {
+    heapUsedMB: number;
+    heapTotalMB: number;
+    rssMB: number;
+  };
+  database: {
+    status: string;
+    name: string;
+    collectionsCount: number;
+  };
+  curriculum: {
+    modulesCount: number;
+    conceptsCount: number;
+    practiceTasksCount: number;
+    milestonesCount: number;
+    status: string;
+  };
+}
+
+export async function adminGetSystemHealth(): Promise<AdminSystemHealth> {
+  const res = await fetch('/api/admin/system', { credentials: 'same-origin' });
+  const body = (await assertOk(res, 'request_failed')) as { system: AdminSystemHealth };
+  return body.system;
+}
+

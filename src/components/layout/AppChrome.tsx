@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 /**
  * AppChrome — the (app) route-group shell UI (Phase 3).
  * Renders the Header above route content and owns the blocked-account gate.
@@ -15,6 +15,7 @@ import { dayIdFromPathname } from '@/lib/learn-routes';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useUiChrome } from '@/components/providers/UiChromeProvider';
+import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -50,6 +51,8 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         onSignOut={signOut}
         activeViewTitle={activeViewTitle}
       />
+
+      <AnnouncementBanner />
 
       {/* Main Content Area — header is sticky (in flow), so no top offset needed */}
       <main className="relative w-full bg-surface-base min-h-screen">{children}</main>

@@ -77,14 +77,13 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         document.getElementById(`stage-card-${scrollToModuleId}`) ??
         document.getElementById(`leaf-${scrollToModuleId}`);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setPulseId(scrollToModuleId);
         setTimeout(() => setPulseId(null), 1800);
-        // Clean up the ?highlight= query param only after the scroll animation
-        // finishes (~600ms for smooth scroll) to avoid re-render mid-flight.
+        // Clean up the ?highlight= query param silently after the smooth scroll completes
         cleanupTimer = setTimeout(() => {
           onScrolledToModule?.();
-        }, 700);
+        }, 600);
       }
     });
     return () => {
