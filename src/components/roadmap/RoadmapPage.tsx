@@ -30,6 +30,14 @@ export default function RoadmapPage({ highlightDayId }: RoadmapPageProps) {
   // stored `userState.currentModuleId`, which navigation never updated.
   const position = deriveLastPosition(ALL_MODULES, userState);
 
+  const handleScrolledToModule = () => {
+    // Clean ?highlight= query param from the browser URL without triggering
+    // Next.js route navigation (which causes window scroll to snap to top).
+    if (typeof window !== 'undefined' && window.location.search) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  };
+
   return (
     <LearningPathView
       userState={userState}
@@ -38,7 +46,7 @@ export default function RoadmapPage({ highlightDayId }: RoadmapPageProps) {
       onSelectModuleAndConcept={selectModuleAndConcept}
       onOpenSchema={openSchema}
       scrollToModuleId={highlightDayId}
-      onScrolledToModule={() => router.replace('/')}
+      onScrolledToModule={handleScrolledToModule}
     />
   );
 }

@@ -173,8 +173,8 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
             <span>{headerLine.replace(/:$/, '')}</span>
           </div>
           {body && (
-            <div className="mt-1 text-xs sm:text-sm text-text-dim leading-relaxed">
-              <InlineContent text={body} />
+            <div className="mt-1 text-xs sm:text-sm text-text-dim leading-relaxed font-normal font-sans">
+              <SubContent text={body} />
             </div>
           )}
         </div>
@@ -187,8 +187,8 @@ const ExplanationItem: React.FC<{ rawText: string }> = ({ rawText }) => {
           <span>{headerLine}</span>
         </h3>
         {body && (
-          <div className="space-y-2">
-            <InlineContent text={body} />
+          <div className="space-y-2 text-text-dim font-normal font-sans">
+            <SubContent text={body} />
           </div>
         )}
       </div>
@@ -299,7 +299,7 @@ function SubLineBlocks({ text }: { text: string }) {
         }
 
         return (
-          <p key={idx} className="text-sm sm:text-[15px] leading-relaxed text-text-dim whitespace-pre-line font-sans">
+          <p key={idx} className="text-sm sm:text-[15px] leading-relaxed text-text-dim whitespace-pre-line font-sans font-normal">
             <InlineContent text={para} />
           </p>
         );

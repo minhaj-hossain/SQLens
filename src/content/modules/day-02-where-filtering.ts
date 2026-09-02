@@ -48,7 +48,7 @@ export const Day_02_MODULE: ModuleData = {
           'QUESTION_BLOCK::FROM::Where should I get the data from?',
           'QUESTION_BLOCK::WHERE::Which rows meet my criteria?',
           'QUESTION_BLOCK::SELECT::What columns do I want to see in the result?',
-          '### 2. The Golden Rule of Row Filtering\n**SELECT controls columns. WHERE controls rows.**\nSQL first evaluates the `WHERE` condition row-by-row to decide which rows survive, and only then extracts the columns requested in `SELECT`.',
+          '### 2. The Golden Rule of Row Filtering\nSELECT controls columns. WHERE controls rows.\n\nSQL first evaluates the `WHERE` condition row-by-row to decide which rows survive, and only then extracts the columns requested in `SELECT`.',
         ],
         targetQuery: {
           sql: 'SELECT name, age\nFROM students\nWHERE age = 21;',

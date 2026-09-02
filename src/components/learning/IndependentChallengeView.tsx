@@ -548,9 +548,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             <div
               ref={highlightRef}
               aria-hidden="true"
-              className="absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
+              className="sql-editor-overlay absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
               style={EDITOR_TEXT_STYLE}
-              dangerouslySetInnerHTML={{ __html: highlightedCode + (currentSql.endsWith('\n') ? '<br />&nbsp;' : '') }}
+              dangerouslySetInnerHTML={{ __html: highlightedCode + (currentSql.endsWith('\n') ? '<br />' : '') }}
             />
 
             {/* Editable Textarea */}
@@ -588,7 +588,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 caretColor: 'var(--func)',
                 WebkitTextFillColor: 'transparent',
               }}
-              className="absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto scrollbar-thin border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"
+              className="sql-editor-textarea absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"
             />
 
             {/* Autocomplete Popup */}

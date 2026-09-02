@@ -582,3 +582,20 @@
   100% { box-shadow: 0 0 0 0 var(--pulse-fade); }
 }
 .stage-pulse { animation: stage-pulse 0.9s ease-out 2; border-radius: 9999px; }
+
+/* ── Code Editor Caret & Backdrop Pixel Alignment ─────────────────────────────
+   Ensures transparent textarea and syntax-highlight backdrop have 100% identical
+   wrapping widths by suppressing scrollbar gutters on both layers.
+──────────────────────────────────────────────────────────────────────────── */
+.sql-editor-textarea,
+.sql-editor-overlay {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.sql-editor-textarea::-webkit-scrollbar,
+.sql-editor-overlay::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

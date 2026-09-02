@@ -61,20 +61,36 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   const nextModule = getNextModule(currentModule, ALL_MODULES);
 
   // Auto-scroll to a target day's leaf (returns from a lesson via ?highlight=).
+  // Strategy:
+  //   1. requestAnimationFrame ensures the DOM is fully painted before we try
+  //      to find/scroll to the element.
+  //   2. scrollIntoView with block:'nearest' scrolls the minimum required —
+  //      never bounces up to the top if the element is already visible.
+  //   3. onScrolledToModule (URL cleanup) is deferred 700ms so the smooth-
+  //      scroll animation finishes before router.replace('/') triggers a
+  //      re-render that would reset the scroll position.
   useEffect(() => {
     if (!scrollToModuleId) return;
-    const t = setTimeout(() => {
+    let cleanupTimer: ReturnType<typeof setTimeout>;
+    const rafId = requestAnimationFrame(() => {
       const el =
         document.getElementById(`stage-card-${scrollToModuleId}`) ??
         document.getElementById(`leaf-${scrollToModuleId}`);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         setPulseId(scrollToModuleId);
         setTimeout(() => setPulseId(null), 1800);
-        onScrolledToModule?.();
+        // Clean up the ?highlight= query param only after the scroll animation
+        // finishes (~600ms for smooth scroll) to avoid re-render mid-flight.
+        cleanupTimer = setTimeout(() => {
+          onScrolledToModule?.();
+        }, 700);
       }
-    }, 60);
-    return () => clearTimeout(t);
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(cleanupTimer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollToModuleId]);
 
