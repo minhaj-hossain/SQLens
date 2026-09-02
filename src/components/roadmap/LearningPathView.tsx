@@ -299,7 +299,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-all duration-150 ${
                           isDone
-                            ? 'bg-done border-[1.5px] border-done text-ink font-bold hover:-translate-y-0.5 hover:shadow-[0_0_0_4px_var(--success-bg)] cursor-pointer'
+                            ? 'bg-surface-2 border-[1.5px] border-func/40 text-func font-bold hover:bg-func/10 hover:border-func hover:-translate-y-0.5 cursor-pointer shadow-[0_0_12px_rgba(244,196,48,0.06)]'
                             : isCurrent
                             ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_5px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
                             : isUnlocked
@@ -342,7 +342,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                             <span
                               className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] shrink-0 font-bold ${
                                 conceptDone
-                                  ? 'bg-done text-ink'
+                                  ? 'bg-func/20 text-func border border-func/40'
                                   : cIdx === calloutConcepts.findIndex((c) => !isConceptCompleted(c, currentModule.id, userState))
                                   ? 'bg-func text-ink'
                                   : 'bg-surface-2 text-text-faint border border-border'

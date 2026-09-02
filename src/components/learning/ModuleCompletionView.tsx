@@ -82,9 +82,9 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
       transition={{ duration: 0.25 }}
       className='mx-auto max-w-2xl py-4'
     >
-      {/* Hero — gold check ring */}
+      {/* Hero — check ring matching our color combo */}
       <div className='flex flex-col items-center text-center'>
-        <div className='flex h-16 w-16 items-center justify-center rounded-full border border-accent/60 bg-accent/10 text-accent shadow-[0_0_18px_var(--accent-dim)]'>
+        <div className='flex h-16 w-16 items-center justify-center rounded-full border border-func/40 bg-func/10 text-func shadow-[0_0_24px_rgba(244,196,48,0.12)]'>
           <Icon name='check' className='text-[30px]' />
         </div>
         <div className='mt-5 font-mono text-[11px] uppercase tracking-[0.08em] text-text-faint'>
@@ -106,7 +106,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
         </div>
         <div className='mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2'>
           <div
-            className='h-full rounded-full bg-accent transition-all duration-500'
+            className='h-full rounded-full bg-func transition-all duration-500'
             style={{ width: `${milestonePercent}%` }}
           />
         </div>
@@ -143,7 +143,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
             {nextStatus.isUnlocked && onContinueNextDay && (
               <button
                 onClick={onContinueNextDay}
-                className='mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-[13px] font-semibold text-ink transition hover:brightness-105 active:scale-[0.99] sm:w-auto'
+                className='mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-func px-5 py-2.5 text-[13px] font-semibold text-ink transition hover:bg-func-hover active:scale-[0.99] sm:w-auto cursor-pointer shadow-sm'
               >
                 Start {getModuleDisplayLabel(nextModule)}
                 <Icon name='arrow_forward' className='text-[15px]' />
@@ -152,7 +152,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
           </>
         ) : (
           <div className='py-1 text-center'>
-            <div className='text-[15px] font-semibold text-accent'>Curriculum completed</div>
+            <div className='text-[15px] font-semibold text-func'>Curriculum completed</div>
             <p className='mx-auto mt-1.5 max-w-md text-[13px] text-text-dim'>
               You&apos;ve finished all {ALL_MODULES.length} days of the SQLens curriculum.
             </p>

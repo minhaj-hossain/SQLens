@@ -1,4 +1,4 @@
-﻿import React, { useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
@@ -113,7 +113,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
                           isCurrent
                             ? 'border-string bg-string/10 text-text font-medium'
                             : isCompleted
-                            ? 'border-border bg-surface-2 text-text hover:border-text-dim cursor-pointer'
+                            ? 'border-func/30 bg-surface-2 text-text hover:border-func cursor-pointer'
                             : isUnlocked
                             ? 'border-border bg-surface-2/50 text-text-dim hover:border-keyword/40 cursor-pointer'
                             : 'border-border-soft bg-surface/20 text-text-faint cursor-not-allowed'

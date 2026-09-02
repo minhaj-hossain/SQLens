@@ -47,8 +47,9 @@
   --warning: #f59e0b;
   --warning-text: #fbbf24;
   --warning-bg: rgba(245, 158, 11, 0.12);
-  --warning-border: rgba(245, 158, 11, 0.3);
-  --done: #4ade80;
+  --done: #f4c430;
+  --done-bg: rgba(244, 196, 48, 0.12);
+  --done-border: rgba(244, 196, 48, 0.35);
 
   /* legacy aliases for backwards compatibility */
   --primary: #f4c430;
@@ -151,8 +152,9 @@
   --warning: #f59e0b;
   --warning-text: #fbbf24;
   --warning-bg: rgba(245, 158, 11, 0.12);
-  --warning-border: rgba(245, 158, 11, 0.3);
-  --done: #34d399;
+  --done: #38bdf8;
+  --done-bg: rgba(56, 189, 248, 0.12);
+  --done-border: rgba(56, 189, 248, 0.35);
 
   /* legacy semantic names */
   --primary: #38bdf8;
@@ -221,7 +223,7 @@
   --color-string: #38bdf8;
   --color-keyword: #60a5fa;
   --color-comment: #64748b;
-  --color-done: #34d399;
+  --color-done: #38bdf8;
 
   --color-success: #10b981;
   --color-success-text: #34d399;
@@ -296,7 +298,7 @@
   --color-string: #f4c430;
   --color-keyword: #f4f4f5;
   --color-comment: #71717a;
-  --color-done: #4ade80;
+  --color-done: #f4c430;
 
   /* status tokens */
   --color-success: #22c55e;
