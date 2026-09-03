@@ -402,14 +402,14 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
     conceptDots && conceptDots.length === totalConcepts
       ? conceptDots
       : Array.from({ length: totalConcepts }, (_, i) =>
-          i < conceptIndex ? 'done' : i === conceptIndex ? 'current' : 'todo');
+        i < conceptIndex ? 'done' : i === conceptIndex ? 'current' : 'todo');
 
   const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="font-mono text-[11px] text-text-faint tracking-[0.07em] uppercase mb-3.5 mt-7 first:mt-0">
       {children}
     </div>
   );
-return (
+  return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -422,11 +422,11 @@ return (
         {/* ----- lesson head ----- */}
         <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6 w-full min-w-0">
           {/* Left: label — truncates cleanly with line-clamp */}
-          <div className="font-mono text-[10.5px] sm:text-[11.5px] text-text-faint min-w-0 flex-1">
-            <span className="block line-clamp-1">
+          <div className="font-mono text-[10.5px] sm:text-[11.5px] text-text-faint min-w-0 flex-1 line-clamp-1">
+            <span className="block ">
               SQL Lesson {conceptIndex + 1}
               <span className="mx-1 text-border">/</span>
-              <b className="text-text-dim font-medium">{concept.title}</b>
+              <b className="text-text-dim font-medium ">{concept.title}</b>
             </span>
           </div>
 
@@ -442,8 +442,8 @@ return (
                     d === 'current'
                       ? 'w-2 h-2 rounded-full border-[1.5px] border-func bg-transparent'
                       : d === 'done'
-                      ? 'w-[7px] h-[7px] rounded-full bg-text-faint'
-                      : 'w-[7px] h-[7px] rounded-full bg-border'
+                        ? 'w-[7px] h-[7px] rounded-full bg-text-faint'
+                        : 'w-[7px] h-[7px] rounded-full bg-border'
                   }
                 />
               ))}
@@ -518,7 +518,7 @@ return (
             />
           </div>
         )}
-{/* ---------- steps ---------- */}
+        {/* ---------- steps ---------- */}
         {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
           <>
             <SectionLabel>Step-by-step SQL processing</SectionLabel>
@@ -571,7 +571,7 @@ return (
             </div>
           </>
         )}
-{/* ---------- live demo ---------- */}
+        {/* ---------- live demo ---------- */}
         {onExecuteSql && (theory.liveDemoSql || theory.exampleQuery) && (
           <>
             <SectionLabel>Interactive live demo</SectionLabel>
@@ -648,7 +648,7 @@ return (
             </div>
           </>
         )}
-{/* ---------- MCQ ---------- */}
+        {/* ---------- MCQ ---------- */}
         {theory.mcqs && theory.mcqs.length > 0 && (
           <>
             <SectionLabel>Test yourself</SectionLabel>
@@ -667,9 +667,8 @@ return (
                     </div>
                     {pq.lead && (
                       <p
-                        className={`text-[13.5px] leading-relaxed font-sans ${
-                          pq.facts.length > 0 ? 'text-text-dim' : 'font-semibold text-text'
-                        }`}
+                        className={`text-[13.5px] leading-relaxed font-sans ${pq.facts.length > 0 ? 'text-text-dim' : 'font-semibold text-text'
+                          }`}
                       >
                         <InlineContent text={pq.lead} />
                       </p>
@@ -697,11 +696,10 @@ return (
                     )}
                     {pq.question && (
                       <p
-                        className={`text-[13.5px] font-semibold text-text leading-snug font-sans ${
-                          pq.lead || pq.facts.length > 0
+                        className={`text-[13.5px] font-semibold text-text leading-snug font-sans ${pq.lead || pq.facts.length > 0
                             ? 'mt-3.5 rounded-r-lg border-l-2 border-l-func bg-surface-3/40 pl-3 pr-2 py-2'
                             : ''
-                        }`}
+                          }`}
                       >
                         <InlineContent text={pq.question} />
                       </p>
@@ -733,13 +731,12 @@ return (
                             className={cls}
                           >
                             <span
-                              className={`w-5 h-5 rounded-full border flex items-center justify-center font-mono text-[10.5px] shrink-0 ${
-                                hasAnswered && isOptCorrect
+                              className={`w-5 h-5 rounded-full border flex items-center justify-center font-mono text-[10.5px] shrink-0 ${hasAnswered && isOptCorrect
                                   ? 'border-success-border text-ink bg-success'
                                   : hasAnswered && isOptSelected && !isCorrect
-                                  ? 'border-error-border text-error-text'
-                                  : 'border-border text-text-faint'
-                              }`}
+                                    ? 'border-error-border text-error-text'
+                                    : 'border-border text-text-faint'
+                                }`}
                             >
                               {hasAnswered && isOptCorrect && !isOptSelected ? '✓' : letter}
                             </span>
@@ -756,11 +753,10 @@ return (
                     </div>
                     {hasAnswered && mcq.explanation && (
                       <div
-                        className={`mt-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed border font-sans ${
-                          isCorrect
+                        className={`mt-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed border font-sans ${isCorrect
                             ? 'bg-success-bg border-success-border text-success-text'
                             : 'bg-error-bg border-error-border text-error-text'
-                        }`}
+                          }`}
                       >
                         <span className="font-bold">
                           {isCorrect ? 'Correct! ' : 'Explanation: '}
@@ -774,7 +770,7 @@ return (
             </div>
           </>
         )}
-{/* ---------- key takeaway + common mistakes ---------- */}
+        {/* ---------- key takeaway + common mistakes ---------- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-7 mb-4">
           {theory.keyTakeaway && (
             <div className="rounded-r-xl border border-border-soft border-l-[3px] border-l-func bg-surface-2 px-4 py-3">
