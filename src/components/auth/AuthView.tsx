@@ -75,25 +75,22 @@ function AuthTabs({ tab, onTabChange }: { tab: 'signin' | 'signup'; onTabChange:
     <div className="relative flex bg-surface border border-border rounded-full p-1 mb-8 select-none">
       <span
         aria-hidden
-        className={`absolute top-1 left-1 w-[calc(50%-4px)] h-[calc(100%-8px)] bg-ink border border-border rounded-full transition-transform duration-200 ease-out ${
-          tab === 'signup' ? 'translate-x-full' : ''
-        }`}
+        className={`absolute top-1 left-1 w-[calc(50%-4px)] h-[calc(100%-8px)] bg-ink border border-border rounded-full transition-transform duration-200 ease-out ${tab === 'signup' ? 'translate-x-full' : ''
+          }`}
       />
       <button
         type="button"
         onClick={() => onTabChange('signin')}
-        className={`relative flex-1 py-2 rounded-full text-[13.5px] font-semibold transition-colors cursor-pointer ${
-          tab === 'signin' ? 'text-func' : 'text-text-dim hover:text-text'
-        }`}
+        className={`relative flex-1 py-2 rounded-full text-[13.5px] font-semibold transition-colors cursor-pointer ${tab === 'signin' ? 'text-func' : 'text-text-dim hover:text-text'
+          }`}
       >
         Sign In
       </button>
       <button
         type="button"
         onClick={() => onTabChange('signup')}
-        className={`relative flex-1 py-2 rounded-full text-[13.5px] font-semibold transition-colors cursor-pointer ${
-          tab === 'signup' ? 'text-func' : 'text-text-dim hover:text-text'
-        }`}
+        className={`relative flex-1 py-2 rounded-full text-[13.5px] font-semibold transition-colors cursor-pointer ${tab === 'signup' ? 'text-func' : 'text-text-dim hover:text-text'
+          }`}
       >
         Sign Up
       </button>
@@ -196,7 +193,7 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         <h2 className="font-display font-semibold text-[22px] mb-1">Welcome back</h2>
         <p className="text-text-dim text-[13.5px] mb-1">Day 2 is waiting — pick up right where you left off.</p>
       </div>
-{/* 
+      {/* 
       <OAuthButtons />
 
       <Divider text="or sign in with email" /> */}
@@ -333,7 +330,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         <h2 className="font-display font-semibold text-[22px] mb-1">Create your account</h2>
         <p className="text-text-dim text-[13.5px] mb-1">Join 38 Days of hands-on SQL. No credit card, no excuses.</p>
       </div>
-{/* 
+      {/* 
       <OAuthButtons />
 
       <Divider text="or sign up with email" /> */}
