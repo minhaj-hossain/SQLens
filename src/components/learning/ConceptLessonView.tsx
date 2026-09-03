@@ -420,14 +420,20 @@ return (
       <div className="bg-surface border border-border rounded-[14px] px-3.5 py-4 sm:px-[30px] sm:pt-[30px] sm:pb-3 overflow-hidden min-w-0">
 
         {/* ----- lesson head ----- */}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 mb-5 sm:mb-6 min-w-0">
-          <div className="font-mono text-[11px] sm:text-[11.5px] text-text-faint min-w-0 truncate">
-            SQL Lesson {conceptIndex + 1} /{' '}
-            <b className="text-text-dim font-medium">{concept.title}</b>
+        <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6 w-full min-w-0">
+          {/* Left: label — truncates cleanly with line-clamp */}
+          <div className="font-mono text-[10.5px] sm:text-[11.5px] text-text-faint min-w-0 flex-1">
+            <span className="block line-clamp-1">
+              SQL Lesson {conceptIndex + 1}
+              <span className="mx-1 text-border">/</span>
+              <b className="text-text-dim font-medium">{concept.title}</b>
+            </span>
           </div>
-          <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0 ml-auto sm:ml-0">
+
+          {/* Right: dots + Next — never compresses */}
+          <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
             {/* progress dots */}
-            <div className="flex items-center gap-1.5">
+            <div className="hidden sm:flex items-center gap-1.5">
               {dots.map((d, i) => (
                 <span
                   key={i}
@@ -442,9 +448,13 @@ return (
                 />
               ))}
             </div>
+            {/* Compact dot count on mobile */}
+            <span className="sm:hidden font-mono text-[10px] text-text-faint tabular-nums">
+              {conceptIndex + 1}/{dots.length}
+            </span>
             <button
               onClick={onStartPractice}
-              className="inline-flex items-center gap-1.5 bg-func text-ink font-semibold text-[13px] px-4 py-2 rounded-lg hover:brightness-110 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 sm:gap-1.5 bg-func text-ink font-semibold text-[12px] sm:text-[13px] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:brightness-110 transition-colors cursor-pointer whitespace-nowrap"
             >
               Next <span aria-hidden>→</span>
             </button>
