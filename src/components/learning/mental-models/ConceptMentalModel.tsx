@@ -55,12 +55,45 @@ const CONCEPT_ID_OVERRIDES: Record<string, ConceptArchetype> = {
   'where-like-wildcards':       'PREDICATE_PATTERN',
   'where-null-safety':          'PREDICATE_PATTERN',
 
+  // ── Day 9 ─────────────────────────────────────────────────────────────────
+  // Concepts 1–5 are standalone aggregation functions (COUNT, MIN, MAX, SUM, AVG):
+  // they do NOT use GROUP BY or HAVING and should show authentic source tables.
+  'aggregate-count':            'TABULAR_PROJECTION',
+  'aggregate-min':              'TABULAR_PROJECTION',
+  'aggregate-max':              'TABULAR_PROJECTION',
+  'aggregate-sum':              'TABULAR_PROJECTION',
+  'aggregate-avg':              'TABULAR_PROJECTION',
+  // Concepts 6 & 7 explicitly teach GROUP BY & HAVING — GroupBucketingVisualizer is correct.
+  'grouping-with-group-by':     'GROUP_BUCKETING',
+  'having-filter':              'GROUP_BUCKETING',
+
+  // ── Day 12 ────────────────────────────────────────────────────────────────
+  // Concepts 1, 2, 4 teach date extraction and difference:
+  'date-components':            'TABULAR_PROJECTION',
+  'group-by-date-parts':        'TABULAR_PROJECTION',
+  'datediff':                   'TABULAR_PROJECTION',
+  // Concept 3 explicitly teaches relative date math ("The Last N Days") — DateTimelineVisualizer is correct.
+  'date-arithmetic':            'DATE_TIMELINE',
+
+  // ── Day 21 ────────────────────────────────────────────────────────────────
+  // Concepts 1–4 teach subqueries (scalar, IN, NOT IN, correlated) before CTEs are introduced.
+  'subqueries-scalar':          'TABULAR_PROJECTION',
+  'subqueries-in-set':          'TABULAR_PROJECTION',
+  'subqueries-not-in-null-trap': 'TABULAR_PROJECTION',
+  'subqueries-correlated':      'TABULAR_PROJECTION',
+  // Concept 5 explicitly teaches Common Table Expressions (WITH) — CtePipelineVisualizer is correct.
+  'common-table-expressions-cte': 'SUBQUERY_CTE',
+
   // ── Day 32 ────────────────────────────────────────────────────────────────
   // Only the SQL injection concepts should show the security visualizer.
   // "Production Safety Drills" is a checklist concept — authentic table is better.
   'sec-injection':              'SECURITY_DEFENSE',
   'sec-parameterized':          'SECURITY_DEFENSE',
   'sec-production':             'TABULAR_PROJECTION',
+
+  // ── Day 38 ────────────────────────────────────────────────────────────────
+  // Concept 1 is "Beyond the Course: Window Functions Preview" — NOT an interview whiteboard.
+  'window-functions-and-future': 'WINDOW_ANALYTICAL',
 };
 
 /**
@@ -84,7 +117,8 @@ export function resolveConceptArchetype(moduleId: string, concept?: Concept): Co
   if (mid === 'day-06' || mid === 'day-16') return 'EXECUTION_PIPELINE';
   // Day 7 is an E-Commerce schema audit (exploration), NOT joins — joins start Day 14.
   if (mid === 'day-14' || mid === 'day-15') return 'RELATIONAL_JOIN';
-  if (mid === 'day-09' || mid === 'day-13' || mid === 'day-18') return 'GROUP_BUCKETING';
+  if (mid === 'day-09') return 'GROUP_BUCKETING';
+  // Day 13 & Day 18 are practice dashboard / applied BI modules — authentic source tables.
   if (mid === 'day-10') return 'CASE_DECISION';
   if (mid === 'day-11') return 'STRING_TRANSFORM';
   if (mid === 'day-12') return 'DATE_TIMELINE';
@@ -93,11 +127,12 @@ export function resolveConceptArchetype(moduleId: string, concept?: Concept): Co
   if (mid === 'day-23' || mid === 'day-24') return 'WINDOW_ANALYTICAL';
   // Day 25 is basic INSERT/UPDATE/DELETE — no commit/rollback; TransactionTimeline is Day 26 only.
   if (mid === 'day-26') return 'DML_TRANSACTION';
-  if (mid === 'day-27' || mid === 'day-28' || mid === 'day-29' || mid === 'day-30' || mid === 'day-33') return 'SCHEMA_DDL';
+  // Day 33 is the Bookstore Capstone — authentic multi-table bookstore schema, NOT generic users/orders blueprint.
+  if (mid === 'day-27' || mid === 'day-28' || mid === 'day-29' || mid === 'day-30') return 'SCHEMA_DDL';
   if (mid === 'day-31') return 'BTREE_INDEXING';
   // Day 32 security: concept-level overrides above handle injection vs production concepts.
   if (mid === 'day-32') return 'SECURITY_DEFENSE';
-  if (mid === 'day-36' || mid === 'day-37' || mid === 'day-38') return 'INTERVIEW_WHITEBOARD';
+  if (mid === 'day-36' || mid === 'day-37') return 'INTERVIEW_WHITEBOARD';
 
   // 3. Universal fallback — shows authentic source table
   return 'TABULAR_PROJECTION';
@@ -108,7 +143,13 @@ export function resolveConceptArchetype(moduleId: string, concept?: Concept): Co
  * Whether the top introTable should be suppressed because a dedicated
  * mental model visualizer replaces it or a static table makes no pedagogical sense.
  */
-export function shouldSuppressTopIntroTable(moduleId: string): boolean {
+export function shouldSuppressTopIntroTable(moduleId: string, concept?: Concept): boolean {
+  // If the concept resolves to TABULAR_PROJECTION, we NEVER suppress its authentic source table.
+  const archetype = resolveConceptArchetype(moduleId, concept);
+  if (archetype === 'TABULAR_PROJECTION') {
+    return false;
+  }
+
   const mid = moduleId.toLowerCase();
   // These modules require conceptual diagrams rather than a flat mock table at top.
   // Day 7, 25, 35 removed: they have useful source tables that contextualize the lesson.

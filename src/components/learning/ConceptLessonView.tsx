@@ -474,7 +474,7 @@ return (
         <ConceptMentalModel moduleId={moduleId} concept={concept} />
 
         {/* intro table — only shown for tabular-projection archetypes */}
-        {theory.introTable && !shouldSuppressTopIntroTable(moduleId) && (
+        {theory.introTable && !shouldSuppressTopIntroTable(moduleId, concept) && (
           <div className="mt-4">
             <DataTable
               tableName={theory.introTable.tableName}
