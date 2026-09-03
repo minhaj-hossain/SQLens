@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 /**
  * /learn/[dayId] layout — the DAY boundary (Phase 3).
  *  - Validates dayId against the curriculum (invalid → 404).
@@ -55,7 +55,7 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
   if (isLocked && !isOverview) return null;
 
   return (
-    <div className="flex flex-col w-full pb-8 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
+    <div className="flex flex-col w-full pb-8 px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 max-w-7xl mx-auto min-w-0 overflow-x-clip">
       {/* Breadcrumb Header */}
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-4 mb-4 border-b border-border-soft">
         <button

@@ -197,9 +197,9 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         <p className="text-text-dim text-[13.5px] mb-1">Day 2 is waiting — pick up right where you left off.</p>
       </div>
 
-      <OAuthButtons />
+      {/* <OAuthButtons /> */}
 
-      <Divider text="or sign in with email" />
+      {/* <Divider text="or sign in with email" /> */}
 
       <div className="flex flex-col gap-[7px]">
         <label className="font-mono text-[11.5px] tracking-[0.03em] text-text-dim uppercase" htmlFor="si-email">Email</label>
@@ -334,9 +334,9 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         <p className="text-text-dim text-[13.5px] mb-1">Join 38 Days of hands-on SQL. No credit card, no excuses.</p>
       </div>
 
-      <OAuthButtons />
+      {/* <OAuthButtons /> */}
 
-      <Divider text="or sign up with email" />
+      {/* <Divider text="or sign up with email" /> */}
 
       <div className="flex flex-col gap-[7px]">
         <label className="font-mono text-[11.5px] tracking-[0.03em] text-text-dim uppercase" htmlFor="su-name">Full name</label>

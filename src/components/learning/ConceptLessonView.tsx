@@ -415,17 +415,17 @@ return (
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.22 }}
-      className="w-full max-w-[760px] mx-auto px-4 pb-10"
+      className="w-full max-w-[760px] mx-auto px-0 sm:px-4 pb-10 min-w-0"
     >
-      <div className="bg-surface border border-border rounded-[14px] px-5 sm:px-[30px] pt-[26px] sm:pt-[30px] pb-2 overflow-hidden">
+      <div className="bg-surface border border-border rounded-[14px] px-3.5 py-4 sm:px-[30px] sm:pt-[30px] sm:pb-3 overflow-hidden min-w-0">
 
         {/* ----- lesson head ----- */}
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mb-6">
-          <div className="font-mono text-[11.5px] text-text-faint">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 mb-5 sm:mb-6 min-w-0">
+          <div className="font-mono text-[11px] sm:text-[11.5px] text-text-faint min-w-0 truncate">
             SQL Lesson {conceptIndex + 1} /{' '}
             <b className="text-text-dim font-medium">{concept.title}</b>
           </div>
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0 ml-auto sm:ml-0">
             {/* progress dots */}
             <div className="flex items-center gap-1.5">
               {dots.map((d, i) => (
@@ -651,8 +651,8 @@ return (
                 // or the legacy layout of a question line followed by SQL code.
                 const pq = parseMcqQuestion(mcq.question);
                 return (
-                  <div key={mIdx} className="rounded-xl bg-surface-2 border border-border p-6">
-                    <div className="font-mono text-[10.5px] text-text-faint uppercase tracking-[0.06em] mb-3">
+                  <div key={mIdx} className="rounded-xl bg-surface-2 border border-border p-3.5 sm:p-6 min-w-0">
+                    <div className="font-mono text-[10px] sm:text-[10.5px] text-text-faint uppercase tracking-[0.06em] mb-2.5 sm:mb-3">
                       MCQ · Question {mIdx + 1}
                     </div>
                     {pq.lead && (

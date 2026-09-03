@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { PracticeTask, Concept } from '../../types/curriculum';
 import { BookOpen, CheckCircle2, ChevronDown, ChevronUp, Code, Copy, Check, HelpCircle } from 'lucide-react';
 
@@ -47,11 +47,11 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   return (
     <div
       id="task-instructions-container"
-      className="flex flex-col bg-surface rounded-xl border border-border p-5 relative text-text"
+      className="flex flex-col bg-surface rounded-xl border border-border p-3.5 sm:p-5 relative text-text w-full min-w-0"
     >
       {/* Top Header: Muted Secondary Metadata & Lesson Link */}
-      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pb-2.5 border-b border-border-soft text-xs">
-        <div className="flex items-center gap-1.5 font-mono text-[11.5px] text-text-faint min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 pb-2.5 border-b border-border-soft text-xs min-w-0">
+        <div className="flex items-center gap-1.5 font-mono text-[11px] sm:text-[11.5px] text-text-faint min-w-0 truncate">
           <span className="tracking-wider shrink-0">
             TASK {taskIndex + 1}/{totalTasks}
           </span>
@@ -59,9 +59,9 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
           <b className="text-text-dim font-medium truncate">{concept.title}</b>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
           {isCompleted && (
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-text-dim bg-surface-2 px-2.5 py-1 rounded-md border border-border">
+            <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-medium text-text-dim bg-surface-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-border">
               <span className="w-3 h-3 rounded-full bg-done text-ink flex items-center justify-center text-[8px] font-bold leading-none">✓</span>
               <span>Done</span>
             </div>
@@ -70,32 +70,32 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
       </div>
 
       {/* Main Single Task Statement (Prominent Visual Focus) */}
-      <div className="py-3.5">
-        <h2 className="font-display text-[19px] font-semibold text-text leading-snug tracking-tight">
+      <div className="py-2.5 sm:py-3.5 min-w-0">
+        <h2 className="font-display text-[17px] sm:text-[19px] font-semibold text-text leading-snug tracking-tight">
           {taskStatement}
         </h2>
       </div>
 
-      {/* Meta strip — TABLE / COLUMNS / EXPECTED ROWS (design `.meta-row`) */}
-      <div className="mt-4 flex flex-wrap items-center font-mono text-xs bg-surface-2 border border-border-soft rounded-lg px-4 py-2.5">
-        <div className="flex items-center gap-2 pr-4 mr-4 border-r border-border">
-          <span className="text-text-faint tracking-wider">TABLE</span>
-          <span className="text-text font-semibold">{task.primaryTable}</span>
+      {/* Meta strip — TABLE / COLUMNS / EXPECTED ROWS (responsive chips on mobile, divided strip on desktop) */}
+      <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 font-mono text-xs bg-surface-2 border border-border-soft rounded-lg p-2.5 sm:px-4 sm:py-2.5 min-w-0">
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
+          <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">TABLE</span>
+          <span className="text-text font-semibold text-[11px] sm:text-xs">{task.primaryTable}</span>
         </div>
 
         {task.validation.requiredColumns && task.validation.requiredColumns.length > 0 && (
-          <div className="flex items-center gap-2 pr-4 mr-4 border-r border-border">
-            <span className="text-text-faint tracking-wider">COLUMNS</span>
-            <span className="text-text font-semibold">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border min-w-0 max-w-full">
+            <span className="text-text-faint text-[10px] sm:text-xs tracking-wider shrink-0">COLUMNS</span>
+            <span className="text-text font-semibold text-[11px] sm:text-xs truncate">
               {task.validation.requiredColumns.join(', ')}
             </span>
           </div>
         )}
 
         {task.validation.expectedRowCount !== undefined && (
-          <div className="flex items-center gap-2">
-            <span className="text-text-faint tracking-wider">EXPECTED ROWS</span>
-            <span className="text-text font-semibold">{String(task.validation.expectedRowCount)}</span>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 shrink-0">
+            <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">EXPECTED</span>
+            <span className="text-text font-semibold text-[11px] sm:text-xs">{String(task.validation.expectedRowCount)} rows</span>
           </div>
         )}
       </div>

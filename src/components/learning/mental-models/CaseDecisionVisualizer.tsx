@@ -29,14 +29,14 @@ export const CaseDecisionVisualizer: React.FC = () => {
     : 'In Stock';
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-5 text-text my-5 shadow-sm">
+    <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-5 text-text my-4 sm:my-5 shadow-sm w-full min-w-0">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-border-soft">
-        <div>
-          <span className="font-mono text-[11px] uppercase tracking-wider text-func font-semibold">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 sm:pb-4 border-b border-border-soft min-w-0">
+        <div className="min-w-0">
+          <span className="font-mono text-[10.5px] sm:text-[11px] uppercase tracking-wider text-func font-semibold">
             Mental Model · Branching Conditional Logic
           </span>
-          <h3 className="font-display font-semibold text-[17px] text-text mt-0.5">
+          <h3 className="font-display font-semibold text-[15px] sm:text-[17px] text-text mt-0.5">
             CASE Expression Flowchart & The &quot;First Match Wins&quot; Rule
           </h3>
         </div>

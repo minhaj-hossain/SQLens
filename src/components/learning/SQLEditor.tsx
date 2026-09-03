@@ -552,22 +552,22 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Bottom Action Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 bg-surface border-t border-border-soft">
-        <div className="flex items-center gap-2 text-xs text-text-faint font-mono">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-surface border-t border-border-soft min-w-0">
+        <div className="hidden sm:flex items-center gap-2 text-xs text-text-faint font-mono">
           <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-dim text-[10px]">
             Ctrl + Enter
           </kbd>
-          <span className="hidden sm:inline">to run &amp; check</span>
+          <span>to run &amp; check</span>
         </div>
 
         {/* P11.2: step-chain Back + Single Smart Button: Run -> Check -> Next */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-end">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
               title={backLabel}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono text-text-dim border border-border bg-surface-2 hover:text-text hover:bg-surface transition cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono text-text-dim border border-border bg-surface-2 hover:text-text hover:bg-surface transition cursor-pointer shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -578,7 +578,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               id="next-task-btn"
               type="button"
               onClick={onNextAction}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:brightness-110 text-ink shadow-[0_0_14px_var(--accent-dim)] transition cursor-pointer active:scale-95"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:brightness-110 text-ink shadow-[0_0_14px_var(--accent-dim)] transition cursor-pointer active:scale-95"
             >
               <span>{nextActionLabel}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -588,7 +588,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               id="run-check-btn"
               type="button"
               onClick={() => onRunAndCheck(value)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans text-ink transition cursor-pointer active:scale-95 ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-semibold font-sans text-ink transition cursor-pointer active:scale-95 ${
                 evaluationState === "wrong"
                   ? "bg-error hover:bg-error/90"
                   : "bg-func hover:brightness-110"

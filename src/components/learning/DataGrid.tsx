@@ -133,14 +133,14 @@ export const DataGrid: React.FC<DataGridProps> = ({
 
   return (
     <div
-      className={`${bare ? '' : 'border border-border rounded-lg overflow-hidden bg-surface'} ${className}`}
+      className={`w-full min-w-0 ${bare ? '' : 'border border-border rounded-lg overflow-hidden bg-surface'} ${className}`}
     >
-      <div className={`overflow-auto scrollbar-thin ${maxHeight}`}>
-        <table className="w-full border-collapse font-mono text-[13px]">
+      <div className={`w-full min-w-0 overflow-x-auto scrollbar-thin ${maxHeight}`}>
+        <table className="w-full min-w-full border-collapse font-mono text-[12px] sm:text-[13px]">
           <thead className="sticky top-0 z-10">
             <tr>
               {rowNumbers && (
-                <th className="px-3 py-2 text-right text-[11px] font-semibold bg-(--table-head-bg) text-(--table-head-text) border-b border-border select-none whitespace-nowrap">
+                <th className="px-2 sm:px-3 py-1.5 sm:py-2 text-right text-[10px] sm:text-[11px] font-semibold bg-(--table-head-bg) text-(--table-head-text) border-b border-border select-none whitespace-nowrap">
                   #
                 </th>
               )}
@@ -154,7 +154,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                     title={
                       clickable ? 'Click to copy / insert column name' : undefined
                     }
-                    className={`px-3.5 py-2 text-left text-[11px] font-semibold select-none whitespace-nowrap bg-(--table-head-bg) border-b border-border ${
+                    className={`px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-left text-[10px] sm:text-[11px] font-semibold select-none whitespace-nowrap bg-(--table-head-bg) border-b border-border ${
                       isHigh ? 'text-text border-b-2 border-b-func' : 'text-(--table-head-text)'
                     } ${clickable ? 'cursor-pointer group hover:bg-surface-2' : ''}`}
                   >
@@ -169,7 +169,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
               })}
             </tr>
           </thead>
-<tbody>
+          <tbody>
             {sliced.map((row, rIdx) => {
               const absIdx = start + rIdx;
               return (
@@ -178,7 +178,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                   className="odd:bg-(--table-zebra) hover:bg-(--table-hover) transition-colors border-b border-(--table-row-border) last:border-b-0"
                 >
                   {rowNumbers && (
-                    <td className="px-3 py-2 text-right text-[11px] text-text-faint tabular-nums select-none whitespace-nowrap">
+                    <td className="px-2 sm:px-3 py-1.5 sm:py-2 text-right text-[10px] sm:text-[11px] text-text-faint tabular-nums select-none whitespace-nowrap">
                       {absIdx + 1}
                     </td>
                   )}
@@ -190,7 +190,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
                     return (
                       <td
                         key={col}
-                        className={`px-3.5 py-2 whitespace-nowrap align-top ${cellAlign(
+                        className={`px-2.5 sm:px-3.5 py-1.5 sm:py-2 whitespace-nowrap align-top ${cellAlign(
                           type,
                         )} ${
                           isNull

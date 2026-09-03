@@ -41,7 +41,7 @@ const VerdictBadge: React.FC<{ verdict: Verdict; mark: string | null; className?
 
 /** Mono chip for operands / expressions. */
 const Chip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <code className="font-mono text-[11.5px] text-text bg-surface-3 border border-border-soft rounded px-1.5 py-0.5 whitespace-nowrap">
+  <code className="font-mono text-[10.5px] sm:text-[11.5px] text-text bg-surface-3 border border-border-soft rounded px-1.5 py-0.5 break-all sm:break-normal max-w-full">
     {children}
   </code>
 );

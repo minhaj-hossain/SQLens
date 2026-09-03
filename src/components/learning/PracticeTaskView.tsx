@@ -147,18 +147,18 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.2 }}
-      className="w-full max-w-[1440px] mx-auto space-y-6 px-2 sm:px-4"
+      className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-6 px-0 sm:px-4 min-w-0"
     >
       {/* UNIFIED 4-PANEL RESPONSIVE GRID 
           Desktop (lg: 2-column balanced pairs)
           Tablet (md: stacked 2-column)
           Mobile: Prioritized linear stream: Task (1) -> Editor (2) -> Results (3) -> Data Explorer (4)
       */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 sm:gap-4 items-start min-w-0 w-full">
         {/* LEFT COLUMN (Desktop): Task Instructions + Database Explorer */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3.5 sm:gap-4 min-w-0 w-full">
           {/* Order 1 on Mobile: Task Instructions */}
-          <div className="order-1">
+          <div className="order-1 min-w-0 w-full">
             <TaskInstructions
               task={task}
               taskIndex={taskIndex}
@@ -171,7 +171,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
           </div>
 
           {/* Order 4 on Mobile (or below task on desktop): Database Explorer */}
-          <div className="order-4 lg:order-2">
+          <div className="order-4 lg:order-2 min-w-0 w-full">
             <DatabaseExplorer
               initialTableName={task.primaryTable}
               highlightedColumns={task.validation.requiredColumns}
@@ -183,9 +183,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
         </div>
 
         {/* RIGHT COLUMN (Desktop): SQL Editor + Results Console */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3.5 sm:gap-4 min-w-0 w-full">
           {/* Order 2 on Mobile: SQL Code Editor */}
-          <div className="order-2 lg:order-1">
+          <div className="order-2 lg:order-1 min-w-0 w-full">
             <SQLEditor
               value={currentSql}
               tableName={task.primaryTable}
@@ -206,7 +206,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
           </div>
 
           {/* Order 3 on Mobile: Results Console */}
-          <div className="order-3 lg:order-2">
+          <div className="order-3 lg:order-2 min-w-0 w-full">
             <ResultsConsole
               result={executionResult}
               evaluationState={evaluationState}

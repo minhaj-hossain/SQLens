@@ -92,14 +92,14 @@ export const JoinRelationalVisualizer: React.FC = () => {
   }, [joinMode]);
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-5 text-text my-5 shadow-sm">
+    <div className="rounded-xl border border-border bg-surface p-3.5 sm:p-5 text-text my-4 sm:my-5 shadow-sm w-full min-w-0">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-border-soft">
-        <div>
-          <span className="font-mono text-[11px] uppercase tracking-wider text-func font-semibold">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 sm:pb-4 border-b border-border-soft min-w-0">
+        <div className="min-w-0">
+          <span className="font-mono text-[10.5px] sm:text-[11px] uppercase tracking-wider text-func font-semibold">
             Mental Model · Relational Algebra & JOINs
           </span>
-          <h3 className="font-display font-semibold text-[17px] text-text mt-0.5">
+          <h3 className="font-display font-semibold text-[15px] sm:text-[17px] text-text mt-0.5">
             Interactive Multi-Table JOIN Simulator
           </h3>
         </div>
@@ -173,16 +173,16 @@ export const JoinRelationalVisualizer: React.FC = () => {
       </div>
 
       {/* Output Joined Grid */}
-      <div className="mt-4 rounded-lg border border-border overflow-hidden bg-surface-2">
-        <div className="flex items-center justify-between px-3 py-2 bg-surface-3 border-b border-border font-mono text-xs font-semibold text-text">
-          <div className="flex items-center gap-1.5">
+      <div className="mt-4 rounded-lg border border-border overflow-hidden bg-surface-2 w-full min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-surface-3 border-b border-border font-mono text-xs font-semibold text-text min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Link2 className="w-3.5 h-3.5 text-func" />
             <span>JOIN Result: {joinMode} JOIN ({joinedRows.length} rows)</span>
           </div>
-          <span className="text-[11px] text-text-dim font-normal">ON customers.id = orders.customer_id</span>
+          <span className="text-[11px] text-text-dim font-normal truncate">ON customers.id = orders.customer_id</span>
         </div>
 
-        <div className="max-h-56 overflow-y-auto font-mono text-xs">
+        <div className="max-h-56 overflow-y-auto overflow-x-auto font-mono text-xs min-w-0">
           <table className="w-full text-left border-collapse">
             <thead className="bg-surface sticky top-0 text-[10.5px] uppercase tracking-wider text-text-faint border-b border-border">
               <tr>

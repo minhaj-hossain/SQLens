@@ -30,27 +30,27 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   return (
     <div
       id="results-console-container"
-      className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden ${className}`}
+      className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden w-full min-w-0 ${className}`}
     >
       {/* Console Header & Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 px-4 py-3.5 bg-surface border-b border-border-soft">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-text-dim" />
-          <span className="font-mono text-[12px] font-semibold text-text-dim uppercase tracking-wider">
-            &gt;_ Query Results
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-surface border-b border-border-soft min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <Terminal className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-text-dim shrink-0" />
+          <span className="font-mono text-[11px] sm:text-[12px] font-semibold text-text-dim uppercase tracking-wider shrink-0">
+            &gt;_ Results
           </span>
 
           {/* Execution Metadata Pills */}
           {result && !result.error && (
-            <div className="flex items-center gap-1.5 ml-2">
-              <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
+            <div className="flex items-center gap-1 sm:gap-1.5 ml-1 sm:ml-2">
+              <span className="px-1.5 sm:px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[9.5px] sm:text-[10px] font-mono border border-border shrink-0">
                 {totalRows} {totalRows === 1 ? 'row' : 'rows'}
               </span>
-              <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
+              <span className="px-1.5 sm:px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[9.5px] sm:text-[10px] font-mono border border-border shrink-0">
                 {result.columns?.length || 0} cols
               </span>
               {timeDisplay && (
-                <span className="px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded bg-surface-2 text-text-dim text-[10px] font-mono border border-border shrink-0">
                   {timeDisplay}
                 </span>
               )}

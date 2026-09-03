@@ -39,15 +39,15 @@ export function CodeCard({
   onCopy?: () => void;
 }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-border bg-editor-bg shadow-sm">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-2 border-b border-border-soft">
-        <span className="font-mono text-[10.5px] uppercase tracking-[0.05em] text-text-faint truncate">
+    <div className="w-full min-w-0 rounded-xl overflow-hidden border border-border bg-editor-bg shadow-sm">
+      <div className="flex items-center justify-between gap-3 px-3.5 py-2 border-b border-border-soft min-w-0">
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.05em] text-text-faint truncate min-w-0">
           {title || 'SQL'}
         </span>
         {onCopy && (
           <button
             onClick={onCopy}
-            className="flex items-center gap-1.5 font-mono text-[11px] text-text-faint hover:text-text transition cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-2"
+            className="flex items-center gap-1.5 font-mono text-[11px] text-text-faint hover:text-text transition cursor-pointer px-1.5 py-0.5 rounded hover:bg-surface-2 shrink-0"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               {copied ? (
@@ -61,11 +61,11 @@ export function CodeCard({
         )}
       </div>
       <pre
-        className="px-4 py-3.5 font-mono text-[13px] leading-[1.8] text-editor-text whitespace-pre overflow-x-auto"
+        className="px-3.5 sm:px-4 py-3 sm:py-3.5 font-mono text-[12px] sm:text-[13px] leading-[1.7] sm:leading-[1.8] text-editor-text whitespace-pre overflow-x-auto w-full min-w-0"
         dangerouslySetInnerHTML={{ __html: highlightSql(sql) }}
       />
       {caption && (
-        <div className="px-4 pb-3 text-xs leading-relaxed text-text-dim">{caption}</div>
+        <div className="px-3.5 sm:px-4 pb-3 text-xs leading-relaxed text-text-dim">{caption}</div>
       )}
     </div>
   );
@@ -89,29 +89,31 @@ export function DataTable({
   rows: (string | number | null)[][];
 }) {
   return (
-    <div className="rounded-lg overflow-hidden border border-border bg-surface">
+    <div className="w-full min-w-0 rounded-lg overflow-hidden border border-border bg-surface">
       {tableName && (
-        <div className="flex items-center justify-between gap-3 px-3.5 py-2 bg-surface-2 border-b border-border-soft">
-          <span className="flex items-center gap-1.5 font-mono text-[11.5px] font-semibold text-text">
+        <div className="flex items-center justify-between gap-2.5 px-3 sm:px-3.5 py-2 bg-surface-2 border-b border-border-soft min-w-0">
+          <span className="flex items-center gap-1.5 font-mono text-[11px] sm:text-[11.5px] font-semibold text-text shrink-0">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
               <path d="M3 5h18v14H3zM3 10h18M3 15h18M10 10v9" />
             </svg>
             {tableName}
           </span>
           {description && (
-            <span className="font-mono text-[10.5px] text-text-dim whitespace-nowrap text-right">
+            <span className="font-mono text-[10px] sm:text-[10.5px] text-text-dim text-right truncate min-w-0">
               {description}
             </span>
           )}
         </div>
       )}
-      <DataGrid
-        columns={columns}
-        rows={rows}
-        schemaName={tableName}
-        bare
-        showRowCount
-      />
+      <div className="w-full min-w-0 overflow-x-auto">
+        <DataGrid
+          columns={columns}
+          rows={rows}
+          schemaName={tableName}
+          bare
+          showRowCount
+        />
+      </div>
     </div>
   );
 }
