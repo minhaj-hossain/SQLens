@@ -56,6 +56,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
+  const gutterRef = useRef<HTMLDivElement>(null);
 
   // Context-aware autocomplete lives in the pure buildSuggestions() module
   // (tracker item 12): tables stay in FROM/JOIN, columns belong to the tables
@@ -69,11 +70,17 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       limit: 5,
     }).map((i) => i.text);
 
-  // Sync scrolling between textarea and syntax highlight overlay
+  // Sync scrolling between textarea, syntax highlight overlay, and line numbers gutter
   const handleScroll = () => {
-    if (textareaRef.current && highlightRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (textareaRef.current) {
+      const { scrollTop, scrollLeft } = textareaRef.current;
+      if (highlightRef.current) {
+        highlightRef.current.scrollTop = scrollTop;
+        highlightRef.current.scrollLeft = scrollLeft;
+      }
+      if (gutterRef.current) {
+        gutterRef.current.scrollTop = scrollTop;
+      }
     }
   };
 
@@ -330,7 +337,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
     onChange(formatted);
   };
 
-  const lineCount = Math.max(value.split("\n").length, 4);
+  const lineCount = Math.max(value.split("\n").length, 6);
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   return (
@@ -397,9 +404,15 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       </div>
 
       {/* Code Editor Surface */}
-      <div className="relative min-h-[160px] max-h-[280px] flex font-mono text-[13px] leading-[22px] bg-editor-bg">
+      <div
+        onClick={() => textareaRef.current?.focus()}
+        className="relative min-h-[180px] max-h-[440px] flex font-mono text-[13px] leading-[22px] bg-editor-bg cursor-text"
+      >
         {/* Line Numbers Gutter */}
-        <div className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft flex flex-col shrink-0">
+        <div
+          ref={gutterRef}
+          className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft overflow-hidden flex flex-col shrink-0"
+        >
           {lines.map((ln) => (
             <div
               key={ln}
@@ -415,7 +428,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         </div>
 
         {/* Textarea & Syntax Highlight Layer Surface */}
-        <div className="relative flex-1 h-full min-h-[160px]">
+        <div className="relative flex-1 self-stretch min-h-[180px]">
           {/* Syntax Highlight Overlay (renders dimmed comments, colored keywords & strings) */}
           <div
             ref={highlightRef}

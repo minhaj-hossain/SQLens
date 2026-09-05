@@ -101,6 +101,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [activeLine, setActiveLine] = useState<number>(1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
+  const gutterRef = useRef<HTMLDivElement>(null);
 
   // Autocomplete
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -382,11 +383,17 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     }
   };
 
-  // Sync scroll between textarea and highlight overlay
+  // Sync scroll between textarea, highlight overlay, and gutter
   const handleScroll = () => {
-    if (textareaRef.current && highlightRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    if (textareaRef.current) {
+      const { scrollTop, scrollLeft } = textareaRef.current;
+      if (highlightRef.current) {
+        highlightRef.current.scrollTop = scrollTop;
+        highlightRef.current.scrollLeft = scrollLeft;
+      }
+      if (gutterRef.current) {
+        gutterRef.current.scrollTop = scrollTop;
+      }
     }
   };
 
@@ -526,10 +533,13 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         {/* Code Editor Surface */}
         <div
           onClick={() => textareaRef.current?.focus()}
-          className="relative min-h-[160px] flex font-mono text-[13px] leading-[22px] bg-editor-bg cursor-text"
+          className="relative min-h-[180px] max-h-[440px] flex font-mono text-[13px] leading-[22px] bg-editor-bg cursor-text"
         >
           {/* Line Numbers Gutter */}
-          <div className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft flex flex-col shrink-0">
+          <div
+            ref={gutterRef}
+            className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft overflow-hidden flex flex-col shrink-0"
+          >
             {lines.map((ln) => (
               <div
                 key={ln}
@@ -543,7 +553,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           </div>
 
           {/* Syntax Highlight + Textarea */}
-          <div className="relative flex-1 min-h-[160px]">
+          <div className="relative flex-1 self-stretch min-h-[180px]">
             {/* Highlight overlay */}
             <div
               ref={highlightRef}
