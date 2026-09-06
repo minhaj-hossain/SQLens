@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { highlightSql } from '@/lib/highlight-sql';
 import { EDITOR_TEXT_STYLE } from '@/lib/editor-text-style';
@@ -154,6 +155,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     ref,
   ) {
     const [activeLine, setActiveLine] = useState(1);
+    const [activeLineTintTop, setActiveLineTintTop] = useState(12);
     const [caretPos, setCaretPos] = useState(0);
     const [inlineError, setInlineError] = useState<string | null>(null);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -164,14 +166,20 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     const [hint, setHint] = useState<string | null>(null);
     const [showKeys, setShowKeys] = useState(false);
     const [snippetRest, setSnippetRest] = useState<string[]>([]);
+    const [isScrollingSuggestions, setIsScrollingSuggestions] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const highlightRef = useRef<HTMLDivElement>(null);
     const gutterRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+    const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const suggestionsRef = useRef<Suggestion[]>([]);
     const selectedIdxRef = useRef(0);
     suggestionsRef.current = suggestions;
     selectedIdxRef.current = selectedIdx;
+
+    useEffect(() => { setMounted(true); }, []);
 
     useEffect(() => {
       setInlineError(error ?? null);
@@ -244,28 +252,45 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         highlightRef.current.scrollLeft = ta.scrollLeft;
       }
       if (gutterRef.current) gutterRef.current.scrollTop = ta.scrollTop;
+      // Re-sync line tint top when user scrolls
+      const caret = ta.selectionStart;
+      const textBefore = ta.value.slice(0, caret);
+      const line = textBefore.split('\n').length;
+      setActiveLineTintTop((line - 1) * 22 + 12 - ta.scrollTop);
     };
 
     const placeWidget = (textBefore: string, matched: Suggestion[]) => {
       const ta = textareaRef.current;
       if (!ta) return;
+      // measureCaret returns coords relative to ta.parentElement
       const pos = measureCaret(ta, textBefore);
-      const dropdownHeight = matched.length * 30 + 36;
-      const spaceBelow = ta.clientHeight - pos.top;
+      const rect = ta.parentElement!.getBoundingClientRect();
+      // Max height: header (36px) + up to 7 items (210px)
+      const dropdownHeight = Math.min(matched.length * 30 + 36, 246);
+      const caretAbsTop = rect.top + pos.top;
+      const spaceBelow = window.innerHeight - caretAbsTop - 20;
       const top =
-        spaceBelow < dropdownHeight && pos.top > dropdownHeight
-          ? Math.max(8, pos.top - dropdownHeight)
-          : pos.top + 20;
-      setCoords({
-        top,
-        left: Math.min(Math.max(pos.left, 8), Math.max(12, ta.clientWidth - 160)),
-      });
+        spaceBelow < dropdownHeight && caretAbsTop > dropdownHeight
+          ? caretAbsTop - dropdownHeight
+          : caretAbsTop + 20;
+      const left = rect.left + Math.min(Math.max(pos.left, 8), Math.max(12, ta.clientWidth - 180));
+      setCoords({ top, left });
+    };
+
+    const updateLineFromCaret = (text: string, caret: number) => {
+      const ta = textareaRef.current;
+      const textBefore = text.slice(0, caret);
+      const line = textBefore.split('\n').length;
+      setActiveLine(line);
+      // Compute tint top accounting for current scroll offset so it stays locked
+      const scrollTop = ta ? ta.scrollTop : 0;
+      setActiveLineTintTop((line - 1) * 22 + 12 - scrollTop);
     };
 
     const updateCursorAndSuggestions = (text: string, caret: number) => {
       setCaretPos(caret);
       const textBefore = text.slice(0, caret);
-      setActiveLine(textBefore.split('\n').length);
+      updateLineFromCaret(text, caret);
       setHint(signatureHint(textBefore));
 
       const prefix = completionPrefix(textBefore);
@@ -355,6 +380,15 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       format: runFormat,
       textarea: textareaRef.current,
     }));
+
+    // Auto-scroll the selected suggestion into view when navigating with arrow keys
+    useEffect(() => {
+      if (!listRef.current) return;
+      const active = listRef.current.querySelector<HTMLElement>(
+        `[data-suggestion-idx="${selectedIdx}"]`,
+      );
+      active?.scrollIntoView({ block: 'nearest' });
+    }, [selectedIdx]);
 
     useEffect(() => {
       const onDoc = (e: MouseEvent) => {
@@ -550,11 +584,11 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
           </div>
 
           <div className="relative flex-1 self-stretch min-h-[180px] overflow-hidden">
-            {/* Active Line Tint */}
+            {/* Active Line Tint — no transition so it snaps instantly like VS Code */}
             <div
               aria-hidden="true"
-              className="absolute left-0 right-0 pointer-events-none bg-func/[0.04] transition-all border-y border-func/10 z-0"
-              style={{ top: `${(activeLine - 1) * 22 + 12}px`, height: '22px' }}
+              className="absolute left-0 right-0 pointer-events-none bg-func/[0.04] border-y border-func/10 z-0"
+              style={{ top: `${activeLineTintTop}px`, height: '22px' }}
             />
 
             <div
@@ -585,12 +619,19 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
                   k === 'Alt' ||
                   k === 'Meta' ||
                   e.code === 'Space' ||
-                  k === 'Escape' ||
-                  k === 'ArrowDown' ||
-                  k === 'ArrowUp'
+                  k === 'Escape'
                 )
                   return;
+                // Arrow keys move the caret — update line tint instantly
+                if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'ArrowLeft' || k === 'ArrowRight') {
+                  updateLineFromCaret(value, e.currentTarget.selectionStart);
+                  return;
+                }
                 updateCursorAndSuggestions(value, e.currentTarget.selectionStart);
+              }}
+              onSelect={(e) => {
+                // Fires on all caret/selection movements (mouse drag, keyboard, etc.)
+                updateLineFromCaret(value, e.currentTarget.selectionStart);
               }}
               onClick={(e) =>
                 updateCursorAndSuggestions(value, e.currentTarget.selectionStart)
@@ -619,63 +660,80 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
               </div>
             )}
 
-            {showSuggestions && suggestions.length > 0 && (
-              <div
-                id="autocomplete-dropdown"
-                className="absolute z-50 bg-surface-2 border border-border rounded-lg shadow-2xl overflow-hidden py-1 min-w-[180px]"
-                style={{ top: `${coords.top}px`, left: `${coords.left}px` }}
-              >
-                <div className="px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between gap-2">
-                  <span>Suggestions</span>
-                  <span className="text-[9px] font-normal normal-case text-text-faint">
-                    Tab · Esc
-                  </span>
-                </div>
-                {suggestions.map((sug, idx) => {
-                  const prefix = completionPrefix(
-                    value.slice(0, textareaRef.current?.selectionStart ?? value.length),
-                  );
-                  const highlight = prefix.includes('.')
-                    ? prefix.slice(prefix.lastIndexOf('.') + 1)
-                    : prefix;
-                  const text = sug.text;
-                  const hi = highlight.length
-                    ? text.toLowerCase().indexOf(highlight.toLowerCase())
-                    : -1;
-                  return (
-                    <div
-                      key={`${sug.type}-${sug.text}`}
-                      onMouseDown={(ev) => {
-                        ev.preventDefault();
-                        applySuggestion(sug);
-                      }}
-                      className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
-                        idx === selectedIdx
-                          ? 'bg-func/15 text-text font-bold'
-                          : 'text-text-dim hover:bg-surface hover:text-text'
-                      }`}
-                    >
-                      <span className="font-semibold">
-                        {hi >= 0 ? (
-                          <>
-                            {text.slice(0, hi)}
-                            <span className="text-func">{text.slice(hi, hi + highlight.length)}</span>
-                            {text.slice(hi + highlight.length)}
-                          </>
-                        ) : (
-                          text
-                        )}
-                      </span>
-                      <span className="text-[9px] text-text-faint px-1.5 py-0.2 rounded bg-surface border border-border">
-                        {kindLabel(sug)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Autocomplete dropdown — rendered via portal so it escapes all overflow:hidden ancestors */}
+        {mounted && showSuggestions && suggestions.length > 0 && createPortal(
+          <div
+            id="autocomplete-dropdown"
+            onMouseDown={(e) => e.preventDefault()}
+            className="bg-surface-2 border border-border rounded-lg shadow-2xl min-w-[180px] overflow-hidden"
+            style={{ position: 'fixed', top: `${coords.top}px`, left: `${coords.left}px`, zIndex: 99999 }}
+          >
+            {/* Pinned header */}
+            <div className="sticky top-0 z-10 px-2.5 py-1 text-[9px] uppercase tracking-wider text-text-dim font-bold bg-surface border-b border-border flex items-center justify-between gap-2">
+              <span>Suggestions</span>
+              <span className="text-[9px] font-normal normal-case text-text-faint">
+                Tab · Esc
+              </span>
+            </div>
+            {/* Scrollable item list */}
+            <div
+              ref={listRef}
+              className={`max-h-[210px] overflow-y-auto overscroll-contain autosuggest-scrollbar${isScrollingSuggestions ? ' is-scrolling' : ''}`}
+              onScroll={() => {
+                setIsScrollingSuggestions(true);
+                if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+                scrollTimerRef.current = setTimeout(() => setIsScrollingSuggestions(false), 1000);
+              }}
+            >
+              {suggestions.map((sug, idx) => {
+                const prefix = completionPrefix(
+                  value.slice(0, textareaRef.current?.selectionStart ?? value.length),
+                );
+                const highlight = prefix.includes('.')
+                  ? prefix.slice(prefix.lastIndexOf('.') + 1)
+                  : prefix;
+                const text = sug.text;
+                const hi = highlight.length
+                  ? text.toLowerCase().indexOf(highlight.toLowerCase())
+                  : -1;
+                return (
+                  <div
+                    key={`${sug.type}-${sug.text}`}
+                    data-suggestion-idx={idx}
+                    onMouseDown={(ev) => {
+                      ev.preventDefault();
+                      applySuggestion(sug);
+                    }}
+                    className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
+                      idx === selectedIdx
+                        ? 'bg-func/15 text-text font-bold'
+                        : 'text-text-dim hover:bg-surface hover:text-text'
+                    }`}
+                  >
+                    <span className="font-semibold">
+                      {hi >= 0 ? (
+                        <>
+                          {text.slice(0, hi)}
+                          <span className="text-func">{text.slice(hi, hi + highlight.length)}</span>
+                          {text.slice(hi + highlight.length)}
+                        </>
+                      ) : (
+                        text
+                      )}
+                    </span>
+                    <span className="text-[9px] text-text-faint px-1.5 py-0.2 rounded bg-surface border border-border">
+                      {kindLabel(sug)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>,
+          document.body,
+        )}
 
         {/* Inline Error Bar & Fix Action */}
         {parsedError && (
