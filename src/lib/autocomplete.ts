@@ -208,10 +208,103 @@ function tableSuggestions(schemas: Record<string, TableSchema>): Suggestion[] {
   return Object.values(schemas).map((s) => ({ text: s.name, type: 'table' as SuggestionKind }));
 }
 
+/** Prefix, inner-word (`JOIN` → `LEFT JOIN`), and compact/fuzzy (`GBY` → `GROUP BY`). */
+export function suggestionMatches(text: string, prefix: string): boolean {
+  const su = text.toUpperCase();
+  const up = prefix.toUpperCase();
+  if (!up) return true;
+  if (su === up) return false;
+  if (su.startsWith(up)) return true;
+  const words = su.split(/\s+/);
+  if (words.length > 1 && words.some((w) => w !== su && w.startsWith(up))) return true;
+  const compact = su.replace(/\s+/g, '');
+  const compactUp = up.replace(/\s+/g, '');
+  if (compactUp.length >= 2 && compact !== compactUp && compact.startsWith(compactUp)) return true;
+  if (compactUp.length >= 3 && isSubsequence(compact, compactUp)) return true;
+  return false;
+}
+
+function isSubsequence(hay: string, needle: string): boolean {
+  let i = 0;
+  for (const ch of hay) {
+    if (ch === needle[i]) i += 1;
+    if (i >= needle.length) return true;
+  }
+  return false;
+}
+
+/** Suggests smart join conditions (table.fk = other.pk) informed by schemas. */
+export function suggestJoinCondition(
+  beforeCursor: string,
+  schemas: Record<string, TableSchema>,
+): Suggestion[] {
+  const masked = maskLiterals(beforeCursor);
+  const match = masked.match(
+    /\b(?:LEFT\s+|INNER\s+|RIGHT\s+|CROSS\s+)?JOIN\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*))?\s*(?:ON\s*)?$/i,
+  );
+  if (!match) return [];
+  const joinedTable = match[1].toLowerCase();
+  const joinedAlias = match[2] || match[1];
+
+  const beforeJoin = masked.slice(0, match.index);
+  const re = /\b(?:FROM|(?:LEFT\s+|INNER\s+|RIGHT\s+|CROSS\s+)?JOIN)\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*))?/gi;
+  const otherTables: { table: string; alias: string }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(beforeJoin)) !== null) {
+    const t = m[1].toLowerCase();
+    if (t !== joinedTable && schemas[t]) {
+      otherTables.push({ table: t, alias: m[2] || m[1] });
+    }
+  }
+
+  const sJoined = schemas[joinedTable];
+  if (!sJoined) return [];
+
+  const alreadyTypedOn = /\bON\s*$/i.test(masked);
+  const prefix = alreadyTypedOn ? '' : 'ON ';
+  const suggestions: Suggestion[] = [];
+
+  for (const { table: tOther, alias: aOther } of otherTables) {
+    const sOther = schemas[tOther];
+    if (!sOther) continue;
+
+    for (const col of sJoined.columns) {
+      if (col.foreignKey && col.foreignKey.table.toLowerCase() === tOther) {
+        suggestions.push({
+          text: `${prefix}${joinedAlias}.${col.name} = ${aOther}.${col.foreignKey.column}`,
+          type: 'keyword',
+        });
+      }
+    }
+    for (const col of sOther.columns) {
+      if (col.foreignKey && col.foreignKey.table.toLowerCase() === joinedTable) {
+        suggestions.push({
+          text: `${prefix}${aOther}.${col.name} = ${joinedAlias}.${col.foreignKey.column}`,
+          type: 'keyword',
+        });
+      }
+    }
+    for (const c1 of sJoined.columns) {
+      if (c1.name.endsWith('_id')) {
+        for (const c2 of sOther.columns) {
+          if (c1.name.toLowerCase() === c2.name.toLowerCase()) {
+            const candidate = `${prefix}${joinedAlias}.${c1.name} = ${aOther}.${c2.name}`;
+            if (!suggestions.some((s) => s.text === candidate)) {
+              suggestions.push({ text: candidate, type: 'keyword' });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return suggestions;
+}
+
 /**
  * Entry point. `prefix` is the identifier being typed (may be ''), and
  * `queryBeforeCursor` is the full SQL text up to the cursor. Returns up to
- * `limit` suggestions ordered tables → columns → keywords.
+ * `limit` suggestions ordered contextually (columns in column context, tables in table context).
  */
 export function buildSuggestions(params: {
   prefix: string;
@@ -226,29 +319,26 @@ export function buildSuggestions(params: {
   const dot = prefix.indexOf('.');
   // For a dotted prefix (`c.` or `c.ema`), match against the part after the dot.
   const up = (dot >= 0 ? prefix.slice(dot + 1) : prefix).toUpperCase();
-  // Previous token lets multi-word keywords complete from their SECOND word too:
-  // `ORDER B` -> ORDER BY, `CREATE TA` -> CREATE TABLE, `IS N` -> IS NOT NULL.
-  // Without it, typing the second word yields zero suggestions (user-reported).
   const stemSource =
     dot >= 0 ? queryBeforeCursor : queryBeforeCursor.slice(0, queryBeforeCursor.length - prefix.length);
-  // `\s*$` (not `$`) — stemSource often ends with a space (e.g. `... ORDER B`
-  // sliced to `... ORDER `); an anchored `$` would then find no word at all.
   const prevWord = stemSource.match(/([a-zA-Z0-9_]+)\s*$/i)?.[1]?.toUpperCase() ?? '';
   const continuation = !!prevWord && MULTI_STARTERS.has(prevWord);
   const upStem = up && continuation ? `${prevWord} ${up}` : '';
 
+  const joinConds = suggestJoinCondition(queryBeforeCursor, schemas);
+
   // Context-scoped pool by default; when the user has actually typed a prefix
   // (or left a multi-word keyword starter like `ORDER ` / `IS `), inject the
-  // GLOBAL keyword superset so ANY syntax is reachable — tables/columns still
-  // rank ahead of keywords, and matching is still prefix-based.
+  // GLOBAL keyword superset so ANY syntax is reachable.
   const ctxPool: Suggestion[] =
     ctx === 'columns'
       ? [
+          ...joinConds,
           ...columnSuggestions(prefix, queryBeforeCursor, schemas, fallbackTable),
           ...keywordSuggestions('columns'),
         ]
       : ctx === 'after-table'
-        ? keywordSuggestions('after-table')
+        ? [...joinConds, ...keywordSuggestions('after-table')]
         : [...tableSuggestions(schemas), ...keywordSuggestions(ctx)];
   const pool: Suggestion[] =
     up || continuation
@@ -264,9 +354,9 @@ export function buildSuggestions(params: {
   const filtered = pool.filter((s) => {
     const su = s.text.toUpperCase();
     if (up && continuation) {
-      return (su !== up && su.startsWith(up)) || (su !== upStem && su.startsWith(upStem));
+      return suggestionMatches(s.text, up) || (upStem ? suggestionMatches(s.text, upStem) : false);
     }
-    if (up) return su !== up && su.startsWith(up);
+    if (up) return suggestionMatches(s.text, up);
     // No prefix yet, but a trailing keyword starter (`ORDER `, `IS `, `INSERT `)
     // implies exactly its multi-word continuation(s).
     if (continuation) {
@@ -286,6 +376,12 @@ export function buildSuggestions(params: {
     }
   }
 
-  const rank: Record<SuggestionKind, number> = { table: 0, column: 1, keyword: 2 };
+  // Dynamic ranking: columns first in column ctx, tables first in table ctx, keywords first otherwise
+  const rank: Record<SuggestionKind, number> =
+    ctx === 'columns'
+      ? { column: 0, keyword: 1, table: 2 }
+      : ctx === 'tables'
+        ? { table: 0, keyword: 1, column: 2 }
+        : { keyword: 0, table: 1, column: 2 };
   return deduped.sort((a, b) => rank[a.type] - rank[b.type]).slice(0, limit);
 }

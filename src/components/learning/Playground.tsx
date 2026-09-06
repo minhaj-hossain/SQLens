@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Play, RotateCcw, Eraser, X, Download, Database, History } from 'lucide-react';
 import { SqlExecutor } from '@/lib/sql-engine/executor';
 import { QueryExecutionResult } from '@/types/database';
 import { DATABASE_SCHEMAS } from '@/content/database/schema';
 import { INITIAL_TABLES } from '@/content/database/tables';
-import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from './DataGrid';
+import { QueryEditor, QueryEditorHandle } from './QueryEditor';
 
 const HISTORY_KEY = 'sqlens_playground_history_v1';
 const DRAFT_KEY = 'sqlens_playground_draft_v1';
@@ -179,12 +179,10 @@ export default function Playground({ onClose }: PlaygroundProps) {
   const [history, setHistory] = useState<string[]>([]);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [dbMode, setDbMode] = useState<'lesson' | 'scratch'>('lesson');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(0);
   const [shareCopied, setShareCopied] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const execRef = useRef<SqlExecutor | null>(null);
+  const editorRef = useRef<QueryEditorHandle>(null);
 
   useEffect(() => {
     // Restore a shared query from the URL hash first (#q=<encoded>), then draft.
@@ -214,13 +212,14 @@ export default function Playground({ onClose }: PlaygroundProps) {
     localStorage.setItem(DRAFT_KEY, sql);
   }, [sql]);
 
-  const run = useCallback(() => {
-    if (!sql.trim()) return;
+  const run = useCallback((sqlToRun?: string) => {
+    const source = typeof sqlToRun === 'string' ? sqlToRun : sql;
+    if (!source.trim()) return;
     if (!execRef.current) {
       execRef.current = new SqlExecutor(dbMode === 'scratch' ? (SCRATCH_DB as never) : undefined);
     }
     const exec = execRef.current;
-    const statements = splitStatements(sql);
+    const statements = splitStatements(source);
     if (statements.length === 0) return;
 
     const stmtResults: StmtResult[] = [];
@@ -245,7 +244,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
     setResults(stmtResults);
     setError(firstError);
     setHistory((prev) => {
-      const next = [sql.trim(), ...prev.filter((h) => h !== sql.trim())].slice(0, 15);
+      const next = [source.trim(), ...prev.filter((h) => h !== source.trim())].slice(0, 15);
       try {
         localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
       } catch {
@@ -255,93 +254,6 @@ export default function Playground({ onClose }: PlaygroundProps) {
     });
     setShowHistory(false);
   }, [sql, dbMode]);
-
-  /** Ctrl+Space autocomplete — suggests keywords, tables, and columns matching
-   *  the word currently being typed. */
-  const showSuggestions = useCallback(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const upto = sql.slice(0, ta.selectionStart);
-    const wordMatch = upto.match(/[A-Za-z_][A-Za-z0-9_.]*$/);
-    const prefix = wordMatch ? wordMatch[0].toLowerCase() : '';
-    const pool = [...SQL_KEYWORDS, ...ALL_TABLES.map((t) => `${t}`), ...ALL_COLUMNS];
-    const matches = Array.from(new Set(pool))
-      .filter((cand) => cand.toLowerCase().startsWith(prefix) && prefix.length >= 1)
-      .slice(0, 8);
-    setSuggestions(matches);
-    setSelectedSuggestionIdx(0);
-  }, [sql]);
-
-  /** Inserts a suggestion at the caret position. */
-  const insertSuggestion = useCallback(
-    (s: string) => {
-      const ta = textareaRef.current;
-      if (!ta) return;
-      const caret = ta.selectionStart;
-      const before = sql.slice(0, caret);
-      const partial = before.match(/[A-Za-z_][A-Za-z0-9_.]*$/)?.[0] ?? '';
-      const replacement = s.includes(' ') ? s : s; // multi-word keywords inserted verbatim
-      const nextSql = before.slice(0, before.length - partial.length) + replacement + sql.slice(caret);
-      setSql(nextSql);
-      setSuggestions([]);
-      requestAnimationFrame(() => {
-        ta.focus();
-        const pos = before.length - partial.length + replacement.length;
-        ta.setSelectionRange(pos, pos);
-      });
-    },
-    [sql],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // Autocomplete navigation (when the Ctrl+Space panel is open)
-      if (suggestions.length > 0) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          setSelectedSuggestionIdx((p) => (p + 1) % suggestions.length);
-          return;
-        }
-        if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          setSelectedSuggestionIdx((p) => (p - 1 + suggestions.length) % suggestions.length);
-          return;
-        }
-        if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) {
-          e.preventDefault();
-          insertSuggestion(suggestions[selectedSuggestionIdx]);
-          return;
-        }
-        if (e.key === 'Escape') {
-          setSuggestions([]);
-          return;
-        }
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        run();
-      } else if (e.ctrlKey && e.code === 'Space') {
-        e.preventDefault();
-        showSuggestions();
-      } else if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-        e.preventDefault();
-        const ta = textareaRef.current;
-        if (!ta) return;
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        const sel = sql.slice(start, end);
-        if (!sel) return;
-        const hasComment = /^\s*--/.test(sel);
-        const newSel = hasComment ? sel.replace(/^\s*--\s*/gm, '') : sel.replace(/^/gm, '-- ');
-        setSql(sql.slice(0, start) + newSel + sql.slice(end));
-        requestAnimationFrame(() => {
-          ta.focus();
-          ta.setSelectionRange(start, start + newSel.length);
-        });
-      }
-    },
-    [run, sql, suggestions, selectedSuggestionIdx, insertSuggestion],
-  );
 
   const shareQuery = useCallback(async () => {
     const encoded = encodeSqlForUrl(sql);
@@ -395,7 +307,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
     setSql('');
     setResults([]);
     setError(null);
-    textareaRef.current?.focus();
+    editorRef.current?.focus();
   }, []);
 
   const tableNames = Object.keys(DATABASE_SCHEMAS);
@@ -514,58 +426,17 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 <Eraser className="w-3 h-3" /> Clear
               </button>
             </div>
-            {/* Syntax-highlight layer under the textarea (P9.2c — one highlighter app-wide) */}
-            <div className="relative">
-              <div
-                aria-hidden
-                className="absolute inset-0 p-4 font-mono text-xs sm:text-sm text-editor-text leading-relaxed pointer-events-none select-none overflow-hidden whitespace-pre-wrap break-words"
-                dangerouslySetInnerHTML={{ __html: highlightSql(sql) }}
-              />
-              <textarea
-                ref={textareaRef}
-                value={sql}
-                onChange={(e) => {
-                  setSql(e.target.value);
-                  setSuggestions([]);
-                }}
-                onScroll={(e) => {
-                  const el = e.currentTarget.previousElementSibling as HTMLDivElement | null;
-                  if (el) {
-                    el.scrollTop = e.currentTarget.scrollTop;
-                    el.scrollLeft = e.currentTarget.scrollLeft;
-                  }
-                }}
-                onBlur={() => setTimeout(() => setSuggestions([]), 150)}
-                onKeyDown={handleKeyDown}
-                spellCheck={false}
-                style={{ caretColor: 'var(--func)' }}
-                className="relative w-full h-56 p-4 bg-transparent font-mono text-xs sm:text-sm text-transparent leading-relaxed outline-none resize-y placeholder:text-text-faint selection:bg-editor-selection"
-                placeholder="Write SQL here… separate multiple statements with ;  (Ctrl+Space for suggestions)"
-              />
-            </div>
-            {/* Autocomplete suggestions */}
-            {suggestions.length > 0 && (
-              <div className="absolute z-20 mt-[-8px] ml-4 rounded-xl border border-border bg-surface shadow-xl overflow-hidden w-64">
-                <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-text-faint bg-surface-2 border-b border-border">
-                  Ctrl+Space suggestions — ↑↓ + Enter, or click
-                </div>
-                {suggestions.map((s, idx) => (
-                  <button
-                    key={s}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      insertSuggestion(s);
-                    }}
-                    className={`w-full text-left px-3 py-1.5 font-mono text-xs transition cursor-pointer ${
-                      idx === selectedSuggestionIdx ? 'bg-surface-2 text-text' : 'hover:bg-surface-2'
-                    } ${ALL_TABLES.includes(s) ? 'text-text' : 'text-text-dim'}`}
-                    title={ALL_TABLES.includes(s) ? 'table' : SQL_KEYWORDS.includes(s) ? 'keyword' : 'column'}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+            <QueryEditor
+              ref={editorRef}
+              value={sql}
+              onChange={setSql}
+              onRun={(next) => run(next)}
+              placeholder="Write SQL here… separate multiple statements with ;"
+              textareaId="playground-sql-textarea"
+              minLineCount={8}
+              editorClassName="max-h-[320px] min-h-[220px]"
+              error={error}
+            />
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-surface-2 border-t border-border">
               <div className="flex items-center gap-2 text-xs text-text-dim font-mono">
                 <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-border text-text-faint text-[10px]">Ctrl+Enter</kbd>
@@ -576,7 +447,8 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 <span className="hidden sm:inline">comment</span>
               </div>
               <button
-                onClick={run}
+                type="button"
+                onClick={() => run()}
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-func text-ink hover:brightness-110 transition cursor-pointer active:scale-95"
               >
                 <Play className="w-3.5 h-3.5 fill-current" /> Run
@@ -603,7 +475,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
                     onClick={() => {
                       setSql(h);
                       setShowHistory(false);
-                      textareaRef.current?.focus();
+                      editorRef.current?.focus();
                     }}
                     className="w-full text-left px-4 py-2 text-xs font-mono text-text-dim hover:bg-surface-2 truncate transition cursor-pointer"
                     title={h}

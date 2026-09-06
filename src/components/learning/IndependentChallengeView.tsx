@@ -40,10 +40,10 @@ interface IndependentChallengeViewProps {
 }
 
 
-import { highlightSql, SQL_KEYWORDS } from '@/lib/highlight-sql';
-import { EDITOR_TEXT_STYLE } from '@/lib/editor-text-style';
 import { formatExecutionTime } from '@/lib/format-execution-time';
+import { formatSql } from '@/lib/format-sql';
 import { DataGrid } from './DataGrid';
+import { QueryEditor, QueryEditorHandle } from './QueryEditor';
 
 /**
  * Strips raw markdown backtick delimiters (`column` -> column)
@@ -96,34 +96,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [dbSearchFilter, setDbSearchFilter] = useState<string>('');
   const [copiedColumn, setCopiedColumn] = useState<string | null>(null);
 
-  // Code editor states
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
-  const [activeLine, setActiveLine] = useState<number>(1);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
-  const gutterRef = useRef<HTMLDivElement>(null);
-
-  // Autocomplete
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [selectedSuggestionIdx, setSelectedSuggestionIdx] = useState(0);
-  const [suggestionWord, setSuggestionWord] = useState('');
-  // Word dismissed with Esc — panel stays shut while this word is at the
-  // cursor; typing a different word (or Ctrl+Space) re-opens suggestions.
-  const [dismissedWord, setDismissedWord] = useState<string | null>(null);
-
-  // Column names for the current task's table
-  const columnNames = useMemo(() => {
-    const schema = DATABASE_SCHEMAS[currentTask.primaryTable?.toLowerCase() || 'products'];
-    return schema ? schema.columns.map((c) => c.name) : [];
-  }, [currentTask.primaryTable]);
-
-  // Syntax highlight — the shared grayscale tokenizer (P9.2c: ONE highlighter
-  // app-wide; same recipe as SQLEditor / lesson pages / playground).
-  const highlightedCode = useMemo(() => {
-    if (!currentSql) return '';
-    return highlightSql(currentSql);
-  }, [currentSql]);
+  const editorRef = useRef<QueryEditorHandle>(null);
 
   // Sync state when selected task changes (tracked by currentTask.id)
   useEffect(() => {
@@ -198,58 +172,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     if (validationFeedback) setValidationFeedback(null);
   };
 
-  const updateCursor = (text: string, selectionStart: number) => {
-    const textBeforeCursor = text.slice(0, selectionStart);
-    setActiveLine(textBeforeCursor.split('\n').length);
-  };
-
-  const updateCursorAndSuggestions = (text: string, selectionStart: number) => {
-    updateCursor(text, selectionStart);
-    const textBefore = text.slice(0, selectionStart);
-    const wordMatch = textBefore.match(/[\w]+$/);
-    const word = wordMatch ? wordMatch[0].toUpperCase() : '';
-    if (word.length >= 2) {
-      if (dismissedWord === word) {
-        setShowSuggestions(false);
-        return;
-      }
-      if (dismissedWord !== null) setDismissedWord(null); // different word -> re-open
-      const allTerms = [...SQL_KEYWORDS, ...columnNames];
-      const matches = allTerms.filter(
-        (t) => t.toUpperCase().startsWith(word) && t.toUpperCase() !== word
-      );
-      setSuggestions(matches.slice(0, 8));
-      setSuggestionWord(word);
-      setShowSuggestions(matches.length > 0);
-      // Keep the highlighted suggestion when the list is unchanged, so arrow-key
-      // navigation (keyup re-runs this) is not snapped back to the first item.
-      const next = matches.slice(0, 8);
-      const sameList =
-        next.length === suggestions.length && next.every((m, i) => m === suggestions[i]);
-      setSelectedSuggestionIdx(sameList ? selectedSuggestionIdx : 0);
-    } else {
-      setShowSuggestions(false);
-    }
-  };
-
-  const applySuggestion = (sug: string) => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const pos = ta.selectionStart;
-    const before = currentSql.slice(0, pos);
-    const after = currentSql.slice(pos);
-    const wordMatch = before.match(/[\w]+$/);
-    const wordLen = wordMatch ? wordMatch[0].length : 0;
-    const newSql = before.slice(0, before.length - wordLen) + sug + ' ' + after;
-    handleTextChange(newSql);
-    setShowSuggestions(false);
-    const newPos = pos - wordLen + sug.length + 1;
-    setTimeout(() => { if (ta) { ta.selectionStart = ta.selectionEnd = newPos; ta.focus(); } }, 0);
-  };
-
-  // Execute and Validate Query
-  const handleRunQuery = () => {
-    const trimmed = currentSql.trim();
+  const handleRunQuery = (sqlToRun?: string) => {
+    const sql = typeof sqlToRun === 'string' ? sqlToRun : currentSql;
+    const trimmed = sql.trim();
     if (!trimmed) {
       setValidationFeedback('Please enter a SQL query before running.');
       return;
@@ -258,7 +183,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     // F1: snapshot BEFORE the statement runs, so mutation tasks can be graded
     // against the expected final database state (sandbox replay).
     const preState = getDatabaseState?.();
-    const result = onExecuteSql(currentSql);
+    const result = onExecuteSql(sql);
     setExecutionResult(result);
 
     // P10.3: grade against the solution's output on the same session executor
@@ -268,7 +193,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         ? onExecuteSql(currentTask.solutionSql)
         : undefined;
 
-    let outcome = validateTaskSolution(currentSql, result, currentTask.validation, expected);
+    let outcome = validateTaskSolution(sql, result, currentTask.validation, expected);
 
     // F1: mutation/DDL tasks grade on final database state — replay the
     // solution on a sandbox clone and compare (wrong-row/wrong-value UPDATEs
@@ -290,8 +215,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     if (outcome.passed) {
       setTaskPassed(true);
       setValidationFeedback(null);
-      setTaskSqlCache((prev) => ({ ...prev, [currentTask.id]: currentSql }));
-      onChallengeTaskSuccess(currentTask.id, currentSql);
+      setTaskSqlCache((prev) => ({ ...prev, [currentTask.id]: sql }));
+      onChallengeTaskSuccess(currentTask.id, sql);
     } else {
       setTaskPassed(false);
       setFailedAttemptsCount((prev) => prev + 1);
@@ -320,85 +245,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   };
 
   const handleFormatSql = () => {
-    let formatted = currentSql;
-    SQL_KEYWORDS.forEach((kw) => {
-      const regex = new RegExp(`\\b${kw}\\b`, 'gi');
-      formatted = formatted.replace(regex, kw);
-    });
-    setCurrentSql(formatted);
-    setTaskSqlCache((prev) => ({ ...prev, [currentTask.id]: formatted }));
+    const formatted = formatSql(currentSql);
+    handleTextChange(formatted);
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Autocomplete navigation
-    if (showSuggestions && suggestions.length > 0) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedSuggestionIdx(p => (p + 1) % suggestions.length); return; }
-      if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedSuggestionIdx(p => (p - 1 + suggestions.length) % suggestions.length); return; }
-      if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey && !e.metaKey)) { e.preventDefault(); applySuggestion(suggestions[selectedSuggestionIdx]); return; }
-      if (e.key === 'Escape') {
-        setShowSuggestions(false);
-        const m = currentSql.slice(0, e.currentTarget.selectionStart).match(/[\w]+$/);
-        setDismissedWord(m ? m[0].toUpperCase() : null);
-        return;
-      }
-    }
-
-    // Ctrl+Space -> force-open suggestions (even after Esc, even with no prefix)
-    if (e.ctrlKey && e.code === 'Space') {
-      e.preventDefault();
-      const selStart = e.currentTarget.selectionStart;
-      const m = currentSql.slice(0, selStart).match(/[\w]+$/);
-      const prefix = m ? m[0].toUpperCase() : '';
-      const allTerms = [...SQL_KEYWORDS, ...columnNames];
-      let matches = prefix
-        ? allTerms.filter((t) => t.toUpperCase().startsWith(prefix) && t.toUpperCase() !== prefix).slice(0, 8)
-        : [];
-      if (matches.length === 0) matches = SQL_KEYWORDS.slice(0, 8);
-      setDismissedWord(null);
-      setSuggestions(matches);
-      setSelectedSuggestionIdx(0);
-      setSuggestionWord(prefix);
-      setShowSuggestions(true);
-      return;
-    }
-
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      setShowSuggestions(false);
-      if (taskPassed) { handleNextAction(); } else { handleRunQuery(); }
-      return;
-    }
-
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = e.currentTarget.selectionStart;
-      const end = e.currentTarget.selectionEnd;
-      const newSql = currentSql.substring(0, start) + '  ' + currentSql.substring(end);
-      handleTextChange(newSql);
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 2;
-        }
-      }, 0);
-    }
-  };
-
-  // Sync scroll between textarea, highlight overlay, and gutter
-  const handleScroll = () => {
-    if (textareaRef.current) {
-      const { scrollTop, scrollLeft } = textareaRef.current;
-      if (highlightRef.current) {
-        highlightRef.current.scrollTop = scrollTop;
-        highlightRef.current.scrollLeft = scrollLeft;
-      }
-      if (gutterRef.current) {
-        gutterRef.current.scrollTop = scrollTop;
-      }
-    }
-  };
-
-  const lineCount = Math.max(currentSql.split('\n').length, 5);
-  const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
   // Active Inspect Table Schema & Rows for Modal
   const activeSchema = DATABASE_SCHEMAS[inspectTable.toLowerCase()] || DATABASE_SCHEMAS.products;
@@ -488,7 +337,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       </div>
 
       {/* 2. SQL EDITOR CENTERPIECE */}
-      <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-lg">
+      <div className="bg-surface rounded-xl border border-border overflow-visible shadow-lg">
         {/* Editor Top Bar */}
         <div className="flex items-center justify-between px-4 py-2 bg-surface-2 border-b border-border-soft select-none">
           <div className="flex items-center gap-2">
@@ -518,120 +367,32 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
             <button
               onClick={() => {
-                setCurrentSql('');
-                setTaskSqlCache((prev) => ({ ...prev, [currentTask.id]: '' }));
-                textareaRef.current?.focus();
+                const scaffold = splitTaskScaffold(currentTask.initialSql);
+                handleTextChange(scaffold.code);
+                editorRef.current?.focus();
               }}
               className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
-              title="Clear editor"
+              title="Reset to the task starter query"
             >
               <RotateCcw className="w-3 h-3" />
             </button>
           </div>
         </div>
 
-        {/* Code Editor Surface */}
-        <div
-          onClick={() => textareaRef.current?.focus()}
-          className="relative min-h-[180px] max-h-[440px] flex font-mono text-[13px] leading-[22px] bg-editor-bg cursor-text"
-        >
-          {/* Line Numbers Gutter */}
-          <div
-            ref={gutterRef}
-            className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft overflow-hidden flex flex-col shrink-0"
-          >
-            {lines.map((ln) => (
-              <div
-                key={ln}
-                className={`h-[22px] text-[11px] font-medium transition-colors ${
-                  ln === activeLine ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3' : ''
-                }`}
-              >
-                {ln}
-              </div>
-            ))}
-          </div>
-
-          {/* Syntax Highlight + Textarea */}
-          <div className="relative flex-1 self-stretch min-h-[180px]">
-            {/* Highlight overlay */}
-            <div
-              ref={highlightRef}
-              aria-hidden="true"
-              className="sql-editor-overlay absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
-              style={EDITOR_TEXT_STYLE}
-              dangerouslySetInnerHTML={{ __html: highlightedCode + (currentSql.endsWith('\n') ? '<br />' : '') }}
-            />
-
-            {/* Editable Textarea */}
-            <textarea
-              id="challenge-sql-textarea"
-              ref={textareaRef}
-              value={currentSql}
-              onScroll={handleScroll}
-              onChange={(e) => {
-                handleTextChange(e.target.value);
-                updateCursorAndSuggestions(e.target.value, e.target.selectionStart);
-              }}
-              onKeyUp={(e) => {
-                // Same guard as SQLEditor: Ctrl+Space keyup must not instantly
-                // close the panel it just opened; typing is covered by onChange.
-                const k = e.key;
-                if (
-                  k === 'Control' || k === 'Shift' || k === 'Alt' || k === 'Meta' ||
-                  e.code === 'Space' || k === 'Escape' ||
-                  k === 'ArrowDown' || k === 'ArrowUp'
-                ) return;
-                updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart);
-              }}
-              onClick={(e) => updateCursorAndSuggestions(currentSql, e.currentTarget.selectionStart)}
-              onKeyDown={handleKeyDown}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-              placeholder={buildEditorPlaceholder(currentTask)}
-              spellCheck={false}
-              autoCapitalize="none"
-              autoComplete="off"
-              autoCorrect="off"
-              style={{
-                ...EDITOR_TEXT_STYLE,
-                color: 'transparent',
-                caretColor: 'var(--func)',
-                WebkitTextFillColor: 'transparent',
-              }}
-              className="sql-editor-textarea absolute inset-0 w-full h-full p-3 bg-transparent placeholder:text-text-faint placeholder:opacity-40 font-mono text-[13px] leading-[22px] resize-none outline-none overflow-y-auto border-none block selection:bg-editor-selection whitespace-pre-wrap break-words z-10"
-            />
-
-            {/* Autocomplete Popup */}
-            {showSuggestions && suggestions.length > 0 && (
-              <div
-                id="challenge-autocomplete-dropdown"
-                className="absolute z-50 bg-surface-2 border border-border rounded-lg shadow-2xl overflow-hidden py-1 min-w-[150px]"
-                style={{ top: `${(activeLine) * 22 + 8}px`, left: '12px' }}
-              >
-                <div className="px-2 py-0.5 text-[9px] font-mono text-text-faint border-b border-border-soft uppercase tracking-wider flex items-center justify-between">
-                  <span>Suggestions</span>
-                  <span className="text-[9px] text-text-faint font-normal normal-case">Esc · Ctrl+Space</span>
-                </div>
-                {suggestions.map((sug, idx) => (
-                  <div
-                    key={sug}
-                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(sug); }}
-                    className={`px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center justify-between gap-2.5 transition ${
-                      idx === selectedSuggestionIdx
-                        ? 'bg-func/15 text-text font-semibold'
-                        : 'text-text hover:bg-surface-3 hover:text-text'
-                    }`}
-                  >
-                    <span className="font-semibold">{sug}</span>
-                    <span className="text-[9px] text-text-faint px-1.5 rounded bg-surface-3 border border-border">
-                      {SQL_KEYWORDS.includes(sug.toUpperCase()) ? 'SQL' : 'COL'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <QueryEditor
+          ref={editorRef}
+          value={currentSql}
+          onChange={handleTextChange}
+          onRun={(sql) => {
+            if (taskPassed) handleNextAction();
+            else handleRunQuery(sql);
+          }}
+          fallbackTable={currentTask.primaryTable || 'products'}
+          placeholder={buildEditorPlaceholder(currentTask)}
+          textareaId="challenge-sql-textarea"
+          minLineCount={5}
+          error={!taskPassed ? (executionResult?.error || validationFeedback) : null}
+        />
 
         {/* Editor Bottom Actions */}
         <div className="flex items-center justify-between px-4 py-3 bg-surface border-t border-border">
@@ -655,7 +416,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           ) : (
             <button
               id="challenge-run-btn"
-              onClick={handleRunQuery}
+              onClick={() => handleRunQuery()}
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
             >
               <Play className="w-3.5 h-3.5 fill-current" />

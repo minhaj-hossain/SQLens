@@ -66,6 +66,11 @@ describe('autocomplete context routing (tracker item 12)', () => {
     expect(has(s, 'products')).toBe(true);
   });
 
+  it('matches JOIN as an inner word of LEFT JOIN', () => {
+    const s = sug({ prefix: 'JOIN', queryBeforeCursor: 'SELECT * FROM products ' });
+    expect(has(s, 'LEFT JOIN')).toBe(true);
+  });
+
   it('never surfaces the unsupported FULL JOIN', () => {
     const start = sug({ prefix: '', queryBeforeCursor: '' });
     const afterTable = sug({ prefix: '', queryBeforeCursor: 'SELECT * FROM products p ' });
@@ -73,6 +78,30 @@ describe('autocomplete context routing (tracker item 12)', () => {
     expect(has(start, 'FULL JOIN')).toBe(false);
     expect(has(afterTable, 'FULL JOIN')).toBe(false);
     expect(has(joinCtx, 'FULL JOIN')).toBe(false);
+  });
+
+  it('ranks columns ahead of tables in columns context', () => {
+    const s = sug({ prefix: 'pr', queryBeforeCursor: 'SELECT pr', fallbackTable: 'products' });
+    const colIdx = s.findIndex((item) => item.type === 'column');
+    const tblIdx = s.findIndex((item) => item.type === 'table');
+    expect(colIdx).toBeGreaterThanOrEqual(0);
+    if (tblIdx >= 0) {
+      expect(colIdx).toBeLessThan(tblIdx);
+    }
+  });
+
+  it('ranks tables ahead of columns in tables context', () => {
+    const s = sug({ prefix: 'pr', queryBeforeCursor: 'SELECT * FROM pr' });
+    const tblIdx = s.findIndex((item) => item.type === 'table');
+    expect(tblIdx).toBe(0);
+  });
+
+  it('suggests smart JOIN ON condition matching foreign keys', () => {
+    const s = sug({
+      prefix: '',
+      queryBeforeCursor: 'SELECT * FROM customers c JOIN orders o ',
+    });
+    expect(s.some((item) => item.text.includes('o.customer_id = c.customer_id'))).toBe(true);
   });
 });
 

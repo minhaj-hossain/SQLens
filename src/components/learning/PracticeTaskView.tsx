@@ -202,6 +202,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               onNextAction={onNextTask}
               onBack={onBack}
               backLabel={backLabel}
+              resetSql={taskScaffold.code}
+              lastError={executionResult?.error || validationMessage}
             />
           </div>
 
