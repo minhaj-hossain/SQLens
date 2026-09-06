@@ -426,19 +426,9 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
           return;
         }
         if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
-          const prefix = completionPrefix(value.slice(0, start));
-          const token = prefix.includes('.') ? prefix.split('.').pop()! : prefix;
-          const sug = list[sel]?.text ?? '';
-          const continueAccept =
-            token.length > 0 &&
-            (sug.toUpperCase().startsWith(token.toUpperCase()) ||
-              sug.toUpperCase().startsWith(prefix.toUpperCase()));
-          if (continueAccept) {
-            e.preventDefault();
-            applySuggestion(list[sel]);
-            return;
-          }
-          setShowSuggestions(false);
+          e.preventDefault();
+          applySuggestion(list[sel]);
+          return;
         }
         if (e.key === 'Escape') {
           e.preventDefault();
