@@ -7,6 +7,7 @@ import { BrandLogo } from '@/components/ui/BrandLogo';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 import { ALL_MODULES } from '../../content/curriculum-index';
+import type { SyncStatus } from '@/components/providers/LearningProgressProvider';
 
 const TOTAL_MODULES = ALL_MODULES.length;
 
@@ -19,6 +20,8 @@ interface HeaderProps {
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
   isAuthPending?: boolean;
   onSignOut?: () => void;
+  syncStatus?: SyncStatus;
+  triggerCloudSync?: () => Promise<boolean>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,6 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   isAuthPending,
   onSignOut,
+  syncStatus = 'idle',
+  triggerCloudSync,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
@@ -114,6 +119,44 @@ export const Header: React.FC<HeaderProps> = ({
                   <Icon name="shield_person" className="text-[16px]" />
                 </Link>
               )}
+              {/* Cloud sync status icon */}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => void triggerCloudSync?.()}
+                  title={
+                    syncStatus === 'syncing'
+                      ? 'Syncing progress with cloud...'
+                      : syncStatus === 'saved'
+                      ? 'Progress synced to cloud'
+                      : syncStatus === 'error'
+                      ? 'Sync error — click to retry'
+                      : 'Progress cloud sync'
+                  }
+                  className="hidden sm:flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:bg-surface transition-all duration-150 cursor-pointer"
+                >
+                  <Icon
+                    name={
+                      syncStatus === 'syncing'
+                        ? 'sync'
+                        : syncStatus === 'saved'
+                        ? 'cloud_done'
+                        : syncStatus === 'error'
+                        ? 'cloud_off'
+                        : 'cloud'
+                    }
+                    className={`text-[16px] ${
+                      syncStatus === 'syncing'
+                        ? 'animate-spin text-func'
+                        : syncStatus === 'saved'
+                        ? 'text-func'
+                        : syncStatus === 'error'
+                        ? 'text-error'
+                        : 'text-text-faint'
+                    }`}
+                  />
+                </button>
+              )}
               {/* Avatar + popover share one hover wrapper so the mouse can move
                   from the circle into the menu without closing it. The admin
                   shield stays OUTSIDE this wrapper — hovering it never opens
@@ -196,6 +239,50 @@ export const Header: React.FC<HeaderProps> = ({
                             </span>
                           )}
                         </div>
+                      </div>
+
+                      {/* Sync status */}
+                      <div className="flex items-center justify-between px-3.5 py-1.5 border-t border-border/60 text-[10px] font-mono text-text-dim bg-surface/40">
+                        <span className="flex items-center gap-1.5">
+                          <Icon
+                            name={
+                              syncStatus === 'syncing'
+                                ? 'sync'
+                                : syncStatus === 'saved'
+                                ? 'cloud_done'
+                                : syncStatus === 'error'
+                                ? 'cloud_off'
+                                : 'cloud'
+                            }
+                            className={`text-[13px] ${
+                              syncStatus === 'syncing'
+                                ? 'animate-spin text-func'
+                                : syncStatus === 'saved'
+                                ? 'text-func'
+                                : syncStatus === 'error'
+                                ? 'text-error'
+                                : 'text-text-faint'
+                            }`}
+                          />
+                          <span>
+                            {syncStatus === 'syncing'
+                              ? 'Syncing...'
+                              : syncStatus === 'saved'
+                              ? 'Synced to cloud'
+                              : syncStatus === 'error'
+                              ? 'Sync issue'
+                              : 'Connected'}
+                          </span>
+                        </span>
+                        {triggerCloudSync && (
+                          <button
+                            type="button"
+                            onClick={() => void triggerCloudSync()}
+                            className="text-func hover:underline cursor-pointer"
+                          >
+                            Sync now
+                          </button>
+                        )}
                       </div>
 
                       {/* Actions */}

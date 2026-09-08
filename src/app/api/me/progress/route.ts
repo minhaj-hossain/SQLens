@@ -13,8 +13,8 @@ import type { CloudProgress } from '@/lib/progress/merge';
 export async function GET(req: NextRequest) {
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
-  const progress = await getProgress(res.user!.id);
-  return NextResponse.json({ progress });
+  const { progress, version, updatedAt } = await getProgress(res.user!.id);
+  return NextResponse.json({ progress, version, updatedAt });
 }
 
 export async function PUT(req: NextRequest) {

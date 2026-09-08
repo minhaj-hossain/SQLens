@@ -28,10 +28,14 @@ function ensureIndexes(): Promise<void> {
 }
 
 /** Fetch a user's cloud progress, or null when they have none yet. */
-export async function getProgress(userId: string): Promise<CloudProgress | null> {
+export async function getProgress(userId: string): Promise<{ progress: CloudProgress | null; version: number; updatedAt: string | null }> {
   await ensureIndexes();
   const doc = await db.collection('user_progress').findOne({ userId });
-  return (doc?.progress as CloudProgress) ?? null;
+  return {
+    progress: (doc?.progress as CloudProgress) ?? null,
+    version: (doc?.version as number) ?? 0,
+    updatedAt: (doc?.updatedAt as string) ?? null,
+  };
 }
 
 /**

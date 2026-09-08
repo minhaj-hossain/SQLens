@@ -87,23 +87,29 @@ export function migrateLegacyModuleIds(state: UserLearningState): UserLearningSt
   return s;
 }
 
+export function getStorageKey(userId?: string | null): string {
+  if (userId) {
+    return `sqlens_progress_user_${userId}`;
+  }
+  return LEARNING_CONFIG.STORAGE_KEY;
+}
+
 /**
- * Load persisted state. Tolerates the pre-Phase-2 position format: older saves
- * carry `currentConceptIndex` (number). The raw legacy field is passed through
- * on the returned object so the provider can resolve it to a concept slug —
- * storage stays curriculum-agnostic (no module imports here).
+ * Load persisted state for a specific user (or guest if no userId provided).
+ * Tolerates legacy position formats and migrates legacy module IDs.
  */
-export function loadUserState(): UserLearningState & { currentConceptIndex?: number } {
+export function loadUserState(userId?: string | null): UserLearningState & { currentConceptIndex?: number } {
   if (typeof window === 'undefined') {
     return INITIAL_USER_STATE;
   }
   try {
-    const raw = localStorage.getItem(LEARNING_CONFIG.STORAGE_KEY);
+    const key = getStorageKey(userId);
+    let raw = localStorage.getItem(key);
+    
+    // If loading for a signed-in user and user-scoped key is empty, don't fall back to guest key
+    // unless explicitly migrating.
     if (!raw) return INITIAL_USER_STATE;
     const parsed = JSON.parse(raw);
-    // The legacy dev-only "Progression Controls" were removed once role-based
-    // administration shipped. Normalize any stale bypass flags so a stored
-    // true/offset can never silently unlock modules for regular users.
     return migrateLegacyModuleIds({
       ...INITIAL_USER_STATE,
       ...parsed,
@@ -116,19 +122,21 @@ export function loadUserState(): UserLearningState & { currentConceptIndex?: num
   }
 }
 
-export function saveUserState(state: UserLearningState): void {
+export function saveUserState(state: UserLearningState, userId?: string | null): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(LEARNING_CONFIG.STORAGE_KEY, JSON.stringify(state));
+    const key = getStorageKey(userId);
+    localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.error('Failed to save learning state:', e);
   }
 }
 
-export function resetUserState(): UserLearningState {
+export function resetUserState(userId?: string | null): UserLearningState {
   if (typeof window !== 'undefined') {
     try {
-      localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
+      const key = getStorageKey(userId);
+      localStorage.removeItem(key);
     } catch (e) {
       console.error('Failed to clear learning state:', e);
     }
@@ -136,8 +144,19 @@ export function resetUserState(): UserLearningState {
   return { ...INITIAL_USER_STATE, lastActiveTimestamp: new Date().toISOString() };
 }
 
+export function clearGuestState(): void {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 // Legacy alias exports (kept for API stability).
 export const loadUserLearningState = loadUserState;
 export const saveUserLearningState = saveUserState;
 export const resetAllProgress = resetUserState;
+
 
