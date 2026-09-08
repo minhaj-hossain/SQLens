@@ -19,7 +19,7 @@ import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { userState, resetProgress, syncStatus, triggerCloudSync } = useLearning();
+  const { userState, resetProgress } = useLearning();
   const { user: authUser, isAuthPending, signOut } = useAuth();
   const { openSchema } = useUiChrome();
 
@@ -50,8 +50,6 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         isAuthPending={isAuthPending}
         onSignOut={signOut}
         activeViewTitle={activeViewTitle}
-        syncStatus={syncStatus}
-        triggerCloudSync={triggerCloudSync}
       />
 
       <AnnouncementBanner />

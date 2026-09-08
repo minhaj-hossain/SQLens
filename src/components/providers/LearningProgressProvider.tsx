@@ -40,15 +40,10 @@ import {
 } from '@/lib/progress/merge';
 import { useAuth } from './AuthProvider';
 
-export type SyncStatus = 'idle' | 'syncing' | 'saved' | 'error' | 'offline';
-
 interface LearningContextValue {
   userState: UserLearningState;
   setUserState: Dispatch<SetStateAction<UserLearningState>>;
   availabilityVersion: number;
-  syncStatus: SyncStatus;
-  lastSyncedAt: string | null;
-  triggerCloudSync: () => Promise<boolean>;
   /**
    * Set when a signed-in user has meaningful progress BOTH locally and in the
    * cloud and they differ. While set, no automatic merge has been applied.
@@ -109,9 +104,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   const [userState, setUserState] = useState<UserLearningState>(() =>
     resolveLegacyPosition(loadUserState(null)),
   );
-
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   // Guest-progress prompt state
   const [mergePrompt, setMergePrompt] = useState<{
@@ -207,7 +199,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       clearTimeout(syncTimerRef.current);
       syncTimerRef.current = null;
     }
-    setSyncStatus('syncing');
     const payload = JSON.stringify({ progress: toCloudProgress(latestStateRef.current) });
     try {
       const r = await fetch('/api/me/progress', {
@@ -219,8 +210,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       lastPushedJsonRef.current = payload;
       pendingPushRef.current = false;
       retryCountRef.current = 0;
-      setSyncStatus('saved');
-      setLastSyncedAt(new Date().toISOString());
       return true;
     } catch {
       // Network failure — localStorage holds the data; retry w/ backoff.
@@ -232,7 +221,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           4000 * retryCountRef.current,
         );
       }
-      setSyncStatus('error');
       return false;
     }
   };
@@ -257,7 +245,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         prevUserIdRef.current = null;
         hydratedForUserRef.current = null;
         setMergePrompt(null);
-        setSyncStatus('idle');
         const guestState = resolveLegacyPosition(loadUserState(null));
         setUserState(guestState);
         latestStateRef.current = guestState;
@@ -285,10 +272,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     let cancelled = false;
     void (async () => {
       try {
-        setSyncStatus('syncing');
         const r = await fetch('/api/me/progress');
         if (cancelled || !r.ok) {
-          setSyncStatus('error');
           return;
         }
         const body = (await r.json()) as { progress: CloudProgress | null };
@@ -306,7 +291,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
             if (divergence.isDivergent) {
               if (cancelled) return;
               setMergePrompt({ local: guestState, cloud, details: divergence });
-              setSyncStatus('idle');
               return;
             }
           }
@@ -329,7 +313,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           await pushCloudNow();
         }
       } catch {
-        setSyncStatus('offline');
+        /* offline / network error */
       }
     })();
 
@@ -359,7 +343,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
             saveUserState(merged, signedInUserIdRef.current);
             skipNextPushRef.current = true;
             setUserState(merged);
-            setSyncStatus('saved');
           }
         }
       } catch {
@@ -642,9 +625,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       userState,
       setUserState,
       availabilityVersion,
-      syncStatus,
-      lastSyncedAt,
-      triggerCloudSync: pushCloudNow,
       mergePrompt,
       resolveMergePrompt,
       markTaskComplete,
@@ -656,8 +636,6 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     [
       userState,
       availabilityVersion,
-      syncStatus,
-      lastSyncedAt,
       mergePrompt,
       resolveMergePrompt,
       markTaskComplete,
