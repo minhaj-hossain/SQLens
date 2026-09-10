@@ -26,7 +26,7 @@ import React, {
   SetStateAction,
 } from 'react';
 import { getModuleById } from '@/content/curriculum-index';
-import { loadUserState, saveUserState, resetUserState, clearGuestState, INITIAL_USER_STATE } from '@/lib/progress/storage';
+import { loadUserState, saveUserState, resetUserState, resetModuleProgress, clearGuestState, INITIAL_USER_STATE } from '@/lib/progress/storage';
 import { UserLearningState, AvailabilityMap } from '@/types/progress';
 import { ModuleData } from '@/types/curriculum';
 import { setAvailabilityMap } from '@/lib/progress/availability-store';
@@ -65,9 +65,10 @@ interface LearningContextValue {
   markConceptComplete: (moduleId: string, conceptId: string) => void;
   /** Mark the whole module complete (all concepts+tasks+challenge). */
   markModuleComplete: (module: ModuleData) => void;
-  /** Wipe all progress back to Day 1 (also clears the legacy nav snapshot). */
-  resetProgress: () => void;
+  /** Wipe all progress back to Day 1, or reset a specific module's progress. */
+  resetProgress: (options?: { moduleId?: string }) => Promise<void>;
 }
+
 
 const LearningContext = createContext<LearningContextValue | null>(null);
 
@@ -586,19 +587,75 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     }));
   }, []);
 
-  const resetProgress = useCallback(() => {
-    const fresh = resetUserState(signedInUserId);
-    try {
-      localStorage.removeItem(LEGACY_NAV_KEY);
-    } catch {
-      /* ignore */
-    }
-    setUserState(fresh);
-    setMergePrompt(null);
-    if (signedInUserId) {
-      void pushCloudNow();
-    }
-  }, [signedInUserId]);
+  const resetProgress = useCallback(
+    async (options?: { moduleId?: string }): Promise<void> => {
+      const targetModuleId = options?.moduleId;
+
+      if (targetModuleId) {
+        // Reset single module progress
+        const mod = getModuleById(targetModuleId);
+        const next = resetModuleProgress(targetModuleId, latestStateRef.current, mod);
+        latestStateRef.current = next;
+        saveUserState(next, signedInUserIdRef.current);
+        setUserState(next);
+
+        if (!skipNextBroadcastRef.current) {
+          broadcastChannelRef.current?.postMessage({
+            type: 'PROGRESS_SYNC',
+            userId: signedInUserIdRef.current,
+            state: next,
+          });
+        }
+
+        if (signedInUserIdRef.current) {
+          await pushCloudNow();
+        }
+        return;
+      }
+
+      // Full curriculum reset back to Day 1
+      if (syncTimerRef.current) {
+        clearTimeout(syncTimerRef.current);
+        syncTimerRef.current = null;
+      }
+      pendingPushRef.current = false;
+      lastPushedJsonRef.current = null;
+      skipNextPushRef.current = true;
+
+      const fresh = resetUserState(signedInUserIdRef.current);
+      try {
+        localStorage.removeItem(LEGACY_NAV_KEY);
+      } catch {
+        /* ignore */
+      }
+      latestStateRef.current = fresh;
+      saveUserState(fresh, signedInUserIdRef.current);
+      setUserState(fresh);
+      setMergePrompt(null);
+
+      if (!skipNextBroadcastRef.current) {
+        broadcastChannelRef.current?.postMessage({
+          type: 'PROGRESS_SYNC',
+          userId: signedInUserIdRef.current,
+          state: fresh,
+        });
+      }
+
+      if (signedInUserIdRef.current) {
+        try {
+          await fetch('/api/me/progress', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+          });
+        } catch (e) {
+          console.error('Failed to delete cloud progress:', e);
+        }
+      }
+    },
+    [],
+  );
+
 
   /** Guest-progress prompt resolution */
   const resolveMergePrompt = useCallback((choice: 'combine' | 'useCloud') => {

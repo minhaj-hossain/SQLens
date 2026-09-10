@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { authorize } from '@/lib/authorize';
-import { getProgress, saveProgress } from '@/lib/server/progress-store';
+import { getProgress, saveProgress, deleteProgress } from '@/lib/server/progress-store';
 import type { CloudProgress } from '@/lib/progress/merge';
 
 /**
@@ -44,3 +44,11 @@ export async function PUT(req: NextRequest) {
   const result = await saveProgress(res.user!.id, body.progress);
   return NextResponse.json({ ok: true, ...result });
 }
+
+export async function DELETE(req: NextRequest) {
+  const res = await authorize(req, 'authenticated');
+  if (!res.ok) return res.response as NextResponse;
+
+  await deleteProgress(res.user!.id);
+  return NextResponse.json({ ok: true });
+}

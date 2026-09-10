@@ -94,12 +94,13 @@ export async function setUserStatus(
   return doc ? mapUser(doc) : null;
 }
 
-/** Permanently remove a user across user/session/account collections. */
+/** Permanently remove a user across user/session/account/progress collections. */
 export async function removeUser(id: string): Promise<boolean> {
   const oid = toObjectId(id);
   if (!oid) return false;
   await db.collection('session').deleteMany({ userId: String(id) });
   await db.collection('account').deleteMany({ userId: String(id) });
+  await db.collection('user_progress').deleteMany({ userId: String(id) });
   const res = await usersCol().deleteOne({ _id: oid });
   return (res.deletedCount ?? 0) > 0;
-}
+}

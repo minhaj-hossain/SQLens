@@ -59,3 +59,10 @@ export async function saveProgress(
   );
   return { version: res?.version ?? 1, updatedAt };
 }
+
+/** Permanently delete a user's cloud progress document. */
+export async function deleteProgress(userId: string): Promise<boolean> {
+  await ensureIndexes();
+  const res = await db.collection('user_progress').deleteOne({ userId });
+  return (res.deletedCount ?? 0) > 0;
+}

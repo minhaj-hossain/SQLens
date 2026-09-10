@@ -6,7 +6,7 @@
  * ROUTE (pathname), not from provider state — the URL is the position.
  */
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import BlockedView from '@/components/auth/BlockedView';
 import { getModuleById } from '@/content/curriculum-index';
@@ -19,6 +19,7 @@ import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { userState, resetProgress } = useLearning();
   const { user: authUser, isAuthPending, signOut } = useAuth();
   const { openSchema } = useUiChrome();
@@ -40,10 +41,16 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased">
       <Header
         userState={userState}
-        currentModule={pathModule ?? getModuleById('day-01')!}
-        onResetProgress={() => {
-          resetProgress();
-          window.location.href = '/';
+        currentModule={pathModule ?? null}
+        onResetProgress={async (mode?: 'all' | 'module', moduleId?: string) => {
+          if (mode === 'module' && moduleId) {
+            await resetProgress({ moduleId });
+            router.refresh();
+          } else {
+            await resetProgress();
+            router.push('/');
+            router.refresh();
+          }
         }}
         onOpenSchemaModal={openSchema}
         user={authUser}

@@ -1,5 +1,6 @@
 import { LEARNING_CONFIG } from '../../config/learning';
 import { UserLearningState, CompletedModuleRecord, CompletedConceptRecord, CompletedTaskRecord } from '../../types/progress';
+import { ModuleData } from '../../types/curriculum';
 
 export const INITIAL_USER_STATE: UserLearningState = {
   currentModuleId: 'day-01',
@@ -137,11 +138,88 @@ export function resetUserState(userId?: string | null): UserLearningState {
     try {
       const key = getStorageKey(userId);
       localStorage.removeItem(key);
+      localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
+      localStorage.removeItem('sql_mastery_nav_v1');
+      try {
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const k = sessionStorage.key(i);
+          if (k && k.startsWith('sqlens_scroll_')) {
+            sessionStorage.removeItem(k);
+          }
+        }
+      } catch {
+        /* ignore sessionStorage failure */
+      }
     } catch (e) {
       console.error('Failed to clear learning state:', e);
     }
   }
   return { ...INITIAL_USER_STATE, lastActiveTimestamp: new Date().toISOString() };
+}
+
+/**
+ * Resets task and concept progress for a single specific module,
+ * leaving other days and unlocked modules intact.
+ */
+export function resetModuleProgress(
+  moduleId: string,
+  state: UserLearningState,
+  moduleData?: ModuleData | null,
+): UserLearningState {
+  const next: UserLearningState = { ...state };
+  const nextCompletedModules = { ...next.completedModules };
+  delete nextCompletedModules[moduleId];
+  next.completedModules = nextCompletedModules;
+
+  const taskIdsToDelete = new Set<string>();
+  const conceptIdsToDelete = new Set<string>();
+
+  if (moduleData) {
+    for (const c of moduleData.concepts ?? []) {
+      conceptIdsToDelete.add(c.id);
+      for (const t of c.tasks ?? []) {
+        taskIdsToDelete.add(t.id);
+      }
+    }
+    if (moduleData.challenge) {
+      for (const t of moduleData.challenge.tasks ?? []) {
+        taskIdsToDelete.add(t.id);
+      }
+    }
+  }
+
+  if (next.completedConcepts) {
+    const nextConcepts = { ...next.completedConcepts };
+    for (const [id, rec] of Object.entries(nextConcepts)) {
+      if (rec.moduleId === moduleId || conceptIdsToDelete.has(id)) {
+        delete nextConcepts[id];
+      }
+    }
+    next.completedConcepts = nextConcepts;
+  }
+
+  if (next.completedTasks) {
+    const nextTasks = { ...next.completedTasks };
+    for (const [id, rec] of Object.entries(nextTasks)) {
+      if (rec.moduleId === moduleId || taskIdsToDelete.has(id)) {
+        delete nextTasks[id];
+      }
+    }
+    next.completedTasks = nextTasks;
+  }
+
+  if (next.taskAttempts) {
+    const nextAttempts = { ...next.taskAttempts };
+    for (const [id, rec] of Object.entries(nextAttempts)) {
+      if (rec.moduleId === moduleId || taskIdsToDelete.has(id)) {
+        delete nextAttempts[id];
+      }
+    }
+    next.taskAttempts = nextAttempts;
+  }
+
+  next.lastActiveTimestamp = new Date().toISOString();
+  return next;
 }
 
 export function clearGuestState(): void {

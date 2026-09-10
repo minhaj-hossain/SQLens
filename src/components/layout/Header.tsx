@@ -7,13 +7,14 @@ import { BrandLogo } from '@/components/ui/BrandLogo';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 import { ALL_MODULES } from '../../content/curriculum-index';
+import ResetProgressModal from '@/components/ui/ResetProgressModal';
 
 const TOTAL_MODULES = ALL_MODULES.length;
 
 interface HeaderProps {
   userState: UserLearningState;
-  currentModule: ModuleData;
-  onResetProgress: () => void;
+  currentModule?: ModuleData | null;
+  onResetProgress: (mode?: 'all' | 'module', moduleId?: string) => Promise<void> | void;
   onOpenSchemaModal: () => void;
   activeViewTitle?: string;
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSignOut,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
   const completedCount = Object.keys(userState.completedModules).length;
   const progressPct = Math.round((completedCount / TOTAL_MODULES) * 100);
 
@@ -90,6 +92,18 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Color theme switcher (graphite / sky) */}
           <ThemeToggle />
+
+          {/* Guest reset progress trigger */}
+          {!user && !isAuthPending && (
+            <button
+              onClick={() => setResetModalOpen(true)}
+              title="Reset course progress"
+              aria-label="Reset course progress"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-error hover:border-error/40 transition-all duration-150 cursor-pointer"
+            >
+              <Icon name="restart_alt" className="text-[15px]" />
+            </button>
+          )}
 
           {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
           {isAuthPending ? (
@@ -203,10 +217,8 @@ export const Header: React.FC<HeaderProps> = ({
                         <button
                           role="menuitem"
                           onClick={() => {
-                            if (window.confirm('Reset all course progress back to Day 1?')) {
-                              setUserMenuOpen(false);
-                              onResetProgress();
-                            }
+                            setUserMenuOpen(false);
+                            setResetModalOpen(true);
                           }}
                           className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
                         >
@@ -256,6 +268,15 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
       </div>
+
+      <ResetProgressModal
+        isOpen={resetModalOpen}
+        onClose={() => setResetModalOpen(false)}
+        currentModule={currentModule}
+        onConfirmReset={async (mode, moduleId) => {
+          await onResetProgress(mode, moduleId);
+        }}
+      />
     </header>
   );
 };
