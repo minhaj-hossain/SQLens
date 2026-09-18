@@ -38,7 +38,7 @@ All eight run in CI (`.github/workflows/ci.yml`).
 | vitest | ✅ 30 files / **325 tests** |
 | `verify:curriculum` | ✅ 100% clean |
 | Task audit | ✅ **343/343**, 0 failures |
-| Engine contract probes | ✅ **22 pass / 0 fail** |
+| Engine contract probes | ✅ **25 pass / 0 fail** |
 | Keyword-case scan | ✅ 0 findings across 13 SQL-aware files |
 | Task equivalence guardrail | 274 tasks / 530 rewrites / **1 finding** → Batch 9 |
 
@@ -127,22 +127,23 @@ All eight run in CI (`.github/workflows/ci.yml`).
 - [x] `tests/engine/ddl-constraints.test.ts` corrected — it had encoded the buggy shape while *documenting* that parity was the point; it now asserts the projection equals the registered schema columns
 - **Exit:** `npm run audit:equivalence:tasks` → 5 → **1 finding** ✅ ; `SELECT *` column count equals the schema count ✅
 
-## Batch 8 — Unaliased `JOIN … ON` silently returns no rows ⬜ NOT STARTED (S1, do first)
-**Why it matters:** silent wrong answers on textbook SQL — the exact class this program exists to eliminate.
+## Batch 8 — Unaliased `JOIN … ON` silently returned no rows ✅ DONE
+**Why it mattered:** silent wrong answers on textbook SQL — the exact class this program exists to eliminate.
 
-- [ ] Evidence (reproduced):
+- [x] Evidence (reproduced before the fix):
 
-      | Query | Result |
-      |---|---|
-      | `SELECT COUNT(*) FROM customers JOIN orders ON customers.customer_id = orders.customer_id` | **0** (silently) |
-      | `SELECT COUNT(*) FROM orders JOIN order_items ON orders.order_id = order_items.order_id` | **0** (silently) |
-      | `SELECT COUNT(*) FROM customers LEFT JOIN orders ON customers.customer_id = orders.customer_id` | **15** — every right side NULL (silently) |
-      | same query with aliases (`orders o JOIN customers c ON o.customer_id = c.customer_id`) | **18** ✅ |
+      | Query | Before | After |
+      |---|---|---|
+      | `SELECT COUNT(*) FROM customers JOIN orders ON customers.customer_id = orders.customer_id` | **0** (silently) | **18** ✅ |
+      | `SELECT COUNT(*) FROM orders JOIN order_items ON orders.order_id = order_items.order_id` | **0** (silently) | **29** ✅ |
+      | `SELECT COUNT(*) FROM customers LEFT JOIN orders ON customers.customer_id = orders.customer_id` | **15**, every right side NULL | **21** (18 matched + 3 order-less) ✅ |
 
-- [ ] Root cause (`parser.ts`, JOIN parsing): the alias group `(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?` greedily captures the keyword **`ON`** as the table alias when no alias is written. The parsed join is then `{ alias: 'ON', onLeft: '', onRight: '' }` — the join matcher has no equality to test, so nothing matches. Curriculum solutions all use aliases, which is why `audit-all-tasks` (343/343) never caught it.
-- [ ] Fix: stop capturing a SQL keyword as an alias (guard `ON`/`USING`/`INNER`/`LEFT`/`RIGHT`/`FULL`/`CROSS`/`JOIN`/`WHERE`/`GROUP`/`ORDER`/`HAVING`/`LIMIT`/`SET`/`VALUES`/`UNION`), and parse the ON clause from the `ON` keyword onward so `onLeft`/`onRight` are populated whether or not an alias is present. A join whose ON clause cannot be evaluated must error, never return an empty set.
-- [ ] Also cover the CROSS-JOIN branch and the base-table alias parse (same regex shape).
-- **Exit:** unaliased INNER/LEFT/RIGHT/FULL joins return the same rows as their aliased equivalents; new CONTRACT probes + tests; `npm run audit:all` green
+- [x] Root cause (`parser.ts`, JOIN parsing): the alias group `(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?` greedily captured the keyword **`ON`** as the table alias when no alias was written, so the parsed join was `{ alias: 'ON', onLeft: '', onRight: '' }`. The matcher had no equality to test and produced no rows. Curriculum solutions all use aliases, which is why the 343-task audit never caught it.
+- [x] Fix (parser): split the `ON` clause off **first**, then tokenise table + optional alias; a captured alias is accepted only if it is not a clause keyword (`NON_ALIAS_WORDS` / `normalizeTableAlias`). The first equality still populates `onLeft`/`onRight`; everything else stays in `onCondition`.
+- [x] Fix (executor): when there is no fast-path equality, evaluate the **whole** ON predicate against the merged row. A JOIN with no ON condition at all raises `JOIN on '<table>' is missing an ON condition` instead of returning an empty set.
+- [x] 3 new CONTRACT probes (22 → 25 probes); 6 new vitest cases (unaliased ≡ aliased row-for-row, LEFT JOIN padding, missing-ON error, extra `AND` terms)
+- [x] `docs/DIALECT.md`: joins table now states the alias is optional and `JOIN … USING (col)` is unsupported (errors by name)
+- **Exit:** unaliased ≡ aliased for INNER/LEFT/RIGHT/FULL ✅ ; `npm run audit:all` green ✅
 
 ## Batch 9 — `customValidator` must not scan raw text ⬜ NOT STARTED
 - [ ] `day-21/subqueries-not-in-null-trap/day17-c1c-t2` fails a semantically identical derived-table wrapper because the check regex-searches the raw SQL for `product_id IS NOT NULL` — the **last** remaining guardrail finding

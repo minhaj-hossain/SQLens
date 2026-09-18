@@ -220,6 +220,38 @@ const probes: Probe[] = [
     checkExec: (r) => (!r.success ? `unexpected error: ${r.error}` : r.rowCount === 3 ? null : `expected 3 rows, got ${r.rowCount}`),
   },
   {
+    id: 'B8 unaliased INNER JOIN must match (was 0 rows)',
+    kind: 'CONTRACT',
+    sql: 'SELECT c.name, o.order_id FROM customers JOIN orders ON customers.customer_id = orders.customer_id;',
+    checkExec: (r) =>
+      !r.success
+        ? `unexpected error: ${r.error}`
+        : r.rowCount === 18
+          ? null
+          : `unaliased JOIN returned ${r.rowCount} row(s), expected 18 (matching the aliased form)`,
+  },
+  {
+    id: 'B8 unaliased LEFT JOIN must match (was an all-NULL right side)',
+    kind: 'CONTRACT',
+    sql: 'SELECT c.name, o.order_id FROM customers LEFT JOIN orders ON customers.customer_id = orders.customer_id;',
+    checkExec: (r) => {
+      if (!r.success) return `unexpected error: ${r.error}`;
+      if (r.rowCount !== 21) return `expected 21 rows, got ${r.rowCount}`;
+      const nullRight = (r.rows ?? []).filter((row: any) => row.order_id == null).length;
+      // Only the 3 customers with no orders may have an unmatched (NULL) side.
+      return nullRight === 3
+        ? null
+        : `${nullRight} NULL right sides — only the 3 order-less customers should be unmatched`;
+    },
+  },
+  {
+    id: 'B8 JOIN without an ON condition must error, not return an empty set',
+    kind: 'CONTRACT',
+    sql: 'SELECT COUNT(*) AS n FROM customers JOIN orders;',
+    checkExec: (r) =>
+      r.success ? `silently returned ${r.rowCount} row(s) for a JOIN with no ON condition` : null,
+  },
+  {
     id: 'BASE extra ON tautology keeps the plain join row set',
     kind: 'BASELINE',
     sql: 'SELECT c.name FROM customers c INNER JOIN orders o ON o.customer_id = c.customer_id AND o.order_id + 0 = o.order_id;',

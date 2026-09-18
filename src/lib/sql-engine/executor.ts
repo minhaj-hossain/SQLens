@@ -1246,6 +1246,23 @@ export class SqlExecutor {
 
         const matches = (row: TableRow, targetRow: TableRow): boolean => {
           if (join.type === 'CROSS') return true;
+
+          // Batch 8: when there is no plain `col = col` to fast-path (an
+          // expression ON clause such as `ON a.x > b.y`, or a JOIN written with
+          // no ON at all), evaluate the WHOLE ON predicate against the merged
+          // row. Returning `false` here is what made every unaliased join
+          // silently produce zero rows.
+          if (!join.onLeft || !join.onRight) {
+            if (!join.onCondition) {
+              throw new Error(
+                `JOIN on '${join.table}' is missing an ON condition. ` +
+                `Add one (e.g. ON ${tableName}.id = ${joinTable}.id) or use CROSS JOIN.`
+              );
+            }
+            const mergedNoFastPath = mergeRow(row, targetRow);
+            return this.evaluateWhere(this.substituteRowRefs(join.onCondition, mergedNoFastPath), mergedNoFastPath);
+          }
+
           const vLeft = getRowValue(row, join.onLeft);
           const vRight = getRowValue(targetRow, join.onRight);
           const vLeftAlt = getRowValue(row, join.onRight);

@@ -631,6 +631,28 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
   return cols;
 }
 
+/**
+ * Batch 8: words that can never be a table alias, because they begin the next
+ * clause. A JOIN written without an alias (`JOIN orders ON …`) used to capture
+ * the keyword `ON` itself as the alias — leaving `onLeft`/`onRight` empty, so the
+ * join matcher had no equality to test and every unaliased JOIN silently returned
+ * ZERO rows. Aliased joins were unaffected, which is why the curriculum audit
+ * (whose solutions all use aliases) never surfaced it.
+ */
+const NON_ALIAS_WORDS = new Set([
+  'ON', 'USING', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'CROSS', 'OUTER', 'JOIN',
+  'WHERE', 'GROUP', 'ORDER', 'HAVING', 'LIMIT', 'OFFSET', 'UNION', 'EXCEPT',
+  'INTERSECT', 'SET', 'VALUES', 'AND', 'OR', 'NOT', 'AS', 'WITH',
+]);
+
+/** Accept a captured alias only when it is not a clause keyword. */
+function normalizeTableAlias(raw: string | undefined | null): string | undefined {
+  if (!raw) return undefined;
+  const alias = raw.replace(/[`"']/g, '').trim();
+  if (!alias || NON_ALIAS_WORDS.has(alias.toUpperCase())) return undefined;
+  return alias;
+}
+
 function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
   // Support INNER / LEFT [OUTER] / RIGHT [OUTER] / FULL [OUTER] / CROSS / bare JOIN
   const joinParts = fromSection.split(
@@ -654,39 +676,40 @@ function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
 
     const joinBody = joinParts[i + 1]?.trim() || '';
 
-    // CROSS JOIN has no ON clause.
+    // Batch 8: split the ON clause off FIRST. Parsing the table+alias with a
+    // greedy alias group could swallow the `ON` keyword as the alias, which is
+    // what made unaliased joins match nothing.
+    const onIdx = joinBody.search(/\bON\b/i);
+    const tablePart = (onIdx === -1 ? joinBody : joinBody.substring(0, onIdx)).trim();
+    const onCondition =
+      onIdx === -1 ? undefined : joinBody.substring(onIdx).replace(/^ON\s+/i, '').trim();
+
+    const tableTokens = tablePart.split(/\s+/).filter(Boolean).map((t) => t.replace(/[`"']/g, ''));
+    const table = tableTokens[0] || '';
+    // `JOIN t AS a` / `JOIN t a` / `JOIN t`
+    const aliasToken = tableTokens[1]?.toUpperCase() === 'AS' ? tableTokens[2] : tableTokens[1];
+    const alias = normalizeTableAlias(aliasToken);
+
+    if (!table) continue;
+
     if (joinType === 'CROSS') {
-      const crossBody = joinBody.match(/^([`"']?[\w_]+[`"']?)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?/i);
-      if (crossBody) {
-        query.joins?.push({
-          type: 'CROSS',
-          table: crossBody[1].replace(/[`"']/g, ''),
-          alias: crossBody[2]?.replace(/[`"']/g, ''),
-          onLeft: '',
-          onRight: '',
-        });
-      }
+      query.joins?.push({ type: 'CROSS', table, alias, onLeft: '', onRight: '' });
       continue;
     }
 
-    const onMatch = joinBody.match(
-      /^([`"']?[\w_]+[`"']?)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?\s+(?:ON\s+([\w_.]+)\s*=\s*([\w_.]+))?/i
-    );
-    if (onMatch) {
-      // S2-4: keep the FULL ON clause so additional `AND <condition>` terms are
-      // evaluated instead of silently dropped. onLeft/onRight stay the first
-      // equality (fast path + existing consumers); onCondition carries the rest.
-      const onIdx = joinBody.search(/\bON\b/i);
-      const onCondition = onIdx !== -1 ? joinBody.substring(onIdx).replace(/^ON\s+/i, '').trim() : undefined;
-      query.joins?.push({
-        type: joinType,
-        table: onMatch[1].replace(/[`"']/g, ''),
-        alias: onMatch[2]?.replace(/[`"']/g, ''),
-        onLeft: (onMatch[3] || '').replace(/[`"']/g, ''),
-        onRight: (onMatch[4] || '').replace(/[`"']/g, ''),
-        onCondition,
-      });
-    }
+    // First equality supplies the fast-path columns; any `AND <condition>` terms
+    // stay in onCondition for the executor to evaluate (S2-4). An ON clause that
+    // is not a plain equality leaves them empty on purpose — the executor then
+    // evaluates the whole predicate instead of matching nothing (Batch 8).
+    const eq = onCondition?.match(/^\s*([`"']?[\w_.]+[`"']?)\s*=\s*([`"']?[\w_.]+[`"']?)/);
+    query.joins?.push({
+      type: joinType,
+      table,
+      alias,
+      onLeft: eq ? eq[1].replace(/[`"']/g, '') : '',
+      onRight: eq ? eq[2].replace(/[`"']/g, '') : '',
+      onCondition,
+    });
   }
 }
 

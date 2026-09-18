@@ -172,6 +172,68 @@ describe('S3-10 — GROUP BY keys must resolve or fail loudly', () => {
   });
 });
 
+describe('Batch 8 — unaliased JOIN … ON must match (not silently return no rows)', () => {
+  /**
+   * The JOIN parser captured the keyword `ON` as the table alias whenever the
+   * table had no alias, leaving onLeft/onRight empty. The matcher then had no
+   * equality to test, so every unaliased JOIN silently returned ZERO rows
+   * (or an all-NULL right side for LEFT JOIN). Curriculum solutions all use
+   * aliases, which is why the 343-task audit never caught it.
+   */
+  const pairs: Array<[string, string, string]> = [
+    [
+      'INNER JOIN',
+      'SELECT c.name AS n, o.order_id AS id FROM customers JOIN orders ON customers.customer_id = orders.customer_id ORDER BY o.order_id;',
+      'SELECT c.name AS n, o.order_id AS id FROM customers c JOIN orders o ON c.customer_id = o.customer_id ORDER BY o.order_id;',
+    ],
+    [
+      'INNER JOIN orders→order_items',
+      'SELECT o.order_id AS id, i.quantity AS q FROM orders JOIN order_items ON orders.order_id = order_items.order_id ORDER BY o.order_id, i.quantity;',
+      'SELECT o.order_id AS id, i.quantity AS q FROM orders o JOIN order_items i ON o.order_id = i.order_id ORDER BY o.order_id, i.quantity;',
+    ],
+    [
+      'explicit INNER keyword',
+      'SELECT c.name AS n FROM customers INNER JOIN orders ON customers.customer_id = orders.customer_id;',
+      'SELECT c.name AS n FROM customers c INNER JOIN orders o ON c.customer_id = o.customer_id;',
+    ],
+  ];
+
+  for (const [label, unaliased, aliased] of pairs) {
+    it(`${label}: unaliased result equals the aliased result`, () => {
+      const raw = run(unaliased);
+      const ali = run(aliased);
+      expect(raw.success).toBe(true);
+      expect(ali.success).toBe(true);
+      expect(raw.rowCount).toBeGreaterThan(0);
+      expect(raw.rowCount).toBe(ali.rowCount);
+      expect(raw.rows).toEqual(ali.rows);
+    });
+  }
+
+  it('LEFT JOIN keeps matched rows and pads only the order-less customers', () => {
+    const r = run(
+      'SELECT c.name AS n, o.order_id AS id FROM customers LEFT JOIN orders ON customers.customer_id = orders.customer_id;'
+    );
+    expect(r.success).toBe(true);
+    expect(r.rowCount).toBe(21); // 18 matched + 3 unmatched
+    expect(r.rows.filter((row: any) => row.id == null).length).toBe(3);
+  });
+
+  it('a JOIN with no ON condition errors instead of returning an empty set', () => {
+    const r = run('SELECT COUNT(*) AS n FROM customers JOIN orders;');
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/on condition/i);
+  });
+
+  it('still evaluates extra AND terms in the ON clause', () => {
+    const r = run(
+      'SELECT COUNT(*) AS n FROM orders o JOIN order_items i ON o.order_id = i.order_id AND i.quantity > 1;'
+    );
+    expect(r.success).toBe(true);
+    expect(Number(r.rows[0].n)).toBeGreaterThan(0);
+  });
+});
+
 describe('Batch 7 — SELECT * must expose table columns, not internal mirrors', () => {
   /**
    * The FROM loader mirrors every column as `table.col`/`alias.col` so qualified

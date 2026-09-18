@@ -39,7 +39,7 @@
 | Shaping | `ORDER BY … ASC/DESC`, multi-key sort, `DISTINCT`, `LIMIT n`, `OFFSET m` | |
 | Aggregates | `COUNT(*)`, `COUNT(col)`, `COUNT(DISTINCT col)`, `MIN`, `MAX`, `SUM`, `AVG` | NULL-aware semantics taught (Day 9) |
 | Grouping | `GROUP BY`, `HAVING` | WHERE = rows, HAVING = groups. Keys may be a column, an expression, a **positional index** (`GROUP BY 1`) or a **SELECT alias**; an unresolvable key is an ERROR, never a silent single-bucket collapse |
-| Joins | `INNER JOIN`, `LEFT JOIN` (OUTER tolerated), table alias | anti-join pattern `LEFT JOIN … WHERE right.pk IS NULL` (Day 14). `RIGHT`/`FULL`/`CROSS` execute but are not taught. Multi-condition `ON a = b AND …` is fully evaluated — no term is dropped |
+| Joins | `INNER JOIN`, `LEFT JOIN` (OUTER tolerated), table alias | anti-join pattern `LEFT JOIN … WHERE right.pk IS NULL` (Day 14). `RIGHT`/`FULL`/`CROSS` execute but are not taught. Multi-condition `ON a = b AND …` is fully evaluated — no term is dropped. An **alias is optional**: `JOIN orders ON customers.customer_id = orders.customer_id` behaves identically to the aliased form. `JOIN … USING (col)` is **not supported** and errors by name — use an explicit `ON` |
 | Subqueries | scalar subquery in comparison, `IN (SELECT …)`, correlated subquery (category-idiom) | Day 17 |
 | Existence | `EXISTS (SELECT …)`, `NOT EXISTS (SELECT …)` | correlated via outer alias; the canonical anti-join alternative to `LEFT JOIN … IS NULL` |
 | CTEs | `WITH name AS (SELECT …)` | Day 17. Clause rules (LIMIT/OFFSET/ORDER BY/GROUP BY) are satisfied by a clause **anywhere** in the query shape — a CTE-wrapped `LIMIT 3` is still a LIMIT |
