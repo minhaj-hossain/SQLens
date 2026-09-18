@@ -172,6 +172,59 @@ describe('S3-10 — GROUP BY keys must resolve or fail loudly', () => {
   });
 });
 
+describe('Batch 9 — customValidator sees clauses at any nesting depth', () => {
+  /**
+   * An authored `customValidator` used to read only `queryAst.whereClause`, i.e.
+   * the TOP-LEVEL statement. A learner who wrapped the same query in a CTE moved
+   * the filter one level down and was told the filter was missing — a
+   * false-reject on a correctly-solved task. The validator now receives a
+   * nesting-independent `features.whereClauses` list.
+   */
+  const rule: ValidationRule = {
+    targetTable: 'products',
+    requireExactResult: true,
+    customValidator: (_ast: any, _res: any, features: any) => {
+      const clauses: string[] = [
+        ...((features?.whereClauses as string[] | undefined) ?? []),
+        String(_ast?.whereClause ?? ''),
+      ];
+      return clauses.some((w) => /IS\s+NOT\s+NULL/i.test(w))
+        ? { valid: true }
+        : { valid: false, message: 'filter is missing' };
+    },
+  };
+
+  const flat =
+    'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items WHERE product_id IS NOT NULL);';
+  const wrapped = `WITH _v AS (${flat.replace(/;$/, '')}) SELECT name, price FROM _v;`;
+
+  it('passes the flat form', () => {
+    const o = validateTaskSolution(flat, run(flat), rule, run(flat));
+    expect(o.passed).toBe(true);
+  });
+
+  it('passes the CTE-wrapped form with the same semantics', () => {
+    const expected = run(flat);
+    const o = validateTaskSolution(wrapped, run(wrapped), rule, expected);
+    expect(o.passed).toBe(true);
+  });
+
+  it('still rejects a query that genuinely omits the NULL filter', () => {
+    const noFilter =
+      'SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items);';
+    const o = validateTaskSolution(noFilter, run(noFilter), rule, run(flat));
+    expect(o.passed).toBe(false);
+  });
+
+  it('a string literal containing the filter text cannot fake it', () => {
+    // The masked feature set blanks literals, so this must NOT satisfy the rule.
+    const faked =
+      "SELECT name, price FROM products WHERE product_id NOT IN (SELECT product_id FROM order_items) AND 'IS NOT NULL' = 'IS NOT NULL';";
+    const o = validateTaskSolution(faked, run(faked), rule, run(flat));
+    expect(o.passed).toBe(false);
+  });
+});
+
 describe('Batch 8 — unaliased JOIN … ON must match (not silently return no rows)', () => {
   /**
    * The JOIN parser captured the keyword `ON` as the table alias whenever the

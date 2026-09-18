@@ -33,7 +33,7 @@ export interface ValidationRule {
    */
   expectFailure?: boolean;
   expectedRowCount?: number | { min?: number; max?: number };
-  customValidator?: (queryAst: any, result: any) => { valid: boolean; message?: string };
+  customValidator?: (queryAst: any, result: any, features?: any) => { valid: boolean; message?: string };
   /**
    * Compare the returned dataset against the task's solutionSql output
    * (multiset of row-values; ordered when requireOrderBy is set). This makes

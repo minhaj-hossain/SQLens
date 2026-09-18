@@ -92,6 +92,17 @@ interface QueryFeatureSet {
   /** Outermost LIMIT wins; a LIMIT found only inside a CTE still counts. */
   limit?: number;
   offset?: number;
+  /**
+   * Batch 9: every WHERE clause text found ANYWHERE in the query shape
+   * (top level, CTE bodies, set-operation operands, derived tables), with string
+   * literals blanked so a literal cannot fake a filter.
+   *
+   * A content validator that inspects `queryAst.whereClause` sees only the
+   * top-level statement, so a semantically identical query that moves the filter
+   * inside a CTE reported "the filter is missing". Validators should test this
+   * list instead — it is nesting-independent.
+   */
+  whereClauses: string[];
 }
 
 function collectQueryFeatures(userSql: string): QueryFeatureSet {
@@ -103,6 +114,7 @@ function collectQueryFeatures(userSql: string): QueryFeatureSet {
     distinct: false,
     filterClause: false,
     orderBy: [],
+    whereClauses: [],
   };
   let limitDepth = Infinity;
   let offsetDepth = Infinity;
@@ -114,6 +126,9 @@ function collectQueryFeatures(userSql: string): QueryFeatureSet {
     if (q.havingClause) features.having = true;
     if (q.isDistinct) features.distinct = true;
     if (q.whereClause) features.filterClause = true;
+    // Batch 9: keep every WHERE text (masked) so content validators can inspect
+    // the filter regardless of how deeply it is nested.
+    if (q.whereClause) features.whereClauses.push(maskStringLiterals(q.whereClause));
     if (q.orderBy?.length) features.orderBy.push(...q.orderBy);
     // Text-level ORDER BY capture (directions for shapes parseOrderByText skips).
     const om = stmtText.match(/\bORDER\s+BY\b([\s\S]*?)(?:\bLIMIT\b|\bOFFSET\b|;|$)/i);
@@ -749,7 +764,10 @@ export function validateTaskSolution(
 
   // 14. Custom Validator
   if (rule.customValidator) {
-    const custom = rule.customValidator(parsed, result);
+    // Batch 9: pass the nesting-independent feature set as a third argument, so
+    // an authored check can see clauses inside CTEs/derived tables instead of
+    // only the top-level statement.
+    const custom = rule.customValidator(parsed, result, features);
     if (!custom.valid) {
       return {
         passed: false,

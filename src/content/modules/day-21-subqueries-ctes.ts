@@ -441,11 +441,19 @@ export const Day_21_MODULE: ModuleData = {
             requiredColumns: ['name', 'price'],
             expectedRowCount: 6,
             // Result-count alone cannot distinguish the broken starter (the
-            // seeded order_items happen to contain no NULLs), so guard the
-            // AST: the NOT IN subquery MUST contain the IS NOT NULL filter.
-            customValidator: (queryAst) => {
-              const where = String(queryAst?.whereClause ?? '');
-              if (/IS\s+NOT\s+NULL/i.test(where)) return { valid: true };
+            // seeded order_items happen to contain no NULLs), so guard the AST:
+            // the NOT IN subquery MUST contain the IS NOT NULL filter.
+            //
+            // Batch 9: check the engine's nesting-independent WHERE list, not just
+            // the top-level `queryAst.whereClause`. A learner who wraps the same
+            // query in a CTE (or a derived table) has moved the filter one level
+            // down; that is the same answer and must pass.
+            customValidator: (queryAst, _result, features) => {
+              const clauses: string[] = [
+                ...((features?.whereClauses as string[] | undefined) ?? []),
+                String(queryAst?.whereClause ?? ''),
+              ];
+              if (clauses.some((w) => /IS\s+NOT\s+NULL/i.test(w))) return { valid: true };
               return {
                 valid: false,
                 message: 'The inner subquery must skip NULL product IDs — add `WHERE product_id IS NOT NULL` inside the subquery.',

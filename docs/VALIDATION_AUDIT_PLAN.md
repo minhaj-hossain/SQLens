@@ -40,7 +40,7 @@ All eight run in CI (`.github/workflows/ci.yml`).
 | Task audit | ✅ **343/343**, 0 failures |
 | Engine contract probes | ✅ **25 pass / 0 fail** |
 | Keyword-case scan | ✅ 0 findings across 13 SQL-aware files |
-| Task equivalence guardrail | 274 tasks / 530 rewrites / **1 finding** → Batch 9 |
+| Task equivalence guardrail | ✅ 274 tasks / 530 rewrites / **0 findings** |
 
 ---
 
@@ -145,10 +145,14 @@ All eight run in CI (`.github/workflows/ci.yml`).
 - [x] `docs/DIALECT.md`: joins table now states the alias is optional and `JOIN … USING (col)` is unsupported (errors by name)
 - **Exit:** unaliased ≡ aliased for INNER/LEFT/RIGHT/FULL ✅ ; `npm run audit:all` green ✅
 
-## Batch 9 — `customValidator` must not scan raw text ⬜ NOT STARTED
-- [ ] `day-21/subqueries-not-in-null-trap/day17-c1c-t2` fails a semantically identical derived-table wrapper because the check regex-searches the raw SQL for `product_id IS NOT NULL` — the **last** remaining guardrail finding
-- [ ] Fix: run `customValidator` against the masked SQL (reuse the Batch 2 mask), or express the rule structurally against the parsed query
-- **Exit:** `npm run audit:equivalence:tasks` → 1 → 0 findings
+## Batch 9 — `customValidator` could not see nested clauses ✅ DONE
+**Why it mattered:** the last remaining guardrail finding — a correctly-solved task was falsely rejected.
+
+- [x] **Correction to the original label:** this was *not* raw-text scanning. The authored check read `queryAst.whereClause`, i.e. the **top-level** statement only, so `WITH _v AS (SELECT … WHERE product_id IS NOT NULL) SELECT … FROM _v` reported *"the filter is missing"* although the semantics are identical.
+- [x] Fix (engine): `QueryFeatureSet.whereClauses` now collects **every** WHERE clause in the query shape (top level, CTE bodies, set-operation operands, derived tables) with string literals blanked; `customValidator` receives it as a third argument (`(queryAst, result, features)`).
+- [x] Fix (content): `day-21/day17-c1c-t2` now tests `features.whereClauses` instead of only the top-level clause.
+- [x] 4 vitest cases: flat form passes, CTE-wrapped form passes, a genuinely unfiltered query still fails, and a **string literal containing `IS NOT NULL` cannot fake the filter** (literals are blanked)
+- **Exit:** `npm run audit:equivalence:tasks` → 1 → **0 findings** ✅ ; `npm run audit:all` fully green ✅
 
 ## Batch 10 — Residual polish & housekeeping ⬜ NOT STARTED
 - [ ] `#` comments: `stripComments` handles them, `hasRealSql` (`split-statements.ts`) does not — align
@@ -160,13 +164,11 @@ All eight run in CI (`.github/workflows/ci.yml`).
 
 ## Recommended execution order
 
-1. **Batch 8** (S1 — silent wrong answers on unaliased JOINs; root cause found, fix is ~1 hour)
-2. **Batch 9** (~1 hour) — closes the last content-grading finding
-3. **Batch 6** (~2–3 hours of content review) — 17 tasks already identified, the rest is judgment
-4. **Batch 10** (~½ day) — polish
+1. **Batch 6** — the remaining engine-grade gap: `strictConstruct` author opt-in (17 tasks already identified, plus judgment calls)
+2. **Batch 10** (~½ day) — residual polish
 
 **Commit policy:** each batch is committed on completion with its verification
-results in the message (Batches 1–5 and 7 are already committed).
+results in the message (Batches 1–5, 7, 8 and 9 are already committed).
 
 ## Adding a batch
 Follow the `docs/IMPROVEMENT_PLAN.md` conventions: a `## Batch N — <theme>` heading
