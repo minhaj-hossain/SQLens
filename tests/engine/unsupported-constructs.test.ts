@@ -14,6 +14,7 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
 import { ValidationRule } from '../../src/types/curriculum';
 import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { splitStatements } from '../../src/lib/sql-engine/split-statements';
 
 const run = (sql: string) => new SqlExecutor().executeQuery(sql);
 
@@ -170,6 +171,74 @@ describe('S3-10 — GROUP BY keys must resolve or fail loudly', () => {
     expect(r.success).toBe(true);
     const cities = new Set(r.rows.map((row: any) => row.city));
     expect(cities.size).toBeGreaterThan(1);
+  });
+});
+
+describe('Batch 10 — ORDER BY sort keys and `#` comments', () => {
+  it('sorts by a projected aggregate written as an expression', () => {
+    const r = run('SELECT city, COUNT(*) AS n FROM customers GROUP BY city ORDER BY COUNT(*) DESC;');
+    expect(r.success).toBe(true);
+    const vals = r.rows.map((row: any) => Number(row.n));
+    expect(vals).toEqual([...vals].sort((a, b) => b - a));
+    // The expression maps onto the projection's own output column.
+    expect(Object.keys(r.rows[0])).toContain('n');
+  });
+
+  it('sorts by an unprojected function expression (evaluated per row)', () => {
+    const r = run('SELECT name FROM products ORDER BY UPPER(name) ASC;');
+    expect(r.success).toBe(true);
+    const names = r.rows.map((row: any) => String(row.name));
+    expect(names).toEqual([...names].sort((a, b) => a.toUpperCase().localeCompare(b.toUpperCase())));
+  });
+
+  it('orders case-insensitively for UPPER(name), unlike the raw column', () => {
+    const ex = new SqlExecutor();
+    ex.executeQuery('CREATE TABLE t (n VARCHAR(20));');
+    ex.executeQuery("INSERT INTO t (n) VALUES ('apple'), ('Banana'), ('cherry'), ('Apricot');");
+    const upper = ex.executeQuery('SELECT n FROM t ORDER BY UPPER(n) ASC;');
+    expect(upper.rows?.map((x: any) => x.n)).toEqual(['apple', 'Apricot', 'Banana', 'cherry']);
+    // `ORDER BY n` on localeCompare is also case-insensitive for these values —
+    // documented here so the two do not diverge silently.
+    const raw = ex.executeQuery('SELECT n FROM t ORDER BY n ASC;');
+    expect(raw.rows?.map((x: any) => x.n)).toEqual(['apple', 'Apricot', 'Banana', 'cherry']);
+  });
+
+  it('still errors on an unresolvable sort key instead of skipping the sort', () => {
+    const r = run('SELECT name FROM products ORDER BY no_such_column;');
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/not found in the query output/i);
+  });
+
+  it('still errors on an arithmetic sort key (documented boundary)', () => {
+    const r = run('SELECT name FROM products ORDER BY price * -1;');
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/order by expressions are not supported/i);
+  });
+
+  it('an unknown function in ORDER BY errors rather than sorting wrongly', () => {
+    const r = run('SELECT name FROM products ORDER BY MYSTERY(name) ASC;');
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/unsupported function/i);
+  });
+});
+
+describe('Batch 10 — `#` comments are ignored like `--` comments', () => {
+  it('a `#`-only chunk is not a statement', () => {
+    expect(splitStatements('# just a comment')).toEqual([]);
+    expect(splitStatements('# c1\n# c2')).toEqual([]);
+    expect(splitStatements('-- only a comment')).toEqual([]);
+  });
+
+  it('a trailing `#` comment does not create a phantom statement', () => {
+    expect(splitStatements('SELECT name FROM students; # trailing comment')).toEqual([
+      'SELECT name FROM students',
+    ]);
+  });
+
+  it('a statement with a leading `#` comment still runs', () => {
+    const r = run('# fetch one student\nSELECT name FROM students LIMIT 1;');
+    expect(r.success).toBe(true);
+    expect(r.rowCount).toBe(1);
   });
 });
 

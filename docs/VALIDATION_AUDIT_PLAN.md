@@ -35,10 +35,10 @@ All eight run in CI (`.github/workflows/ci.yml`).
 | Gate | Result |
 |---|---|
 | `tsc --noEmit` | ✅ 0 errors |
-| vitest | ✅ 30 files / **325 tests** |
+| vitest | ✅ 30 files / **353 tests** |
 | `verify:curriculum` | ✅ 100% clean |
 | Task audit | ✅ **343/343**, 0 failures |
-| Engine contract probes | ✅ **25 pass / 0 fail** |
+| Engine contract probes | ✅ **28 pass / 0 fail** |
 | Keyword-case scan | ✅ 0 findings across 13 SQL-aware files |
 | Task equivalence guardrail | ✅ 274 tasks / 530 rewrites / **0 findings** |
 
@@ -127,7 +127,12 @@ All eight run in CI (`.github/workflows/ci.yml`).
       | `day-32/sec-injection/sec-c1-t3` | `UNION` → `UNION ALL` | passed | **rejected** |
       | `day-04/distinct-deduplication/day04-c2-t1` (+t2, hw-2) | `DISTINCT` → `GROUP BY` | passed | **rejected** |
 
-- [x] **Two cases deliberately left advisory** (documented so they are not mistaken for oversights): `day-07/challenge/day07-hw-3` and `day-08/challenge/day08-hw-2` accept `DISTINCT` ≡ `GROUP BY`. Their modules are not DISTINCT lessons — the ask is the *result*, and `DIALECT.md` says an equivalent route has succeeded. `day-08/milestone-1-eval/day08-c1-t2` cannot even be rewritten (`ORDER BY <expression>` is unsupported — Batch 10).
+- [x] **Three cases deliberately left advisory** (documented so they are not mistaken for oversights). All three accept `DISTINCT` ≡ `GROUP BY` with an identical dataset, verified with a correct rewrite (`SELECT city FROM customers GROUP BY city ORDER BY city ASC`):
+  - `day-07/challenge/day07-hw-3` — day-07 is schema navigation; the ask is the *result*.
+  - `day-08/milestone-1-eval/day08-c1-t2` — milestone evaluation; DISTINCT is one requirement among several.
+  - `day-08/challenge/day08-hw-2` — combines WHERE + DISTINCT; the DISTINCT is one of two skills.
+
+  *Correction:* an earlier note in this plan claimed `day08-c1-t2` "cannot even be rewritten (ORDER BY expression unsupported)". That was wrong — the ad-hoc rewrite generator had appended `GROUP BY` *after* `ORDER BY`, producing invalid SQL. The engine handles the correct rewrite fine. All three are advisory by choice, not by limitation; adding them to `SCOPE` in `apply-strict-construct.ts` is a one-line change if you want them enforced.
 - [x] 5 new vitest cases: advisory default accepts with a `note:`, strict rejects the identical dataset, strict still accepts the required construct, and a content guard asserting the opt-in set (≥47, including the critical ids) so it cannot silently regress
 - **Exit:** `npm run audit:equivalence:tasks` → 0 findings, no `STRICT_IMPOSSIBLE` ✅ ; task audit 343/343 ✅ ; `npm run audit:all` green ✅
 
@@ -180,18 +185,63 @@ All eight run in CI (`.github/workflows/ci.yml`).
 - [x] 4 vitest cases: flat form passes, CTE-wrapped form passes, a genuinely unfiltered query still fails, and a **string literal containing `IS NOT NULL` cannot fake the filter** (literals are blanked)
 - **Exit:** `npm run audit:equivalence:tasks` → 1 → **0 findings** ✅ ; `npm run audit:all` fully green ✅
 
-## Batch 10 — Residual polish & housekeeping ⬜ NOT STARTED
-- [ ] `#` comments: `stripComments` handles them, `hasRealSql` (`split-statements.ts`) does not — align
-- [ ] `ORDER BY <aggregate>` unsupported (carried over from the prior audit's F5)
-- [ ] Document the `toPrecision(12)` numeric-comparison limits in `docs/DIALECT.md`
-- [ ] **Watch item — one flaky vitest failure observed.** During Batch 6 verification the full suite reported `1 failed | 343 passed (344)` on a run that took 11.96s (vs 8.20s normally); **4 subsequent runs were clean (344/344)**. The correlation with run duration points at a per-test timeout under load rather than a logic failure. Identify and harden that test so CI cannot flake.
-- **Exit:** `npm run audit:all` green; working tree clean
+## Batch 10 — Residual polish & housekeeping ✅ DONE
+
+- [x] **`#` comments aligned.** `stripComments` (parser) recognised `#` but `hasRealSql` (`split-statements.ts`) did not, so a `#`-only chunk was pushed as a statement and then failed with `Empty query`. Verified before/after:
+
+      | Input | Before | After |
+      |---|---|---|
+      | `splitStatements('# just a comment')` | `['# just a comment']` | `[]` ✅ |
+      | `splitStatements('SELECT …; # trailing comment')` | 2 statements (2nd bogus) | `['SELECT name FROM students']` ✅ |
+      | `executeQuery('# comment\nSELECT … LIMIT 1;')` | worked | works ✅ |
+
+      A script containing only comments reports `Empty script` — now uniformly for `#`, `--` and `/* */` (previously the `#` case produced a bogus statement and then failed as `Empty query`).
+
+- [x] **`ORDER BY <aggregate>` now works** (the carried-over F5 gap). Before: `ORDER BY COUNT(*) DESC` → `ORDER BY column 'COUNT(*)' not found in the query output`, even though that expression *is* projected. Sort keys now resolve in a documented order: positional → output column/alias → **projected expression** → **function expression evaluated per row** → error.
+
+      | Query | Before | After |
+      |---|---|---|
+      | `ORDER BY COUNT(*) DESC` (projection aliased `n`) | error | **sorted** ✅ |
+      | `ORDER BY AVG(price) DESC` | error | **sorted** ✅ |
+      | `SELECT name … ORDER BY UPPER(name)` | error | **sorted** ✅ |
+      | `ORDER BY no_such_column` | error | still errors ✅ |
+      | `ORDER BY price * -1` | error | still errors (documented boundary) ✅ |
+      | `ORDER BY MYSTERY(name)` | — | errors via the unknown-function path ✅ |
+
+- [x] **`toPrecision(12)` documented** in `docs/DIALECT.md` §7: numbers compare equal after rounding to 12 significant digits (so `0.1+0.2 == 0.3`), differences ≤ ~1e-12 relative are treated as equal, and the tolerance applies to the dataset check only — `expectedRowCount`, sort direction and GROUP BY keys stay exact. Plus the full **ORDER BY sort-key contract** with the arithmetic boundary stated.
+- [x] **Flaky-test hardening.** The full suite once reported `1 failed | 343 passed` on a 12s run (vs ~8s), then ran clean 4×. The curriculum-replay suites legitimately take ~3s each; `vitest.config.ts` now sets `testTimeout`/`hookTimeout` to 20s with the reason recorded, so a loaded machine cannot flake a passing test.
+- [x] 3 new CONTRACT/BASELINE probes (25 → 28) and 9 new vitest cases
+- **Exit:** `npm run audit:all` green ✅ ; working tree clean ✅
+
+---
+
+## Program status — all batches complete
+
+| Batch | Theme | Status |
+|---|---|---|
+| 1 | Engine honesty | ✅ |
+| 2 | Decision-first grading | ✅ |
+| 3 | Feedback & state verification | ✅ |
+| 4 | Instruments & CI | ✅ |
+| 5 | Keyword-case hardening | ✅ |
+| 6 | `strictConstruct` author opt-in | ✅ |
+| 7 | `SELECT *` internal-key leak | ✅ |
+| 8 | Unaliased `JOIN … ON` returned no rows | ✅ |
+| 9 | `customValidator` nested-clause visibility | ✅ |
+| 10 | Residual polish | ✅ |
+
+Remaining, by choice rather than by defect: the **Batch 6 follow-up backlog** (construct rules left advisory where the construct is a means) and three DISTINCT tasks left advisory (see Batch 6).
 
 ---
 
 ## Recommended execution order
 
-1. **Batch 10** (~½ day) — residual polish (`#` comments, `ORDER BY <aggregate>`, `toPrecision(12)` docs)
+Nothing outstanding — all ten batches are complete. If you want to go further,
+the only remaining judgement calls are the ones deliberately left open:
+
+1. Revisit the **Batch 6 follow-up backlog** (make `requireJoin`/`requireGroupBy`/`requireFunction`/`requireWhere`/`whereContainsTerms`/`requireOrderBy` strict on more lessons). One-line additions to `SCOPE` in `scripts/apply-strict-construct.ts`, then re-run the guardrail.
+2. Enforce the **three DISTINCT tasks** left advisory (`day07-hw-3`, `day08-c1-t2`, `day08-hw-2`) — same one-line change. All three are rewritable, so this is a pedagogy choice, not a limitation.
+3. Extend `scripts/audit-equivalence.ts` rewrite families (more SQL shapes → more classes of false accept caught automatically).
 
 **Commit policy:** each batch is committed on completion with its verification
 results in the message (Batches 1–9 are already committed).

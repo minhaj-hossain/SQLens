@@ -252,6 +252,35 @@ const probes: Probe[] = [
       r.success ? `silently returned ${r.rowCount} row(s) for a JOIN with no ON condition` : null,
   },
   {
+    id: 'B10 ORDER BY a projected aggregate must sort, not error',
+    kind: 'CONTRACT',
+    sql: 'SELECT city, COUNT(*) AS n FROM customers GROUP BY city ORDER BY COUNT(*) DESC;',
+    checkExec: (r) => {
+      if (!r.success) return `valid MySQL errored: ${r.error}`;
+      const vals = (r.rows ?? []).map((row: any) => Number(row.n));
+      const desc = [...vals].sort((a, b) => b - a);
+      return JSON.stringify(vals) === JSON.stringify(desc) ? null : `not sorted descending: ${JSON.stringify(vals)}`;
+    },
+  },
+  {
+    id: 'B10 ORDER BY an unprojected function expression must sort',
+    kind: 'CONTRACT',
+    sql: 'SELECT name FROM products ORDER BY UPPER(name) ASC;',
+    checkExec: (r) => {
+      if (!r.success) return `valid MySQL errored: ${r.error}`;
+      const names = (r.rows ?? []).map((row: any) => String(row.name));
+      const sorted = [...names].sort((a, b) => a.toUpperCase().localeCompare(b.toUpperCase()));
+      return JSON.stringify(names) === JSON.stringify(sorted) ? null : 'UPPER(name) order not applied';
+    },
+  },
+  {
+    id: 'B10 an unresolvable ORDER BY key must still error',
+    kind: 'BASELINE',
+    sql: 'SELECT name FROM products ORDER BY no_such_column;',
+    checkExec: (r) =>
+      r.success ? 'silently returned rows for an unknown sort key' : null,
+  },
+  {
     id: 'BASE extra ON tautology keeps the plain join row set',
     kind: 'BASELINE',
     sql: 'SELECT c.name FROM customers c INNER JOIN orders o ON o.customer_id = c.customer_id AND o.order_id + 0 = o.order_id;',

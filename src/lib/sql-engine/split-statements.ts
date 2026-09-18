@@ -46,8 +46,11 @@ export function splitStatements(sql: string): string[] {
 
 /** A chunk is a real statement only if it contains actual SQL (non-comment). */
 function hasRealSql(chunk: string): boolean {
-  // Strip `-- ...` line comments and `/* ... */` block comments, then test non-whitespace.
-  const withoutLine = chunk.replace(/--[^\n]*/g, ' ');
+  // Strip `-- …` and `# …` line comments plus `/* … */` block comments, then test
+  // for non-whitespace. `#` must be handled here too: the parser's `stripComments`
+  // recognises it, so a `#`-only chunk was treated as a real statement, pushed as
+  // one, and then failed with "Empty query" instead of being ignored.
+  const withoutLine = chunk.replace(/--[^\n]*/g, ' ').replace(/#[^\n]*/g, ' ');
   const withoutBlock = withoutLine.replace(/\/\*[\s\S]*?\*\//g, ' ');
   return withoutBlock.trim().length > 0;
 }

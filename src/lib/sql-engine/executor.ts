@@ -1689,7 +1689,54 @@ export class SqlExecutor {
         projectedRows.length > 0 ? Object.keys(projectedRows[0]) : [];
       const hasKey = (row: TableRow, key: string): boolean =>
         getRowValue(row, key) !== undefined;
-      for (const ord of query.orderBy) {
+
+      // Batch 10: `ORDER BY <expression>`. Learners naturally write the aggregate
+      // they are sorting by (`ORDER BY COUNT(*) DESC`) instead of the projection
+      // alias, but the sort key was matched only against OUTPUT column names — so
+      // a perfectly valid query errored with "not found in the query output"
+      // even though that expression IS projected. Map such a key onto the output
+      // column of the matching SELECT item; unmatchable keys still error.
+      const outputKeyFor = (key: string): string | undefined => {
+        const needle = key.trim().toLowerCase();
+        if (!needle) return undefined;
+        const isOutput = (name: string) =>
+          sampleKeys.some((k) => k.toLowerCase() === name.toLowerCase());
+        for (const col of query.columns ?? []) {
+          const candidates = [
+            col.expression,
+            (col as any).raw,
+            col.aggregate && col.aggregateArg ? `${col.aggregate}(${col.aggregateArg})` : undefined,
+          ];
+          for (const c of candidates) {
+            if (!c) continue;
+            const text = String(c).trim().toLowerCase();
+            // Compare with and without a trailing `AS alias`.
+            const bare = text.replace(/\s+as\s+[`"']?[\w_]+[`"']?$/i, '').trim();
+            if (text !== needle && bare !== needle) continue;
+            const out = col.alias || (col.expression.includes('.') ? col.expression.split('.')[1] : col.expression);
+            if (out && isOutput(out)) return out;
+          }
+        }
+        return undefined;
+      };
+
+      const effectiveOrderBy = (query.orderBy ?? []).map((ord) => ({ ...ord }));
+      for (const ord of effectiveOrderBy) {
+        if (ord.caseExpression) continue;
+        if (/^\d+$/.test(ord.column) || ord.column === '__order_expression__') continue;
+        if (projectedRows.length === 0) continue;
+        if (hasKey(projectedRows[0], ord.column)) continue;
+        const resolved = outputKeyFor(ord.column);
+        if (resolved) ord.column = resolved;
+      }
+
+      // Batch 10: `ORDER BY <fn>(<col>)` where that expression is NOT projected
+      // (e.g. `SELECT name FROM products ORDER BY UPPER(name)`) is legal MySQL and
+      // is evaluated per row from the hidden `__source__` row. Anything else that
+      // cannot be evaluated still errors rather than silently not sorting.
+      const isEvaluableExpr = (k: string) => /^[A-Za-z_][\w]*\s*\([\s\S]*\)$/.test(k.trim());
+
+      for (const ord of effectiveOrderBy) {
         if (ord.caseExpression) continue;
         if (/^\d+$/.test(ord.column)) {
           const idx = parseInt(ord.column, 10) - 1;
@@ -1705,13 +1752,13 @@ export class SqlExecutor {
             'ORDER BY expressions are not supported in this SQL dialect — sort by a column name or position instead.'
           );
         }
-        if (projectedRows.length > 0 && !hasKey(projectedRows[0], ord.column)) {
+        if (projectedRows.length > 0 && !hasKey(projectedRows[0], ord.column) && !isEvaluableExpr(ord.column)) {
           throw new Error(`ORDER BY column '${ord.column}' not found in the query output.`);
         }
       }
       projectedRows.sort((a, b) => {
 
-        for (const ord of query.orderBy!) {
+        for (const ord of effectiveOrderBy) {
           // Sort key may be a CASE expression (ORDER BY CASE … END)
           let keyA = ord.column;
           let keyB = ord.column;
@@ -1720,8 +1767,18 @@ export class SqlExecutor {
             keyA = Object.keys(a)[idx];
             keyB = Object.keys(b)[idx];
           }
-          const valA = ord.caseExpression ? this.evaluateCase(ord.caseExpression, a) : getRowValue(a, keyA);
-          const valB = ord.caseExpression ? this.evaluateCase(ord.caseExpression, b) : getRowValue(b, keyB);
+          const exprA = isEvaluableExpr(keyA) && !hasKey(a, keyA);
+          const exprB = isEvaluableExpr(keyB) && !hasKey(b, keyB);
+          const valA = ord.caseExpression
+            ? this.evaluateCase(ord.caseExpression, a)
+            : exprA
+              ? this.evaluateScalar(a, keyA)
+              : getRowValue(a, keyA);
+          const valB = ord.caseExpression
+            ? this.evaluateCase(ord.caseExpression, b)
+            : exprB
+              ? this.evaluateScalar(b, keyB)
+              : getRowValue(b, keyB);
 
           
           if (valA === valB) continue;

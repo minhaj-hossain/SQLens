@@ -36,7 +36,7 @@
 | Pattern match | `LIKE` with `%` (any length) and `_` (exactly one char) | every other character is **literal** — `LIKE 'a.c'` does not match `abc` |
 | NULL | `IS NULL`, `IS NOT NULL` | 3-valued logic; `= NULL` never matches (taught, never accidental). **Only the absent value is NULL — `''` IS NOT NULL** |
 | Boolean predicates | `col IS TRUE`, `col IS FALSE`, `IS NOT TRUE/FALSE` | only boolean-ish values (true/false, 1/0) satisfy them; a non-boolean is *neither*, so `city IS FALSE` matches nothing |
-| Shaping | `ORDER BY … ASC/DESC`, multi-key sort, `DISTINCT`, `LIMIT n`, `OFFSET m` | |
+| Shaping | `ORDER BY … ASC/DESC`, multi-key sort, `DISTINCT`, `LIMIT n`, `OFFSET m` | a sort key may be an output column, a SELECT alias, a **positional index**, a projected **expression/aggregate** (`ORDER BY COUNT(*)`, `ORDER BY AVG(price)`) or a **function expression evaluated per row** (`ORDER BY UPPER(name)`) — see §7 for the sort-key contract |
 | Aggregates | `COUNT(*)`, `COUNT(col)`, `COUNT(DISTINCT col)`, `MIN`, `MAX`, `SUM`, `AVG` | NULL-aware semantics taught (Day 9) |
 | Grouping | `GROUP BY`, `HAVING` | WHERE = rows, HAVING = groups. Keys may be a column, an expression, a **positional index** (`GROUP BY 1`) or a **SELECT alias**; an unresolvable key is an ERROR, never a silent single-bucket collapse |
 | Joins | `INNER JOIN`, `LEFT JOIN` (OUTER tolerated), table alias | anti-join pattern `LEFT JOIN … WHERE right.pk IS NULL` (Day 14). `RIGHT`/`FULL`/`CROSS` execute but are not taught. Multi-condition `ON a = b AND …` is fully evaluated — no term is dropped. An **alias is optional**: `JOIN orders ON customers.customer_id = orders.customer_id` behaves identically to the aliased form. `JOIN … USING (col)` is **not supported** and errors by name — use an explicit `ON` |
@@ -52,6 +52,7 @@
 | DML | `INSERT INTO t (cols) VALUES (…)`, `UPDATE t SET … WHERE …`, `DELETE FROM t WHERE …` | unguarded UPDATE/DELETE taught as a *bug* (Day 19) |
 | DDL | `CREATE TABLE`, constraints, `ALTER TABLE … ADD`, `DROP TABLE [IF EXISTS]` | Day 20; see §5 |
 | Introspection | `EXPLAIN SELECT …` | **simulated plan model**, see §6 |
+| Comments | `-- …`, `# …` (to end of line), `/* … */` | all three are ignored by the parser *and* by statement splitting, so `#` behaves exactly like `--`: a trailing comment never creates a phantom statement, and a script containing only comments reports `Empty script` (uniform for all three styles) |
 
 ### Fails loudly by design (the engine-honesty contract)
 
@@ -156,4 +157,46 @@ Rule of thumb for authors: leave `strictConstruct` **off** (the default) unless 
 lesson's objective is the keyword itself (comma-join vs `JOIN`, `UNION` vs
 `UNION ALL`, a taught alias). A learner who produces the right answer by a
 different-but-equivalent route has succeeded.
+
+Where the construct *is* the lesson, opt in with `strictConstruct: true` — the
+set-ops module, the DISTINCT/LIMIT lessons, the CASE module and the GROUP
+BY/HAVING and JOIN lessons do. Those opt-ins are applied by
+`scripts/apply-strict-construct.ts` (dry-run by default; it prints the reasoning
+for every task it would change).
+
+### Numeric comparison tolerance (how the dataset is compared)
+
+Row values are canonicalised before comparison, and **numbers are compared after
+rounding to 12 significant digits** (`Number(v.toPrecision(12))` in
+`src/lib/sql-engine/validator.ts`). Consequences for authors and learners:
+
+- Floating-point noise never fails a correct answer: `0.1 + 0.2` compares equal
+  to `0.3`, and `17.580000000000002` equals `17.58`.
+- Differences **at or below ~1e-12 relative** are therefore treated as *equal*.
+  Do not author a task whose lesson depends on distinguishing values that close
+  together (e.g. "is this 1.0000000000001 or 1.0000000000002?").
+- Comparison is still exact per digit above that threshold, so currency and
+  percentage answers (the curriculum's DECIMAL work) compare as written.
+- This applies to the dataset check only. `expectedRowCount`, `ORDER BY`
+  direction and `GROUP BY` keys are compared exactly.
+
+### ORDER BY sort-key contract
+
+A sort key is resolved in this order, and **an unresolvable key is an error** —
+the engine never returns rows unsorted as if the sort had applied:
+
+1. **Positional** — `ORDER BY 2` sorts by the second output column; out of range
+   errors with the column count.
+2. **Output column or alias** — `ORDER BY price`, `ORDER BY n` (an alias).
+3. **A projected expression** — `ORDER BY COUNT(*)` / `ORDER BY AVG(price)` maps
+   onto the output column of the matching SELECT item, whether or not it has an
+   alias. (Learners write the expression; the projection may be aliased.)
+4. **A function expression evaluated per row** — `ORDER BY UPPER(name)` works even
+   when that expression is not projected; it is evaluated against the row.
+5. Anything else errors: `ORDER BY no_such_column` →
+   `ORDER BY column '…' not found in the query output.`
+
+**Arithmetic sort keys are not supported** — `ORDER BY price * -1` raises
+`ORDER BY expressions are not supported in this SQL dialect — sort by a column
+name or position instead.` Use `ORDER BY price DESC` (or a projected alias).
 
