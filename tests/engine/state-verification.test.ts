@@ -100,6 +100,31 @@ describe('F1: mutation grading by final database state', () => {
     const preState = new SqlExecutor().getDatabaseState();
     const verdict = gradeFinalState(preState, 'UPDATE nonexistent_table SET x = 1;', preState);
     expect(verdict.ok).toBe(true);
+    // S3-11: the pass must be FLAGGED, not silent — a broken reference solution
+    // is an authoring bug that has to stay visible.
+    expect(verdict.inconclusive).toBe(true);
+    expect(verdict.message).toMatch(/reference solution failed/i);
+  });
+
+  it('S3-11: verifyTypes OFF accepts legal type variation', () => {
+    const expected = mkState('t', [{ id: 1, name: 'a' }], ['id', 'name']);
+    const actual = mkState('t', [{ id: 1, name: 'a' }], ['id', 'name']);
+    actual.schemas.t.columns[0].type = 'number';
+    expect(compareFinalState(actual, expected).ok).toBe(true);
+  });
+
+  it('S3-11: verifyTypes ON rejects a wrong type KIND but ignores precision', () => {
+    const expected = mkState('t', [{ id: 1, name: 'a' }], ['id', 'name']);
+    expected.schemas.t.columns[0].type = 'number';
+
+    const wrongKind = mkState('t', [{ id: 1, name: 'a' }], ['id', 'name']);
+    const wrongVerdict = compareFinalState(wrongKind, expected, { verifyTypes: true });
+    expect(wrongVerdict.ok).toBe(false);
+    expect(wrongVerdict.message).toMatch(/requires/i);
+
+    const sameKind = mkState('t', [{ id: 1, name: 'a' }], ['id', 'name']);
+    sameKind.schemas.t.columns[0].type = 'number';
+    expect(compareFinalState(sameKind, expected, { verifyTypes: true }).ok).toBe(true);
   });
 });
 

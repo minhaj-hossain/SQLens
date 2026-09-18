@@ -42,6 +42,26 @@ export interface ValidationRule {
    * `IN` vs `OR`, `<>` vs `!=`, etc.).
    */
   requireExactResult?: boolean;
+  /**
+   * S1-1: by default, when a task grades on `requireExactResult` and the
+   * learner's dataset is identical to the reference solution's, construct rules
+   * (`requireDistinct`, `requireJoin`, `requireLimit`, …) become ADVISORY —
+   * a different-but-equivalent formulation still passes, because the answer is
+   * correct by definition.
+   *
+   * Set this to `true` on tasks where the *construct itself* is the deliverable
+   * (e.g. "use JOIN, not a comma join"; "use UNION ALL, not UNION") so the
+   * keyword requirement stays a hard requirement.
+   */
+  strictConstruct?: boolean;
+  /**
+   * S3-11: DDL tasks normally compare column NAMES only, because legal
+   * variations (VARCHAR(100) vs VARCHAR(200), DECIMAL vs FLOAT) must not fail a
+   * correct solution. Set this to `true` on tasks where the declared TYPE is
+   * part of the learning objective, so a wrong type KIND (INT where the
+   * reference says VARCHAR) fails the final-state comparison.
+   */
+  verifyColumnTypes?: boolean;
 }
 
 export interface PracticeTask {

@@ -14,7 +14,12 @@
     "test:engine": "tsx scripts/engine-tests.ts",
     "test:module-order": "tsx scripts/module-order-check.ts",
     "test:db-lifecycle": "tsx scripts/db-lifecycle-check.ts",
-    "test:manual-pass": "tsx scripts/day1920-manual-pass.ts"
+    "test:manual-pass": "tsx scripts/day1920-manual-pass.ts",
+    "audit:equivalence": "tsx scripts/probe-equivalence.ts",
+    "audit:equivalence:tasks": "tsx scripts/audit-equivalence.ts",
+    "audit:validation-overlap": "tsx scripts/count-validation-overlap.ts",
+    "audit:keyword-case": "tsx scripts/audit-keyword-case.ts",
+    "audit:all": "npm run verify:curriculum && npx tsx scripts/audit-all-tasks.ts && npm run audit:equivalence && npm run audit:equivalence:tasks && npm run audit:validation-overlap && npm run audit:keyword-case"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",

@@ -9,7 +9,7 @@
  */
 import { ALL_MODULES } from '../src/content/curriculum-index';
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
-import { validateTaskSolution } from '../src/lib/sql-engine/validator';
+import { validateTaskSolution, isReadOnlySelect } from '../src/lib/sql-engine/validator';
 import { ModuleData, PracticeTask } from '../src/types/curriculum';
 import { INITIAL_TABLES } from '../src/content/database/tables';
 
@@ -38,6 +38,22 @@ function formatExpected(e: PracticeTask['validation']['expectedRowCount']): stri
     return `{${parts.join(', ')}}`;
   }
   return '<none>';
+}
+
+/**
+ * Expected output for exact-result tasks, computed the same way the app does
+ * (re-execute the solution — legal only for read-only SELECTs, so it can never
+ * mutate the session DB).
+ *
+ * AUDIT FIX: this script used to call validateTaskSolution WITHOUT `expected`,
+ * so `datasetGraded` was always false and the exact-result dataset comparison
+ * never ran here — "343/343 passed" only meant "no construct rule or row count
+ * objected". Passing `expected` makes the claim real.
+ */
+function expectedFor(task: PracticeTask, exec: SqlExecutor) {
+  if (!task.validation.requireExactResult) return undefined;
+  if (!isReadOnlySelect(task.solutionSql)) return undefined;
+  return exec.executeQuery(task.solutionSql);
 }
 
 function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'challenge', exec: SqlExecutor) {
@@ -90,7 +106,12 @@ function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'ch
     return;
   }
 
-  const outcome = validateTaskSolution(task.solutionSql, result, task.validation);
+  const outcome = validateTaskSolution(
+    task.solutionSql,
+    result,
+    task.validation,
+    expectedFor(task, exec)
+  );
 
   if (outcome.passed) {
     passedTasks++;

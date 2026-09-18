@@ -46,13 +46,16 @@ export interface EvalBlock {
   otherLines: string[];
 }
 
-const VERDICT_TAIL = /(TRUE|FALSE|UNKNOWN)\s*([✓✕])?\s*$/;
+// Batch 6: content and learner notes may write these words in lowercase
+// (`true and false`), so every pattern here is case-insensitive and the captured
+// words are normalised to upper case before they reach the typed union values.
+const VERDICT_TAIL = /(TRUE|FALSE|UNKNOWN)\s*([✓✕])?\s*$/i;
 const ARROW_SPLIT = /(?:-{2,}>|→|->)/;
 const TRAILING_ARROW = /(?:-{2,}>|→|->)\s*$/;
 const TRAILING_SEP = /[-–—:;]\s*$/;
 const BULLET_RE = /^[•\-*]\s*/;
 const NUMBER_RE = /^(\d+)[.)]\s*/;
-const BOOL_WORD = /^(?:TRUE|FALSE|UNKNOWN)$/;
+const BOOL_WORD = /^(?:TRUE|FALSE|UNKNOWN)$/i;
 
 /**
  * Parse a single line into a truth-table row or subject-evaluation row.
@@ -74,7 +77,7 @@ export function parseEvalLine(rawLine: string): EvalRow | null {
 
   const tail = s.match(VERDICT_TAIL);
   if (!tail || tail.index === undefined || tail.index === 0) return null;
-  const verdict = tail[1] as Verdict;
+  const verdict = tail[1].toUpperCase() as Verdict;
   const mark = (tail[2] as VerdictMark | undefined) ?? null;
 
   let head = s
@@ -86,18 +89,18 @@ export function parseEvalLine(rawLine: string): EvalRow | null {
 
   // --- Truth-table row: `TRUE AND TRUE` / `FALSE OR TRUE` / `NOT TRUE` -----
   if (!ARROW_SPLIT.test(head) && !head.includes(':')) {
-    const binary = head.match(/^(.{1,40}?)\s+(AND|OR)\s+(.{1,40})$/);
+    const binary = head.match(/^(.{1,40}?)\s+(AND|OR)\s+(.{1,40})$/i);
     if (binary && BOOL_WORD.test(binary[1]) && BOOL_WORD.test(binary[3])) {
       return {
         kind: 'truth',
         left: binary[1],
-        op: binary[2] as TruthRow['op'],
+        op: binary[2].toUpperCase() as TruthRow['op'],
         right: binary[3],
         verdict,
         mark,
       };
     }
-    const unary = head.match(/^NOT\s+(.{1,40})$/);
+    const unary = head.match(/^NOT\s+(.{1,40})$/i);
     if (unary && BOOL_WORD.test(unary[1])) {
       return { kind: 'truth', left: unary[1], op: 'NOT', right: '', verdict, mark };
     }

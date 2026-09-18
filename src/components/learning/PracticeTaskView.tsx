@@ -100,7 +100,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       preState && getDatabaseState && task.solutionSql &&
       !isReadOnlySelect(task.solutionSql) && !result.error
     ) {
-      const stateCheck = gradeFinalState(preState, task.solutionSql, getDatabaseState());
+      const stateCheck = gradeFinalState(preState, task.solutionSql, getDatabaseState(), {
+        verifyTypes: !!task.validation.verifyColumnTypes,
+      });
       if (!stateCheck.ok) {
         outcome = {
           passed: false,

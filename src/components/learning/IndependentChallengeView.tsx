@@ -203,7 +203,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       preState && getDatabaseState && currentTask.solutionSql &&
       !isReadOnlySelect(currentTask.solutionSql) && !result.error
     ) {
-      const stateCheck = gradeFinalState(preState, currentTask.solutionSql, getDatabaseState());
+      const stateCheck = gradeFinalState(preState, currentTask.solutionSql, getDatabaseState(), {
+        verifyTypes: !!currentTask.validation.verifyColumnTypes,
+      });
       if (!stateCheck.ok) {
         outcome = {
           passed: false,

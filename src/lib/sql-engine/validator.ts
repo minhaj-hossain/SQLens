@@ -1,6 +1,6 @@
 import { QueryExecutionResult } from '../../types/database';
 import { ValidationRule } from '../../types/curriculum';
-import { parseSql } from './parser';
+import { parseSql, ParsedOrderBy } from './parser';
 import { splitStatements } from './split-statements';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 
@@ -8,6 +8,201 @@ export interface ValidationOutcome {
   passed: boolean;
   feedback: string;
   hintLevelToUnlock?: number;
+}
+
+/**
+ * Masks every string literal (single- and double-quoted) so textual checks can
+ * never be satisfied — or falsely triggered — by text inside a literal.
+ * S2-7/S3-8: DIALECT §1 blesses double-quoted strings, so both quote styles
+ * must be masked; `SELECT 'CONCAT(' …` must not satisfy `requireFunction:
+ * 'CONCAT'`, and `WHERE x LIKE "%SUM(%"` must not fire the aggregate trap.
+ */
+function maskStringLiterals(sql: string): string {
+  let out = '';
+  let i = 0;
+  while (i < sql.length) {
+    const ch = sql[i];
+    if (ch === "'" || ch === '"') {
+      const quote = ch;
+      let j = i + 1;
+      let closed = false;
+      while (j < sql.length) {
+        if (sql[j] === '\\') { j += 2; continue; }
+        if (sql[j] === quote) {
+          if (sql[j + 1] === quote) { j += 2; continue; } // SQL escaped quote ('' / "")
+          closed = true;
+          break;
+        }
+        j++;
+      }
+      out += closed ? "''" : sql.slice(i, j);
+      i = closed ? j + 1 : j;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+
+/** Removes `-- …`, `# …` line comments and block comments. */
+function stripSqlComments(sql: string): string {
+  return sql
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/--[^\n\r]*/g, ' ')
+    .replace(/#[^\n\r]*/g, ' ');
+}
+
+/**
+ * S3-8: the canonical text used by every structural/presence check — string
+ * literals and comments removed, so only *real SQL* can satisfy a requirement.
+ * Masking runs FIRST so a `#` or `--` inside a literal ('C#', '--') can never
+ * be mistaken for the start of a comment.
+ */
+function structuralSql(sql: string): string {
+  return stripSqlComments(maskStringLiterals(sql));
+}
+
+/** Escapes regex metacharacters so a column name can be embedded literally. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * S2-5: clause-level features gathered across the WHOLE query shape — the
+ * top-level statement, CTE bodies, set-operation operands and EXPLAIN targets.
+ * Clause checks used to read only the `effective` parse of one statement, so a
+ * CTE-wrapped LIMIT was invisible and the learner got "LIMIT is not set" for a
+ * byte-identical result set.
+ */
+interface QueryFeatureSet {
+  joined: boolean;
+  groupBy: boolean;
+  having: boolean;
+  distinct: boolean;
+  filterClause: boolean;
+  orderBy: ParsedOrderBy[];
+  /**
+   * Raw text of the ORDER BY clause(s), used to enforce sort DIRECTIONS on
+   * shapes `parseOrderByText` cannot fully parse (expressions, multiple
+   * clauses). Never used to *satisfy* a requirement on its own — the rule still
+   * has to find the required column inside this text.
+   */
+  orderByText?: string;
+  /** Outermost LIMIT wins; a LIMIT found only inside a CTE still counts. */
+  limit?: number;
+  offset?: number;
+}
+
+function collectQueryFeatures(userSql: string): QueryFeatureSet {
+  const masked = maskStringLiterals(userSql);
+  const features: QueryFeatureSet = {
+    joined: false,
+    groupBy: false,
+    having: false,
+    distinct: false,
+    filterClause: false,
+    orderBy: [],
+  };
+  let limitDepth = Infinity;
+  let offsetDepth = Infinity;
+
+  const applyQuery = (q: ReturnType<typeof parseSql>, depth: number, stmtText = '') => {
+    if (!q) return;
+    if (q.joins?.length) features.joined = true;
+    if (q.groupBy?.length) features.groupBy = true;
+    if (q.havingClause) features.having = true;
+    if (q.isDistinct) features.distinct = true;
+    if (q.whereClause) features.filterClause = true;
+    if (q.orderBy?.length) features.orderBy.push(...q.orderBy);
+    // Text-level ORDER BY capture (directions for shapes parseOrderByText skips).
+    const om = stmtText.match(/\bORDER\s+BY\b([\s\S]*?)(?:\bLIMIT\b|\bOFFSET\b|;|$)/i);
+    if (om) {
+      const clause = om[1].trim();
+      if (clause) features.orderByText = features.orderByText ? `${features.orderByText}, ${clause}` : clause;
+    }
+    if (typeof q.limit === 'number' && depth < limitDepth) { features.limit = q.limit; limitDepth = depth; }
+    if (typeof q.offset === 'number' && depth < offsetDepth) { features.offset = q.offset; offsetDepth = depth; }
+  };
+
+  const visit = (fragment: string, depth = 0) => {
+    if (depth > 3) return;
+    for (const stmt of splitStatements(fragment)) {
+      const p = parseSql(stmt);
+      applyQuery(p, depth, maskStringLiterals(stmt));
+      if (p.type === 'SET_OPERATION') {
+        // setLeft/setRight are raw SQL fragments — recurse so each operand's
+        // own clauses (LIMIT, ORDER BY, JOINs) contribute to the feature set.
+        [p.setLeft, p.setRight].forEach((sq) => sq && visit(sq, depth + 1));
+      }
+      if (p.type === 'CTE') {
+        if (p.cteQuery) visit(p.cteQuery, depth + 1);
+        if (p.mainQuery) visit(p.mainQuery, depth + 1);
+        (p.ctes ?? []).forEach((c) => visit(c.query, depth + 1));
+      }
+      if (p.type === 'EXPLAIN' && p.explainTarget) visit(p.explainTarget, depth + 1);
+    }
+  };
+  visit(userSql);
+
+  // Text-level fallbacks for shapes the statement parser cannot split (mixed
+  // scripts, chained set ops): still evidence from real SQL, never a
+  // self-satisfied pass — directions and columns are parsed, not assumed.
+  const upper = masked.toUpperCase();
+  if (!features.joined && /\bJOIN\b/.test(upper)) features.joined = true;
+  if (!features.groupBy && /\bGROUP\s+BY\b/.test(upper)) features.groupBy = true;
+  if (!features.having && /\bHAVING\b/.test(upper)) features.having = true;
+  if (!features.distinct && /\bDISTINCT\b/.test(upper)) features.distinct = true;
+  if (!features.filterClause && (/\bWHERE\b/.test(upper) || /\bHAVING\b/.test(upper))) features.filterClause = true;
+  if (features.orderBy.length === 0) {
+    const om = masked.match(/\bORDER\s+BY\b([\s\S]*?)(?:\bLIMIT\b|\bOFFSET\b|;|$)/i);
+    if (om) {
+      features.orderBy = parseOrderByText(om[1]);
+      if (!features.orderByText) features.orderByText = om[1].trim();
+    }
+  }
+  if (features.limit === undefined) {
+    const lm = masked.match(/\bLIMIT\s+(\d+)/i);
+    if (lm) features.limit = parseInt(lm[1], 10);
+  }
+  if (features.offset === undefined) {
+    const ofm = masked.match(/\bOFFSET\s+(\d+)/i);
+    if (ofm) features.offset = parseInt(ofm[1], 10);
+  }
+  return features;
+}
+
+function parseOrderByText(text: string): ParsedOrderBy[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let inQuote: string | null = null;
+  let current = '';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if ((ch === "'" || ch === '"' || ch === '`') && (i === 0 || text[i - 1] !== '\\')) {
+      if (!inQuote) inQuote = ch;
+      else if (inQuote === ch) inQuote = null;
+      current += ch;
+      continue;
+    }
+    if (!inQuote) {
+      if (ch === '(') depth++;
+      else if (ch === ')') depth = Math.max(0, depth - 1);
+      else if (ch === ',' && depth === 0) { parts.push(current); current = ''; continue; }
+    }
+    current += ch;
+  }
+  if (current.trim()) parts.push(current);
+  const out: ParsedOrderBy[] = [];
+  for (const part of parts) {
+    const m = part.trim().match(/^([`"']?[\w_.]+[`"']?|\d+)\s*(ASC|DESC)?$/i);
+    if (!m) continue; // unparsed sort expression — never self-satisfies a rule
+    out.push({
+      column: m[1].replace(/[`"']/g, ''),
+      direction: m[2]?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
+    });
+  }
+  return out;
 }
 
 /**
@@ -47,6 +242,40 @@ function sameValueMultiset(a: string[], b: string[]): boolean {
     if (c === 1) counts.delete(k); else counts.set(k, c - 1);
   }
   return counts.size === 0;
+}
+
+/**
+ * S3-12 feedback: name the FIRST row that differs so the learner knows exactly
+ * what to fix. Generic "one or more values differ" forces guessing; showing
+ * `Row 3 returned ("Dhaka", 1200), expected ("Dhaka", 1020)` points straight at
+ * the filter/JOIN/aggregate that is wrong.
+ *
+ * Rows are matched greedily by canonical key, so the descriptor stays honest for
+ * unordered comparisons and never reports a row as "extra" merely because the
+ * learner's ORDER BY differs.
+ */
+function describeRowDifference(gotRows: any[], expRows: any[]): string {
+  const keyOf = (r: any) => Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
+  const display = (r: any) =>
+    '(' + Object.values(r || {}).map((v) => (v === null || v === undefined ? 'NULL' : JSON.stringify(v))).join(', ') + ')';
+
+  const used = new Set<number>();
+  for (let i = 0; i < gotRows.length; i++) {
+    const gk = keyOf(gotRows[i]);
+    const match = expRows.findIndex((r, idx) => !used.has(idx) && keyOf(r) === gk);
+    if (match === -1) {
+      const spare = expRows.findIndex((_r, idx) => !used.has(idx));
+      return spare === -1
+        ? `Row ${i + 1} ${display(gotRows[i])} is not part of the expected result.`
+        : `Row ${i + 1} returned ${display(gotRows[i])} but the expected result has ${display(expRows[spare])}.`;
+    }
+    used.add(match);
+  }
+
+  const missing = expRows.findIndex((_r, idx) => !used.has(idx));
+  return missing === -1
+    ? ''
+    : `The expected result also contains ${display(expRows[missing])}, which your query did not return.`;
 }
 
 /**
@@ -116,7 +345,9 @@ export function validateTaskSolution(
 
   // Trap checks run on a string-literal-free copy of the SQL so patterns like
   // '%SUM(%' inside quotes can never trigger a false "syntax trap" (P10.1).
-  const sqlNoStrings = cleanSql.replace(/'(?:[^']|'')*'/g, "''");
+  // S2-7: DIALECT §1 blesses double-quoted strings too, so masking must cover
+  // both quote styles — `WHERE name LIKE "%SUM(%"` is a legal pattern, not a trap.
+  const sqlNoStrings = maskStringLiterals(cleanSql);
 
   // Check Common Aggregate in WHERE Trap (only within the WHERE clause and not part of a subquery or HAVING)
   const whereMatch = sqlNoStrings.match(/\bWHERE\b((?:(?!\bSELECT\b)[\s\S])*?)(?:\bGROUP\s+BY\b|\bHAVING\b|\bORDER\s+BY\b|\bLIMIT\b|\)|;|$)/i);
@@ -163,6 +394,58 @@ export function validateTaskSolution(
   // Use that parse for clause-level checks so the rules see the actual query.
   const effective =
     parsed.type === 'CTE' && parsed.mainQuery ? parseSql(parsed.mainQuery) : parsed;
+
+  // ---------------------------------------------------------------------
+  // S1-1 decision-first grading scaffolding.
+  //
+  // Construct rules ("use JOIN", "use LIMIT 3", "use DISTINCT") exist to teach
+  // shape, but they used to VETO a dataset that is byte-identical to the
+  // reference solution — a learner writing provably-equivalent SQL was told
+  // their answer was wrong. Now the dataset verdict is the decision; when it
+  // PASSES, unsatisfied construct rules are collected as advisory notes instead
+  // of hard failures, unless the task opts into `strictConstruct` (the
+  // construct IS the deliverable for that lesson).
+  //
+  // When the dataset FAILS, the construct note stays the primary message: it is
+  // far more actionable ("use DISTINCT after SELECT") than "values differ".
+  // ---------------------------------------------------------------------
+  const structural = structuralSql(cleanSql);
+  const features = collectQueryFeatures(cleanSql);
+  const strictConstruct = !!rule.strictConstruct;
+  const constructFailures: string[] = [];
+  const failConstruct = (message: string) => { constructFailures.push(message); };
+
+  // ---------------------------------------------------------------------
+  // S2-5: feature-based presence helpers. `features` unions the top-level
+  // statement with CTE bodies, set-operation operands, EXPLAIN targets and
+  // every statement of a script, so a construct used anywhere in the query
+  // shape satisfies a structural rule (a CTE-wrapped LIMIT is still a LIMIT).
+  // ---------------------------------------------------------------------
+  const hasJoin = () => features.joined;
+  const hasGroupBy = () => features.groupBy;
+  const hasHaving = () => features.having;
+
+  /**
+   * True when the required set operator appears at paren depth 0 — a UNION
+   * hidden inside a subquery must not satisfy an EXCEPT requirement (and vice
+   * versa). Runs on `structural` so a literal like 'UNION ALL' cannot fake it.
+   * `UNION ALL` deliberately does NOT satisfy a `UNION` requirement.
+   */
+  const hasTopLevelSetOp = (op: string): boolean => {
+    const target = op.toUpperCase();
+    const upper = structural.toUpperCase();
+    let depth = 0;
+    for (let i = 0; i < upper.length; i++) {
+      const ch = upper[i];
+      if (ch === '(') { depth++; continue; }
+      if (ch === ')') { depth = Math.max(0, depth - 1); continue; }
+      if (depth !== 0) continue;
+      if (upper.startsWith('UNION ALL', i)) { if (target === 'UNION ALL') return true; i += 9; continue; }
+      if (upper.startsWith('UNION', i)) { if (target === 'UNION') return true; i += 4; continue; }
+      if (upper.startsWith('EXCEPT', i)) { if (target === 'EXCEPT') return true; i += 5; continue; }
+    }
+    return false;
+  };
 
   // 1. Check Target Table
   if (rule.targetTable) {
@@ -275,114 +558,64 @@ export function validateTaskSolution(
     }
   }
 
-  // 5. Check JOIN requirements
-  if (rule.requireJoin && !parsed.joins?.length && !cleanSql.toUpperCase().includes('JOIN')) {
-    return {
-      passed: false,
-      feedback: `This task requires joining multiple tables using the JOIN keyword (e.g. FROM table_a JOIN table_b ON table_a.id = table_b.a_id).`,
-    };
+  // 5. Check JOIN requirements (S2-5: feature set covers CTEs / set ops / scripts)
+  if (rule.requireJoin && !hasJoin()) {
+    failConstruct(`This task requires joining multiple tables using the JOIN keyword (e.g. FROM table_a JOIN table_b ON table_a.id = table_b.a_id).`);
   }
 
   // 6. Check GROUP BY requirements
-  if (rule.requireGroupBy && !parsed.groupBy?.length && !cleanSql.toUpperCase().includes('GROUP BY')) {
-    return {
-      passed: false,
-      feedback: `This task requires aggregating rows by categories or entities using the GROUP BY clause.`,
-    };
+  if (rule.requireGroupBy && !hasGroupBy()) {
+    failConstruct(`This task requires aggregating rows by categories or entities using the GROUP BY clause.`);
   }
 
   // 7. Check HAVING requirements
-  if (rule.requireHaving && !parsed.havingClause && !cleanSql.toUpperCase().includes('HAVING')) {
-    return {
-      passed: false,
-      feedback: `This task requires filtering aggregated groups using the HAVING clause after GROUP BY.`,
-    };
+  if (rule.requireHaving && !hasHaving()) {
+    failConstruct(`This task requires filtering aggregated groups using the HAVING clause after GROUP BY.`);
   }
 
-  // 7.5 Check CASE requirement
-  if (rule.requireCase && !/\bCASE\b/i.test(cleanSql)) {
-    return {
-      passed: false,
-      feedback: `This task requires a CASE expression (CASE WHEN … THEN … ELSE … END) to produce the requested values.`,
-    };
+  // 7.5 Check CASE requirement (S3-8: literals/comments masked)
+  if (rule.requireCase && !/\bCASE\b/i.test(structural)) {
+    failConstruct(`This task requires a CASE expression (CASE WHEN … THEN … ELSE … END) to produce the requested values.`);
   }
 
   // 7.6 Check required function (e.g. CONCAT, UPPER, YEAR, DATEDIFF)
-  if (rule.requireFunction && !new RegExp(`\\b${rule.requireFunction.toUpperCase()}\\s*\\(`, 'i').test(cleanSql)) {
-    return {
-      passed: false,
-      feedback: `This task requires the ${rule.requireFunction.toUpperCase()}() function in your query.`,
-    };
+  if (rule.requireFunction && !new RegExp(`\\b${rule.requireFunction.toUpperCase()}\\s*\\(`, 'i').test(structural)) {
+    failConstruct(`This task requires the ${rule.requireFunction.toUpperCase()}() function in your query.`);
   }
 
   // 7.7 Check top-level set operation (UNION / UNION ALL / EXCEPT).
   // Scans for the operator OUTSIDE any parentheses so a UNION hidden inside a
   // subquery does not satisfy an EXCEPT requirement (and vice versa).
-  if (rule.requireSetOp) {
-    let depth = 0;
-    let found = false;
-    const upper = cleanSql.toUpperCase();
-    for (let i = 0; i < upper.length; i++) {
-      const ch = upper[i];
-      if (ch === '(') { depth++; continue; }
-      if (ch === ')') { depth = Math.max(0, depth - 1); continue; }
-      if (depth === 0) {
-        if (upper.startsWith('UNION ALL', i)) { if (rule.requireSetOp === 'UNION ALL') found = true; i += 9; continue; }
-        if (upper.startsWith('UNION', i)) { if (rule.requireSetOp === 'UNION') found = true; i += 4; continue; }
-        if (upper.startsWith('EXCEPT', i)) { if (rule.requireSetOp === 'EXCEPT') found = true; i += 5; continue; }
-      }
-    }
-    if (!found) {
-      return {
-        passed: false,
-        feedback: `This task requires combining two result sets with a top-level ${rule.requireSetOp} operator (e.g. SELECT … ${rule.requireSetOp} SELECT …).`,
-      };
-    }
+  if (rule.requireSetOp && !hasTopLevelSetOp(rule.requireSetOp)) {
+    failConstruct(`This task requires combining two result sets with a top-level ${rule.requireSetOp} operator (e.g. SELECT … ${rule.requireSetOp} SELECT …).`);
   }
 
-  // 8. Check LIMIT
+  // 8. Check LIMIT (S2-5: the feature set sees CTE / set-op / nested LIMITs)
   if (rule.requireLimit !== undefined) {
-    if (typeof rule.requireLimit === 'number') {
-      if (effective.limit !== rule.requireLimit) {
-        return {
-          passed: false,
-          feedback: `Almost there! This task specifically requires a LIMIT of ${rule.requireLimit}. Currently LIMIT is ${effective.limit ?? 'not set'}.`,
-        };
-      }
-    } else {
-      if (rule.requireLimit.exact && effective.limit !== rule.requireLimit.exact) {
-        return {
-          passed: false,
-          feedback: `This task requires LIMIT ${rule.requireLimit.exact}. Currently LIMIT is ${effective.limit || 'not specified'}.`,
-        };
-      }
+    const requiredLimit =
+      typeof rule.requireLimit === 'number' ? rule.requireLimit : rule.requireLimit.exact;
+    if (requiredLimit !== undefined && features.limit !== requiredLimit) {
+      failConstruct(`Almost there! This task specifically requires a LIMIT of ${requiredLimit}. Currently LIMIT is ${features.limit ?? 'not set'}.`);
     }
   }
 
   // 9. Check OFFSET
-  if (rule.requireOffset !== undefined) {
-    if (effective.offset !== rule.requireOffset) {
-      return {
-        passed: false,
-        feedback: `This task requires an OFFSET of ${rule.requireOffset} (e.g. LIMIT ... OFFSET ${rule.requireOffset}).`,
-      };
-    }
+  if (rule.requireOffset !== undefined && features.offset !== rule.requireOffset) {
+    failConstruct(`This task requires an OFFSET of ${rule.requireOffset} (e.g. LIMIT ... OFFSET ${rule.requireOffset}).`);
   }
 
   // 10. Check ORDER BY
   if (rule.requireOrderBy && rule.requireOrderBy.length > 0) {
-    const orderByOk =
-      effective.orderBy && effective.orderBy.length > 0
-        ? effective.orderBy
-        : /\bORDER\s+BY\b/i.test(cleanSql)
-          ? rule.requireOrderBy.map((r) => ({ column: r.column, direction: r.direction }))
-          : null;
-    if (!orderByOk) {
-      return {
-        passed: false,
-        feedback: `Remember to sort the results using the ORDER BY clause.`,
-      };
-    }
+    // S2-5: previously the fallback mapped the REQUIREMENT onto itself, so mere
+    // presence of the words "ORDER BY" satisfied both column and direction.
+    // Now the requirement must be found in parsed clauses or in the raw
+    // ORDER BY text — the requirement never satisfies itself.
+    const parsedOrders: ParsedOrderBy[] =
+      features.orderBy && features.orderBy.length > 0
+        ? features.orderBy
+        : features.orderByText
+          ? parseOrderByText(features.orderByText)
+          : [];
     // P10.5: resolve positional sort keys (ORDER BY 2) to their output column
     // so positional ORDER BY is accepted as the equivalent of naming the column.
     const resolveSortCol = (c: string): string => {
@@ -393,45 +626,47 @@ export function validateTaskSolution(
       }
       return c.toLowerCase();
     };
-    for (const reqOrd of rule.requireOrderBy) {
-      const match = (orderByOk as any[]).find(o => resolveSortCol(o.column) === reqOrd.column.toLowerCase());
-      if (!match) {
-        return {
-          passed: false,
-          feedback: `Make sure to sort by '${reqOrd.column}'.`,
-        };
+    if (parsedOrders.length === 0) {
+      // Unparsed sort expression (e.g. ORDER BY price * -1) — direction cannot
+      // be verified, so only the presence of the clause itself can be credited.
+      if (!/\bORDER\s+BY\b/i.test(structural)) {
+        failConstruct(`Remember to sort the results using the ORDER BY clause.`);
       }
-      if (reqOrd.direction && match.direction !== reqOrd.direction) {
-        return {
-          passed: false,
-          feedback: `Sort direction for '${reqOrd.column}' should be ${reqOrd.direction} (e.g. ORDER BY ${reqOrd.column} ${reqOrd.direction}).`,
-        };
+    }
+    for (const reqOrd of rule.requireOrderBy) {
+      const match = parsedOrders.find(
+        (o) => resolveSortCol(o.column) === reqOrd.column.toLowerCase()
+      );
+      if (!match) {
+        // Column-level fallback: the required column may appear inside an
+        // unparsed sort expression (ORDER BY LOWER(name) DESC).
+        const colRe = new RegExp(`\\b${escapeRegExp(reqOrd.column)}\\b`, 'i');
+        if (parsedOrders.length === 0 && colRe.test(features.orderByText ?? '')) {
+          if (reqOrd.direction) {
+            const dirRe = new RegExp(`\\b${escapeRegExp(reqOrd.column)}\\b[^,]*\\b${reqOrd.direction}\\b`, 'i');
+            if (!dirRe.test(features.orderByText ?? '')) {
+              failConstruct(`Sort direction for '${reqOrd.column}' should be ${reqOrd.direction} (e.g. ORDER BY ${reqOrd.column} ${reqOrd.direction}).`);
+            }
+          }
+          continue;
+        }
+        failConstruct(`Make sure to sort by '${reqOrd.column}'.`);
+      } else if (reqOrd.direction && match.direction !== reqOrd.direction) {
+        failConstruct(`Sort direction for '${reqOrd.column}' should be ${reqOrd.direction} (e.g. ORDER BY ${reqOrd.column} ${reqOrd.direction}).`);
       }
     }
   }
 
-  // 11. Check DISTINCT
-  if (rule.requireDistinct) {
-    if (!parsed.isDistinct && !userSql.toUpperCase().includes('DISTINCT')) {
-      return {
-        passed: false,
-        feedback: `This task requires returning distinct (unique) rows. Use the DISTINCT keyword after SELECT.`,
-      };
-    }
+  // 11. Check DISTINCT (S3-8: comments/literals masked, so `-- distinct` no
+  // longer satisfies the rule and `'DISTINCT'` in a literal cannot either).
+  if (rule.requireDistinct && !features.distinct) {
+    failConstruct(`This task requires returning distinct (unique) rows. Use the DISTINCT keyword after SELECT.`);
   }
 
   // 12. Check WHERE
   if (rule.requireWhere) {
-    const hasFilter =
-      effective.whereClause ||
-      effective.havingClause ||
-      /\bWHERE\b/i.test(cleanSql) ||
-      /\bHAVING\b/i.test(cleanSql);
-    if (!hasFilter) {
-      return {
-        passed: false,
-        feedback: `This task requires filtering with a WHERE clause.`,
-      };
+    if (!features.filterClause) {
+      failConstruct(`This task requires filtering with a WHERE clause.`);
     }
     if (rule.whereContainsTerms) {
       // Operator/whitespace-normalized containment: `city <> 'Dhaka'` must
@@ -440,10 +675,7 @@ export function validateTaskSolution(
       const normSql = norm(userSql);
       for (const term of rule.whereContainsTerms) {
         if (!normSql.includes(norm(term))) {
-          return {
-            passed: false,
-            feedback: `Your filter should use '${term}' to check the condition.`,
-          };
+          failConstruct(`Your filter should use '${term}' to check the condition.`);
         }
       }
     }
@@ -453,31 +685,33 @@ export function validateTaskSolution(
   // solution's output. Values compare per-row as sorted value-multisets, so
   // column identity/order/aliasing never matters; when requireOrderBy is set
   // (a sorting lesson), row ORDER also matters.
-  if (rule.requireExactResult && expected && expected.success && !result.error) {
+  //
+  // S1-1: this verdict is the DECISION. Unsatisfied construct rules collected
+  // above are enforced only for structural-only tasks, or when the task opts
+  // into `strictConstruct` — otherwise a correct dataset wins and the construct
+  // note is reported as advice (see block 15 at the end of this function).
+  let datasetMismatch: string | null = null;
+  const datasetGraded = !!(rule.requireExactResult && expected && expected.success && !result.error);
+  if (datasetGraded) {
     const gotCols = result.columns.map(c => c.toLowerCase());
-    const expCols = expected.columns.map(c => c.toLowerCase());
+    const expCols = expected!.columns.map(c => c.toLowerCase());
     if (gotCols.length !== expCols.length) {
-      return {
-        passed: false,
-        feedback: `Your query returned ${gotCols.length} column(s), but the expected result has ${expCols.length}. Check your SELECT list.`,
-      };
-    }
-    const rowKey = (r: any) => Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
-    const gotKeys = (result.rows || []).map(rowKey);
-    const expKeys = (expected.rows || []).map(rowKey);
-    const ordered = !!(rule.requireOrderBy && rule.requireOrderBy.length > 0);
-    if (ordered) {
-      if (gotKeys.length !== expKeys.length || gotKeys.some((k, i) => k !== expKeys[i])) {
-        return {
-          passed: false,
-          feedback: 'The rows you returned do not match the expected result set (values or sort order). Check your filters, JOINs, and ORDER BY.',
-        };
+      datasetMismatch = `Your query returned ${gotCols.length} column(s), but the expected result has ${expCols.length}. Check your SELECT list.`;
+    } else {
+      const rowKey = (r: any) => Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
+      const gotKeys = (result.rows || []).map(rowKey);
+      const expKeys = (expected!.rows || []).map(rowKey);
+      const ordered = !!(rule.requireOrderBy && rule.requireOrderBy.length > 0);
+      const detail = describeRowDifference(result.rows || [], expected!.rows || []);
+      const suffix = detail ? ` ${detail}` : '';
+      if (ordered) {
+        if (gotKeys.length !== expKeys.length || gotKeys.some((k, i) => k !== expKeys[i])) {
+          datasetMismatch =
+            `The rows you returned do not match the expected result set (values or sort order).${suffix}`;
+        }
+      } else if (!sameValueMultiset(gotKeys, expKeys)) {
+        datasetMismatch = `The returned data does not match the expected result set.${suffix}`;
       }
-    } else if (!sameValueMultiset(gotKeys, expKeys)) {
-      return {
-        passed: false,
-        feedback: 'The returned data does not match the expected result set. The row count was right but one or more values differ - check your filter conditions and JOINs.',
-      };
     }
   }
 
@@ -522,6 +756,55 @@ export function validateTaskSolution(
         feedback: custom.message || 'The query result does not match all required criteria.',
       };
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // 15. Final decision (S1-1 decision-first grading — the consumer for the
+  // `datasetMismatch` / `constructFailures` collected above).
+  //
+  // Three regimes:
+  //
+  //  A. Structural-only task (no comparable dataset: 66 tasks, mostly DML/DDL
+  //     where the result IS a mutation). The construct rules ARE the grade, so
+  //     every collected construct failure is fatal — exactly as before.
+  //
+  //  B. Dataset-graded task whose dataset DOES NOT match. The learner's real
+  //     problem is the data, but the construct note is far more actionable
+  //     ("use DISTINCT after SELECT" beats "one value differs"), so it leads
+  //     and the mismatch follows. Either one fails the task.
+  //
+  //  C. Dataset-graded task whose dataset MATCHES (byte-identical multiset to
+  //     the reference solution). The learner has provably produced the right
+  //     answer — a construct rule must not veto that. Unsatisfied constructs
+  //     are returned as advisory notes in the success feedback, UNLESS the task
+  //     sets `strictConstruct` (the construct itself is the deliverable there).
+  // ---------------------------------------------------------------------
+  if (datasetGraded) {
+    if (datasetMismatch) {
+      // B: dataset is wrong — fail. Lead with the construct note when present.
+      const lead = constructFailures.length > 0 ? `${constructFailures[0]} ` : '';
+      return { passed: false, feedback: `${lead}${datasetMismatch}` };
+    }
+    // C: dataset matches.
+    if (constructFailures.length > 0) {
+      if (strictConstruct) {
+        return { passed: false, feedback: constructFailures[0] };
+      }
+      const notes = constructFailures.map((n) => `Note: ${n}`).join(' ');
+      return {
+        passed: true,
+        feedback: `Success! Your query produced the expected results. ${notes}`,
+      };
+    }
+    return {
+      passed: true,
+      feedback: 'Success! Your query produced the expected results and meets all criteria.',
+    };
+  }
+
+  // A: structural-only grading — any unsatisfied construct rule fails the task.
+  if (constructFailures.length > 0) {
+    return { passed: false, feedback: constructFailures[0] };
   }
 
   return {

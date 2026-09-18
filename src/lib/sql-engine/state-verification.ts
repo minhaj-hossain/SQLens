@@ -56,10 +56,39 @@ export interface FinalStateVerdict {
   ok: boolean;
   /** Human-readable explanation of the first mismatch found (when !ok). */
   message?: string;
+  /**
+   * S3-11: the check could not reach a verdict because the task's own reference
+   * solution errored. `ok` stays TRUE so a learner is never punished for an
+   * authoring bug, but the flag makes the broken task visible (callers log it,
+   * audit scripts can fail CI on it) instead of silently passing forever.
+   */
+  inconclusive?: boolean;
+}
+
+export interface StateCompareOptions {
+  /**
+   * S3-11: opt-in column TYPE comparison for DDL tasks where the declared type
+   * is the learning objective. Defaults to OFF because legal variations
+   * (VARCHAR(100) vs VARCHAR(200), DECIMAL vs FLOAT) must not fail a correct
+   * solution — enable only on tasks that teach types.
+   */
+  verifyTypes?: boolean;
+}
+
+/**
+ * Normalize a declared type for comparison, dropping precision/scale — a
+ * VARCHAR(100) solution satisfies a VARCHAR(200) reference.
+ */
+function baseType(t: string | undefined): string {
+  return String(t ?? '').toUpperCase().replace(/\(.*\)/, '').trim();
 }
 
 /** Compare two database states: same tables, same columns, same row multisets. */
-export function compareFinalState(actual: DatabaseState, expected: DatabaseState): FinalStateVerdict {
+export function compareFinalState(
+  actual: DatabaseState,
+  expected: DatabaseState,
+  options: StateCompareOptions = {},
+): FinalStateVerdict {
   const norm = (s: string) => s.toLowerCase();
   const actualTables = new Map(Object.keys(actual.tables ?? {}).map((t) => [norm(t), t]));
   const expectedTables = new Map(Object.keys(expected.tables ?? {}).map((t) => [norm(t), t]));
@@ -94,6 +123,26 @@ export function compareFinalState(actual: DatabaseState, expected: DatabaseState
       if (extraCols.length > 0) {
         return { ok: false, message: `Table '${eorig}' has unexpected column(s): ${extraCols.join(', ')}.` };
       }
+      // S3-11: opt-in type verification. Off by default (precision/scale
+      // differences are legal); when ON, a declared type that differs in KIND
+      // (INT where the reference says VARCHAR) fails the task — that IS the
+      // lesson for type-teaching DDL tasks.
+      if (options.verifyTypes) {
+        const eTypes = new Map(
+          (expected.schemas?.[eorig]?.columns ?? []).map((c) => [c.name.toLowerCase(), baseType(c.type)])
+        );
+        for (const col of actual.schemas?.[aorig]?.columns ?? []) {
+          const want = eTypes.get(col.name.toLowerCase());
+          if (want === undefined) continue;
+          const got = baseType(col.type);
+          if (got && want && got !== want) {
+            return {
+              ok: false,
+              message: `Column '${col.name}' in table '${eorig}' was declared ${got}, but this task requires ${want}.`,
+            };
+          }
+        }
+      }
     }
 
     const eRows = expected.tables?.[eorig] ?? [];
@@ -118,13 +167,20 @@ export function gradeFinalState(
   preState: DatabaseState,
   solutionSql: string,
   actualPostState: DatabaseState,
+  options: StateCompareOptions = {},
 ): FinalStateVerdict {
   const sandbox = new SqlExecutor(preState);
   const refResult = sandbox.execute(solutionSql);
   if (refResult.error) {
-    // The reference solution itself must run cleanly; if it does not, fall
-    // back to no state grading rather than rejecting a possibly-correct user.
-    return { ok: true };
+    // S3-11: the reference solution must run cleanly. It did not, so the task is
+    // ungradeable — never punish the learner (`ok` stays true), but do NOT hide
+    // the authoring bug behind a silent pass: flag it and surface it.
+    const message =
+      `This task's reference solution failed to run (${refResult.error}), so the final state could not be verified. Please report this task.`;
+    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn(`[state-verification] reference solution errored — task needs review: ${solutionSql} :: ${refResult.error}`);
+    }
+    return { ok: true, inconclusive: true, message };
   }
-  return compareFinalState(actualPostState, sandbox.getDatabaseState());
+  return compareFinalState(actualPostState, sandbox.getDatabaseState(), options);
 }

@@ -47,6 +47,12 @@ export interface ParsedJoin {
   alias?: string;
   onLeft: string;
   onRight: string;
+  /**
+   * Full ON clause text, e.g. `o.customer_id = c.customer_id AND o.status = 'x'`.
+   * S2-4: the executor evaluates the extra AND terms (onLeft/onRight only carry
+   * the first equality) so multi-condition joins are not silently truncated.
+   */
+  onCondition?: string;
 }
 
 export interface ParsedCaseWhen {
@@ -489,7 +495,11 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
     // Quoted string literal (e.g. 'customer' AS source — the tagged
     // UNION ALL pattern): keep the quotes in `expression` so the executor
     // recognizes it as a literal value, not a column reference.
-    const strLitMatch = cleanPart.match(/^'([^']*)'\s*(?:AS\s+)?(?:[`"']?([\w_]+)[`"']?)?$/);
+    // NOTE: the /i flag is load-bearing — without it a lowercase `as`
+    // ('Customer' as source) failed to match, the alias was folded into the
+    // expression, and the value silently evaluated to NULL. See the audit's
+    // "keyword case (lowercase)" false-reject finding.
+    const strLitMatch = cleanPart.match(/^'([^']*)'\s*(?:AS\s+)?(?:[`"']?([\w_]+)[`"']?)?$/i);
     if (strLitMatch) {
       col.expression = `'${strLitMatch[1]}'`;
       col.alias = strLitMatch[2] || strLitMatch[1];
@@ -543,9 +553,19 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
     }
 
     // Check scalar function expressions: UPPER/LOWER/TRIM/LENGTH/CONCAT/
-    // SUBSTRING/YEAR/MONTH/DAY/EXTRACT/DATEDIFF — flat calls only.
-    const fnMatch = cleanPart.match(/^(UPPER|LOWER|TRIM|LENGTH|CONCAT|SUBSTRING|YEAR|MONTH|DAY|EXTRACT|DATEDIFF)\s*\(([\s\S]*)\)(?:\s+AS\s+)?(?:[`"']?([\w_]+)[`"']?)?\s*$/i);
-    if (fnMatch) {
+    // SUBSTRING/YEAR/MONTH/DAY/EXTRACT/DATEDIFF/DATE_SUB/DATE_ADD/NOW/CURDATE/
+    // COALESCE/IFNULL/NULLIF/IF — flat calls only. S1-3: the parser accepts ANY
+    // flat NAME(...) as a functionCall so unknown/typoed functions reach the
+    // executor, which throws a NAMED error instead of silently NULLing.
+    const fnMatch = cleanPart.match(/^([A-Za-z_][\w]*)\s*\(([\s\S]*)\)(?:\s+AS\s+)?(?:[`"']?([\w_]+)[`"']?)?\s*$/i);
+    // Aggregates and COALESCE-wrapped aggregates must NOT be captured here —
+    // they are parsed below into col.aggregate (+col.coalesceFallback) so the
+    // executor groups them correctly. Only scalar calls take this branch.
+    const fnNameCandidate = fnMatch ? fnMatch[1].toUpperCase() : '';
+    const isAggregateCall = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'].includes(fnNameCandidate);
+    const isCoalesceAgg =
+      fnNameCandidate === 'COALESCE' && /^(COUNT|SUM|AVG|MIN|MAX)\s*\(/i.test((fnMatch?.[2] ?? '').trim());
+    if (fnMatch && !isAggregateCall && !isCoalesceAgg) {
       col.functionCall = { name: fnMatch[1].toUpperCase(), args: splitFunctionArgs(fnMatch[2]) };
       col.alias = fnMatch[3]?.replace(/[`"']/g, '') || `${fnMatch[1].toLowerCase()}_result`;
       col.expression = col.alias;
@@ -653,12 +673,18 @@ function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
       /^([`"']?[\w_]+[`"']?)(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?\s+(?:ON\s+([\w_.]+)\s*=\s*([\w_.]+))?/i
     );
     if (onMatch) {
+      // S2-4: keep the FULL ON clause so additional `AND <condition>` terms are
+      // evaluated instead of silently dropped. onLeft/onRight stay the first
+      // equality (fast path + existing consumers); onCondition carries the rest.
+      const onIdx = joinBody.search(/\bON\b/i);
+      const onCondition = onIdx !== -1 ? joinBody.substring(onIdx).replace(/^ON\s+/i, '').trim() : undefined;
       query.joins?.push({
         type: joinType,
         table: onMatch[1].replace(/[`"']/g, ''),
         alias: onMatch[2]?.replace(/[`"']/g, ''),
         onLeft: (onMatch[3] || '').replace(/[`"']/g, ''),
         onRight: (onMatch[4] || '').replace(/[`"']/g, ''),
+        onCondition,
       });
     }
   }

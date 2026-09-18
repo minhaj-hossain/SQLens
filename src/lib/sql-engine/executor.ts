@@ -1,5 +1,5 @@
 import { DatabaseState, QueryExecutionResult, TableRow, ColumnDefinition, TableSchema } from '../../types/database';
-import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, ParsedCaseWhen } from './parser';
+import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, ParsedCaseWhen, ParsedSelectColumn } from './parser';
 import { splitStatements } from './split-statements';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
@@ -84,6 +84,9 @@ function splitLogicalClauses(expr: string, operator: 'OR' | 'AND'): string[] {
         continue;
       }
 
+      // S1-2 note: EXISTS (...) needs no special case here. Its opening '(' is
+      // counted by the generic depth tracker above, so AND/OR inside the
+      // EXISTS parens never split; the OR/AND checks below only fire at depth 0.
       if (operator === 'OR' && /^\bOR\b/i.test(rest)) {
         parts.push(current.trim());
         current = '';
@@ -610,11 +613,53 @@ export class SqlExecutor {
       case 'LENGTH': return arg(0) === null || arg(0) === undefined ? null : String(arg(0)).length;
       case 'CONCAT':
         return args.map((a) => String(this.evaluateScalar(row, a) ?? '')).join('');
-      case 'SUBSTRING': {
+      case 'SUBSTRING':
+      case 'SUBSTR': {
         const s = String(arg(0) ?? '');
-        const start = Number(args[1]) || 1;
-        const len = args[2] !== undefined ? Number(args[2]) : undefined;
+        const start = Number(this.evaluateScalar(row, args[1])) || 1;
+        const len = args[2] !== undefined ? Number(this.evaluateScalar(row, args[2])) : undefined;
         return len !== undefined ? s.substring(start - 1, start - 1 + len) : s.substring(start - 1);
+      }
+      // COALESCE / IFNULL / NULLIF / IF — bare (non-aggregate) null handling
+      // (S1-3 engine honesty). The aggregate-wrapped COALESCE(SUM(x), 0) form is
+      // parsed into col.aggregate + col.coalesceFallback; this handles the rest.
+      case 'COALESCE': {
+        for (const a of args) {
+          const v = this.evaluateScalar(row, a);
+          if (v !== null && v !== undefined) return v;
+        }
+        return null;
+      }
+      case 'IFNULL': {
+        const v = arg(0);
+        return v !== null && v !== undefined ? v : this.evaluateScalar(row, args[1]);
+      }
+      case 'NULLIF': {
+        const a = arg(0);
+        const b = arg(1);
+        return String(a ?? '') === String(b ?? '') ? null : a;
+      }
+      case 'IF': {
+        const cond = this.evaluateScalar(row, args[0]);
+        const truthy = cond === true || cond === 1 || String(cond).toLowerCase() === 'true';
+        return truthy ? this.evaluateScalar(row, args[1]) : this.evaluateScalar(row, args[2]);
+      }
+      case 'NOW':
+      case 'CURDATE':
+      case 'CURRENT_DATE': return SIMULATED_TODAY;
+      // Aggregates reaching the scalar evaluator (WHERE/HAVING position, e.g.
+      // HAVING COUNT(*) > 1): evaluate over the current group when present.
+      // Outside a group there is no row set to aggregate — that is a genuine
+      // semantic error, not a silent NULL.
+      case 'COUNT':
+      case 'SUM':
+      case 'AVG':
+      case 'MIN':
+      case 'MAX': {
+        if (this.currentAggRows) return this.computeAggregate(name, args.join(','), this.currentAggRows);
+        throw new Error(
+          `Aggregate ${name}() cannot be used here — aggregates need a GROUP BY group or a full-table aggregation, not a single-row WHERE comparison. Filter aggregates with HAVING after GROUP BY.`
+        );
       }
       case 'YEAR': return this.extractDatePart(arg(0), 'YEAR');
       case 'MONTH': return this.extractDatePart(arg(0), 'MONTH');
@@ -631,8 +676,29 @@ export class SqlExecutor {
         const ms = a.getTime() - b.getTime();
         return isNaN(a.getTime()) || isNaN(b.getTime()) ? null : Math.round(ms / 86400000);
       }
+      case 'DATE_SUB':
+      case 'DATE_ADD': {
+        // DATE_SUB(date, INTERVAL n DAY|MONTH|YEAR) / DATE_ADD — date-shift
+        // support for temporal filters (S1-3 synonym coverage).
+        const base = new Date(String(arg(0) ?? ''));
+        if (isNaN(base.getTime())) return null;
+        const m = String(args[1] ?? '').match(/INTERVAL\s+(\d+)\s+(DAY|MONTH|YEAR)/i);
+        if (!m) return null;
+        const n = parseInt(m[1], 10) * (name === 'DATE_SUB' ? -1 : 1);
+        const unit = m[2].toUpperCase();
+        const d = new Date(base.getTime());
+        if (unit === 'DAY') d.setUTCDate(d.getUTCDate() + n);
+        else if (unit === 'MONTH') d.setUTCMonth(d.getUTCMonth() + n);
+        else d.setUTCFullYear(d.getUTCFullYear() + n);
+        return d.toISOString().split('T')[0];
+      }
       default:
-        return null;
+        // S1-3 engine honesty: unknown functions must ERROR with a named,
+        // actionable message — never silently evaluate to NULL. Typo'd names
+        // (LENGHT) and out-of-dialect functions surface here.
+        throw new Error(
+          `Unsupported function: ${name}(). This SQL dialect supports UPPER, LOWER, TRIM, LENGTH, CONCAT, SUBSTRING/SUBSTR, YEAR, MONTH, DAY, EXTRACT, DATEDIFF, DATE_SUB/DATE_ADD, COALESCE, IFNULL, NULLIF, IF, NOW/CURDATE, and aggregates COUNT/SUM/AVG/MIN/MAX.`
+        );
     }
   }
 
@@ -1172,10 +1238,19 @@ export class SqlExecutor {
           const vRight = getRowValue(targetRow, join.onRight);
           const vLeftAlt = getRowValue(row, join.onRight);
           const vRightAlt = getRowValue(targetRow, join.onLeft);
-          return (
+          const baseMatch =
             (vLeft !== undefined && vRight !== undefined && vLeft == vRight) ||
-            (vLeftAlt !== undefined && vRightAlt !== undefined && vLeftAlt == vRightAlt)
-          );
+            (vLeftAlt !== undefined && vRightAlt !== undefined && vLeftAlt == vRightAlt);
+          if (!baseMatch) return false;
+          // S2-4: evaluate any additional `AND <condition>` terms in the ON clause.
+          // Silently dropping them changed the row set (e.g. ON a=b AND o.status='x'
+          // behaved like ON a=b).
+          const extras = join.onCondition
+            ? splitLogicalClauses(join.onCondition, 'AND').slice(1)
+            : [];
+          if (extras.length === 0) return true;
+          const merged = mergeRow(row, targetRow);
+          return extras.every((cond) => this.evaluateWhere(this.substituteRowRefs(cond, merged), merged));
         };
 
         const newRows: TableRow[] = [];
@@ -1226,10 +1301,25 @@ export class SqlExecutor {
       }
     }
 
-    // 3. WHERE clause filtering
+    // 3. WHERE clause filtering. evaluateWhere throws a named error for
+    // unsupported predicates (S1-2 engine honesty) — convert it to the honest
+    // failure result instead of letting it escape as an exception. The outer
+    // execute() try/catch would also catch it, but localizing here keeps the
+    // failure attributed to the WHERE clause.
     if (query.whereClause) {
-      currentRows = currentRows.filter(row => this.evaluateWhere(query.whereClause!, row));
-    }
+      try {
+        currentRows = currentRows.filter(row => this.evaluateWhere(query.whereClause!, row));
+      } catch (e: any) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: e.message || 'Execution error',
+        };
+      }
+    } // end WHERE filtering
 
     // 4. GROUP BY & Aggregations
     let finalColumns: string[] = [];
@@ -1241,10 +1331,39 @@ export class SqlExecutor {
     if (hasGroupBy || hasAggregates) {
       const groups: Record<string, TableRow[]> = {};
       if (hasGroupBy) {
+        // S3-10: resolve GROUP BY positional keys (GROUP BY 1) and SELECT-list
+        // aliases (GROUP BY label) to the underlying expression. Previously an
+        // unresolvable key evaluated to `undefined` for EVERY row, so the whole
+        // table collapsed into a single group — silently wrong data instead of
+        // an error. Now unknown keys raise a named error.
+        const groupableExpr = (c: ParsedSelectColumn): string =>
+          c.functionCall ? `${c.functionCall.name}(${c.functionCall.args.join(', ')})` : c.expression;
+        const resolveGroupKey = (raw: string): string => {
+          const t = raw.trim();
+          if (/^\d+$/.test(t)) {
+            const sel = query.columns?.[parseInt(t, 10) - 1];
+            if (!sel) {
+              throw new Error(
+                `GROUP BY position ${t} is out of range — the SELECT list has ${query.columns?.length ?? 0} column(s).`
+              );
+            }
+            return groupableExpr(sel);
+          }
+          const aliasHit = query.columns?.find(
+            (c) => (c.alias ?? '').toLowerCase() === t.toLowerCase()
+          );
+          return aliasHit ? groupableExpr(aliasHit) : t;
+        };
+        const groupKeys = query.groupBy!.map(resolveGroupKey);
         currentRows.forEach(row => {
-          const key = query.groupBy!.map(col => {
+          const key = groupKeys.map(col => {
             // GROUP BY may reference expressions (e.g. YEAR(order_date))
             const v = /\(/.test(col) ? this.evaluateScalar(row, col) : getRowValue(row, col);
+            if (v === undefined) {
+              throw new Error(
+                `GROUP BY column '${col}' does not exist in the query source. Check the column name in your GROUP BY clause.`
+              );
+            }
             return String(v ?? '');
           }).join('___');
           if (!groups[key]) groups[key] = [];
@@ -1599,6 +1718,21 @@ export class SqlExecutor {
     };
   }
 
+  /**
+   * Replaces `alias.column` references in a predicate with the literal value
+   * found on the given (already merged) row. Used for extra JOIN ON terms
+   * (S2-4) so they can be evaluated with the normal WHERE engine even though
+   * they are written against the pre-merge row shape.
+   */
+  private substituteRowRefs(predicate: string, row: TableRow): string {
+    return predicate.replace(/([A-Za-z_]\w*)\.([A-Za-z_]\w*)/g, (full) => {
+      const v = getRowValue(row, full);
+      if (v === undefined) return full;
+      if (v === null) return 'NULL';
+      return typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : String(v);
+    });
+  }
+
   private evaluateWhere(whereExpr: string, row: TableRow): boolean {
     let trimmed = whereExpr.trim();
 
@@ -1632,8 +1766,17 @@ export class SqlExecutor {
       return andParts.every(part => this.evaluateWhere(part, row));
     }
 
-    // Negation: NOT <expr> (e.g. `NOT (category_id = 1)`, `NOT price > 50`)
-    // Evaluate the inner expression and invert the boolean result.
+    // Negation: NOT <expr> (e.g. `NOT (category_id = 1)`, `NOT price > 50`).
+    // S1-2: NOT EXISTS is handled by the EXISTS branch below, which must win
+    // over generic negation (otherwise `NOT EXISTS (...)` would strip NOT and
+    // re-enter with `EXISTS (...)` — same result, but the explicit branch also
+    // owns correlation, so check it first for clarity).
+    const existsFirst = trimmed.match(/^(NOT\s+)?EXISTS\s*\(([\s\S]+)\)$/i);
+    if (existsFirst) {
+      const not = !!existsFirst[1];
+      const hasRows = this.evaluateExistsSubquery(existsFirst[2], row);
+      return not ? !hasRows : hasRows;
+    }
     if (/^NOT\s+/i.test(trimmed)) {
       const inner = trimmed.replace(/^NOT\s+/i, '').trim();
       return !this.evaluateWhere(inner, row);
@@ -1645,7 +1788,10 @@ export class SqlExecutor {
       const col = isNullMatch[1].replace(/[`"']/g, '');
       const not = !!isNullMatch[2];
       const val = getRowValue(row, col);
-      const isNull = val === null || val === undefined || val === '';
+      // S2-6: SQL three-valued logic — only the NULL (absent) value IS NULL.
+      // An empty string is a value, so `'' IS NULL` must be FALSE. Matching ''
+      // here taught the opposite of real MySQL.
+      const isNull = val === null || val === undefined;
       return not ? !isNull : isNull;
     }
 
@@ -1656,8 +1802,12 @@ export class SqlExecutor {
       const not = !!likeMatch[2];
       const pattern = likeMatch[4];
       const val = String(getRowValue(row, col) ?? '');
-      
-      const regexStr = '^' + pattern.replace(/%/g, '.*').replace(/_/g, '.') + '$';
+
+      // S3-9: escape regex metacharacters FIRST, then translate the two LIKE
+      // wildcards. Previously only %/_ were handled, so a pattern containing
+      // `.` `(` `+` etc. acted as regex — `LIKE 'a.c'` wrongly matched 'abc'.
+      const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regexStr = '^' + escaped.replace(/%/g, '.*').replace(/_/g, '.') + '$';
       const regex = new RegExp(regexStr, 'i');
       const matches = regex.test(val);
       return not ? !matches : matches;
@@ -1707,12 +1857,37 @@ export class SqlExecutor {
     }
 
     // Comparison operators (=, !=, <>, <=, >=, <, >) with literal or subquery.
-    // Left side may be a plain column OR a function expression (LENGTH(phone), UPPER(city), …).
-    const compMatch = trimmed.match(/^([A-Za-z_]+\s*\([^)]*\)|[`"']?[\w_.]+[`"']?)\s*(=|!=|<>|<=|>=|<|>)\s*([\s\S]+)$/);
-    if (compMatch) {
-      const rawCol = compMatch[1];
-      const isFnCol = /\(/.test(rawCol);
-      const col = isFnCol ? rawCol : rawCol.replace(/[`"']/g, '');
+    // Left side may be a plain column OR a function expression (LENGTH(phone), UPPER(city), …)
+    // OR an arithmetic expression (price * 1.15, quantity * unit_price * 1.10).
+    const compMatch = trimmed.match(
+      /^([^=<>!]+?)\s*(=|!=|<>|<=|>=|<|>)\s*([\s\S]+)$/
+    );
+    // S1-2 hardening: the regex above is deliberately permissive, so it also
+    // matches shapes where the FIRST operator is not the comparison — e.g.
+    // `(price > 1) IS TRUE` yields leftOperand `(price `. Computing a comparison
+    // from that silently returned FALSE for every row (0 results, no error).
+    // Only accept a genuine left operand: a column/qualified name, a function
+    // call, or an arithmetic expression with balanced parentheses.
+    const rawLeft = compMatch ? compMatch[1].trim() : '';
+    const leftOperandValid = compMatch
+      ? /^[`"']?[\w.]+[`"']?$/.test(rawLeft) ||
+        /^[A-Za-z_]\w*\s*\([\s\S]*\)$/.test(rawLeft) ||
+        (/^[\w.\s+\-*/()]+$/.test(rawLeft) &&
+          /[+\-*/]/.test(rawLeft) &&
+          (() => {
+            let d = 0;
+            for (const c of rawLeft) {
+              if (c === '(') d++;
+              else if (c === ')') { d--; if (d < 0) return false; }
+            }
+            return d === 0;
+          })())
+      : false;
+    if (compMatch && leftOperandValid) {
+      const rawCol = compMatch[1].trim();
+      const isFnCol = /^[A-Za-z_]\w*\s*\(/.test(rawCol) && /\w\s*\([\s\S]*\)$/.test(rawCol);
+      const isArithCol = !isFnCol && /[+\-*/]/.test(rawCol);
+      const col = isFnCol || isArithCol ? rawCol : rawCol.replace(/[`"']/g, '');
       const op = compMatch[2];
       let target = compMatch[3].trim();
 
@@ -1755,7 +1930,9 @@ export class SqlExecutor {
 
       const rowVal = isFnCol
         ? this.evaluateScalar(row, rawCol)
-        : (isNaN(Number(col)) || getRowValue(row, col) !== undefined ? getRowValue(row, col) : Number(col));
+        : isArithCol
+          ? this.evaluateArithmetic(row, rawCol)
+          : (isNaN(Number(col)) || getRowValue(row, col) !== undefined ? getRowValue(row, col) : Number(col));
 
       const numRow = Number(rowVal);
       const numTarget = Number(targetVal);
@@ -1775,7 +1952,63 @@ export class SqlExecutor {
       }
     }
 
-    return true;
+    // IS [NOT] TRUE / FALSE — boolean-literal predicates (S1-2 engine honesty).
+    const isBoolMatch = trimmed.match(/^([`"']?[\w_.]+[`"']?)\s+IS\s+(NOT\s+)?(TRUE|FALSE)$/i);
+    if (isBoolMatch) {
+      const col = isBoolMatch[1].replace(/[`"']/g, '');
+      const not = !!isBoolMatch[2];
+      const wantTrue = isBoolMatch[3].toUpperCase() === 'TRUE';
+      const val = getRowValue(row, col);
+      // MySQL semantics: only boolean-ish values (true/false, 1/0) satisfy
+      // IS TRUE / IS FALSE. A non-boolean string (e.g. city = 'Dhaka') is
+      // NEITHER, so `city IS FALSE` must not match. NULL satisfies neither.
+      const asText = String(val).toLowerCase();
+      const isTrue = val === true || val === 1 || asText === 'true' || asText === '1';
+      const isFalse = val === false || val === 0 || asText === 'false' || asText === '0';
+      const hit = wantTrue ? isTrue : isFalse;
+      return not ? !hit : hit;
+    }
+
+    // S1-2 engine honesty: an unrecognized predicate must NEVER silently match
+    // every row. Throw a named error so the learner (and validator) sees exactly
+    // which construct is outside the dialect instead of a wrong dataset.
+    throw new Error(`Unsupported WHERE predicate: "${trimmed}". This SQL dialect supports comparisons, AND/OR/NOT, IN, BETWEEN, LIKE, IS NULL, IS TRUE/FALSE, EXISTS, and scalar subqueries.`);
+  }
+
+  /**
+   * Executes an EXISTS subquery for one outer row. Correlation: every
+   * `alias.column` reference naming an OUTER query alias (an alias not
+   * declared by the subquery's own FROM/JOIN list) is substituted with the
+   * outer row's value. References to the subquery's own tables are left
+   * intact so the inner query still filters on its own rows.
+   */
+  private evaluateExistsSubquery(subquery: string, outerRow: TableRow): boolean {
+    const inner = parseSql(subquery);
+    const ownAliases = new Set<string>();
+    if (inner.fromTable) {
+      ownAliases.add(inner.fromTable.toLowerCase());
+      if (inner.fromAlias) ownAliases.add(inner.fromAlias.toLowerCase());
+    }
+    for (const j of inner.joins ?? []) {
+      ownAliases.add(j.table.toLowerCase());
+      if (j.alias) ownAliases.add(j.alias.toLowerCase());
+    }
+    let correlated = subquery;
+    const refs = new Set<string>();
+    const refRe = /([A-Za-z_][\w]*)\.([\w]+)/g;
+    let m: RegExpExecArray | null;
+    while ((m = refRe.exec(subquery)) !== null) refs.add(m[0]);
+    for (const ref of refs) {
+      const alias = ref.split('.')[0].toLowerCase();
+      if (ownAliases.has(alias)) continue; // inner table — not a correlation
+      const val = getRowValue(outerRow, ref);
+      if (val === undefined) continue;
+      const safe = typeof val === 'string' ? `'${String(val).replace(/'/g, "''")}'` : String(val);
+      correlated = correlated.split(ref).join(safe);
+    }
+    const subRes = this.execute(correlated);
+    if (!subRes.success) throw new Error(subRes.error || 'EXISTS subquery failed.');
+    return (subRes.rows?.length ?? 0) > 0;
   }
 
   private computeAggregate(func: string, arg: string, rows: TableRow[]): number {

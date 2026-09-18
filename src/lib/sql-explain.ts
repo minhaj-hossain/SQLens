@@ -40,7 +40,9 @@ function describeSelectColumn(raw: string, expression: string, alias: string | u
   const src = /^\w+\s*\(/.test(raw)
     ? raw.replace(/\s+AS\s+[A-Za-z_][A-Za-z0-9_]*\s*$/i, '')
     : expression;
-  if (raw.includes('CASE') && raw.includes('END')) return `a CASE expression${aliasPhrase}`;
+  // Case-insensitive (Batch 6): learners write `case … end` in lowercase, and
+  // word boundaries stop a column like `weekend` from matching `end`.
+  if (/\bCASE\b/i.test(raw) && /\bEND\b/i.test(raw)) return `a CASE expression${aliasPhrase}`;
   if (/^(ROW_NUMBER|RANK|DENSE_RANK)\s*\(/.test(src)) {
     const kind = /^\w+/.exec(src)?.[0].toUpperCase();
     const noun =

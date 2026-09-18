@@ -42,5 +42,17 @@ jobs:
       - name: Full task audit
         run: npx tsx scripts/audit-all-tasks.ts
 
+      - name: Engine equivalence probes (S1/S2 contracts)
+        run: npm run audit:equivalence
+
+      - name: Task equivalence guardrail (approach-fairness)
+        run: npm run audit:equivalence:tasks
+
+      - name: Validation-overlap census
+        run: npm run audit:validation-overlap
+
+      - name: Keyword case-fragility guardrail
+        run: npm run audit:keyword-case
+
       - name: Production build
         run: npm run build
