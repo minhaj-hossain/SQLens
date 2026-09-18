@@ -201,6 +201,7 @@ export const Day_32_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requireSetOp: 'UNION',
             requiredColumns: ['name', 'email'],

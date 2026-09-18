@@ -438,6 +438,7 @@ export const Day_04_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireDistinct: true,
@@ -461,6 +462,7 @@ export const Day_04_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `SELECT DISTINCT category_id FROM products;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['category_id'],
             requireDistinct: true,
@@ -586,6 +588,7 @@ export const Day_04_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `ORDER BY quantity_in_stock ASC LIMIT 5;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock'],
             requireOrderBy: [{ column: 'quantity_in_stock', direction: 'ASC' }],
@@ -611,6 +614,7 @@ export const Day_04_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `ORDER BY customer_id ASC LIMIT 5 OFFSET 5;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['customer_id', 'name', 'city'],
             requireOrderBy: [{ column: 'customer_id', direction: 'ASC' }],
@@ -670,6 +674,7 @@ export const Day_04_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `SELECT DISTINCT city FROM customers;`' }],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'customers',
           requiredColumns: ['city'],
           requireDistinct: true,

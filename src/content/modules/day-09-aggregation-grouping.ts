@@ -813,6 +813,7 @@ export const Day_09_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `SELECT category_id, COUNT(*) AS total_products FROM products GROUP BY category_id;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requireGroupBy: true,
             expectedRowCount: 6,
@@ -836,6 +837,7 @@ export const Day_09_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `SELECT city, COUNT(*) AS customer_count FROM customers GROUP BY city;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['city', 'customer_count'],
             requireGroupBy: true,
@@ -959,6 +961,7 @@ export const Day_09_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `GROUP BY category_id ORDER BY avg_price DESC;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requireGroupBy: true,
             requireOrderBy: [{ column: 'avg_price', direction: 'DESC' }],
@@ -985,6 +988,7 @@ export const Day_09_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `HAVING COUNT(*) >= 2 ORDER BY customer_count DESC;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['city', 'customer_count'],
             requireGroupBy: true,
@@ -1022,6 +1026,7 @@ export const Day_09_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `SELECT category_id, COUNT(*) AS total_products FROM products GROUP BY category_id;`' }],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requireGroupBy: true,
           expectedRowCount: 6,
@@ -1044,6 +1049,7 @@ export const Day_09_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `GROUP BY category_id ORDER BY avg_price DESC;`' }],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requireGroupBy: true,
           requireOrderBy: [{ column: 'avg_price', direction: 'DESC' }],
@@ -1067,6 +1073,7 @@ export const Day_09_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `GROUP BY category_id HAVING AVG(price) > 25;`' }],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requireGroupBy: true,
           requireHaving: true,

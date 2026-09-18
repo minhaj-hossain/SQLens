@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
 import { ValidationRule } from '../../src/types/curriculum';
+import { ALL_MODULES } from '../../src/content/curriculum-index';
 
 const run = (sql: string) => new SqlExecutor().executeQuery(sql);
 
@@ -169,6 +170,64 @@ describe('S3-10 — GROUP BY keys must resolve or fail loudly', () => {
     expect(r.success).toBe(true);
     const cities = new Set(r.rows.map((row: any) => row.city));
     expect(cities.size).toBeGreaterThan(1);
+  });
+});
+
+describe('Batch 6 — strictConstruct closes the same-dataset false accept', () => {
+  /**
+   * Decision-first grading (Batch 2) made construct rules advisory when the
+   * dataset matches. That is right for most lessons — but where the construct IS
+   * the subject, an equivalent formulation that skips it must still fail.
+   * `UNION` vs `UNION ALL` on dedupe-free data is the canonical case: identical
+   * rows, different lesson.
+   */
+  // Dedupe-free data: `UNION` and `UNION ALL` return the IDENTICAL rows here, so
+  // the dataset cannot tell them apart — only the construct rule can.
+  const unionAll = "SELECT name, 'Customer' AS source FROM customers UNION ALL SELECT name, 'Supplier' AS source FROM suppliers;";
+  const union = "SELECT name, 'Customer' AS source FROM customers UNION SELECT name, 'Supplier' AS source FROM suppliers;";
+  const base: ValidationRule = {
+    targetTable: 'customers',
+    requireExactResult: true,
+    requireSetOp: 'UNION',
+  };
+
+  it('accepts a dataset-identical rewrite when the task is advisory (default)', () => {
+    const expected = run(union);
+    const r = run(unionAll);
+    const o = validateTaskSolution(unionAll, r, base, expected);
+    expect(o.passed).toBe(true);
+    expect(o.feedback).toMatch(/note:/i);
+  });
+
+  it('rejects it once the task opts in with strictConstruct', () => {
+    const expected = run(union);
+    const r = run(unionAll);
+    const o = validateTaskSolution(unionAll, r, { ...base, strictConstruct: true }, expected);
+    expect(o.passed).toBe(false);
+    expect(o.feedback).toMatch(/UNION/i);
+  });
+
+  it('still accepts the required construct', () => {
+    const expected = run(union);
+    const o = validateTaskSolution(union, run(union), { ...base, strictConstruct: true }, expected);
+    expect(o.passed).toBe(true);
+  });
+
+  it('the curriculum actually opts in where the construct is the lesson', () => {
+    // Guards the Batch 6 content pass: set-ops day, DISTINCT lesson, CASE module,
+    // GROUP BY/HAVING lessons, LIMIT lesson and the JOIN module must be strict.
+    const strictIds = new Set<string>();
+    for (const m of ALL_MODULES as any[]) {
+      const groups: Array<[string, any[]]> = (m.concepts ?? []).map((c: any) => [c.id, c.tasks ?? []]);
+      if (m.challenge?.tasks) groups.push(['challenge', m.challenge.tasks]);
+      for (const [, tasks] of groups) {
+        for (const t of tasks) if (t.validation?.strictConstruct) strictIds.add(t.id);
+      }
+    }
+    expect(strictIds.size).toBeGreaterThanOrEqual(47);
+    for (const id of ['union-dedupe-t1', 'union-all-t1', 'day04-c2-t1', 'case-basic-t1', 'day09-c2-t1', 'day11-c1-t1']) {
+      expect(strictIds.has(id)).toBe(true);
+    }
   });
 });
 

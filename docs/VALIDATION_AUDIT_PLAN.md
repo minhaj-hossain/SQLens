@@ -98,15 +98,41 @@ All eight run in CI (`.github/workflows/ci.yml`).
 
 ---
 
-## Batch 6 — `strictConstruct` author opt-in ⬜ NOT STARTED
-**Why it matters:** Batch 2 made shape rules advisory. **0 tasks currently opt in**, so a lesson whose deliverable *is* the construct will accept a rewrite that skips it.
+## Batch 6 — `strictConstruct` author opt-in ✅ DONE
+**Why it mattered:** Batch 2 made construct rules advisory when the dataset matches. On a lesson whose *subject* is the construct, an equivalent formulation that skips it was a false accept.
 
-- [ ] Measured candidate set (**99** exact-graded tasks carry a shape rule):
-  - [ ] **`requireSetOp` (12 tasks)** — day-17 UNION / UNION ALL / dedupe / shape-compatibility / EXCEPT lessons, day-32 `sec-c1-t3`. These teach the operator itself → `strictConstruct: true`
-  - [ ] **`requiredAliases` (5 tasks)** — day-01 column-aliasing (3), day-01-hw-3, day-06-c1-t2. Aliasing is the deliverable → `strictConstruct: true`
-  - [ ] **`requireJoin` / `requireLimit` / `requireDistinct` / `requireCase` (remaining ~82)** — author-by-author review; default stays advisory
-- [ ] Verify each opt-in with `npm run audit:equivalence:tasks` (`STRICT_IMPOSSIBLE` means an author enabled a rule their own solution breaks)
-- **Exit:** every annotatable task has an explicit decision; guardrail reports 0 `STRICT_IMPOSSIBLE`
+- [x] **Census corrected.** The original plan counted 99 tasks as "now advisory". Re-checking the validator showed **`requiredAliases` was never advisory** — it is checked against the returned column names and fails *immediately* (not via the deferred `constructFailures` list). The genuinely advisory rules are the deferred ones: `requireJoin`, `requireGroupBy`, `requireHaving`, `requireCase`, `requireFunction`, `requireSetOp`, `requireLimit`, `requireOffset`, `requireOrderBy`, `requireDistinct`, `requireWhere`, `whereContainsTerms`.
+- [x] **Criterion (auditable, not vibes):** opt in when the *concept* is named after / dedicated to the construct, or it is that construct's module challenge. Where the construct is merely a means to a report, the dataset self-verifies it and the rule stays advisory.
+- [x] **47 tasks opted in** across 7 module files, applied by `scripts/apply-strict-construct.ts` (idempotent, dry-run by default, prints its reasoning):
+
+      | Scope | Tasks |
+      |---|---|
+      | `day-17` (all set-op concepts) + `day-32/sec-injection` | 12 |
+      | `day-10` (conditional-logic module) | 14 |
+      | `day-04` distinct-deduplication + challenge | 3 |
+      | `day-04` limit-and-offset | 2 |
+      | `day-09` grouping/having + challenge | 7 |
+      | `day-12` group-by-date-parts + challenge | 3 |
+      | `day-14` (JOIN module) | 6 |
+
+- [x] **Value proven, not assumed** — 6 same-dataset false accepts are now closed (each returned identical rows and previously PASSED):
+
+      | Task | Rewrite that produced identical data | Before | Now |
+      |---|---|---|---|
+      | `day-17/union-all/union-all-t1` | `UNION ALL` → `UNION` | passed | **rejected** |
+      | `day-17/union-dedupe/union-dedupe-t2` | `UNION` → `UNION ALL` | passed | **rejected** |
+      | `day-17/shape-compatibility/shape-compat-t1` | `UNION ALL` → `UNION` | passed | **rejected** |
+      | `day-17/shape-compatibility/shape-compat-t2` | `UNION ALL` → `UNION` | passed | **rejected** |
+      | `day-17/challenge/setops-hw-1` | `UNION ALL` → `UNION` | passed | **rejected** |
+      | `day-32/sec-injection/sec-c1-t3` | `UNION` → `UNION ALL` | passed | **rejected** |
+      | `day-04/distinct-deduplication/day04-c2-t1` (+t2, hw-2) | `DISTINCT` → `GROUP BY` | passed | **rejected** |
+
+- [x] **Two cases deliberately left advisory** (documented so they are not mistaken for oversights): `day-07/challenge/day07-hw-3` and `day-08/challenge/day08-hw-2` accept `DISTINCT` ≡ `GROUP BY`. Their modules are not DISTINCT lessons — the ask is the *result*, and `DIALECT.md` says an equivalent route has succeeded. `day-08/milestone-1-eval/day08-c1-t2` cannot even be rewritten (`ORDER BY <expression>` is unsupported — Batch 10).
+- [x] 5 new vitest cases: advisory default accepts with a `note:`, strict rejects the identical dataset, strict still accepts the required construct, and a content guard asserting the opt-in set (≥47, including the critical ids) so it cannot silently regress
+- **Exit:** `npm run audit:equivalence:tasks` → 0 findings, no `STRICT_IMPOSSIBLE` ✅ ; task audit 343/343 ✅ ; `npm run audit:all` green ✅
+
+### Batch 6 follow-up backlog (reviewed, intentionally advisory)
+`requireJoin` (39), `requireGroupBy` (38), `requireFunction` (46), `requireWhere` (87), `whereContainsTerms` (42), `requireOrderBy` (41), `requireLimit` (21), `requireDistinct` (3) — the construct is a means; the returned dataset encodes the work, so a same-dataset skip is rare. Revisit only if a concrete false accept is observed.
 
 ## Batch 7 — `SELECT *` must not leak internal keys ✅ DONE
 **Why it mattered:** Day-1 user-visible, and it broke every CTE/derived-table wrapper. Was **4 of the 5** guardrail findings.
@@ -164,11 +190,10 @@ All eight run in CI (`.github/workflows/ci.yml`).
 
 ## Recommended execution order
 
-1. **Batch 6** — the remaining engine-grade gap: `strictConstruct` author opt-in (17 tasks already identified, plus judgment calls)
-2. **Batch 10** (~½ day) — residual polish
+1. **Batch 10** (~½ day) — residual polish (`#` comments, `ORDER BY <aggregate>`, `toPrecision(12)` docs)
 
 **Commit policy:** each batch is committed on completion with its verification
-results in the message (Batches 1–5, 7, 8 and 9 are already committed).
+results in the message (Batches 1–9 are already committed).
 
 ## Adding a batch
 Follow the `docs/IMPROVEMENT_PLAN.md` conventions: a `## Batch N — <theme>` heading

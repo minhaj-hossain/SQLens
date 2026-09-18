@@ -142,6 +142,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'stock_status'],
             requireCase: true,
@@ -168,6 +169,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'email', 'email_status'],
             requireCase: true,
@@ -277,6 +279,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_tier'],
             requireCase: true,
@@ -303,6 +306,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock', 'stock_health'],
             requireCase: true,
@@ -422,6 +426,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'price_tier'],
             requireCase: true,
@@ -448,6 +453,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'price', 'tier'],
             requireCase: true,
@@ -568,6 +574,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['category_id', 'out_of_stock', 'total_products'],
             requireCase: true,
@@ -595,6 +602,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['city', 'missing_email'],
             requireCase: true,
@@ -707,6 +715,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['name', 'quantity_in_stock'],
             requireCase: true,
@@ -733,6 +742,7 @@ export const Day_10_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'students',
             requiredColumns: ['name', 'department', 'age'],
             requireCase: true,
@@ -772,6 +782,7 @@ export const Day_10_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'orders',
           requiredColumns: ['customer_id', 'order_count', 'customer_tier'],
           requireCase: true,
@@ -798,6 +809,7 @@ export const Day_10_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requiredColumns: ['category_id', 'out_of_stock', 'total_products'],
           requireCase: true,
@@ -824,6 +836,7 @@ export const Day_10_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requiredColumns: ['name', 'quantity_in_stock'],
           requireCase: true,
@@ -850,6 +863,7 @@ export const Day_10_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requiredColumns: ['category_id', 'budget_products', 'standard_products', 'premium_products'],
           requireCase: true,

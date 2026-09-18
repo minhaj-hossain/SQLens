@@ -142,6 +142,7 @@ export const Day_14_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `INNER JOIN categories c ON p.category_id = c.category_id;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requireJoin: true,
             requiredColumns: ['product_name', 'category_name'],
@@ -167,6 +168,7 @@ export const Day_14_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `FROM orders o INNER JOIN customers c ON o.customer_id = c.customer_id;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'orders',
             requireJoin: true,
             requiredColumns: ['order_id', 'name', 'order_date'],
@@ -288,6 +290,7 @@ export const Day_14_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `SELECT c.name, o.order_id FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requireJoin: true,
             requiredColumns: ['name', 'order_id'],
@@ -312,6 +315,7 @@ export const Day_14_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `SELECT s.name AS supplier_name, p.name AS product_name FROM suppliers s LEFT JOIN products p ON s.supplier_id = p.supplier_id;`' }],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'suppliers',
             requireJoin: true,
             requiredColumns: ['supplier_name', 'product_name'],
@@ -348,6 +352,7 @@ export const Day_14_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `FROM orders o INNER JOIN customers c ON o.customer_id = c.customer_id;`' }],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'orders',
           requireJoin: true,
           requiredColumns: ['order_id', 'name', 'order_date'],
@@ -372,6 +377,7 @@ export const Day_14_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name;`' }],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'customers',
           requireJoin: true,
           requireGroupBy: true,

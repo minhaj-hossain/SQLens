@@ -171,6 +171,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'source'],
             requireSetOp: 'UNION ALL',
@@ -198,6 +199,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireSetOp: 'UNION ALL',
@@ -349,6 +351,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['city'],
             requireSetOp: 'UNION',
@@ -378,6 +381,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['contact'],
             requireSetOp: 'UNION',
@@ -517,6 +521,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'city'],
             requireSetOp: 'UNION ALL',
@@ -544,6 +549,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['name', 'city'],
             requireSetOp: 'UNION ALL',
@@ -693,6 +699,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'products',
             requiredColumns: ['product_id'],
             requireSetOp: 'EXCEPT',
@@ -720,6 +727,7 @@ export const Day_17_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['customer_id'],
             requireSetOp: 'EXCEPT',
@@ -759,6 +767,7 @@ export const Day_17_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'customers',
           requiredColumns: ['name', 'source'],
           requireSetOp: 'UNION ALL',
@@ -786,6 +795,7 @@ export const Day_17_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'products',
           requiredColumns: ['product_id', 'name'],
           requireSetOp: 'EXCEPT',
@@ -813,6 +823,7 @@ export const Day_17_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'customers',
           requiredColumns: ['city'],
           requireSetOp: 'EXCEPT',

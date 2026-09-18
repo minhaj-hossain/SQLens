@@ -18,6 +18,7 @@ an in-memory engine or a fresh sandbox.
 | `audit-equivalence.ts` | `npm run audit:equivalence:tasks` | Projection (F6), author guardrail: for every exact-result task it proves approach-fairness (operator aliases, keyword case, whitespace, CTE re-wrap must all still pass), no-false-accept (dropping the WHERE clause must fail), and that `strictConstruct` accepts the task's own solution. |
 | `count-validation-overlap.ts` | `npm run audit:validation-overlap` | Reproduces the validation census (343 tasks / 274 exact-result / 66 structural-only / 3 expect-failure) and the per-rule overlap with `requireExactResult`, from the curriculum source of truth. |
 | `audit-keyword-case.ts` | `npm run audit:keyword-case` | Keyword-CASE guardrail: flags regexes/comparisons that match a SQL keyword without the `i` flag across the engine and the SQL-aware UI libs. Reasoned allowlist + stale-entry detection. Found and now guards the `'literal' as alias` → NULL bug. |
+| `apply-strict-construct.ts` | `npx tsx scripts/apply-strict-construct.ts [--write]` | Batch 6 content pass: sets `strictConstruct: true` on the 47 tasks whose concept is dedicated to the construct (set ops, DISTINCT, CASE, GROUP BY/HAVING, LIMIT, JOIN). Dry-run by default and prints its reasoning per task; idempotent, so re-running `--write` is safe. |
 
 ## Standalone audit / dev tools
 

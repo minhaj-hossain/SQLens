@@ -276,6 +276,7 @@ export const Day_12_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'orders',
             requiredColumns: ['mon', 'order_count'],
             requireFunction: 'MONTH',
@@ -303,6 +304,7 @@ export const Day_12_MODULE: ModuleData = {
           ],
           validation: {
             requireExactResult: true,
+            strictConstruct: true,
             targetTable: 'customers',
             requiredColumns: ['signup_year', 'signups'],
             requireFunction: 'YEAR',
@@ -621,6 +623,7 @@ export const Day_12_MODULE: ModuleData = {
         ],
         validation: {
           requireExactResult: true,
+          strictConstruct: true,
           targetTable: 'orders',
           requiredColumns: ['mon', 'order_count'],
           requireFunction: 'MONTH',
