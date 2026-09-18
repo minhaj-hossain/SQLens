@@ -184,7 +184,8 @@ All eight run in CI (`.github/workflows/ci.yml`).
 - [ ] `#` comments: `stripComments` handles them, `hasRealSql` (`split-statements.ts`) does not — align
 - [ ] `ORDER BY <aggregate>` unsupported (carried over from the prior audit's F5)
 - [ ] Document the `toPrecision(12)` numeric-comparison limits in `docs/DIALECT.md`
-- **Exit:** `npm run audit:all` green
+- [ ] **Watch item — one flaky vitest failure observed.** During Batch 6 verification the full suite reported `1 failed | 343 passed (344)` on a run that took 11.96s (vs 8.20s normally); **4 subsequent runs were clean (344/344)**. The correlation with run duration points at a per-test timeout under load rather than a logic failure. Identify and harden that test so CI cannot flake.
+- **Exit:** `npm run audit:all` green; working tree clean
 
 ---
 
