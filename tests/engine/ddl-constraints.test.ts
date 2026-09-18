@@ -133,12 +133,16 @@ describe('DDL constraint engine', () => {
     const ex = setup();
     ex.executeQuery("INSERT INTO publishers (name) VALUES ('One');");
     const r = ex.executeQuery('SELECT * FROM publishers;');
-    // SELECT * expands raw keys + prefixed keys engine-wide (same shape as a
-    // seeded table) — the point is parity: created tables resolve identically.
+    // Batch 7: SELECT * returns the table's own columns once. The mirrors the
+    // FROM loader adds for qualified-name resolution (`publishers.name`) are an
+    // internal aid and must not become result columns.
     const cols = r.columns as string[];
-    expect([...cols].sort()).toEqual(
-      ['publisher_id', 'name', 'publishers.publisher_id', 'publishers.name'].sort()
-    );
+    expect([...cols].sort()).toEqual(['name', 'publisher_id']);
+    expect(cols.some((c) => c.includes('.'))).toBe(false);
+    // Parity is the point: the projection matches the registered schema that the
+    // seeded tables also resolve through — created and seeded tables agree.
+    const declared = ex.getDatabaseState().schemas['publishers'].columns.map((c: any) => c.name);
+    expect([...cols].sort()).toEqual([...declared].sort());
     expect(r.rows[0].publisher_id).toBe(1);
     expect(r.rows[0].name).toBe('One');
   });

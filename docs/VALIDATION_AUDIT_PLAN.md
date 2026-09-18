@@ -38,9 +38,9 @@ All eight run in CI (`.github/workflows/ci.yml`).
 | vitest | ✅ 30 files / **325 tests** |
 | `verify:curriculum` | ✅ 100% clean |
 | Task audit | ✅ **343/343**, 0 failures |
-| Engine contract probes | ✅ **18 pass / 0 fail** |
+| Engine contract probes | ✅ **22 pass / 0 fail** |
 | Keyword-case scan | ✅ 0 findings across 13 SQL-aware files |
-| Task equivalence guardrail | ⚠️ 274 tasks / 530 rewrites / **5 findings** → Batches 7–8 |
+| Task equivalence guardrail | 274 tasks / 530 rewrites / **1 finding** → Batch 9 |
 
 ---
 
@@ -108,42 +108,64 @@ All eight run in CI (`.github/workflows/ci.yml`).
 - [ ] Verify each opt-in with `npm run audit:equivalence:tasks` (`STRICT_IMPOSSIBLE` means an author enabled a rule their own solution breaks)
 - **Exit:** every annotatable task has an explicit decision; guardrail reports 0 `STRICT_IMPOSSIBLE`
 
-## Batch 7 — `SELECT *` must not leak internal keys ⬜ NOT STARTED
-**Why it matters:** Day-1 user-visible, and it breaks every CTE/derived-table wrapper. **4 of the 5 current guardrail findings.**
+## Batch 7 — `SELECT *` must not leak internal keys ✅ DONE
+**Why it mattered:** Day-1 user-visible, and it broke every CTE/derived-table wrapper. Was **4 of the 5** guardrail findings.
 
-- [ ] Evidence (reproduced):
+- [x] Evidence (reproduced before the fix):
 
       | Query | Columns |
       |---|---|
       | `SELECT * FROM students` | **10** — `id, name, …, city, students.id, students.name, …, students.city` |
       | `WITH _v AS (SELECT * FROM students) SELECT * FROM _v` | **20** — the above re-prefixed as `_v.*` |
 
-- [ ] Root cause: the FROM loader mirrors every column as `table.col`/`alias.col` for qualified resolution, and `SELECT *` projects `Object.keys(row)` — so the mirrors become result columns. A CTE body stores those rows and the outer FROM re-prefixes them.
-- [ ] **Pre-existing** (confirmed against `HEAD`) — not a regression from Batches 1–5.
-- [ ] Fix: strip mirrored qualified keys at projection time so `SELECT *` returns base columns and CTE bodies carry plain rows — while keeping qualified resolution working for `WHERE`/`ORDER BY`/`JOIN ON` (which rely on those mirrors plus the non-enumerable `__source__`).
-- [ ] Affected findings to re-check: `day-01/select-all/day01-c3-t1`, `day-05/challenge/day05-hw-1`, `day-07/schema-navigation/day07-c1-t1`, `day-07/challenge/day07-hw-1` (+ the CTE + set-op matrix case)
-- **Exit:** `SELECT *` column count equals the schema count; CTE re-wrap findings drop to 0; the day-1 result grid shows no duplicate columns
+- [x] Root cause: the FROM loader mirrors every column as `table.col`/`alias.col` for qualified resolution, and the `SELECT *` branch projected `Object.keys(row)` — so the mirrors became result columns. A CTE body stored those rows and the outer FROM re-prefixed them.
+- [x] **Pre-existing** (confirmed against `HEAD`) — not a regression from Batches 1–5.
+- [x] Fix: `isInternalMirrorKey()` + the `SELECT *` branch builds a base-column projection and re-attaches the non-enumerable `__source__` so `ORDER BY <qualified name>` still resolves.
+- [x] Bonus fix: `WITH c AS (SELECT name, 'customer' AS source …) SELECT * FROM c UNION ALL …` used to fail with a bogus *"left side: 4, right side: 2"* shape error — now passes (the mirrors were faking extra columns).
+- [x] 3 new CONTRACT probes + 1 BASELINE probe in `scripts/probe-equivalence.ts` (18 → 22 probes)
+- [x] 5 new vitest cases in `tests/engine/unsupported-constructs.test.ts`
+- [x] `tests/engine/ddl-constraints.test.ts` corrected — it had encoded the buggy shape while *documenting* that parity was the point; it now asserts the projection equals the registered schema columns
+- **Exit:** `npm run audit:equivalence:tasks` → 5 → **1 finding** ✅ ; `SELECT *` column count equals the schema count ✅
 
-## Batch 8 — `customValidator` must not scan raw text ⬜ NOT STARTED
-- [ ] `day-21/subqueries-not-in-null-trap/day17-c1c-t2` fails a semantically identical derived-table wrapper because the check regex-searches the raw SQL for `product_id IS NOT NULL`
+## Batch 8 — Unaliased `JOIN … ON` silently returns no rows ⬜ NOT STARTED (S1, do first)
+**Why it matters:** silent wrong answers on textbook SQL — the exact class this program exists to eliminate.
+
+- [ ] Evidence (reproduced):
+
+      | Query | Result |
+      |---|---|
+      | `SELECT COUNT(*) FROM customers JOIN orders ON customers.customer_id = orders.customer_id` | **0** (silently) |
+      | `SELECT COUNT(*) FROM orders JOIN order_items ON orders.order_id = order_items.order_id` | **0** (silently) |
+      | `SELECT COUNT(*) FROM customers LEFT JOIN orders ON customers.customer_id = orders.customer_id` | **15** — every right side NULL (silently) |
+      | same query with aliases (`orders o JOIN customers c ON o.customer_id = c.customer_id`) | **18** ✅ |
+
+- [ ] Root cause (`parser.ts`, JOIN parsing): the alias group `(?:\s+(?:AS\s+)?([`"']?[\w_]+[`"']?))?` greedily captures the keyword **`ON`** as the table alias when no alias is written. The parsed join is then `{ alias: 'ON', onLeft: '', onRight: '' }` — the join matcher has no equality to test, so nothing matches. Curriculum solutions all use aliases, which is why `audit-all-tasks` (343/343) never caught it.
+- [ ] Fix: stop capturing a SQL keyword as an alias (guard `ON`/`USING`/`INNER`/`LEFT`/`RIGHT`/`FULL`/`CROSS`/`JOIN`/`WHERE`/`GROUP`/`ORDER`/`HAVING`/`LIMIT`/`SET`/`VALUES`/`UNION`), and parse the ON clause from the `ON` keyword onward so `onLeft`/`onRight` are populated whether or not an alias is present. A join whose ON clause cannot be evaluated must error, never return an empty set.
+- [ ] Also cover the CROSS-JOIN branch and the base-table alias parse (same regex shape).
+- **Exit:** unaliased INNER/LEFT/RIGHT/FULL joins return the same rows as their aliased equivalents; new CONTRACT probes + tests; `npm run audit:all` green
+
+## Batch 9 — `customValidator` must not scan raw text ⬜ NOT STARTED
+- [ ] `day-21/subqueries-not-in-null-trap/day17-c1c-t2` fails a semantically identical derived-table wrapper because the check regex-searches the raw SQL for `product_id IS NOT NULL` — the **last** remaining guardrail finding
 - [ ] Fix: run `customValidator` against the masked SQL (reuse the Batch 2 mask), or express the rule structurally against the parsed query
-- **Exit:** `npm run audit:equivalence:tasks` → 5 → 0 findings
+- **Exit:** `npm run audit:equivalence:tasks` → 1 → 0 findings
 
-## Batch 9 — Residual polish & housekeeping ⬜ NOT STARTED
+## Batch 10 — Residual polish & housekeeping ⬜ NOT STARTED
 - [ ] `#` comments: `stripComments` handles them, `hasRealSql` (`split-statements.ts`) does not — align
 - [ ] `ORDER BY <aggregate>` unsupported (carried over from the prior audit's F5)
 - [ ] Document the `toPrecision(12)` numeric-comparison limits in `docs/DIALECT.md`
-- [ ] Commit the whole program (currently uncommitted on `main`)
-- **Exit:** `npm run audit:all` green; working tree clean
+- **Exit:** `npm run audit:all` green
 
 ---
 
 ## Recommended execution order
 
-1. **Batch 8** (~1 hour) — closes the last content-grading finding with a small, well-understood change
-2. **Batch 7** (~½ day) — highest learner-visible impact; unblocks 4 findings and all CTE wrappers
+1. **Batch 8** (S1 — silent wrong answers on unaliased JOINs; root cause found, fix is ~1 hour)
+2. **Batch 9** (~1 hour) — closes the last content-grading finding
 3. **Batch 6** (~2–3 hours of content review) — 17 tasks already identified, the rest is judgment
-4. **Batch 9** (~½ day) — polish, then commit
+4. **Batch 10** (~½ day) — polish
+
+**Commit policy:** each batch is committed on completion with its verification
+results in the message (Batches 1–5 and 7 are already committed).
 
 ## Adding a batch
 Follow the `docs/IMPROVEMENT_PLAN.md` conventions: a `## Batch N — <theme>` heading

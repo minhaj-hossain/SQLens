@@ -32,6 +32,18 @@ function getRowValue(row: TableRow, colExpr: string): any {
   return undefined;
 }
 
+/**
+ * Batch 7: true when a row key is one of the internal qualified mirrors the FROM
+ * loader adds (`table.col` / `alias.col`) so that qualified names resolve — see
+ * the fallbacks in `getRowValue` above. Those mirrors are a resolution aid, never
+ * result columns: a `SELECT *` must expose only the table's own columns, or every
+ * column appears twice and a CTE wrapper re-prefixes the mirrors again.
+ * No schema column name contains a dot, so this discriminator is exact.
+ */
+function isInternalMirrorKey(key: string): boolean {
+  return key.includes('.');
+}
+
 function splitLogicalClauses(expr: string, operator: 'OR' | 'AND'): string[] {
   const parts: string[] = [];
   let current = '';
@@ -1461,9 +1473,24 @@ export class SqlExecutor {
       // 5. Standard SELECT projection
       const isSelectAll = query.columns?.some(c => c.expression.trim() === '*');
       if (isSelectAll) {
-        projectedRows = currentRows;
-        if (currentRows.length > 0) {
-          finalColumns = Object.keys(currentRows[0]);
+        // Batch 7: a `SELECT *` result is the table's own columns — the internal
+        // `table.col` / `alias.col` mirrors are stripped. Without this,
+        // `SELECT * FROM students` returned 10 columns for a 5-column table, and
+        // `WITH _v AS (SELECT * FROM students) SELECT * FROM _v` returned 20
+        // (the mirrors re-prefixed). `__source__` keeps the un-stripped row
+        // reachable for ORDER BY on a qualified name, exactly like the
+        // explicit-column projection below.
+        projectedRows = currentRows.map(row => {
+          const projected: TableRow = {};
+          for (const k of Object.keys(row)) {
+            if (isInternalMirrorKey(k)) continue;
+            projected[k] = row[k];
+          }
+          Object.defineProperty(projected, '__source__', { value: row, enumerable: false });
+          return projected;
+        });
+        if (projectedRows.length > 0) {
+          finalColumns = Object.keys(projectedRows[0]);
         } else {
           const schema = this.db.schemas[tableName];
           finalColumns = schema ? schema.columns.map(c => c.name) : [];

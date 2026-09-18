@@ -14,3 +14,7 @@ coverage/
 .next/
 out/
 *.tsbuildinfo
+
+# Throwaway audit probes (scratch scripts written while investigating a finding).
+# Any scratch file that must survive belongs in scripts/ with a real audit name.
+scripts/tmp-*

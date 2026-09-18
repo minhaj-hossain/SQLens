@@ -181,6 +181,45 @@ const probes: Probe[] = [
         : `silently returned ${r.rowCount} row(s) instead of erroring`,
   },
   {
+    id: 'B7 SELECT * exposes the table columns only (no internal mirrors)',
+    kind: 'CONTRACT',
+    sql: 'SELECT * FROM students;',
+    checkExec: (r) => {
+      if (!r.success) return `unexpected error: ${r.error}`;
+      const dotted = (r.columns ?? []).filter((c: string) => c.includes('.'));
+      if (dotted.length > 0) return `leaked internal mirror columns: ${dotted.join(', ')}`;
+      return (r.columns ?? []).length === 5 ? null : `expected 5 columns, got ${(r.columns ?? []).length}`;
+    },
+  },
+  {
+    id: 'B7 CTE + SELECT * must not re-prefix the columns',
+    kind: 'CONTRACT',
+    sql: 'WITH _v AS (SELECT * FROM students) SELECT * FROM _v;',
+    checkExec: (r) => {
+      if (!r.success) return `unexpected error: ${r.error}`;
+      const dotted = (r.columns ?? []).filter((c: string) => c.includes('.'));
+      if (dotted.length > 0) return `leaked ${dotted.length} prefixed column(s): ${dotted.slice(0, 3).join(', ')}`;
+      return (r.columns ?? []).length === 5 ? null : `expected 5 columns, got ${(r.columns ?? []).length}`;
+    },
+  },
+  {
+    id: 'B7 CTE + set operation keeps matching shapes',
+    kind: 'CONTRACT',
+    sql: "WITH c AS (SELECT name, 'customer' AS source FROM customers) SELECT * FROM c UNION ALL SELECT name, 'supplier' AS source FROM suppliers;",
+    checkExec: (r) =>
+      !r.success
+        ? `CTE-wrapped SELECT * produced a shape mismatch: ${r.error}`
+        : r.rowCount === 21
+          ? null
+          : `expected 21 rows, got ${r.rowCount}`,
+  },
+  {
+    id: 'B7 ORDER BY a qualified name still resolves after stripping mirrors',
+    kind: 'BASELINE',
+    sql: 'SELECT * FROM products ORDER BY products.price DESC LIMIT 3;',
+    checkExec: (r) => (!r.success ? `unexpected error: ${r.error}` : r.rowCount === 3 ? null : `expected 3 rows, got ${r.rowCount}`),
+  },
+  {
     id: 'BASE extra ON tautology keeps the plain join row set',
     kind: 'BASELINE',
     sql: 'SELECT c.name FROM customers c INNER JOIN orders o ON o.customer_id = c.customer_id AND o.order_id + 0 = o.order_id;',

@@ -172,6 +172,52 @@ describe('S3-10 — GROUP BY keys must resolve or fail loudly', () => {
   });
 });
 
+describe('Batch 7 — SELECT * must expose table columns, not internal mirrors', () => {
+  /**
+   * The FROM loader mirrors every column as `table.col`/`alias.col` so qualified
+   * names resolve. Those mirrors used to become RESULT columns: `SELECT * FROM
+   * students` returned 10 columns for a 5-column table, and a CTE wrapper
+   * re-prefixed them to 20 — and a CTE + set operation failed with a bogus
+   * "sides must return the same number of columns" shape error.
+   */
+  it('returns the table columns exactly once', () => {
+    const r = run('SELECT * FROM students;');
+    expect(r.success).toBe(true);
+    expect(r.columns).toEqual(['id', 'name', 'age', 'department', 'city']);
+  });
+
+  it('never emits a dotted (qualified) column name', () => {
+    const r = run('SELECT * FROM products;');
+    expect(r.success).toBe(true);
+    expect(r.columns.filter((c: string) => c.includes('.'))).toEqual([]);
+  });
+
+  it('does not double the column list through a CTE wrapper', () => {
+    const r = run('WITH _v AS (SELECT * FROM students) SELECT * FROM _v;');
+    expect(r.success).toBe(true);
+    expect(r.columns).toEqual(['id', 'name', 'age', 'department', 'city']);
+    expect(r.rowCount).toBe(5);
+  });
+
+  it('keeps CTE + UNION ALL shape-compatible', () => {
+    // Used to fail with "left side: 4, right side: 2" because of the mirrors.
+    const r = run(
+      "WITH c AS (SELECT name, 'customer' AS source FROM customers) SELECT * FROM c UNION ALL SELECT name, 'supplier' AS source FROM suppliers;"
+    );
+    expect(r.success).toBe(true);
+    expect(r.rowCount).toBe(21);
+  });
+
+  it('still resolves ORDER BY on a qualified name', () => {
+    const r = run('SELECT * FROM products ORDER BY products.price DESC LIMIT 3;');
+    expect(r.success).toBe(true);
+    expect(r.rowCount).toBe(3);
+    const prices = r.rows.map((row: any) => Number(row.price));
+    expect(prices[0]).toBeGreaterThanOrEqual(prices[1]);
+    expect(prices[1]).toBeGreaterThanOrEqual(prices[2]);
+  });
+});
+
 describe('Batch 6 — SQL keywords are case-insensitive (tagged UNION-family regression)', () => {
   /**
    * Regression for a real learner-visible bug: a SELECT alias on a string
