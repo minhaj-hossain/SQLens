@@ -88,6 +88,37 @@ export function migrateLegacyModuleIds(state: UserLearningState): UserLearningSt
   return s;
 }
 
+/**
+ * Batch 5 — explicit storage scope for a FULL reset.
+ *
+ * Cleared (this device):
+ *  - the caller's progress key (`sqlens_progress_user_<id>` or legacy guest
+ *    `sql_mastery_progress_v1`) + legacy guest key + `sql_mastery_nav_v1`
+ *  - `sqlens_scroll_*` session keys
+ *  - playground editor draft + history (V7: a restored draft feels like
+ *    "old data back" even when the progress maps are empty)
+ *
+ * Intentionally KEPT:
+ *  - other accounts' `sqlens_progress_user_*` keys (account isolation —
+ *    resetting user A must never wipe user B's cached progress on a shared
+ *    device; each key is user-scoped and only loaded for its own session)
+ *  - task SQL inside `taskAttempts.lastSubmittedSql` of OTHER users (same
+ *    reason — per-key isolation)
+ */
+export const PLAYGROUND_DRAFT_KEY = 'sqlens_playground_draft_v1';
+export const PLAYGROUND_HISTORY_KEY = 'sqlens_playground_history_v1';
+
+/** Clear playground editor draft + history (safe no-op without a window). */
+export function clearPlaygroundDraft(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(PLAYGROUND_DRAFT_KEY);
+    localStorage.removeItem(PLAYGROUND_HISTORY_KEY);
+  } catch {
+    /* ignore storage failure */
+  }
+}
+
 export function getStorageKey(userId?: string | null): string {
   if (userId) {
     return `sqlens_progress_user_${userId}`;
@@ -152,6 +183,9 @@ export function resetUserState(userId?: string | null, prevEpoch?: number): User
       localStorage.removeItem(key);
       localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
       localStorage.removeItem('sql_mastery_nav_v1');
+      // Batch 5 (V7): playground draft/history would otherwise restore old
+      // editor text after a full reset and feel like "data back".
+      clearPlaygroundDraft();
       try {
         for (let i = sessionStorage.length - 1; i >= 0; i--) {
           const k = sessionStorage.key(i);

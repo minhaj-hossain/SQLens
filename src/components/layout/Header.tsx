@@ -15,6 +15,8 @@ interface HeaderProps {
   userState: UserLearningState;
   currentModule?: ModuleData | null;
   onResetProgress: (mode?: 'all' | 'module', moduleId?: string) => Promise<void> | void;
+  /** Batch 5: last full-reset tombstone error — forwarded to the reset modal. */
+  resetError?: string | null;
   onOpenSchemaModal: () => void;
   activeViewTitle?: string;
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
@@ -26,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   userState,
   currentModule,
   onResetProgress,
+  resetError,
   onOpenSchemaModal,
   activeViewTitle = 'Learning Path',
   user,
@@ -273,6 +276,7 @@ export const Header: React.FC<HeaderProps> = ({
         isOpen={resetModalOpen}
         onClose={() => setResetModalOpen(false)}
         currentModule={currentModule}
+        serverError={resetError ?? null}
         onConfirmReset={async (mode, moduleId) => {
           await onResetProgress(mode, moduleId);
         }}

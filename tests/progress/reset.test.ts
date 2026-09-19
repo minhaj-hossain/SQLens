@@ -4,6 +4,9 @@ import {
   resetModuleProgress,
   loadUserState,
   saveUserState,
+  clearPlaygroundDraft,
+  PLAYGROUND_DRAFT_KEY,
+  PLAYGROUND_HISTORY_KEY,
   INITIAL_USER_STATE,
   getStorageKey,
 } from '../../src/lib/progress/storage';
@@ -135,5 +138,32 @@ describe('Progress Reset Engine', () => {
     const next = resetModuleProgress('day-01', state);
     expect(next.completedModules['day-01']).toBeUndefined();
     expect(next.taskAttempts?.['t1']).toBeUndefined();
+  });
+
+  it('Batch 5: full reset clears playground draft + history but keeps other accounts isolated', () => {
+    const hasStorage = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+    if (!hasStorage) return;
+    const userId = 'user_a';
+    const otherId = 'user_b';
+    localStorage.setItem(PLAYGROUND_DRAFT_KEY, 'SELECT * FROM orders;');
+    localStorage.setItem(PLAYGROUND_HISTORY_KEY, JSON.stringify(['SELECT 1;']));
+    localStorage.setItem(getStorageKey(otherId), JSON.stringify({ ...INITIAL_USER_STATE, currentModuleId: 'day-05' }));
+
+    resetUserState(userId);
+
+    expect(localStorage.getItem(PLAYGROUND_DRAFT_KEY)).toBeNull();
+    expect(localStorage.getItem(PLAYGROUND_HISTORY_KEY)).toBeNull();
+    // Account isolation: another user's cached progress survives our reset.
+    expect(localStorage.getItem(getStorageKey(otherId))).not.toBeNull();
+    localStorage.removeItem(getStorageKey(otherId));
+  });
+
+  it('Batch 5: clearPlaygroundDraft is a safe no-op helper', () => {
+    const hasStorage = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+    if (!hasStorage) return;
+    localStorage.setItem(PLAYGROUND_DRAFT_KEY, 'SELECT 1;');
+    clearPlaygroundDraft();
+    expect(localStorage.getItem(PLAYGROUND_DRAFT_KEY)).toBeNull();
+    expect(localStorage.getItem(PLAYGROUND_HISTORY_KEY)).toBeNull();
   });
 });

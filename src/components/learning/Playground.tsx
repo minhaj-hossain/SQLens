@@ -9,9 +9,10 @@ import { INITIAL_TABLES } from '@/content/database/tables';
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from './DataGrid';
 import { QueryEditor, QueryEditorHandle } from './QueryEditor';
+import { PLAYGROUND_DRAFT_KEY, PLAYGROUND_HISTORY_KEY } from '@/lib/progress/storage';
 
-const HISTORY_KEY = 'sqlens_playground_history_v1';
-const DRAFT_KEY = 'sqlens_playground_draft_v1';
+const HISTORY_KEY = PLAYGROUND_HISTORY_KEY;
+const DRAFT_KEY = PLAYGROUND_DRAFT_KEY;
 const SCRATCH_DB = { tables: {}, schemas: {} };
 
 /** All schema-known table + column identifiers, used by autocomplete and

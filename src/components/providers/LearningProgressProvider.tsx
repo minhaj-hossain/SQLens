@@ -78,6 +78,12 @@ interface LearningContextValue {
   markModuleComplete: (module: ModuleData) => void;
   /** Wipe all progress back to Day 1, or reset a specific module's progress. */
   resetProgress: (options?: { moduleId?: string }) => Promise<void>;
+  /**
+   * Batch 5: the last full-reset error, if the tombstone write failed
+   * (offline / 5xx). AppChrome surfaces it instead of navigating into a race
+   * where refresh would resurrect. Null = last reset committed (or none yet).
+   */
+  resetError: string | null;
 }
 
 
@@ -125,6 +131,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   } | null>(null);
   const mergePromptRef = useRef(mergePrompt);
   mergePromptRef.current = mergePrompt;
+
+  // Batch 5: last full-reset tombstone error (surfaced by AppChrome).
+  const [resetError, setResetError] = useState<string | null>(null);
 
   // Multi-tab channel
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
@@ -826,6 +835,18 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
           });
+          if (!r.ok) {
+            // Batch 5: tombstone write failed (offline / 5xx). Local is Day 1
+            // but the cloud still holds old progress — a refresh would
+            // resurrect. Record the error and THROW so AppChrome stays on the
+            // page with a retry instead of navigating into the race.
+            // Local state is intentionally left at Day 1: the next online
+            // reset (or any push of this newer epoch) still converges.
+            const message = `Cloud reset failed (HTTP ${r.status}). Your progress looks reset on this device, but the server still holds the old data — reconnect and retry the reset before refreshing.`;
+            setResetError(message);
+            throw new Error(message);
+          }
+          setResetError(null);
           if (r.ok) {
             // Adopt the server's authoritative epoch (covers the race where a
             // concurrent reset elsewhere already bumped past ours) so local,
@@ -851,8 +872,18 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
             }
           }
         } catch (e) {
+          // Batch 5: network threw (offline tab-close etc.) — same contract as
+          // !r.ok above: surface + rethrow so callers don't navigate away.
+          // The console.error stays for debugging; the throw drives the UI.
           console.error('Failed to reset cloud progress:', e);
+          if (e instanceof Error && e.message.startsWith('Cloud reset failed')) throw e;
+          const message =
+            'Cloud reset failed (network error). Your progress looks reset on this device, but the server may still hold the old data — reconnect and retry the reset before refreshing.';
+          setResetError(message);
+          throw new Error(message);
         }
+      } else {
+        setResetError(null);
       }
     },
     [],
@@ -891,6 +922,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       markConceptComplete,
       markModuleComplete,
       resetProgress,
+      resetError,
     }),
     [
       userState,
@@ -902,6 +934,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       markConceptComplete,
       markModuleComplete,
       resetProgress,
+      resetError,
     ],
   );
 

@@ -11,12 +11,19 @@ export interface ResetProgressModalProps {
   onClose: () => void;
   currentModule?: ModuleData | null;
   onConfirmReset: (mode: 'all' | 'module', moduleId?: string) => Promise<void>;
+  /**
+   * Batch 5: tombstone-write failure from the provider (offline / 5xx).
+   * Shown as a retryable error — the modal stays open instead of navigating
+   * into a refresh that would resurrect old cloud progress.
+   */
+  serverError?: string | null;
 }
 
 export default function ResetProgressModal({
   isOpen,
   onClose,
   currentModule,
+  serverError,
   onConfirmReset,
 }: ResetProgressModalProps) {
   const [resetMode, setResetMode] = useState<'all' | 'module'>('all');
@@ -34,10 +41,17 @@ export default function ResetProgressModal({
       } else {
         await onConfirmReset('all');
       }
+      // Batch 5: only close on commit. onConfirmReset throws when the cloud
+      // tombstone write fails — staying open with the error lets the user
+      // retry instead of refreshing into resurrected progress.
       onClose();
     } catch (err) {
       console.error('Reset error:', err);
-      setErrorMessage('Failed to reset progress. Please try again.');
+      setErrorMessage(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Failed to reset progress. Please try again.',
+      );
     } finally {
       setIsResetting(false);
     }
@@ -159,9 +173,21 @@ export default function ResetProgressModal({
             <span>This action cannot be undone. Saved SQL solutions will be cleared.</span>
           </div>
 
-          {errorMessage && (
+          {/* Batch 5: document the reset contract so "old data back" reports
+              are diagnosable — cloud tombstone, other-device convergence,
+              draft clearing. */}
+          <div className="px-3 py-2 rounded-lg bg-surface border border-border/60 text-[11px] text-text-dim mb-5 leading-relaxed">
+            Clears cloud progress + this device (including editor drafts).
+            Other signed-in devices converge to Day 1 on next focus.
+            Other accounts on this device are untouched.
+          </div>
+
+          {(errorMessage || serverError) && (
             <div className="mb-4 text-xs text-error bg-error/10 border border-error/30 rounded-lg p-2.5">
-              {errorMessage}
+              {errorMessage ?? serverError}
+              <span className="block mt-1 text-text-dim">
+                The reset did not fully commit — reconnect and press Confirm Reset again before refreshing.
+              </span>
             </div>
           )}
 

@@ -20,7 +20,12 @@ import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { userState, resetProgress } = useLearning();
+  // Batch 5: resetProgress now THROWS when the tombstone write fails, and
+  // exposes resetError. Only navigate after the server ack — navigating first
+  // (push + refresh) remounts + GETs while the cloud still holds old progress
+  // and resurrects it. On failure we stay on the page; the modal shows the
+  // error with a retry.
+  const { userState, resetProgress, resetError } = useLearning();
   const { user: authUser, isAuthPending, signOut } = useAuth();
   const { openSchema } = useUiChrome();
 
@@ -43,6 +48,8 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         userState={userState}
         currentModule={pathModule ?? null}
         onResetProgress={async (mode?: 'all' | 'module', moduleId?: string) => {
+          // Await the tombstone ack BEFORE navigating: resetProgress throws
+          // when the server write fails, so push/refresh only run on commit.
           if (mode === 'module' && moduleId) {
             await resetProgress({ moduleId });
             router.refresh();
@@ -52,6 +59,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             router.refresh();
           }
         }}
+        resetError={resetError}
         onOpenSchemaModal={openSchema}
         user={authUser}
         isAuthPending={isAuthPending}
