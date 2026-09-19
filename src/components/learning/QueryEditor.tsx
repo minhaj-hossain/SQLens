@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { highlightSql } from '@/lib/highlight-sql';
 import { EDITOR_TEXT_STYLE } from '@/lib/editor-text-style';
+import { gutterLineCount, resolveEnterKey, shouldSteerSuggestionList, toOverlayHtml } from '@/lib/editor-layout';
 import { buildSuggestions, Suggestion } from '@/lib/autocomplete';
 import {
   applyCompletion,
@@ -70,7 +71,14 @@ function measureCaret(
   div.style.font = style.font;
   div.style.fontSize = style.fontSize;
   div.style.lineHeight = style.lineHeight;
+  div.style.fontWeight = style.fontWeight;
+  div.style.fontStyle = style.fontStyle;
+  div.style.fontStretch = style.fontStretch;
+  div.style.fontKerning = style.fontKerning;
+  div.style.fontVariantLigatures = style.fontVariantLigatures;
   div.style.letterSpacing = style.letterSpacing;
+  div.style.tabSize = style.tabSize;
+  div.style.textRendering = style.textRendering;
   div.style.padding = style.padding;
   div.style.boxSizing = style.boxSizing;
   div.style.width = `${textarea.clientWidth}px`;
@@ -147,7 +155,10 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       readOnly = false,
       fallbackTable = 'products',
       textareaId = 'sql-query-textarea',
-      minLineCount = 6,
+      // minLineCount kept in props for API compatibility but intentionally
+      // unused: the gutter renders exactly value.split('\n').length rows.
+      // Filling up to a minimum created phantom rows the caret could never
+      // reach (ArrowDown on the real last line is a native no-op).
       className,
       editorClassName,
       error,
@@ -160,6 +171,11 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     const [inlineError, setInlineError] = useState<string | null>(null);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [selectedIdx, setSelectedIdx] = useState(0);
+    // True once the user explicitly steers the open suggestion list
+    // (Ctrl+Space, or an Arrow key already consumed for the list). While
+    // false, ArrowUp/Down move the caret natively — auto-open must never
+    // trap the caret one line above the end. Any text edit resets it.
+    const [listNavActive, setListNavActive] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0 });
     const [dismissedWord, setDismissedWord] = useState<string | null>(null);
@@ -180,6 +196,25 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     selectedIdxRef.current = selectedIdx;
 
     useEffect(() => { setMounted(true); }, []);
+
+    // Re-sync overlay + gutter + tint after `value` changes from outside
+    // (format, undo, task switch, controlled parent). rAF so the textarea
+    // has already laid out and scrollTop/scrollHeight are final.
+    useEffect(() => {
+      const id = requestAnimationFrame(() => {
+        const ta = textareaRef.current;
+        if (!ta) return;
+        if (highlightRef.current) {
+          highlightRef.current.scrollTop = ta.scrollTop;
+          highlightRef.current.scrollLeft = ta.scrollLeft;
+        }
+        if (gutterRef.current) gutterRef.current.scrollTop = ta.scrollTop;
+        const line = ta.value.slice(0, ta.selectionStart).split('\n').length;
+        setActiveLine(line);
+        setActiveLineTintTop((line - 1) * 22 + 12 - ta.scrollTop);
+      });
+      return () => cancelAnimationFrame(id);
+    }, [value]);
 
     useEffect(() => {
       setInlineError(error ?? null);
@@ -204,7 +239,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         const esc = parsedError.token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         code = code.replace(
           new RegExp(`(>|\\b)(${esc})(<|\\b)`, 'i'),
-          `$1<span class="underline decoration-wavy decoration-error text-error bg-error/15 font-semibold">$2</span>$3`,
+          `$1<span class="underline decoration-wavy decoration-error text-error bg-error/15">$2</span>$3`,
         );
       }
 
@@ -226,7 +261,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             (ch === ')' && count === closeParenIdx);
           count++;
           if (isTarget) {
-            return `<span class="text-func font-bold bg-func/25 rounded-xs ring-1 ring-func/60">${ch}</span>`;
+            return `<span class="text-func bg-func/25 rounded-xs ring-1 ring-func/60">${ch}</span>`;
           }
           return m;
         });
@@ -244,6 +279,12 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         limit: 8,
       });
 
+    // Logical-line tint geometry lives here (Phase 4): the tint tracks the
+    // LOGICAL line (22px rows + 12px pad) minus scroll. Wrapped visual rows
+    // are handled by measuring the real caret (placeWidget) for the dropdown.
+    const lineToTintTop = (line: number, scrollTop: number) =>
+      (line - 1) * 22 + 12 - scrollTop;
+
     const syncScroll = () => {
       const ta = textareaRef.current;
       if (!ta) return;
@@ -256,7 +297,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       const caret = ta.selectionStart;
       const textBefore = ta.value.slice(0, caret);
       const line = textBefore.split('\n').length;
-      setActiveLineTintTop((line - 1) * 22 + 12 - ta.scrollTop);
+      setActiveLineTintTop(lineToTintTop(line, ta.scrollTop));
     };
 
     const placeWidget = (textBefore: string, matched: Suggestion[]) => {
@@ -284,7 +325,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       setActiveLine(line);
       // Compute tint top accounting for current scroll offset so it stays locked
       const scrollTop = ta ? ta.scrollTop : 0;
-      setActiveLineTintTop((line - 1) * 22 + 12 - scrollTop);
+      setActiveLineTintTop(lineToTintTop(line, scrollTop));
     };
 
     const updateCursorAndSuggestions = (text: string, caret: number) => {
@@ -314,6 +355,9 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             matched.every((m, i) => m.text === suggestions[i]?.text);
           setSuggestions(matched);
           setSelectedIdx(sameList ? selectedIdx : 0);
+          // Fresh auto-open is caret mode: arrows move the caret until the
+          // user explicitly steers the list (Ctrl+Space / Arrow consumed).
+          if (!sameList) setListNavActive(false);
           setShowSuggestions(true);
           placeWidget(textBefore, matched);
           return;
@@ -411,11 +455,27 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
 
       if (open) {
         if (e.key === 'ArrowDown') {
+          if (!shouldSteerSuggestionList('ArrowDown', open, listNavActive)) {
+            // Auto-opened list, user hasn't steered yet: let the caret move
+            // natively (ArrowDown on the real last line is a no-op, which is
+            // correct — the gutter no longer shows phantom rows). Enter
+            // list-nav mode for the NEXT press without hijacking this one.
+            setListNavActive(true);
+            setSelectedIdx(0);
+            updateLineFromCaret(value, ta.selectionStart);
+            return;
+          }
           e.preventDefault();
           setSelectedIdx((p) => (p + 1) % list.length);
           return;
         }
         if (e.key === 'ArrowUp') {
+          if (!shouldSteerSuggestionList('ArrowUp', open, listNavActive)) {
+            setListNavActive(true);
+            setSelectedIdx(0);
+            updateLineFromCaret(value, ta.selectionStart);
+            return;
+          }
           e.preventDefault();
           setSelectedIdx((p) => (p - 1 + list.length) % list.length);
           return;
@@ -425,14 +485,20 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
           applySuggestion(list[sel]);
           return;
         }
+        // Enter ALWAYS inserts a newline — accepting with Enter traps the
+        // caret on the second-last line because the key needed to create the
+        // last line gets swallowed. Accept with Tab / click instead.
         if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-          applySuggestion(list[sel]);
-          return;
+          if (resolveEnterKey(open) === 'newline') {
+            setShowSuggestions(false);
+            setListNavActive(false);
+            return;
+          }
         }
         if (e.key === 'Escape') {
           e.preventDefault();
           setShowSuggestions(false);
+          setListNavActive(false);
           const p = completionPrefix(value.slice(0, start));
           const token = p.includes('.') ? p.slice(p.lastIndexOf('.') + 1) : p;
           setDismissedWord(token ? token.toUpperCase() : null);
@@ -454,6 +520,8 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         setDismissedWord(null);
         setSuggestions(matched);
         setSelectedIdx(0);
+        // Explicit user request: enter list-navigation immediately.
+        setListNavActive(true);
         setShowSuggestions(matched.length > 0);
         if (matched.length > 0) placeWidget(textBefore, matched);
         return;
@@ -546,7 +614,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       }
     };
 
-    const lineCount = Math.max(value.split('\n').length, minLineCount);
+    const lineCount = gutterLineCount(value);
     const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
 
     return (
@@ -587,7 +655,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
               className="sql-editor-overlay absolute inset-0 p-3 pointer-events-none select-none font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre-wrap break-words text-editor-text z-0"
               style={EDITOR_TEXT_STYLE}
               dangerouslySetInnerHTML={{
-                __html: highlightedCode + (value.endsWith('\n') ? '<br />' : ''),
+                __html: toOverlayHtml(highlightedCode, value),
               }}
             />
             <textarea

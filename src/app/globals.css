@@ -602,6 +602,17 @@
   height: 0 !important;
 }
 
+/* ── Overlay metric guard ───────────────────────────────────────────────────
+   The highlight overlay must be color-only. Any font-weight / font-style
+   change inside a span alters glyph advances, so the overlay wraps at a
+   different x than the textarea's single plain run and clicks land on the
+   wrong column (caret looks "stuck" / letters land at line end). highlightSql
+   output is shared with lesson pages, so this guard normalizes overlay use. */
+.sql-editor-overlay span {
+  font-weight: 400 !important;
+  font-style: normal !important;
+}
+
 /* ── Autosuggest Dropdown Scroll-Activated Scrollbar ─────────────────────────
    Scrollbar thumb is invisible by default; only appears when scrolling.
 ──────────────────────────────────────────────────────────────────────────── */
