@@ -43,6 +43,10 @@ import {
 import {
   isInResetQuietWindow,
   shouldPushOnNullCloud,
+  buildSyncMessage,
+  buildResetMessage,
+  decideIncomingBroadcast,
+  decideIncomingStorage,
   RESET_QUIET_WINDOW_MS,
 } from '@/lib/progress/sync-guard';
 import { useAuth } from './AuthProvider';
@@ -171,15 +175,40 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       bc = new BroadcastChannel('sqlens_progress_sync');
       broadcastChannelRef.current = bc;
       bc.onmessage = (event) => {
-        const data = event.data;
-        if (data?.type === 'PROGRESS_SYNC' && data.state) {
-          if (data.userId === signedInUserIdRef.current) {
-            skipNextBroadcastRef.current = true;
-            skipNextPushRef.current = true;
-            latestStateRef.current = data.state;
-            setUserState(data.state);
+        // Batch 4: epoch-gated adoption (closes V4). Older-generation senders
+        // are stale tabs that haven't converged — ignore them instead of
+        // merging old bytes back. Newer-or-equal is adopted WITHOUT pushing
+        // back; PROGRESS_RESET additionally drops pendingPush, aborts the
+        // in-flight PUT, clears the debounce timer, and extends the quiet
+        // window so this tab can never re-upload pre-reset bytes.
+        const decision = decideIncomingBroadcast(
+          event.data,
+          signedInUserIdRef.current,
+          getResetEpoch(latestStateRef.current),
+        );
+        if (decision.action === 'ignore') return;
+        if (decision.action === 'adopt-reset') {
+          inflightPutRef.current?.abort();
+          inflightPutRef.current = null;
+          if (syncTimerRef.current) {
+            clearTimeout(syncTimerRef.current);
+            syncTimerRef.current = null;
           }
+          pendingPushRef.current = false;
+          retryCountRef.current = 0;
+          skipNextBroadcastRef.current = true;
+          skipNextPushRef.current = true;
+          resetQuietUntilRef.current = Date.now() + RESET_QUIET_WINDOW_MS;
+          latestStateRef.current = decision.state;
+          saveUserState(decision.state, signedInUserIdRef.current);
+          setMergePrompt(null);
+          setUserState(decision.state);
+          return;
         }
+        skipNextBroadcastRef.current = true;
+        skipNextPushRef.current = true;
+        latestStateRef.current = decision.state;
+        setUserState(decision.state);
       };
     }
 
@@ -187,12 +216,15 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       if (e.key && e.newValue && e.key.startsWith('sqlens_progress')) {
         try {
           const incoming = JSON.parse(e.newValue);
-          if (incoming?.currentModuleId) {
-            skipNextBroadcastRef.current = true;
-            skipNextPushRef.current = true;
-            latestStateRef.current = incoming;
-            setUserState(incoming);
-          }
+          // Batch 4: same epoch gate for the storage-event path (covers
+          // browsers without BroadcastChannel). Older generation ignored.
+          const decision = decideIncomingStorage(incoming, getResetEpoch(latestStateRef.current));
+          if (decision.action === 'ignore') return;
+          if (typeof decision.state?.currentModuleId !== 'string') return;
+          skipNextBroadcastRef.current = true;
+          skipNextPushRef.current = true;
+          latestStateRef.current = decision.state;
+          setUserState(decision.state);
         } catch {
           /* ignore */
         }
@@ -486,11 +518,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     saveUserState(userState, signedInUserId);
     if (!skipNextBroadcastRef.current) {
-      broadcastChannelRef.current?.postMessage({
-        type: 'PROGRESS_SYNC',
-        userId: signedInUserId,
-        state: userState,
-      });
+      // Batch 4: every broadcast carries its epoch so receivers can tell a
+      // stale sender from an authoritative one.
+      broadcastChannelRef.current?.postMessage(buildSyncMessage(signedInUserId, userState));
     }
     skipNextBroadcastRef.current = false;
   }, [userState, signedInUserId]);
@@ -739,11 +769,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         setUserState(next);
 
         if (!skipNextBroadcastRef.current) {
-          broadcastChannelRef.current?.postMessage({
-            type: 'PROGRESS_SYNC',
-            userId: signedInUserIdRef.current,
-            state: next,
-          });
+          broadcastChannelRef.current?.postMessage(
+            buildSyncMessage(signedInUserIdRef.current, next),
+          );
         }
 
         if (signedInUserIdRef.current) {
@@ -783,11 +811,12 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       setMergePrompt(null);
 
       if (!skipNextBroadcastRef.current) {
-        broadcastChannelRef.current?.postMessage({
-          type: 'PROGRESS_SYNC',
-          userId: signedInUserIdRef.current,
-          state: fresh,
-        });
+        // Batch 4: PROGRESS_RESET (not SYNC) — stale tabs that receive it drop
+        // their pendingPush, abort in-flight PUTs, and converge to Day 1
+        // instead of re-uploading their older epoch.
+        broadcastChannelRef.current?.postMessage(
+          buildResetMessage(signedInUserIdRef.current, fresh),
+        );
       }
 
       if (signedInUserIdRef.current) {
