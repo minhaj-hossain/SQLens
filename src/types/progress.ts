@@ -50,6 +50,15 @@ export interface UserLearningState {
   completedModules: Record<string, CompletedModuleRecord>;
   unlockedModuleIds?: string[];
   lastActiveTimestamp?: string;
+  /**
+   * Batch 2 — monotonic reset generation. Every full reset bumps this by 1
+   * (locally and on the server tombstone). Union-merge and PUT fencing honor
+   * it so pre-reset bytes can never resurrect: a write/merge carrying an
+   * older epoch is stale by definition. Defaults to 0 for legacy states.
+   */
+  resetEpoch?: number;
+  /** ISO timestamp of the last full reset, if any. */
+  resetAt?: string | null;
   // Developer / learner test settings
   bypassDailyLock: boolean;
   simulatedTimeOffsetHours: number; // For time-traveling forward to test 6:00 PM unlock

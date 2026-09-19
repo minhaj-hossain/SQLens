@@ -133,7 +133,19 @@ export function saveUserState(state: UserLearningState, userId?: string | null):
   }
 }
 
-export function resetUserState(userId?: string | null): UserLearningState {
+/**
+ * Full curriculum reset: wipes the caller's local key + legacy guest key and
+ * returns Day-1 INITIAL state. Batch 2: bumps `resetEpoch` by 1 over
+ * `prevEpoch` (default: read the stored state) so the reset is a first-class
+ * fact — not absence-of-data — that merge + PUT fencing can honor. Plain
+ * `resetUserState(userId)` with no epoch still resets to epoch 0 for legacy
+ * call sites; the provider passes the live epoch.
+ */
+export function resetUserState(userId?: string | null, prevEpoch?: number): UserLearningState {
+  let epoch = 0;
+  if (typeof prevEpoch === 'number' && Number.isFinite(prevEpoch) && prevEpoch >= 0) {
+    epoch = Math.floor(prevEpoch) + 1;
+  }
   if (typeof window !== 'undefined') {
     try {
       const key = getStorageKey(userId);
@@ -154,7 +166,13 @@ export function resetUserState(userId?: string | null): UserLearningState {
       console.error('Failed to clear learning state:', e);
     }
   }
-  return { ...INITIAL_USER_STATE, lastActiveTimestamp: new Date().toISOString() };
+  const now = new Date().toISOString();
+  return {
+    ...INITIAL_USER_STATE,
+    lastActiveTimestamp: now,
+    resetEpoch: epoch,
+    resetAt: epoch > 0 ? now : null,
+  };
 }
 
 /**

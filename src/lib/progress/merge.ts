@@ -23,6 +23,39 @@ import {
 /** The shape stored in the `user_progress` collection — no dev toggles. */
 export type CloudProgress = Omit<UserLearningState, 'bypassDailyLock' | 'simulatedTimeOffsetHours'>;
 
+/**
+ * Batch 2 — authoritative reset generation ("epoch").
+ *
+ * Every full reset bumps `resetEpoch` by 1 (locally AND on the server
+ * tombstone). Any write/merge carrying an older epoch is stale by definition
+ * and must never resurrect pre-reset bytes:
+ *  - PUT with `progress.resetEpoch < stored.resetEpoch` → 409 reset_stale
+ *  - merge where one side is newer-epoch → the newer epoch wins outright,
+ *    no union of the older side back in
+ *
+ * Legacy states/docs without the field read as epoch 0.
+ */
+export function getResetEpoch(state: Pick<UserLearningState, 'resetEpoch'> | CloudProgress | null | undefined): number {
+  const epoch = (state as { resetEpoch?: unknown } | null | undefined)?.resetEpoch;
+  return typeof epoch === 'number' && Number.isFinite(epoch) && epoch >= 0 ? Math.floor(epoch) : 0;
+}
+
+/**
+ * A server-side reset tombstone: the content half is Day-1 empty, the epoch
+ * half proves "a reset happened at generation N". Adopted unconditionally by
+ * any client holding an older epoch.
+ */
+export function isResetTombstone(progress: CloudProgress | null | undefined): boolean {
+  if (!progress) return false;
+  if (getResetEpoch(progress) <= 0) return false;
+  return (
+    Object.keys(progress.completedModules ?? {}).length === 0 &&
+    Object.keys(progress.taskAttempts ?? {}).length === 0 &&
+    Object.keys(progress.completedTasks ?? {}).length === 0 &&
+    Object.keys(progress.completedConcepts ?? {}).length === 0
+  );
+}
+
 function ts(value?: string): number {
   const t = Date.parse(value ?? '');
   return Number.isNaN(t) ? 0 : t;
@@ -124,12 +157,12 @@ function mergeCompletedModules(
   return out;
 }
 
-/** Strip developer-only fields before anything leaves the browser. */
+/** Strip developer-only fields before anything leaves the browser. Batch 2: the epoch travels with every PUT. */
 export function toCloudProgress(state: UserLearningState): CloudProgress {
   const { bypassDailyLock: _bypass, simulatedTimeOffsetHours: _offset, ...cloud } = state;
   void _bypass;
   void _offset;
-  return cloud;
+  return { ...cloud, resetEpoch: getResetEpoch(state) };
 }
 
 /** Re-hydrate a cloud doc into a full local state (dev toggles kept from base). */
@@ -140,6 +173,8 @@ export function fromCloudProgress(
   return {
     ...base,
     ...(cloud as Partial<UserLearningState>),
+    resetEpoch: getResetEpoch(cloud),
+    resetAt: cloud.resetAt ?? base.resetAt ?? null,
     bypassDailyLock: base.bypassDailyLock,
     simulatedTimeOffsetHours: base.simulatedTimeOffsetHours,
   };
@@ -246,11 +281,32 @@ export function detectProgressDivergence(
 /**
  * Merge a local guest state and a cloud state into one unified state.
  * Both inputs are treated as immutable; the result is brand new.
+ *
+ * Batch 2/3 — epoch fencing runs BEFORE any union: union can only ADD data,
+ * so it can never express "this was deleted". When the two sides disagree on
+ * resetEpoch, the newer generation wins outright (tombstone adoption for
+ * cloud-newer, cloud-ignore for local-newer). Equal epochs fall through to
+ * the legacy union below.
  */
 export function mergeProgress(
   local: UserLearningState,
   cloud: CloudProgress,
 ): UserLearningState {
+  const localEpoch = getResetEpoch(local);
+  const cloudEpoch = getResetEpoch(cloud);
+
+  if (cloudEpoch > localEpoch) {
+    // A newer reset happened elsewhere (another tab/device already bumped the
+    // generation). Adopt the tombstone/authoritative doc unconditionally —
+    // never union pre-reset local bytes back in, and never prompt "combine".
+    return fromCloudProgress(cloud, local);
+  }
+  if (localEpoch > cloudEpoch) {
+    // Local reset is newer than this cloud snapshot (stale GET racing the
+    // tombstone write, or a device that hasn't converged yet). Keep local
+    // verbatim — the caller pushes it, which the server's epoch fence accepts.
+    return { ...local };
+  }
   const completedTasks = mergeDatedRecords<CompletedTaskRecord>(
     local.completedTasks,
     cloud.completedTasks,
@@ -295,6 +351,8 @@ export function mergeProgress(
       new Set([...(local.unlockedModuleIds ?? []), ...(cloud.unlockedModuleIds ?? [])]),
     ),
     lastActiveTimestamp: lastActive ?? new Date().toISOString(),
+    resetEpoch: localEpoch,
+    resetAt: local.resetAt ?? cloud.resetAt ?? null,
     bypassDailyLock: local.bypassDailyLock,
     simulatedTimeOffsetHours: local.simulatedTimeOffsetHours,
   };

@@ -34,10 +34,17 @@ import {
   mergeProgress,
   fromCloudProgress,
   toCloudProgress,
+  getResetEpoch,
+  isResetTombstone,
   CloudProgress,
   detectProgressDivergence,
   DivergenceDetails,
 } from '@/lib/progress/merge';
+import {
+  isInResetQuietWindow,
+  shouldPushOnNullCloud,
+  RESET_QUIET_WINDOW_MS,
+} from '@/lib/progress/sync-guard';
 import { useAuth } from './AuthProvider';
 
 interface LearningContextValue {
@@ -115,10 +122,16 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   const mergePromptRef = useRef(mergePrompt);
   mergePromptRef.current = mergePrompt;
 
-  // Multi-tab channel & sync suppression refs
+  // Multi-tab channel
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
   const skipNextBroadcastRef = useRef(false);
   const skipNextPushRef = useRef(false);
+  // Batch 1 — write serialization: abort an in-flight PUT before a reset
+  // DELETE so stale bytes cannot land after the reset (V1), and suppress
+  // background writers (debounce/pagehide/focus) for a short quiet window
+  // after each reset while the DELETE settles.
+  const inflightPutRef = useRef<AbortController | null>(null);
+  const resetQuietUntilRef = useRef(0);
 
   // Server-controlled curriculum availability
   const [availabilityVersion, setAvailabilityVersion] = useState(0);
@@ -196,23 +209,78 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   /** Immediate PUT of the current local state to the user's cloud doc. */
   const pushCloudNow = async (): Promise<boolean> => {
     if (!signedInUserIdRef.current) return false;
+    if (isInResetQuietWindow(resetQuietUntilRef.current, Date.now())) {
+      // Batch 1: a reset just settled — drop this background push so stale
+      // bytes cannot recreate the deleted doc (V1/V3). The reset's own write
+      // path sets lastPushedJsonRef explicitly, so keeping pendingPush false
+      // here is safe: there is nothing newer worth pushing yet.
+      pendingPushRef.current = false;
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[progress] push skipped: inside post-reset quiet window');
+      }
+      return false;
+    }
     if (syncTimerRef.current) {
       clearTimeout(syncTimerRef.current);
       syncTimerRef.current = null;
     }
+    // Abort any previous in-flight PUT so only the latest payload lands.
+    inflightPutRef.current?.abort();
+    const controller = new AbortController();
+    inflightPutRef.current = controller;
     const payload = JSON.stringify({ progress: toCloudProgress(latestStateRef.current) });
     try {
       const r = await fetch('/api/me/progress', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: payload,
+        signal: controller.signal,
       });
+      if (r.status === 409) {
+        // Batch 2: our epoch is older than the server's reset tombstone (stale
+        // tab, or a PUT that raced the DELETE). Stop retrying, pull the
+        // authoritative tombstone, and converge to Day 1 instead of pushing
+        // old bytes back over it.
+        pendingPushRef.current = false;
+        if (inflightPutRef.current === controller) inflightPutRef.current = null;
+        try {
+          const conflict = (await r.json()) as { storedEpoch?: number };
+          const get = await fetch('/api/me/progress');
+          if (get.ok) {
+            const fresh = (await get.json()) as { progress: CloudProgress | null };
+            if (fresh.progress && getResetEpoch(fresh.progress) >= getResetEpoch(latestStateRef.current)) {
+              const adopted = fromCloudProgress(fresh.progress, latestStateRef.current);
+              latestStateRef.current = adopted;
+              saveUserState(adopted, signedInUserIdRef.current);
+              skipNextPushRef.current = true;
+              setUserState(adopted);
+              setMergePrompt(null);
+            }
+          }
+          if (process.env.NODE_ENV === 'development') {
+            console.debug('[progress] stale PUT rejected (409), converged to epoch', conflict.storedEpoch);
+          }
+        } catch {
+          /* offline mid-recovery — local epoch guard still holds next push */
+        }
+        return false;
+      }
       if (!r.ok) throw new Error(String(r.status));
       lastPushedJsonRef.current = payload;
       pendingPushRef.current = false;
       retryCountRef.current = 0;
+      if (inflightPutRef.current === controller) inflightPutRef.current = null;
       return true;
-    } catch {
+    } catch (err) {
+      // Batch 1: an aborted PUT (reset superseded it) is intentional — never
+      // retry it, or stale bytes would resurrect after the DELETE (V1).
+      if (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') {
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('[progress] push aborted (superseded by reset or newer write)');
+        }
+        if (inflightPutRef.current === controller) inflightPutRef.current = null;
+        return false;
+      }
       // Network failure — localStorage holds the data; retry w/ backoff.
       if (retryCountRef.current < 3) {
         retryCountRef.current += 1;
@@ -287,6 +355,38 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
         if (body.progress) {
           const cloud = body.progress;
+          // Batch 2/3: epoch fencing decides before any timestamp/divergence
+          // logic. A newer-epoch tombstone is adopted outright (Day 1 wins, no
+          // combine prompt, no union of local bytes back in); an older-epoch
+          // cloud snapshot is ignored — local (post-reset) stays and pushes.
+          const localEpochNow = getResetEpoch(latestStateRef.current);
+          const cloudEpoch = getResetEpoch(cloud);
+          if (cloudEpoch > localEpochNow) {
+            const adopted = fromCloudProgress(cloud, latestStateRef.current);
+            latestStateRef.current = adopted;
+            saveUserState(adopted, signedInUserId);
+            setUserState(adopted);
+            if (hasGuestProgress) clearGuestState();
+            setMergePrompt(null);
+            lastPushedJsonRef.current = JSON.stringify(toCloudProgress(adopted));
+            pendingPushRef.current = false;
+            if (cancelled) return;
+            return;
+          }
+          if (localEpochNow > cloudEpoch) {
+            if (hasGuestProgress) clearGuestState();
+            await pushCloudNow();
+            return;
+          }
+          if (isResetTombstone(cloud) && !hasGuestProgress) {
+            const adopted = fromCloudProgress(cloud, latestStateRef.current);
+            latestStateRef.current = adopted;
+            saveUserState(adopted, signedInUserId);
+            setUserState(adopted);
+            lastPushedJsonRef.current = JSON.stringify(toCloudProgress(adopted));
+            pendingPushRef.current = false;
+            return;
+          }
           if (hasGuestProgress) {
             const divergence = detectProgressDivergence(guestState, cloud);
             if (divergence.isDivergent) {
@@ -304,14 +404,21 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           if (hasGuestProgress) clearGuestState();
           await pushCloudNow();
         } else {
-          // First sign-in with no cloud doc — upload existing guest progress if any
+          // First sign-in with no cloud doc — upload existing guest progress if any.
+          // Batch 1 (V3): without a guest upload, only push when the in-memory
+          // state is at least as new as the guest state just loaded, so a stale
+          // ref cannot recreate a just-deleted cloud doc.
           if (hasGuestProgress) {
             saveUserState(guestState, signedInUserId);
             latestStateRef.current = guestState;
             setUserState(guestState);
             clearGuestState();
+            await pushCloudNow();
+          } else if (shouldPushOnNullCloud(latestStateRef.current, guestState)) {
+            await pushCloudNow();
+          } else if (process.env.NODE_ENV === 'development') {
+            console.debug('[progress] hydration upload skipped: stale in-memory state');
           }
-          await pushCloudNow();
         }
       } catch {
         /* offline / network error */
@@ -326,6 +433,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   /** Window focus / visibility change re-validation (cross-browser / cross-device) */
   useEffect(() => {
     const onFocusOrVisible = async () => {
+      // Batch 1: skip revalidation while a reset is settling (V1/V3).
+      if (isInResetQuietWindow(resetQuietUntilRef.current, Date.now())) return;
       if (typeof document === 'undefined' || document.visibilityState !== 'visible' || !signedInUserIdRef.current) {
         return;
       }
@@ -336,6 +445,20 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         if (body.progress) {
           const cloud = body.progress;
           const current = latestStateRef.current;
+          // Batch 2/3: epoch first, timestamps second. A newer-epoch cloud doc
+          // (reset committed elsewhere) is adopted outright — mergeProgress
+          // does exactly this, but adopt explicitly so no prompt/union can run.
+          // An older-epoch cloud snapshot is ignored: local already reset.
+          if (getResetEpoch(cloud) > getResetEpoch(current)) {
+            const adopted = fromCloudProgress(cloud, current);
+            latestStateRef.current = adopted;
+            saveUserState(adopted, signedInUserIdRef.current);
+            skipNextPushRef.current = true;
+            setUserState(adopted);
+            setMergePrompt(null);
+            return;
+          }
+          if (getResetEpoch(current) > getResetEpoch(cloud)) return;
           const cloudTs = Date.parse(cloud.lastActiveTimestamp ?? '');
           const localTs = Date.parse(current.lastActiveTimestamp ?? '');
           if (cloudTs > localTs) {
@@ -374,6 +497,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
   // Debounced cloud sync for signed-in users
   useEffect(() => {
+    // Batch 1: reset just settled — keep the local save, skip the cloud push.
+    if (isInResetQuietWindow(resetQuietUntilRef.current, Date.now())) return;
     if (!signedInUserId || hydratedForUserRef.current !== signedInUserId) return;
     if (skipNextPushRef.current) {
       skipNextPushRef.current = false;
@@ -389,6 +514,11 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     const flush = () => {
       if (!signedInUserIdRef.current || !pendingPushRef.current) return;
+      // Batch 1: never flush inside the post-reset quiet window (V1).
+      if (isInResetQuietWindow(resetQuietUntilRef.current, Date.now())) {
+        pendingPushRef.current = false;
+        return;
+      }
       try {
         void fetch('/api/me/progress', {
           method: 'PUT',
@@ -592,7 +722,16 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       const targetModuleId = options?.moduleId;
 
       if (targetModuleId) {
-        // Reset single module progress
+        // Batch 1: serialize like full reset — drop pending/in-flight writes
+        // so the pruned state is what lands, then push it explicitly before
+        // opening the quiet window (pushCloudNow stays silent inside it).
+        inflightPutRef.current?.abort();
+        inflightPutRef.current = null;
+        if (syncTimerRef.current) {
+          clearTimeout(syncTimerRef.current);
+          syncTimerRef.current = null;
+        }
+        pendingPushRef.current = false;
         const mod = getModuleById(targetModuleId);
         const next = resetModuleProgress(targetModuleId, latestStateRef.current, mod);
         latestStateRef.current = next;
@@ -610,10 +749,14 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         if (signedInUserIdRef.current) {
           await pushCloudNow();
         }
+        resetQuietUntilRef.current = Date.now() + RESET_QUIET_WINDOW_MS;
         return;
       }
 
-      // Full curriculum reset back to Day 1
+      // Full curriculum reset back to Day 1.
+      // Batch 2: the reset bumps resetEpoch and commits an authoritative
+      // server tombstone (DELETE writes epoch+1 empty doc, not deleteOne), so
+      // racing/stale PUTs are 409-rejected and later GETs converge to Day 1.
       if (syncTimerRef.current) {
         clearTimeout(syncTimerRef.current);
         syncTimerRef.current = null;
@@ -622,12 +765,18 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       lastPushedJsonRef.current = null;
       skipNextPushRef.current = true;
 
-      const fresh = resetUserState(signedInUserIdRef.current);
+      const fresh = resetUserState(signedInUserIdRef.current, getResetEpoch(latestStateRef.current));
       try {
         localStorage.removeItem(LEGACY_NAV_KEY);
       } catch {
         /* ignore */
       }
+      // Batch 1 (V1): abort any in-flight PUT so stale bytes cannot land
+      // after the DELETE below, then open a quiet window that silences
+      // background writers while the reset settles.
+      inflightPutRef.current?.abort();
+      inflightPutRef.current = null;
+      resetQuietUntilRef.current = Date.now() + RESET_QUIET_WINDOW_MS;
       latestStateRef.current = fresh;
       saveUserState(fresh, signedInUserIdRef.current);
       setUserState(fresh);
@@ -643,13 +792,37 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
       if (signedInUserIdRef.current) {
         try {
-          await fetch('/api/me/progress', {
+          const r = await fetch('/api/me/progress', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
           });
+          if (r.ok) {
+            // Adopt the server's authoritative epoch (covers the race where a
+            // concurrent reset elsewhere already bumped past ours) so local,
+            // cloud, and other tabs agree on the generation.
+            try {
+              const committed = (await r.json()) as { resetEpoch?: number; resetAt?: string };
+              if (typeof committed.resetEpoch === 'number' && committed.resetEpoch !== getResetEpoch(latestStateRef.current)) {
+                const synced: typeof fresh = {
+                  ...fresh,
+                  resetEpoch: committed.resetEpoch,
+                  resetAt: committed.resetAt ?? fresh.resetAt ?? null,
+                };
+                latestStateRef.current = synced;
+                saveUserState(synced, signedInUserIdRef.current);
+                skipNextPushRef.current = true;
+                setUserState(synced);
+                lastPushedJsonRef.current = JSON.stringify(toCloudProgress(synced));
+              } else {
+                lastPushedJsonRef.current = JSON.stringify(toCloudProgress(fresh));
+              }
+            } catch {
+              lastPushedJsonRef.current = JSON.stringify(toCloudProgress(fresh));
+            }
+          }
         } catch (e) {
-          console.error('Failed to delete cloud progress:', e);
+          console.error('Failed to reset cloud progress:', e);
         }
       }
     },

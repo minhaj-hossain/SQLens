@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { authorize } from '@/lib/authorize';
-import { getProgress, saveProgress, deleteProgress } from '@/lib/server/progress-store';
-import type { CloudProgress } from '@/lib/progress/merge';
+import { getProgress, saveProgress, resetProgress, deleteProgress } from '@/lib/server/progress-store';
+import { getResetEpoch, type CloudProgress } from '@/lib/progress/merge';
 
 /**
  * Per-user progress sync (Phase 2). `userId` always comes from the verified
@@ -13,8 +13,8 @@ import type { CloudProgress } from '@/lib/progress/merge';
 export async function GET(req: NextRequest) {
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
-  const { progress, version, updatedAt } = await getProgress(res.user!.id);
-  return NextResponse.json({ progress, version, updatedAt });
+  const { progress, version, updatedAt, resetEpoch, resetAt } = await getProgress(res.user!.id);
+  return NextResponse.json({ progress, version, updatedAt, resetEpoch, resetAt });
 }
 
 export async function PUT(req: NextRequest) {
@@ -41,14 +41,33 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'invalid_progress_shape' }, { status: 400 });
   }
 
-  const result = await saveProgress(res.user!.id, body.progress);
-  return NextResponse.json({ ok: true, ...result });
+  // Batch 2: legacy clients that predate resetEpoch write epoch 0 — accepted
+  // unless a reset tombstone already bumped the stored epoch, in which case
+  // saveProgress reports stale and we answer 409 so the tab refetches Day 1
+  // instead of resurrecting pre-reset bytes.
+  const result = await saveProgress(res.user!.id, { ...body.progress, resetEpoch: getResetEpoch(body.progress) });
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: 'reset_stale', storedEpoch: result.storedEpoch, version: result.version, updatedAt: result.updatedAt },
+      { status: 409 },
+    );
+  }
+  return NextResponse.json({ ...result });
 }
 
 export async function DELETE(req: NextRequest) {
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
 
-  await deleteProgress(res.user!.id);
-  return NextResponse.json({ ok: true });
+  // Batch 2 — permanent fix for "reset, then refresh brings data back": a full
+  // reset is now an authoritative epoch-bumped tombstone, NOT a deleteOne.
+  // Deleting the doc left a hole that any racing/stale PUT (in-flight write,
+  // pagehide flush, stale tab on GET-null) would blindly recreate; the
+  // tombstone instead rejects those stale writes with 409 and makes every
+  // later GET converge to Day 1. deleteProgress() stays for admin/account
+  // deletion only. keepalive retained: the reset must commit even if the tab
+  // navigates away mid-request.
+  void deleteProgress;
+  const result = await resetProgress(res.user!.id);
+  return NextResponse.json({ ok: true, ...result });
 }
