@@ -525,7 +525,18 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
   // Sync state with localStorage (instant — offline-safe, user-scoped)
   useEffect(() => {
-    saveUserState(userState, signedInUserId);
+    // Batch 6 (remount clobber): the fresh mount seeds useState from the GUEST
+    // key (epoch 0) while the session resolves. Persisting that snapshot under
+    // the user's key would overwrite the tombstone lineage BEFORE hydration
+    // GETs it. Gate on: signed in AND hydration settled for this user. Guest
+    // (signed-out) writes still persist immediately; the second branch covers
+    // the signed-out case.
+    if (signedInUserId) {
+      if (hydratedForUserRef.current !== signedInUserId) return;
+      saveUserState(userState, signedInUserId);
+    } else {
+      saveUserState(userState, null);
+    }
     if (!skipNextBroadcastRef.current) {
       // Batch 4: every broadcast carries its epoch so receivers can tell a
       // stale sender from an authoritative one.

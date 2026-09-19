@@ -59,6 +59,14 @@ export interface UserLearningState {
   resetEpoch?: number;
   /** ISO timestamp of the last full reset, if any. */
   resetAt?: string | null;
+  /**
+   * Batch 6 — module-level tombstones. Module ids whose progress was reset
+   * via module-reset (which bumps the global resetEpoch). The equal-epoch
+   * union path in merge.ts strips these ids from the cloud side before
+   * unioning, so a stale cloud snapshot can never resurrect a module the
+   * user deliberately cleared — even if epochs somehow tie.
+   */
+  resetModuleIds?: string[];
   // Developer / learner test settings
   bypassDailyLock: boolean;
   simulatedTimeOffsetHours: number; // For time-traveling forward to test 6:00 PM unlock

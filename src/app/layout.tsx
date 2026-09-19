@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import AppProviders from '@/components/providers/AppProviders';
 import './globals.css';
 
 // Self-hosted via next/font: preloaded, non-blocking, zero layout shift.
@@ -111,7 +112,19 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-ink text-text antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        {/*
+          Batch 6: Auth + LearningProgress + SqlExecutor live here (above ALL
+          route groups) so `/` <-> `/admin` navigation no longer unmounts the
+          provider tree. Before, leaving (app) destroyed the in-memory
+          resetEpoch lineage; the remount re-seeded from the guest key
+          (epoch 0) and replayed hydration — resurrecting module resets and
+          any full reset whose tombstone hadn't committed. UiChromeProvider
+          stays in (app)/layout.tsx: it needs usePathname/useLearning for
+          app chrome and must not wrap /admin or /signin.
+        */}
+        <ThemeProvider>
+          <AppProviders>{children}</AppProviders>
+        </ThemeProvider>
       </body>
     </html>
   );

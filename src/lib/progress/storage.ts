@@ -212,13 +212,30 @@ export function resetUserState(userId?: string | null, prevEpoch?: number): User
 /**
  * Resets task and concept progress for a single specific module,
  * leaving other days and unlocked modules intact.
+ *
+ * Batch 6: bumps the GLOBAL resetEpoch by 1 (like a full reset — the epoch
+ * is the only generation counter the server fences on) and records the
+ * module in `resetModuleIds` with `resetAt`. Why the epoch bump: after a
+ * module reset, cloud still holds the old full doc at the same epoch, so a
+ * remount hydration (or a stale tab) would equal-epoch union-merge the
+ * deleted module straight back (V6 — incl. the `/admin` round-trip). With
+ * the bump, the pruned state outranks the old cloud snapshot everywhere:
+ * merge adopts local, PUT passes the fence, and receivers ignore the stale
+ * sender. The bumped epoch also flows into the tombstone if the user later
+ * full-resets, so generations stay monotonic.
  */
 export function resetModuleProgress(
   moduleId: string,
   state: UserLearningState,
   moduleData?: ModuleData | null,
 ): UserLearningState {
-  const next: UserLearningState = { ...state };
+  const prevEpoch = typeof state.resetEpoch === 'number' && Number.isFinite(state.resetEpoch) && state.resetEpoch >= 0
+    ? Math.floor(state.resetEpoch)
+    : 0;
+  const now = new Date().toISOString();
+  const next: UserLearningState = { ...state, resetEpoch: prevEpoch + 1, resetAt: now };
+  const resetModuleIds = Array.from(new Set([...(next.resetModuleIds ?? []), moduleId]));
+  next.resetModuleIds = resetModuleIds;
   const nextCompletedModules = { ...next.completedModules };
   delete nextCompletedModules[moduleId];
   next.completedModules = nextCompletedModules;

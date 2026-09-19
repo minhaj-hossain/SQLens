@@ -122,6 +122,54 @@ describe('Progress Reset Engine', () => {
 
     // Day unlocks are preserved!
     expect(next.unlockedModuleIds).toEqual(['day-01', 'day-02', 'day-03']);
+
+    // Batch 6: module reset bumps the epoch + tombstones the module so a
+    // remount hydration (equal-epoch union) can never resurrect it.
+    expect(next.resetEpoch).toBe(1);
+    expect(next.resetModuleIds).toContain('day-02');
+  });
+
+  it('Batch 6: equal-epoch union with a stale cloud cannot resurrect a reset module', async () => {
+    const { mergeProgress, toCloudProgress } = await import('../../src/lib/progress/merge');
+    const dummyModule = {
+      id: 'day-02',
+      concepts: [{ id: 'c2-1', tasks: [{ id: 'd2-t1' }] }],
+      challenge: { tasks: [{ id: 'd2-ch-t1' }] },
+    } as unknown as ModuleData;
+
+    const state: UserLearningState = {
+      ...INITIAL_USER_STATE,
+      resetEpoch: 0,
+      completedModules: {
+        'day-02': {
+          moduleId: 'day-02',
+          completedAt: '2026-09-02T00:00:00Z',
+          completedConcepts: ['c2-1'],
+          completedTasks: ['d2-t1'],
+          challengeCompleted: false,
+        },
+      },
+      completedTasks: {
+        'd2-t1': { taskId: 'd2-t1', moduleId: 'day-02', completed: true, hintsUsed: 0, viewedSolution: false },
+      },
+      taskAttempts: {
+        'd2-t1': { taskId: 'd2-t1', moduleId: 'day-02', completed: true, hintsUsed: 0, viewedSolution: false },
+      },
+    };
+    const staleCloud = toCloudProgress(state);
+
+    // Module reset bumps to epoch 1 — simulate the /admin round-trip remount:
+    // hydration GETs the stale epoch-0 cloud while local holds the reset.
+    const pruned = resetModuleProgress('day-02', state, dummyModule);
+    expect(pruned.resetEpoch).toBe(1);
+    const merged = mergeProgress(pruned, { ...staleCloud, resetEpoch: 0 });
+    expect(merged.completedModules['day-02']).toBeUndefined();
+    expect(merged.completedTasks?.['d2-t1']).toBeUndefined();
+
+    // Even if epochs tie (legacy/concurrent), the tombstone list still wins.
+    const tied = mergeProgress(pruned, { ...staleCloud, resetEpoch: 1 });
+    expect(tied.completedModules['day-02']).toBeUndefined();
+    expect(tied.completedTasks?.['d2-t1']).toBeUndefined();
   });
 
   it('handles resetModuleProgress gracefully when moduleData is not supplied', () => {

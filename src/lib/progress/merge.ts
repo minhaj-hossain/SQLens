@@ -307,21 +307,56 @@ export function mergeProgress(
     // verbatim — the caller pushes it, which the server's epoch fence accepts.
     return { ...local };
   }
+
+  // Batch 6 — equal-epoch module tombstones: strip reset modules from the
+  // CLOUD side before unioning. resetModuleProgress() bumps the global epoch
+  // so this path normally never runs for module resets, but if epochs tie
+  // anyway (legacy states, concurrent resets), the explicit tombstone list
+  // still prevents the deleted module from resurrecting via union.
+  const tombstoned = new Set(local.resetModuleIds ?? []);
+  let cloudForUnion: CloudProgress = cloud;
+  if (tombstoned.size > 0) {
+    const stripByModule = <T extends { moduleId?: string }>(
+      recs: Record<string, T> | undefined,
+    ): Record<string, T> | undefined => {
+      if (!recs) return recs;
+      const out: Record<string, T> = {};
+      for (const [k, v] of Object.entries(recs)) {
+        if (tombstoned.has(k)) continue;
+        const mid = (v as { moduleId?: unknown } | null)?.moduleId;
+        if (typeof mid === 'string' && tombstoned.has(mid)) continue;
+        out[k] = v;
+      }
+      return out;
+    };
+    const strippedModules: Record<string, CompletedModuleRecord> = {};
+    for (const [k, v] of Object.entries(cloud.completedModules ?? {})) {
+      if (tombstoned.has(k)) continue;
+      strippedModules[k] = v;
+    }
+    cloudForUnion = {
+      ...cloud,
+      completedTasks: stripByModule(cloud.completedTasks),
+      taskAttempts: stripByModule(cloud.taskAttempts),
+      completedConcepts: stripByModule(cloud.completedConcepts),
+      completedModules: strippedModules,
+    };
+  }
   const completedTasks = mergeDatedRecords<CompletedTaskRecord>(
     local.completedTasks,
-    cloud.completedTasks,
+    cloudForUnion.completedTasks,
   );
   const taskAttempts = mergeTaskAttempts(
     local.taskAttempts,
-    cloud.taskAttempts,
+    cloudForUnion.taskAttempts,
   );
   const completedConcepts = mergeDatedRecords<CompletedConceptRecord>(
     local.completedConcepts,
-    cloud.completedConcepts,
+    cloudForUnion.completedConcepts,
   );
   const completedModules = mergeCompletedModules(
     local.completedModules,
-    cloud.completedModules,
+    cloudForUnion.completedModules,
   );
 
   // Position fields follow the most recently active side. When neither has a
@@ -348,11 +383,13 @@ export function mergeProgress(
     completedConcepts,
     completedModules,
     unlockedModuleIds: Array.from(
-      new Set([...(local.unlockedModuleIds ?? []), ...(cloud.unlockedModuleIds ?? [])]),
+      new Set([...(local.unlockedModuleIds ?? []), ...(cloudForUnion.unlockedModuleIds ?? [])]),
     ),
     lastActiveTimestamp: lastActive ?? new Date().toISOString(),
     resetEpoch: localEpoch,
     resetAt: local.resetAt ?? cloud.resetAt ?? null,
+    // Batch 6: tombstone list survives merges so the deletion keeps winning.
+    resetModuleIds: local.resetModuleIds ?? cloud.resetModuleIds ?? undefined,
     bypassDailyLock: local.bypassDailyLock,
     simulatedTimeOffsetHours: local.simulatedTimeOffsetHours,
   };
