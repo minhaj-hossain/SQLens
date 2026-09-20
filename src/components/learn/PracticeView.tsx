@@ -61,6 +61,8 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
   // Database lifecycle (v2, replaces freshDb): reset to seed when this task
   // mounts with the `fresh` lifecycle. `inherit`/undefined keep continuity
   // (which the concept-boundary reset in the day layout still bounds).
+  // P0 FIX: expose resetDatabase to the task view so Run & Check retries also
+  // replay from seed (idempotent) instead of accumulating rows per attempt.
   const { resetDatabase, getDatabaseState } = useSqlExecutor();
   useEffect(() => {
     if (task?.databaseLifecycle === 'fresh') resetDatabase();
@@ -84,6 +86,7 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
       savedSql={userState.taskAttempts?.[task.id]?.lastSubmittedSql}
       onExecuteSql={executeQuery}
       getDatabaseState={getDatabaseState}
+      onResetDatabase={resetDatabase}
       onTaskSuccess={(userSql, hintsUsed, viewedSolution) =>
         markTaskComplete({ taskId: task.id, moduleId: mod.id, userSql, hintsUsed, viewedSolution })
       }

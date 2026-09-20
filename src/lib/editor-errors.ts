@@ -53,6 +53,30 @@ export function parseEditorError(
   if (!rawError || !rawError.trim()) return null;
   const msg = rawError.trim();
 
+  // P0 FIX (blocking INSERT bug): this parser only understands ENGINE errors
+  // (e.g. "Table 'custmers' does not exist"). Grading/validation feedback
+  // such as "Table 'products' does not match the expected final state ..."
+  // must NEVER reach here — it matches the /Table '...' / regex and gets
+  // rewritten into the false "does not exist. Did you mean 'products'?"
+  // + a no-op "Fix to products" button. Callers must route validation text
+  // to ResultsConsole; this guard is defense-in-depth so a future wiring
+  // mistake degrades to "no inline bar" instead of a lie.
+  // Phase 1 messages KEEP the "does not match the expected final state"
+  // prefix (so this guard still fires) and append "Your row count is right,
+  // but values differ in ..." — still validation, still ignored here.
+  if (
+    /does not match the expected final state/i.test(msg) ||
+    /your row count is right/i.test(msg) ||
+    /values differ in/i.test(msg) ||
+    /is missing column\(s\)/i.test(msg) ||
+    /has unexpected column\(s\)/i.test(msg) ||
+    /does not match the expected/i.test(msg) ||
+    /final state could not be verified/i.test(msg) ||
+    /reference solution failed/i.test(msg)
+  ) {
+    return null;
+  }
+
   const allTables = Object.keys(schemas);
   const allColumns = Array.from(
     new Set(Object.values(schemas).flatMap((s) => s.columns.map((c) => c.name))),
@@ -127,13 +151,17 @@ export function parseEditorError(
 
   if (kind === 'table' && token) {
     const best = findClosestMatch(token, allTables);
-    if (best) {
+    // P0 FIX: never suggest the token itself ("products" -> "products").
+    // findClosestMatch returns distance 0 for an exact (case-insensitive)
+    // hit, which used to render a no-op "Fix to products" button next to a
+    // false "does not exist" message.
+    if (best && best.toLowerCase() !== token.toLowerCase()) {
       didYouMean = best;
       displayMessage = `Table '${token}' does not exist. Did you mean '${best}'?`;
     }
   } else if (kind === 'column' && token) {
     const best = findClosestMatch(token, allColumns);
-    if (best) {
+    if (best && best.toLowerCase() !== token.toLowerCase()) {
       didYouMean = best;
       displayMessage = `No column named '${token}'. Did you mean '${best}'?`;
     }

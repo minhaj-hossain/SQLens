@@ -37,4 +37,37 @@ describe('editor error parsing & did-you-mean', () => {
     expect(parseEditorError(null, 'SELECT 1', DATABASE_SCHEMAS)).toBeNull();
     expect(parseEditorError('', 'SELECT 1', DATABASE_SCHEMAS)).toBeNull();
   });
+
+  // P0 regression (blocking INSERT bug): grading/validation feedback must
+  // NEVER render as an inline engine error. Before the fix,
+  // "Table 'products' does not match..." was rewritten into the false
+  // "Table 'products' does not exist. Did you mean 'products'?" + a no-op
+  // "Fix to products" button.
+  it('P0: ignores final-state validation feedback (not an engine error)', () => {
+    const sql =
+      "INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Ultra Wireless Mouse', 1, 1, 49.99, 100, 20);";
+    expect(
+      parseEditorError(
+        "Table 'products' does not match the expected final state (expected 32 row(s), found 31). Check which rows you targeted and the values you wrote.",
+        sql,
+        DATABASE_SCHEMAS,
+      ),
+    ).toBeNull();
+    expect(
+      parseEditorError(
+        "Table 'products' is missing column(s): price.",
+        sql,
+        DATABASE_SCHEMAS,
+      ),
+    ).toBeNull();
+  });
+
+  it('P0: never suggests the token itself (no self "Fix to products")', () => {
+    const sql = 'INSERT INTO products (name) VALUES (\'X\');';
+    const parsed = parseEditorError("Table 'products' does not exist.", sql, DATABASE_SCHEMAS);
+    // products exists in the schema, but even for a hypothetical exact-name
+    // hit the Fix button must not offer a no-op replacement.
+    expect(parsed?.didYouMean === undefined || parsed?.didYouMean.toLowerCase() !== 'products').toBe(true);
+    expect(parsed?.displayMessage ?? '').not.toContain("Did you mean 'products'?");
+  });
 });

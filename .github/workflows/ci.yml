@@ -54,5 +54,11 @@ jobs:
       - name: Keyword case-fragility guardrail
         run: npm run audit:keyword-case
 
+      - name: Grading-pipeline audit (real UI pipeline over every task)
+        run: npm run audit:grading-pipeline
+
+      - name: Grading-policy enforcement
+        run: npm run audit:grading-policy
+
       - name: Production build
         run: npm run build

@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { PracticeTask, Concept } from '../../types/curriculum';
 import { QueryExecutionResult, DatabaseState } from '../../types/database';
-import { gradeFinalState } from '../../lib/sql-engine/state-verification';
+import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
 import { TaskInstructions } from './TaskInstructions';
 import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
-import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
 import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
 
 interface PracticeTaskViewProps {
@@ -22,6 +21,13 @@ interface PracticeTaskViewProps {
   onExecuteSql: (sql: string) => QueryExecutionResult;
   /** F1: snapshot hook — mutation tasks grade by final database state. */
   getDatabaseState?: () => DatabaseState;
+  /**
+   * P0 FIX: idempotent retry for `fresh` tasks. The host (PracticeView) owns
+   * resetDatabase; PracticeTaskView calls it at the START of submit so every
+   * Run & Check replays from seed instead of accumulating rows across
+   * retries (28 -> 29 -> 30 -> 31 ... which made correct INSERTs ungradeable).
+   */
+  onResetDatabase?: () => void;
   onTaskSuccess: (userSql: string, hintsUsed: number, viewedSolution: boolean) => void;
   onNextTask?: () => void;
   /** P11.2: step-chain Back (task N -> task N-1 -> lesson -> prev-concept task). */
@@ -41,6 +47,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   savedSql,
   onExecuteSql,
   getDatabaseState,
+  onResetDatabase,
   onTaskSuccess,
   onNextTask,
   onBack,
@@ -57,6 +64,11 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   const [taskPassed, setTaskPassed] = useState<boolean>(isCompleted);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
+  // Phase 5: 1-based submit counter for the CURRENT task session. Telemetry only
+  // — a high attempt count with value mismatches is the signal that a task's
+  // instructions (not the engine) are what learners struggle with.
+  const attemptRef = useRef(1);
+
   // Re-sync when switching tasks (tracked by task.id)
   useEffect(() => {
     const scaffold = splitTaskScaffold(task.initialSql);
@@ -65,6 +77,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     setExecutionResult(null);
     setTaskPassed(isCompleted);
     setValidationMessage(null);
+    attemptRef.current = 1;
   }, [task.id]);
 
   // Run Preview (no grading / validation, purely executes and shows results)
@@ -74,42 +87,28 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     return result;
   };
 
-  // Submit & Validate
+  // Submit & Validate.
+  //
+  // Phase 3 (single grading pipeline): this used to inline reset → snapshot →
+  // execute → snapshot → validate → grade-final-state. That sequence was
+  // copy-pasted in `IndependentChallengeView` and (weaker) in `audit-all-tasks`,
+  // which is exactly how the blocking INSERT bug shipped twice. It now lives in
+  // ONE testable function that the UI and the audits both call, so an audit
+  // failure is a real learner-visible failure.
   const handleSubmitAndValidate = (sqlToRun: string = currentSql) => {
-    // F1: snapshot BEFORE the statement runs, so mutation tasks can be graded
-    // against the expected final database state (sandbox replay).
-    const preState = getDatabaseState?.();
-    const result = onExecuteSql(sqlToRun);
-    setExecutionResult(result);
-
-    // P10.3: for exact-result tasks, grade against the solution's output on the
-    // same session executor. Guarded to single read-only SELECTs so computing
-    // the expected dataset never mutates the database.
-    const expected =
-      task.validation.requireExactResult && !result.error && isReadOnlySelect(task.solutionSql)
-        ? onExecuteSql(task.solutionSql)
-        : undefined;
-
-    let outcome = validateTaskSolution(sqlToRun, result, task.validation, expected);
-
-    // F1: mutation/DDL tasks grade on final database state — an UPDATE on the
-    // wrong row reports the same affectedRows as the right one, but the state
-    // differs. Replay the solution on a sandbox clone and compare.
-    if (
-      outcome.passed &&
-      preState && getDatabaseState && task.solutionSql &&
-      !isReadOnlySelect(task.solutionSql) && !result.error
-    ) {
-      const stateCheck = gradeFinalState(preState, task.solutionSql, getDatabaseState(), {
-        verifyTypes: !!task.validation.verifyColumnTypes,
-      });
-      if (!stateCheck.ok) {
-        outcome = {
-          passed: false,
-          feedback: stateCheck.message || 'The statement ran, but the resulting database state does not match the expected outcome.',
-        };
-      }
-    }
+    const outcome = runAndGradeSubmission({
+      task,
+      sql: sqlToRun,
+      hooks: {
+        execute: onExecuteSql,
+        getDatabaseState,
+        resetDatabase: onResetDatabase,
+      },
+      surface: 'lesson',
+      // Phase 5: attempt count feeds telemetry only (never the verdict).
+      attempt: attemptRef.current++,
+    });
+    setExecutionResult(outcome.result);
 
     if (outcome.passed) {
       setTaskPassed(true);
@@ -117,15 +116,15 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       onTaskSuccess(sqlToRun, hintsUsed, viewedSolution);
     } else {
       setTaskPassed(false);
-      const errMsg =
+      setValidationMessage(
         outcome.feedback ||
-        (result.error
-          ? `SQL Error: ${result.error}`
-          : 'Result did not match the expected dataset. Check your selected columns or filter condition.');
-      setValidationMessage(errMsg);
+          (outcome.result.error
+            ? `SQL Error: ${outcome.result.error}`
+            : 'Result did not match the expected dataset. Check your selected columns or filter condition.'),
+      );
     }
 
-    return result;
+    return outcome.result;
   };
 
   const isLastTask = taskIndex >= totalTasks - 1;
@@ -177,6 +176,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
             <DatabaseExplorer
               initialTableName={task.primaryTable}
               highlightedColumns={task.validation.requiredColumns}
+              getDatabaseState={getDatabaseState}
+              refreshKey={executionResult}
               onSelectColumn={(colName) => {
                 // Click column helper
               }}
@@ -205,7 +206,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               onBack={onBack}
               backLabel={backLabel}
               resetSql={taskScaffold.code}
-              lastError={executionResult?.error || validationMessage}
+              engineError={executionResult?.error ?? null}
             />
           </div>
 

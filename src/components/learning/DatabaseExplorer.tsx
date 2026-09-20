@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Table, Database, Key, Search, ChevronDown, Check, Info, Network, ArrowRight } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
-import { INITIAL_TABLES } from '../../content/database/tables';
-import { TableRow } from '../../types/database';
+import { DatabaseState } from '../../types/database';
+import { readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
 import { DataGrid } from './DataGrid';
 
 interface DatabaseExplorerProps {
@@ -10,6 +10,15 @@ interface DatabaseExplorerProps {
   highlightedColumns?: string[];
   onSelectColumn?: (colName: string) => void;
   className?: string;
+  /**
+   * Phase 2 (live explorer): pass the executor snapshot getter so the preview
+   * shows the LEARNER's live rows (seed + their INSERTs) instead of the static
+   * INITIAL_TABLES seed. Falls back to seed when absent (roadmap modal, tests).
+   * `refreshKey` re-reads the snapshot after each Run & Check — pass
+   * `executionResult` (or any per-run token) from the host.
+   */
+  getDatabaseState?: () => DatabaseState;
+  refreshKey?: unknown;
 }
 
 export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
@@ -17,6 +26,8 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   highlightedColumns = [],
   onSelectColumn,
   className = '',
+  getDatabaseState,
+  refreshKey,
 }) => {
   const [activeTable, setActiveTable] = useState<string>(initialTableName);
   const [activeTab, setActiveTab] = useState<'preview' | 'schema' | 'graph'>('preview');
@@ -32,7 +43,23 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   }, [initialTableName]);
 
   const schema = DATABASE_SCHEMAS[activeTable.toLowerCase()] || DATABASE_SCHEMAS.products;
-  const rawRows: TableRow[] = INITIAL_TABLES[activeTable.toLowerCase()] || [];
+  // Phase 2: live rows when the host provides the executor snapshot; the seed
+  // fallback keeps every other consumer (roadmap modal, playground) unchanged.
+  // getDatabaseState() deep-clones (P0), so one read per Run & Check is enough —
+  // `refreshKey` (the host's executionResult) invalidates that read.
+  const liveTables = React.useMemo(
+    () => readLiveTables(getDatabaseState),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [refreshKey, getDatabaseState],
+  );
+  const tableKey = activeTable.toLowerCase();
+  const {
+    rows: rawRows,
+    seedCount,
+    liveCount,
+    delta,
+    deltaLabel,
+  } = resolveLiveRows(tableKey, liveTables);
 
   const filteredRows = rawRows.filter((row) => {
     if (!searchFilter) return true;
@@ -71,14 +98,20 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
             >
               {allTableNames.map((tName) => (
                 <option key={tName} value={tName} className="bg-surface text-text-dim">
-                  {tName} ({INITIAL_TABLES[tName]?.length || 0} rows)
+                  {/* Phase 2: live count when hosted by a task view (seed otherwise) */}
+                  {tName} ({resolveRowCount(tName, liveTables)} rows)
                 </option>
               ))}
             </select>
             <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-text-faint absolute right-1.5 sm:right-2 top-2 pointer-events-none" />
           </div>
           <span className="text-[11px] font-mono text-text-faint hidden md:inline">
-            {INITIAL_TABLES[activeTable]?.length || 0} rows · {schema.columns.length} cols
+            {liveCount} rows · {schema.columns.length} cols
+            {delta !== 0 && (
+              <span className="ml-1 text-text-dim">
+                ({delta > 0 ? `+${delta}` : delta} since start)
+              </span>
+            )}
           </span>
         </div>
 
@@ -140,7 +173,14 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
       <div className={`relative ${isCollapsedOnMobile ? 'hidden sm:block' : 'block'}`}>
         <div className="min-h-[160px] bg-surface">
           {activeTab === 'preview' ? (
-            <DataGrid
+            <>
+              {delta !== 0 && deltaLabel && (
+                <div className="px-3 pt-2 font-mono text-[10.5px] text-text-dim">
+                  Showing live data: {deltaLabel}. New rows appear at the
+                  bottom.
+                </div>
+              )}
+              <DataGrid
               columns={schema.columns.map((c) => c.name)}
               rows={filteredRows}
               schemaName={activeTable}
@@ -181,6 +221,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                   : 'No rows to display.'
               }
             />
+            </>
           ) : activeTab === 'schema' ? (
             /* Schema & Types List View */
             <div className="p-3 divide-y divide-border-soft">
@@ -258,7 +299,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
                         <span className="font-mono text-xs font-semibold text-text">{tblKey}</span>
                       </div>
                       <span className="text-[9px] font-mono text-text-faint bg-surface px-1.5 py-0.2 rounded">
-                        {INITIAL_TABLES[tblKey]?.length || 0} rows
+                        {resolveRowCount(tblKey, liveTables)} rows
                       </span>
                     </div>
 

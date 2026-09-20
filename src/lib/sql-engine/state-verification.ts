@@ -37,6 +37,64 @@ function rowKey(row: TableRow): string {
   const keys = Object.keys(row || {}).sort();
   return keys.map((k) => k + '=' + serializeCellValue(row[k])).join('\u0001');
 }
+/** Truncate a display value so error banners stay one idea, not a data dump. */
+function fmtCell(v: unknown, maxLen = 40): string {
+  if (v === null || v === undefined) return 'NULL';
+  let s = String(v);
+  if (s.length > maxLen) s = s.slice(0, maxLen - 1) + '…';
+  return "'" + s + "'";
+}
+
+/**
+ * Phase 1 (value-diff errors): when two same-size row multisets differ,
+ * explain WHICH values differ instead of the cryptic "expected 16, found 16".
+ * Pairs the single extra learner row with the single missing expected row for
+ * a column-level diff: `name (yours: 'Rahim …', expected: 'Sultana …')`.
+ * Pure + bounded: at most maxCols columns named, values truncated, no
+ * solution copy-paste (only differing columns shown).
+ */
+function diffSameSizeRows(
+  aRows: TableRow[],
+  eRows: TableRow[],
+  maxCols = 3,
+): { message: string; columns: string[] } | null {
+  if (aRows.length === 0 || aRows.length !== eRows.length) return null;
+  const aKeys = aRows.map(rowKey);
+  const eCounts = new Map<string, number>();
+  for (const k of eRows.map(rowKey)) eCounts.set(k, (eCounts.get(k) ?? 0) + 1);
+  const extraIdx: number[] = [];
+  for (let i = 0; i < aKeys.length; i++) {
+    const c = eCounts.get(aKeys[i]);
+    if (!c) extraIdx.push(i);
+    else if (c === 1) eCounts.delete(aKeys[i]);
+    else eCounts.set(aKeys[i], c - 1);
+  }
+  if (extraIdx.length === 0) return null;
+  const missing = eRows.filter((r) => !aKeys.includes(rowKey(r)));
+  // Precise 1:1 diff for the classic single-INSERT mistake; otherwise a
+  // bounded summary so multi-row batches don't flood the banner.
+  if (extraIdx.length !== 1 || missing.length !== 1) {
+    // No 1:1 pairing, so there is no column list to report — the caller still
+    // gets the count framing and telemetry just records "value mismatch".
+    return { message: extraIdx.length + ' row(s) differ from the expected result.', columns: [] };
+  }
+  const actual = aRows[extraIdx[0]];
+  const want = missing[0];
+  const cols = Array.from(new Set([...Object.keys(actual ?? {}), ...Object.keys(want ?? {})]));
+  const diffs = cols.filter(
+    (c) => serializeCellValue(actual?.[c]) !== serializeCellValue(want?.[c]),
+  );
+  if (diffs.length === 0) return null;
+  const shown = diffs.slice(0, maxCols);
+  const parts = shown.map(
+    (c) => "'" + c + "' (yours: " + fmtCell(actual?.[c]) + ', expected: ' + fmtCell(want?.[c]) + ')',
+  );
+  const more = diffs.length > maxCols ? ' +' + (diffs.length - maxCols) + ' more' : '';
+  return {
+    message: 'values differ in ' + parts.join(', ') + more + '.',
+    columns: diffs,
+  };
+}
 
 /** True when two row-key lists represent the same multiset (order-insensitive). */
 export function rowMultisetEqual(a: string[], b: string[]): boolean {
@@ -56,6 +114,14 @@ export interface FinalStateVerdict {
   ok: boolean;
   /** Human-readable explanation of the first mismatch found (when !ok). */
   message?: string;
+  /**
+   * Phase 3 (telemetry + audits): the column names whose VALUES differed, when
+   * the mismatch was a same-size 1:1 row diff (the classic wrong-INSERT). Empty
+   * for count/shape mismatches. Lets the telemetry report say "learners get the
+   * row count right but miss the VALUES in these columns" without re-parsing the
+   * human-readable message.
+   */
+  diffColumns?: string[];
   /**
    * S3-11: the check could not reach a verdict because the task's own reference
    * solution errored. `ok` stays TRUE so a learner is never punished for an
@@ -148,9 +214,23 @@ export function compareFinalState(
     const eRows = expected.tables?.[eorig] ?? [];
     const aRows = actual.tables?.[aorig] ?? [];
     if (!rowMultisetEqual(aRows.map(rowKey), eRows.map(rowKey))) {
+      // Phase 1: prefer a value-level diff over the cryptic count message.
+      // Same-size mismatch (the classic wrong-INSERT: "expected 16, found 16")
+      // names the differing columns; count mismatch keeps the count framing.
+      const base = `Table '${eorig}' does not match the expected final state (expected ${eRows.length} row(s), found ${aRows.length}).`;
+      if (eRows.length === aRows.length) {
+        const diff = diffSameSizeRows(aRows, eRows);
+        if (diff) {
+          return {
+            ok: false,
+            message: `${base} Your row count is right, but ${diff.message} Check the exact values in the instructions.`,
+            diffColumns: diff.columns,
+          };
+        }
+      }
       return {
         ok: false,
-        message: `Table '${eorig}' does not match the expected final state (expected ${eRows.length} row(s), found ${aRows.length}). Check which rows you targeted and the values you wrote.`,
+        message: `${base} Check which rows you targeted and the values you wrote.`,
       };
     }
   }

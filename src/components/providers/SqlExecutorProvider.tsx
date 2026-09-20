@@ -31,6 +31,8 @@ export function SqlExecutorProvider({ children }: { children: React.ReactNode })
   }, [executor]);
 
   const getDatabaseState = useCallback(
+    // P0 FIX: executor.getDatabaseState() now deep-clones, so this snapshot
+    // is frozen even if the learner runs more SQL afterwards.
     () => executor.getDatabaseState(),
     [executor],
   );

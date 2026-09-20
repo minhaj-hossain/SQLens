@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
-import { QueryExecutionResult, TableRow, DatabaseState } from '../../types/database';
-import { validateTaskSolution, isReadOnlySelect } from '../../lib/sql-engine/validator';
-import { gradeFinalState } from '../../lib/sql-engine/state-verification';
+import { QueryExecutionResult, DatabaseState } from '../../types/database';
+import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
 import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
-import { INITIAL_TABLES } from '../../content/database/tables';
+import { readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
 import {
   Play,
   CheckCircle2,
@@ -31,6 +30,12 @@ interface IndependentChallengeViewProps {
   onExecuteSql: (sql: string) => QueryExecutionResult;
   /** F1: snapshot hook — mutation tasks grade by final database state. */
   getDatabaseState?: () => DatabaseState;
+  /**
+   * P0 FIX (parity with PracticeTaskView): lets fresh-challenge retries reset
+   * to seed at submit time so repeated Run & Check stays idempotent.
+   * Host (ChallengeView) decides; view only calls for `fresh` lifecycles.
+   */
+  onResetDatabase?: () => void;
   onChallengeTaskSuccess: (taskId: string, userSql: string) => void;
   onFinishAllChallenges: () => void;
   onBackToPractice?: () => void;
@@ -60,6 +65,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   savedTaskSqls = {},
   onExecuteSql,
   getDatabaseState,
+  onResetDatabase,
   onChallengeTaskSuccess,
   onFinishAllChallenges,
   onBackToPractice,
@@ -99,6 +105,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
   const editorRef = useRef<QueryEditorHandle>(null);
 
+  // Phase 5: 1-based submit counter for the CURRENT task session. Telemetry only
+  // — a high attempt count alongside value mismatches is the signal that a
+  // challenge's instructions (not the engine) are what learners struggle with.
+  const attemptRef = useRef(1);
+
   // Sync state when selected task changes (tracked by currentTask.id)
   useEffect(() => {
     const isDone = completedTaskIds.includes(currentTask.id);
@@ -112,6 +123,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     setRevealedHintLevel(0);
     setFailedAttemptsCount(0);
     setInspectTable(currentTask.primaryTable || 'products');
+    attemptRef.current = 1;
     // v2 database lifecycle: a `fresh` challenge resets the database to seed
     // on every task switch so each task is independently verifiable. `inherit`
     // (or default) keeps the mutated state for connected multi-step tasks.
@@ -172,6 +184,16 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     if (validationFeedback) setValidationFeedback(null);
   };
 
+  // Submit & grade.
+  //
+  // Phase 3 (single grading pipeline): this used to inline the same six-step
+  // sequence as `PracticeTaskView`, which is how the blocking INSERT bug shipped
+  // twice — a fix applied to one view left the other broken. Both now call
+  // `runAndGradeSubmission`, and the audit scripts call it too, so a CI failure
+  // is the same failure a learner would hit.
+  // v2 lifecycle: a task-level `databaseLifecycle` overrides the challenge-level
+  // one (challenge tasks usually inherit); `fresh` resets to seed at submit so
+  // retries are idempotent instead of accumulating rows.
   const handleRunQuery = (sqlToRun?: string) => {
     const sql = typeof sqlToRun === 'string' ? sqlToRun : currentSql;
     const trimmed = sql.trim();
@@ -180,39 +202,22 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       return;
     }
 
-    // F1: snapshot BEFORE the statement runs, so mutation tasks can be graded
-    // against the expected final database state (sandbox replay).
-    const preState = getDatabaseState?.();
-    const result = onExecuteSql(sql);
-    setExecutionResult(result);
-
-    // P10.3: grade against the solution's output on the same session executor
-    // (read-only SELECTs only, so this never mutates the database).
-    const expected =
-      currentTask.validation.requireExactResult && !result.error && isReadOnlySelect(currentTask.solutionSql)
-        ? onExecuteSql(currentTask.solutionSql)
-        : undefined;
-
-    let outcome = validateTaskSolution(sql, result, currentTask.validation, expected);
-
-    // F1: mutation/DDL tasks grade on final database state — replay the
-    // solution on a sandbox clone and compare (wrong-row/wrong-value UPDATEs
-    // report identical affectedRows but leave a different state behind).
-    if (
-      outcome.passed &&
-      preState && getDatabaseState && currentTask.solutionSql &&
-      !isReadOnlySelect(currentTask.solutionSql) && !result.error
-    ) {
-      const stateCheck = gradeFinalState(preState, currentTask.solutionSql, getDatabaseState(), {
-        verifyTypes: !!currentTask.validation.verifyColumnTypes,
-      });
-      if (!stateCheck.ok) {
-        outcome = {
-          passed: false,
-          feedback: stateCheck.message || 'The statement ran, but the resulting database state does not match the expected outcome.',
-        };
-      }
-    }
+    const outcome = runAndGradeSubmission({
+      task: {
+        ...currentTask,
+        databaseLifecycle: currentTask.databaseLifecycle ?? challenge.databaseLifecycle,
+      },
+      sql,
+      hooks: {
+        execute: onExecuteSql,
+        getDatabaseState,
+        resetDatabase: onResetDatabase,
+      },
+      surface: 'challenge',
+      // Phase 5: telemetry only — never affects the verdict.
+      attempt: attemptRef.current++,
+    });
+    setExecutionResult(outcome.result);
 
     if (outcome.passed) {
       setTaskPassed(true);
@@ -225,8 +230,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
       const errorText =
         outcome.feedback ||
-        (result.error
-          ? `SQL execution error: ${result.error}`
+        (outcome.result.error
+          ? `SQL execution error: ${outcome.result.error}`
           : 'Your query output did not match the expected dataset.');
       setValidationFeedback(cleanBackticks(errorText));
     }
@@ -253,7 +258,18 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
   // Active Inspect Table Schema & Rows for Modal
   const activeSchema = DATABASE_SCHEMAS[inspectTable.toLowerCase()] || DATABASE_SCHEMAS.products;
-  const rawRows: TableRow[] = INITIAL_TABLES[inspectTable.toLowerCase()] || [];
+  // Phase 2 (live explorer, parity with DatabaseExplorer): read the executor
+  // snapshot so the inspector shows the learner's live rows (seed + their own
+  // INSERT/UPDATE/DELETE) instead of the static INITIAL_TABLES seed. Keyed on
+  // `executionResult` so it re-reads after every Run & Check; falls back to
+  // seed when no executor hook is provided (unit tests, static renders).
+  const liveTables = useMemo(
+    () => readLiveTables(getDatabaseState),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [executionResult, getDatabaseState],
+  );
+  const inspectKey = inspectTable.toLowerCase();
+  const { rows: rawRows, deltaLabel: inspectDeltaLabel } = resolveLiveRows(inspectKey, liveTables);
   const filteredRows = rawRows.filter((r) => {
     if (!dbSearchFilter) return true;
     return Object.values(r).some((val) =>
@@ -261,7 +277,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     );
   });
 
-  const tableRowCount = INITIAL_TABLES[currentTask.primaryTable.toLowerCase()]?.length || 0;
+  const tableRowCount = resolveRowCount(currentTask.primaryTable, liveTables);
   const cleanedPrompt = cleanBackticks(currentTask.description || currentTask.title);
 
   return (
@@ -393,7 +409,10 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           placeholder={buildEditorPlaceholder(currentTask)}
           textareaId="challenge-sql-textarea"
           minLineCount={5}
-          error={!taskPassed ? (executionResult?.error || validationFeedback) : null}
+          // P0 FIX: inline bar only understands ENGINE errors. Validation text
+          // renders in the banner below; passing it here forged the false
+          // "Table 'products' does not exist" message.
+          error={!taskPassed ? (executionResult?.error ?? null) : null}
         />
 
         {/* Editor Bottom Actions */}
@@ -547,7 +566,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                   >
                     {Object.keys(DATABASE_SCHEMAS).map((tName) => (
                       <option key={tName} value={tName} className="bg-surface-2 text-text">
-                        {tName} ({INITIAL_TABLES[tName]?.length || 0} rows)
+                        {/* Phase 2: live row counts, so inserts are visible here too */}
+                        {tName} ({resolveRowCount(tName, liveTables)} rows)
                       </option>
                     ))}
                   </select>
@@ -598,6 +618,14 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             </div>
 
             {/* Data Grid — shared DataGrid */}
+            {/* Phase 2: when the learner's statements changed this table, say so —
+                the cryptic "expected 16, found 16" only makes sense once they can
+                see their own row landed on top of the seed. */}
+            {inspectDeltaLabel && (
+              <div className="px-3 pt-2 font-mono text-[10.5px] text-text-dim">
+                Showing live data: {inspectDeltaLabel}. New rows appear at the bottom.
+              </div>
+            )}
             <DataGrid
               columns={activeSchema.columns.map((c) => c.name)}
               rows={filteredRows}

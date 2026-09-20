@@ -54,6 +54,9 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
       completedTaskIds={completedTaskIds}
       onExecuteSql={executeQuery}
       getDatabaseState={getDatabaseState}
+      // P0 FIX: idempotent fresh-challenge retries (reset at submit, not just
+      // on task switch).
+      onResetDatabase={resetDatabase}
       onChallengeTaskSuccess={(taskId, userSql) =>
         markChallengeTaskComplete({ taskId, moduleId: mod.id, userSql })
       }

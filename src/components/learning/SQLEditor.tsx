@@ -24,7 +24,16 @@ interface SQLEditorProps {
   backLabel?: string;
   /** Restore this SQL on reset (task scaffold). */
   resetSql?: string;
-  /** Error from last execution or validation */
+  /**
+   * P0 FIX: ENGINE error only (result.error from executeQuery).
+   * Validation/grading feedback must NOT be passed here — it goes to
+   * ResultsConsole via validationFeedback. Mixing them made
+   * "Table 'products' does not match the expected final state" render as
+   * "Table 'products' does not exist. Did you mean 'products'?".
+   * `lastError` kept as deprecated alias so existing callers keep compiling.
+   */
+  engineError?: string | null;
+  /** @deprecated use engineError — kept for backwards compat. */
   lastError?: string | null;
 }
 
@@ -41,6 +50,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   onBack,
   backLabel = "Back",
   resetSql,
+  engineError,
   lastError,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -137,7 +147,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         }
         readOnly={readOnly}
         textareaId="sql-query-textarea"
-        error={evaluationState === "wrong" ? lastError : null}
+        error={evaluationState === "wrong" ? (engineError ?? lastError ?? null) : null}
       />
 
       <div className="flex items-center gap-1.5 px-3 py-2 bg-surface border-t border-border-soft overflow-x-auto text-xs scrollbar-none">

@@ -251,12 +251,37 @@ export class SqlExecutor {
   private db: DatabaseState;
   private transactionBackup: DatabaseState | null = null;
   private inTransaction: boolean = false;
-  /** Index registry — key is the lowercase index name. Seeded from the schema's
-   *  PRIMARY KEY columns; extended by `CREATE INDEX`, shrunk by `DROP INDEX`. */
-  private indexes: Record<string, SqlIndexDef>;
-  private indexBackup: Record<string, SqlIndexDef> | null = null;
+
+  /**
+   * Runtime DDL state is part of the DATABASE STATE, not executor-local state.
+   *
+   * Phase 3 fix (6 of 7 audit findings): grading snapshots the DB via
+   * `getDatabaseState()` and replays the reference solution in a sandbox
+   * (`new SqlExecutor(preState)`). While `tableMeta` (AUTO_INCREMENT / DEFAULT /
+   * CHECK / FK from `CREATE TABLE`) and `indexes` lived only on the instance, the
+   * sandbox could not reproduce the learner's execution: a runtime-created
+   * `authors` table lost its AUTO_INCREMENT, so `INSERT INTO authors (name)`
+   * produced `{name}` instead of `{author_id, name}` in the sandbox. Row counts
+   * matched, values did not — correct multi-step Day-33/31 capstones could never
+   * pass. Storing them in `db` makes every clone/snapshot self-contained.
+   *
+   * Accessors keep the original call sites unchanged and lazily seed on states
+   * that predate the fields (hand-built literals).
+   */
+  private get indexes(): Record<string, SqlIndexDef> {
+    if (!this.db.indexes) this.db.indexes = this.seedIndexes();
+    return this.db.indexes;
+  }
+
+  private set indexes(value: Record<string, SqlIndexDef>) {
+    this.db.indexes = value;
+  }
+
   /** Constraint metadata for tables created at runtime via CREATE TABLE. */
-  private tableMeta: Record<string, DdlTableMeta> = {};
+  private get tableMeta(): Record<string, DdlTableMeta> {
+    if (!this.db.meta) this.db.meta = {};
+    return this.db.meta;
+  }
 
   constructor(initialDb?: DatabaseState) {
     if (initialDb) {
@@ -267,8 +292,17 @@ export class SqlExecutor {
         schemas: JSON.parse(JSON.stringify(DATABASE_SCHEMAS)),
       };
     }
-    this.indexes = this.seedIndexes();
-    this.tableMeta = {};
+    // Materialize the runtime registries INTO the state immediately, so the very
+    // first `getDatabaseState()` snapshot already carries them.
+    if (!this.db.meta) this.db.meta = {};
+    if (!this.db.indexes) this.db.indexes = this.seedIndexes();
+    // Detached-reference safety (Phase 2): previews/tests pass `getDatabaseState`
+    // and `resetDatabase` around as plain callbacks (e.g. `readLiveTables(fn)`),
+    // and an unbound method would throw on `this.db` — the caller would then
+    // silently render stale seed data. Bind so passing the method by reference
+    // is always safe.
+    this.getDatabaseState = this.getDatabaseState.bind(this);
+    this.resetDatabase = this.resetDatabase.bind(this);
   }
 
   /** PRIMARY KEY indexes are the seed state — one per table, on its PK column. */
@@ -286,7 +320,12 @@ export class SqlExecutor {
   }
 
   public getDatabaseState(): DatabaseState {
-    return this.db;
+    // P0 FIX (blocking INSERT bug): never hand out the live reference.
+    // Callers snapshot BEFORE execute and grade AFTER — if this returns
+    // `this.db` directly, `preState` silently includes the user's own
+    // mutation and the sandbox replay in gradeFinalState() inserts twice
+    // (expected 32 vs found 31). Deep-clone so snapshots stay frozen.
+    return JSON.parse(JSON.stringify(this.db));
   }
 
   public resetDatabase(initialDb?: DatabaseState) {
@@ -300,9 +339,10 @@ export class SqlExecutor {
     }
     this.transactionBackup = null;
     this.inTransaction = false;
-    this.indexes = this.seedIndexes();
-    this.indexBackup = null;
-    this.tableMeta = {};
+    // Re-seed the runtime registries into the fresh state (see the `indexes`
+    // accessor): a reset DB must forget runtime tables' meta and custom indexes.
+    this.db.indexes = this.seedIndexes();
+    this.db.meta = {};
   }
 
   /** Extract simple column predicates from a WHERE clause for plan simulation.
@@ -1093,8 +1133,10 @@ export class SqlExecutor {
     const cmd = parsed.transactionCommand;
     if (cmd === 'BEGIN') {
       this.inTransaction = true;
+      // Phase 3: `db` now carries the runtime registries (meta/indexes), so one
+      // backup snapshot restores tables, schemas, indexes AND DDL metadata —
+      // the separate `indexBackup` field became redundant.
       this.transactionBackup = JSON.parse(JSON.stringify(this.db));
-      this.indexBackup = JSON.parse(JSON.stringify(this.indexes));
       return {
         success: true,
         columns: ['status'],
@@ -1106,7 +1148,6 @@ export class SqlExecutor {
     } else if (cmd === 'COMMIT') {
       this.inTransaction = false;
       this.transactionBackup = null;
-      this.indexBackup = null;
       return {
         success: true,
         columns: ['status'],
@@ -1116,13 +1157,11 @@ export class SqlExecutor {
         transactionStatus: 'committed',
       };
     } else if (cmd === 'ROLLBACK') {
+      // Phase 3: restoring `db` restores tables, schemas, indexes and DDL meta
+      // in one step — the runtime registries now live inside the snapshot.
       if (this.transactionBackup) {
         this.db = this.transactionBackup;
         this.transactionBackup = null;
-      }
-      if (this.indexBackup) {
-        this.indexes = this.indexBackup;
-        this.indexBackup = null;
       }
       this.inTransaction = false;
       return {

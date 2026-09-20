@@ -58,6 +58,36 @@ describe('F1: mutation grading by final database state', () => {
     expect(verdict.ok).toBe(false);
   });
 
+  // P0 regression (blocking INSERT bug): getDatabaseState() must return a
+  // frozen snapshot, not the live reference. Before the fix, snapshotting
+  // preState then executing mutated the SAME object, so the sandbox replay
+  // inserted twice and a correct INSERT could never grade ok.
+  it('P0: preState snapshot stays frozen after the learner executes', () => {
+    const host = new SqlExecutor();
+    const seedCount = host.executeQuery('SELECT * FROM products;').rowCount;
+    const preState = host.getDatabaseState();
+    const preCount = preState.tables['products'].length;
+    host.executeQuery(
+      "INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Ultra Wireless Mouse', 1, 1, 49.99, 100, 20);",
+    );
+    expect(preState.tables['products'].length).toBe(preCount);
+    expect(preState.tables['products'].length).toBe(seedCount);
+    expect(host.getDatabaseState().tables['products'].length).toBe(seedCount + 1);
+  });
+
+  it('P0: correct INSERT grades ok, repeatedly (idempotent retry)', () => {
+    const INSERT =
+      "INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Ultra Wireless Mouse', 1, 1, 49.99, 100, 20);";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      // Fresh-task retry contract: reset to seed, snapshot, execute, grade.
+      const host = new SqlExecutor();
+      const preState = host.getDatabaseState();
+      host.executeQuery(INSERT);
+      const verdict = gradeFinalState(preState, INSERT, host.getDatabaseState());
+      expect(verdict.ok).toBe(true);
+    }
+  });
+
   it('is float-tolerant: precomputed literal 17.589 equals engine-computed price*1.10', () => {
     const preState = new SqlExecutor().getDatabaseState();
     const learner = new SqlExecutor(preState);
@@ -94,6 +124,54 @@ describe('F1: mutation grading by final database state', () => {
     const different = mkState('r', [{ id: 1, created_at: '2026-07-01 10:30:02' }], ['id', 'created_at']);
     expect(compareFinalState(sameMinute, expected).ok).toBe(true);
     expect(compareFinalState(different, expected).ok).toBe(false);
+  });
+
+  // Phase 1 (value-diff errors): same-size mismatch names differing columns
+  // instead of the cryptic "expected 16, found 16". Covers the Day-25
+  // screenshot: Rahim vs Sultana, same count, wrong values.
+  it('Phase 1: same-count wrong-INSERT names the differing columns', () => {
+    const expected = mkState(
+      'customers',
+      [{ name: 'Sultana Begum', email: 'sultana@example.com', city: 'Dhaka' }],
+      ['name', 'email', 'city'],
+    );
+    const actual = mkState(
+      'customers',
+      [{ name: 'Rahim Ahmed', email: 'rahim.ahmed@example.com', city: 'Dhaka' }],
+      ['name', 'email', 'city'],
+    );
+    const verdict = compareFinalState(actual, expected);
+    expect(verdict.ok).toBe(false);
+    expect(verdict.message).toMatch(/row count is right/i);
+    expect(verdict.message).toMatch(/values differ in/i);
+    expect(verdict.message).toContain("'name'");
+    expect(verdict.message).toContain('Rahim Ahmed');
+    expect(verdict.message).toContain('Sultana Begum');
+    // Same-city must NOT be listed as differing.
+    expect(verdict.message).not.toContain("'city'");
+  });
+
+  it('Phase 1: count mismatch keeps the count framing (no fake diff)', () => {
+    const expected = mkState('t', [{ id: 1 }, { id: 2 }]);
+    const actual = mkState('t', [{ id: 1 }]);
+    const verdict = compareFinalState(actual, expected);
+    expect(verdict.ok).toBe(false);
+    expect(verdict.message).toMatch(/expected 2 row\(s\), found 1/);
+    expect(verdict.message).not.toMatch(/row count is right/i);
+  });
+
+  it('Phase 1: end-to-end Day-25 T2 wrong customer gets a diff message', () => {
+    const SOLUTION =
+      "INSERT INTO customers (name, email, city, signup_date) VALUES ('Sultana Begum', 'sultana@example.com', 'Dhaka', '2026-08-25');";
+    const preState = new SqlExecutor().getDatabaseState();
+    const learner = new SqlExecutor(preState);
+    learner.executeQuery(
+      "INSERT INTO customers (name, email, city, signup_date) VALUES ('Rahim Ahmed', 'rahim.ahmed@example.com', 'Dhaka', '2026-09-20');",
+    );
+    const verdict = gradeFinalState(preState, SOLUTION, learner.getDatabaseState());
+    expect(verdict.ok).toBe(false);
+    expect(verdict.message).toMatch(/values differ in/i);
+    expect(verdict.message).toContain("'name'");
   });
 
   it('falls back to PASS when the reference solution itself errors', () => {
