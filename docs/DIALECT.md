@@ -200,3 +200,141 @@ the engine never returns rows unsorted as if the sort had applied:
 `ORDER BY expressions are not supported in this SQL dialect — sort by a column
 name or position instead.` Use `ORDER BY price DESC` (or a projected alias).
 
+---
+
+## 8. Three-Tier Dialect Model (Milestone 4 contract — Days 39–57)
+
+Teaching rule: **concept first, syntax second. One day = one module = one
+conceptual lesson.** Dialect differences live at the step/exercise/validator
+level — never as parallel day files. `day-39-views-mysql.ts` next to
+`day-39-views-postgres.ts` is forbidden: it duplicates curriculum and drifts.
+
+### Tier 1 — Shared concept (one lesson, one conceptual explanation)
+
+The *idea* exists in both engines and is taught once:
+
+```text
+SELECT, JOIN, CTE, WITH RECURSIVE (concept), window functions,
+CREATE VIEW, WITH CHECK OPTION, transactions (BEGIN/COMMIT/ROLLBACK),
+SAVEPOINT, SELECT ... FOR UPDATE (concept), GRANT/REVOKE (concept),
+composite-index (concept), EXPLAIN (concept), JSON-extract (concept),
+FUNCTION / PROCEDURE / TRIGGER as concepts (named logic, parameterised
+routines, automatic row hooks exist in both engines)
+```
+
+### Tier 2 — Same concept, different syntax/implementation
+
+One lesson, two validators. Each exercise carries `dialect` + `variants`
+(see `src/types/curriculum.ts`); the validator runs the matching leg.
+
+| Concept | MySQL canonical | PostgreSQL variant |
+|---|---|---|
+| Auto-increment | `AUTO_INCREMENT` | `GENERATED ALWAYS AS IDENTITY` (`SERIAL` legacy) |
+| Upsert | `ON DUPLICATE KEY UPDATE` | `ON CONFLICT DO UPDATE` |
+| JSON extract | `JSON_EXTRACT(col, '$.a')` | `col->>'a'` / `col->'a'` |
+| JSON contains | `JSON_CONTAINS(col, ...)` | `@>` operator |
+| Scalar function def | `CREATE FUNCTION f(p T) RETURNS T RETURN expr` | `CREATE FUNCTION f(p T) RETURNS T AS $$ ... $$ LANGUAGE sql` |
+| Procedure error raise | `SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=...` | `RAISE EXCEPTION ...` |
+| Procedure error handler | `DECLARE ... HANDLER FOR SQLEXCEPTION ...` | `BEGIN ... EXCEPTION WHEN OTHERS THEN ... END` |
+| Trigger creation | `CREATE TRIGGER t BEFORE/AFTER ... FOR EACH ROW <body>` | `CREATE FUNCTION ... RETURNS trigger` + `CREATE TRIGGER ... EXECUTE FUNCTION ...` |
+| Covering index | composite design (no `INCLUDE` — rejected with named error + hint) | key columns + `INCLUDE (cols)` |
+| String concat | `CONCAT(a, b)` | `CONCAT(a, b)` and `\|\|` |
+| `EXPLAIN ANALYZE` | supported (MySQL 8.0.18+, own output shape) | supported (own output shape) — NOT Postgres-only; the matrix captures the syntax/output difference |
+| Partition DDL | per-dialect boundary DDL | per-dialect boundary DDL — `PARTITION BY RANGE (YEAR(...))` is NOT assumed universal; lessons teach key, boundaries, pruning |
+
+**FUNCTION / PROCEDURE / TRIGGER placement:** Tier-1 concepts, Tier-2 implementations. Procedural languages and semantics are not interchangeable — never present MySQL handler syntax as valid PostgreSQL or vice versa.
+
+### Tier 3 — Engine-specific (extension callout, validated only on that dialect)
+
+PostgreSQL-native: RLS (CREATE POLICY), MATERIALIZED VIEW + REFRESH, partial index (WHERE), expression index, GIN, INCLUDE.
+MySQL-specific: gap-lock behaviour, ENUM semantics, DEFINER-rights patterns, function-based partitioning spellings.
+
+UI rule: PostgreSQL RLS is native; the MySQL approach is an alternative pattern (view + application boundary). Say "Equivalent pattern:", never "Equivalent feature:".
+
+### Execution vs simulation
+
+Real execution in the SQLens engine: VIEW registry + SELECT FROM view, WITH RECURSIVE (depth-guarded), deterministic scalar FUNCTION, PROCEDURE CALL, TRIGGER audit side-effects — but ONLY after engine tests prove state/result semantics (see Readiness Rule below).
+Simulation / visualizer: isolation anomalies, deadlock sequences, FOR UPDATE blocking, partition-pruning counts, EXPLAIN ANALYZE cost, GRANT/REVOKE matrix, RLS, backups/PITR, sharding.
+
+**Engine Readiness Rule (binding):** parser support is not execution support is not state mutation is not validator support. A construct is not "Real execution" until an engine-level test proves its state and result semantics. Curriculum claiming otherwise is a defect.
+
+### BEGIN disambiguation (binding, Days 44-45 and 50)
+
+`BEGIN` means two different things; lessons must separate them:
+
+```text
+START TRANSACTION ... COMMIT / ROLLBACK  — transaction control
+BEGIN ... END                            — procedural block delimiters
+```
+
+Inside procedures, authors write `START TRANSACTION` when they mean
+transaction control (where the dialect allows it) and call out PostgreSQL
+procedure-transaction rules separately. Learners must never leave believing
+procedural BEGIN and transaction BEGIN are the same keyword.
+
+### Handler, locking, indexing, anomaly wording (binding, Days 45-53)
+
+- Handler rollback: an error handler does NOT automatically roll back the
+  whole transaction. Every Day-45 exercise declares its transaction boundary
+  explicitly (BEGIN, operation A, operation B fails, handler, ROLLBACK — one
+  shape; SAVEPOINT, op fails, ROLLBACK TO SAVEPOINT — the separate Day-50
+  shape).
+- Locking: teach what resource is locked, what other transactions are
+  blocked, and why, then show engine-specific behaviour. Never present
+  "row lock vs table lock" as a universal cross-dialect law.
+- Composite indexes: ordered by leading columns, so queries using the
+  leading portion can generally benefit; exact optimizer behaviour is
+  query- and engine-dependent. Never teach leftmost-prefix as absolute law.
+- Anomalies (incl. lost update): teach what occurred, why it occurred, and
+  which mechanism prevents it. Never imply SERIALIZABLE universally solves
+  every lost update.
+- Recursion termination vs runtime guard: SQL termination is anchor plus
+  recursive member plus termination condition. The SQLens max expansion
+  (100) is runtime safety, not SQL semantics — never present LIMIT as the
+  reason recursive CTEs terminate.
+- Partitioning: explicit boundary model (2024 / 2025 / 2026 partitions);
+  each dialect supplies valid DDL. Objective is key, boundaries, pruning.
+- Recursive string accumulation: declare explicit expected output
+  schemas/types per dialect leg where needed — do not assume identical
+  typing across engines.
+- JSON comparison: semantic results, never raw serialisation.
+- Day 40 to Day 44 progression: Day 40 teaches VIEW vs stored summary
+  table with MANUAL refresh only (DROP/CREATE or conceptual UI action —
+  no procedure stub). Day 44 introduces automation.
+
+---
+
+## 9. Dual-validator semantics (Milestone 4)
+
+`dialect: 'both'` does NOT mean "pass if either dialect happens to match".
+The learner is validated independently per leg:
+
+```text
+learner SQL
+   ├── MySQL leg      → pass / fail (+ reason)
+   └── PostgreSQL leg → pass / fail (+ reason)
+```
+
+Each task declares an explicit `matchPolicy`:
+
+| Policy | Meaning | Use for |
+|---|---|---|
+| `both-required` (default for shared exercises) | learner SQL passes BOTH legs independently | shared SQL: views, WITH RECURSIVE, SAVEPOINT, FOR UPDATE, shared EXPLAIN reading |
+| `one-valid-variant` | task ships `variants.mysql` / `variants.postgres`; learner passes if EITHER variant dataset plus construct checks pass ON ITS MATCHING leg (cross-dialect accidental dataset match without the matching construct check does not pass) | Tier-2 differences: function/procedure/trigger DDL, JSON operators, INCLUDE, EXPLAIN ANALYZE output |
+| `dialect-specific` | only the declared leg runs; UI shows a dialect badge | Tier-3: RLS policy, MATERIALIZED VIEW, GIN, DEFINER |
+
+Per-leg failures are both reported on `both-required` tasks so a learner
+never sees "passed" while one engine rejects the SQL.
+
+---
+
+## 10. Milestone 4 grading notes
+
+- `strictConstruct` stays syntax-only. Reasoning is graded by `judgment[]`
+  exercises (`choose-and-defend`, `predict-failure`, `diagnose-plan`,
+  `compare-tradeoff`) — never by keyword regex.
+- The atomicity linter (`scripts/audit-atomicity.ts`) is a human-review
+  warning, not an automatic reject: `Views + CHECK OPTION` can be one
+  atomic module. It flags suspected bundling (`Composite + covering +
+  partial`, `JSON + UUID + ENUM`, `Backup + PITR + migration`) for review.
+

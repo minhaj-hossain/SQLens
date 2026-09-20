@@ -205,7 +205,7 @@ export const Day_19_MODULE: ModuleData = {
         title: 'Task 2: Inactive customer temporal audit (90 days or zero orders)',
         description: 'Audit customers whose last order is older than 90 days — or who never ordered at all. Rebuild the inactive account audit with relative dates and DATEDIFF.',
         instructions: [
-          'LEFT JOIN `orders o` on `c.customer_id = o.customer_id`; GROUP BY `c.customer_id, c.name`.',
+          'FROM `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`; GROUP BY `c.customer_id, c.name`.',
           'Select `c.name`, `MAX(o.order_date) AS last_order`, `DATEDIFF(CURDATE(), MAX(o.order_date)) AS days_since`.',
           'HAVING the gap > 90 (or no orders at all: `MAX(o.order_date) IS NULL`). End with a semicolon.',
         ],

@@ -832,7 +832,7 @@ export const Day_23_MODULE: ModuleData = {
           title: 'Task 2 (Independent): Top-3 best-sellers per category',
           description: 'Transfer to sales data: which 3 products sold the most units within each category? One more CTE is needed — sales per product first, then the ranking.',
           instructions: [
-            'CTE `sold`: join `order_items oi` to `products p`, select `p.product_id, p.name, p.category_id`, and `SUM(oi.quantity) AS total_sold`, GROUP BY the three product columns.',
+            'CTE `sold`: FROM `order_items oi` JOIN `products p` ON `oi.product_id = p.product_id`, select `p.product_id, p.name, p.category_id`, and `SUM(oi.quantity) AS total_sold`, GROUP BY the three product columns.',
             'CTE `ranked`: add `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY total_sold DESC) AS sales_rank`.',
             'Outer query: keep `sales_rank <= 3`, output name, category_id, total_sold.',
           ],
@@ -921,7 +921,7 @@ export const Day_23_MODULE: ModuleData = {
         title: 'Task 3 (Stretch): Best-seller per supplier',
         description: 'For the supplier review: the single best-selling product (by total units sold) for each supplier. Everything from today in one query — aggregate, join, partition, cut to 1.',
         instructions: [
-          'CTE `sold`: join `order_items oi` to `products p`; select `p.product_id, p.name, p.supplier_id, SUM(oi.quantity) AS total_sold`; GROUP BY the three product columns.',
+          'CTE `sold`: FROM `order_items oi` JOIN `products p` ON `oi.product_id = p.product_id`; select `p.product_id, p.name, p.supplier_id, SUM(oi.quantity) AS total_sold`; GROUP BY the three product columns.',
           'CTE `ranked`: ROW_NUMBER OVER (PARTITION BY `supplier_id` ORDER BY `total_sold DESC`) AS `sup_rank`.',
           'Keep only `sup_rank = 1`.',
         ],

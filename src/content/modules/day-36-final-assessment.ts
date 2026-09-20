@@ -138,6 +138,7 @@ export const Day_36_MODULE: ModuleData = {
           validation: {
             requireExactResult: true,
             targetTable: 'customers',
+            requireJoin: true,
             expectedRowCount: 5,
           },
           successMessage: 'Warmup 2 completed! Above-average spenders filtered with CTE benchmark.',
@@ -198,6 +199,7 @@ export const Day_36_MODULE: ModuleData = {
         validation: {
           requireExactResult: true,
           targetTable: 'customers',
+          requireJoin: true,
           expectedRowCount: 5,
         },
         successMessage: 'Deliverable 2 verified! High-value customer benchmark verified.',

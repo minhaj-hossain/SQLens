@@ -83,6 +83,15 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
           <span className="text-text font-semibold text-[11px] sm:text-xs">{task.primaryTable}</span>
         </div>
 
+        {task.secondaryTables && task.secondaryTables.length > 0 && (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border min-w-0 max-w-full">
+            <span className="text-text-faint text-[10px] sm:text-xs tracking-wider shrink-0">JOIN</span>
+            <span className="text-text font-semibold text-[11px] sm:text-xs truncate">
+              {task.secondaryTables.join(' + ')}
+            </span>
+          </div>
+        )}
+
         {task.validation.requiredColumns && task.validation.requiredColumns.length > 0 && (
           <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border min-w-0 max-w-full">
             <span className="text-text-faint text-[10px] sm:text-xs tracking-wider shrink-0">COLUMNS</span>

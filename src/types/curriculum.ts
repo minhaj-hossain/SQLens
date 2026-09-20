@@ -1,3 +1,23 @@
+export type DialectId = 'both' | 'mysql' | 'postgres';
+
+export type DialectMatchPolicy = 'both-required' | 'one-valid-variant' | 'dialect-specific';
+
+export interface DialectVariant {
+  solutionSql: string;
+  validationOverride?: Partial<ValidationRule>;
+  explanationSuffix?: string;
+}
+
+export type JudgmentKind = 'choose-and-defend' | 'predict-failure' | 'diagnose-plan' | 'compare-tradeoff';
+
+export interface JudgmentExercise {
+  kind: JudgmentKind;
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
 export type TaskType = 'guided' | 'independent' | 'stretch' | 'challenge' | 'project' | 'assignment';
 
 export type LessonStepType = 'concept_theory' | 'practice_task' | 'concept_complete' | 'module_challenge' | 'module_complete';
@@ -88,6 +108,10 @@ export interface PracticeTask {
    *   undefined (default) — current behavior: inherit within a concept/day.
    */
   databaseLifecycle?: 'fresh' | 'inherit';
+  dialect?: DialectId;
+  matchPolicy?: DialectMatchPolicy;
+  variants?: { mysql?: DialectVariant; postgres?: DialectVariant };
+  judgment?: JudgmentExercise[];
 }
 
 export interface SyntaxBlock {

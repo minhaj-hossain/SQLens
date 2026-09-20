@@ -230,7 +230,7 @@ export const Day_37_MODULE: ModuleData = {
         title: 'Task 2: The executive revenue trend',
         description: 'Month, revenue, running total, and month-over-month growth - one query, two window functions. Verified against the store ledger.',
         instructions: [
-          'CTE monthly: MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue, JOIN orders to order_items, GROUP BY the month expression.',
+          'CTE monthly: FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`; select MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue; GROUP BY the month expression.',
           'CTE trend: SUM(revenue) OVER (ORDER BY mon) AS running_revenue, LAG(revenue) OVER (ORDER BY mon) AS prev_revenue.',
           'Outer: mon, revenue, running_revenue, revenue - prev_revenue AS growth, ORDER BY mon. Expect 7 rows.',
         ],
@@ -248,6 +248,7 @@ export const Day_37_MODULE: ModuleData = {
           targetTable: 'orders',
           requiredColumns: ['mon', 'revenue', 'running_revenue', 'growth'],
           requireFunction: 'LAG',
+          requireJoin: true,
           expectedRowCount: 7,
         },
         successMessage: 'Revenue trend delivered - running total and growth in a single pass.',
@@ -257,7 +258,7 @@ export const Day_37_MODULE: ModuleData = {
         title: 'Task 3: The fan-out count',
         description: '"How many distinct orders does the ledger actually contain?" Asked after showing the candidate an orders-to-order_items join.',
         instructions: [
-          'JOIN order_items to orders (the many side).',
+          'FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id` — orders is the one side, order_items the many side, so each order fans out to its line items.',
           'COUNT(DISTINCT o.order_id) AS orders_placed - not COUNT(*), which counts line items.',
           'Expect 1 row.',
         ],
@@ -275,6 +276,7 @@ export const Day_37_MODULE: ModuleData = {
           targetTable: 'orders',
           requiredColumns: ['orders_placed'],
           requireFunction: 'COUNT',
+          requireJoin: true,
           expectedRowCount: 1,
         },
         successMessage: 'Fan-out neutralized. Gauntlet complete - go take the real thing.',

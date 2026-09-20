@@ -1,3 +1,5 @@
+import { maskLiterals } from './sql-mask';
+
 const PAIRS: Record<string, string> = {
   "'": "'",
   '"': '"',
@@ -154,19 +156,112 @@ export function deleteEmptyPair(
   return { next, caret: start - 1 };
 }
 
-export const FUNCTION_SIGNATURES: { test: RegExp; hint: string }[] = [
-  { test: /\bCOUNT\s*\(\s*$/i, hint: 'COUNT(column) — how many non-NULL values' },
-  { test: /\bSUM\s*\(\s*$/i, hint: 'SUM(column) — total of numeric values' },
-  { test: /\bAVG\s*\(\s*$/i, hint: 'AVG(column) — average of numeric values' },
-  { test: /\bCONCAT\s*\(\s*$/i, hint: 'CONCAT(a, b, …) — glue strings together' },
-  { test: /\bCOALESCE\s*\(\s*$/i, hint: 'COALESCE(a, b, …) — first non-NULL value' },
-  { test: /\bSUBSTRING\s*\(\s*$/i, hint: 'SUBSTRING(text, start, length) — slice a string' },
-  { test: /\bROUND\s*\(\s*$/i, hint: 'ROUND(number, decimals) — round a number' },
-];
+/**
+ * Argument names + one-line doc per supported function. Batch 5 item 6: the
+ * signature bar highlights the argument the caret is currently inside, so this
+ * is a table (ordered params) rather than a flat hint string.
+ */
+export const FUNCTION_SIGNATURE_TABLE: Record<string, { params: string[]; doc: string }> = {
+  COUNT: { params: ['column'], doc: 'how many non-NULL values' },
+  SUM: { params: ['column'], doc: 'total of numeric values' },
+  AVG: { params: ['column'], doc: 'average of numeric values' },
+  MIN: { params: ['column'], doc: 'smallest value in the group' },
+  MAX: { params: ['column'], doc: 'largest value in the group' },
+  CONCAT: { params: ['a', 'b', '…'], doc: 'glue strings together' },
+  COALESCE: { params: ['a', 'b', '…'], doc: 'first non-NULL value' },
+  SUBSTRING: { params: ['text', 'start', 'length'], doc: 'slice a string' },
+  ROUND: { params: ['number', 'decimals'], doc: 'round a number' },
+  UPPER: { params: ['text'], doc: 'upper-case the text' },
+  LOWER: { params: ['text'], doc: 'lower-case the text' },
+  TRIM: { params: ['text'], doc: 'strip surrounding spaces' },
+  LENGTH: { params: ['text'], doc: 'count the characters' },
+};
 
-export function signatureHint(textBeforeCursor: string): string | null {
-  for (const s of FUNCTION_SIGNATURES) {
-    if (s.test.test(textBeforeCursor)) return s.hint;
+export interface FunctionSignature {
+  name: string;
+  params: string[];
+  doc: string;
+  /** Zero-based index of the argument the caret currently sits in. */
+  activeIndex: number;
+}
+
+export interface SignatureParts {
+  /** Text before the active argument, e.g. `SUBSTRING(text, `. */
+  before: string;
+  /** The active argument name to emphasise, e.g. `start`. */
+  active: string;
+  /** Text after the active argument, e.g. `, length) — slice a string`. */
+  after: string;
+  /** Full one-line signature, for a `title` / `aria-label`. */
+  text: string;
+}
+
+/**
+ * Signature under the caret (Batch 5, item 6). Scans backwards for the
+ * innermost UNCLOSED `(` — nested calls resolve correctly, and `ROUND(SUM(x), `
+ * reports ROUND with `decimals` active rather than SUM. The name directly
+ * before that paren is looked up in `FUNCTION_SIGNATURE_TABLE`; the argument
+ * index is the count of top-level commas between the paren and the caret.
+ *
+ * Literals are masked first, so `WHERE name = 'COUNT('` never triggers it.
+ * Returns `null` when the caret is not inside a known function call.
+ */
+export function findActiveSignature(textBeforeCursor: string): FunctionSignature | null {
+  const masked = maskLiterals(textBeforeCursor);
+  let depth = 0;
+  let open = -1;
+  for (let i = masked.length - 1; i >= 0; i--) {
+    const ch = masked[i];
+    if (ch === ')') depth++;
+    else if (ch === '(') {
+      if (depth === 0) {
+        open = i;
+        break;
+      }
+      depth--;
+    }
   }
-  return null;
+  if (open < 0) return null;
+
+  const name = /([A-Za-z_][A-Za-z0-9_]*)\s*$/.exec(masked.slice(0, open))?.[1];
+  if (!name) return null;
+  const spec = FUNCTION_SIGNATURE_TABLE[name.toUpperCase()];
+  if (!spec) return null;
+
+  let nested = 0;
+  let separators = 0;
+  for (let i = open + 1; i < masked.length; i++) {
+    const ch = masked[i];
+    if (ch === '(') nested++;
+    else if (ch === ')') nested--;
+    else if (ch === ',' && nested === 0) separators++;
+  }
+
+  return {
+    name: name.toUpperCase(),
+    params: spec.params,
+    doc: spec.doc,
+    // More separators than declared params (e.g. a variadic tail) clamps to the
+    // last declared argument instead of returning nothing.
+    activeIndex: Math.min(separators, spec.params.length - 1),
+  };
+}
+
+/** Split a signature into the three renderable pieces around the active arg. */
+export function signatureParts(sig: FunctionSignature): SignatureParts {
+  const { name, params, doc } = sig;
+  const i = Math.max(0, Math.min(sig.activeIndex, params.length - 1));
+  const before = `${name}(${params.slice(0, i).join(', ')}${i > 0 ? ', ' : ''}`;
+  const active = params[i];
+  const after = `${i < params.length - 1 ? ', ' : ''}${params.slice(i + 1).join(', ')}) — ${doc}`;
+  return { before, active, after, text: `${name}(${params.join(', ')}) — ${doc}` };
+}
+
+/**
+ * String entry point: the full one-line signature while the caret is inside a
+ * known function call, else `null`. Kept for callers that only need the text.
+ */
+export function signatureHint(textBeforeCursor: string): string | null {
+  const sig = findActiveSignature(textBeforeCursor);
+  return sig ? signatureParts(sig).text : null;
 }

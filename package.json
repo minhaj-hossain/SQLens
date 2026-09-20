@@ -19,6 +19,7 @@
     "audit:equivalence:tasks": "tsx scripts/audit-equivalence.ts",
     "audit:validation-overlap": "tsx scripts/count-validation-overlap.ts",
     "audit:keyword-case": "tsx scripts/audit-keyword-case.ts",
+    "audit:atomicity": "tsx scripts/audit-atomicity.ts",
     "audit:all": "npm run verify:curriculum && npx tsx scripts/audit-all-tasks.ts && npm run audit:equivalence && npm run audit:equivalence:tasks && npm run audit:validation-overlap && npm run audit:keyword-case"
   },
   "dependencies": {

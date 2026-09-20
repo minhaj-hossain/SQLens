@@ -1,5 +1,6 @@
 import AdminShell from '@/components/admin/AdminShell';
 import AdminQueryDebugPanel from '@/components/admin/AdminQueryDebugPanel';
+import AdminSuggestTelemetryPanel from '@/components/admin/AdminSuggestTelemetryPanel';
 import { auth, db } from '@/lib/auth';
 import { headers } from 'next/headers';
 
@@ -17,6 +18,7 @@ export default async function AdminQueryDebugPage() {
   return (
     <AdminShell adminName={(doc?.name as string | undefined) ?? 'Admin'}>
       <AdminQueryDebugPanel />
+      <AdminSuggestTelemetryPanel />
     </AdminShell>
   );
 }

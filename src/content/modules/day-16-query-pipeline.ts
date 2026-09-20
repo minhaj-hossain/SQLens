@@ -287,7 +287,7 @@ export const Day_16_MODULE: ModuleData = {
         title: 'Task 2: Customer loyalty tier classification (LEFT JOIN + CASE)',
         description: 'Marketing wants every customer classified as Gold (3+ orders), Silver (1–2 orders), or Bronze (0 orders — preserved via LEFT JOIN).',
         instructions: [
-          'LEFT JOIN `orders o` on `c.customer_id = o.customer_id`, GROUP BY `c.customer_id, c.name`.',
+          'FROM `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`, GROUP BY `c.customer_id, c.name`.',
           'Output `c.name`, `COUNT(o.order_id) AS order_count`, and a CASE on `COUNT(o.order_id)`: >= 3 → \'Gold\', >= 1 → \'Silver\', ELSE \'Bronze\' — AS `loyalty_tier`.',
           'Sort by `order_count DESC`. End with a semicolon (;).',
         ],

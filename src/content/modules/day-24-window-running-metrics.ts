@@ -186,7 +186,7 @@ export const Day_24_MODULE: ModuleData = {
           description:
             "Finance wants a revenue trend table: each month's revenue side by side with the revenue to date. Build the exact pattern from the concept.",
           instructions: [
-            'CTE `monthly`: `MONTH(o.order_date) AS mon` and `SUM(oi.quantity * oi.unit_price) AS revenue`, JOIN `orders o` to `order_items oi`, GROUP BY the month expression.',
+            'CTE `monthly`: FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id` — select `MONTH(o.order_date) AS mon` and `SUM(oi.quantity * oi.unit_price) AS revenue`, GROUP BY the month expression.',
             'Main query: `mon`, `revenue`, and `SUM(revenue) OVER (ORDER BY mon) AS running_revenue` FROM `monthly`, ORDER BY `mon`.',
             'Expect 7 rows — February through August.',
           ],
@@ -207,6 +207,7 @@ export const Day_24_MODULE: ModuleData = {
             targetTable: 'orders',
             requiredColumns: ['mon', 'revenue', 'running_revenue'],
             requireFunction: 'SUM',
+            requireJoin: true,
             expectedRowCount: 7,
           },
           successMessage: 'Running revenue shipped — and you now know the last-row-equals-grand-total sanity check.',
@@ -218,7 +219,7 @@ export const Day_24_MODULE: ModuleData = {
           description:
             "Support wants a ledger: for every order, the customer's cumulative spend up to that order. Same cumulative frame, new partition.",
           instructions: [
-            'CTE `ord`: `o.customer_id, o.order_id, o.order_date`, and `SUM(oi.quantity * oi.unit_price) AS total`; JOIN orders→order_items; GROUP BY the three order columns.',
+            'CTE `ord`: FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`; select `o.customer_id, o.order_id, o.order_date` and `SUM(oi.quantity * oi.unit_price) AS total`; GROUP BY the three order columns.',
             'Main query: customer_id, order_id, order_date, total, and `SUM(total) OVER (PARTITION BY customer_id ORDER BY order_date) AS running_total` from `ord`.',
             'Expect 18 rows — one per order. Rafiul (customer 1) should show 96.98 → 262.48 → 291.23.',
           ],
@@ -401,7 +402,7 @@ export const Day_24_MODULE: ModuleData = {
           description:
             "The CEO wants to see each month's revenue next to its growth vs the prior month. Use the exact two-stage pattern from the concept.",
           instructions: [
-            'CTE `monthly`: `MONTH(o.order_date) AS mon`, `SUM(oi.quantity * oi.unit_price) AS revenue`, JOIN orders→order_items, GROUP BY the month expression.',
+            'CTE `monthly`: FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`; select `MONTH(o.order_date) AS mon` and `SUM(oi.quantity * oi.unit_price) AS revenue`, GROUP BY the month expression.',
             'CTE `with_prev`: add `LAG(revenue) OVER (ORDER BY mon) AS prev_revenue` FROM `monthly`.',
             'Outer query: `mon`, `revenue`, and `revenue - prev_revenue AS growth`, ORDER BY `mon`. Expect 7 rows.',
           ],
@@ -422,6 +423,7 @@ export const Day_24_MODULE: ModuleData = {
             targetTable: 'orders',
             requiredColumns: ['mon', 'revenue', 'growth'],
             requireFunction: 'LAG',
+            requireJoin: true,
             expectedRowCount: 7,
           },
           successMessage: 'Growth column shipped — and you know exactly why that first-row NULL is the honest answer, not a bug.',
@@ -548,7 +550,7 @@ export const Day_24_MODULE: ModuleData = {
         description:
           'Finance wants one table that tells the whole story: each month\'s revenue, the revenue to date, and the growth vs the previous month. Harness both of today\'s window functions in a single report.',
         instructions: [
-          'CTE `monthly`: `MONTH(o.order_date) AS mon`, `SUM(oi.quantity * oi.unit_price) AS revenue`, JOIN orders→order_items, GROUP BY the month expression.',
+          'CTE `monthly`: FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`; select `MONTH(o.order_date) AS mon` and `SUM(oi.quantity * oi.unit_price) AS revenue`, GROUP BY the month expression.',
           'CTE `trend`: add `SUM(revenue) OVER (ORDER BY mon) AS running_revenue` AND `LAG(revenue) OVER (ORDER BY mon) AS prev_revenue`.',
           'Outer query: `mon`, `revenue`, `running_revenue`, and `revenue - prev_revenue AS growth`, ORDER BY `mon`. Expect 7 rows.',
         ],

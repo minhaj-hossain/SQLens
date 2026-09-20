@@ -127,4 +127,12 @@ describe('autocomplete keyword coverage (every syntax discoverable)', () => {
     expect(items).toContain('TRUE');
     expect(suggest('SELECT * FROM products WHERE in_stock = FA')).toContain('FALSE');
   });
+
+  it('OFFERS the Batch 4 template starters (CASE WHEN skeleton)', () => {
+    // Templates live in the global reachability pool, so a typed prefix
+    // reaches them from any cursor position just like a keyword.
+    expect(suggest('SELECT CA')).toContain('CASE');
+    expect(suggest('SELECT CASE W')).toContain('CASE WHEN');
+    expect(suggest('SELECT CASE ')).toContain('CASE WHEN');
+  });
 });

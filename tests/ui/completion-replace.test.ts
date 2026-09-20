@@ -4,6 +4,8 @@ import {
   applySnippetCompletion,
   completionPrefix,
   completionReplaceRange,
+  ghostRemainder,
+  snippetNeedsSpace,
 } from '../../src/lib/completion-replace';
 
 describe('completionPrefix', () => {
@@ -61,6 +63,21 @@ describe('completionReplaceRange', () => {
     const r = completionReplaceRange(before, 'ORDER BY');
     expect(before.slice(r.replaceFrom).replace(/\s+/g, ' ')).toBe('ORDER B');
   });
+
+  it('does not absorb a finished token that merely prefixes the candidate', () => {
+    // Regression: `JOIN orders o ` + `ON …` used to delete the `o` alias
+    // because `o` is a prefix of `ON`.
+    const before = 'SELECT * FROM customers c JOIN orders o ';
+    const r = completionReplaceRange(before, 'ON o.customer_id = c.customer_id');
+    expect(r.replaceFrom).toBe(before.length);
+    expect(before.slice(r.replaceFrom)).toBe('');
+  });
+
+  it('still absorbs an exactly matching finished token', () => {
+    const before = 'SELECT * FROM products INNER ';
+    const r = completionReplaceRange(before, 'INNER JOIN');
+    expect(before.slice(r.replaceFrom).trim()).toBe('INNER');
+  });
 });
 
 describe('applyCompletion', () => {
@@ -85,6 +102,47 @@ describe('applyCompletion', () => {
   });
 });
 
+describe('ghost text (Batch 4)', () => {
+  it('returns the not-yet-typed tail of an extending suggestion', () => {
+    expect(ghostRemainder('SEL', 'SELECT')).toBe('ECT');
+    expect(ghostRemainder('se', 'SELECT')).toBe('LECT');
+  });
+
+  it('previews only the token after a dotted qualifier', () => {
+    expect(ghostRemainder('c.em', 'email')).toBe('ail');
+    // A bare `c.` has nothing typed yet: the dropdown is the affordance, an
+    // inline ghost would guess one column out of many.
+    expect(ghostRemainder('c.', 'email')).toBe('');
+  });
+
+  it('is empty when the suggestion does not extend the typed token', () => {
+    expect(ghostRemainder('SLCT', 'SELECT')).toBe('');
+    expect(ghostRemainder('', 'SELECT')).toBe('');
+  });
+
+  it('previews the missing tail of a multi-word continuation', () => {
+    expect(ghostRemainder('ORDER B', 'ORDER BY')).toBe('Y');
+    expect(ghostRemainder('IS NOT N', 'IS NOT NULL')).toBe('ULL');
+  });
+});
+
+describe('snippet spacing (Batch 4)', () => {
+  it('does not append a space to a schema-derived join condition', () => {
+    expect(snippetNeedsSpace('ON o.customer_id = c.customer_id')).toBe(false);
+    const sql = 'SELECT * FROM customers c JOIN orders o ';
+    const { next } = applyCompletion(sql, sql.length, 'ON o.customer_id = c.customer_id');
+    expect(next).toBe('SELECT * FROM customers c JOIN orders o ON o.customer_id = c.customer_id');
+    expect(next.endsWith(' ')).toBe(false);
+  });
+
+  it('still appends a space to ordinary keywords', () => {
+    expect(snippetNeedsSpace('WHERE')).toBe(true);
+    const sql = 'SELECT * FROM products ';
+    const { next } = applyCompletion(sql, sql.length, 'WHERE');
+    expect(next).toBe('SELECT * FROM products WHERE ');
+  });
+});
+
 describe('applySnippetCompletion', () => {
   it('expands UPDATE snippet with placeholders', () => {
     const res = applySnippetCompletion('UPD', 3, 'UPDATE');
@@ -98,6 +156,26 @@ describe('applySnippetCompletion', () => {
     expect(res).not.toBeNull();
     expect(res?.next).toContain('DELETE FROM table_name\nWHERE condition');
     expect(res?.placeholders).toEqual(['condition']);
+  });
+
+  it('expands the Batch 4 CASE WHEN skeleton and selects the first placeholder', () => {
+    const caseWhen = applySnippetCompletion('CASE W', 6, 'CASE WHEN');
+    expect(caseWhen?.next).toContain('CASE\n  WHEN condition THEN result\n  ELSE fallback\nEND');
+    // The FIRST placeholder is pre-selected (the returned list excludes it).
+    expect(caseWhen?.placeholders).toEqual(['result', 'fallback']);
+    const body = caseWhen?.next ?? '';
+    expect(body.slice(caseWhen!.caretStart, caseWhen!.caretEnd)).toBe('condition');
+  });
+
+  it('leaves high-frequency clause keywords as plain completions, not skeletons', () => {
+    // Regression guard: accepting `ORDER BY` / `GROUP BY` must insert the clause,
+    // never a pre-filled `column_name` skeleton.
+    expect(applySnippetCompletion('GROUP ', 6, 'GROUP BY')).toBeNull();
+    expect(applySnippetCompletion('ORDER B', 7, 'ORDER BY')).toBeNull();
+    const sql = 'SELECT * FROM products ';
+    expect(applyCompletion(sql, sql.length, 'ORDER BY').next).toBe(
+      'SELECT * FROM products ORDER BY ',
+    );
   });
 });
 

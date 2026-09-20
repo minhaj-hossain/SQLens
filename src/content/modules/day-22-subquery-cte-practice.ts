@@ -139,6 +139,7 @@ export const Day_22_MODULE: ModuleData = {
           validation: {
             requireExactResult: true,
             targetTable: 'customers',
+            requireJoin: true,
             expectedRowCount: 2,
           },
           successMessage: 'Task 2 completed! High-spend customer tier analyzed with CTE.',
@@ -225,6 +226,7 @@ export const Day_22_MODULE: ModuleData = {
         validation: {
           requireExactResult: true,
           targetTable: 'customers',
+          requireJoin: true,
           expectedRowCount: 2,
         },
         successMessage: 'Task 2 completed! Staged CTE spending report verified.',

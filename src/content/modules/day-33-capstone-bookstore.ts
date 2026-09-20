@@ -570,7 +570,7 @@ export const Day_33_MODULE: ModuleData = {
           description: 'Alice, the store analyst, wants total revenue per author so she can see who drives earnings.',
           instructions: [
             'Select `a.name AS author` and `SUM(s.quantity * s.unit_price) AS revenue`.',
-            'Joining sales→books→authors, GROUP BY a.name.',
+            'FROM `sales s` JOIN `books b` ON `s.book_id = b.book_id` JOIN `authors a` ON `b.author_id = a.author_id`, GROUP BY a.name.',
             'Expect exactly 3 rows — one per author.',
           ],
           type: 'independent',
@@ -597,7 +597,7 @@ export const Day_33_MODULE: ModuleData = {
           title: 'Task 3 (Independent): Rank the best-sellers with a window',
           description: 'The marketing team needs a ranked best-seller board: aggregate copies sold per book, then rank by that total.',
           instructions: [
-            'Build a CTE `sold` that selects `b.title` and `SUM(s.quantity) AS total_sold`, joining sales to books and grouping by title.',
+            'Build a CTE `sold` that selects `b.title` and `SUM(s.quantity) AS total_sold`, FROM `sales s` JOIN `books b` ON `s.book_id = b.book_id` and grouping by title.',
             'Then `SELECT title, total_sold, RANK() OVER (ORDER BY total_sold DESC) AS sales_rank FROM sold`.',
             'Expect 4 rows — one per book, ranked by copies sold.',
           ],
