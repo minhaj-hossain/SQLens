@@ -131,9 +131,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   const isLastTask = taskIndex >= totalTasks - 1;
   const nextActionLabel = isLastTask
     ? conceptIndex < totalConcepts - 1
-      ? 'Next Concept →'
-      : 'Module Challenge →'
-    : 'Next Task →';
+      ? 'Next Concept'
+      : 'Module Challenge'
+    : 'Next Task';
 
   const evaluationState =
     executionResult === null
