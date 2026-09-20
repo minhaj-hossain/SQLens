@@ -41,6 +41,10 @@ export const Day_25_MODULE: ModuleData = {
           'Specify the target table, the column names in parentheses, followed by `VALUES (...)` with the matching data:',
           '```sql\nINSERT INTO products (\n  name, supplier_id, category_id, price, quantity_in_stock, reorder_level\n) VALUES (\n  \'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20\n);\n```',
           'You typically omit the primary key column (e.g. `product_id`) if the database is configured to generate sequential auto-increment IDs automatically.',
+          '### 2. Multi-Row INSERT (One Statement, Many Rows)',
+          'A shipment is rarely one item. Write the column list ONCE, then add one parenthesized tuple per row, separated by commas — a single statement lands every row together:',
+          '```sql\nINSERT INTO products (\n  name, supplier_id, category_id, price, quantity_in_stock, reorder_level\n) VALUES\n  (\'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20),\n  (\'Bluetooth Speaker\', 2, 1, 45.50, 3, 10),\n  (\'USB-C Charging Cable\', 1, 4, 9.99, 200, 50);\n```',
+          'Three tuples, one statement, three new rows. Day 26 will wrap exactly this shape in BEGIN/COMMIT so the batch lands atomically — learn the tuple list here, add the transaction there.',
         ],
         targetQuery: {
           sql: "INSERT INTO products (\n  name, supplier_id, category_id, price, quantity_in_stock, reorder_level\n) VALUES (\n  'Ultra Wireless Mouse', 1, 1, 49.99, 100, 20\n);",

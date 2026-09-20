@@ -49,6 +49,7 @@ export const Day_26_MODULE: ModuleData = {
           'QUESTION_BLOCK::AFTER::What single keyword makes the change permanent?',
           'COMMIT is the moment of no return: after it, the rows are durable and the transaction is closed. The snapshot the engine took at BEGIN is discarded - there is no going back. That is exactly why real systems require an explicit COMMIT instead of assuming every statement is permanent.',
           'When to wrap in a transaction: any operation with MULTIPLE dependent mutations (an order plus its line items, a transfer across two accounts, a sale plus its stock changes). A single standalone statement is already atomic on its own.',
+          'Multi-row INSERT inside the transaction: the tuple list from Day 25 drops straight into the workspace. `INSERT INTO products (name, price) VALUES (\'A\', 9.99), (\'B\', 8.50), (\'C\', 7.25);` writes the column list once and appends one comma-separated tuple per row, so the whole flash-sale batch is a SINGLE statement - and BEGIN/COMMIT makes that one statement atomic. One statement, one unit: the batch can never half-land.',
         ],
         targetQuery: {
           sql: "BEGIN;\nINSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Flash Sale Mouse', 1, 1, 9.99, 100, 20);\nCOMMIT;",

@@ -832,11 +832,18 @@ export const Day_33_MODULE: ModuleData = {
       {
         id: 'cap-ch-t2',
         title: 'Task 2: Seed the whole store',
-        description: 'Load every table with multi-row INSERTs, letting AUTO_INCREMENT assign the ids (parents first).',
+        description:
+          'Load every table with multi-row INSERTs, letting AUTO_INCREMENT assign the ids (parents first). Use exactly the store data listed below — the leadership dashboard in Task 3 is graded on the exact result these values produce.',
         instructions: [
-          "Insert 3 authors and 2 publishers.",
-          "Insert 4 books referencing the generated author and publisher ids.",
-          "Insert 5 sales referencing the generated book ids.",
+          'Insert 3 authors, in this order: `James Clear`, `Michelle Obama`, `Matt Haig` (they get author_id 1, 2, 3).',
+          'Insert 2 publishers, in this order: `HarperCollins`, `Penguin Random House` (publisher_id 1, 2).',
+          'Insert 4 books, in this order (author_id/publisher_id from the ids above):',
+          '`Atomic Habits` — author_id 1, publisher_id 1, genre `Self-Help`, price 16.99, quantity_in_stock 40.',
+          '`Becoming` — author_id 2, publisher_id 2, genre `Memoir`, price 14.50, quantity_in_stock 22.',
+          '`The Midnight Library` — author_id 3, publisher_id 2, genre `Fiction`, price 11.25, quantity_in_stock 30.',
+          '`Think Again` — author_id 1, publisher_id 1, genre `Self-Help`, price 14.00, quantity_in_stock 25.',
+          'Insert 5 sales, in this order (book_id from the book order above): `(1, \'2026-01-15\', 3, 16.99)`, `(2, \'2026-01-20\', 2, 14.50)`, `(1, \'2026-02-02\', 5, 16.99)`, `(4, \'2026-02-14\', 1, 14.00)`, `(3, \'2026-03-05\', 4, 11.25)`.',
+          'Use one multi-row INSERT per table (`VALUES (...), (...), (...)`) and let AUTO_INCREMENT number every id.',
         ],
         type: 'challenge',
         primaryTable: 'sales',
