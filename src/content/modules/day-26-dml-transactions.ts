@@ -152,7 +152,7 @@ export const Day_26_MODULE: ModuleData = {
         {
           id: 'tx-c1-t1',
           title: 'Task 1 (Guided): The minimal committed insert',
-          description: 'Run the smallest useful transaction: open it, insert one flash-sale product, then commit. Feel the three keywords working together.',
+          description: 'Run the smallest useful transaction: open it, insert the flash-sale product `(\'Flash Sale Mouse\', 1, 1, 9.99, 100, 20)` into `products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level)`, then commit. Feel the three keywords working together.',
           instructions: [
             'Run `BEGIN;`',
             "Run `INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Flash Sale Mouse', 1, 1, 9.99, 100, 20);`",
