@@ -60,5 +60,8 @@ jobs:
       - name: Grading-policy enforcement
         run: npm run audit:grading-policy
 
+      - name: Taught-before-tested (constructs taught before use, values visible)
+        run: npm run audit:taught-before-tested
+
       - name: Production build
         run: npm run build

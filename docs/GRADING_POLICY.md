@@ -12,7 +12,7 @@ This exists because of a shipped bug: a correct INSERT reported
 contract — validator + final-state comparison — and the enforcer runs every task
 through the SAME `runAndGradeSubmission` pipeline the UI runs.
 
-## The five rules
+## The six rules
 
 ### Rule 1 — Exact-result coverage
 Every task whose `solutionSql` is a single read-only query MUST set
@@ -71,6 +71,24 @@ on `Try Again` with a correct query. The pipeline resets `fresh` tasks BEFORE
 the pre-state snapshot; the enforcer re-submits the solution against a dirty
 executor and demands the same verdict and the same row counts.
 
+### Rule 6 — Taught before tested
+Every construct a task's `solutionSql` uses must be SHOWN in theory code
+(target query, step snippets, syntax blocks, worked examples, live demos,
+fenced SQL, inline `code` spans — never bare prose) by the task's own or an
+earlier concept; and every value the grader enforces must appear in the
+RENDERED prompt (title/description/instructions/scenario — never hints behind
+"Need help?"). Motivating bugs: Day 26 `tx-c1-t2`/`tx-hw-2` required multi-row
+`VALUES (...), (...)` no earlier theory teaches; `tx-c1-t1` graded
+`'Flash Sale Mouse', ...` while the visible prompt said "one flash-sale
+product".
+
+- Enforcement: `npm run audit:taught-before-tested` (Batch 2 gate). Lesson
+  tasks must be taught strictly before use; challenge tasks are exempt from
+  the construct half ONLY when the construct is taught later in the same-or-
+  later module AND the task's own rendered prompt spells out the exact
+  statement (self-contained). The literal half applies to every task
+  (`expectFailure` labs exempt — their invalid values are the point).
+
 ## Task-author checklist
 
 1. Single read-only query? → `requireExactResult: true`.
@@ -81,5 +99,5 @@ executor and demands the same verdict and the same row counts.
 4. Teaching a TYPE (`verifyColumnTypes`)? → only for DDL type lessons.
 5. `fresh` mutation? → the pipeline resets before grading; your solution must
    pass from seed every time.
-6. Run `npm run audit:grading-pipeline && npm run audit:grading-policy` before
-   pushing. Both must be green.
+6. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested` before
+   pushing. All three must be green.
