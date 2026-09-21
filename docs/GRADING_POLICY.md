@@ -12,7 +12,7 @@ This exists because of a shipped bug: a correct INSERT reported
 contract — validator + final-state comparison — and the enforcer runs every task
 through the SAME `runAndGradeSubmission` pipeline the UI runs.
 
-## The six rules
+## The seven rules
 
 ### Rule 1 — Exact-result coverage
 Every task whose `solutionSql` is a single read-only query MUST set
@@ -89,6 +89,35 @@ product".
   statement (self-contained). The literal half applies to every task
   (`expectFailure` labs exempt — their invalid values are the point).
 
+### Rule 7 — Grading predicates are reachable, refutable, explainable, discoverable
+A `validation.customValidator` is CODE, not data: nothing type-checks it, nothing
+renders it, and no earlier rule can see it. It MUST therefore satisfy all four:
+
+1. **Reachable** — the predicate actually runs. It must not sit on an
+   `expectFailure` lab (rule 14 of the validator is unreachable there, so the
+   predicate is dead code wearing a requirement), and its task's reference
+   solution must reach rule 14 in true ladder order.
+2. **Refutable** — it has at least one failing path (`valid: false` /
+   `return false`). A predicate that can only return `true` grades nothing.
+3. **Explainable** — every failing path supplies an engine-readable `message`.
+   `feedback:` and friends are NOT read by rule 14; the learner then sees only
+   the generic "does not match all required criteria" sentence. Motivating bug:
+   Day 1 `sel-hw-2` (alias guidance hidden behind `feedback:`).
+4. **Discoverable** — every value it keys off is either a schema identifier, a
+   SQL syntax token, or present in the RENDERED prompt. A hidden value makes a
+   correct-looking answer impossible to reach — the Day-26 `tx-c1-t1` class,
+   transplanted from data into code.
+
+- Enforcement: `npm run audit:custom-validators` (Batch 5 gate). Static half
+  reads `fn.toString()` and classifies `always-valid` / `unreachable` /
+  `silent-failure` / `ghost-value` / `no-solution`. Behavioural half replays each
+  affected module as a **ladder** (concepts then challenge, one session executor
+  per module — identical to `audit-grading-pipeline.ts`, so the two gates cannot
+  disagree) and asserts the predicate was invoked and did not reject the task's
+  own `solutionSql`. Ladder fidelity is load-bearing: probing an `inherit` task
+  on a bare executor makes its own reference solution ERROR and reports a
+  false "dead code" finding.
+
 ## Task-author checklist
 
 1. Single read-only query? → `requireExactResult: true`.
@@ -99,5 +128,7 @@ product".
 4. Teaching a TYPE (`verifyColumnTypes`)? → only for DDL type lessons.
 5. `fresh` mutation? → the pipeline resets before grading; your solution must
    pass from seed every time.
-6. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested` before
-   pushing. All three must be green.
+6. Writing a `customValidator`? → give every failing path a `message`, and key
+   only off values the rendered prompt shows (Rule 7).
+7. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators` before
+   pushing. All four must be green.

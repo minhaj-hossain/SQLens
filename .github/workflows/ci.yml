@@ -63,5 +63,8 @@ jobs:
       - name: Taught-before-tested (constructs taught before use, values visible)
         run: npm run audit:taught-before-tested
 
+      - name: Custom-validator audit (predicates reachable, refutable, explainable)
+        run: npm run audit:custom-validators
+
       - name: Production build
         run: npm run build

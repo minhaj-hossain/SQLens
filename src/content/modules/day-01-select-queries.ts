@@ -708,7 +708,7 @@ export const Day_01_MODULE: ModuleData = {
             expectedRowCount: 5,
             customValidator: (_ast, result) => {
               if (!result || !result.columns || result.columns.length < 4) {
-                return { valid: false, feedback: 'Query must return all 4 columns with human-readable aliases.' };
+                return { valid: false, message: 'Query must return all 4 columns with human-readable aliases.' };
               }
               const cols = result.columns.map((c: string) => c.toLowerCase().replace(/[\s_"]/g, ''));
               const hasId = cols.some((c: string) => c.includes('studentid') || c.includes('id'));
@@ -719,7 +719,7 @@ export const Day_01_MODULE: ModuleData = {
               if (hasId && hasName && hasAge && hasDept && result.rows.length === 5) {
                 return { valid: true };
               }
-              return { valid: false, feedback: 'Ensure you alias std_id, std_nm, std_age, dept to Student ID, Student Name, Age, Department.' };
+              return { valid: false, message: 'Ensure you alias std_id, std_nm, std_age, dept to Student ID, Student Name, Age, Department.' };
             },
           },
           successMessage: 'Masterpiece! You produced a formatted report for the school principal.',
