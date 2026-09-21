@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 26 - DML + Transactions (id: day-26 - order 26)
@@ -183,11 +183,11 @@ export const Day_26_MODULE: ModuleData = {
           instructions: [
             'Open a transaction.',
             'Insert all three flash-sale products into `products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level)` in a single multi-row INSERT. The products are: Flash Sale Mouse (supplier 1, category 1, price 9.99, stock 100, reorder 20), Flash Sale Speaker (supplier 2, category 1, price 19.99, stock 80, reorder 15), and Flash Sale Pan (supplier 3, category 2, price 24.99, stock 60, reorder 10).',
-            'Commit the transaction, then verify that all three rows exist.',
+            'Commit the transaction with COMMIT; (make sure each statement, including the INSERT, ends with a semicolon ;), then verify that all three rows exist.',
           ],
           type: 'independent',
           primaryTable: 'products',
-          initialSql: '-- BEGIN;  INSERT (3 tuples);  COMMIT;\n',
+          initialSql: '-- BEGIN;\n-- INSERT INTO products (...) VALUES (...);\n-- COMMIT;\n',
           solutionSql:
             "BEGIN;\nINSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Flash Sale Mouse', 1, 1, 9.99, 100, 20), ('Flash Sale Speaker', 2, 1, 19.99, 80, 15), ('Flash Sale Pan', 3, 2, 24.99, 60, 10);\nCOMMIT;",
           solutionExplanation: 'One statement seeded three rows; COMMIT made all three durable. Multi-row INSERT is how real batches are loaded.',
@@ -207,18 +207,21 @@ export const Day_26_MODULE: ModuleData = {
           title: 'Task 3 (Independent): Verify Durability with SELECT',
           description: 'After committing, prove the rows survived by querying them back. Write a SELECT that retrieves all flash-sale products from the committed transaction.',
           instructions: [
-            'Write a SELECT query that filters for all products whose name begins with "Flash Sale".',
+            'Write a SELECT query that retrieves the name column for all products whose name begins with "Flash Sale".',
             'Confirm that exactly 3 rows are returned — the proof that COMMIT made them durable.',
           ],
           type: 'independent',
           primaryTable: 'products',
+          setupSql:
+            "DELETE FROM products WHERE name LIKE 'Flash Sale%';\nINSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Flash Sale Mouse', 1, 1, 9.99, 100, 20), ('Flash Sale Speaker', 2, 1, 19.99, 80, 15), ('Flash Sale Pan', 3, 2, 24.99, 60, 10);",
           initialSql: '-- Verify the committed batch\n',
           solutionSql: "SELECT name FROM products WHERE name LIKE 'Flash Sale%';",
           solutionExplanation: 'Retrieval after a DML statement is the classic "verify-with-SELECT" habit - the rows are still there because COMMIT persisted them.',
-          hints: [{ level: 1, text: "Filter products by name LIKE 'Flash Sale%' to count your committed batch." }],
+          hints: [{ level: 1, text: "Filter products by name LIKE 'Flash Sale%' and select the name column." }],
           validation: {
             requireExactResult: true,
             targetTable: 'products',
+            requiredColumns: ['name'],
             requireWhere: true,
             expectedRowCount: 3,
           },
@@ -638,6 +641,8 @@ export const Day_26_MODULE: ModuleData = {
         ],
         type: 'challenge',
         primaryTable: 'products',
+        setupSql:
+          "DELETE FROM products WHERE name LIKE 'Flash Sale%';\nINSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Flash Sale Mouse', 1, 1, 9.99, 100, 20), ('Flash Sale Speaker', 2, 1, 19.99, 80, 15), ('Flash Sale Pan', 3, 2, 24.99, 60, 10);",
         initialSql: '-- Verify the durable batch\n',
         solutionSql: "SELECT name, price FROM products WHERE name LIKE 'Flash Sale%' ORDER BY name;",
         solutionExplanation: 'Three rows returned after the commit - the batch is durable, not provisional.',

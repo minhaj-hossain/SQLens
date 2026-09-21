@@ -178,3 +178,26 @@ describe('expectFailure validator rule', () => {
     expect(outcome.passed).toBe(true);
   });
 });
+
+describe('Multi-statement transaction boundary resilience', () => {
+  it('splits and executes COMMIT; even if preceding INSERT missed trailing semicolon', () => {
+    const ex = fresh();
+    const script = `begin;
+INSERT INTO products (${PKG_COLS})
+VALUES ('Lenient Widget 1', 1, 1, 12.5, 10, 5), ('Lenient Widget 2', 1, 1, 15.0, 10, 5)
+commit;`;
+    const r = ex.executeQuery(script);
+    expect(r.success).toBe(true);
+    expect(ex.getTransactionState().status).toBe('none');
+    const verify = ex.executeQuery("SELECT name FROM products WHERE name LIKE 'Lenient Widget%';");
+    expect(verify.rowCount).toBe(2);
+  });
+
+  it('reports syntax error if unexpected trailing tokens follow VALUES on same line', () => {
+    const ex = fresh();
+    const badSql = `INSERT INTO products (${PKG_COLS}) VALUES ('Broken Widget', 1, 1, 10, 10, 5) commit;`;
+    const r = ex.executeQuery(badSql);
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/Syntax error near "commit"/i);
+  });
+});

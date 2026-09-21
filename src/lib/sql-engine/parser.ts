@@ -717,7 +717,7 @@ function parseFromAndJoins(fromSection: string, query: ParsedSqlQuery) {
  * Splits the VALUES section of an INSERT into top-level tuples, respecting
  * string literals and nested parentheses: `('A', 1), ('B', 2)` → two tuples.
  */
-function splitValueTuples(valueSection: string): string[] {
+function splitValueTuples(valueSection: string): { tuples: string[]; trailing: string } {
   const tuples: string[] = [];
   let current = '';
   let depth = 0;
@@ -755,7 +755,7 @@ function splitValueTuples(valueSection: string): string[] {
     }
     current += ch;
   }
-  return tuples.filter((t) => t.length > 2);
+  return { tuples: tuples.filter((t) => t.length > 2), trailing: current.trim() };
 }
 
 function parseInsert(sql: string, rawSql: string): ParsedSqlQuery {
@@ -773,13 +773,29 @@ function parseInsert(sql: string, rawSql: string): ParsedSqlQuery {
     .map((s) => s.trim().replace(/[`"']/g, ''))
     .filter(Boolean);
 
-  const tuples = splitValueTuples(headerMatch[3]);
+  const { tuples, trailing } = splitValueTuples(headerMatch[3]);
   if (tuples.length === 0) {
     return {
       type: 'INSERT',
       raw: rawSql,
       normalized: sql,
       error: 'Invalid INSERT syntax. Expected at least one VALUES tuple.',
+    };
+  }
+
+  const nonCommentTrailing = trailing
+    .replace(/--[^\n]*/g, ' ')
+    .replace(/#[^\n]*/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .trim();
+
+  if (nonCommentTrailing.length > 0) {
+    const snippet = nonCommentTrailing.split(/\s+/)[0];
+    return {
+      type: 'INSERT',
+      raw: rawSql,
+      normalized: sql,
+      error: `Syntax error near "${snippet}". Did you forget a semicolon (;) to separate statements?`,
     };
   }
 

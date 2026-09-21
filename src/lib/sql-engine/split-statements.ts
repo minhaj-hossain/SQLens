@@ -11,32 +11,60 @@ export function splitStatements(sql: string): string[] {
   let current = '';
   let inString: string | null = null;
   let parenDepth = 0;
+  let hasNewlineSinceLastToken = false;
+
   for (let i = 0; i < sql.length; i++) {
     const ch = sql[i];
     if ((ch === "'" || ch === '"') && (i === 0 || sql[i - 1] !== '\\')) {
       if (!inString) inString = ch;
       else if (inString === ch) inString = null;
       current += ch;
+      hasNewlineSinceLastToken = false;
       continue;
     }
     if (inString) {
       current += ch;
       continue;
     }
+    if (ch === '\n' || ch === '\r') {
+      hasNewlineSinceLastToken = true;
+      current += ch;
+      continue;
+    }
     if (ch === '(') {
       parenDepth++;
       current += ch;
+      hasNewlineSinceLastToken = false;
       continue;
     }
     if (ch === ')') {
       parenDepth = Math.max(0, parenDepth - 1);
       current += ch;
+      hasNewlineSinceLastToken = false;
       continue;
     }
     if (ch === ';' && parenDepth === 0) {
       if (hasRealSql(current)) out.push(current.trim());
       current = '';
+      hasNewlineSinceLastToken = false;
       continue;
+    }
+
+    // Lenient boundary detection: if parenDepth === 0, we're on a new line,
+    // and a standalone transaction statement (COMMIT, ROLLBACK, BEGIN, START TRANSACTION)
+    // starts here, split the preceding statement even if it lacked a trailing semicolon.
+    if (parenDepth === 0 && hasNewlineSinceLastToken && hasRealSql(current)) {
+      const remaining = sql.slice(i);
+      const match = remaining.match(/^(?:COMMIT|ROLLBACK|BEGIN|START\s+TRANSACTION)\b/i);
+      if (match) {
+        out.push(current.trim());
+        current = '';
+        hasNewlineSinceLastToken = false;
+      }
+    }
+
+    if (ch !== ' ' && ch !== '\t') {
+      hasNewlineSinceLastToken = false;
     }
     current += ch;
   }

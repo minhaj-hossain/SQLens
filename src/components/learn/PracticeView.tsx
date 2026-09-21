@@ -63,9 +63,10 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
   // (which the concept-boundary reset in the day layout still bounds).
   // P0 FIX: expose resetDatabase to the task view so Run & Check retries also
   // replay from seed (idempotent) instead of accumulating rows per attempt.
-  const { resetDatabase, getDatabaseState, getCommittedState, getTransactionState } = useSqlExecutor();
+  const { resetDatabase, getDatabaseState, getCommittedState, getTransactionState, executeQuery } = useSqlExecutor();
   useEffect(() => {
     if (task?.databaseLifecycle === 'fresh') resetDatabase();
+    if (task?.setupSql) executeQuery(task.setupSql);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id]);
 
