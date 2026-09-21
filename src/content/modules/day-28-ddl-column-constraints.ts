@@ -480,7 +480,13 @@ export const Day_28_MODULE: ModuleData = {
         title: 'Task 1: Design the Fully-Constrained Reviews Table',
         description: 'Create the `review_system` table with every appropriate constraint applied. Reviews must be linked to a product, attributed to a unique reviewer, scored within a valid range, and default to unverified status.',
         instructions: [
-          'Create a table named `review_system` with the following columns and constraints: `review_id INT AUTO_INCREMENT PRIMARY KEY`, `product_id INT` (mandatory — every review belongs to a product), `reviewer_name VARCHAR(80)` (mandatory and unique — one reviewer, one review), `score INT` (mandatory, checked to be between 1 and 5), and `verified BOOLEAN` (mandatory, defaulting to FALSE).',
+          'Create a table named `review_system`.',
+          'Define `review_id INT AUTO_INCREMENT PRIMARY KEY` as the unique identity key.',
+          'Define `product_id INT NOT NULL` to link each review to a product.',
+          'Define `reviewer_name VARCHAR(80) NOT NULL UNIQUE` to ensure each reviewer submits at most one review.',
+          'Define `score INT NOT NULL` with a `CHECK (score BETWEEN 1 AND 5)` constraint.',
+          'Define `verified BOOLEAN NOT NULL DEFAULT FALSE` to record verified purchase status.',
+          'Terminate your SQL statement with a semicolon.',
         ],
         type: 'challenge',
         primaryTable: 'review_system',
@@ -488,7 +494,7 @@ export const Day_28_MODULE: ModuleData = {
         solutionSql:
           'CREATE TABLE review_system (review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, reviewer_name VARCHAR(80) NOT NULL UNIQUE, score INT NOT NULL CHECK (score BETWEEN 1 AND 5), verified BOOLEAN NOT NULL DEFAULT FALSE);',
         solutionExplanation: 'Four constraint types working together: identity, mandatory, unrepeatable, bounded, defaulted.',
-        hints: [{ level: 1, text: 'Reuse the constraint ladder from C4 Task 2, adapted to review data.' }],
+        hints: [{ level: 1, text: 'Define the table with column constraints: PRIMARY KEY, NOT NULL, UNIQUE, CHECK, and DEFAULT.' }],
         validation: { targetTable: 'review_system', expectedRowCount: 1 },
         successMessage: 'A production-grade table definition - every constraint earning its place.',
         databaseLifecycle: 'fresh',
@@ -508,7 +514,7 @@ export const Day_28_MODULE: ModuleData = {
           'CREATE TABLE IF NOT EXISTS review_system (review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, reviewer_name VARCHAR(80) NOT NULL UNIQUE, score INT NOT NULL CHECK (score BETWEEN 1 AND 5), verified BOOLEAN NOT NULL DEFAULT FALSE);',
         solutionSql: "INSERT INTO review_system (product_id, reviewer_name, score) VALUES (1, 'Cheater', 9);",
         solutionExplanation: 'The CHECK violation fired - score 9 can never exist in this table.',
-        hints: [{ level: 1, text: 'Run the INSERT exactly as written - the error is the expected result.' }],
+        hints: [{ level: 1, text: 'Write an INSERT INTO review_system with score outside 1 to 5 (e.g. score = 9) to trigger the CHECK constraint.' }],
         validation: {
           targetTable: 'review_system',
           expectFailure: true,

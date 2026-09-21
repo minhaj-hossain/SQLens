@@ -416,7 +416,7 @@ export const Day_27_MODULE: ModuleData = {
         initialSql: '-- Task 1: Create the product_reviews table\n',
         solutionSql: 'CREATE TABLE product_reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );',
         solutionExplanation: 'Creates the new product_reviews entity table with complete constraints.',
-        hints: [{ level: 1, text: 'Use `CREATE TABLE product_reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );`' }],
+        hints: [{ level: 1, text: 'Use `CREATE TABLE product_reviews (...)` with column definitions for review_id, product_id, customer_id, rating, comment, and created_at.' }],
         validation: {
           targetTable: 'product_reviews',
           expectedRowCount: 1,
