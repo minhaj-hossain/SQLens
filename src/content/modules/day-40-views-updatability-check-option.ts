@@ -111,7 +111,7 @@ export const Day_40_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'orders',
           initialSql:
-            "-- Step 1: Create the view\nCREATE VIEW v_pending_orders AS\n  SELECT order_id, customer_id, status\n  FROM orders WHERE status = 'pending';\n\n-- Step 2: Update through the view\n\n-- Step 3: Verify on the real table\nSELECT order_id, status FROM orders WHERE order_id = 1;\n",
+            "-- Step 1: Create the view\n\n\n-- Step 2: Update through the view\n\n\n-- Step 3: Verify on the real table\n",
           solutionSql:
             "CREATE VIEW v_pending_orders AS\n  SELECT order_id, customer_id, status FROM orders WHERE status = 'pending';\nUPDATE v_pending_orders SET status = 'shipped' WHERE order_id = 1;\nSELECT order_id, status FROM orders WHERE order_id = 1;",
           solutionExplanation:
@@ -224,13 +224,13 @@ export const Day_40_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'customers',
           initialSql:
-            "CREATE VIEW v_active_customers AS\n  SELECT customer_id, name, city\n  FROM customers\n  WHERE city = 'New York'\nWITH CHECK OPTION;\n\n-- Try the bad insert (will fail):\n-- INSERT INTO v_active_customers (customer_id, name, city) VALUES (999, 'Bob', 'Boston');\n\n-- Try the good insert:\n",
+            "-- Step 1: Create v_active_customers with WITH CHECK OPTION\n\n\n-- Step 2: Try inserting Bob from Boston (should fail)\n-- INSERT INTO v_active_customers (customer_id, name, city) VALUES (999, 'Bob', 'Boston');\n\n-- Step 3: Insert valid customer from New York\n",
           solutionSql:
             "CREATE VIEW v_active_customers AS\n  SELECT customer_id, name, city FROM customers WHERE city = 'New York'\nWITH CHECK OPTION;\nINSERT INTO v_active_customers (customer_id, name, city, email, signup_date)\n  VALUES (998, 'Alice NY', 'New York', null, '2024-01-01');",
           solutionExplanation:
             'The Boston insert is blocked. The New York insert succeeds and lands in the real customers table.',
           hints: [
-            { level: 1, text: 'Remove the comment from the good insert line and run it.' },
+            { level: 1, text: 'Create the view with WITH CHECK OPTION, then write the INSERT statement for Alice NY.' },
             { level: 2, text: "INSERT INTO v_active_customers (customer_id, name, city, email, signup_date) VALUES (998, 'Alice NY', 'New York', null, '2024-01-01');" },
           ],
           validation: { requireView: true, whereContainsTerms: ['WITH CHECK OPTION'] },
@@ -310,7 +310,7 @@ export const Day_40_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'products',
           initialSql:
-            '-- Step 1: Create the original view\nCREATE VIEW v_high_stock AS\n  SELECT product_id, name, quantity_in_stock\n  FROM products WHERE quantity_in_stock > 50;\n\n-- Step 2: Replace it with a stricter filter\n\n-- Step 3: Query to confirm\nSELECT * FROM v_high_stock;\n',
+            '-- Step 1: Create the original view (quantity > 50)\n\n\n-- Step 2: Replace it with a stricter filter (quantity > 100)\n\n\n-- Step 3: Query to confirm\n',
           solutionSql:
             'CREATE VIEW v_high_stock AS\n  SELECT product_id, name, quantity_in_stock\n  FROM products WHERE quantity_in_stock > 50;\nCREATE OR REPLACE VIEW v_high_stock AS\n  SELECT product_id, name, quantity_in_stock\n  FROM products WHERE quantity_in_stock > 100;\nSELECT * FROM v_high_stock;',
           solutionExplanation:

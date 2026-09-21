@@ -358,7 +358,7 @@ export const Day_41_MODULE: ModuleData = {
         description:
           'Generate all 31 days of January 2024 using WITH RECURSIVE, then LEFT JOIN orders and order_items to compute total revenue per day (SUM of quantity * unit_price). Show sale_date and daily_revenue. Days with no sales should show 0.',
         instructions: [
-          'Anchor: 2024-01-01, end condition: d < 2024-02-01 (gives 31 days)',
+          'Anchor: 2024-01-01, end condition: d < 2024-01-31 (gives 31 days)',
           'LEFT JOIN orders on order_date, then JOIN order_items',
           'SELECT dates.d AS sale_date, COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue',
           'GROUP BY dates.d ORDER BY dates.d',
@@ -369,14 +369,14 @@ export const Day_41_MODULE: ModuleData = {
         initialSql:
           '-- 31-day revenue report with no missing days\nWITH RECURSIVE dates AS (\n  \n)\nSELECT\n  dates.d AS sale_date,\n  COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue\nFROM dates\nLEFT JOIN orders o ON DATE(o.order_date) = dates.d\nLEFT JOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY dates.d\nORDER BY dates.d;\n',
         solutionSql:
-          "WITH RECURSIVE dates AS (\n  SELECT DATE('2024-01-01') AS d\n  UNION ALL\n  SELECT DATE(d, '+1 day') FROM dates WHERE d < DATE('2024-02-01')\n)\nSELECT\n  dates.d AS sale_date,\n  COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue\nFROM dates\nLEFT JOIN orders o ON DATE(o.order_date) = dates.d\nLEFT JOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY dates.d\nORDER BY dates.d;",
+          "WITH RECURSIVE dates AS (\n  SELECT DATE('2024-01-01') AS d\n  UNION ALL\n  SELECT DATE(d, '+1 day') FROM dates WHERE d < DATE('2024-01-31')\n)\nSELECT\n  dates.d AS sale_date,\n  COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue\nFROM dates\nLEFT JOIN orders o ON DATE(o.order_date) = dates.d\nLEFT JOIN order_items oi ON o.order_id = oi.order_id\nGROUP BY dates.d\nORDER BY dates.d;",
         solutionExplanation:
           'The date series covers all 31 days of January. LEFT JOINs on orders and order_items pull in revenue data where it exists. COALESCE converts NULL to 0 for days with no sales. Result: 31 rows, always.',
         hints: [
-          { level: 1, text: "Change the anchor to DATE('2024-01-01') and the stop condition to d < DATE('2024-02-01') to get all 31 days." },
+          { level: 1, text: "Change the anchor to DATE('2024-01-01') and the stop condition to d < DATE('2024-01-31') to get all 31 days." },
           {
             level: 2,
-            text: "WITH RECURSIVE dates AS (SELECT DATE('2024-01-01') AS d UNION ALL SELECT DATE(d, '+1 day') FROM dates WHERE d < DATE('2024-02-01')) SELECT dates.d AS sale_date, COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue FROM dates LEFT JOIN orders o ON DATE(o.order_date) = dates.d LEFT JOIN order_items oi ON o.order_id = oi.order_id GROUP BY dates.d ORDER BY dates.d;",
+            text: "WITH RECURSIVE dates AS (SELECT DATE('2024-01-01') AS d UNION ALL SELECT DATE(d, '+1 day') FROM dates WHERE d < DATE('2024-01-31')) SELECT dates.d AS sale_date, COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue FROM dates LEFT JOIN orders o ON DATE(o.order_date) = dates.d LEFT JOIN order_items oi ON o.order_id = oi.order_id GROUP BY dates.d ORDER BY dates.d;",
           },
         ],
         validation: { requireRecursive: true, expectedRowCount: 31 },

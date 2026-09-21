@@ -60,6 +60,8 @@ export interface ValidationRule {
   requireTrigger?: boolean;
   /** Require a CREATE PROCEDURE or CALL statement. */
   requireProcedure?: boolean;
+  /** Require a CREATE FUNCTION statement. */
+  requireCustomFunction?: boolean;
   /** Require a SAVEPOINT statement. */
   requireSavepoint?: boolean;
   /** Require a WITH RECURSIVE statement. */

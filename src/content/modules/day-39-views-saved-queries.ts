@@ -314,7 +314,7 @@ export const Day_39_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'orders',
           initialSql:
-            "-- Step 1: Create the view\nCREATE VIEW v_temp_report AS\n  SELECT order_id, status FROM orders WHERE status = 'shipped';\n\n-- Step 2: Query it\nSELECT * FROM v_temp_report;\n\n-- Step 3: Drop it\n",
+            "-- Step 1: Create the view\n\n\n-- Step 2: Query it\n\n\n-- Step 3: Drop it\n",
           solutionSql:
             "CREATE VIEW v_temp_report AS\n  SELECT order_id, status FROM orders WHERE status = 'shipped';\nSELECT * FROM v_temp_report;\nDROP VIEW v_temp_report;",
           solutionExplanation:

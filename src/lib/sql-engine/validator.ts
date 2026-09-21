@@ -469,12 +469,31 @@ export function validateTaskSolution(
   if (unquotedMatch) {
     const rhs = unquotedMatch[3].toUpperCase();
     const isKeywordOrNumber = ['NULL', 'TRUE', 'FALSE', 'SELECT', 'AS', 'AND', 'OR', 'NOT'].includes(rhs) || /^\d+$/.test(rhs);
+    // Routine parameters (CREATE PROCEDURE/FUNCTION) and local variables are legitimate identifiers in WHERE
+    const routineParams = new Set<string>();
+    const routineParamMatches = sqlNoStrings.matchAll(/CREATE\s+(?:OR\s+REPLACE\s+)?(?:PROCEDURE|FUNCTION)\s+[a-zA-Z0-9_.]+\s*\(([\s\S]*?)\)\s*(?:RETURNS\b|BEGIN\b|RETURN\b|AS\b|LANGUAGE\b|DETERMINISTIC\b|$)/gi);
+    for (const m of routineParamMatches) {
+      const parts = m[1].split(',');
+      for (const p of parts) {
+        const tokens = p.trim().split(/\s+/);
+        if (tokens.length >= 2) {
+          const name = ['IN', 'OUT', 'INOUT'].includes(tokens[0].toUpperCase()) ? tokens[1] : tokens[0];
+          if (name) routineParams.add(name.toLowerCase());
+        }
+      }
+    }
+    const declareMatches = sqlNoStrings.matchAll(/\bDECLARE\s+([a-zA-Z0-9_]+)\b/gi);
+    for (const dm of declareMatches) {
+      routineParams.add(dm[1].toLowerCase());
+    }
+
     // P10.1: a bare identifier is legitimate when it names a real column or
     // table (e.g. WHERE name = title) — only flag when it could only be an
     // unquoted string. Joins commonly compare two columns, so skip there too.
     const isKnownIdentifier =
       sqlNoStrings.toUpperCase().includes(' JOIN ') ||
-      knownIdentifiers.has(rhs.toLowerCase());
+      knownIdentifiers.has(rhs.toLowerCase()) ||
+      routineParams.has(rhs.toLowerCase());
     if (!isKeywordOrNumber && !isKnownIdentifier) {
       return {
         passed: false,
@@ -704,6 +723,10 @@ export function validateTaskSolution(
 
   if (rule.requireProcedure && !/\b(PROCEDURE|CALL)\b/i.test(structural)) {
     failConstruct(`This task requires creating or invoking a stored procedure (CREATE PROCEDURE or CALL ...).`);
+  }
+
+  if (rule.requireCustomFunction && !/\bFUNCTION\b/i.test(structural)) {
+    failConstruct(`This task requires creating a stored function (CREATE FUNCTION ...).`);
   }
 
   if (rule.requireSavepoint && !/\bSAVEPOINT\b/i.test(structural)) {

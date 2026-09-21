@@ -23,9 +23,10 @@ describe('every task answer passes its own validator', () => {
       // DDL (CREATE TABLE / CREATE INDEX) from earlier tasks is present.
       const ex = fresh();
 
-      const runTask = (conceptKey: string, task: { id: string; solutionSql?: string; validation: { expectFailure?: boolean; requireExactResult?: boolean }; databaseLifecycle?: 'fresh' | 'inherit' }) => {
-        // Mirror PracticeView/ChallengeView: reset BEFORE tasks marked 'fresh'.
+      const runTask = (conceptKey: string, task: { id: string; solutionSql?: string; validation: { expectFailure?: boolean; requireExactResult?: boolean }; databaseLifecycle?: 'fresh' | 'inherit'; setupSql?: string }) => {
+        // Mirror PracticeView/ChallengeView: reset BEFORE tasks marked 'fresh', then bootstrap setupSql.
         if (task.databaseLifecycle === 'fresh') ex.resetDatabase();
+        if (task.setupSql) ex.executeQuery(task.setupSql);
         if (task.validation.expectFailure) return; // deliberate-error labs exempt
         if (!task.solutionSql) {
           failures.push(`${mod.id}/${conceptKey}/${task.id} (no solutionSql)`);

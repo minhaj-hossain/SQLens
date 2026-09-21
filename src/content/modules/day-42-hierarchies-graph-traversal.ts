@@ -109,9 +109,9 @@ export const Day_42_MODULE: ModuleData = {
           setupSql:
             '',
           initialSql:
-            "-- Step 1: Create the table\nCREATE TABLE employees (\n  emp_id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  manager_id INTEGER\n);\n\n-- Step 2: Insert the data\nINSERT INTO employees VALUES\n  (1, 'Alice', NULL),\n  (2, 'Bob',   1),\n  (3, 'Carol', 2),\n  (4, 'Dave',  3),\n  (5, 'Eve',   2);\n\n-- Step 3: Self-join to see each person with their direct manager\n",
+            "-- Step 1: Create the employees table\n\n\n-- Step 2: Insert the 5 rows\n\n\n-- Step 3: Match each person with their direct manager\n",
           solutionSql:
-            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nSELECT e.name AS employee, m.name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.emp_id;",
+            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nSELECT e.name AS employee, m.name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.emp_id;",
           solutionExplanation:
             'The self-join matches each employee to their manager using manager_id = emp_id. LEFT JOIN keeps Alice (NULL manager_id) in the result.',
           hints: [
@@ -160,7 +160,7 @@ export const Day_42_MODULE: ModuleData = {
         exampleQueryExplanation:
           'Starting from emp_id=4 (Dave), the query walks up through Carol, Bob, and Alice. The level column shows the distance from Dave.',
         liveDemoSql:
-          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nWITH RECURSIVE chain AS (\n  SELECT emp_id, name, manager_id, 1 AS level FROM employees WHERE emp_id = 4\n  UNION ALL\n  SELECT e.emp_id, e.name, e.manager_id, chain.level + 1 FROM employees e JOIN chain ON e.emp_id = chain.manager_id\n)\nSELECT name, level FROM chain ORDER BY level;",
+          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nWITH RECURSIVE chain AS (\n  SELECT emp_id, name, manager_id, 1 AS level FROM employees WHERE emp_id = 4\n  UNION ALL\n  SELECT e.emp_id, e.name, e.manager_id, chain.level + 1 FROM employees e JOIN chain ON e.emp_id = chain.manager_id\n)\nSELECT name, level FROM chain ORDER BY level;",
         liveDemoNotes:
           'You should get 4 rows: Dave (1), Carol (2), Bob (3), Alice (4). Try changing WHERE emp_id = 4 to WHERE emp_id = 5 to start from Eve instead.',
         mcqs: [
@@ -196,7 +196,7 @@ export const Day_42_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'products',
           setupSql:
-            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
+            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
           initialSql:
             '-- Walk from Dave (emp_id=4) up to the CEO\nWITH RECURSIVE chain AS (\n  -- Anchor\n  SELECT emp_id, name, manager_id, 1 AS level\n  FROM employees WHERE emp_id = 4\n\n  UNION ALL\n\n  -- Recursive step: follow manager_id up\n  \n)\nSELECT name, level FROM chain ORDER BY level;\n',
           solutionSql:
@@ -286,7 +286,7 @@ export const Day_42_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'products',
           setupSql:
-            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
+            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
           initialSql:
             '-- Build "Alice > Bob > Carol > Dave"\nWITH RECURSIVE chain AS (\n  SELECT emp_id, name, manager_id,\n         name AS path\n  FROM employees WHERE emp_id = 4\n  UNION ALL\n  SELECT e.emp_id, e.name, e.manager_id,\n         -- build the path here\n         \n  FROM employees e\n  JOIN chain ON e.emp_id = chain.manager_id\n)\nSELECT path FROM chain WHERE manager_id IS NULL;\n',
           solutionSql:
@@ -314,7 +314,7 @@ export const Day_42_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'products',
           setupSql:
-            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
+            "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
           initialSql:
             '-- Show full breadcrumbs for all employees (except the root)\n',
           solutionSql:
@@ -354,7 +354,7 @@ export const Day_42_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'products',
         setupSql:
-          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Frank',4),(6,'Grace',5);",
+          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Frank',4),(6,'Grace',5);",
         initialSql:
           '-- Walk DOWN from Bob (emp_id=2)\nWITH RECURSIVE subtree AS (\n  -- Anchor: start at Bob\n  \n  UNION ALL\n  -- Recursive step: find direct reports\n  \n)\nSELECT emp_id, name, depth FROM subtree ORDER BY depth;\n',
         solutionSql:

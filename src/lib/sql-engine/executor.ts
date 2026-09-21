@@ -763,6 +763,39 @@ export class SqlExecutor {
     };
   }
 
+  private fireTriggers(
+    timing: 'BEFORE' | 'AFTER',
+    event: 'INSERT' | 'UPDATE' | 'DELETE',
+    table: string,
+    oldRow?: TableRow,
+    newRow?: TableRow
+  ) {
+    const matching = Object.values(this.triggers).filter(
+      (t) => t.timing === timing && t.event === event && t.table.toLowerCase() === table.toLowerCase()
+    );
+    for (const trg of matching) {
+      let body = trg.body;
+      body = body.replace(/FOR\s+EACH\s+ROW/i, '').trim();
+      const beginEndMatch = body.match(/^BEGIN\s+([\s\S]+?)\s+END\s*;?$/i);
+      if (beginEndMatch) body = beginEndMatch[1].trim();
+
+      // Substitute NEW.col and OLD.col references
+      if (newRow) {
+        for (const [k, v] of Object.entries(newRow)) {
+          const valStr = typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : (v === null || v === undefined ? 'NULL' : String(v));
+          body = body.replace(new RegExp(`\\bNEW\\.${k}\\b`, 'gi'), valStr);
+        }
+      }
+      if (oldRow) {
+        for (const [k, v] of Object.entries(oldRow)) {
+          const valStr = typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : (v === null || v === undefined ? 'NULL' : String(v));
+          body = body.replace(new RegExp(`\\bOLD\\.${k}\\b`, 'gi'), valStr);
+        }
+      }
+      this.execute(body);
+    }
+  }
+
 // ---------------------------------------------------------------------
   // Set operations (UNION [ALL] / INTERSECT / EXCEPT).
   // ---------------------------------------------------------------------
@@ -995,30 +1028,88 @@ export class SqlExecutor {
         const ms = a.getTime() - b.getTime();
         return isNaN(a.getTime()) || isNaN(b.getTime()) ? null : Math.round(ms / 86400000);
       }
+      case 'DATE': {
+        const raw = arg(0);
+        if (raw === null || raw === undefined || raw === '') return null;
+        const base = new Date(String(raw));
+        if (isNaN(base.getTime())) return null;
+        const d = new Date(base.getTime());
+        if (args[1]) {
+          const mod = String(args[1]).replace(/['"]/g, '').trim();
+          const match = mod.match(/^([+-]?\d+)\s*(day|month|year)s?$/i);
+          if (match) {
+            const delta = parseInt(match[1], 10);
+            const u = match[2].toLowerCase();
+            if (u === 'day') d.setUTCDate(d.getUTCDate() + delta);
+            else if (u === 'month') d.setUTCMonth(d.getUTCMonth() + delta);
+            else if (u === 'year') d.setUTCFullYear(d.getUTCFullYear() + delta);
+          }
+        }
+        return d.toISOString().split('T')[0];
+      }
       case 'DATE_SUB':
       case 'DATE_ADD': {
         // DATE_SUB(date, INTERVAL n DAY|MONTH|YEAR) / DATE_ADD — date-shift
-        // support for temporal filters (S1-3 synonym coverage).
+        // support for temporal filters (S1-3 synonym coverage). Also supports numeric n.
         const base = new Date(String(arg(0) ?? ''));
         if (isNaN(base.getTime())) return null;
-        const m = String(args[1] ?? '').match(/INTERVAL\s+(\d+)\s+(DAY|MONTH|YEAR)/i);
-        if (!m) return null;
-        const n = parseInt(m[1], 10) * (name === 'DATE_SUB' ? -1 : 1);
-        const unit = m[2].toUpperCase();
+        const rawArg1 = String(args[1] ?? '').trim();
+        const m = rawArg1.match(/INTERVAL\s+(\d+)\s+(DAY|MONTH|YEAR)/i);
+        let n = 0;
+        let unit = 'DAY';
+        if (m) {
+          n = parseInt(m[1], 10) * (name === 'DATE_SUB' ? -1 : 1);
+          unit = m[2].toUpperCase();
+        } else if (/^-?\d+$/.test(rawArg1)) {
+          n = parseInt(rawArg1, 10) * (name === 'DATE_SUB' ? -1 : 1);
+        } else {
+          return null;
+        }
         const d = new Date(base.getTime());
         if (unit === 'DAY') d.setUTCDate(d.getUTCDate() + n);
         else if (unit === 'MONTH') d.setUTCMonth(d.getUTCMonth() + n);
         else d.setUTCFullYear(d.getUTCFullYear() + n);
         return d.toISOString().split('T')[0];
       }
-      default:
+      default: {
+        const lower = name.toLowerCase();
+        const routine = this.routines[lower];
+        if (routine && routine.type === 'FUNCTION') {
+          return this.executeCustomFunction(routine, args, row);
+        }
         // S1-3 engine honesty: unknown functions must ERROR with a named,
         // actionable message — never silently evaluate to NULL. Typo'd names
         // (LENGHT) and out-of-dialect functions surface here.
         throw new Error(
           `Unsupported function: ${name}(). This SQL dialect supports UPPER, LOWER, TRIM, LENGTH, CONCAT, SUBSTRING/SUBSTR, YEAR, MONTH, DAY, EXTRACT, DATEDIFF, DATE_SUB/DATE_ADD, COALESCE, IFNULL, NULLIF, IF, NOW/CURDATE, and aggregates COUNT/SUM/AVG/MIN/MAX.`
         );
+      }
     }
+  }
+
+  private executeCustomFunction(
+    routine: { name: string; params: string[]; body: string },
+    args: string[],
+    row: TableRow
+  ): any {
+    const paramNames = routine.params.map((p) => p.trim().split(/\s+/)[0].replace(/[`"']/g, ''));
+    const evaluatedArgs = args.map((a) => this.evaluateScalar(row, a));
+
+    let expr = routine.body;
+    const returnMatch = expr.match(/RETURN\s+([\s\S]+?)(?:;|\s+END|$)/i);
+    if (returnMatch) {
+      expr = returnMatch[1].trim();
+    }
+
+    const evalRow: TableRow = { ...row };
+    paramNames.forEach((pName, idx) => {
+      evalRow[pName] = evaluatedArgs[idx];
+    });
+
+    if (/[+\-*/]/.test(expr)) {
+      return this.evaluateArithmetic(evalRow, expr);
+    }
+    return this.evaluateScalar(evalRow, expr);
   }
 
   /**
@@ -1055,6 +1146,44 @@ export class SqlExecutor {
       case '/': return rn === 0 ? null : ln / rn;
       default: return null;
     }
+  }
+
+  /**
+   * Evaluates a `||` string concatenation expression, e.g. `e.name || ' > ' || chain.path`.
+   * Splits on `||` at the top level (respecting string literals and parentheses),
+   * evaluates each part with evaluateScalar, and joins the results as strings.
+   */
+  private evaluateConcatenation(row: TableRow, expr: string): string | null {
+    const t = (expr ?? '').trim();
+    const parts: string[] = [];
+    let current = '';
+    let depth = 0;
+    let inString = false;
+    let stringChar = '';
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if ((ch === "'" || ch === '"') && !inString) { inString = true; stringChar = ch; current += ch; continue; }
+      if (inString && ch === stringChar) { inString = false; current += ch; continue; }
+      if (inString) { current += ch; continue; }
+      if (ch === '(') { depth++; current += ch; continue; }
+      if (ch === ')') { depth--; current += ch; continue; }
+      if (depth === 0 && ch === '|' && t[i + 1] === '|') {
+        parts.push(current.trim());
+        current = '';
+        i++; // skip the second |
+        continue;
+      }
+      current += ch;
+    }
+    if (current.trim()) parts.push(current.trim());
+    if (parts.length === 0) return null;
+    const values = parts.map(p => {
+      const v = this.evaluateScalar(row, p);
+      if (v === null || v === undefined) return null;
+      return String(v);
+    });
+    if (values.some(v => v === null)) return null;
+    return values.join('');
   }
 
   /** Extracts a date component from a 'YYYY-MM-DD…' value (UTC-safe). */
@@ -1131,13 +1260,23 @@ export class SqlExecutor {
               break;
             }
 
-            // Standard SQL: recursive query columns align positionally with the anchor query columns
+            // Standard SQL: recursive step columns align positionally with the anchor columns.
+            // Use nextRes.columns (the logical SELECT output names) for positional mapping —
+            // NOT Object.values(row), which includes internal JOIN mirror keys and produces
+            // wrong positional alignment for expressions like `chain.level + 1`.
             const stepCols = anchorRes.columns;
+            const nextCols = nextRes.columns; // e.g. ['emp_id','name','manager_id','level + 1']
             const mappedNextRows = nextRes.rows.map((row) => {
-              const rowVals = Object.values(row);
               const mapped: Record<string, any> = {};
               stepCols.forEach((colName, idx) => {
-                mapped[colName] = row[colName] !== undefined ? row[colName] : rowVals[idx];
+                // Prefer: value already stored under the anchor column name (e.g. 'level')
+                // Fallback: positional match from the recursive step's output column (e.g. 'level + 1')
+                if (row[colName] !== undefined) {
+                  mapped[colName] = row[colName];
+                } else {
+                  const srcCol = nextCols[idx];
+                  mapped[colName] = srcCol !== undefined ? row[srcCol] : undefined;
+                }
               });
               return mapped;
             });
@@ -1879,12 +2018,20 @@ export class SqlExecutor {
 
           const vLeft = getRowValue(row, join.onLeft);
           const vRight = getRowValue(targetRow, join.onRight);
-          const vLeftAlt = getRowValue(row, join.onRight);
-          const vRightAlt = getRowValue(targetRow, join.onLeft);
-          const baseMatch =
-            (vLeft !== undefined && vRight !== undefined && vLeft == vRight) ||
-            (vLeftAlt !== undefined && vRightAlt !== undefined && vLeftAlt == vRightAlt);
-          if (!baseMatch) return false;
+          // Primary direction: onLeft from left table, onRight from right table.
+          const directMatch = vLeft !== undefined && vRight !== undefined && vLeft == vRight;
+          if (directMatch) {
+            // fast-path: correct direction matched
+          } else {
+            // Only try reversed direction if the primary fails. Use the full ON-clause
+            // evaluator against a merged row — this avoids the getRowValue bare-column
+            // fallback that caused cross-table false positives (e.g. Dave's manager_id=3
+            // matching Carol's emp_id=3 when checking e.emp_id = chain.manager_id).
+            if (!join.onCondition) return false;
+            const mergedFallback = mergeRow(row, targetRow);
+            return this.evaluateWhere(this.substituteRowRefs(join.onCondition, mergedFallback), mergedFallback);
+          }
+          const baseMatch = directMatch;
           // S2-4: evaluate any additional `AND <condition>` terms in the ON clause.
           // Silently dropping them changed the row set (e.g. ON a=b AND o.status='x'
           // behaved like ON a=b).
@@ -2151,7 +2298,7 @@ export class SqlExecutor {
             }
             // Check computed arithmetic expressions
             // (quantity * unit_price, revenue - prev_revenue, …)
-            else if (!col.windowFunction && /[+\-*/]/.test(srcCol)) {
+            else if (!col.windowFunction && /[+\-*/]/.test(srcCol) && !/\|\|/.test(srcCol)) {
               const ar = this.evaluateArithmetic(row, srcCol);
               projected[outputCol] =
                 ar !== undefined
@@ -2159,6 +2306,11 @@ export class SqlExecutor {
                   : getRowValue(row, srcCol) !== undefined
                   ? getRowValue(row, srcCol)
                   : null;
+            }
+            // String concatenation with || operator (SQLite/PostgreSQL style)
+            // e.g. e.name || ' > ' || chain.path
+            else if (!col.windowFunction && /\|\|/.test(srcCol)) {
+              projected[outputCol] = this.evaluateConcatenation(row, srcCol);
             } else if (!col.windowFunction && !col.aggregate) {
               projected[outputCol] = getRowValue(row, srcCol) !== undefined ? getRowValue(row, srcCol) : null;
             }
@@ -2638,9 +2790,14 @@ export class SqlExecutor {
         target = anchorDate.toISOString().split('T')[0];
       }
 
-      let targetVal: any = target.replace(/^['"]|['"]$/g, '').replace(/[`"']/g, '');
-      if (getRowValue(row, targetVal) !== undefined && !target.startsWith("'") && !target.startsWith('"')) {
-        targetVal = getRowValue(row, targetVal);
+      let targetVal: any;
+      if (/^[A-Za-z_]\w*\s*\(/.test(target) && /\w\s*\([\s\S]*\)$/.test(target)) {
+        targetVal = this.evaluateScalar(row, target);
+      } else {
+        targetVal = target.replace(/^['"]|['"]$/g, '').replace(/[`"']/g, '');
+        if (getRowValue(row, targetVal) !== undefined && !target.startsWith("'") && !target.startsWith('"')) {
+          targetVal = getRowValue(row, targetVal);
+        }
       }
 
       const rowVal = isFnCol
@@ -2648,6 +2805,11 @@ export class SqlExecutor {
         : isArithCol
           ? this.evaluateArithmetic(row, rawCol)
           : (isNaN(Number(col)) || getRowValue(row, col) !== undefined ? getRowValue(row, col) : Number(col));
+
+      // SQL three-valued logic: comparison with NULL is unknown (false in predicates)
+      if (rowVal === null || rowVal === undefined || targetVal === null || targetVal === undefined) {
+        return false;
+      }
 
       const numRow = Number(rowVal);
       const numTarget = Number(targetVal);
@@ -2875,6 +3037,7 @@ export class SqlExecutor {
 
     for (const row of resolved) {
       this.db.tables[table].push(row);
+      this.fireTriggers('AFTER', 'INSERT', table, undefined, row);
     }
     // Batch A: durable-affecting write while a txn is OPEN — counted, not
     // committed. `getCommittedState()` keeps returning the BEGIN snapshot
@@ -2899,6 +3062,7 @@ export class SqlExecutor {
     }
 
     let affected = 0;
+    const updatedPairs: { oldRow: TableRow; newRow: TableRow }[] = [];
     this.db.tables[table] = this.db.tables[table].map(row => {
       if (!query.whereClause || this.evaluateWhere(query.whereClause, row)) {
         affected++;
@@ -2909,10 +3073,16 @@ export class SqlExecutor {
         for (const [col, val] of Object.entries(query.updateSet ?? {})) {
           updates[col] = this.evaluateSetValue(String(val), row);
         }
-        return { ...row, ...updates };
+        const newRow = { ...row, ...updates };
+        updatedPairs.push({ oldRow: { ...row }, newRow });
+        return newRow;
       }
       return row;
     });
+
+    for (const pair of updatedPairs) {
+      this.fireTriggers('AFTER', 'UPDATE', table, pair.oldRow, pair.newRow);
+    }
 
     // Batch A: in-place mutation inside an OPEN txn is uncommitted by
     // definition (the BEGIN snapshot in `getCommittedState()` still holds the
@@ -3002,12 +3172,19 @@ export class SqlExecutor {
     }
 
     const initialLen = this.db.tables[table].length;
+    const deletedRows: TableRow[] = [];
     this.db.tables[table] = this.db.tables[table].filter(row => {
       if (!query.whereClause) return false;
-      return !this.evaluateWhere(query.whereClause, row);
+      const matches = this.evaluateWhere(query.whereClause, row);
+      if (matches) deletedRows.push(row);
+      return !matches;
     });
 
     const affected = initialLen - this.db.tables[table].length;
+
+    for (const row of deletedRows) {
+      this.fireTriggers('AFTER', 'DELETE', table, row, undefined);
+    }
 
     // Batch A: same as UPDATE — the BEGIN snapshot keeps the pre-DELETE rows
     // until COMMIT, so this delete is uncommitted while the txn is OPEN.

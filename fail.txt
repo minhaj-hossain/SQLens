@@ -1,0 +1,11 @@
+day-39/view-drop/day39-t4
+day-40/view-updatability/day40-t1
+day-40/view-check-option/day40-t3
+day-40/view-replace/day40-t4
+day-42/hierarchy-self-ref/day42-t1
+day-39/view-drop/day39-t4
+day-40/view-updatability/day40-t1
+day-40/view-check-option/day40-t3
+day-40/view-replace/day40-t4
+day-42/hierarchy-self-ref/day42-t1
+day-40/view-updatability/day40-t1

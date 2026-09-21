@@ -862,7 +862,12 @@ function parseInsert(sql: string, rawSql: string): ParsedSqlQuery {
   const rowFromVals = (vals: string[]): Record<string, any> => {
     const row: Record<string, any> = {};
     cols.forEach((col, idx) => {
-      const rawVal = (vals[idx] ?? '').trim().replace(/^['"]|['"]$/g, '');
+      const trimmed = (vals[idx] ?? '').trim();
+      if (/^null$/i.test(trimmed)) {
+        row[col] = null;
+        return;
+      }
+      const rawVal = trimmed.replace(/^['"]|['"]$/g, '');
       const num = Number(rawVal);
       row[col] = !isNaN(num) && rawVal !== '' ? num : rawVal;
     });

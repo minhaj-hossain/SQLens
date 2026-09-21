@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../types/curriculum';
+import { ModuleData } from '../types/curriculum';
 import { MODULE_PUBLISH_SCHEDULE } from '../config/curriculum-schedule';
 import { MODULE_CURRICULUM_ORDER } from '../config/curriculum-order';
 import { Day_01_MODULE } from './modules/day-01-select-queries';
@@ -43,6 +43,12 @@ import { Day_39_MODULE } from './modules/day-39-views-saved-queries';
 import { Day_40_MODULE } from './modules/day-40-views-updatability-check-option';
 import { Day_41_MODULE } from './modules/day-41-recursive-ctes-series';
 import { Day_42_MODULE } from './modules/day-42-hierarchies-graph-traversal';
+import { Day_43_MODULE } from './modules/day-43-stored-functions';
+import { Day_44_MODULE } from './modules/day-44-stored-procedures';
+import { Day_45_MODULE } from './modules/day-45-procedural-control-error-handling';
+import { Day_46_MODULE } from './modules/day-46-triggers-audit';
+import { Day_47_MODULE } from './modules/day-47-encapsulation-lab';
+import { Day_48_MODULE } from './modules/day-48-milestone-4a-checkpoint';
 
 /** Raw module definitions, in canonical day order (1-38). */
 const RAW_MODULES: ModuleData[] = [
@@ -88,6 +94,12 @@ const RAW_MODULES: ModuleData[] = [
   Day_40_MODULE,
   Day_41_MODULE,
   Day_42_MODULE,
+  Day_43_MODULE,
+  Day_44_MODULE,
+  Day_45_MODULE,
+  Day_46_MODULE,
+  Day_47_MODULE,
+  Day_48_MODULE,
 ];
 
 /**
