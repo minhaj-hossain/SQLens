@@ -92,7 +92,7 @@ export const Day_35_MODULE: ModuleData = {
       },
       tasks: [
         {
-          id: 'day23-c1-t1',
+          id: 'day35-c1-t1',
           title: 'Task 1 (Guided Fix): Customer Order Volume Audit',
           description: 'List every customer together with how many orders they have placed. Customers who have never placed an order must still appear in the results, showing 0 orders.',
           instructions: [
@@ -118,7 +118,7 @@ export const Day_35_MODULE: ModuleData = {
           successMessage: 'Task 1 completed! All customer accounts preserved with accurate zero counts.',
         },
         {
-          id: 'day23-c1-t2',
+          id: 'day35-c1-t2',
           title: 'Task 2 (Transfer): Catalog Sales Volume Audit with COALESCE',
           description: 'Show the total units sold for every product. Products that have never been purchased must appear too — their total should show 0 instead of being empty or missing.',
           instructions: [
@@ -155,7 +155,7 @@ export const Day_35_MODULE: ModuleData = {
     scenario: 'Harden analytical reporting queries against zero-state edge cases:',
     tasks: [
       {
-        id: 'day23-hw-1',
+        id: 'day35-hw-1',
         title: 'Task 1: Customer order roster with 0-order preservation',
         description: 'Customer order roster preserving all customers (LEFT JOIN).',
         instructions: [

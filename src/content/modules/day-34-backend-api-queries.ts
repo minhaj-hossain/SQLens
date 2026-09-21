@@ -90,7 +90,7 @@ export const Day_34_MODULE: ModuleData = {
       },
       tasks: [
         {
-          id: 'day22-c1-t1',
+          id: 'day34-c1-t1',
           title: 'Mission 1 (Guided): Product Detail View Endpoint Query',
           description: 'Retrieve product information with category name and supplier name for `product_id = 1`.',
           instructions: [
@@ -114,7 +114,7 @@ export const Day_34_MODULE: ModuleData = {
           successMessage: 'Mission 1 complete! Product detail endpoint query verified.',
         },
         {
-          id: 'day22-c1-t2',
+          id: 'day34-c1-t2',
           title: 'Mission 2 (Independent): Executive Dashboard KPI Summary Query',
           description: 'Calculate overall total distinct orders and grand total revenue in a single query.',
           instructions: [
@@ -149,7 +149,7 @@ export const Day_34_MODULE: ModuleData = {
     scenario: 'The backend team needs two endpoints wired to real SQL today: the product detail page and the executive KPI call. Write both queries the API will ship — production expectations, no starter code:',
     tasks: [
       {
-        id: 'day22-hw-1',
+        id: 'day34-hw-1',
         title: 'Endpoint 1: "Get Product Detail Page" Query',
         description: 'Product info + category name + supplier name for product 1.',
         instructions: [
@@ -173,7 +173,7 @@ export const Day_34_MODULE: ModuleData = {
         successMessage: 'Endpoint 1 verified! Product detail query active.',
       },
       {
-        id: 'day22-hw-2',
+        id: 'day34-hw-2',
         title: 'Endpoint 2: "Executive Dashboard KPI Query" (Revenue & Orders)',
         description: 'Calculate grand total revenue and total distinct order count in a single query.',
         instructions: [

@@ -399,7 +399,7 @@ export const Day_27_MODULE: ModuleData = {
     databaseLifecycle: 'inherit',
     tasks: [
       {
-        id: 'day20-hw-1',
+        id: 'day27-hw-1',
         title: 'Task 1 (Challenge): Design the Product Reviews Table',
         description: 'Design and create a resilient `product_reviews` schema that enforces identity, non-null relationships, rating domain validation, and automatic timestamping.',
         instructions: [
@@ -425,7 +425,7 @@ export const Day_27_MODULE: ModuleData = {
         databaseLifecycle: 'fresh',
       },
       {
-        id: 'day20-hw-2',
+        id: 'day27-hw-2',
         title: 'Task 2 (Challenge): Aggregate Product Rating Performance',
         description: 'Compute summary metrics across catalog products by linking products to customer review records.',
         instructions: [

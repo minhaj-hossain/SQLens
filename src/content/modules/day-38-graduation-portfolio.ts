@@ -96,7 +96,7 @@ export const Day_38_MODULE: ModuleData = {
       },
       tasks: [
         {
-          id: 'day25-c1-t1',
+          id: 'day38-c1-t1',
           title: 'Exploration 1: Rank Products within Categories',
           description: 'Use ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) to rank products in each category.',
           instructions: [
@@ -118,7 +118,7 @@ export const Day_38_MODULE: ModuleData = {
           successMessage: 'Exploration 1 verified! Window function ranking calculated.',
         },
         {
-          id: 'day25-c1-t2',
+          id: 'day38-c1-t2',
           title: 'Exploration 2: Top 2 Products per Category via CTE',
           description: 'Combine a Window Function with a CTE to extract only the top 2 highest priced products per category.',
           instructions: [
@@ -151,7 +151,7 @@ export const Day_38_MODULE: ModuleData = {
     scenario: 'Optional Exploration: Run the final Window Function query to complete your graduation portfolio:',
     tasks: [
       {
-        id: 'day25-hw-1',
+        id: 'day38-hw-1',
         title: 'Graduation Milestone: Top 2 Most Expensive Products in Each Category',
         description: 'Find the top 2 most expensive products in each category using ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC).',
         instructions: [

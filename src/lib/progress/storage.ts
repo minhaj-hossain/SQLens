@@ -1,4 +1,4 @@
-import { LEARNING_CONFIG } from '../../config/learning';
+﻿import { LEARNING_CONFIG } from '../../config/learning';
 import { UserLearningState, CompletedModuleRecord, CompletedConceptRecord, CompletedTaskRecord } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 
@@ -23,7 +23,7 @@ export const INITIAL_USER_STATE: UserLearningState = {
  * positional `day-NN` scheme so that id === filename === position === label.
  * Any persisted progress written under a pre-consolidation id is remapped on
  * load so no learner loses completed/unlocked state. The map is one-directional
- * (old → new) and idempotent — running it twice is harmless because new ids
+ * (old â†’ new) and idempotent â€” running it twice is harmless because new ids
  * never appear as keys.
  */
 const MODULE_ID_MIGRATION: Record<string, string> = {
@@ -62,6 +62,35 @@ function migrateModuleIdRef(value: string): string {
   return MODULE_ID_MIGRATION[value] ?? value;
 }
 
+/**
+ * Task-ID consolidation map (2026-09). Task ids were normalised to match their
+ * parent day so that id, module, and position are all self-consistent.
+ * Any persisted progress written under a pre-consolidation task id is remapped
+ * on load — running the map twice is harmless (old ids never appear as values).
+ */
+const TASK_ID_MIGRATION: Record<string, string> = {
+  // Day 27 challenge tasks (were erroneously labelled day20-*)
+  'day20-hw-1': 'day27-hw-1',
+  'day20-hw-2': 'day27-hw-2',
+  // Day 34 practice & challenge tasks (were labelled day22-*)
+  'day22-c1-t1': 'day34-c1-t1',
+  'day22-c1-t2': 'day34-c1-t2',
+  'day22-hw-1':  'day34-hw-1',
+  'day22-hw-2':  'day34-hw-2',
+  // Day 35 practice & challenge tasks (were labelled day23-*)
+  'day23-c1-t1': 'day35-c1-t1',
+  'day23-c1-t2': 'day35-c1-t2',
+  'day23-hw-1':  'day35-hw-1',
+  // Day 38 practice & challenge tasks (were labelled day25-*)
+  'day25-c1-t1': 'day38-c1-t1',
+  'day25-c1-t2': 'day38-c1-t2',
+  'day25-hw-1':  'day38-hw-1',
+};
+
+function migrateTaskIdRef(value: string): string {
+  return TASK_ID_MIGRATION[value] ?? value;
+}
+
 /** Remap any stored module references written under pre-consolidation ids. */
 export function migrateLegacyModuleIds(state: UserLearningState): UserLearningState {
   const s: UserLearningState = { ...state };
@@ -70,26 +99,32 @@ export function migrateLegacyModuleIds(state: UserLearningState): UserLearningSt
 
   const completedModules: Record<string, CompletedModuleRecord> = {};
   for (const [key, record] of Object.entries(state.completedModules ?? {})) {
-    completedModules[migrateModuleIdRef(key)] = { ...record, moduleId: migrateModuleIdRef(record.moduleId ?? key) };
+    completedModules[migrateModuleIdRef(key)] = {
+      ...record,
+      moduleId: migrateModuleIdRef(record.moduleId ?? key),
+      // Remap any task IDs stored inside the module record's task array.
+      completedTasks: (record.completedTasks ?? []).map(migrateTaskIdRef),
+    };
   }
   s.completedModules = completedModules;
 
-  const remapEmbedded = <T extends { moduleId?: string }>(records?: Record<string, T>): Record<string, T> | undefined => {
+  const remapEmbedded = <T extends { moduleId?: string }>(records?: Record<string, T>, remapKey?: (k: string) => string): Record<string, T> | undefined => {
     if (!records) return undefined;
     const out: Record<string, T> = {};
     for (const [key, record] of Object.entries(records)) {
-      out[key] = record.moduleId ? { ...record, moduleId: migrateModuleIdRef(record.moduleId) } : record;
+      const newKey = remapKey ? remapKey(key) : key;
+      out[newKey] = record.moduleId ? { ...record, moduleId: migrateModuleIdRef(record.moduleId) } : record;
     }
     return out;
   };
   s.completedConcepts = remapEmbedded<CompletedConceptRecord>(state.completedConcepts);
-  s.completedTasks = remapEmbedded<CompletedTaskRecord>(state.completedTasks);
-  s.taskAttempts = remapEmbedded<CompletedTaskRecord>(state.taskAttempts);
+  s.completedTasks = remapEmbedded<CompletedTaskRecord>(state.completedTasks, migrateTaskIdRef);
+  s.taskAttempts = remapEmbedded<CompletedTaskRecord>(state.taskAttempts, migrateTaskIdRef);
   return s;
 }
 
 /**
- * Batch 5 — explicit storage scope for a FULL reset.
+ * Batch 5 â€” explicit storage scope for a FULL reset.
  *
  * Cleared (this device):
  *  - the caller's progress key (`sqlens_progress_user_<id>` or legacy guest
@@ -99,11 +134,11 @@ export function migrateLegacyModuleIds(state: UserLearningState): UserLearningSt
  *    "old data back" even when the progress maps are empty)
  *
  * Intentionally KEPT:
- *  - other accounts' `sqlens_progress_user_*` keys (account isolation —
+ *  - other accounts' `sqlens_progress_user_*` keys (account isolation â€”
  *    resetting user A must never wipe user B's cached progress on a shared
  *    device; each key is user-scoped and only loaded for its own session)
  *  - task SQL inside `taskAttempts.lastSubmittedSql` of OTHER users (same
- *    reason — per-key isolation)
+ *    reason â€” per-key isolation)
  */
 export const PLAYGROUND_DRAFT_KEY = 'sqlens_playground_draft_v1';
 export const PLAYGROUND_HISTORY_KEY = 'sqlens_playground_history_v1';
@@ -168,7 +203,7 @@ export function saveUserState(state: UserLearningState, userId?: string | null):
  * Full curriculum reset: wipes the caller's local key + legacy guest key and
  * returns Day-1 INITIAL state. Batch 2: bumps `resetEpoch` by 1 over
  * `prevEpoch` (default: read the stored state) so the reset is a first-class
- * fact — not absence-of-data — that merge + PUT fencing can honor. Plain
+ * fact â€” not absence-of-data â€” that merge + PUT fencing can honor. Plain
  * `resetUserState(userId)` with no epoch still resets to epoch 0 for legacy
  * call sites; the provider passes the live epoch.
  */
@@ -213,12 +248,12 @@ export function resetUserState(userId?: string | null, prevEpoch?: number): User
  * Resets task and concept progress for a single specific module,
  * leaving other days and unlocked modules intact.
  *
- * Batch 6: bumps the GLOBAL resetEpoch by 1 (like a full reset — the epoch
+ * Batch 6: bumps the GLOBAL resetEpoch by 1 (like a full reset â€” the epoch
  * is the only generation counter the server fences on) and records the
  * module in `resetModuleIds` with `resetAt`. Why the epoch bump: after a
  * module reset, cloud still holds the old full doc at the same epoch, so a
  * remount hydration (or a stale tab) would equal-epoch union-merge the
- * deleted module straight back (V6 — incl. the `/admin` round-trip). With
+ * deleted module straight back (V6 â€” incl. the `/admin` round-trip). With
  * the bump, the pruned state outranks the old cloud snapshot everywhere:
  * merge adopts local, PUT passes the fence, and receivers ignore the stale
  * sender. The bumped epoch also flows into the tombstone if the user later
