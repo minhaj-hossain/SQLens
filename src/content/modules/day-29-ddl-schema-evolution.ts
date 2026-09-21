@@ -114,11 +114,11 @@ export const Day_29_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl3-c1-t1',
-          title: 'Task 1 (Guided): The tagline migration',
-          description: 'The live products catalog needs a tagline column. Add it without touching any existing data.',
+          title: 'Task 1 (Guided): Add a Column to a Live Table',
+          description: 'The live products catalog needs a tagline column. Add it to the existing table without touching any data that already exists.',
           instructions: [
-            'Write `ALTER TABLE products ADD COLUMN tagline VARCHAR(120);`',
-            "Then verify with `SELECT product_id, name, tagline FROM products LIMIT 3;` - tagline is NULL everywhere, data intact.",
+            'Write an ALTER TABLE statement that adds a `tagline VARCHAR(120)` column to the `products` table.',
+            'After running it, verify that the column exists by selecting `product_id`, `name`, and `tagline` from a few products. The new column should be present, with NULL in every existing row.',
           ],
           type: 'guided',
           primaryTable: 'products',
@@ -132,11 +132,11 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c1-t2',
-          title: 'Task 2 (Independent): A backfilled status column',
-          description: 'Add `lifecycle_status` to products with a DEFAULT of active, so every existing row is backfilled immediately.',
+          title: 'Task 2 (Independent): Add a Backfilled Status Column',
+          description: 'Add a `lifecycle_status` column to the products table that immediately populates all existing rows with a meaningful default, eliminating the need for a follow-up UPDATE.',
           instructions: [
-            "Write `ALTER TABLE products ADD COLUMN lifecycle_status VARCHAR(20) DEFAULT 'active';`",
-            "Verify: `SELECT product_id, lifecycle_status FROM products LIMIT 3;` - every row shows active.",
+            'Write an ALTER TABLE statement that adds `lifecycle_status VARCHAR(20)` to `products`, with a default value of "active".',
+            'Verify the result by selecting `product_id` and `lifecycle_status` from a few rows. Every existing row should already show "active".',
           ],
           type: 'independent',
           primaryTable: 'products',
@@ -225,10 +225,11 @@ export const Day_29_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl3-c2-t1',
-          title: 'Task 1 (Guided): A relationship-guarded table',
-          description: 'Create `wishlist_items` whose product and customer references are both enforced.',
+          title: 'Task 1 (Guided): Create a Relationship-Guarded Table',
+          description: 'Create a `wishlist_items` table whose product and customer references are enforced by the database. An item cannot reference a product or customer that does not exist.',
           instructions: [
-            'Write `CREATE TABLE wishlist_items (item_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, FOREIGN KEY (product_id) REFERENCES products(product_id), FOREIGN KEY (customer_id) REFERENCES customers(customer_id));`',
+            'Create a table named `wishlist_items` with three columns: `item_id INT AUTO_INCREMENT PRIMARY KEY`, `product_id INT` (mandatory), and `customer_id INT` (mandatory).',
+            'Add two FOREIGN KEY constraints: one linking `product_id` to `products(product_id)`, and another linking `customer_id` to `customers(customer_id)`.',
           ],
           type: 'guided',
           primaryTable: 'wishlist_items',
@@ -243,11 +244,11 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c2-t2',
-          title: 'Task 2 (Independent): Verify the FK rejects an orphan',
-          description: 'Insert a wishlist item referencing product 999. The task EXPECTS the FK to reject it.',
+          title: 'Task 2 (Independent): Verify Foreign Key Enforcement Against Orphan Inserts',
+          description: 'Confirm that the foreign key constraint on `wishlist_items.product_id` is actively enforced by attempting an insert that references a non-existent product. This task expects the insert to be rejected.',
           instructions: [
-            'Run `INSERT INTO wishlist_items (product_id, customer_id) VALUES (999, 1);` - product 999 does not exist.',
-            'Expect the foreign-key error.',
+            'Attempt to insert a row into `wishlist_items` referencing a product that does not exist (e.g. product_id 999).',
+            'Confirm that the engine rejects the insert with a foreign-key constraint error.',
           ],
           type: 'independent',
           primaryTable: 'wishlist_items',
@@ -337,12 +338,12 @@ export const Day_29_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl3-c3-t1',
-          title: 'Task 1 (Guided): Create, then tear down',
-          description: 'Create a staging table, then drop it with the safe form. Run the DROP twice to see idempotence in action.',
+          title: 'Task 1 (Guided): Create and Tear Down a Staging Table',
+          description: 'Create a temporary staging table, then drop it using the safe, idempotent form. Run the DROP twice to observe that the second execution succeeds silently — that is idempotence.',
           instructions: [
-            'Run `CREATE TABLE IF NOT EXISTS temp_order_staging (staging_id INT PRIMARY KEY, note VARCHAR(80));`',
-            'Run `DROP TABLE IF EXISTS temp_order_staging;`',
-            'Run the DROP a second time - no error. That is idempotence.',
+            'Create a temporary staging table named `temp_order_staging` with `staging_id INT PRIMARY KEY` and `note VARCHAR(80)`.',
+            'Drop the table using DROP TABLE IF EXISTS.',
+            'Run the DROP statement again. Both executions should succeed without errors.',
           ],
           type: 'guided',
           primaryTable: 'temp_order_staging',
@@ -356,10 +357,10 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c3-t2',
-          title: 'Task 2 (Independent): The reproducible setup script',
-          description: 'Write the final teardown for a legacy table as part of a replayable cleanup script.',
+          title: 'Task 2 (Independent): Write a Reproducible Teardown Statement',
+          description: 'Write the teardown statement for a legacy table as part of a replayable cleanup script. The statement must succeed whether or not the table currently exists.',
           instructions: [
-            'Write `DROP TABLE IF EXISTS legacy_student_grades;`',
+            'Write a DROP TABLE statement for `legacy_student_grades` that uses the IF EXISTS clause to make it safe to execute in any environment state.',
           ],
           type: 'independent',
           primaryTable: 'legacy_student_grades',
@@ -383,10 +384,11 @@ export const Day_29_MODULE: ModuleData = {
     tasks: [
       {
         id: 'ddl3-hw-1',
-        title: 'Task 1: Create the child table with FKs',
-        description: 'Create `wishlists`: wishlist_id PK auto-increment, product_id NOT NULL with FK to products(product_id), customer_id NOT NULL with FK to customers(customer_id).',
+        title: 'Task 1: Create a Child Table with Enforced Relationships',
+        description: 'Create a `wishlists` table that enforces both of its parent relationships. A wishlist entry must reference a real product and a real customer — orphaned rows are structurally impossible.',
         instructions: [
-          'Write `CREATE TABLE wishlists (wishlist_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, FOREIGN KEY (product_id) REFERENCES products(product_id), FOREIGN KEY (customer_id) REFERENCES customers(customer_id));`',
+          'Create a table named `wishlists` with three columns: `wishlist_id INT AUTO_INCREMENT PRIMARY KEY`, `product_id INT` (mandatory), and `customer_id INT` (mandatory).',
+          'Add a FOREIGN KEY from `product_id` to `products(product_id)` and another from `customer_id` to `customers(customer_id)`.',
         ],
         type: 'challenge',
         primaryTable: 'wishlists',
@@ -402,10 +404,10 @@ export const Day_29_MODULE: ModuleData = {
       },
       {
         id: 'ddl3-hw-2',
-        title: 'Task 2: Extend the products table',
-        description: 'Add `featured BOOLEAN NOT NULL DEFAULT FALSE` to products - a backfilled migration.',
+        title: 'Task 2: Add a Featured Flag to the Products Table',
+        description: 'Extend the live products table with a `featured` flag. All existing products must start as non-featured without requiring a separate UPDATE step.',
         instructions: [
-          "Write `ALTER TABLE products ADD COLUMN featured BOOLEAN NOT NULL DEFAULT FALSE;`",
+          'Write an ALTER TABLE statement that adds `featured BOOLEAN NOT NULL DEFAULT FALSE` to the `products` table. Existing rows should be backfilled to FALSE automatically.',
         ],
         type: 'challenge',
         primaryTable: 'products',
@@ -418,9 +420,9 @@ export const Day_29_MODULE: ModuleData = {
       },
       {
         id: 'ddl3-hw-3',
-        title: 'Task 3: Idempotent teardown',
-        description: 'Finish the migration with a safe teardown of the temp import table.',
-        instructions: ['Write `DROP TABLE IF EXISTS temp_import_orders;`'],
+        title: 'Task 3: Write a Safe, Idempotent Teardown Statement',
+        description: 'Complete the migration script with a teardown for the temporary import table. The statement must run cleanly regardless of whether the table currently exists.',
+        instructions: ['Write a DROP TABLE statement for `temp_import_orders` that uses IF EXISTS to make it safe to run in any environment.'],
         type: 'challenge',
         primaryTable: 'temp_import_orders',
         initialSql: '-- Safe teardown\n',

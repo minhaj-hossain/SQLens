@@ -63,20 +63,35 @@ describe('submit-pipeline — fresh retry idempotence (P0)', () => {
     expect(exec.executeQuery('SELECT * FROM customers;').rowCount).toBe(seedCount + 1);
   });
 
-  it('a wrong-values INSERT fails with the Phase 1 value diff, not a count lie', () => {
+  it('allows custom values on INSERT by default, and enforces diff when strictValues is set', () => {
     const exec = new SqlExecutor();
-    const verdict = runAndGradeSubmission({
+    // Default flexible behavior: custom values pass as long as constraints and counts are valid
+    const flexibleVerdict = runAndGradeSubmission({
       task: INSERT_CUSTOMER,
       sql: "INSERT INTO customers (name, email, city, signup_date) VALUES ('Rahim Ahmed', 'rahim.ahmed@example.com', 'Dhaka', '2026-09-20');",
       hooks: lessonHooks(exec),
       surface: 'lesson',
       record: false,
     });
-    expect(verdict.passed).toBe(false);
-    expect(verdict.stage).toBe('final-state');
-    expect(verdict.stateOk).toBe(false);
-    expect(verdict.feedback).toMatch(/row count is right/i);
-    expect(verdict.diffColumns).toContain('name');
+    expect(flexibleVerdict.passed).toBe(true);
+
+    // When strictValues is true, exact value matching is enforced
+    const strictTask = {
+      ...INSERT_CUSTOMER,
+      validation: { strictValues: true },
+    };
+    const strictVerdict = runAndGradeSubmission({
+      task: strictTask,
+      sql: "INSERT INTO customers (name, email, city, signup_date) VALUES ('Rahim Ahmed', 'rahim.ahmed@example.com', 'Dhaka', '2026-09-20');",
+      hooks: lessonHooks(exec),
+      surface: 'lesson',
+      record: false,
+    });
+    expect(strictVerdict.passed).toBe(false);
+    expect(strictVerdict.stage).toBe('final-state');
+    expect(strictVerdict.stateOk).toBe(false);
+    expect(strictVerdict.feedback).toMatch(/row count is right/i);
+    expect(strictVerdict.diffColumns).toContain('name');
   });
 });
 

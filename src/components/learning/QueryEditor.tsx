@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -335,6 +336,19 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       });
       return () => cancelAnimationFrame(id);
     }, [value, syncEditorRows]);
+
+    /**
+     * Mount-time measurement: run syncEditorRows synchronously after the first
+     * DOM paint so the tint never renders with the stale empty-rows initial
+     * state. Without this, if the textarea has a pre-filled value and the user
+     * immediately clicks into a line below a wrapped line, activeLine updates
+     * before the rAF-deferred syncEditorRows fires, and the tint sits one visual
+     * row too high for every line below the first wrap.
+     */
+    useLayoutEffect(() => {
+      syncEditorRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // intentionally runs only on mount
 
     // Soft wrap depends on the CONTENT WIDTH, so a container resize (split-pane
     // drag, sidebar toggle, viewport rotate, devtools dock) re-wraps long lines

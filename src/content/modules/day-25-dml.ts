@@ -106,11 +106,12 @@ export const Day_25_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day19-c1-t1',
-          title: 'Task 1: Insert a New Product',
-          description: 'Insert a new item into the `products` table.',
+          title: 'Task 1 (Guided): Insert a New Product',
+          description: 'Add a new product record to the catalog with appropriate product attributes.',
           instructions: [
-            'Insert into `products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level)` values `(\'Ultra Wireless Mouse\', 1, 1, 49.99, 100, 20)`.',
-            'End with a semicolon (;).',
+            'Write an `INSERT INTO products` statement specifying the column list: `name`, `supplier_id`, `category_id`, `price`, `quantity_in_stock`, and `reorder_level`.',
+            'Choose any product name, set `supplier_id` and `category_id` to any existing IDs, and supply a positive `price`, `quantity_in_stock`, and `reorder_level`.',
+            'Terminate your statement with a semicolon.',
           ],
           type: 'guided',
           primaryTable: 'products',
@@ -127,18 +128,19 @@ export const Day_25_MODULE: ModuleData = {
         },
         {
           id: 'day19-c1-t2',
-          title: 'Task 2: Insert a New Customer',
-          description: 'Insert a new customer profile into the `customers` table.',
+          title: 'Task 2 (Independent): Insert a New Customer',
+          description: 'Register a new customer profile in the customers table.',
           instructions: [
-            'Insert into `customers (name, email, city, signup_date)`.',
-            'Values: `(\'Sultana Begum\', \'sultana@example.com\', \'Dhaka\', \'2026-08-25\')`.',
+            'Write an `INSERT INTO customers` statement specifying the columns: `name`, `email`, `city`, and `signup_date`.',
+            'Provide your own customer values — any valid name, a properly formatted email address, a city, and a date in `YYYY-MM-DD` format.',
+            'Terminate your statement with a semicolon.',
           ],
           type: 'independent',
           primaryTable: 'customers',
           initialSql: '-- Insert new customer\n',
           solutionSql: 'INSERT INTO customers (name, email, city, signup_date) VALUES (\'Sultana Begum\', \'sultana@example.com\', \'Dhaka\', \'2026-08-25\');',
           solutionExplanation: 'Appends Sultana Begum to the customer roster.',
-          hints: [{ level: 1, text: 'Use `INSERT INTO customers (name, email, city, signup_date) VALUES (\'Sultana Begum\', \'sultana@example.com\', \'Dhaka\', \'2026-08-25\');`' }],
+          hints: [{ level: 1, text: 'Use `INSERT INTO customers (name, email, city, signup_date) VALUES (...);` with values of your choice.' }],
           validation: {
             targetTable: 'customers',
             expectedRowCount: 1,
@@ -403,11 +405,12 @@ export const Day_25_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day19-hw-1',
-        title: 'Task 1: Insert a new product into products',
-        description: 'Insert a new product into products.',
+        title: 'Task 1 (Challenge): Insert a New Product',
+        description: 'Catalogue a new product by inserting a complete row into the products table.',
         instructions: [
-          'Insert into `products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level)` values `(\'Precision Stylus Pen\', 1, 1, 29.99, 80, 15)`.',
-          'End with a semicolon (;).',
+          'Write an `INSERT INTO products` statement that specifies every required column: `name`, `supplier_id`, `category_id`, `price`, `quantity_in_stock`, and `reorder_level`.',
+          'Use values of your choice, ensuring `supplier_id` and `category_id` reference valid existing records and all numeric fields are positive.',
+          'Terminate your statement with a semicolon.',
         ],
         type: 'challenge',
         primaryTable: 'products',

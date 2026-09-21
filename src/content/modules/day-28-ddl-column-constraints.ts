@@ -113,11 +113,11 @@ export const Day_28_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl2-c1-t1',
-          title: 'Task 1 (Guided): The mandatory-fields table',
-          description: 'Create the employees table where full_name and salary can never be empty.',
+          title: 'Task 1 (Guided): Create a Table with Mandatory Fields',
+          description: 'Create the `employees` table where `full_name` and `salary` are mandatory fields. Every employee record must carry both.',
           instructions: [
-            'Write `CREATE TABLE employees (emp_id INT PRIMARY KEY, full_name VARCHAR(100) NOT NULL, salary DECIMAL(10,2) NOT NULL);`',
-            'End with a semicolon (;).',
+            'Create a table named `employees` with three columns: `emp_id INT PRIMARY KEY`, `full_name VARCHAR(100)` that cannot be null, and `salary DECIMAL(10,2)` that also cannot be null.',
+            'Apply the NOT NULL constraint to both `full_name` and `salary` so any insert missing either field is rejected by the engine.',
           ],
           type: 'guided',
           primaryTable: 'employees',
@@ -131,11 +131,11 @@ export const Day_28_MODULE: ModuleData = {
         },
         {
           id: 'ddl2-c1-t2',
-          title: 'Task 2 (Independent): Customer signups without fake data',
-          description: 'Create `customer_signups` where `signup_email` and `signup_date` are mandatory, but `referral_code` stays optional (customers may not have one).',
+          title: 'Task 2 (Independent): Customer Signups Without Fake Data',
+          description: 'Create a `customer_signups` table that captures signup data accurately: mandatory for fields the business requires, and honestly nullable for fields that may not apply to every customer.',
           instructions: [
-            'Create table `customer_signups`.',
-            'Columns: `signup_id INT PRIMARY KEY`, `signup_email VARCHAR(120) NOT NULL`, `signup_date DATE NOT NULL`, `referral_code VARCHAR(30)` (nullable).',
+            'Create a table named `customer_signups` with four columns: `signup_id INT PRIMARY KEY`, `signup_email VARCHAR(120)` (mandatory), `signup_date DATE` (mandatory), and `referral_code VARCHAR(30)` (nullable — customers may not have one).',
+            'Apply NOT NULL only to the fields that the business genuinely requires on every signup.',
           ],
           type: 'independent',
           primaryTable: 'customer_signups',
@@ -217,10 +217,11 @@ export const Day_28_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl2-c2-t1',
-          title: 'Task 1 (Guided): Duplicate-proof usernames',
-          description: 'Create the users table with a UNIQUE username.',
+          title: 'Task 1 (Guided): Duplicate-Proof Usernames',
+          description: 'Create a `users` table where usernames are guaranteed unique at the schema level. No application code should be needed to prevent duplicate usernames.',
           instructions: [
-            'Write `CREATE TABLE users (user_id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(40) NOT NULL UNIQUE, display_name VARCHAR(80));`',
+            'Create a table named `users` with three columns: `user_id INT AUTO_INCREMENT PRIMARY KEY`, `username VARCHAR(40)` that is both mandatory and unique, and `display_name VARCHAR(80)` which is optional.',
+            'Place both NOT NULL and UNIQUE on the `username` column.',
           ],
           type: 'guided',
           primaryTable: 'users',
@@ -234,10 +235,10 @@ export const Day_28_MODULE: ModuleData = {
         },
         {
           id: 'ddl2-c2-t2',
-          title: 'Task 2 (Independent): Two natural keys at once',
-          description: 'Create `warehouse_items` where BOTH `sku` and `barcode` are unique (and sku is also NOT NULL).',
+          title: 'Task 2 (Independent): Two Independent Natural Keys',
+          description: 'Create a `warehouse_items` table where two separate natural keys — SKU and barcode — are both duplicate-proof. SKU is also mandatory, while barcode may be absent for items not yet assigned one.',
           instructions: [
-            'Columns: `item_id INT AUTO_INCREMENT PRIMARY KEY`, `sku VARCHAR(30) NOT NULL UNIQUE`, `barcode VARCHAR(30) UNIQUE`, `location VARCHAR(40)`.',
+            'Create a table named `warehouse_items` with four columns: `item_id INT AUTO_INCREMENT PRIMARY KEY`, `sku VARCHAR(30)` (mandatory and unique), `barcode VARCHAR(30)` (unique but nullable — may not yet be assigned), and `location VARCHAR(40)` (optional).',
           ],
           type: 'independent',
           primaryTable: 'warehouse_items',
@@ -324,10 +325,11 @@ export const Day_28_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl2-c3-t1',
-          title: 'Task 1 (Guided): Self-registering orders',
-          description: 'Create `orders_v2` where status defaults to pending and created_at stamps itself.',
+          title: 'Task 1 (Guided): Self-Registering Orders Table',
+          description: 'Create an `orders_v2` table where the status defaults to "pending" automatically, and the creation timestamp records itself without requiring any input from the application.',
           instructions: [
-            "Write `CREATE TABLE orders_v2 (order_id INT AUTO_INCREMENT PRIMARY KEY, customer_id INT NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'pending', created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`",
+            'Create a table named `orders_v2` with four columns: `order_id INT AUTO_INCREMENT PRIMARY KEY`, `customer_id INT` (mandatory), `status VARCHAR(20)` (mandatory with a default of "pending"), and `created_at DATETIME` (defaulting to the current timestamp).',
+            'Use DEFAULT to set the fallback values so future INSERTs can omit those columns and still receive the correct defaults.',
           ],
           type: 'guided',
           primaryTable: 'orders_v2',
@@ -341,10 +343,10 @@ export const Day_28_MODULE: ModuleData = {
         },
         {
           id: 'ddl2-c3-t2',
-          title: 'Task 2 (Independent): A flag that starts off',
-          description: 'Create `marketing_prefs` where `newsletter` is a BOOLEAN that defaults to FALSE and `customer_id` is mandatory.',
+          title: 'Task 2 (Independent): Opt-Out Newsletter Preference',
+          description: 'Create a `marketing_prefs` table for tracking newsletter subscriptions. The business requirement is that customers default to opted-out, not opted-in, as a compliance-safe starting point.',
           instructions: [
-            'Columns: `pref_id INT AUTO_INCREMENT PRIMARY KEY`, `customer_id INT NOT NULL`, `newsletter BOOLEAN NOT NULL DEFAULT FALSE`.',
+            'Create a table named `marketing_prefs` with three columns: `pref_id INT AUTO_INCREMENT PRIMARY KEY`, `customer_id INT` (mandatory), and `newsletter BOOLEAN` (mandatory, defaulting to FALSE).',
           ],
           type: 'independent',
           primaryTable: 'marketing_prefs',
@@ -432,10 +434,10 @@ export const Day_28_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl2-c4-t1',
-          title: 'Task 1 (Guided): Bounded ratings',
-          description: 'Create `product_ratings` with a CHECK keeping scores between 1 and 5.',
+          title: 'Task 1 (Guided): Enforce a Bounded Rating with CHECK',
+          description: 'Create a `product_ratings` table where the score column is restricted to valid values only. A score of 0 or 6 should be structurally impossible to insert.',
           instructions: [
-            'Write `CREATE TABLE product_ratings (rating_id INT PRIMARY KEY, score INT NOT NULL CHECK (score BETWEEN 1 AND 5));`',
+            'Create a table named `product_ratings` with two columns: `rating_id INT PRIMARY KEY` and `score INT` (mandatory, with a CHECK constraint that restricts the value to the range 1 through 5).',
           ],
           type: 'guided',
           primaryTable: 'product_ratings',
@@ -449,10 +451,10 @@ export const Day_28_MODULE: ModuleData = {
         },
         {
           id: 'ddl2-c4-t2',
-          title: 'Task 2 (Independent): The full constraint ladder',
-          description: 'Create `discount_campaigns` combining all four: campaign_id PK, code NOT NULL UNIQUE, discount DECIMAL(4,2) CHECK 0-1, active BOOLEAN DEFAULT FALSE.',
+          title: 'Task 2 (Independent): The Full Constraint Ladder in One Table',
+          description: 'Create a `discount_campaigns` table that combines all four column constraint types. This is the complete constraint ladder applied to a realistic e-commerce use case.',
           instructions: [
-            'Columns: `campaign_id INT AUTO_INCREMENT PRIMARY KEY`, `code VARCHAR(20) NOT NULL UNIQUE`, `discount DECIMAL(4,2) CHECK (discount >= 0 AND discount <= 1)`, `active BOOLEAN NOT NULL DEFAULT FALSE`.',
+            'Create a table named `discount_campaigns` with four columns: `campaign_id INT AUTO_INCREMENT PRIMARY KEY`, `code VARCHAR(20)` (mandatory and unique — no two campaigns share a code), `discount DECIMAL(4,2)` (checked to be between 0 and 1 inclusive, representing a fraction), and `active BOOLEAN` (mandatory, defaulting to FALSE).',
           ],
           type: 'independent',
           primaryTable: 'discount_campaigns',
@@ -475,10 +477,10 @@ export const Day_28_MODULE: ModuleData = {
     tasks: [
       {
         id: 'ddl2-hw-1',
-        title: 'Task 1: The fully-guarded reviews table',
-        description: 'Create `review_system`: review_id PK auto-increment, product_id NOT NULL, reviewer_name NOT NULL UNIQUE, score NOT NULL CHECK 1-5, verified BOOLEAN NOT NULL DEFAULT FALSE.',
+        title: 'Task 1: Design the Fully-Constrained Reviews Table',
+        description: 'Create the `review_system` table with every appropriate constraint applied. Reviews must be linked to a product, attributed to a unique reviewer, scored within a valid range, and default to unverified status.',
         instructions: [
-          'Write `CREATE TABLE review_system (review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, reviewer_name VARCHAR(80) NOT NULL UNIQUE, score INT NOT NULL CHECK (score BETWEEN 1 AND 5), verified BOOLEAN NOT NULL DEFAULT FALSE);`',
+          'Create a table named `review_system` with the following columns and constraints: `review_id INT AUTO_INCREMENT PRIMARY KEY`, `product_id INT` (mandatory — every review belongs to a product), `reviewer_name VARCHAR(80)` (mandatory and unique — one reviewer, one review), `score INT` (mandatory, checked to be between 1 and 5), and `verified BOOLEAN` (mandatory, defaulting to FALSE).',
         ],
         type: 'challenge',
         primaryTable: 'review_system',
@@ -493,11 +495,11 @@ export const Day_28_MODULE: ModuleData = {
       },
       {
         id: 'ddl2-hw-2',
-        title: 'Task 2 (Failure lab): Prove the CHECK rejects bad data',
-        description: 'Try to insert a review with score 9. The task EXPECTS the constraint to reject it.',
+        title: 'Task 2 (Constraint Verification): Attempt an Out-of-Range Score Insert',
+        description: 'Verify that the CHECK constraint on `review_system.score` is actively enforced by the engine. This task expects the insert to be rejected — the constraint error is the intended outcome.',
         instructions: [
-          "Run `INSERT INTO review_system (product_id, reviewer_name, score) VALUES (1, 'Cheater', 9);` - score 9 breaks the CHECK.",
-          'Expect a constraint error, not a saved row.',
+          'Attempt to insert a review into `review_system` with a score value that falls outside the allowed range of 1 to 5. Use any valid values for the other required fields.',
+          'Confirm that the engine rejects the write with a constraint violation error, not a saved row.',
         ],
         type: 'challenge',
         primaryTable: 'review_system',

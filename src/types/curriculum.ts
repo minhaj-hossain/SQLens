@@ -84,6 +84,12 @@ export interface ValidationRule {
    * reference says VARCHAR) fails the final-state comparison.
    */
   verifyColumnTypes?: boolean;
+  /**
+   * By default, INSERT tasks allow learners to write custom values for columns
+   * as long as schema constraints (NOT NULL, types, FKs) and row counts are met.
+   * Set this to `true` to require exact value parity with the reference solution.
+   */
+  strictValues?: boolean;
 }
 
 export interface PracticeTask {

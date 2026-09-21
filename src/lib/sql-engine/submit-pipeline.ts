@@ -134,6 +134,8 @@ export function gradeSubmission(input: {
   if (outcome.passed && preState && postState && isStateGraded(task) && !result.error) {
     const stateCheck: FinalStateVerdict = gradeFinalState(preState, task.solutionSql!, postState, {
       verifyTypes: !!task.validation.verifyColumnTypes,
+      strictValues: !!task.validation.strictValues,
+      ...stateOptions,
     });
     if (!stateCheck.ok) {
       return {

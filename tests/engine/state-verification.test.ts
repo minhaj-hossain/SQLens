@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import {
   gradeFinalState,
@@ -160,7 +160,7 @@ describe('F1: mutation grading by final database state', () => {
     expect(verdict.message).not.toMatch(/row count is right/i);
   });
 
-  it('Phase 1: end-to-end Day-25 T2 wrong customer gets a diff message', () => {
+  it('allows custom values on INSERT tasks so learners are not forced to write prefixed strings', () => {
     const SOLUTION =
       "INSERT INTO customers (name, email, city, signup_date) VALUES ('Sultana Begum', 'sultana@example.com', 'Dhaka', '2026-08-25');";
     const preState = new SqlExecutor().getDatabaseState();
@@ -169,9 +169,13 @@ describe('F1: mutation grading by final database state', () => {
       "INSERT INTO customers (name, email, city, signup_date) VALUES ('Rahim Ahmed', 'rahim.ahmed@example.com', 'Dhaka', '2026-09-20');",
     );
     const verdict = gradeFinalState(preState, SOLUTION, learner.getDatabaseState());
-    expect(verdict.ok).toBe(false);
-    expect(verdict.message).toMatch(/values differ in/i);
-    expect(verdict.message).toContain("'name'");
+    expect(verdict.ok).toBe(true);
+
+    // With strictValues: true, exact matching is still enforced
+    const strictVerdict = gradeFinalState(preState, SOLUTION, learner.getDatabaseState(), { strictValues: true });
+    expect(strictVerdict.ok).toBe(false);
+    expect(strictVerdict.message).toMatch(/values differ in/i);
+    expect(strictVerdict.message).toContain("'name'");
   });
 
   it('falls back to PASS when the reference solution itself errors', () => {

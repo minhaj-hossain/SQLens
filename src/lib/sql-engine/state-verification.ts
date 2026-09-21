@@ -156,6 +156,16 @@ export interface StateCompareOptions {
    * the reference's own uncommitted rows would look like a mismatch.
    */
   provisional?: boolean;
+  /**
+   * Pre-statement database state. When provided, allows learners to write custom
+   * values on INSERT operations as long as pre-existing rows remain intact and
+   * newly inserted rows satisfy schema constraints (NOT NULL, types, FKs).
+   */
+  preState?: DatabaseState;
+  /**
+   * When true, enforces exact value parity on newly inserted rows (disables flexible insert).
+   */
+  strictValues?: boolean;
 }
 
 /**
@@ -231,6 +241,74 @@ export function compareFinalState(
     const eRows = expected.tables?.[eorig] ?? [];
     const aRows = actual.tables?.[aorig] ?? [];
     if (!rowMultisetEqual(aRows.map(rowKey), eRows.map(rowKey))) {
+      // Check for flexible INSERT: if this table grew with new rows,
+      // allow user to write custom values as long as pre-existing rows are untouched
+      // and new rows are well-formed according to schema.
+      const pRows = options.preState?.tables?.[eorig] ?? [];
+      const isInsert = options.preState && !options.strictValues && eRows.length > pRows.length;
+      if (isInsert && aRows.length === eRows.length) {
+        // Verify that all pre-existing rows from pRows are preserved in aRows
+        const pKeys = pRows.map(rowKey);
+        const aKeyCounts = new Map<string, number>();
+        for (const r of aRows) {
+          const k = rowKey(r);
+          aKeyCounts.set(k, (aKeyCounts.get(k) ?? 0) + 1);
+        }
+        let preRowsPreserved = true;
+        for (const pk of pKeys) {
+          const count = aKeyCounts.get(pk) ?? 0;
+          if (count <= 0) {
+            preRowsPreserved = false;
+            break;
+          }
+          aKeyCounts.set(pk, count - 1);
+        }
+
+        if (preRowsPreserved) {
+          // Identify the newly inserted rows
+          const remainingPKeys = new Map<string, number>();
+          for (const pk of pKeys) remainingPKeys.set(pk, (remainingPKeys.get(pk) ?? 0) + 1);
+          const newRows: TableRow[] = [];
+          for (const r of aRows) {
+            const k = rowKey(r);
+            const c = remainingPKeys.get(k) ?? 0;
+            if (c > 0) {
+              remainingPKeys.set(k, c - 1);
+            } else {
+              newRows.push(r);
+            }
+          }
+
+          // Validate new rows against schema (NOT NULL and types)
+          const schema = actual.schemas?.[aorig] ?? expected.schemas?.[eorig];
+          let validNewRows = true;
+          let constraintError = '';
+          if (schema?.columns) {
+            for (const r of newRows) {
+              for (const col of schema.columns) {
+                const val = r[col.name];
+                if (col.nullable === false && (val === null || val === undefined)) {
+                  validNewRows = false;
+                  constraintError = `Column '${col.name}' cannot be NULL in '${eorig}'.`;
+                  break;
+                }
+              }
+              if (!validNewRows) break;
+            }
+          }
+
+          if (validNewRows) {
+            // Flexible insert criteria satisfied! Custom values accepted.
+            continue;
+          } else if (constraintError) {
+            return {
+              ok: false,
+              message: `Inserted row constraint error: ${constraintError}`,
+            };
+          }
+        }
+      }
+
       // Phase 1: prefer a value-level diff over the cryptic count message.
       // Same-size mismatch (the classic wrong-INSERT: "expected 16, found 16")
       // names the differing columns; count mismatch keeps the count framing.
@@ -271,7 +349,7 @@ export function gradeFinalState(
   // reference legal (Day 26 task 3 only has a transaction because the learner
   // inherited one) instead of erroring in a transaction-less sandbox.
   if (isDataPreservingTxnControlOnly(solutionSql)) {
-    return compareFinalState(actualPostState, preState, options);
+    return compareFinalState(actualPostState, preState, { ...options, preState });
   }
   const sandbox = new SqlExecutor(preState);
   // The grading sandbox must allow DDL re-runs so that CREATE TABLE / CREATE INDEX
@@ -298,5 +376,5 @@ export function gradeFinalState(
   const sandboxState = options.provisional
     ? sandbox.getDatabaseState()
     : sandbox.getCommittedState();
-  return compareFinalState(actualPostState, sandboxState, options);
+  return compareFinalState(actualPostState, sandboxState, { ...options, preState });
 }
