@@ -489,6 +489,7 @@ export const Day_28_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Reuse the constraint ladder from C4 Task 2, adapted to review data.' }],
         validation: { targetTable: 'review_system', expectedRowCount: 1 },
         successMessage: 'A production-grade table definition - every constraint earning its place.',
+        databaseLifecycle: 'fresh',
       },
       {
         id: 'ddl2-hw-2',
@@ -501,6 +502,8 @@ export const Day_28_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'review_system',
         initialSql: '-- This insert is SUPPOSED to fail\n',
+        setupSql:
+          'CREATE TABLE IF NOT EXISTS review_system (review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, reviewer_name VARCHAR(80) NOT NULL UNIQUE, score INT NOT NULL CHECK (score BETWEEN 1 AND 5), verified BOOLEAN NOT NULL DEFAULT FALSE);',
         solutionSql: "INSERT INTO review_system (product_id, reviewer_name, score) VALUES (1, 'Cheater', 9);",
         solutionExplanation: 'The CHECK violation fired - score 9 can never exist in this table.',
         hints: [{ level: 1, text: 'Run the INSERT exactly as written - the error is the expected result.' }],

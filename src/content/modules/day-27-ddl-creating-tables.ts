@@ -404,6 +404,7 @@ export const Day_27_MODULE: ModuleData = {
           expectedRowCount: 1,
         },
         successMessage: 'Task 1 completed! product_reviews table schema defined.',
+        databaseLifecycle: 'fresh',
       },
       {
         id: 'day20-hw-2',

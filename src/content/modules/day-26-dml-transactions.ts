@@ -230,7 +230,7 @@ export const Day_26_MODULE: ModuleData = {
           title: 'Task 4 (Challenge): Commit an order as one unit',
           description: 'An order is never one row: it needs a row in `orders` AND rows in `order_items`. Insert a new order plus one line item, and commit them together so the order is never left half-built.',
           instructions: [
-            'Run `BEGIN;`',
+            'Run `BEGIN;`.',
             "Insert into `orders (customer_id, order_date, status)` values `(2, '2026-08-26', 'pending')`.",
             "Insert into `order_items (order_id, product_id, quantity, unit_price)` values `(19, 1, 2, 15.99)`.",
             'Run `COMMIT;`.',
@@ -352,8 +352,8 @@ export const Day_26_MODULE: ModuleData = {
           title: 'Task 1 (Guided): Undo a price change',
           description: 'Product 1 got an unplanned 10% raise. Try it inside a transaction, look at the provisional price, then ROLLBACK it away.',
           instructions: [
-            'Run `BEGIN;`',
-            'Run `UPDATE products SET price = price * 1.10 WHERE product_id = 1;`',
+            'Run `BEGIN;`.',
+            'Run `UPDATE products SET price = price * 1.10 WHERE product_id = 1;`.',
             "Run `SELECT price FROM products WHERE product_id = 1;` - it shows the provisional new price.",
             'Run `ROLLBACK;` then the same SELECT again - the price is back to 15.99.',
           ],
@@ -379,7 +379,7 @@ export const Day_26_MODULE: ModuleData = {
           title: 'Task 2 (Independent): Prove the revert with your own SELECT',
           description: 'Write the SELECT that proves product 1 is back at its original price of 15.99 after the rollback.',
           instructions: [
-            'Run `SELECT name, price FROM products WHERE product_id = 1;`',
+            'Run `SELECT name, price FROM products WHERE product_id = 1;`.',
             'The price column must show 15.99 - the pre-transaction value.',
           ],
           type: 'independent',
@@ -524,7 +524,7 @@ export const Day_26_MODULE: ModuleData = {
           title: 'Task 1 (Guided): The failure lab',
           description: 'Deliberately trigger a foreign-key violation inside a transaction. This task EXPECTS your query to fail - that is the point.',
           instructions: [
-            'Run `BEGIN;`',
+            'Run `BEGIN;`.',
             "Run `INSERT INTO products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level) VALUES ('Broken Item', 1, 999, 1.00, 1, 1);` - category 999 does not exist.",
             'Watch the foreign-key error fire. Do not fix it yet - this task wants the error.',
           ],
@@ -548,7 +548,7 @@ export const Day_26_MODULE: ModuleData = {
           description: 'A valid insert went in before the failure. Roll the transaction back and prove nothing survived.',
           instructions: [
             'Your transaction is still open from Task 1.',
-            'Run `ROLLBACK;`',
+            'Run `ROLLBACK;`.',
             "Then run `SELECT name FROM products WHERE name IN ('Limited Edition Mug', 'Broken Item');` - expect ZERO rows.",
           ],
           type: 'independent',
@@ -580,7 +580,7 @@ export const Day_26_MODULE: ModuleData = {
         id: 'tx-hw-1',
         title: 'Task 1: Open the go-live transaction',
         description: 'The catalog change starts now. Open a transaction so the batch is provisional until you commit it.',
-        instructions: ['Run `BEGIN;`'],
+        instructions: ['Run `BEGIN;`.'],
         type: 'challenge',
         primaryTable: 'products',
         initialSql: '-- Open the go-live transaction\n',
@@ -616,7 +616,7 @@ export const Day_26_MODULE: ModuleData = {
         id: 'tx-hw-3',
         title: 'Task 3: Commit the go-live',
         description: 'The batch is complete and correct. Ship it to the database.',
-        instructions: ['Run `COMMIT;`'],
+        instructions: ['Run `COMMIT;`.'],
         type: 'challenge',
         primaryTable: 'products',
         initialSql: '-- Ship it\n',
@@ -633,7 +633,7 @@ export const Day_26_MODULE: ModuleData = {
         title: 'Task 4: Prove durability with your own SELECT',
         description: 'Verify-with-SELECT, one last time: query the flash-sale catalog back and confirm all three rows are durable.',
         instructions: [
-          "Run `SELECT name, price FROM products WHERE name LIKE 'Flash Sale%' ORDER BY name;`",
+          "Run `SELECT name, price FROM products WHERE name LIKE 'Flash Sale%' ORDER BY name;`.",
           'Expect exactly 3 rows.',
         ],
         type: 'challenge',

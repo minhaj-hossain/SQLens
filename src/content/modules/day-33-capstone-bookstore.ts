@@ -1,5 +1,53 @@
 import { ModuleData } from '../../types/curriculum';
 
+// ---------------------------------------------------------------------------
+// Bookstore bootstrap SQL — injected as setupSql on tasks that need the
+// bookstore schema / data to already exist (Stage 3-5 and challenge tasks).
+// Using IF NOT EXISTS so running the same task twice never errors.
+// ---------------------------------------------------------------------------
+
+/** Schema only — all four tables, parents before children. Cleans existing tables first. */
+const BOOKSTORE_SCHEMA_SQL = [
+  'DROP TABLE IF EXISTS sales;',
+  'DROP TABLE IF EXISTS books;',
+  'DROP TABLE IF EXISTS authors;',
+  'DROP TABLE IF EXISTS publishers;',
+  'CREATE TABLE publishers (publisher_id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100) NOT NULL UNIQUE);',
+  'CREATE TABLE authors (author_id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100) NOT NULL);',
+  'CREATE TABLE books (book_id INT PRIMARY KEY AUTO_INCREMENT, title VARCHAR(200) NOT NULL, author_id INT NOT NULL, publisher_id INT NOT NULL, genre VARCHAR(50) NOT NULL, price DECIMAL(8,2) NOT NULL CHECK (price >= 0), quantity_in_stock INT NOT NULL DEFAULT 0, FOREIGN KEY (author_id) REFERENCES authors(author_id), FOREIGN KEY (publisher_id) REFERENCES publishers(publisher_id));',
+  'CREATE TABLE sales (sale_id INT PRIMARY KEY AUTO_INCREMENT, book_id INT NOT NULL, sale_date DATE NOT NULL, quantity INT NOT NULL CHECK (quantity > 0), unit_price DECIMAL(8,2) NOT NULL, FOREIGN KEY (book_id) REFERENCES books(book_id));',
+].join('\n');
+
+const BOOKSTORE_AUTHORS_SEED = "INSERT INTO authors (name) VALUES ('James Clear'), ('Michelle Obama'), ('Matt Haig');";
+const BOOKSTORE_PUBLISHERS_SEED = "INSERT INTO publishers (name) VALUES ('HarperCollins'), ('Penguin Random House');";
+const BOOKSTORE_BOOKS_SEED = "INSERT INTO books (title, author_id, publisher_id, genre, price, quantity_in_stock) VALUES ('Atomic Habits', 1, 1, 'Self-Help', 16.99, 40), ('Becoming', 2, 2, 'Memoir', 14.50, 22), ('The Midnight Library', 3, 2, 'Fiction', 11.25, 30), ('Think Again', 1, 1, 'Self-Help', 14.00, 25);";
+const BOOKSTORE_SALES_SEED = "INSERT INTO sales (book_id, sale_date, quantity, unit_price) VALUES (1, '2026-01-15', 3, 16.99), (2, '2026-01-20', 2, 14.50), (1, '2026-02-02', 5, 16.99), (4, '2026-02-14', 1, 14.00), (3, '2026-03-05', 4, 11.25);";
+
+/** Schema + parents (authors, publishers) for Task 3 (seed books). */
+const BOOKSTORE_STAGE3_BOOKS_SETUP_SQL = [
+  BOOKSTORE_SCHEMA_SQL,
+  BOOKSTORE_AUTHORS_SEED,
+  BOOKSTORE_PUBLISHERS_SEED,
+].join('\n');
+
+/** Schema + parents + books for Task 4 (seed sales). */
+const BOOKSTORE_STAGE3_SALES_SETUP_SQL = [
+  BOOKSTORE_SCHEMA_SQL,
+  BOOKSTORE_AUTHORS_SEED,
+  BOOKSTORE_PUBLISHERS_SEED,
+  BOOKSTORE_BOOKS_SEED,
+].join('\n');
+
+/** Full bookstore setup (schema + all seed data) for Stages 4, 5, and Challenge tasks. */
+const BOOKSTORE_FULL_SETUP_SQL = [
+  BOOKSTORE_SCHEMA_SQL,
+  BOOKSTORE_AUTHORS_SEED,
+  BOOKSTORE_PUBLISHERS_SEED,
+  BOOKSTORE_BOOKS_SEED,
+  BOOKSTORE_SALES_SEED,
+].join('\n');
+
+
 // =============================================================================
 // DAY 33 - CAPSTONE PROJECT: SQLens Bookstore (id: day-33, order 33)
 // -----------------------------------------------------------------------------
@@ -383,6 +431,7 @@ export const Day_33_MODULE: ModuleData = {
           type: 'guided',
           primaryTable: 'authors',
           initialSql: '-- Stage 3: seed authors\n',
+          setupSql: BOOKSTORE_SCHEMA_SQL,
           solutionSql:
             "INSERT INTO authors (name) VALUES ('James Clear'), ('Michelle Obama'), ('Matt Haig');",
           solutionExplanation: 'AUTO_INCREMENT assigns author_id 1, 2, 3 — ready for books to reference.',
@@ -399,6 +448,7 @@ export const Day_33_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'publishers',
           initialSql: '-- Stage 3: seed publishers\n',
+          setupSql: BOOKSTORE_SCHEMA_SQL,
           solutionSql:
             "INSERT INTO publishers (name) VALUES ('HarperCollins'), ('Penguin Random House');",
           solutionExplanation: 'Two publishers with generated ids 1 and 2.',
@@ -408,6 +458,8 @@ export const Day_33_MODULE: ModuleData = {
           databaseLifecycle: 'inherit',
         },
         {
+          // Books need authors + publishers to already exist for FK references
+          setupSql: BOOKSTORE_STAGE3_BOOKS_SETUP_SQL,
           id: 'cap-c3-t3',
           title: 'Task 3 (Independent): Seed the books',
           description: 'Insert four books referencing the author and publisher ids created above.',
@@ -431,6 +483,8 @@ export const Day_33_MODULE: ModuleData = {
           databaseLifecycle: 'inherit',
         },
         {
+          // Sales need schema + authors + publishers + books pre-populated for FK references
+          setupSql: BOOKSTORE_STAGE3_SALES_SETUP_SQL,
           id: 'cap-c3-t4',
           title: 'Task 4 (Independent): Seed the sales',
           description: 'Insert five sales referencing the book ids, with a date, a positive quantity, and the price charged.',
@@ -538,6 +592,7 @@ export const Day_33_MODULE: ModuleData = {
       },
       tasks: [
         {
+          setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c4-t1',
           title: 'Task 1 (Guided): The 3-way JOIN — readable sales',
           description: 'Turn every sale into a readable row: book title, author, publisher, quantity, and unit price.',
@@ -565,6 +620,7 @@ export const Day_33_MODULE: ModuleData = {
           databaseLifecycle: 'inherit',
         },
         {
+          setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c4-t2',
           title: 'Task 2 (Independent): Revenue per author',
           description: 'Alice, the store analyst, wants total revenue per author so she can see who drives earnings.',
@@ -593,6 +649,7 @@ export const Day_33_MODULE: ModuleData = {
           databaseLifecycle: 'inherit',
         },
         {
+          setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c4-t3',
           title: 'Task 3 (Independent): Rank the best-sellers with a window',
           description: 'The marketing team needs a ranked best-seller board: aggregate copies sold per book, then rank by that total.',
@@ -721,6 +778,7 @@ export const Day_33_MODULE: ModuleData = {
       },
       tasks: [
         {
+          setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c5-t1',
           title: 'Task 1 (Guided): Add an edition column to books',
           description: 'The store now sells multiple editions. Add an `edition` column to the live books table with a default so every existing row gets a value.',
@@ -739,6 +797,7 @@ export const Day_33_MODULE: ModuleData = {
           databaseLifecycle: 'inherit',
         },
         {
+          setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c5-t2',
           title: 'Task 2 (Independent): Index titles and prove it with EXPLAIN',
           description: 'Title lookups are slow. Create an index on books(title), then EXPLAIN a title filter to confirm it no longer scans.',
@@ -768,6 +827,7 @@ export const Day_33_MODULE: ModuleData = {
           databaseLifecycle: 'inherit',
         },
         {
+          setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c5-t3',
           title: 'Task 3 (Challenge): The Rollback Lab',
           description: 'Test adding a book inside a transaction, then roll it back and prove the count returned to 4 — atomicity in action.',
@@ -849,6 +909,7 @@ export const Day_33_MODULE: ModuleData = {
         primaryTable: 'sales',
         secondaryTables: ['authors', 'publishers', 'books'],
         initialSql: '-- Capstone Task 2: seed the store\n',
+        setupSql: BOOKSTORE_SCHEMA_SQL,
         solutionSql:
           "INSERT INTO authors (name) VALUES ('James Clear'), ('Michelle Obama'), ('Matt Haig');\nINSERT INTO publishers (name) VALUES ('HarperCollins'), ('Penguin Random House');\nINSERT INTO books (title, author_id, publisher_id, genre, price, quantity_in_stock) VALUES ('Atomic Habits', 1, 1, 'Self-Help', 16.99, 40), ('Becoming', 2, 2, 'Memoir', 14.50, 22), ('The Midnight Library', 3, 2, 'Fiction', 11.25, 30), ('Think Again', 1, 1, 'Self-Help', 14.00, 25);\nINSERT INTO sales (book_id, sale_date, quantity, unit_price) VALUES (1, '2026-01-15', 3, 16.99), (2, '2026-01-20', 2, 14.50), (1, '2026-02-02', 5, 16.99), (4, '2026-02-14', 1, 14.00), (3, '2026-03-05', 4, 11.25);",
         solutionExplanation: 'Seed in parent→child order so every foreign key reference is valid: authors and publishers, then books, then sales.',
@@ -870,6 +931,7 @@ export const Day_33_MODULE: ModuleData = {
         primaryTable: 'sales',
         secondaryTables: ['books', 'authors'],
         initialSql: '-- Capstone Task 3: revenue per author\n',
+        setupSql: BOOKSTORE_FULL_SETUP_SQL,
         solutionSql:
           "SELECT a.name AS author, SUM(s.quantity * s.unit_price) AS revenue FROM sales s JOIN books b ON s.book_id = b.book_id JOIN authors a ON b.author_id = a.author_id GROUP BY a.name ORDER BY revenue DESC;",
         solutionExplanation: 'The 3-way JOIN feeds the GROUP BY: revenue per author, sorted richest-first.',
@@ -897,6 +959,7 @@ export const Day_33_MODULE: ModuleData = {
         type: 'challenge',
         primaryTable: 'books',
         initialSql: '-- Capstone Task 4: index + proof\n',
+        setupSql: BOOKSTORE_FULL_SETUP_SQL,
         solutionSql:
           "CREATE INDEX idx_books_title ON books(title);\nEXPLAIN SELECT * FROM books WHERE title = 'Atomic Habits';",
         solutionExplanation: 'The index turns the title filter into an indexed ref lookup — proven by EXPLAIN.',

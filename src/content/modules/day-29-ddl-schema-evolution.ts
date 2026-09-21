@@ -243,7 +243,7 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c2-t2',
-          title: 'Task 2 (Independent): Feel the FK reject an orphan',
+          title: 'Task 2 (Independent): Verify the FK rejects an orphan',
           description: 'Insert a wishlist item referencing product 999. The task EXPECTS the FK to reject it.',
           instructions: [
             'Run `INSERT INTO wishlist_items (product_id, customer_id) VALUES (999, 1);` - product 999 does not exist.',
@@ -252,6 +252,8 @@ export const Day_29_MODULE: ModuleData = {
           type: 'independent',
           primaryTable: 'wishlist_items',
           initialSql: '-- This insert is SUPPOSED to fail\n',
+          setupSql:
+            'CREATE TABLE IF NOT EXISTS wishlist_items (item_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, FOREIGN KEY (product_id) REFERENCES products(product_id), FOREIGN KEY (customer_id) REFERENCES customers(customer_id));',
           solutionSql: 'INSERT INTO wishlist_items (product_id, customer_id) VALUES (999, 1);',
           solutionExplanation: 'The FK fired: no product 999, so the insert is rejected. The relationship is enforced, not assumed.',
           hints: [{ level: 1, text: 'Run the INSERT exactly as written - the error is the expected result.' }],
@@ -396,6 +398,7 @@ export const Day_29_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Two FOREIGN KEY lines at the bottom of the CREATE TABLE, one per reference.' }],
         validation: { targetTable: 'wishlists', expectedRowCount: 1 },
         successMessage: 'Relationships enforced at creation time.',
+        databaseLifecycle: 'fresh',
       },
       {
         id: 'ddl3-hw-2',

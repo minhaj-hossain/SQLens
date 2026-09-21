@@ -545,6 +545,7 @@ export const Day_30_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Email as PRIMARY KEY, name NOT NULL - two columns, one fact each.' }],
         validation: { targetTable: 'clean_customers', expectedRowCount: 1 },
         successMessage: 'Customer facts now live in exactly one place.',
+        databaseLifecycle: 'fresh',
       },
       {
         id: 'norm-hw-2',
@@ -563,6 +564,7 @@ export const Day_30_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Product name as PRIMARY KEY; price with NOT NULL and CHECK (product_price >= 0).' }],
         validation: { targetTable: 'clean_products', expectedRowCount: 1 },
         successMessage: 'Product facts stored once - and the schema now rejects bad prices on its own.',
+        databaseLifecycle: 'fresh',
       },
       {
         id: 'norm-hw-3',
@@ -576,11 +578,16 @@ export const Day_30_MODULE: ModuleData = {
         primaryTable: 'clean_orders',
         secondaryTables: ['fat_orders'],
         initialSql: '-- References instead of copies\n',
+        setupSql: [
+          'CREATE TABLE IF NOT EXISTS clean_customers (customer_email VARCHAR(100) PRIMARY KEY, customer_name VARCHAR(100) NOT NULL);',
+          'CREATE TABLE IF NOT EXISTS clean_products (product_name VARCHAR(100) PRIMARY KEY, product_price DECIMAL(8,2) NOT NULL CHECK (product_price >= 0));',
+        ].join('\n'),
         solutionSql: 'CREATE TABLE clean_orders (order_id INT PRIMARY KEY, customer_email VARCHAR(100) NOT NULL, product_name VARCHAR(100) NOT NULL, quantity INT NOT NULL, FOREIGN KEY (customer_email) REFERENCES clean_customers(customer_email), FOREIGN KEY (product_name) REFERENCES clean_products(product_name));',
         solutionExplanation: 'This is fat_orders redesigned: keys and quantity stay, copied facts become enforced references. Update, insert, and delete anomalies are all designed out.',
         hints: [{ level: 1, text: 'One FOREIGN KEY (...) REFERENCES ...(...) line per relationship, after the columns.' }],
         validation: { targetTable: 'clean_orders', expectedRowCount: 1 },
         successMessage: 'The normalized schema is complete: every fact stored once, every relationship enforced. Compare it to fat_orders - that is design.',
+        databaseLifecycle: 'fresh',
       },
     ],
   },

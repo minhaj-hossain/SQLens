@@ -148,15 +148,16 @@ export const Day_36_MODULE: ModuleData = {
   ],
 
   // ===========================================================================
-  // DAY 24 CHALLENGE: MILESTONE 3 CAPSTONE ASSESSMENT (ENDING ACTIVITY)
+  // DAY 36 CHALLENGE: MILESTONE 3 CAPSTONE ASSESSMENT (ENDING ACTIVITY)
   // ===========================================================================
   challenge: {
     id: 'day-36-homework',
     title: 'Day 36 — Milestone 3 Capstone Assessment (Ending Activity)',
     scenario: 'Four deliverables spanning the whole 38-day journey — multi-table retrieval, CTE analysis, a schema change, and an index optimization. Fresh mindset, no hints: everything before this was practice, this is the assessment:',
+    databaseLifecycle: 'fresh',
     tasks: [
       {
-        id: 'day24-hw-1',
+        id: 'day36-hw-1',
         title: 'Deliverable 1 (Complex Retrieval): Top 3 categories by revenue',
         description: 'Top 3 categories by revenue (categories → products → order_items).',
         instructions: [
@@ -182,7 +183,7 @@ export const Day_36_MODULE: ModuleData = {
         successMessage: 'Deliverable 1 verified! Top 3 revenue categories calculated.',
       },
       {
-        id: 'day24-hw-2',
+        id: 'day36-hw-2',
         title: 'Deliverable 2 (CTE Analysis): Customers with above-average total spend',
         description: 'Find customers whose total spend is higher than the overall average customer spend.',
         instructions: [
@@ -205,7 +206,7 @@ export const Day_36_MODULE: ModuleData = {
         successMessage: 'Deliverable 2 verified! High-value customer benchmark verified.',
       },
       {
-        id: 'day24-hw-3',
+        id: 'day36-hw-3',
         title: 'Deliverable 3 (Schema DDL): Add status column to products with default',
         description: 'Add a status column to products: `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`.',
         instructions: [
@@ -223,9 +224,10 @@ export const Day_36_MODULE: ModuleData = {
           expectedRowCount: 1,
         },
         successMessage: 'Deliverable 3 verified! Schema altered with status column.',
+        databaseLifecycle: 'fresh',
       },
       {
-        id: 'day24-hw-4',
+        id: 'day36-hw-4',
         title: 'Deliverable 4 (Index Optimization): Create index on orders(customer_id)',
         description: 'Create an index named idx_orders_customer_id on orders(customer_id).',
         instructions: [
@@ -243,6 +245,7 @@ export const Day_36_MODULE: ModuleData = {
           expectedRowCount: 1,
         },
         successMessage: 'Deliverable 4 verified! Index created on orders(customer_id).',
+        databaseLifecycle: 'fresh',
       },
     ],
   },
