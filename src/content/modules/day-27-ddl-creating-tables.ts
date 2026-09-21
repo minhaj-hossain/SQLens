@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_27_MODULE: ModuleData = {
   id: 'day-27',
@@ -22,7 +22,7 @@ export const Day_27_MODULE: ModuleData = {
     {
       id: 'ddl-create-table',
       order: 1,
-      title: '1. Creating a Table with CREATE TABLE',
+      title: 'Creating a Table with CREATE TABLE',
       shortDescription: 'Define table structure and allocate new database entities.',
       theory: {
         summary: 'The store needs a product_tags table that does not exist yet. CREATE TABLE name (col1 type, col2 type) draws the blueprint — every column, its type, and the value rules — and creates an empty structure ready for data.',
@@ -142,7 +142,7 @@ export const Day_27_MODULE: ModuleData = {
     {
       id: 'ddl-data-types',
       order: 2,
-      title: '2. Choosing Column Data Types',
+      title: 'Choosing Column Data Types',
       shortDescription: 'INT, VARCHAR, DECIMAL, DATETIME, and MySQL BOOLEAN / TINYINT(1).',
       theory: {
         summary: 'Store a price as VARCHAR and numeric sorting breaks; store an ISBN as INT and the leading zeros vanish. The data type you choose decides how much space a column eats, how fast it compares, and whether the data stays honest.',
@@ -273,7 +273,7 @@ export const Day_27_MODULE: ModuleData = {
     {
       id: 'ddl-primary-key',
       order: 3,
-      title: '3. The PRIMARY KEY Constraint',
+      title: 'The PRIMARY KEY Constraint',
       shortDescription: 'Uniquely identify every row and configure AUTO_INCREMENT.',
       theory: {
         summary: 'Every product, customer, and order needs one identity that can never repeat and never be empty. The PRIMARY KEY is exactly that — unique, non-NULL, and built for fast lookups — the anchor every other table foreign key points back to.',

@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_09_MODULE: ModuleData = {
   id: 'day-09',
@@ -24,7 +24,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'aggregate-count',
       order: 1,
-      title: '1. Count Rows & Values with COUNT',
+      title: 'Count Rows & Values with COUNT',
       shortDescription: 'COUNT(*) counts all rows; COUNT(column) counts only non-NULL values.',
       theory: {
         summary: 'The board asks: "how many customers do we have — and how many actually gave us their email?" COUNT(*) answers with every row; COUNT(column) answers with only the rows where that column is filled in. Same keyword, two honest numbers.',
@@ -163,7 +163,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'aggregate-min',
       order: 2,
-      title: '2. Finding the Smallest Value with MIN',
+      title: 'Finding the Smallest Value with MIN',
       shortDescription: 'Find the lowest numerical, alphabetical, or chronological value.',
       theory: {
         summary: 'Which product has the lowest price, which order is the oldest, which name sorts first? MIN(column) scans a column and returns the single smallest value — numerically, alphabetically, or chronologically — while skipping NULLs along the way.',
@@ -294,7 +294,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'aggregate-max',
       order: 3,
-      title: '3. Finding the Largest Value with MAX',
+      title: 'Finding the Largest Value with MAX',
       shortDescription: 'Find the highest numerical, alphabetical, or latest chronological value.',
       theory: {
         summary: 'What is the most expensive product, the newest order, the largest order value? MAX(column) scans a column and returns the single largest value — the mirror image of MIN, with the same NULL-skipping rule.',
@@ -430,7 +430,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'aggregate-sum',
       order: 4,
-      title: '4. Adding Values with SUM',
+      title: 'Adding Values with SUM',
       shortDescription: 'Calculate the mathematical sum of numeric values across rows.',
       theory: {
         summary: 'Total revenue, total units in stock, total order value — SUM(column) adds every non-NULL numeric value in a column into one number. One column in, one grand total out.',
@@ -564,7 +564,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'aggregate-avg',
       order: 5,
-      title: '5. Calculating an Average with AVG',
+      title: 'Calculating an Average with AVG',
       shortDescription: 'Calculate the arithmetic mean across non-NULL numeric values.',
       theory: {
         summary: 'What does the typical customer spend, or a typical product cost? AVG(column) takes the sum of a column and divides it by the count of values that went in — the arithmetic mean, computed over non-NULL values only.',
@@ -702,7 +702,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'grouping-with-group-by',
       order: 6,
-      title: '6. Grouping Rows with GROUP BY',
+      title: 'Grouping Rows with GROUP BY',
       shortDescription: 'Segment calculations by category, status, or location.',
       theory: {
         summary: 'A single "average price" hides the truth that electronics and office chairs cost differently. GROUP BY splits the table into buckets — one per category, city, or status — and runs the aggregation separately inside each one.',
@@ -854,7 +854,7 @@ export const Day_09_MODULE: ModuleData = {
     {
       id: 'having-filter',
       order: 7,
-      title: '7. Filtering Groups with HAVING',
+      title: 'Filtering Groups with HAVING',
       shortDescription: 'Filter aggregate summaries after grouping.',
       theory: {
         summary: 'WHERE filters rows before they are grouped; HAVING filters the groups after the math runs. "Only categories with more than 10 products" cannot be a WHERE clause — no row knows its group size yet — so HAVING exists for exactly that question.',

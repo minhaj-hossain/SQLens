@@ -118,12 +118,6 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
         >
           {steps.map((step, idx) => (
             <li key={idx} className="flex items-start gap-2 text-[13px] sm:text-sm leading-relaxed min-w-0">
-              <span
-                aria-hidden="true"
-                className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-surface-2 border border-border font-mono text-[10px] font-bold text-text-dim h-[18px] w-[18px]"
-              >
-                {idx + 1}
-              </span>
               <span className="min-w-0 flex-1 text-text-dim">
                 <StepText text={step} />
               </span>

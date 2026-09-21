@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 29 - DDL III: Schema Evolution (id: day-29 - order 29)
@@ -26,7 +26,7 @@ export const Day_29_MODULE: ModuleData = {
     {
       id: 'ddl3-alter-table',
       order: 1,
-      title: '1. Evolving a Schema with ALTER TABLE',
+      title: 'Evolving a Schema with ALTER TABLE',
       shortDescription: 'Add a column to a live table - without losing data.',
       theory: {
         summary: 'Day 27 taught you to create a table. But real systems change after launch: products gain a discontinued flag, customers gain a loyalty tier. ALTER TABLE ADD COLUMN extends an existing table in place - every existing row keeps its data, and the new column is filled with NULL (or the DEFAULT you supply).',
@@ -153,7 +153,7 @@ export const Day_29_MODULE: ModuleData = {
     {
       id: 'ddl3-foreign-key',
       order: 2,
-      title: '2. Relationships with FOREIGN KEY',
+      title: 'Relationships with FOREIGN KEY',
       shortDescription: 'Orphaned records become structurally impossible.',
       theory: {
         summary: 'A FOREIGN KEY on a column points at another table\'s primary key. From then on, the engine refuses any value that does not exist in the parent table - an order for a nonexistent customer, a product in a category that was never created. Day 27 gave your tables identity (PK); FOREIGN KEY connects those identities into enforceable relationships.',
@@ -271,7 +271,7 @@ export const Day_29_MODULE: ModuleData = {
     {
       id: 'ddl3-drop-table',
       order: 3,
-      title: '3. Safe Teardown with DROP TABLE IF EXISTS',
+      title: 'Safe Teardown with DROP TABLE IF EXISTS',
       shortDescription: 'Reproducible scripts never crash on a missing table.',
       theory: {
         summary: 'DROP TABLE removes a table and all its rows - permanently. Plain DROP TABLE errors if the table does not exist, which breaks migration scripts that should run cleanly twice. DROP TABLE IF EXISTS tears the table down if present and does nothing (no error) if absent - the idempotent way to write setup and teardown scripts.',

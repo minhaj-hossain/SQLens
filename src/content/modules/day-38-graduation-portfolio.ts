@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_38_MODULE: ModuleData = {
   id: 'day-38',
@@ -20,7 +20,7 @@ export const Day_38_MODULE: ModuleData = {
     {
       id: 'window-functions-and-future',
       order: 1,
-      title: '1. Beyond the Course: Window Functions Preview',
+      title: 'Beyond the Course: Window Functions Preview',
       shortDescription: 'Calculate analytical ranks and running metrics without collapsing rows.',
       theory: {
         summary: 'Thirty-eight days of SQL are behind you — today is graduation. It closes with a preview of what production development reaches for next: window functions, which rank and total rows without collapsing a single one. Then your SQL crosses the bridge into the backend stacks — Drizzle, Prisma, pg, mysql2 — where those queries run for real.',

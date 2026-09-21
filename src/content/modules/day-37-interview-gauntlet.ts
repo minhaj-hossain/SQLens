@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 37 - INTERVIEW GAUNTLET (id: day-37, order 37)
@@ -37,7 +37,7 @@ export const Day_37_MODULE: ModuleData = {
     {
       id: 'gauntlet-warmup',
       order: 1,
-      title: '1. Rapid Recall Warmups',
+      title: 'Rapid Recall Warmups',
       shortDescription: 'Four questions, no lookup, sixty seconds each. The traps interviewers use to filter.',
       theory: {
         summary:
@@ -150,7 +150,7 @@ export const Day_37_MODULE: ModuleData = {
     {
       id: 'gauntlet-patterns',
       order: 2,
-      title: '2. Classic Patterns, No Hints',
+      title: 'Classic Patterns, No Hints',
       shortDescription: 'The two patterns every SQL interview opens with - unaided, against the live store database.',
       theory: {
         summary:

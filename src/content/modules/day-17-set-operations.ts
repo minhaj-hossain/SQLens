@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 17 — Set Operations  (id: day-17 · order 17)
@@ -26,7 +26,7 @@ export const Day_17_MODULE: ModuleData = {
     {
       id: 'union-all',
       order: 1,
-      title: '1. UNION ALL: Stack Two Result Sets',
+      title: 'UNION ALL: Stack Two Result Sets',
       shortDescription: 'Append the rows of a second query below the first.',
       theory: {
         summary: "The ops team wants one contact list containing customers AND suppliers. Two queries produce two separate result grids — copy-pasting them together is manual work. UNION ALL does it in one statement: it runs both queries and stacks the second result directly beneath the first.",
@@ -213,7 +213,7 @@ export const Day_17_MODULE: ModuleData = {
     {
       id: 'union-dedupe',
       order: 2,
-      title: '2. UNION: Stack Plus Deduplicate',
+      title: 'UNION: Stack Plus Deduplicate',
       shortDescription: 'UNION ALL with a built-in DISTINCT on the combined rows.',
       theory: {
         summary: 'The city report only needs each city once. UNION is UNION ALL plus one extra step: after stacking, it removes duplicate rows from the combined result. Same stack, then a dedupe pass.',
@@ -395,7 +395,7 @@ export const Day_17_MODULE: ModuleData = {
     {
       id: 'shape-compatibility',
       order: 3,
-      title: '3. Shape Compatibility: The Rule Both Sides Must Obey',
+      title: 'Shape Compatibility: The Rule Both Sides Must Obey',
       shortDescription: 'Equal column count, compatible types — or the engine refuses to run.',
       theory: {
         summary: 'Stacking only makes sense if the two results have the same shape: the same number of columns, with compatible types, position by position. A 2-column result cannot be stacked on a 1-column result — and SQLens refuses loudly instead of guessing.',
@@ -563,7 +563,7 @@ export const Day_17_MODULE: ModuleData = {
     {
       id: 'except-antijoin',
       order: 4,
-      title: '4. EXCEPT: Set Difference as a Declarative Anti-Join',
+      title: 'EXCEPT: Set Difference as a Declarative Anti-Join',
       shortDescription: 'Rows in the first result that have no match in the second.',
       theory: {
         summary: 'Day 14 found never-ordered products with LEFT JOIN + IS NULL. There is a second, more direct way: EXCEPT returns the rows of the first SELECT that do not appear anywhere in the second. You state WHAT you want — "products minus ordered products" — instead of engineering a join that fails to match.',

@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 31 (id: day-21, frozen legacy ID) — Performance & Indexing
@@ -33,7 +33,7 @@ export const Day_31_MODULE: ModuleData = {
     {
       id: 'perf-scan-problem',
       order: 1,
-      title: '1. The Problem: Full Table Scans',
+      title: 'The Problem: Full Table Scans',
       shortDescription: 'Why SQL slows down when it reads every row.',
       theory: {
         summary: 'Your queries feel instant on 28 products. Real tables hold millions of rows. When SQL needs rows that match a condition, it can read every row one by one — a full table scan, O(N) — or jump straight to the right rows — an index lookup, O(log N). Before you meet indexes, see the slow way for what it is: a scan reads EVERY row, and EXPLAIN is the tool that tells you when it happens.',
@@ -170,7 +170,7 @@ export const Day_31_MODULE: ModuleData = {
     {
       id: 'perf-index-lookup',
       order: 2,
-      title: '2. The Tool: Indexes & Reading the Plan',
+      title: 'The Tool: Indexes & Reading the Plan',
       shortDescription: 'Jump straight to the right rows with a B-tree index.',
       theory: {
         summary: 'A full scan is slow at scale. The fix is an index: a tiny, ordered structure of (column value → row pointer) that lets SQL jump straight to matching rows without scanning. Every PRIMARY KEY already has one — and EXPLAIN shows the difference: const / ref / range mean "index used", ALL means "scanned".',
@@ -303,7 +303,7 @@ export const Day_31_MODULE: ModuleData = {
     {
       id: 'perf-optimization-loop',
       order: 3,
-      title: '3. The Loop: EXPLAIN → CREATE INDEX → EXPLAIN',
+      title: 'The Loop: EXPLAIN → CREATE INDEX → EXPLAIN',
       shortDescription: 'The DBA workflow for tuning a slow query.',
       theory: {
         summary: 'Fixing a slow query is a repeatable loop: EXPLAIN it, spot type: ALL on a filtered column, create an index on that exact column, then EXPLAIN again to verify the plan changed (ALL → ref / range). Clean up with DROP INDEX when you want to undo. Indexes are not free — every INSERT / UPDATE must maintain them — so index the columns your filters actually use.',

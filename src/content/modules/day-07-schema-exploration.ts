@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_07_MODULE: ModuleData = {
   id: 'day-07',
@@ -19,7 +19,7 @@ export const Day_07_MODULE: ModuleData = {
     {
       id: 'schema-navigation',
       order: 1,
-      title: '1. Explore the Database Schema Like a Real Data Engineer',
+      title: 'Explore the Database Schema Like a Real Data Engineer',
       shortDescription: 'Your first data engineering task: audit the 6-table e-commerce database independently.',
       theory: {
         summary: 'Welcome to the data engineering team! Before running analytical joins or modifying records, your onboarding mission is to audit and inspect all tables in the production e-commerce database.',

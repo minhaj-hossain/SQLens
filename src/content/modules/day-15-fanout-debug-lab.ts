@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_15_MODULE: ModuleData = {
   id: 'day-15',
@@ -19,7 +19,7 @@ export const Day_15_MODULE: ModuleData = {
     {
       id: 'fan-out-and-distinct-counts',
       order: 1,
-      title: '1. The Row Duplication Problem (and the Solution)',
+      title: 'The Row Duplication Problem (and the Solution)',
       shortDescription: 'Why JOINs multiply rows, why normal COUNT breaks, and how COUNT(DISTINCT) fixes it.',
       theory: {
         summary: 'When you join customers → orders → order_items, each order row is duplicated for every line item it contains. Running COUNT(o.order_id) counts joined result rows, inflating order counts! Fix: COUNT(DISTINCT o.order_id) counts distinct orders accurately.',

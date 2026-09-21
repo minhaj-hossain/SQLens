@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_01_MODULE: ModuleData = {
   id: 'day-01',
@@ -24,7 +24,7 @@ export const Day_01_MODULE: ModuleData = {
     {
       id: 'select-and-from',
       order: 1,
-      title: '1. Find a Table, Pick Your Columns',
+      title: 'Find a Table, Pick Your Columns',
       shortDescription: 'Every query asks two simple questions: where is my data (FROM), and which columns do I want (SELECT)?',
       theory: {
         summary: 'Every SQL query answers two questions: WHERE does the data come from, and WHICH columns do you want back? Imagine we have a database containing a table called students:',
@@ -180,7 +180,7 @@ export const Day_01_MODULE: ModuleData = {
     {
       id: 'selecting-multiple-columns',
       order: 2,
-      title: '2. Selecting Multiple Columns',
+      title: 'Selecting Multiple Columns',
       shortDescription: 'How to retrieve two or more columns simultaneously.',
       theory: {
         summary: 'What if you want both name and age?',
@@ -332,7 +332,7 @@ export const Day_01_MODULE: ModuleData = {
     {
       id: 'select-all',
       order: 3,
-      title: '3. SELECT *',
+      title: 'SELECT *',
       shortDescription: 'The asterisk (*) shorthand to retrieve all columns at once.',
       theory: {
         summary: 'You just want to see the whole table — every row, every column — without listing each name. That is what the * wildcard means: all columns, no list written, the fastest first look at your data.',

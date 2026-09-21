@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_14_MODULE: ModuleData = {
   id: 'day-14',
@@ -23,7 +23,7 @@ export const Day_14_MODULE: ModuleData = {
     {
       id: 'relational-keys-inner-join',
       order: 1,
-      title: '1. Primary & Foreign Keys, INNER JOIN Basics',
+      title: 'Primary & Foreign Keys, INNER JOIN Basics',
       shortDescription: 'Connect tables where records match — understand one-to-many relationships.',
       theory: {
         summary: 'Every product belongs to exactly one category — yet the products table stores only a category_id number. The categories table uses that id as its primary key, one unique identity per row, and the foreign key inside products points at it. That single pointer is what turns two tables into one connected system.',
@@ -185,7 +185,7 @@ export const Day_14_MODULE: ModuleData = {
     {
       id: 'left-join-preserving-left',
       order: 2,
-      title: '2. Preserving All Left Rows with LEFT JOIN',
+      title: 'Preserving All Left Rows with LEFT JOIN',
       shortDescription: 'Keep every row from the left table even when no right-table match exists.',
       theory: {
         summary: 'A customer with no orders still deserves a row — INNER JOIN would silently drop them. LEFT JOIN keeps every row from the left table no matter what, and fills in NULL where the right side has no match. Customers who never ordered stop disappearing from reports.',

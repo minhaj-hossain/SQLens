@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_20_MODULE: ModuleData = {
   id: 'day-20',
@@ -20,7 +20,7 @@ export const Day_20_MODULE: ModuleData = {
     {
       id: 'milestone-2-eval',
       order: 1,
-      title: '1. Real Financial Scenario: Multi-Table Revenue Analysis',
+      title: 'Real Financial Scenario: Multi-Table Revenue Analysis',
       shortDescription: 'The CFO four questions; multi-table JOINs and aggregations required; no templates.',
       theory: {
         summary: 'The CFO asks four questions: (1) What\'s our total revenue? (2) Which categories are revenue leaders? (3) High-value customers? (4) Suppliers we haven\'t ordered from? You have all the tools from Days 9–19. No templates. No hints. This is what the analyst role looks like.',

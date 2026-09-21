@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_34_MODULE: ModuleData = {
   id: 'day-34',
@@ -19,7 +19,7 @@ export const Day_34_MODULE: ModuleData = {
     {
       id: 'full-stack-query-patterns',
       order: 1,
-      title: '1. Production Backend API Query Patterns',
+      title: 'Production Backend API Query Patterns',
       shortDescription: 'Product detail pages, customer profiles, and executive KPIs.',
       theory: {
         summary: 'A product detail page shows the product, its category, and its supplier — three pieces of data, one screen. A well-built backend fetches them all in a single round trip with one rich query, instead of firing three slow network calls and stitching the results together.',

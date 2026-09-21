@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_06_MODULE: ModuleData = {
   id: 'day-06',
@@ -19,7 +19,7 @@ export const Day_06_MODULE: ModuleData = {
     {
       id: 'simple-logical-order',
       order: 1,
-      title: '1. Execution Order: FROM -> WHERE -> SELECT -> ORDER BY -> LIMIT',
+      title: 'Execution Order: FROM -> WHERE -> SELECT -> ORDER BY -> LIMIT',
       shortDescription: 'The engine runs queries differently than you write them — learn why to debug weird behavior.',
       theory: {
         summary: 'SQL queries are written starting with SELECT, but the database engine evaluates them in a completely different logical order. Understanding this lifecycle explains why column aliases created in SELECT cannot be used in WHERE.',

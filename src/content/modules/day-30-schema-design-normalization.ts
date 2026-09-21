@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 30 - Schema Design & Normalization (id: day-30 - order 30)
@@ -27,7 +27,7 @@ export const Day_30_MODULE: ModuleData = {
     {
       id: 'norm-redundancy',
       order: 1,
-      title: '1. Redundancy: The Same Fact, Stored Twice',
+      title: 'Redundancy: The Same Fact, Stored Twice',
       shortDescription: 'Duplicated facts are duplicated chances to be wrong.',
       theory: {
         summary: 'Redundancy means the same fact lives in more than one place. See it with data you already know: join order_items to products and the product name repeats on every line item that mentions it. In a JOIN that repetition is harmless (computed, not stored). Stored in a real table, every copy is a chance to disagree with the others.',
@@ -131,7 +131,7 @@ export const Day_30_MODULE: ModuleData = {
     {
       id: 'norm-update-anomaly',
       order: 2,
-      title: '2. Update Anomaly: When Copies Disagree',
+      title: 'Update Anomaly: When Copies Disagree',
       shortDescription: 'Redundancy is theoretical until you UPDATE one copy and forget the others.',
       theory: {
         summary: 'If a fact lives in six places, changing it in five leaves the table lying. That silent inconsistency is an update anomaly — the reason redundancy is not just wasteful but dangerous.',
@@ -226,7 +226,7 @@ export const Day_30_MODULE: ModuleData = {
     {
       id: 'norm-1nf',
       order: 3,
-      title: '3. First Normal Form: Atomic Values Only',
+      title: 'First Normal Form: Atomic Values Only',
       shortDescription: 'Each cell holds one value. Repeating groups are the first thing to split out.',
       theory: {
         summary: 'A table is in 1NF when every cell holds a single, atomic value — no lists, no repeating groups, no "phone1/phone2/phone3" columns.',
@@ -326,7 +326,7 @@ export const Day_30_MODULE: ModuleData = {
     {
       id: 'norm-functional-dependency',
       order: 4,
-      title: '4. Functional Dependency: What Determines What',
+      title: 'Functional Dependency: What Determines What',
       shortDescription: 'Before splitting any table, trace which columns depend on which keys.',
       theory: {
         summary: 'A functional dependency X → Y means: knowing X tells you Y. It is the foundation that makes 2NF and 3NF derivable instead of memorizable.',
@@ -429,7 +429,7 @@ export const Day_30_MODULE: ModuleData = {
     {
       id: 'norm-2nf-3nf',
       order: 5,
-      title: '5. Second & Third Normal Form: The Splits Dependencies Justify',
+      title: 'Second & Third Normal Form: The Splits Dependencies Justify',
       shortDescription: '2NF removes partial dependencies. 3NF removes transitive ones. Both are derived, not memorized.',
       theory: {
         summary: '2NF: a table with a composite key must have every non-key column depend on the WHOLE key. 3NF: no non-key column may depend on ANOTHER non-key column (a transitive dependency). Both rules follow directly from the functional dependencies you traced in concept 4.',

@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_18_MODULE: ModuleData = {
   id: 'day-18',
@@ -19,7 +19,7 @@ export const Day_18_MODULE: ModuleData = {
     {
       id: 'multi-table-reporting-patterns',
       order: 1,
-      title: '1. Production BI Reports: Sales Volume, VIP Rankings & Dead Inventory',
+      title: 'Production BI Reports: Sales Volume, VIP Rankings & Dead Inventory',
       shortDescription: 'Aggregate products by sales, rank customers by spend, find items never ordered.',
       theory: {
         summary: 'Welcome to the Business Intelligence (BI) team! Today you build three key executive reports: sales volume by product, top spending VIP customers, and identifying catalog items that have never been ordered using anti-joins.',

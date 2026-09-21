@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 28 - DDL II: Column Constraints (id: day-28 - order 28)
@@ -26,7 +26,7 @@ export const Day_28_MODULE: ModuleData = {
     {
       id: 'ddl2-not-null',
       order: 1,
-      title: '1. Mandatory Fields with NOT NULL',
+      title: 'Mandatory Fields with NOT NULL',
       shortDescription: 'A column that can never be empty.',
       theory: {
         summary: 'The NOT NULL constraint makes a column mandatory: every INSERT and UPDATE must supply a value. A row without it is rejected with a constraint error. Use it for data the business cannot function without - names, prices, dates - and save yourself a lifetime of NULL-handling in analytics.',
@@ -152,7 +152,7 @@ export const Day_28_MODULE: ModuleData = {
     {
       id: 'ddl2-unique',
       order: 2,
-      title: '2. No Duplicates with UNIQUE',
+      title: 'No Duplicates with UNIQUE',
       shortDescription: 'A value that can appear only once per column.',
       theory: {
         summary: 'UNIQUE guarantees no two rows share the same value in that column. It is the constraint behind usernames, product SKUs, and coupon codes. It differs from PRIMARY KEY in two ways: a table can have several UNIQUE columns, and a UNIQUE column may (in most engines) hold one NULL.',
@@ -255,7 +255,7 @@ export const Day_28_MODULE: ModuleData = {
     {
       id: 'ddl2-default',
       order: 3,
-      title: '3. Automatic Values with DEFAULT',
+      title: 'Automatic Values with DEFAULT',
       shortDescription: 'A column that fills itself when you omit it.',
       theory: {
         summary: 'DEFAULT gives a column a fallback value: any INSERT that omits the column receives the default automatically. Statuses start at one value (pending), timestamps record themselves (CURRENT_TIMESTAMP), flags start off (FALSE). Less boilerplate in every INSERT, fewer forgotten fields.',
@@ -363,7 +363,7 @@ export const Day_28_MODULE: ModuleData = {
     {
       id: 'ddl2-check',
       order: 4,
-      title: '4. Business Rules with CHECK',
+      title: 'Business Rules with CHECK',
       shortDescription: 'The database rejects values that break your rules.',
       theory: {
         summary: 'CHECK puts a TRUE/FALSE condition on a column: every INSERT and UPDATE must satisfy it or be rejected. Prices stay positive, percentages stay in range, ratings stay between 1 and 5. It is the schema encoding the rules your team currently enforces with hope.',

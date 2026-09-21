@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_35_MODULE: ModuleData = {
   id: 'day-35',
@@ -19,7 +19,7 @@ export const Day_35_MODULE: ModuleData = {
     {
       id: 'performance-and-edge-cases',
       order: 1,
-      title: '1. Zero-State Hardening & NULL-Safe Aggregates',
+      title: 'Zero-State Hardening & NULL-Safe Aggregates',
       shortDescription: 'LEFT JOIN, COUNT natural 0s, and COALESCE with SUM.',
       theory: {
         summary: 'Every customer with zero orders must still appear in the business report — a customer who vanishes from analytics might as well never have signed up. Production SQL keeps those zero-state rows with LEFT JOIN, and counts them correctly by knowing what COUNT() and SUM()do with NULL.',

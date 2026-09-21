@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 32 - SECURITY & PRODUCTION SAFETY (id: day-32, order 32)
@@ -37,7 +37,7 @@ export const Day_32_MODULE: ModuleData = {
     {
       id: 'sec-injection',
       order: 1,
-      title: '1. SQL Injection: The Live Demo',
+      title: 'SQL Injection: The Live Demo',
       shortDescription: "Build the vulnerable query the way naive code does - then watch the attack work.",
       theory: {
         summary:
@@ -215,7 +215,7 @@ export const Day_32_MODULE: ModuleData = {
     {
       id: 'sec-parameterized',
       order: 2,
-      title: '2. The Fix: Parameterized Queries',
+      title: 'The Fix: Parameterized Queries',
       shortDescription: 'Separate code from data so a payload is only ever a value - plus whitelisting for the places parameters cannot go.',
       theory: {
         summary:
@@ -394,7 +394,7 @@ export const Day_32_MODULE: ModuleData = {
     {
       id: 'sec-production',
       order: 3,
-      title: '3. Production Safety Drills',
+      title: 'Production Safety Drills',
       shortDescription: 'Least privilege, transaction dry-runs, backups, and error hygiene - the habits that keep a live database alive.',
       theory: {
         summary:

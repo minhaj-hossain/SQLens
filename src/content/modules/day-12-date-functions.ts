@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 12 — Date Functions  (id: day-12 · order 12)
@@ -27,7 +27,7 @@ export const Day_12_MODULE: ModuleData = {
     {
       id: 'date-components',
       order: 1,
-      title: '1. Extract Date Components: YEAR, MONTH, DAY',
+      title: 'Extract Date Components: YEAR, MONTH, DAY',
       shortDescription: 'Pull out year, month, day from dates to group or filter by time periods.',
       theory: {
         summary: "You saw on Day 11 that SUBSTRING(order_date, 1, 7) can slice '2026-08' out of a date — but that treats a date like text. Dates are their own data type with a real internal value, and SQL gives you purpose-built extractors: YEAR(), MONTH(), DAY(). They are clearer, safer, and signal intent.",
@@ -168,7 +168,7 @@ export const Day_12_MODULE: ModuleData = {
     {
       id: 'group-by-date-parts',
       order: 2,
-      title: '2. Grouping by Date Components',
+      title: 'Grouping by Date Components',
       shortDescription: 'Buckets of time: counts per month, per year.',
       theory: {
         summary: 'The ops dashboard needs "orders per month". You know GROUP BY (Day 9) and you know MONTH() — put them together and GROUP BY accepts the function expression directly: every order lands in the bucket of its month.',
@@ -319,7 +319,7 @@ export const Day_12_MODULE: ModuleData = {
     {
       id: 'date-arithmetic',
       order: 3,
-      title: '3. Date Arithmetic: "The Last N Days"',
+      title: 'Date Arithmetic: "The Last N Days"',
       shortDescription: 'Relative time windows that never go stale.',
       theory: {
         summary: 'Finance asks every morning: "how many orders in the last 30 days?" A hardcoded date like \'2026-06-25\' works today and is wrong tomorrow. SQL\'s answer: compute the boundary from "today" — CURDATE() minus an INTERVAL — so the window slides forward automatically.',
@@ -458,7 +458,7 @@ export const Day_12_MODULE: ModuleData = {
     {
       id: 'datediff',
       order: 4,
-      title: '4. DATEDIFF: Measuring Gaps in Days',
+      title: 'DATEDIFF: Measuring Gaps in Days',
       shortDescription: 'How far apart are two dates? One function, one number.',
       theory: {
         summary: '"How long ago did each customer sign up?" The answer is a gap — a number of days between two dates. DATEDIFF(a, b) returns a minus b in days: how many days b is before a. Positive = a is later; negative = b is later.',

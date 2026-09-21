@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_36_MODULE: ModuleData = {
   id: 'day-36',
@@ -20,7 +20,7 @@ export const Day_36_MODULE: ModuleData = {
     {
       id: 'capstone-evaluation',
       order: 1,
-      title: '1. Milestone 3 Capstone Skill Verification',
+      title: 'Milestone 3 Capstone Skill Verification',
       shortDescription: 'Final comprehensive SQL certification assessment across all 38 days.',
       theory: {
         summary: 'The certification exam has arrived — no templates, no scaffold. Prove full database engineering: rank categories by revenue across three joined tables, find above-average customers with CTEs, migrate a live schema with ALTER TABLE,and create an index that EXPLAIN confirms. Four production-grade deliverables, one final assessment.',

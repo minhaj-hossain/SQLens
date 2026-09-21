@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_04_MODULE: ModuleData = {
   id: 'day-04',
@@ -23,7 +23,7 @@ export const Day_04_MODULE: ModuleData = {
     {
       id: 'order-by-single-column',
       order: 1,
-      title: '1. Sort Results with ORDER BY (ASC and DESC)',
+      title: 'Sort Results with ORDER BY (ASC and DESC)',
       shortDescription: 'Arrange output rows alphabetically, numerically, or by date — lowest to highest or vice versa.',
       theory: {
         summary: 'SQL never promises row order — run the same query twice and the "cheapest first" list you saw once may come back scrambled. ORDER BY is the only way to make a sort a guarantee rather than a coincidence.',
@@ -171,7 +171,7 @@ export const Day_04_MODULE: ModuleData = {
     {
       id: 'order-by-multi-column',
       order: 2,
-      title: '2. Multi-Column Sorting (Tie-Breaking)',
+      title: 'Multi-Column Sorting (Tie-Breaking)',
       shortDescription: 'How to use secondary sort columns to resolve identical values.',
       theory: {
         summary: 'Half the sales report ties at 1,000 in total sales — and ties left alone come back in arbitrary order. A second sort column, like the product name, breaks the tie deliberately so the same query always yields the same, findable report.',
@@ -332,7 +332,7 @@ export const Day_04_MODULE: ModuleData = {
     {
       id: 'distinct-deduplication',
       order: 3,
-      title: '3. Deduplication with DISTINCT',
+      title: 'Deduplication with DISTINCT',
       shortDescription: 'Eliminate duplicate rows to discover unique values.',
       theory: {
         summary: 'When multiple rows contain the same value in a column (e.g. several customers residing in "Dhaka"), `DISTINCT` collapses duplicates into a single unique list.',
@@ -479,7 +479,7 @@ export const Day_04_MODULE: ModuleData = {
     {
       id: 'limit-and-offset',
       order: 4,
-      title: '4. Pagination with LIMIT & OFFSET',
+      title: 'Pagination with LIMIT & OFFSET',
       shortDescription: 'Restrict row counts and skip rows for multi-page displays.',
       theory: {
         summary: 'No product catalog page shows every row at once — it shows page 1, then page 2. `LIMIT` cuts the result to a fixed row count and `OFFSET` jumps past the rows the previous page already displayed. Together they are pagination.',

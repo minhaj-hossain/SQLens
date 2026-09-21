@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 23 — Window Functions I: Ranking  (id: day-23 · order 23)
@@ -27,7 +27,7 @@ export const Day_23_MODULE: ModuleData = {
     {
       id: 'row-number-basics',
       order: 1,
-      title: '1. ROW_NUMBER(): Append Rankings Without Removing Rows',
+      title: 'ROW_NUMBER(): Append Rankings Without Removing Rows',
       shortDescription: 'A leaderboard column appended to every row.',
       theory: {
         summary: "Day 9's GROUP BY answered 'how many products per category' but destroyed the rows. Now the question is different: keep every product AND give each one its price rank. ROW_NUMBER() OVER (ORDER BY …) appends a 1, 2, 3… column sorted by your chosen order — without removing a single row.",
@@ -208,7 +208,7 @@ export const Day_23_MODULE: ModuleData = {
     {
       id: 'partition-by',
       order: 2,
-      title: '2. PARTITION BY: One Leaderboard Per Group',
+      title: 'PARTITION BY: One Leaderboard Per Group',
       shortDescription: 'Restart the ranking inside each category.',
       theory: {
         summary: "One global leaderboard is rarely what a report needs. The real request: 'rank products within each category.' Five categories means five leaderboards — PARTITION BY computes all of them in one query, resetting the rank to 1 at each new group.",
@@ -380,7 +380,7 @@ export const Day_23_MODULE: ModuleData = {
     {
       id: 'rank-ties',
       order: 3,
-      title: '3. RANK(): Ties Share a Rank — and Leave a Gap',
+      title: 'RANK(): Ties Share a Rank — and Leave a Gap',
       shortDescription: 'Competition ranking: equal values, equal rank, skipped numbers.',
       theory: {
         summary: 'ROW_NUMBER forces an arbitrary order onto ties — two $55.00 products become ranks 4 and 5 for no real reason. RANK() fixes the fairness problem: tied values share the same rank. But it awards ranks the way sports competitions do — after a tie, the numbering jumps ahead.',
@@ -546,7 +546,7 @@ export const Day_23_MODULE: ModuleData = {
     {
       id: 'dense-rank',
       order: 4,
-      title: '4. DENSE_RANK(): Ties Without Gaps',
+      title: 'DENSE_RANK(): Ties Without Gaps',
       shortDescription: 'League-table ranking: equal values, equal rank, consecutive numbers.',
       theory: {
         summary: 'RANK leaves gaps because ties consume positions. DENSE_RANK keeps the sharing but throws away the consumption: ties share a rank AND the next distinct value gets the very next number. Same data, one keyword difference — a genuinely different leaderboard philosophy.',
@@ -697,7 +697,7 @@ export const Day_23_MODULE: ModuleData = {
     {
       id: 'top-n-pattern',
       order: 5,
-      title: '5. Pattern Lab: Top-N Per Group',
+      title: 'Pattern Lab: Top-N Per Group',
       shortDescription: 'The classic interview pattern: rank in a CTE, filter outside it.',
       theory: {
         summary: '"Top 2 cheapest products per category" — the single most-asked window-function question in interviews, and a real reporting staple. It cannot be done with WHERE (WHERE cannot filter a window result) and cannot be done with GROUP BY (it would destroy the rows). The solution is a two-step pipeline you already own: rank inside a CTE, filter outside it.',

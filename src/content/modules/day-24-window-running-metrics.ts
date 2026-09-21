@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 24 — Window Functions II: Running Metrics  (id: day-24 · order 24)
@@ -28,7 +28,7 @@ export const Day_24_MODULE: ModuleData = {
     {
       id: 'running-totals',
       order: 1,
-      title: '1. SUM() OVER (ORDER BY ...): Build Cumulative Running Totals',
+      title: 'SUM() OVER (ORDER BY ...): Build Cumulative Running Totals',
       shortDescription: 'A cumulative column that grows row by row — revenue to date.',
       theory: {
         summary:
@@ -250,7 +250,7 @@ export const Day_24_MODULE: ModuleData = {
     {
       id: 'lag-lead',
       order: 2,
-      title: '2. LAG() / LEAD(): Peek at the Neighboring Row',
+      title: 'LAG() / LEAD(): Peek at the Neighboring Row',
       shortDescription: 'Compare each row to its predecessor or successor — no self-join.',
       theory: {
         summary:
@@ -465,7 +465,7 @@ export const Day_24_MODULE: ModuleData = {
     {
       id: 'window-frames-preview',
       order: 3,
-      title: '3. Advanced Preview (Optional): Window Frames & Moving Averages',
+      title: 'Advanced Preview (Optional): Window Frames & Moving Averages',
       shortDescription: 'A taste of ROWS BETWEEN — the smoothing tool you will meet in real dashboards.',
       theory: {
         summary:

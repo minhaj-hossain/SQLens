@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_05_MODULE: ModuleData = {
   id: 'day-05',
@@ -20,7 +20,7 @@ export const Day_05_MODULE: ModuleData = {
     {
       id: 'day-05-pipelines',
       order: 1,
-      title: '1. Combine Clauses into Real Operational Queries',
+      title: 'Combine Clauses into Real Operational Queries',
       shortDescription: 'Write complete queries that filter, sort, and paginate — the real SQL you see in production applications.',
       theory: {
         summary: 'The support desk needs open tickets, sorted by urgency, with only the first screen of them shown. That is not one clause — it is WHERE, ORDER BY, and LIMIT in a single pipeline. Working SQL combines clauses into one statement, the way production screens actually need it.',

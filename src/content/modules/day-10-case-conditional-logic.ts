@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 10 — CASE & Conditional Logic  (id: day-10 · order 10)
@@ -27,7 +27,7 @@ export const Day_10_MODULE: ModuleData = {
     {
       id: 'case-basic',
       order: 1,
-      title: '1. Create Computed Columns with CASE',
+      title: 'Create Computed Columns with CASE',
       shortDescription: 'Turn row conditions into output labels — "If quantity = 0, show \'Out of Stock\', otherwise \'Available\'".',
       theory: {
         summary: 'The marketing team wants products labeled \'Out of Stock\' or \'Available\' — but no such column exists. Labels are not stored data; they are computed. CASE is SQL\'s way of producing a different output value depending on each row\'s condition.',
@@ -183,7 +183,7 @@ export const Day_10_MODULE: ModuleData = {
     {
       id: 'case-multi-branch',
       order: 2,
-      title: '2. Build Multi-Branch Tiers with Stacked WHEN',
+      title: 'Build Multi-Branch Tiers with Stacked WHEN',
       shortDescription: 'Chain multiple WHEN conditions to classify rows into tiers (Budget / Standard / Premium).',
       theory: {
         summary: 'Two labels are rarely enough. Finance wants every product classified as Budget, Standard, or Premium by price. One WHEN per tier — chained top to bottom — turns a raw number column into a tier system.',
@@ -320,7 +320,7 @@ export const Day_10_MODULE: ModuleData = {
     {
       id: 'case-evaluation-order',
       order: 3,
-      title: '3. CASE Evaluation Order: First Match Wins',
+      title: 'CASE Evaluation Order: First Match Wins',
       shortDescription: 'Why branch order can silently make branches unreachable.',
       theory: {
         summary: 'A tier query was reordered and suddenly nobody is \'Budget\' anymore. Branch order is not cosmetic — CASE stops at the first TRUE WHEN, so a greedy branch placed first can make every later branch unreachable. This is the bug class you must see once to never forget.',
@@ -467,7 +467,7 @@ export const Day_10_MODULE: ModuleData = {
     {
       id: 'case-in-aggregates',
       order: 4,
-      title: '4. CASE Inside Aggregates: Conditional Counting',
+      title: 'CASE Inside Aggregates: Conditional Counting',
       shortDescription: 'SUM(CASE …) / COUNT(CASE …) — count two ways in one query.',
       theory: {
         summary: 'Ops asks: "How many out-of-stock products does each category have?" One WHERE can\'t answer it — WHERE filters rows before grouping, so it can\'t count matching and non-matching rows side by side. The trick: put CASE **inside** the aggregate, and let each row vote on what it contributes.',
@@ -617,7 +617,7 @@ export const Day_10_MODULE: ModuleData = {
     {
       id: 'case-in-order-by',
       order: 5,
-      title: '5. CASE in ORDER BY: Sorting by Priority',
+      title: 'CASE in ORDER BY: Sorting by Priority',
       shortDescription: 'Sort by business urgency, not by alphabetical or numeric value.',
       theory: {
         summary: 'A picker walks the warehouse with a printed list. The most urgent items must be at the top: out-of-stock first, then the lowest stock. ORDER BY quantity_in_stock alone would put the zero-stock rows first — but only by luck, and it breaks the moment ops wants a different priority rule. CASE in ORDER BY makes the priority explicit.',

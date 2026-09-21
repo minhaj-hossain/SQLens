@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_02_MODULE: ModuleData = {
   id: 'day-02',
@@ -25,7 +25,7 @@ export const Day_02_MODULE: ModuleData = {
     {
       id: 'where-exact-equality',
       order: 1,
-      title: '1. Filtering Rows with WHERE and Exact Equality (=)',
+      title: 'Filtering Rows with WHERE and Exact Equality (=)',
       shortDescription: 'Find rows that match your criteria exactly — the WHERE clause\'s most direct tool.',
       theory: {
         summary: 'WHERE is SQL\'s row filter: it tests a condition against every row and keeps only the rows where the condition is TRUE. We begin with exact matching using the = operator, on our familiar students table:',
@@ -224,7 +224,7 @@ export const Day_02_MODULE: ModuleData = {
     {
       id: 'where-inequality',
       order: 2,
-      title: '2. Excluding Values with Inequality (!= / <>)',
+      title: 'Excluding Values with Inequality (!= / <>)',
       shortDescription: 'How to filter rows that do NOT match a specific value.',
       theory: {
         summary: 'What if we want every student EXCEPT those in a specific department?',
@@ -397,7 +397,7 @@ export const Day_02_MODULE: ModuleData = {
     {
       id: 'where-strict-comparisons',
       order: 3,
-      title: '3. Strict Range Comparisons (> and <)',
+      title: 'Strict Range Comparisons (> and <)',
       shortDescription: 'Filter numeric columns strictly above or below a threshold.',
       theory: {
         summary: 'The store wants products above 50 and below 100 — but a product priced at exactly 50.00 does not make the list. Those are strict thresholds, and SQL expresses them with > and <, which leave the boundary value out.',
@@ -567,7 +567,7 @@ export const Day_02_MODULE: ModuleData = {
     {
       id: 'where-inclusive-comparisons',
       order: 4,
-      title: '4. Inclusive Range Comparisons (>= and <=)',
+      title: 'Inclusive Range Comparisons (>= and <=)',
       shortDescription: 'Filter numeric columns with inclusive boundary thresholds.',
       theory: {
         summary: 'Ops needs every product at 50.00 or above included — a report that silently skipped the product sitting exactly on the threshold would be wrong. >= and <= include that boundary, which is why pricing floors and stock ceilings behave so naturally.',
@@ -769,7 +769,7 @@ export const Day_02_MODULE: ModuleData = {
     {
       id: 'where-text-strings',
       order: 5,
-      title: '5. Filtering Text with Single Quotes',
+      title: 'Filtering Text with Single Quotes',
       shortDescription: 'How to filter rows by string and text values safely.',
       theory: {
         summary: '"Which city?", the team asks — and the answer lives in a text column like city or department. Filtering words works almost exactly like filtering numbers, with one extra rule: the value goes in single quotes, because SQL needs to know where the text ends.',

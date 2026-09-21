@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_22_MODULE: ModuleData = {
   id: 'day-22',
@@ -19,7 +19,7 @@ export const Day_22_MODULE: ModuleData = {
     {
       id: 'correlated-and-staged-ctes',
       order: 1,
-      title: '1. Row-by-Row Comparisons: Correlate Subqueries to Outer Context',
+      title: 'Row-by-Row Comparisons: Correlate Subqueries to Outer Context',
       shortDescription: 'Category benchmarks and tiered spend CTEs.',
       theory: {
         summary: 'This is the drill day for Day 21 techniques: compare each product against its own category average with correlated subqueries, cut customers into spending tiers with CTEs, and refactor a deeply nested query into a readable pipeline. The tools are yours — now they need repetition.',

@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 11 — String Functions  (id: day-11 · order 11)
@@ -24,7 +24,7 @@ export const Day_11_MODULE: ModuleData = {
     {
       id: 'upper-lower',
       order: 1,
-      title: '1. Normalize Case with UPPER & LOWER',
+      title: 'Normalize Case with UPPER & LOWER',
       shortDescription: 'Transform text case dynamically without changing stored data.',
       theory: {
         summary: 'The email client needs every name in CAPITALS for a shipping manifest; the analytics sheet needs emails lowercased. The database stores names as typed ("Rafiul Islam") — rewriting 15 rows for one report would be madness. Case is a display concern, and display belongs in the query.',
@@ -158,7 +158,7 @@ export const Day_11_MODULE: ModuleData = {
     {
       id: 'trim',
       order: 2,
-      title: '2. TRIM: Cleaning Whitespace',
+      title: 'TRIM: Cleaning Whitespace',
       shortDescription: 'Strip stray spaces from the edges of text values.',
       theory: {
         summary: 'Data from imports and form inputs often carries invisible leading/trailing spaces: \' Dhaka\' is not \'Dhaka\' to SQL — it is a different string that will never match your filters. TRIM() strips whitespace from both ends of a value, returning the clean copy.',
@@ -288,7 +288,7 @@ export const Day_11_MODULE: ModuleData = {
     {
       id: 'concat',
       order: 3,
-      title: '3. CONCAT: Assembling Display Strings',
+      title: 'CONCAT: Assembling Display Strings',
       shortDescription: 'Glue columns and literals into one text value.',
       theory: {
         summary: 'The email client needs one field: "Rafiul Islam <rafiul@example.com>". The database has two columns — name and email — and no format string column. CONCAT glues any number of text pieces (columns *and* quoted literals) into a single value.',
@@ -425,7 +425,7 @@ export const Day_11_MODULE: ModuleData = {
     {
       id: 'substring',
       order: 4,
-      title: '4. SUBSTRING: Extracting Text Portions',
+      title: 'SUBSTRING: Extracting Text Portions',
       shortDescription: 'Pull a slice out of a text value by position.',
       theory: {
         summary: 'Order dates are stored as \'2026-08-12\' — but the dashboard only needs the \'2026-08\' month prefix. SUBSTRING(col, start, length) cuts a slice out of text, counting from 1. It works on any structured text: date prefixes, SKU codes, initials.',
@@ -554,7 +554,7 @@ export const Day_11_MODULE: ModuleData = {
     {
       id: 'length',
       order: 5,
-      title: '5. LENGTH: Measuring Text',
+      title: 'LENGTH: Measuring Text',
       shortDescription: 'Count the characters of a value — and sort or filter by it.',
       theory: {
         summary: 'Which of our customer emails is suspiciously long? LENGTH(col) returns the character count of each value — and because it produces a number per row, you can filter, sort, and even aggregate by it.',

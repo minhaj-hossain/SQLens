@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 26 - DML + Transactions (id: day-26 - order 26)
@@ -28,7 +28,7 @@ export const Day_26_MODULE: ModuleData = {
     {
       id: 'tx-begin-commit',
       order: 1,
-      title: '1. Transaction Boundaries: BEGIN / COMMIT',
+      title: 'Transaction Boundaries: BEGIN / COMMIT',
       shortDescription: 'Changes are provisional until you COMMIT them.',
       theory: {
         summary:
@@ -255,7 +255,7 @@ export const Day_26_MODULE: ModuleData = {
     {
       id: 'tx-rollback',
       order: 2,
-      title: '2. ROLLBACK: The Undo',
+      title: 'ROLLBACK: The Undo',
       shortDescription: 'Undo everything since BEGIN by restoring the snapshot.',
       theory: {
         summary: 'COMMIT makes changes permanent; ROLLBACK throws them away. While a transaction is open, the engine keeps the pre-BEGIN snapshot. ROLLBACK restores that exact snapshot - every INSERT, UPDATE, and DELETE since BEGIN is reversed, as if it never happened. It is the safety net that makes experimentation safe.',
@@ -409,7 +409,7 @@ export const Day_26_MODULE: ModuleData = {
     {
       id: 'tx-atomic-failure',
       order: 3,
-      title: '3. Atomic Failure: All or Nothing',
+      title: 'Atomic Failure: All or Nothing',
       shortDescription: 'A failed step mid-batch undoes nothing and half-applies nothing.',
       theory: {
         summary: 'The real payoff of transactions: when one statement inside a batch FAILS, nothing is half-applied. You ROLLBACK, and the database is exactly as it was at BEGIN. The alternative - some rows inserted, others rejected - is data corruption. Atomicity means a multi-statement operation has only two outcomes: all of it, or none of it.',

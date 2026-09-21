@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_16_MODULE: ModuleData = {
   id: 'day-16',
@@ -19,7 +19,7 @@ export const Day_16_MODULE: ModuleData = {
     {
       id: 'expanded-logical-order',
       order: 1,
-      title: '1. The Complete 7-Stage Execution Pipeline',
+      title: 'The Complete 7-Stage Execution Pipeline',
       shortDescription: 'FROM/JOIN -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY -> LIMIT',
       theory: {
         summary: 'Now that JOINs, GROUP BY, and HAVING are in our toolkit, we integrate all 7 clauses into a single unified execution model. Understanding this lifecycle ensures you know when data is created, filtered, and sorted.',

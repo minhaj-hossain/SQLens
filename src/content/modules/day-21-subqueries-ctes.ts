@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_21_MODULE: ModuleData = {
   id: 'day-21',
@@ -22,7 +22,7 @@ export const Day_21_MODULE: ModuleData = {
     {
       id: 'subqueries-scalar',
       order: 1,
-      title: '1. Single-Value Subqueries: Compare Rows Against Aggregates',
+      title: 'Single-Value Subqueries: Compare Rows Against Aggregates',
       shortDescription: 'Compare individual rows dynamically against whole-table aggregates.',
       theory: {
         summary: '"Show me every product above the average price." The average is a number you do not know until you ask the database — so you place one query inside another. A scalar subquery returns exactly one value (one row, one column) and stands in wherever you would otherwise write a plain number.',
@@ -164,7 +164,7 @@ export const Day_21_MODULE: ModuleData = {
     {
       id: 'subqueries-in-set',
       order: 2,
-      title: '2. Set Membership Subqueries with IN',
+      title: 'Set Membership Subqueries with IN',
       shortDescription: 'Filter rows against dynamic lists produced by inner queries.',
       theory: {
         summary: 'A scalar subquery returns one number, but "customers with active orders" is a list — hundreds of values that change on every run. IN matches a row against that whole dynamic list, so the filter follows the database wherever those orders actually exist.',
@@ -305,7 +305,7 @@ export const Day_21_MODULE: ModuleData = {
     {
       id: 'subqueries-not-in-null-trap',
       order: 3,
-      title: '3. Exclusion Subqueries with NOT IN & The NULL Trap',
+      title: 'Exclusion Subqueries with NOT IN & The NULL Trap',
       shortDescription: 'Exclude matching rows safely and avoid the three-valued logic NULL trap.',
       theory: {
         summary: 'NOT IN answers "products nobody ordered" — until the subquery slips in even one NULL value, and the whole filter collapses to UNKNOWN, returning nothing at all. The trap is silent, which makes it a classic production bug — and now you know exactly what to check for.',
@@ -471,7 +471,7 @@ export const Day_21_MODULE: ModuleData = {
     {
       id: 'subqueries-correlated',
       order: 4,
-      title: '4. Correlated Subqueries (Per-Row Dynamic Benchmarks)',
+      title: 'Correlated Subqueries (Per-Row Dynamic Benchmarks)',
       shortDescription: 'Compare each row dynamically against its own category or parent benchmark.',
       theory: {
         summary: 'Is this product cheaper than its own category average? An independent subquery runs once for the whole table; a correlated subquery references a column from the outer query and re-evaluates for every single row. Each product gets its own personal benchmark.',
@@ -627,7 +627,7 @@ export const Day_21_MODULE: ModuleData = {
     {
       id: 'common-table-expressions-cte',
       order: 5,
-      title: '5. Common Table Expressions (WITH syntax)',
+      title: 'Common Table Expressions (WITH syntax)',
       shortDescription: 'Readable, modular multi-stage query architecture.',
       theory: {
         summary: 'A four-stage query reads like a chain of nested parentheses — until you name each stage. WITH name AS (...) gives a temporary result a name and its own place in the query, turning one beast into a pipeline of named steps that live only as long as the query runs.',

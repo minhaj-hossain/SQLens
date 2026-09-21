@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_13_MODULE: ModuleData = {
   id: 'day-13',
@@ -19,7 +19,7 @@ export const Day_13_MODULE: ModuleData = {
     {
       id: 'reporting-widgets',
       order: 1,
-      title: '1. Build Multi-Metric Dashboard Queries',
+      title: 'Build Multi-Metric Dashboard Queries',
       shortDescription: 'Combine multiple aggregates to build real business reports.',
       theory: {
         summary: 'An executive dashboard never shows one number — it shows item count, average price, and total stock side by side on the same screen. One query produces all of them at once, and HAVING trims the result to the groups the business actually cares about.',

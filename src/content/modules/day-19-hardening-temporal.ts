@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_19_MODULE: ModuleData = {
   id: 'day-19',
@@ -19,7 +19,7 @@ export const Day_19_MODULE: ModuleData = {
     {
       id: 'query-debugging-polish',
       order: 1,
-      title: '1. Production Query Hardening: Dates, Ranges & Audits',
+      title: 'Production Query Hardening: Dates, Ranges & Audits',
       shortDescription: 'Add temporal constraints and edge case handling to multi-table queries.',
       theory: {
         summary: 'Production queries frequently require temporal constraints (such as orders placed in the last 60 days) and inactive account audits. Today we harden existing queries against these real-world requirements.',

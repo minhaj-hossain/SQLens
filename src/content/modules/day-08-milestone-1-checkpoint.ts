@@ -1,4 +1,4 @@
-import { ModuleData } from '../../types/curriculum';
+﻿import { ModuleData } from '../../types/curriculum';
 
 export const Day_08_MODULE: ModuleData = {
   id: 'day-08',
@@ -19,7 +19,7 @@ export const Day_08_MODULE: ModuleData = {
     {
       id: 'milestone-1-eval',
       order: 1,
-      title: '1. Real Warehouse Scenario: Restock Alert Query',
+      title: 'Real Warehouse Scenario: Restock Alert Query',
       shortDescription: 'A realistic inventory management task — no templates, just business requirements.',
       theory: {
         summary: 'The warehouse manager just sent you an email: "I need a list of products that have fallen below reorder point, sorted by urgency (worst stock first), and I only want to see the top 5 items for immediate action." This is your real job. Write the query.',
