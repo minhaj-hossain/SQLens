@@ -128,6 +128,7 @@ export interface SqlIndexDef {
   name: string; // display name, e.g. 'PRIMARY', 'idx_products_supplier'
   table: string; // lowercase table name
   column: string; // lowercase column name
+  columns?: string[];
   unique?: boolean;
 }
 

@@ -35,6 +35,7 @@ export type ExpectedErrorCategory =
   | 'TRANSACTION_STATE';
 
 export interface ValidationRule {
+  requireSelect?: boolean;
   targetTable?: string;
   requiredColumns?: string[];
   forbiddenColumns?: string[];

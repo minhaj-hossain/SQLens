@@ -57,3 +57,6 @@ export { Day_51_MODULE } from './day-51-reading-query-plans';
 export { Day_52_MODULE } from './day-52-composite-covering-indexes';
 export { Day_53_MODULE } from './day-53-partitioning-deep-pagination';
 export { Day_54_MODULE } from './day-54-json-semi-structured-data';
+export { Day_55_MODULE } from './day-55-users-roles-least-privilege';
+export { Day_56_MODULE } from './day-56-migrations-schema-evolution';
+export { Day_57_MODULE } from './day-57-production-capstone';

@@ -55,6 +55,9 @@ import { Day_51_MODULE } from './modules/day-51-reading-query-plans';
 import { Day_52_MODULE } from './modules/day-52-composite-covering-indexes';
 import { Day_53_MODULE } from './modules/day-53-partitioning-deep-pagination';
 import { Day_54_MODULE } from './modules/day-54-json-semi-structured-data';
+import { Day_55_MODULE } from './modules/day-55-users-roles-least-privilege';
+import { Day_56_MODULE } from './modules/day-56-migrations-schema-evolution';
+import { Day_57_MODULE } from './modules/day-57-production-capstone';
 
 /** Raw module definitions, in canonical day order (1-38). */
 const RAW_MODULES: ModuleData[] = [
@@ -112,6 +115,9 @@ const RAW_MODULES: ModuleData[] = [
   Day_52_MODULE,
   Day_53_MODULE,
   Day_54_MODULE,
+  Day_55_MODULE,
+  Day_56_MODULE,
+  Day_57_MODULE,
 ];
 
 /**
