@@ -501,12 +501,12 @@ export class SqlExecutor {
           continue;
         }
         last = r;
-        // A transaction-control statement (BEGIN/COMMIT/ROLLBACK) carries no
+        // A transaction-control statement (BEGIN/COMMIT/ROLLBACK/SET) carries no
         // data — when it closes the script, the meaningful outcome is the
         // previous data statement (INSERT/UPDATE/DELETE/SELECT). This keeps
         // validation (expectedRowCount → affectedRows) correct for scripts
         // like `BEGIN; INSERT …; COMMIT;`.
-        if (!/^(BEGIN|COMMIT|ROLLBACK)\b/i.test(stmt.trim())) lastData = r;
+        if (!/^(BEGIN|COMMIT|ROLLBACK|SET)\b/i.test(stmt.trim())) lastData = r;
       }
       const endControl = /^(BEGIN|COMMIT|ROLLBACK)\b/i.test(statements[statements.length - 1].trim());
       // Batch A: the script errored mid-way — surface the FIRST error, not the
@@ -1875,6 +1875,14 @@ export class SqlExecutor {
         success: true,
         columns: ['status'],
         rows: [{ status: `Savepoint '${spName}' released` }],
+        rowCount: 1,
+        executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      });
+    } else if (cmd === 'SET_ISOLATION') {
+      return finish({
+        success: true,
+        columns: ['status'],
+        rows: [{ status: 'Transaction isolation level set successfully' }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       });

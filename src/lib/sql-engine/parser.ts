@@ -93,7 +93,7 @@ export interface ParsedSqlQuery {
   updateTable?: string;
   updateSet?: Record<string, any>;
   deleteTable?: string;
-  transactionCommand?: 'BEGIN' | 'COMMIT' | 'ROLLBACK' | 'SAVEPOINT' | 'ROLLBACK_TO_SAVEPOINT' | 'RELEASE_SAVEPOINT';
+  transactionCommand?: 'BEGIN' | 'COMMIT' | 'ROLLBACK' | 'SAVEPOINT' | 'ROLLBACK_TO_SAVEPOINT' | 'RELEASE_SAVEPOINT' | 'SET_ISOLATION';
   savepointName?: string;
   cteName?: string;
   cteQuery?: string;
@@ -169,6 +169,9 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
   }
   if (/^COMMIT/i.test(sql)) {
     return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'COMMIT' };
+  }
+  if (/^SET\s+(?:SESSION\s+|GLOBAL\s+)?TRANSACTION\s+ISOLATION\s+LEVEL\b/i.test(sql)) {
+    return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'SET_ISOLATION' };
   }
   if (/^ROLLBACK\s+TO(\s+SAVEPOINT)?\s+([`"']?[\w_]+[`"']?)/i.test(sql)) {
     const spMatch = sql.match(/^ROLLBACK\s+TO(\s+SAVEPOINT)?\s+([`"']?[\w_]+[`"']?)/i);
@@ -413,6 +416,12 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
 
   try {
     let remaining = sql;
+
+    // Strip trailing locking clause: FOR UPDATE / FOR SHARE [SKIP LOCKED / NOWAIT]
+    const lockMatch = remaining.match(/\bFOR\s+(?:UPDATE|SHARE)(?:\s+(?:SKIP\s+LOCKED|NOWAIT))?\s*$/i);
+    if (lockMatch) {
+      remaining = remaining.substring(0, lockMatch.index).trim();
+    }
 
     // Extract LIMIT & OFFSET from tail (at top level)
     const limitIdx = findTopLevelKeyword(remaining, 'LIMIT');

@@ -35,7 +35,7 @@ export interface ReferenceTxnExpectation {
 const OPENS_TXN = /^(BEGIN|START\s+TRANSACTION)\b/;
 const CLOSES_TXN = /^(COMMIT|END|ROLLBACK)\b/;
 /** Statements that move the transaction boundary without touching DATA. */
-const DATA_PRESERVING = /^(BEGIN|START\s+TRANSACTION|COMMIT|END)$/;
+const DATA_PRESERVING = /^(BEGIN|START\s+TRANSACTION|COMMIT|END|SET\s+(?:SESSION\s+|GLOBAL\s+)?TRANSACTION\s+ISOLATION\s+LEVEL\s+[\w\s]+)$/;
 
 /** Strip `--` / `#` line comments and block comments from one statement. */
 function stripComments(statement: string): string {

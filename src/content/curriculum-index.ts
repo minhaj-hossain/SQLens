@@ -49,6 +49,8 @@ import { Day_45_MODULE } from './modules/day-45-procedural-control-error-handlin
 import { Day_46_MODULE } from './modules/day-46-triggers-audit';
 import { Day_47_MODULE } from './modules/day-47-encapsulation-lab';
 import { Day_48_MODULE } from './modules/day-48-milestone-4a-checkpoint';
+import { Day_49_MODULE } from './modules/day-49-isolation-concurrency';
+import { Day_50_MODULE } from './modules/day-50-locking-contention-deadlocks';
 
 /** Raw module definitions, in canonical day order (1-38). */
 const RAW_MODULES: ModuleData[] = [
@@ -100,6 +102,8 @@ const RAW_MODULES: ModuleData[] = [
   Day_46_MODULE,
   Day_47_MODULE,
   Day_48_MODULE,
+  Day_49_MODULE,
+  Day_50_MODULE,
 ];
 
 /**

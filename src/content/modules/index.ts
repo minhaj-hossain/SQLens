@@ -51,3 +51,5 @@ export { Day_45_MODULE } from './day-45-procedural-control-error-handling';
 export { Day_46_MODULE } from './day-46-triggers-audit';
 export { Day_47_MODULE } from './day-47-encapsulation-lab';
 export { Day_48_MODULE } from './day-48-milestone-4a-checkpoint';
+export { Day_49_MODULE } from './day-49-isolation-concurrency';
+export { Day_50_MODULE } from './day-50-locking-contention-deadlocks';
