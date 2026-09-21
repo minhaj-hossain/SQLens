@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, Database, Key, Search, ChevronDown, Check, Info, Network, ArrowRight } from 'lucide-react';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { DatabaseState } from '../../types/database';
-import { readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
+import { readLiveDatabase, readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
 import { DataGrid } from './DataGrid';
 
 interface DatabaseExplorerProps {
@@ -18,6 +18,8 @@ interface DatabaseExplorerProps {
    * `executionResult` (or any per-run token) from the host.
    */
   getDatabaseState?: () => DatabaseState;
+  /** Batch B: session txn state — when OPEN, the delta band reads “(uncommitted)”. */
+  txnStatus?: 'none' | 'open' | 'failed';
   refreshKey?: unknown;
 }
 
@@ -26,7 +28,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   highlightedColumns = [],
   onSelectColumn,
   className = '',
-  getDatabaseState,
+  getDatabaseState, txnStatus,
   refreshKey,
 }) => {
   const [activeTable, setActiveTable] = useState<string>(initialTableName);
@@ -35,24 +37,44 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   const [copiedCol, setCopiedCol] = useState<string | null>(null);
   const [isCollapsedOnMobile, setIsCollapsedOnMobile] = useState<boolean>(true);
 
-  // Sync if initialTableName changes
-  React.useEffect(() => {
-    if (initialTableName && DATABASE_SCHEMAS[initialTableName.toLowerCase()]) {
-      setActiveTable(initialTableName.toLowerCase());
-    }
-  }, [initialTableName]);
-
-  const schema = DATABASE_SCHEMAS[activeTable.toLowerCase()] || DATABASE_SCHEMAS.products;
-  // Phase 2: live rows when the host provides the executor snapshot; the seed
+  // Phase 2: live database state when the host provides the executor snapshot; the seed
   // fallback keeps every other consumer (roadmap modal, playground) unchanged.
   // getDatabaseState() deep-clones (P0), so one read per Run & Check is enough —
   // `refreshKey` (the host's executionResult) invalidates that read.
-  const liveTables = React.useMemo(
-    () => readLiveTables(getDatabaseState),
+  const liveDb = React.useMemo(
+    () => readLiveDatabase(getDatabaseState),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [refreshKey, getDatabaseState],
   );
+  const liveTables = liveDb?.tables ?? null;
+
+  const allTableNames = React.useMemo(() => {
+    const set = new Set<string>(Object.keys(DATABASE_SCHEMAS));
+    if (liveDb?.schemas) {
+      for (const k of Object.keys(liveDb.schemas)) set.add(k.toLowerCase());
+    }
+    if (liveDb?.tables) {
+      for (const k of Object.keys(liveDb.tables)) set.add(k.toLowerCase());
+    }
+    return Array.from(set);
+  }, [liveDb]);
+
+  // Sync if initialTableName changes
+  React.useEffect(() => {
+    if (initialTableName) {
+      const lower = initialTableName.toLowerCase();
+      if (allTableNames.includes(lower) || DATABASE_SCHEMAS[lower]) {
+        setActiveTable(lower);
+      }
+    }
+  }, [initialTableName, allTableNames]);
+
   const tableKey = activeTable.toLowerCase();
+  const schema =
+    (liveDb?.schemas && liveDb.schemas[tableKey]) ||
+    DATABASE_SCHEMAS[tableKey] ||
+    DATABASE_SCHEMAS.products;
+
   const {
     rows: rawRows,
     seedCount,
@@ -74,8 +96,6 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
     if (onSelectColumn) onSelectColumn(colName);
     setTimeout(() => setCopiedCol(null), 1200);
   };
-
-  const allTableNames = Object.keys(DATABASE_SCHEMAS);
 
   return (
     <div

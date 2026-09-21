@@ -27,7 +27,7 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
   if (!mod) notFound();
 
   const { userState, markChallengeTaskComplete } = useLearning();
-  const { executeQuery, resetDatabase, getDatabaseState } = useSqlExecutor();
+  const { executeQuery, resetDatabase, getDatabaseState, getCommittedState, getTransactionState } = useSqlExecutor();
   const nav = useLearningNavigation();
   const router = useRouter();
 
@@ -54,6 +54,8 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
       completedTaskIds={completedTaskIds}
       onExecuteSql={executeQuery}
       getDatabaseState={getDatabaseState}
+      getCommittedState={getCommittedState}
+      getTransactionState={getTransactionState}
       // P0 FIX: idempotent fresh-challenge retries (reset at submit, not just
       // on task switch).
       onResetDatabase={resetDatabase}

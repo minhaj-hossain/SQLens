@@ -5,6 +5,8 @@ import {
   compactSuggestionsQuery,
   countTrailingNewlines,
   gutterLineCount,
+  gutterRowHeights,
+  lineVisualLayout,
   overlaySuffixHtml,
   resolveEnterKey,
   shouldAutoOpenSuggestions,
@@ -12,6 +14,7 @@ import {
   SUGGESTION_DEBOUNCE_MS,
   suggestionAnnouncement,
   suggestionDismissKey,
+  tintBox,
   toOverlayHtml,
 } from '../../src/lib/editor-layout';
 import { completionPrefix } from '../../src/lib/completion-replace';
@@ -162,6 +165,84 @@ describe('editor-layout — batch 5 item 5: screen-reader announcement', () => {
     const a = suggestionAnnouncement({ open: true, count: 8, selectedText: 'X' });
     const b = suggestionAnnouncement({ open: true, count: 8, selectedText: 'X' });
     expect(a).toBe(b);
+  });
+});
+
+describe('editor-layout — batch E1: caret/line highlighter geometry', () => {
+  // The real bug: the editor is `pre-wrap` + `break-words`, so ONE logical line
+  // can own several visual rows. A long multi-row VALUES list wraps inside two
+  // logical lines, and the old tint (`(line - 1) * 22 + 12 - scrollTop`) put the
+  // highlight one row too high for every wrapped line above the caret.
+  const METRICS = { lineHeight: 22, padTop: 12 };
+
+  it('defaults every logical line to one visual row before any measurement', () => {
+    const layout = lineVisualLayout('a\nb\nc');
+    expect(layout.lineCount).toBe(3);
+    expect(layout.rowCounts).toEqual([1, 1, 1]);
+    expect(layout.rowOffset).toEqual([0, 1, 2]);
+    expect(layout.totalRows).toBe(3);
+  });
+
+  it('counts logical lines exactly like the gutter (trailing newline included)', () => {
+    expect(lineVisualLayout('SELECT 1;\n').lineCount).toBe(gutterLineCount('SELECT 1;\n'));
+    expect(lineVisualLayout('').lineCount).toBe(1);
+  });
+
+  it('uses the MEASURED row counts, not one row per logical line', () => {
+    // Line 1 wrapped into 3 rows (a long VALUES tuple), line 3 into 2.
+    const layout = lineVisualLayout('a\nb\nc', [3, 1, 2]);
+    expect(layout.rowCounts).toEqual([3, 1, 2]);
+    expect(layout.rowOffset).toEqual([0, 3, 4]);
+    expect(layout.totalRows).toBe(6);
+  });
+
+  it('places the tint below every wrapped row above the caret (the E1 regression)', () => {
+    const layout = lineVisualLayout('a\nb', [3, 1]);
+    const tint = tintBox(layout, 2, METRICS, 0);
+    // Old math: 12 + (2 - 1) * 22 = 34 — one row short per wrapped line above.
+    expect(tint.top).toBe(12 + 3 * 22);
+    expect(tint.top).toBe(78);
+    expect(tint.top).not.toBe(34);
+  });
+
+  it('sizes the tint over ALL visual rows of the active line', () => {
+    const layout = lineVisualLayout('a\nb', [1, 2]);
+    expect(tintBox(layout, 2, METRICS, 0).height).toBe(44);
+    // A single-row line still gets exactly one row.
+    expect(tintBox(layout, 1, METRICS, 0).height).toBe(22);
+  });
+
+  it('keeps the tint locked to the text while scrolling', () => {
+    const layout = lineVisualLayout('a\nb', [3, 1]);
+    expect(tintBox(layout, 2, METRICS, 30)).toEqual({ top: 48, height: 22 });
+    expect(tintBox(layout, 1, METRICS, 30)).toEqual({ top: -18, height: 66 });
+  });
+
+  it('gives a wrapped line the gutter height of all its visual rows', () => {
+    const layout = lineVisualLayout('a\nb\nc', [1, 3, 2]);
+    expect(gutterRowHeights(layout, METRICS.lineHeight)).toEqual([22, 66, 44]);
+  });
+
+  it('degrades to the old one-row math instead of NaN on bad measurements', () => {
+    // Shorter than the document, non-numeric, negative, sub-1: all -> 1 row.
+    const layout = lineVisualLayout('a\nb\nc\nd', [2, Number.NaN, 0, -5]);
+    expect(layout.rowCounts).toEqual([2, 1, 1, 1]);
+    expect(layout.rowOffset).toEqual([0, 2, 3, 4]);
+    // Unmeasured document (empty array) is the pre-measure render.
+    expect(lineVisualLayout('a\nb', []).rowCounts).toEqual([1, 1]);
+  });
+
+  it('falls back to the pre-E1 geometry for an out-of-range active line', () => {
+    const layout = lineVisualLayout('a\nb', [1, 1]);
+    // A stale activeLine (5 on a 2-line doc) must not produce undefined/NaN.
+    expect(tintBox(layout, 5, METRICS, 0)).toEqual({ top: 12 + 4 * 22, height: 22 });
+    expect(tintBox(layout, 0, METRICS, 0)).toEqual({ top: 12, height: 22 });
+  });
+
+  it('takes the editor metrics as parameters (no hardcoded 22px grid)', () => {
+    const layout = lineVisualLayout('a\nb', [1, 2]);
+    const tint = tintBox(layout, 2, { lineHeight: 18, padTop: 8 }, 0);
+    expect(tint).toEqual({ top: 8 + 18, height: 36 });
   });
 });
 

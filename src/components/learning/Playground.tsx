@@ -217,7 +217,9 @@ export default function Playground({ onClose }: PlaygroundProps) {
     const source = typeof sqlToRun === 'string' ? sqlToRun : sql;
     if (!source.trim()) return;
     if (!execRef.current) {
-      execRef.current = new SqlExecutor(dbMode === 'scratch' ? (SCRATCH_DB as never) : undefined);
+      const ex = new SqlExecutor(dbMode === 'scratch' ? (SCRATCH_DB as never) : undefined);
+      ex.allowDdlOverwrite = true; // sandbox leniency: re-running DDL never errors
+      execRef.current = ex;
     }
     const exec = execRef.current;
     const statements = splitStatements(source);

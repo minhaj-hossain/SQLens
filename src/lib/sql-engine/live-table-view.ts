@@ -39,6 +39,17 @@ export interface LiveTableRows {
  * Callers in React should memoize on a per-run token; `getDatabaseState()`
  * deep-clones, so one read per Run & Check is enough.
  */
+export function readLiveDatabase(
+  getDatabaseState?: (() => DatabaseState) | null,
+): DatabaseState | null {
+  if (!getDatabaseState) return null;
+  try {
+    return getDatabaseState() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function readLiveTables(
   getDatabaseState?: (() => DatabaseState) | null,
 ): LiveTables {

@@ -14,12 +14,25 @@ interface SqlExecutorContextValue {
   resetDatabase: () => void;
   /** F1: live database snapshot for mutation-task state verification. */
   getDatabaseState: () => ReturnType<SqlExecutor['getDatabaseState']>;
+  /**
+   * Batch A: DURABLE snapshot (live minus uncommitted txn writes) — the ONLY
+   * view grading may use. The explorer keeps `getDatabaseState` (session).
+   */
+  getCommittedState: () => ReturnType<SqlExecutor['getCommittedState']>;
+  /** Batch B: session txn state for the dirty banner + submit gate. */
+  getTransactionState: () => ReturnType<SqlExecutor['getTransactionState']>;
 }
 
 const SqlExecutorContext = createContext<SqlExecutorContextValue | null>(null);
 
 export function SqlExecutorProvider({ children }: { children: React.ReactNode }) {
-  const executor = useMemo(() => new SqlExecutor(), []);
+  const executor = useMemo(() => {
+    const ex = new SqlExecutor();
+    // Sandbox leniency: learners can Run Code then Check Answer (or retry after
+    // a validation error) on DDL tasks without hitting "Table already exists".
+    ex.allowDdlOverwrite = true;
+    return ex;
+  }, []);
 
   const executeQuery = useCallback(
     (sql: string) => executor.executeQuery(sql),
@@ -37,9 +50,15 @@ export function SqlExecutorProvider({ children }: { children: React.ReactNode })
     [executor],
   );
 
+  // Batch A/B: committed snapshot + txn state are already bound in the
+  // executor constructor, so passing them by reference is safe.
+  const getCommittedState = useCallback(() => executor.getCommittedState(), [executor]);
+
+  const getTransactionState = useCallback(() => executor.getTransactionState(), [executor]);
+
   const value = useMemo(
-    () => ({ executeQuery, resetDatabase, getDatabaseState }),
-    [executeQuery, resetDatabase, getDatabaseState],
+    () => ({ executeQuery, resetDatabase, getDatabaseState, getCommittedState, getTransactionState }),
+    [executeQuery, resetDatabase, getDatabaseState, getCommittedState, getTransactionState],
   );
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { PracticeTask, Concept } from '../../types/curriculum';
-import { QueryExecutionResult, DatabaseState } from '../../types/database';
+import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
 import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
 import { TaskInstructions } from './TaskInstructions';
 import { DatabaseExplorer } from './DatabaseExplorer';
@@ -21,6 +21,10 @@ interface PracticeTaskViewProps {
   onExecuteSql: (sql: string) => QueryExecutionResult;
   /** F1: snapshot hook — mutation tasks grade by final database state. */
   getDatabaseState?: () => DatabaseState;
+  /** Batch A: durable snapshot — grading compares this, never the session view. */
+  getCommittedState?: () => DatabaseState;
+  /** Batch B: session txn state — drives the dirty banner. */
+  getTransactionState?: () => { status: TxnStatus; uncommittedChanges: number };
   /**
    * P0 FIX: idempotent retry for `fresh` tasks. The host (PracticeView) owns
    * resetDatabase; PracticeTaskView calls it at the START of submit so every
@@ -47,6 +51,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   savedSql,
   onExecuteSql,
   getDatabaseState,
+  getCommittedState,
+  getTransactionState,
   onResetDatabase,
   onTaskSuccess,
   onNextTask,
@@ -78,10 +84,20 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     setTaskPassed(isCompleted);
     setValidationMessage(null);
     attemptRef.current = 1;
+    if (task.setupSql) {
+      onExecuteSql(task.setupSql);
+    }
   }, [task.id]);
 
   // Run Preview (no grading / validation, purely executes and shows results)
   const handleRunPreview = (sqlToRun: string = currentSql) => {
+    const isDdl = /CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX/i.test(task.solutionSql || '');
+    if ((task.databaseLifecycle === 'fresh' || (isDdl && task.databaseLifecycle !== 'inherit')) && onResetDatabase) {
+      onResetDatabase();
+    }
+    if (task.setupSql) {
+      onExecuteSql(task.setupSql);
+    }
     const result = onExecuteSql(sqlToRun);
     setExecutionResult(result);
     return result;
@@ -102,13 +118,22 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       hooks: {
         execute: onExecuteSql,
         getDatabaseState,
+        getCommittedState,
+        getTransactionState,
         resetDatabase: onResetDatabase,
       },
       surface: 'lesson',
       // Phase 5: attempt count feeds telemetry only (never the verdict).
       attempt: attemptRef.current++,
     });
+    // Batch B: the preview grid shows what RAN even when grading is blocked —
+    // the verdict banner carries the open-txn warning, not an empty console.
     setExecutionResult(outcome.result);
+    if (outcome.txnBlocked) {
+      setTaskPassed(false);
+      setValidationMessage(outcome.feedback);
+      return;
+    }
 
     if (outcome.passed) {
       setTaskPassed(true);
@@ -133,6 +158,11 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       ? 'Next Concept'
       : 'Module Challenge'
     : 'Next Task';
+
+  // Batch B: txn pill reads the last execution result (session view). Open/failed
+  // means uncommitted work; none means durable. No extra executor call needed.
+  const txnStatus = executionResult?.txnStatus ?? 'none';
+  const uncommitted = executionResult?.uncommittedChanges ?? 0;
 
   const evaluationState =
     executionResult === null
@@ -187,6 +217,24 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
 
         {/* RIGHT COLUMN (Desktop): SQL Editor + Results Console */}
         <div className="flex flex-col gap-3.5 sm:gap-4 min-w-0 w-full">
+          {/* Batch B: session txn pill — Run shows the session outcome. Open/failed
+              means uncommitted work: Submit will refuse until COMMIT/ROLLBACK. */}
+          {txnStatus !== 'none' && (
+            <div
+              className={
+                txnStatus === 'failed'
+                  ? 'rounded-xl border border-error-border bg-error-bg px-3.5 py-2 font-mono text-[11.5px] text-error-text'
+                  : 'rounded-xl border border-border bg-surface px-3.5 py-2 font-mono text-[11.5px] text-text-dim'
+              }
+            >
+              {txnStatus === 'failed'
+                ? 'Transaction failed — only ROLLBACK; is legal now. COMMIT cannot save it.'
+                : uncommitted > 0
+                  ? 'TXN OPEN — ' + uncommitted + ' uncommitted change(s). Run COMMIT; or ROLLBACK; before checking.'
+                  : 'TXN OPEN — no durable writes yet. Run COMMIT; or ROLLBACK; before checking.'}
+            </div>
+          )}
+
           {/* Order 2 on Mobile: SQL Code Editor */}
           <div className="order-2 lg:order-1 min-w-0 w-full">
             <SQLEditor

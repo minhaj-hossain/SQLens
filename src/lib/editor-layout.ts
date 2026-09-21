@@ -48,6 +48,97 @@ export function toOverlayHtml(highlightedCode: string, value: string): string {
 }
 
 /**
+ * Batch E1 — visual-row geometry for the gutter, the overlay and the
+ * active-line tint.
+ *
+ * The editor layers are `white-space: pre-wrap` + `word-break`, so ONE logical
+ * line can occupy N visual rows (a long multi-row `VALUES` list wraps inside a
+ * single logical line). Anything that maps a logical line number to a y
+ * position must therefore consume MEASURED row counts: the old fixed-pixel tint
+ * (`(line - 1) * 22px`) drifted by one row per wrapped line above the caret,
+ * which is exactly why the highlight sat on the wrong row on long VALUES lists
+ * while the caret was correct.
+ *
+ * These helpers are pure so the geometry is unit-tested; the component supplies
+ * the measured row counts (a hidden mirror div with the textarea's metrics).
+ */
+export interface LineVisualLayout {
+  /** Logical lines — `value.split('\n').length`, same as `gutterLineCount`. */
+  lineCount: number;
+  /** Visual rows occupied by each logical line (always >= 1). */
+  rowCounts: number[];
+  /** Visual rows ABOVE each logical line; `rowOffset[0]` is always 0. */
+  rowOffset: number[];
+  /** Visual rows in the whole document. */
+  totalRows: number;
+}
+
+/** Metrics shared by the gutter, the overlay and the tint (`p-3`, `leading-[22px]`). */
+export interface EditorMetrics {
+  /** Computed `line-height` of the editor text, in px. */
+  lineHeight: number;
+  /** Computed top padding of the editor text (`p-3`), in px. */
+  padTop: number;
+}
+
+/**
+ * Zip logical lines with their MEASURED visual row counts.
+ *
+ * `measuredRows` may be shorter than the document (or empty before the first
+ * measurement): a missing / non-finite / sub-1 entry degrades to a single row,
+ * which is the old behaviour — never NaN geometry.
+ */
+export function lineVisualLayout(
+  value: string,
+  measuredRows: readonly number[] = [],
+): LineVisualLayout {
+  const rowCounts = value.split('\n').map((_, i) => {
+    const rows = measuredRows[i];
+    return typeof rows === 'number' && Number.isFinite(rows) && rows >= 1
+      ? Math.floor(rows)
+      : 1;
+  });
+  const rowOffset: number[] = new Array(rowCounts.length);
+  let acc = 0;
+  for (let i = 0; i < rowCounts.length; i++) {
+    rowOffset[i] = acc;
+    acc += rowCounts[i];
+  }
+  return { lineCount: rowCounts.length, rowCounts, rowOffset, totalRows: acc };
+}
+
+/**
+ * Gutter row heights. A wrapped line's number owns all of its visual rows, so
+ * the numbers stay beside the text they label instead of sliding up by one row
+ * per preceding wrapped line.
+ */
+export function gutterRowHeights(layout: LineVisualLayout, lineHeight: number): number[] {
+  return layout.rowCounts.map((rows) => rows * lineHeight);
+}
+
+/**
+ * The active-line tint box in editor coordinates, already scroll-corrected, so
+ * it can be rendered as `top` / `height` on an absolutely positioned div.
+ *
+ * Out-of-range lines (a stale `activeLine` after an external value swap) fall
+ * back to the pre-E1 one-row-per-line math rather than producing `undefined`.
+ */
+export function tintBox(
+  layout: LineVisualLayout,
+  line: number,
+  metrics: EditorMetrics,
+  scrollTop: number,
+): { top: number; height: number } {
+  const index = Math.max(1, Math.floor(line)) - 1;
+  const rowsAbove = layout.rowOffset[index] ?? index;
+  const rows = layout.rowCounts[index] ?? 1;
+  return {
+    top: metrics.padTop + rowsAbove * metrics.lineHeight - scrollTop,
+    height: rows * metrics.lineHeight,
+  };
+}
+
+/**
  * Keyboard contract for the suggestion dropdown.
  *
  * The list opens with the FIRST candidate already selected, so the contract

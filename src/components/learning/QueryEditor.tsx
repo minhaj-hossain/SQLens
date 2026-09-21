@@ -2,6 +2,7 @@
 
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -14,14 +15,20 @@ import { highlightSql } from '@/lib/highlight-sql';
 import { EDITOR_TEXT_STYLE } from '@/lib/editor-text-style';
 import {
   compactSuggestionsQuery,
+  EditorMetrics,
   gutterLineCount,
+  gutterRowHeights,
+  lineVisualLayout,
   resolveSuggestionKeyAction,
   shouldAutoOpenSuggestions,
   SUGGESTION_DEBOUNCE_MS,
   suggestionAnnouncement,
   suggestionDismissKey,
+  tintBox,
   toOverlayHtml,
 } from '@/lib/editor-layout';
+import { findMatchingBracket, highlightBracketPair } from '@/lib/editor-brackets';
+
 import { buildSuggestions, Suggestion, SuggestionContext, suggestionContext } from '@/lib/autocomplete';
 import {
   applyCompletion,
@@ -71,13 +78,31 @@ export interface QueryEditorProps {
   error?: string | null;
 }
 
-function measureCaret(
+/** Batch E1: fallback metrics when the computed style cannot be read. */
+const FALLBACK_LINE_HEIGHT = 22;
+const FALLBACK_PAD_TOP = 12;
+
+/**
+ * Hidden mirror div that lays plain text out with the TEXTAREA's exact metrics.
+ *
+ * Both layers share `EDITOR_TEXT_STYLE`, but the safest source of truth is the
+ * textarea's own computed style: it is what clicks and carets resolve against,
+ * so copying the whole layout-affecting set makes the mirror wrap exactly like
+ * the real editor at any font size / zoom / width.
+ *
+ * The mirror is the only way to know how many VISUAL rows a logical line
+ * occupies: the overlay is `pre-wrap` + `break-words`, so a long multi-row
+ * `VALUES` list wraps inside a single logical line, and any line-index ×
+ * line-height arithmetic drifts one row per wrapped line (Batch E1).
+ */
+function createTextMirror(
   textarea: HTMLTextAreaElement,
-  textUpToCaret: string,
-): { top: number; left: number } {
+  style: CSSStyleDeclaration = getComputedStyle(textarea),
+): HTMLDivElement {
   const div = document.createElement('div');
-  const style = getComputedStyle(textarea);
   div.style.position = 'absolute';
+  div.style.top = '0';
+  div.style.left = '0';
   div.style.visibility = 'hidden';
   div.style.pointerEvents = 'none';
   div.style.whiteSpace = style.whiteSpace;
@@ -97,6 +122,14 @@ function measureCaret(
   div.style.padding = style.padding;
   div.style.boxSizing = style.boxSizing;
   div.style.width = `${textarea.clientWidth}px`;
+  return div;
+}
+
+function measureCaret(
+  textarea: HTMLTextAreaElement,
+  textUpToCaret: string,
+): { top: number; left: number } {
+  const div = createTextMirror(textarea);
   div.textContent = textUpToCaret;
   const marker = document.createElement('span');
   marker.textContent = '\u200b';
@@ -107,6 +140,46 @@ function measureCaret(
   div.remove();
   return { top, left };
 }
+
+/**
+ * Batch E1 — one measurement pass per value/width change: how many visual rows
+ * each logical line occupies, plus the metrics those numbers were measured
+ * with. Gutter row heights AND the active-line tint both come from this, so the
+ * numbers, the tint and the text can never drift apart again.
+ */
+function measureEditorRows(
+  textarea: HTMLTextAreaElement,
+  value: string,
+): { rows: number[]; metrics: EditorMetrics } {
+  const lines = value.split('\n');
+  const style = getComputedStyle(textarea);
+  const metrics: EditorMetrics = {
+    lineHeight: parseFloat(style.lineHeight) || FALLBACK_LINE_HEIGHT,
+    padTop: parseFloat(style.paddingTop) || FALLBACK_PAD_TOP,
+  };
+  const parent = textarea.parentElement;
+  if (!parent) return { rows: lines.map(() => 1), metrics };
+
+  const mirror = createTextMirror(textarea, style);
+  const spans = lines.map((text, i) => {
+    const span = document.createElement('span');
+    // A zero-width space keeps an EMPTY line measurable: a span with no text
+    // has no line box, so it would report height 0 and its row would vanish
+    // from the layout (`tintBox` would then highlight the wrong row).
+    span.textContent = text === '' ? '\u200b' : text;
+    mirror.appendChild(span);
+    if (i < lines.length - 1) mirror.appendChild(document.createTextNode('\n'));
+    return span;
+  });
+  parent.appendChild(mirror);
+  // Reads only, after every write: one forced layout for the whole document.
+  const rows = spans.map((span) =>
+    Math.max(1, Math.round(span.getBoundingClientRect().height / metrics.lineHeight)),
+  );
+  mirror.remove();
+  return { rows, metrics };
+}
+
 
 function kindLabel(s: Suggestion): string {
   if (s.type === 'table') return 'TBL';
@@ -132,52 +205,6 @@ function sameSignature(a: SignatureParts | null, b: SignatureParts | null): bool
   return a.before === b.before && a.active === b.active && a.after === b.after;
 }
 
-function findMatchingBracket(
-  sql: string,
-  caret: number,
-): { open: number; close: number } | null {
-  if (!sql) return null;
-  let target = -1;
-  let isOpen = true;
-
-  if (sql[caret] === '(') {
-    target = caret;
-    isOpen = true;
-  } else if (caret > 0 && sql[caret - 1] === '(') {
-    target = caret - 1;
-    isOpen = true;
-  } else if (sql[caret] === ')') {
-    target = caret;
-    isOpen = false;
-  } else if (caret > 0 && sql[caret - 1] === ')') {
-    target = caret - 1;
-    isOpen = false;
-  }
-
-  if (target < 0) return null;
-
-  if (isOpen) {
-    let depth = 0;
-    for (let i = target; i < sql.length; i++) {
-      if (sql[i] === '(') depth++;
-      else if (sql[i] === ')') {
-        depth--;
-        if (depth === 0) return { open: target, close: i };
-      }
-    }
-  } else {
-    let depth = 0;
-    for (let i = target; i >= 0; i--) {
-      if (sql[i] === ')') depth++;
-      else if (sql[i] === '(') {
-        depth--;
-        if (depth === 0) return { open: i, close: target };
-      }
-    }
-  }
-  return null;
-}
-
 export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
   function QueryEditor(
     {
@@ -199,8 +226,20 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     ref,
   ) {
     const [activeLine, setActiveLine] = useState(1);
-    const [activeLineTintTop, setActiveLineTintTop] = useState(12);
     const [caretPos, setCaretPos] = useState(0);
+    /**
+     * Batch E1: MEASURED visual rows per logical line + the metrics they were
+     * measured with. Drives the gutter row heights AND the active-line tint, so
+     * both track soft wrap (`pre-wrap` + `break-words`) instead of assuming one
+     * 22px row per logical line.
+     */
+    const [lineRows, setLineRows] = useState<number[]>([]);
+    const [editorMetrics, setEditorMetrics] = useState<EditorMetrics>({
+      lineHeight: FALLBACK_LINE_HEIGHT,
+      padTop: FALLBACK_PAD_TOP,
+    });
+    /** Textarea scrollTop: the tint is positioned in editor space. */
+    const [editorScrollTop, setEditorScrollTop] = useState(0);
     const [inlineError, setInlineError] = useState<string | null>(null);
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [selectedIdx, setSelectedIdx] = useState(0);
@@ -238,6 +277,30 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     suggestionsRef.current = suggestions;
     selectedIdxRef.current = selectedIdx;
 
+    /**
+     * Batch E1 — re-measure the visual-row layout. Cheap enough for every value
+     * change (one hidden mirror, one layout pass) and REQUIRED on width changes:
+     * re-wrapping moves every line below it without `value` changing at all.
+     * Both state writes are reference-stable when the layout did not change, so
+     * a keystroke that re-wraps nothing never re-renders the gutter.
+     */
+    const syncEditorRows = useCallback(() => {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      const measured = measureEditorRows(ta, ta.value);
+      setEditorMetrics((prev) =>
+        prev.lineHeight === measured.metrics.lineHeight &&
+        prev.padTop === measured.metrics.padTop
+          ? prev
+          : measured.metrics,
+      );
+      setLineRows((prev) =>
+        prev.length === measured.rows.length && prev.every((r, i) => r === measured.rows[i])
+          ? prev
+          : measured.rows,
+      );
+    }, []);
+
     useEffect(() => { setMounted(true); }, []);
 
     // Batch 5 item 3: `matchMedia` (not a resize listener) so the chip bar also
@@ -265,10 +328,25 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         if (gutterRef.current) gutterRef.current.scrollTop = ta.scrollTop;
         const line = ta.value.slice(0, ta.selectionStart).split('\n').length;
         setActiveLine(line);
-        setActiveLineTintTop((line - 1) * 22 + 12 - ta.scrollTop);
+        setEditorScrollTop(ta.scrollTop);
+        // Batch E1: the row counts belong to THIS text — measure here so the
+        // tint and the gutter numbers never show the previous layout.
+        syncEditorRows();
       });
       return () => cancelAnimationFrame(id);
-    }, [value]);
+    }, [value, syncEditorRows]);
+
+    // Soft wrap depends on the CONTENT WIDTH, so a container resize (split-pane
+    // drag, sidebar toggle, viewport rotate, devtools dock) re-wraps long lines
+    // without `value` changing at all. Without this the gutter numbers and the
+    // tint keep the OLD wrap and drift away from the text.
+    useEffect(() => {
+      const ta = textareaRef.current;
+      if (!ta || typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(() => syncEditorRows());
+      observer.observe(ta);
+      return () => observer.disconnect();
+    }, [syncEditorRows]);
 
     useEffect(() => {
       setInlineError(error ?? null);
@@ -284,6 +362,19 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       [value, caretPos],
     );
 
+    // Batch E1: gutter row heights + the active-line tint come from ONE measured
+    // layout, so a soft-wrapped line keeps the tint, its gutter number and the
+    // text on the same visual rows.
+    const lineLayout = useMemo(() => lineVisualLayout(value, lineRows), [value, lineRows]);
+    const gutterHeights = useMemo(
+      () => gutterRowHeights(lineLayout, editorMetrics.lineHeight),
+      [lineLayout, editorMetrics.lineHeight],
+    );
+    const tint = useMemo(
+      () => tintBox(lineLayout, activeLine, editorMetrics, editorScrollTop),
+      [lineLayout, activeLine, editorMetrics, editorScrollTop],
+    );
+
     const highlightedCode = useMemo(() => {
       let code = value ? highlightSql(value) : '';
       if (!code) return '';
@@ -297,31 +388,11 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         );
       }
 
-      // Matching bracket glow/tint
-      if (matchedBracket) {
-        let count = 0;
-        let openParenIdx = 0;
-        for (let i = 0; i < matchedBracket.open; i++) {
-          if (value[i] === '(' || value[i] === ')') openParenIdx++;
-        }
-        let closeParenIdx = 0;
-        for (let i = 0; i < matchedBracket.close; i++) {
-          if (value[i] === '(' || value[i] === ')') closeParenIdx++;
-        }
-
-        code = code.replace(/<span class="text-code-punc">([()])<\/span>/g, (m, ch) => {
-          const isTarget =
-            (ch === '(' && count === openParenIdx) ||
-            (ch === ')' && count === closeParenIdx);
-          count++;
-          if (isTarget) {
-            return `<span class="text-func bg-func/25 rounded-xs ring-1 ring-func/60">${ch}</span>`;
-          }
-          return m;
-        });
-      }
-
-      return code;
+      // Matching bracket glow/tint (Batch E1: ordinal-addressed inside
+      // `highlightBracketPair`, so the pair is found by the same rule the
+      // matcher used — including across the newlines of a multi-row VALUES
+      // list, where the old character-counting pass landed on the wrong row).
+      return highlightBracketPair(code, value, matchedBracket);
     }, [value, parsedError, matchedBracket]);
 
     const computeMatches = (prefix: string, textBefore: string) =>
@@ -334,11 +405,22 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         historyBoost: liveHistoryBoost(),
       });
 
-    // Logical-line tint geometry lives here (Phase 4): the tint tracks the
-    // LOGICAL line (22px rows + 12px pad) minus scroll. Wrapped visual rows
-    // are handled by measuring the real caret (placeWidget) for the dropdown.
-    const lineToTintTop = (line: number, scrollTop: number) =>
-      (line - 1) * 22 + 12 - scrollTop;
+    // Logical-line tracking lives here (Batch E1). The tint's geometry is a
+    // separate concern: `tintBox` consumes the MEASURED visual-row layout, so a
+    // wrapped line keeps the tint on all of its visual rows instead of assuming
+    // one 22px row per logical line.
+    const updateLineFromCaret = (text: string, caret: number) => {
+      const ta = textareaRef.current;
+      const textBefore = text.slice(0, caret);
+      const line = textBefore.split('\n').length;
+      setActiveLine(line);
+      // Batch E1: `caretPos` (the bracket-pair input) used to be written only by
+      // the keystroke path, so arrow keys, clicks and drag-selections left it at
+      // the OLD offset and the glow kept highlighting the previous bracket.
+      // Every caret move lands here, so it is the right place to track it.
+      setCaretPos(caret);
+      setEditorScrollTop(ta ? ta.scrollTop : 0);
+    };
 
     const syncScroll = () => {
       const ta = textareaRef.current;
@@ -348,11 +430,10 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         highlightRef.current.scrollLeft = ta.scrollLeft;
       }
       if (gutterRef.current) gutterRef.current.scrollTop = ta.scrollTop;
-      // Re-sync line tint top when user scrolls
-      const caret = ta.selectionStart;
-      const textBefore = ta.value.slice(0, caret);
-      const line = textBefore.split('\n').length;
-      setActiveLineTintTop(lineToTintTop(line, ta.scrollTop));
+      // Batch E1: publish the scroll offset and let `tintBox` place the tint —
+      // the tint is a pure function of (measured rows, active line, scroll), so
+      // it can never disagree with the gutter about where a line starts.
+      setEditorScrollTop(ta.scrollTop);
       setScrollTick((t) => t + 1);
     };
 
@@ -372,16 +453,6 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
           : caretAbsTop + 20;
       const left = rect.left + Math.min(Math.max(pos.left, 8), Math.max(12, ta.clientWidth - 180));
       setCoords({ top, left });
-    };
-
-    const updateLineFromCaret = (text: string, caret: number) => {
-      const ta = textareaRef.current;
-      const textBefore = text.slice(0, caret);
-      const line = textBefore.split('\n').length;
-      setActiveLine(line);
-      // Compute tint top accounting for current scroll offset so it stays locked
-      const scrollTop = ta ? ta.scrollTop : 0;
-      setActiveLineTintTop(lineToTintTop(line, scrollTop));
     };
 
     /** Cancel a pending debounced suggestion pass. */
@@ -885,7 +956,11 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             {lines.map((ln) => (
               <div
                 key={ln}
-                className={`h-[22px] text-[11px] font-medium transition-colors ${
+                // Batch E1: a soft-wrapped line owns all of its visual rows, so
+                // the number stays beside the text it labels and the gutter keeps
+                // scrolling in step with the textarea.
+                style={{ height: `${gutterHeights[ln - 1] ?? editorMetrics.lineHeight}px` }}
+                className={`text-[11px] font-medium transition-colors ${
                   ln === activeLine
                     ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3'
                     : ''
@@ -897,11 +972,14 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
           </div>
 
           <div className="relative flex-1 self-stretch min-h-[180px] overflow-hidden">
-            {/* Active Line Tint — no transition so it snaps instantly like VS Code */}
+            {/* Active Line Tint — no transition so it snaps instantly like VS
+                Code. Batch E1: `tintBox` sizes it from the MEASURED visual rows
+                and the scroll offset, so it covers every wrapped row of the
+                active line instead of a fixed 22px at an assumed offset. */}
             <div
               aria-hidden="true"
               className="absolute left-0 right-0 pointer-events-none bg-func/[0.04] border-y border-func/10 z-0"
-              style={{ top: `${activeLineTintTop}px`, height: '22px' }}
+              style={{ top: `${tint.top}px`, height: `${tint.height}px` }}
             />
 
             <div

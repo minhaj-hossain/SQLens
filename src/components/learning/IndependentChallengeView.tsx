@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
-import { QueryExecutionResult, DatabaseState } from '../../types/database';
+import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
 import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
 import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
@@ -30,6 +30,10 @@ interface IndependentChallengeViewProps {
   onExecuteSql: (sql: string) => QueryExecutionResult;
   /** F1: snapshot hook — mutation tasks grade by final database state. */
   getDatabaseState?: () => DatabaseState;
+  /** Batch A: durable snapshot — grading compares this, never the session view. */
+  getCommittedState?: () => DatabaseState;
+  /** Batch B: session txn state — drives the dirty banner. */
+  getTransactionState?: () => { status: TxnStatus; uncommittedChanges: number };
   /**
    * P0 FIX (parity with PracticeTaskView): lets fresh-challenge retries reset
    * to seed at submit time so repeated Run & Check stays idempotent.
@@ -65,6 +69,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   savedTaskSqls = {},
   onExecuteSql,
   getDatabaseState,
+  getCommittedState,
+  getTransactionState,
   onResetDatabase,
   onChallengeTaskSuccess,
   onFinishAllChallenges,
@@ -211,13 +217,23 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       hooks: {
         execute: onExecuteSql,
         getDatabaseState,
+        getCommittedState,
+        getTransactionState,
         resetDatabase: onResetDatabase,
       },
       surface: 'challenge',
       // Phase 5: telemetry only — never affects the verdict.
       attempt: attemptRef.current++,
     });
+    // Batch B: the preview grid shows what RAN even when grading is blocked —
+    // the verdict banner carries the open-txn warning, not an empty console.
     setExecutionResult(outcome.result);
+
+    if (outcome.txnBlocked) {
+      setTaskPassed(false);
+      setValidationFeedback(outcome.feedback);
+      return;
+    }
 
     if (outcome.passed) {
       setTaskPassed(true);
