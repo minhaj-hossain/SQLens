@@ -68,12 +68,6 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   const rawTitle = (task.title || '').replace(/^Task\s+\d+:\s*/i, '').replace(/`/g, '').trim();
   const rawDesc = (task.description || '').replace(/`/g, '').trim();
   const taskStatement = rawDesc || rawTitle;
-  // Batch 1 (visible instructions): `task.instructions[]` was dead data — the
-  // grader enforced exact tuples that lived only there (tx-c1-t1's
-  // 'Flash Sale Mouse' tuple), while the headline said "one flash-sale
-  // product". Render the steps as a numbered checklist with backtick spans as
-  // code chips, so every enforced value is visible before the learner submits.
-  const steps = Array.isArray(task.instructions) ? task.instructions : [];
 
   return (
     <div
@@ -107,24 +101,6 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
         </h2>
       </div>
 
-      {/* Steps checklist — the instructions the grader enforces, visible by
-          default (Batch 1). Backtick spans render as code chips so exact
-          tuples/keywords stand out; plain prose renders as-is. */}
-      {steps.length > 0 && (
-        <ol
-          id="task-steps-checklist"
-          className="mb-1 space-y-1.5"
-          aria-label="Steps to complete this task"
-        >
-          {steps.map((step, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-[13px] sm:text-sm leading-relaxed min-w-0">
-              <span className="min-w-0 flex-1 text-text-dim">
-                <StepText text={step} />
-              </span>
-            </li>
-          ))}
-        </ol>
-      )}
 
       {/* Meta strip — TABLE / COLUMNS / EXPECTED ROWS (responsive chips on mobile, divided strip on desktop) */}
       <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 font-mono text-xs bg-surface-2 border border-border-soft rounded-lg p-2.5 sm:px-4 sm:py-2.5 min-w-0">
