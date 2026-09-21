@@ -69,6 +69,10 @@ function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'ch
     if (task.databaseLifecycle === 'fresh') exec.resetDatabase();
   }
 
+  if (task.setupSql) {
+    exec.executeQuery(task.setupSql);
+  }
+
   let result;
   try {
     result = exec.executeQuery(task.solutionSql);

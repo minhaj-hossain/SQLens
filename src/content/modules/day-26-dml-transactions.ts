@@ -538,6 +538,7 @@ export const Day_26_MODULE: ModuleData = {
           validation: {
             targetTable: 'products',
             expectFailure: true,
+            expectedErrorCategory: 'FOREIGN_KEY',
           },
           successMessage: 'The constraint fired exactly as designed - now roll the whole thing back.',
           databaseLifecycle: 'fresh',

@@ -258,7 +258,11 @@ export const Day_29_MODULE: ModuleData = {
           solutionSql: 'INSERT INTO wishlist_items (product_id, customer_id) VALUES (999, 1);',
           solutionExplanation: 'The FK fired: no product 999, so the insert is rejected. The relationship is enforced, not assumed.',
           hints: [{ level: 1, text: 'Run the INSERT exactly as written - the error is the expected result.' }],
-          validation: { targetTable: 'wishlist_items', expectFailure: true },
+          validation: {
+            targetTable: 'wishlist_items',
+            expectFailure: true,
+            expectedErrorCategory: 'FOREIGN_KEY',
+          },
           successMessage: 'The FK rejected the orphan - your Day 26 failure lab, now by design.',
           databaseLifecycle: 'inherit',
         },

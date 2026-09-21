@@ -1,5 +1,5 @@
 import { QueryExecutionResult } from '../../types/database';
-import { ValidationRule } from '../../types/curriculum';
+import { ValidationRule, ExpectedErrorCategory } from '../../types/curriculum';
 import { parseSql, ParsedOrderBy } from './parser';
 import { splitStatements } from './split-statements';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
@@ -348,13 +348,61 @@ export function validateTaskSolution(
   if (rule.expectFailure) {
     if (!result.success) {
       const err = result.error || '';
-      const isSyntaxErr = /syntax error|unexpected token|unrecognized token|cannot parse/i.test(err);
-      if (isSyntaxErr && !rule.expectedErrorPattern) {
-        return {
-          passed: false,
-          feedback: `Your query failed with a syntax error (${err}), but this lab requires a logical constraint failure (e.g. CHECK or FOREIGN KEY violation). Correct your SQL syntax to test the constraint.`,
-        };
+
+      // Check table target if rule.targetTable is specified
+      if (rule.targetTable) {
+        const targetRegex = new RegExp(`\\b${rule.targetTable}\\b`, 'i');
+        if (!targetRegex.test(cleanSql)) {
+          return {
+            passed: false,
+            feedback: `Your query does not target the expected table '${rule.targetTable}'. Make sure your statement operates on '${rule.targetTable}'.`,
+          };
+        }
       }
+
+      // Check if this error is an accidental syntax or parser failure
+      const isSyntaxOrEngineFault =
+        /syntax error|unexpected token|unrecognized token|cannot parse|unsupported or unparseable|invalid (insert|update|delete|select) syntax|empty (script|query)|table .* does not exist/i.test(
+          err,
+        );
+
+      // Verify category if specified
+      if (rule.expectedErrorCategory) {
+        const categoryMap: Record<ExpectedErrorCategory, { regex: RegExp; label: string }> = {
+          CHECK_CONSTRAINT: {
+            regex: /check constraint violated/i,
+            label: 'a CHECK constraint violation',
+          },
+          FOREIGN_KEY: {
+            regex: /foreign key constraint fails/i,
+            label: 'a FOREIGN KEY constraint violation',
+          },
+          NOT_NULL: {
+            regex: /not null constraint/i,
+            label: 'a NOT NULL constraint violation',
+          },
+          UNIQUE_CONSTRAINT: {
+            regex: /duplicate entry.*for unique/i,
+            label: 'a UNIQUE constraint violation',
+          },
+          TRANSACTION_STATE: {
+            regex: /transaction/i,
+            label: 'a transaction state error',
+          },
+        };
+
+        const cat = categoryMap[rule.expectedErrorCategory];
+        if (cat) {
+          if (!cat.regex.test(err)) {
+            return {
+              passed: false,
+              feedback: `Your query failed with: "${err}", but this lab specifically expects ${cat.label}. Correct any syntax typos or invalid column references and ensure your SQL triggers the required constraint.`,
+            };
+          }
+        }
+      }
+
+      // Verify explicit pattern if provided
       if (rule.expectedErrorPattern) {
         const pat =
           typeof rule.expectedErrorPattern === 'string'
@@ -367,6 +415,25 @@ export function validateTaskSolution(
           };
         }
       }
+
+      // If neither category nor pattern was defined, disallow generic syntax/engine faults
+      if (!rule.expectedErrorCategory && !rule.expectedErrorPattern) {
+        if (isSyntaxOrEngineFault) {
+          return {
+            passed: false,
+            feedback: `Your query failed with a syntax or table lookup error (${err}), but this lab requires a logical constraint failure (e.g. CHECK or FOREIGN KEY violation). Correct your SQL syntax to test the constraint.`,
+          };
+        }
+        const isRecognizedConstraint =
+          /constraint|duplicate entry|foreign key|check|not null/i.test(err);
+        if (!isRecognizedConstraint) {
+          return {
+            passed: false,
+            feedback: `Your query failed with "${err}", but did not trigger a recognized constraint failure. Correct your SQL to test the required constraint.`,
+          };
+        }
+      }
+
       return {
         passed: true,
         feedback: `The query failed as expected. Engine error: ${result.error}`,
@@ -374,7 +441,8 @@ export function validateTaskSolution(
     }
     return {
       passed: false,
-      feedback: 'This task expects the query to FAIL (e.g. a CHECK or foreign-key violation). Your query succeeded — try inserting a value that breaks a constraint.',
+      feedback:
+        'This task expects the query to FAIL (e.g. a CHECK or foreign-key violation). Your query succeeded — try inserting a value that breaks a constraint.',
     };
   }
 

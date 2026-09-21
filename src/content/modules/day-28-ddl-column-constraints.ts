@@ -509,7 +509,11 @@ export const Day_28_MODULE: ModuleData = {
         solutionSql: "INSERT INTO review_system (product_id, reviewer_name, score) VALUES (1, 'Cheater', 9);",
         solutionExplanation: 'The CHECK violation fired - score 9 can never exist in this table.',
         hints: [{ level: 1, text: 'Run the INSERT exactly as written - the error is the expected result.' }],
-        validation: { targetTable: 'review_system', expectFailure: true },
+        validation: {
+          targetTable: 'review_system',
+          expectFailure: true,
+          expectedErrorCategory: 'CHECK_CONSTRAINT',
+        },
         successMessage: 'The CHECK fired - your business rule is now enforced by the engine, not by hope.',
       },
     ],

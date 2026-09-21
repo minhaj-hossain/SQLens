@@ -125,4 +125,56 @@ describe('expectFailure validator rule', () => {
     );
     expect(outcome.passed).toBe(false);
   });
+
+  it('rejects a syntax error / typo even though it errored', () => {
+    const ex = fresh();
+    const typoSql = 'SELEC * FORM products;';
+    const result = ex.executeQuery(typoSql);
+    expect(result.success).toBe(false);
+    const outcome = validateTaskSolution(
+      typoSql,
+      result,
+      { targetTable: 'products', expectFailure: true, expectedErrorCategory: 'FOREIGN_KEY' }
+    );
+    expect(outcome.passed).toBe(false);
+    expect(outcome.feedback).toContain('specifically expects a FOREIGN KEY constraint violation');
+  });
+
+  it('rejects an error when targeting the wrong table', () => {
+    const ex = fresh();
+    const wrongTableSql = "INSERT INTO categories (name) VALUES ('Broken');";
+    const result = { success: false, error: 'Cannot add or update child row: a foreign key constraint fails', columns: [], rows: [], rowCount: 0, executionTimeMs: 1 };
+    const outcome = validateTaskSolution(
+      wrongTableSql,
+      result,
+      { targetTable: 'products', expectFailure: true }
+    );
+    expect(outcome.passed).toBe(false);
+    expect(outcome.feedback).toContain("does not target the expected table 'products'");
+  });
+
+  it('enforces expectedErrorCategory mismatch between CHECK and FOREIGN_KEY', () => {
+    const ex = fresh();
+    const result = ex.executeQuery(insert('X', 1, 999, 1)); // FK violation
+    expect(result.success).toBe(false);
+    const outcome = validateTaskSolution(
+      insert('X', 1, 999, 1),
+      result,
+      { targetTable: 'products', expectFailure: true, expectedErrorCategory: 'CHECK_CONSTRAINT' }
+    );
+    expect(outcome.passed).toBe(false);
+    expect(outcome.feedback).toContain('specifically expects a CHECK constraint violation');
+  });
+
+  it('passes when expectedErrorCategory matches', () => {
+    const ex = fresh();
+    const result = ex.executeQuery(insert('X', 1, 999, 1)); // FK violation
+    expect(result.success).toBe(false);
+    const outcome = validateTaskSolution(
+      insert('X', 1, 999, 1),
+      result,
+      { targetTable: 'products', expectFailure: true, expectedErrorCategory: 'FOREIGN_KEY' }
+    );
+    expect(outcome.passed).toBe(true);
+  });
 });

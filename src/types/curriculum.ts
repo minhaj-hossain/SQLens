@@ -27,6 +27,13 @@ export interface TaskHint {
   text: string;
 }
 
+export type ExpectedErrorCategory =
+  | 'CHECK_CONSTRAINT'
+  | 'FOREIGN_KEY'
+  | 'NOT_NULL'
+  | 'UNIQUE_CONSTRAINT'
+  | 'TRANSACTION_STATE';
+
 export interface ValidationRule {
   targetTable?: string;
   requiredColumns?: string[];
@@ -52,6 +59,8 @@ export interface ValidationRule {
    * constraint violation mid-transaction). Passes when the engine rejects it.
    */
   expectFailure?: boolean;
+  /** Expected constraint error category for failure labs. Prevents syntax typos from falsely passing. */
+  expectedErrorCategory?: ExpectedErrorCategory;
   /** Expected error pattern or category for failure labs. Prevents syntax typos from falsely passing. */
   expectedErrorPattern?: RegExp | string;
   expectedRowCount?: number | { min?: number; max?: number };
