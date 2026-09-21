@@ -11,6 +11,8 @@ export function splitStatements(sql: string): string[] {
   let current = '';
   let inString: string | null = null;
   let parenDepth = 0;
+  let beginBlockDepth = 0;
+  let caseDepth = 0;
   let hasNewlineSinceLastToken = false;
 
   for (let i = 0; i < sql.length; i++) {
@@ -43,7 +45,31 @@ export function splitStatements(sql: string): string[] {
       hasNewlineSinceLastToken = false;
       continue;
     }
-    if (ch === ';' && parenDepth === 0) {
+
+    // Word boundary check for block structures
+    const prevChar = i > 0 ? sql[i - 1] : ' ';
+    if (/[\s,;()]/.test(prevChar)) {
+      const remainingSlice = sql.slice(i);
+      const wordMatch = remainingSlice.match(/^([a-zA-Z_]\w*)\b/i);
+      if (wordMatch) {
+        const word = wordMatch[1].toUpperCase();
+        if (word === 'CASE') {
+          caseDepth++;
+        } else if (word === 'BEGIN') {
+          if (/CREATE\s+(?:OR\s+REPLACE\s+)?(?:PROCEDURE|FUNCTION|TRIGGER)\b/i.test(current)) {
+            beginBlockDepth++;
+          }
+        } else if (word === 'END') {
+          if (caseDepth > 0) {
+            caseDepth--;
+          } else if (beginBlockDepth > 0) {
+            beginBlockDepth--;
+          }
+        }
+      }
+    }
+
+    if (ch === ';' && parenDepth === 0 && beginBlockDepth === 0) {
       if (hasRealSql(current)) out.push(current.trim());
       current = '';
       hasNewlineSinceLastToken = false;
@@ -53,9 +79,13 @@ export function splitStatements(sql: string): string[] {
     // Lenient boundary detection: if parenDepth === 0, we're on a new line,
     // and a standalone transaction statement (COMMIT, ROLLBACK, BEGIN, START TRANSACTION)
     // starts here, split the preceding statement even if it lacked a trailing semicolon.
-    if (parenDepth === 0 && hasNewlineSinceLastToken && hasRealSql(current)) {
+    if (parenDepth === 0 && beginBlockDepth === 0 && hasNewlineSinceLastToken && hasRealSql(current)) {
       const remaining = sql.slice(i);
-      const match = remaining.match(/^(?:COMMIT|ROLLBACK|BEGIN|START\s+TRANSACTION)\b/i);
+      const isRoutineHeader = /CREATE\s+(?:OR\s+REPLACE\s+)?(?:PROCEDURE|FUNCTION|TRIGGER)\b/i.test(current);
+      const pattern = isRoutineHeader
+        ? /^(?:COMMIT|ROLLBACK|START\s+TRANSACTION)\b/i
+        : /^(?:COMMIT|ROLLBACK|BEGIN|START\s+TRANSACTION)\b/i;
+      const match = remaining.match(pattern);
       if (match) {
         out.push(current.trim());
         current = '';

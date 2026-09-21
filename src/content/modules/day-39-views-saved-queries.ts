@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 39 — Views: Saved Queries (id: day-39 — order 39)
@@ -32,7 +32,7 @@ export const Day_39_MODULE: ModuleData = {
       shortDescription: 'A view is a saved query with a name — not a copy of the data.',
       theory: {
         summary:
-          'Every time you write a long JOIN query for a report, you have to retype it. A view solves this: you write the query ONCE, give it a name, and from then on anyone can write SELECT * FROM that_name and get the same result. The data is NOT copied — the view just stores the instructions. Every time someone queries the view, the database runs the original query fresh.',
+          'A view saves a query under a name. Instead of retyping a complex JOIN every time, save it once as a view. The data is not copied — the view re-runs your query live each time someone queries it.',
         introTable: {
           tableName: 'products (sample)',
           description: 'The products table joined to suppliers is what we want to make reusable.',
@@ -67,7 +67,7 @@ export const Day_39_MODULE: ModuleData = {
           },
         ],
         keyTakeaway:
-          'A view is a saved query with a name. It stores the instructions, not a copy of the data. Every query against the view runs the original SELECT live.',
+          'A view is a saved query with a name. It stores instructions, not a copy of data, running the query fresh on every call.',
         exampleQuery:
           'CREATE VIEW v_expensive_products AS\n  SELECT product_id, name, price\n  FROM products\n  WHERE price > 30;',
         exampleQueryExplanation:
@@ -192,7 +192,8 @@ export const Day_39_MODULE: ModuleData = {
           description:
             'The view v_affordable_products was just created. Query it to get all product names and prices, sorted cheapest first.',
           instructions: [
-            'Write a SELECT that picks name and price from v_affordable_products',
+            'Keep the CREATE VIEW line at the top so the view exists in this run',
+            'Write a SELECT below it that picks name and price from v_affordable_products',
             'Sort the results by price ascending (cheapest first)',
           ],
           type: 'guided',

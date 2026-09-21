@@ -646,13 +646,15 @@ function parseColumnList(str: string): ParsedSelectColumn[] {
     }
 
     // Check alias AS or whitespace
-    const asMatch = cleanPart.match(/^([\s\S]+?)\s+(?:AS\s+)?([`"']?[\w_]+[`"']?)$/i);
+    const asMatch = cleanPart.match(/^([\s\S]+?)(?:\s+AS\s+([`"']?[\w_]+[`"']?)|\s+([`"']?[a-zA-Z_][\w_]*[`"']?))$/i);
     if (asMatch && !cleanPart.includes('(')) {
+      const alias = asMatch[2] || asMatch[3];
       col.expression = asMatch[1].trim().replace(/[`"']/g, '');
-      col.alias = asMatch[2].replace(/[`"']/g, '').trim();
-    } else if (asMatch && cleanPart.includes('(') && cleanPart.endsWith(asMatch[2])) {
+      col.alias = alias.replace(/[`"']/g, '').trim();
+    } else if (asMatch && cleanPart.includes('(') && cleanPart.endsWith(asMatch[2] || asMatch[3])) {
+      const alias = asMatch[2] || asMatch[3];
       col.expression = asMatch[1].trim();
-      col.alias = asMatch[2].replace(/[`"']/g, '').trim();
+      col.alias = alias.replace(/[`"']/g, '').trim();
     }
 
     // Check aggregates

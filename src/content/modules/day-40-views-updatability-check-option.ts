@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 40 — View Rules & Editable Views (id: day-40 — order 40)
@@ -120,7 +120,7 @@ export const Day_40_MODULE: ModuleData = {
             { level: 1, text: "After creating the view, write: UPDATE v_pending_orders SET status = 'shipped' WHERE order_id = 1;" },
             { level: 2, text: "UPDATE v_pending_orders SET status = 'shipped' WHERE order_id = 1;" },
           ],
-          validation: { requireView: true },
+          validation: { requireView: true, whereContainsTerms: ['UPDATE'] },
           successMessage: 'You just edited the real orders table through a view. Simple views are live portals into the real data.',
           databaseLifecycle: 'fresh',
         },
@@ -207,7 +207,7 @@ export const Day_40_MODULE: ModuleData = {
             { level: 1, text: 'Write the whole CREATE VIEW statement first, then add WITH CHECK OPTION on its own line at the very end.' },
             { level: 2, text: "CREATE VIEW v_active_customers AS SELECT customer_id, name, city FROM customers WHERE city = 'New York' WITH CHECK OPTION;" },
           ],
-          validation: { requireView: true, requireWhere: true },
+          validation: { requireView: true, requireWhere: true, whereContainsTerms: ['WITH CHECK OPTION'] },
           successMessage: 'The view is now protected. Any INSERT with a non-New York city will be blocked.',
           databaseLifecycle: 'fresh',
         },
@@ -233,7 +233,7 @@ export const Day_40_MODULE: ModuleData = {
             { level: 1, text: 'Remove the comment from the good insert line and run it.' },
             { level: 2, text: "INSERT INTO v_active_customers (customer_id, name, city, email, signup_date) VALUES (998, 'Alice NY', 'New York', null, '2024-01-01');" },
           ],
-          validation: { requireView: true },
+          validation: { requireView: true, whereContainsTerms: ['WITH CHECK OPTION'] },
           successMessage: 'The check option blocked the bad insert and allowed the valid one. Your view is self-enforcing!',
           databaseLifecycle: 'fresh',
         },
@@ -319,7 +319,7 @@ export const Day_40_MODULE: ModuleData = {
             { level: 1, text: 'Write CREATE OR REPLACE VIEW v_high_stock AS — then paste the new SELECT with the updated threshold.' },
             { level: 2, text: 'CREATE OR REPLACE VIEW v_high_stock AS SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock > 100;' },
           ],
-          validation: { requireView: true },
+          validation: { requireView: true, whereContainsTerms: ['OR REPLACE'] },
           successMessage: 'View definition updated in one step. No DROP, no data loss — just a clean replacement.',
           databaseLifecycle: 'fresh',
         },
@@ -355,7 +355,7 @@ export const Day_40_MODULE: ModuleData = {
           { level: 1, text: 'Add WITH CHECK OPTION on the line after WHERE quantity_in_stock < 10.' },
           { level: 2, text: 'CREATE VIEW v_low_stock AS SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock < 10 WITH CHECK OPTION;' },
         ],
-        validation: { requireView: true, requireWhere: true },
+        validation: { requireView: true, requireWhere: true, whereContainsTerms: ['WITH CHECK OPTION'] },
         successMessage: 'Low-stock view is now protected. Only genuinely low-stock items can be inserted through it.',
         databaseLifecycle: 'fresh',
       },
@@ -381,7 +381,7 @@ export const Day_40_MODULE: ModuleData = {
           { level: 1, text: 'Use CREATE OR REPLACE VIEW (not DROP + CREATE) to swap the definition.' },
           { level: 2, text: 'CREATE OR REPLACE VIEW v_low_stock AS SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock < 5 WITH CHECK OPTION;' },
         ],
-        validation: { requireView: true },
+        validation: { requireView: true, whereContainsTerms: ['OR REPLACE'] },
         successMessage: 'Threshold updated and protection preserved in a single clean statement!',
         databaseLifecycle: 'inherit',
       },

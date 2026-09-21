@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 42 — Navigating Trees & Management Chains (id: day-42 — order 42)
@@ -297,7 +297,7 @@ export const Day_42_MODULE: ModuleData = {
             { level: 1, text: "The path expression is: e.name || ' > ' || chain.path" },
             { level: 2, text: "WITH RECURSIVE chain AS (SELECT emp_id, name, manager_id, name AS path FROM employees WHERE emp_id = 4 UNION ALL SELECT e.emp_id, e.name, e.manager_id, e.name || ' > ' || chain.path FROM employees e JOIN chain ON e.emp_id = chain.manager_id) SELECT path FROM chain WHERE manager_id IS NULL;" },
           ],
-          validation: { requireRecursive: true },
+          validation: { requireRecursive: true, expectedRowCount: 1 },
           successMessage: '"Alice > Bob > Carol > Dave" — one row containing the full management chain as a readable breadcrumb.',
           databaseLifecycle: 'fresh',
         },

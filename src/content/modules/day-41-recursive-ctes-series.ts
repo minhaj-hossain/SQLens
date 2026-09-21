@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 41 — WITH RECURSIVE: Generating Sequences & Filling Gaps (id: day-41)
@@ -43,7 +43,6 @@ export const Day_41_MODULE: ModuleData = {
           '```sql\nWITH RECURSIVE counter AS (\n  SELECT 1 AS n          -- ANCHOR: start at 1\n  UNION ALL\n  SELECT n + 1 FROM counter WHERE n < 5  -- STEP: add 1 each time, stop at 5\n)\nSELECT n FROM counter;\n```',
           'QUESTION_BLOCK::BEFORE::In the query above, how many rows will counter produce?',
           'QUESTION_BLOCK::AFTER::Five rows: 1, 2, 3, 4, 5. When n reaches 5, the WHERE n < 5 condition becomes false and the loop stops.',
-          'The engine runs the anchor once (n=1), then runs the step using n=1 to get n=2, then n=3, n=4, n=5. At n=5, WHERE n < 5 is false — loop ends.',
           'Safety: the engine has a built-in limit of 100 iterations. A query that would loop forever (no stopping condition) is automatically cut off with an error.',
         ],
         introTable: {

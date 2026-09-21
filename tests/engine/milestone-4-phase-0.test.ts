@@ -27,6 +27,24 @@ describe('Phase 0: Engine & Tools Groundwork (Milestone 4 Foundations)', () => {
     expect(postDrop.success).toBe(false);
   });
 
+  it('supports CREATE OR REPLACE VIEW to update view definitions in place', () => {
+    const engine = new SqlExecutor();
+
+    const res1 = engine.executeQuery(
+      'CREATE VIEW v_stock AS SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock > 50;'
+    );
+    expect(res1.success).toBe(true);
+    const count1 = engine.executeQuery('SELECT * FROM v_stock;').rowCount;
+
+    const res2 = engine.executeQuery(
+      'CREATE OR REPLACE VIEW v_stock AS SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock > 100;'
+    );
+    expect(res2.success).toBe(true);
+    const count2 = engine.executeQuery('SELECT * FROM v_stock;').rowCount;
+
+    expect(count2).toBeLessThanOrEqual(count1);
+  });
+
   it('supports WITH RECURSIVE series generation with depth protection', () => {
     const engine = new SqlExecutor();
     

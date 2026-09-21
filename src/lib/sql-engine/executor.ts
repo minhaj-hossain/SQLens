@@ -1131,16 +1131,27 @@ export class SqlExecutor {
               break;
             }
 
+            // Standard SQL: recursive query columns align positionally with the anchor query columns
+            const stepCols = anchorRes.columns;
+            const mappedNextRows = nextRes.rows.map((row) => {
+              const rowVals = Object.values(row);
+              const mapped: Record<string, any> = {};
+              stepCols.forEach((colName, idx) => {
+                mapped[colName] = row[colName] !== undefined ? row[colName] : rowVals[idx];
+              });
+              return mapped;
+            });
+
             if (!isAll) {
               // UNION deduplication against already accumulated rows
               const seen = new Set(accumulatedRows.map((r) => JSON.stringify(r)));
-              const uniqueNext = nextRes.rows.filter((r) => !seen.has(JSON.stringify(r)));
+              const uniqueNext = mappedNextRows.filter((r) => !seen.has(JSON.stringify(r)));
               if (uniqueNext.length === 0) break;
               accumulatedRows.push(...uniqueNext);
               currentStepRows = uniqueNext;
             } else {
-              accumulatedRows.push(...nextRes.rows);
-              currentStepRows = nextRes.rows;
+              accumulatedRows.push(...mappedNextRows);
+              currentStepRows = mappedNextRows;
             }
           }
 
