@@ -52,6 +52,8 @@ export interface ValidationRule {
    * constraint violation mid-transaction). Passes when the engine rejects it.
    */
   expectFailure?: boolean;
+  /** Expected error pattern or category for failure labs. Prevents syntax typos from falsely passing. */
+  expectedErrorPattern?: RegExp | string;
   expectedRowCount?: number | { min?: number; max?: number };
   customValidator?: (queryAst: any, result: any, features?: any) => { valid: boolean; message?: string };
   /**
@@ -108,6 +110,8 @@ export interface PracticeTask {
    *   undefined (default) — current behavior: inherit within a concept/day.
    */
   databaseLifecycle?: 'fresh' | 'inherit';
+  /** Optional bootstrap SQL executed if prerequisite tables or rows are absent. */
+  setupSql?: string;
   dialect?: DialectId;
   matchPolicy?: DialectMatchPolicy;
   variants?: { mysql?: DialectVariant; postgres?: DialectVariant };

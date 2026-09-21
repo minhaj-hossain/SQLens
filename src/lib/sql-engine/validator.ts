@@ -347,6 +347,26 @@ export function validateTaskSolution(
   // the engine surfaced the failure — the learner then ROLLBACKs to feel atomicity.
   if (rule.expectFailure) {
     if (!result.success) {
+      const err = result.error || '';
+      const isSyntaxErr = /syntax error|unexpected token|unrecognized token|cannot parse/i.test(err);
+      if (isSyntaxErr && !rule.expectedErrorPattern) {
+        return {
+          passed: false,
+          feedback: `Your query failed with a syntax error (${err}), but this lab requires a logical constraint failure (e.g. CHECK or FOREIGN KEY violation). Correct your SQL syntax to test the constraint.`,
+        };
+      }
+      if (rule.expectedErrorPattern) {
+        const pat =
+          typeof rule.expectedErrorPattern === 'string'
+            ? new RegExp(rule.expectedErrorPattern, 'i')
+            : rule.expectedErrorPattern;
+        if (!pat.test(err)) {
+          return {
+            passed: false,
+            feedback: `The query failed with: "${err}", but did not trigger the expected constraint failure (${rule.expectedErrorPattern}). Ensure your SQL targets the required constraint.`,
+          };
+        }
+      }
       return {
         passed: true,
         feedback: `The query failed as expected. Engine error: ${result.error}`,

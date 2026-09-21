@@ -1,5 +1,6 @@
 import { SqlExecutor } from './executor';
 import { DatabaseState, TableRow } from '../../types/database';
+import { isDataPreservingTxnControlOnly } from './txn-expectation';
 
 /**
  * F1 (report.md §6 Rec 1): mutation/DDL task grading by FINAL DATABASE STATE.
@@ -139,6 +140,22 @@ export interface StateCompareOptions {
    * solution — enable only on tasks that teach types.
    */
   verifyTypes?: boolean;
+  /**
+   * Batch B follow-up: replay the reference INSIDE an open transaction, i.e. in
+   * the same context the learner was in. Day 26 chains inherit `BEGIN;` from the
+   * previous task, so a reference of `COMMIT;` (task 3) is legal there and
+   * "no transaction in progress" in a clean sandbox — which made an otherwise
+   * passing task report an inconclusive verdict. Only injected when the session
+   * really had a transaction open, so the comparison stays apples-to-apples.
+   */
+  ambientTxn?: boolean;
+  /**
+   * Batch B follow-up: compare the sandbox's SESSION view (what the learner
+   * sees, uncommitted writes included) instead of its durable view. Set for
+   * provisional tasks whose reference leaves the transaction open — otherwise
+   * the reference's own uncommitted rows would look like a mismatch.
+   */
+  provisional?: boolean;
 }
 
 /**
@@ -249,7 +266,21 @@ export function gradeFinalState(
   actualPostState: DatabaseState,
   options: StateCompareOptions = {},
 ): FinalStateVerdict {
+  // A reference made only of BEGIN / COMMIT cannot change the data: its expected
+  // state IS the pre-state. Short-circuiting here also keeps a `COMMIT;`
+  // reference legal (Day 26 task 3 only has a transaction because the learner
+  // inherited one) instead of erroring in a transaction-less sandbox.
+  if (isDataPreservingTxnControlOnly(solutionSql)) {
+    return compareFinalState(actualPostState, preState, options);
+  }
   const sandbox = new SqlExecutor(preState);
+  // The grading sandbox must allow DDL re-runs so that CREATE TABLE / CREATE INDEX
+  // solutions can be verified cleanly regardless of what the pre-state contains.
+  sandbox.allowDdlOverwrite = true;
+  // Batch B follow-up: an inherited open transaction is part of the exercise on
+  // Day 26 chains — replay the reference inside it so `COMMIT;` is legal and a
+  // bare `INSERT` stays provisional, exactly as it did for the learner.
+  if (options.ambientTxn) sandbox.execute('BEGIN;');
   const refResult = sandbox.execute(solutionSql);
   if (refResult.error) {
     // S3-11: the reference solution must run cleanly. It did not, so the task is
@@ -262,5 +293,10 @@ export function gradeFinalState(
     }
     return { ok: true, inconclusive: true, message };
   }
-  return compareFinalState(actualPostState, sandbox.getDatabaseState(), options);
+  // Provisional tasks are compared on the session view: the reference's own rows
+  // are uncommitted too, so its durable view would always look like "missing".
+  const sandboxState = options.provisional
+    ? sandbox.getDatabaseState()
+    : sandbox.getCommittedState();
+  return compareFinalState(actualPostState, sandboxState, options);
 }

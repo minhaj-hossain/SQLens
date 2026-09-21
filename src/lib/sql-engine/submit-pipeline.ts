@@ -1,8 +1,9 @@
-import { DatabaseState, QueryExecutionResult } from '../../types/database';
+import { DatabaseState, QueryExecutionResult, TxnStatus } from '../../types/database';
 import { ValidationRule } from '../../types/curriculum';
 import { validateTaskSolution, isReadOnlySelect, ValidationOutcome } from './validator';
-import { gradeFinalState, FinalStateVerdict } from './state-verification';
+import { gradeFinalState, FinalStateVerdict, StateCompareOptions } from './state-verification';
 import { GradingStage, GradingSurface, recordGradingEvent } from '../grading-telemetry';
+import { referenceTxnExpectation } from './txn-expectation';
 
 /**
  * Phase 3 (single grading pipeline) — the ONE place a submission is graded.
@@ -34,6 +35,7 @@ export interface SubmittableTask {
   solutionSql?: string;
   validation: ValidationRule;
   databaseLifecycle?: 'fresh' | 'inherit';
+  setupSql?: string;
 }
 
 /** Everything the pipeline needs from the host (provider / audit session). */
@@ -42,6 +44,18 @@ export interface SubmitHooks {
   execute: (sql: string) => QueryExecutionResult;
   /** Deep-cloning snapshot hook. Absent → state grading is skipped. */
   getDatabaseState?: () => DatabaseState;
+  /**
+   * Batch A/B: DURABLE snapshot hook (live minus uncommitted txn writes).
+   * State-graded tasks MUST grade against this; `getDatabaseState` stays the
+   * session view for the explorer. Absent → falls back to `getDatabaseState`
+   * (pre-Batch-A hosts, incl. old tests).
+   */
+  getCommittedState?: () => DatabaseState;
+  /**
+   * Batch B: session txn state for the open-transaction submit gate.
+   * Absent → the gate is skipped (same fallback as the committed snapshot).
+   */
+  getTransactionState?: () => { status: TxnStatus; uncommittedChanges: number };
   /** Reset to seed. Absent → `fresh` retries keep prior mutations. */
   resetDatabase?: () => void;
 }
@@ -71,6 +85,12 @@ export interface GradedVerdict extends ValidationOutcome {
   inconclusive?: boolean;
   /** Phase 1: columns whose values differed on a same-size mismatch. */
   diffColumns?: string[];
+  /**
+   * Batch B: the submit script left a transaction OPEN, so nothing was durable.
+   * Grading refused to run — the learner must COMMIT or ROLLBACK first.
+   * Never a pass; the UI shows the open-txn warning instead of a diff.
+   */
+  txnBlocked?: boolean;
 }
 
 export interface SubmitOutcome extends GradedVerdict {
@@ -100,8 +120,10 @@ export function gradeSubmission(input: {
   postState?: DatabaseState | null;
   /** Reference output for `requireExactResult` SELECT tasks. */
   expected?: QueryExecutionResult;
+  /** Extra final-state comparison options (Batch B: txn context). */
+  stateOptions?: StateCompareOptions;
 }): GradedVerdict {
-  const { task, sql, result, preState, postState, expected } = input;
+  const { task, sql, result, preState, postState, expected, stateOptions } = input;
 
   // Step 5: result-level validation (count / construct / dataset).
   const outcome = validateTaskSolution(sql, result, task.validation, expected);
@@ -157,19 +179,77 @@ export function gradeSubmission(input: {
  */
 export function runAndGradeSubmission(options: SubmitOptions): SubmitOutcome {
   const { task, sql, hooks, surface, attempt = 1, record = true } = options;
-  const { execute, getDatabaseState, resetDatabase } = hooks;
+  const { execute, getDatabaseState, getCommittedState, getTransactionState, resetDatabase } = hooks;
 
-  // Step 1: `fresh` tasks reset BEFORE the snapshot. Read-only SELECT tasks are
-  // exempt: their solutionSql never mutates, so a reset would only discard the
-  // learner's earlier work in an `inherit` concept.
-  const reset = task.databaseLifecycle === 'fresh' && isStateGraded(task);
+  // Step 1: `fresh` tasks reset BEFORE the snapshot. DDL tasks without explicit 'inherit'
+  // reset to seed so retries never accumulate duplicate definitions.
+  const isDdl = /CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX/i.test(task.solutionSql || '');
+  const reset = (task.databaseLifecycle === 'fresh' || (isDdl && task.databaseLifecycle !== 'inherit')) && isStateGraded(task);
   if (reset) resetDatabase?.();
+
+  // If task defines prerequisite setupSql (e.g. multi-stage capstone), bootstrap it
+  if (task.setupSql) {
+    execute(task.setupSql);
+  }
+
+  // Batch B: the transaction state the learner STARTS from decides what "open at
+  // submit" means. A `fresh` reset above closes any inherited transaction, while
+  // Day 26's `inherit` chains deliberately hand the next task an OPEN one (task 1
+  // teaches `BEGIN;`, task 2 fills it, task 3 commits) — there an open txn is the
+  // exercise, not a mistake, so a blanket gate would make the homework unpassable.
+  const txnBefore = getTransactionState?.();
+  const txnWasOpen = !!txnBefore && txnBefore.status !== 'none';
+  const expectation = referenceTxnExpectation(task.solutionSql, txnWasOpen);
 
   // Steps 2–4: pre/post snapshots are deep clones; the sandbox replay must never
   // observe the learner's own mutation.
   const preState = getDatabaseState?.();
   const result = execute(sql);
-  const postState = getDatabaseState?.();
+  const txnAfter = getTransactionState?.();
+
+  // Batch B gate: an OPEN (or FAILED) transaction means the script's writes are
+  // provisional. That is only a mistake when the task expects DURABILITY — i.e.
+  // when its own reference leaves the transaction boundary closed. The result grid
+  // still shows what RAN (session view); only the verdict is gated.
+  if (
+    txnAfter &&
+    txnAfter.status !== 'none' &&
+    isStateGraded(task) &&
+    expectation.expectsDurable &&
+    !result.error
+  ) {
+    const blocked: SubmitOutcome = {
+      passed: false,
+      feedback:
+        txnAfter.status === 'failed'
+          ? 'Your transaction has failed and must be rolled back. Run ROLLBACK; before retrying — COMMIT cannot save a failed transaction.'
+          : `You have an open transaction${txnAfter.uncommittedChanges > 0 ? ` with ${txnAfter.uncommittedChanges} uncommitted change(s)` : ''}. Run COMMIT; to make it durable (or ROLLBACK; to discard it) before checking.`,
+      stage: 'validation',
+      txnBlocked: true,
+      result,
+      reset,
+    };
+    if (record) {
+      recordGradingEvent({
+        taskId: task.id,
+        stage: blocked.stage,
+        surface,
+        validatorPassed: false,
+        affectedRows: result.affectedRows ?? result.rowCount,
+        attempt,
+      });
+    }
+    return blocked;
+  }
+
+  // Batch A/B: grade the DURABLE view for durability tasks (grading the session
+  // view would bless `BEGIN; INSERT;` as durable — the screenshot bug) and the
+  // SESSION view for provisional ones, where the reference's own rows are
+  // uncommitted too and its durable view would always look "missing".
+  const postState = expectation.expectsDurable
+    ? (getCommittedState ?? getDatabaseState)?.()
+    : (getDatabaseState ?? getCommittedState)?.();
+
 
   // Reference dataset for exact-result SELECT tasks — legal only for a
   // read-only solution, so computing it can't mutate the session database.
@@ -178,7 +258,21 @@ export function runAndGradeSubmission(options: SubmitOptions): SubmitOutcome {
       ? execute(task.solutionSql!)
       : undefined;
 
-  const verdict = gradeSubmission({ task, sql, result, preState, postState, expected });
+  const verdict = gradeSubmission({
+    task,
+    sql,
+    result,
+    preState,
+    postState,
+    expected,
+    // Batch B: replay the reference in the SAME transaction context the learner
+    // was in (a `COMMIT;` reference is only legal inside an inherited txn), and
+    // compare the sandbox's session view for provisional tasks.
+    stateOptions: {
+      ambientTxn: txnWasOpen && !expectation.opensTransaction,
+      provisional: !expectation.expectsDurable,
+    },
+  });
 
   // Step 7: telemetry is best-effort and must never break a submit.
   if (record) {

@@ -1,4 +1,4 @@
-import { DatabaseState, QueryExecutionResult, TableRow, ColumnDefinition, TableSchema } from '../../types/database';
+import { DatabaseState, QueryExecutionResult, TableRow, ColumnDefinition, TableSchema, TxnStatus } from '../../types/database';
 import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, ParsedCaseWhen, ParsedSelectColumn } from './parser';
 import { splitStatements } from './split-statements';
 import { INITIAL_TABLES } from '../../content/database/tables';
@@ -251,6 +251,13 @@ export class SqlExecutor {
   private db: DatabaseState;
   private transactionBackup: DatabaseState | null = null;
   private inTransaction: boolean = false;
+  /**
+   * Batch A (real transaction state machine): count of mutating statements
+   * applied while a txn is OPEN that are not yet durable. Cleared on
+   * COMMIT / ROLLBACK / reset. Drives the dirty banner + submit gate.
+   */
+  private uncommittedChanges = 0;
+  private txnFailed: boolean = false;
 
   /**
    * Runtime DDL state is part of the DATABASE STATE, not executor-local state.
@@ -283,6 +290,18 @@ export class SqlExecutor {
     return this.db.meta;
   }
 
+  /**
+   * Interactive learning sandbox setting: when true, re-running CREATE TABLE
+   * or CREATE INDEX overwrites the prior runtime table/index cleanly rather than
+   * failing with 'Table already exists'.
+   *
+   * Defaults to **false** (standard SQL behaviour) so unit tests get strict
+   * semantics.  The UI learning layer (`SqlExecutorProvider`) and the grading
+   * sandbox (`state-verification`) explicitly set this to `true` at construction
+   * time to give learners a resilient re-run experience.
+   */
+  public allowDdlOverwrite: boolean = false;
+
   constructor(initialDb?: DatabaseState) {
     if (initialDb) {
       this.db = JSON.parse(JSON.stringify(initialDb));
@@ -303,6 +322,8 @@ export class SqlExecutor {
     // is always safe.
     this.getDatabaseState = this.getDatabaseState.bind(this);
     this.resetDatabase = this.resetDatabase.bind(this);
+    this.getCommittedState = this.getCommittedState.bind(this);
+    this.getTransactionState = this.getTransactionState.bind(this);
   }
 
   /** PRIMARY KEY indexes are the seed state — one per table, on its PK column. */
@@ -328,6 +349,48 @@ export class SqlExecutor {
     return JSON.parse(JSON.stringify(this.db));
   }
 
+  /**
+   * Batch A: the DURABLE view — the BEGIN-time snapshot while a txn is OPEN,
+   * live state otherwise. Grading (`submit-pipeline`) and audit ladders MUST
+   * use this. The explorer keeps `getDatabaseState()` (session view) so
+   * learners see their own pending rows, labelled uncommitted.
+   *
+   * Why the backup and not a row-diff: UPDATE/DELETE mutate rows in place, so
+   * "strip N trailing rows" is only correct for pure-append INSERT chains.
+   * The BEGIN snapshot is exact for every mutation shape, including DDL.
+   */
+  public getCommittedState(): DatabaseState {
+    if (this.inTransaction && this.transactionBackup) {
+      return JSON.parse(JSON.stringify(this.transactionBackup));
+    }
+    return JSON.parse(JSON.stringify(this.db));
+  }
+
+  /**
+   * Batch A/B: session transaction state for the dirty banner + submit gate.
+   * `open` = BEGIN seen (writes uncommitted); `failed` = errored inside a txn
+   * (Postgres: only ROLLBACK is legal); `none` otherwise.
+   */
+  public getTransactionState(): {
+    status: TxnStatus;
+    uncommittedChanges: number;
+  } {
+    if (!this.inTransaction) return { status: 'none', uncommittedChanges: 0 };
+    // An open txn with no writes yet still blocks grading — `BEGIN; COMMIT;`
+    // must not pass a task that requires an INSERT.
+    return {
+      status: this.txnFailed ? 'failed' : 'open',
+      uncommittedChanges: this.uncommittedChanges,
+    };
+  }
+
+  /** Batch A: count a durable-affecting statement applied while a txn is OPEN. */
+  private trackMutation(affectedRows: number): void {
+    if (!this.inTransaction) return;
+    if (affectedRows > 0) this.uncommittedChanges += affectedRows;
+    else this.uncommittedChanges += 1;
+  }
+
   public resetDatabase(initialDb?: DatabaseState) {
     if (initialDb) {
       this.db = JSON.parse(JSON.stringify(initialDb));
@@ -339,6 +402,8 @@ export class SqlExecutor {
     }
     this.transactionBackup = null;
     this.inTransaction = false;
+    this.uncommittedChanges = 0;
+    this.txnFailed = false;
     // Re-seed the runtime registries into the fresh state (see the `indexes`
     // accessor): a reset DB must forget runtime tables' meta and custom indexes.
     this.db.indexes = this.seedIndexes();
@@ -398,7 +463,15 @@ export class SqlExecutor {
       let lastData: QueryExecutionResult | null = null;
       for (const stmt of statements) {
         const r = this.execute(stmt);
-        if (!r.success) return r;
+        // Batch A: a failed statement inside an OPEN txn poisons it (Postgres).
+        // Keep executing the rest of the script so COMMIT-after-error is
+        // itself graded, but remember the FIRST error for the final verdict —
+        // silently returning the COMMIT row would hide the real failure.
+        if (!r.success) {
+          if (this.inTransaction) this.txnFailed = true;
+          if (!last) last = r;
+          continue;
+        }
         last = r;
         // A transaction-control statement (BEGIN/COMMIT/ROLLBACK) carries no
         // data — when it closes the script, the meaningful outcome is the
@@ -408,6 +481,9 @@ export class SqlExecutor {
         if (!/^(BEGIN|COMMIT|ROLLBACK)\b/i.test(stmt.trim())) lastData = r;
       }
       const endControl = /^(BEGIN|COMMIT|ROLLBACK)\b/i.test(statements[statements.length - 1].trim());
+      // Batch A: the script errored mid-way — surface the FIRST error, not the
+      // trailing COMMIT row. `withTxn` already marked the txn FAILED.
+      if (last && !last.success) return this.withTxn({ ...last });
       if (
         endControl &&
         lastData &&
@@ -429,14 +505,14 @@ export class SqlExecutor {
     const parsed = parseSql(sql);
 
     if (parsed.error) {
-      return {
+      return this.withTxn({
         success: false,
         columns: [],
         rows: [],
         rowCount: 0,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         error: parsed.error,
-      };
+      });
     }
 
     try {
@@ -476,23 +552,23 @@ export class SqlExecutor {
         return this.executeSetOperation(parsed, startTime);
       }
 
-      return {
+      return this.withTxn({
         success: false,
         columns: [],
         rows: [],
         rowCount: 0,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         error: 'Unsupported statement type',
-      };
+      });
     } catch (err: any) {
-      return {
+      return this.withTxn({
         success: false,
         columns: [],
         rows: [],
         rowCount: 0,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         error: err.message || 'Execution error',
-      };
+      });
     }
   }
 
@@ -913,7 +989,13 @@ export class SqlExecutor {
       if (this.db.tables[tbl]) {
         // v2 DDL fix: re-creating an existing table is an error (mirrors
         // real SQL behavior). `IF NOT EXISTS` suppresses it silently.
-        if (!ifNotExists) {
+        // If allowDdlOverwrite is active (interactive sandbox default), drop and re-create cleanly.
+        if (this.allowDdlOverwrite) {
+          delete this.db.tables[tbl];
+          delete this.db.schemas[tbl];
+          delete this.tableMeta[tbl];
+          delete this.indexes[`primary:${tbl}`];
+        } else if (!ifNotExists) {
           return {
             success: false,
             columns: [],
@@ -922,14 +1004,15 @@ export class SqlExecutor {
             executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
             error: `Table '${tbl}' already exists. Use CREATE TABLE IF NOT EXISTS to ignore, or DROP TABLE first.`,
           };
+        } else {
+          return {
+            success: true,
+            columns: ['status'],
+            rows: [{ status: `Table '${tbl}' already exists (IF NOT EXISTS — no change)` }],
+            rowCount: 1,
+            executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          };
         }
-        return {
-          success: true,
-          columns: ['status'],
-          rows: [{ status: `Table '${tbl}' already exists (IF NOT EXISTS — no change)` }],
-          rowCount: 1,
-          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-        };
       }
       const bodyMatch = cmd.match(/\(([\s\S]+)\)\s*$/i);
       const body = bodyMatch ? bodyMatch[1] : '';
@@ -1075,14 +1158,18 @@ export class SqlExecutor {
         };
       }
       if (this.indexes[key]) {
-        return {
-          success: false,
-          columns: [],
-          rows: [],
-          rowCount: 0,
-          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-          error: `Duplicate key name '${name}' — an index with this name already exists.`,
-        };
+        if (this.allowDdlOverwrite) {
+          delete this.indexes[key];
+        } else {
+          return {
+            success: false,
+            columns: [],
+            rows: [],
+            rowCount: 0,
+            executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+            error: `Duplicate key name '${name}' — an index with this name already exists.`,
+          };
+        }
       }
       const colLower = col.split(' ')[0].toLowerCase();
       this.indexes[key] = { name, table: tbl, column: colLower, unique: !!createIndexMatch[1] };
@@ -1131,32 +1218,85 @@ export class SqlExecutor {
 
   private handleTransaction(parsed: ParsedSqlQuery, startTime: number): QueryExecutionResult {
     const cmd = parsed.transactionCommand;
+    const finish = (
+      base: Omit<QueryExecutionResult, 'txnStatus' | 'uncommittedChanges'>,
+    ): QueryExecutionResult => {
+      const state = this.getTransactionState();
+      return { ...base, txnStatus: state.status, uncommittedChanges: state.uncommittedChanges };
+    };
     if (cmd === 'BEGIN') {
+      if (this.inTransaction) {
+        return finish({
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: 'There is already a transaction in progress. COMMIT or ROLLBACK it before BEGIN.',
+        });
+      }
       this.inTransaction = true;
+      this.txnFailed = false;
+      this.uncommittedChanges = 0;
       // Phase 3: `db` now carries the runtime registries (meta/indexes), so one
       // backup snapshot restores tables, schemas, indexes AND DDL metadata —
       // the separate `indexBackup` field became redundant.
       this.transactionBackup = JSON.parse(JSON.stringify(this.db));
-      return {
+      return finish({
         success: true,
         columns: ['status'],
         rows: [{ status: 'Transaction started (atomicity active)' }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         transactionStatus: 'in_transaction',
-      };
+      });
     } else if (cmd === 'COMMIT') {
+      // Batch A (Postgres rule): a FAILED txn can only ROLLBACK. Accepting the
+      // COMMIT would silently discard the error and grade a broken txn as
+      // "committed".
+      if (this.txnFailed) {
+        return finish({
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: 'Current transaction has failed and must be rolled back. Run ROLLBACK; before retrying.',
+        });
+      }
+      if (!this.inTransaction) {
+        return finish({
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: 'There is no transaction in progress. COMMIT without BEGIN has no effect.',
+        });
+      }
       this.inTransaction = false;
+      this.txnFailed = false;
+      this.uncommittedChanges = 0;
       this.transactionBackup = null;
-      return {
+      return finish({
         success: true,
         columns: ['status'],
         rows: [{ status: 'Transaction committed successfully' }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         transactionStatus: 'committed',
-      };
+      });
     } else if (cmd === 'ROLLBACK') {
+      if (!this.inTransaction && !this.transactionBackup) {
+        return finish({
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: 'There is no transaction in progress. ROLLBACK without BEGIN has no effect.',
+        });
+      }
       // Phase 3: restoring `db` restores tables, schemas, indexes and DDL meta
       // in one step — the runtime registries now live inside the snapshot.
       if (this.transactionBackup) {
@@ -1164,14 +1304,16 @@ export class SqlExecutor {
         this.transactionBackup = null;
       }
       this.inTransaction = false;
-      return {
+      this.txnFailed = false;
+      this.uncommittedChanges = 0;
+      return finish({
         success: true,
         columns: ['status'],
         rows: [{ status: 'Transaction rolled back (changes reverted)' }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         transactionStatus: 'rolled_back',
-      };
+      });
     }
 
     return {
@@ -2301,16 +2443,20 @@ export class SqlExecutor {
     for (const row of resolved) {
       this.db.tables[table].push(row);
     }
+    // Batch A: durable-affecting write while a txn is OPEN — counted, not
+    // committed. `getCommittedState()` keeps returning the BEGIN snapshot
+    // until COMMIT; the explorer still shows the session rows as uncommitted.
+    this.trackMutation(resolved.length);
 
     const inserted = rowsToInsert.length;
-    return {
+    return this.withTxn({
       success: true,
       columns: ['status', 'affected_rows'],
       rows: [{ status: `Inserted ${inserted} row(s) successfully`, affected_rows: inserted }],
       rowCount: 1,
       affectedRows: inserted,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-    };
+    });
   }
 
   private executeUpdate(query: ParsedSqlQuery, startTime: number): QueryExecutionResult {
@@ -2335,14 +2481,19 @@ export class SqlExecutor {
       return row;
     });
 
-    return {
+    // Batch A: in-place mutation inside an OPEN txn is uncommitted by
+    // definition (the BEGIN snapshot in `getCommittedState()` still holds the
+    // pre-UPDATE values until COMMIT).
+    this.trackMutation(affected);
+
+    return this.withTxn({
       success: true,
       columns: ['status', 'affected_rows'],
       rows: [{ status: `Updated ${affected} row(s)`, affected_rows: affected }],
       rowCount: 1,
       affectedRows: affected,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-    };
+    });
   }
 
   /**
@@ -2425,13 +2576,30 @@ export class SqlExecutor {
 
     const affected = initialLen - this.db.tables[table].length;
 
-    return {
+    // Batch A: same as UPDATE — the BEGIN snapshot keeps the pre-DELETE rows
+    // until COMMIT, so this delete is uncommitted while the txn is OPEN.
+    this.trackMutation(affected);
+
+    return this.withTxn({
       success: true,
       columns: ['status', 'affected_rows'],
       rows: [{ status: `Deleted ${affected} row(s)`, affected_rows: affected }],
       rowCount: 1,
       affectedRows: affected,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-    };
+    });
+  }
+
+  /**
+   * Batch A: stamp every execution result with the session txn state, and mark
+   * the txn FAILED when a statement errors inside one (Postgres: only ROLLBACK
+   * is legal afterwards; COMMIT must refuse until then).
+   */
+  private withTxn(
+    base: Omit<QueryExecutionResult, 'txnStatus' | 'uncommittedChanges'>,
+  ): QueryExecutionResult {
+    if (!base.success && this.inTransaction) this.txnFailed = true;
+    const state = this.getTransactionState();
+    return { ...base, txnStatus: state.status, uncommittedChanges: state.uncommittedChanges };
   }
 }

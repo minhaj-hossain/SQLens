@@ -59,6 +59,8 @@ export interface SqlIndexDef {
   unique?: boolean;
 }
 
+export type TxnStatus = 'none' | 'open' | 'failed';
+
 export interface DatabaseState {
   tables: Record<string, TableRow[]>;
   schemas: Record<string, TableSchema>;
@@ -85,4 +87,16 @@ export interface QueryExecutionResult {
   error?: string;
   affectedRows?: number;
   transactionStatus?: 'in_transaction' | 'committed' | 'rolled_back' | 'none';
+  /**
+   * Batch A (real transaction state machine): session-level transaction state
+   * AFTER this statement. `'open'` = BEGIN seen, writes uncommitted;
+   * `'failed'` = statement errored inside a txn (Postgres: must ROLLBACK);
+   * `'none'` = no open transaction.
+   */
+  txnStatus?: TxnStatus;
+  /**
+   * Writes applied by this statement that are NOT yet durable (uncommitted).
+   * Drives the dirty banner + the "commit before checking" submit gate.
+   */
+  uncommittedChanges?: number;
 }
