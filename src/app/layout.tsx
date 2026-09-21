@@ -22,9 +22,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
-const TITLE = 'SQLens — Learn SQL by Doing, 38 Days Hands-On';
+const TITLE = 'SQLens — Learn SQL by Doing, 57 Days Hands-On';
 const DESCRIPTION =
-  'Master SQL in 38 Days through visual mental models, an interactive in-browser query engine, guided practice tasks and independent challenges. No setup required.';
+  'Master SQL in 57 Days through visual mental models, an interactive in-browser query engine, guided practice tasks and independent challenges. No setup required.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

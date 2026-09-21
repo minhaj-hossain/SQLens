@@ -328,7 +328,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
     <form className="flex flex-col gap-[18px]" onSubmit={handleSubmit} noValidate>
       <div>
         <h2 className="font-display font-semibold text-[22px] mb-1">Create your account</h2>
-        <p className="text-text-dim text-[13.5px] mb-1">Join 38 Days of hands-on SQL. No credit card, no excuses.</p>
+        <p className="text-text-dim text-[13.5px] mb-1">Join 57 Days of hands-on SQL. No credit card, no excuses.</p>
       </div>
       {/* 
       <OAuthButtons />

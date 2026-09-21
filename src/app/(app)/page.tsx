@@ -1,11 +1,11 @@
-﻿import RoadmapPage from '@/components/roadmap/RoadmapPage';
+import RoadmapPage from '@/components/roadmap/RoadmapPage';
 import { legacyNavigationToRoute, LegacySearchParams } from '@/lib/legacy-routes';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-  title: 'Learning Path — 38 Days of Hands-On SQL',
+  title: 'Learning Path — 57 Days of Hands-On SQL',
   description:
-    'Your visual roadmap through 38 Days of SQL: mental models, guided practice tasks and independent challenges in the in-browser query engine.',
+    'Your visual roadmap through 57 Days of SQL: mental models, guided practice tasks and independent challenges in the in-browser query engine.',
 };
 
 /**

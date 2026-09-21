@@ -163,7 +163,7 @@ export default function ResetProgressModal({
               <span className="text-text font-semibold block mb-1">
                 Full Curriculum Reset
               </span>
-              This will reset all 38 days, task submissions, and unlock times back to Day 1.
+              This will reset all 57 days, task submissions, and unlock times back to Day 1.
             </div>
           )}
 
