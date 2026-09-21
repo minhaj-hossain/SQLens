@@ -51,6 +51,10 @@ import { Day_47_MODULE } from './modules/day-47-encapsulation-lab';
 import { Day_48_MODULE } from './modules/day-48-milestone-4a-checkpoint';
 import { Day_49_MODULE } from './modules/day-49-isolation-concurrency';
 import { Day_50_MODULE } from './modules/day-50-locking-contention-deadlocks';
+import { Day_51_MODULE } from './modules/day-51-reading-query-plans';
+import { Day_52_MODULE } from './modules/day-52-composite-covering-indexes';
+import { Day_53_MODULE } from './modules/day-53-partitioning-deep-pagination';
+import { Day_54_MODULE } from './modules/day-54-json-semi-structured-data';
 
 /** Raw module definitions, in canonical day order (1-38). */
 const RAW_MODULES: ModuleData[] = [
@@ -104,6 +108,10 @@ const RAW_MODULES: ModuleData[] = [
   Day_48_MODULE,
   Day_49_MODULE,
   Day_50_MODULE,
+  Day_51_MODULE,
+  Day_52_MODULE,
+  Day_53_MODULE,
+  Day_54_MODULE,
 ];
 
 /**

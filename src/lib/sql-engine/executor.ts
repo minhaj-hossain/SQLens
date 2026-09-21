@@ -996,6 +996,28 @@ export class SqlExecutor {
         const truthy = cond === true || cond === 1 || String(cond).toLowerCase() === 'true';
         return truthy ? this.evaluateScalar(row, args[1]) : this.evaluateScalar(row, args[2]);
       }
+      case 'JSON_EXTRACT': {
+        const rawJson = this.evaluateScalar(row, args[0]);
+        const path = String(this.evaluateScalar(row, args[1]) ?? '').trim();
+        if (rawJson === null || rawJson === undefined) return null;
+        try {
+          const obj = typeof rawJson === 'object' ? rawJson : JSON.parse(String(rawJson));
+          const segments = path.replace(/^\$\.?/, '').split('.').filter(Boolean);
+          let cur: any = obj;
+          for (const seg of segments) {
+            if (cur === null || cur === undefined) return null;
+            cur = cur[seg];
+          }
+          return cur !== undefined ? (typeof cur === 'object' ? JSON.stringify(cur) : cur) : null;
+        } catch {
+          return null;
+        }
+      }
+      case 'JSON_UNQUOTE': {
+        const val = this.evaluateScalar(row, args[0]);
+        if (val === null || val === undefined) return null;
+        return String(val).replace(/^["']|["']$/g, '');
+      }
       case 'NOW':
       case 'CURDATE':
       case 'CURRENT_DATE': return SIMULATED_TODAY;
@@ -1081,7 +1103,7 @@ export class SqlExecutor {
         // actionable message — never silently evaluate to NULL. Typo'd names
         // (LENGHT) and out-of-dialect functions surface here.
         throw new Error(
-          `Unsupported function: ${name}(). This SQL dialect supports UPPER, LOWER, TRIM, LENGTH, CONCAT, SUBSTRING/SUBSTR, YEAR, MONTH, DAY, EXTRACT, DATEDIFF, DATE_SUB/DATE_ADD, COALESCE, IFNULL, NULLIF, IF, NOW/CURDATE, and aggregates COUNT/SUM/AVG/MIN/MAX.`
+          `Unsupported function: ${name}(). This SQL dialect supports UPPER, LOWER, TRIM, LENGTH, CONCAT, SUBSTRING/SUBSTR, YEAR, MONTH, DAY, EXTRACT, DATEDIFF, DATE_SUB/DATE_ADD, COALESCE, IFNULL, NULLIF, IF, NOW/CURDATE, JSON_EXTRACT, JSON_UNQUOTE, and aggregates COUNT/SUM/AVG/MIN/MAX.`
         );
       }
     }
@@ -1675,12 +1697,13 @@ export class SqlExecutor {
           };
         }
       }
-      const colLower = col.split(' ')[0].toLowerCase();
-      this.indexes[key] = { name, table: tbl, column: colLower, unique: !!createIndexMatch[1] };
+      const cols = col.split(',').map((c) => c.trim().split(/\s+/)[0].replace(/[`"']/g, '').toLowerCase()).filter(Boolean);
+      const colLower = cols[0] || '';
+      this.indexes[key] = { name, table: tbl, column: colLower, columns: cols, unique: !!createIndexMatch[1] };
       return {
         success: true,
         columns: ['status'],
-        rows: [{ status: `Index '${name}' created on ${tbl}(${colLower})` }],
+        rows: [{ status: `Index '${name}' created on ${tbl}(${cols.join(', ')})` }],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       };

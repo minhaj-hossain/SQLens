@@ -56,6 +56,7 @@ export interface SqlIndexDef {
   name: string;
   table: string;
   column: string;
+  columns?: string[];
   unique?: boolean;
 }
 

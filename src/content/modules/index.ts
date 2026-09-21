@@ -53,3 +53,7 @@ export { Day_47_MODULE } from './day-47-encapsulation-lab';
 export { Day_48_MODULE } from './day-48-milestone-4a-checkpoint';
 export { Day_49_MODULE } from './day-49-isolation-concurrency';
 export { Day_50_MODULE } from './day-50-locking-contention-deadlocks';
+export { Day_51_MODULE } from './day-51-reading-query-plans';
+export { Day_52_MODULE } from './day-52-composite-covering-indexes';
+export { Day_53_MODULE } from './day-53-partitioning-deep-pagination';
+export { Day_54_MODULE } from './day-54-json-semi-structured-data';
