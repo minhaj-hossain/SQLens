@@ -57,6 +57,54 @@ export const Day_37_MODULE: ModuleData = {
           '### How this works',
           'There is nothing to learn here - that is the point. This concept checks that the instincts built over Days 1-36 are still loaded. If any answer surprises you, the module named in the explanation is the one to revisit - before the timed tasks, not after.',
         ],
+        targetQuery: {
+          sql: 'SELECT name FROM customers WHERE email IS NULL;',
+          explanation: 'Finds customers who do not have an email address recorded by checking for IS NULL directly.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Inspect the customers table',
+            sqlSnippet: 'FROM customers',
+            explanation: 'Scan customer records where profile contact information may contain missing fields.',
+            tableData: {
+              tableName: 'customers',
+              columns: ['customer_id', 'name', 'email'],
+              rows: [
+                [1, 'Rafiul', 'rafiul@example.com'],
+                [2, 'Farhana', null],
+                [3, 'Tanvir', 'tanvir@example.com'],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Apply three-valued logic with IS NULL',
+            sqlSnippet: 'WHERE email IS NULL',
+            explanation: 'Never use = NULL because comparison with NULL yields UNKNOWN. The IS NULL operator explicitly tests for missing values.',
+            tableData: {
+              tableName: 'Filtered rows',
+              columns: ['customer_id', 'name', 'email'],
+              rows: [
+                [2, 'Farhana', null],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Project the matched customer names',
+            sqlSnippet: 'SELECT name',
+            explanation: 'Return the names of accounts requiring contact information follow-up.',
+            tableData: {
+              tableName: 'Output',
+              columns: ['name'],
+              rows: [
+                ['Farhana'],
+              ],
+            },
+          },
+        ],
         keyTakeaway: 'The interview traps are all mental-model checks: NULL poisons NOT IN, ties change rank behavior, COUNT(col) skips NULLs, and joins multiply rows.',
         exampleQuery: "SELECT name FROM customers WHERE email IS NULL;",
         exampleQueryExplanation: 'The IS NULL form from Day 3 - a reminder that NULL has its own comparison syntax, and that forgetting it is the root of most interview traps.',
@@ -119,6 +167,56 @@ export const Day_37_MODULE: ModuleData = {
         explanation: [
           '### Why interviewers love these',
           'Both are one-liners *if* your mental model is solid, and both fail loudly *if* it is not. That is exactly what a screening question is for. Solve them the way you would on a whiteboard: state the interpretation first ("second-highest distinct price"), then write the query.',
+        ],
+        targetQuery: {
+          sql: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);',
+          explanation: 'Filters products costing more than the catalog average price using an uncorrelated scalar subquery in the WHERE clause.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Compute the catalog average in a scalar subquery',
+            sqlSnippet: '(SELECT AVG(price) FROM products)',
+            explanation: 'The inner scalar subquery executes once to evaluate the average price across all products in the catalog.',
+            tableData: {
+              tableName: 'Scalar Subquery Result',
+              columns: ['AVG(price)'],
+              rows: [
+                [38.50],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Compare each product price against the scalar value',
+            sqlSnippet: 'WHERE price > (SELECT AVG(price) FROM products)',
+            explanation: 'In the WHERE stage, each row price is evaluated against the constant scalar benchmark computed in step 1.',
+            tableData: {
+              tableName: 'Candidate Products',
+              columns: ['name', 'price', 'Above 38.50?'],
+              rows: [
+                ['Wireless Mouse', 15.99, 'No'],
+                ['Mechanical Keyboard', 89.99, 'Yes'],
+                ['USB-C Hub', 24.99, 'No'],
+                ['Gaming Monitor', 249.99, 'Yes'],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Return products exceeding the threshold',
+            sqlSnippet: 'SELECT name, price FROM products ...',
+            explanation: 'Project the names and prices of the premium products exceeding the catalog-wide average.',
+            tableData: {
+              tableName: 'Output',
+              columns: ['name', 'price'],
+              rows: [
+                ['Mechanical Keyboard', 89.99],
+                ['Gaming Monitor', 249.99],
+              ],
+            },
+          },
         ],
         keyTakeaway: 'Second-highest = DISTINCT + ORDER BY + OFFSET; above-average = scalar subquery in WHERE. Interpretation first, SQL second.',
         exampleQuery: 'SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);',

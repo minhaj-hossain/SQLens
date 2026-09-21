@@ -493,6 +493,61 @@ export const Day_24_MODULE: ModuleData = {
           'When to use it: smoothing noisy series (moving averages), computing "spend over the last 90 days" per row, rolling totals that reset (e.g. trailing 7-day sums). When NOT to: if you just need "cumulative to date", the default frame already does that.',
           '⚠️ This is a PREVIEW, not a core requirement. If it feels like a lot, park it — Day 24\'s required skills are running totals and LAG/LEAD, which you have already mastered. Revisit frames when you meet them in real charts.',
         ],
+        targetQuery: {
+          sql: 'WITH monthly AS (SELECT MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY MONTH(o.order_date)) SELECT mon, revenue, AVG(revenue) OVER (ORDER BY mon ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS moving_avg_3 FROM monthly ORDER BY mon;',
+          explanation: 'Computes a 3-month trailing moving average for monthly revenue, smoothing spikes and dips.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Aggregate revenue into monthly buckets',
+            sqlSnippet: 'WITH monthly AS (SELECT MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY MONTH(o.order_date))',
+            explanation: 'Group transactions by month using a CTE to establish the sequential revenue baseline before applying window calculations.',
+            tableData: {
+              tableName: 'CTE monthly',
+              columns: ['mon', 'revenue'],
+              rows: [
+                [2, 89.99],
+                [3, 120.00],
+                [4, 24.99],
+                [5, 101.84],
+              ],
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Declare the sliding 3-row frame',
+            sqlSnippet: 'AVG(revenue) OVER (ORDER BY mon ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)',
+            explanation: 'Limit the window average calculation to the current month plus the two preceding months rather than all previous rows.',
+            tableData: {
+              tableName: 'Sliding Frame Scope',
+              columns: ['mon', 'frame window', 'average calculation'],
+              rows: [
+                [2, '[Feb]', '89.99 (1 month)'],
+                [3, '[Feb, Mar]', '(89.99 + 120.00) / 2 = 104.99'],
+                [4, '[Feb, Mar, Apr]', '(89.99 + 120.00 + 24.99) / 3 = 78.33'],
+                [5, '[Mar, Apr, May]', '(120.00 + 24.99 + 101.84) / 3 = 82.28'],
+              ],
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Project the moving average alongside actual revenue',
+            sqlSnippet: 'SELECT mon, revenue, moving_avg_3 FROM monthly ORDER BY mon;',
+            explanation: 'Display each month\'s actual revenue next to the smoothed 3-month moving average.',
+            tableData: {
+              tableName: 'Final Trend Output',
+              columns: ['mon', 'revenue', 'moving_avg_3'],
+              rows: [
+                [2, 89.99, 89.99],
+                [3, 120.00, 104.99],
+                [4, 24.99, 78.33],
+                [5, 101.84, 82.28],
+              ],
+            },
+          },
+        ],
         keyTakeaway:
           "A frame fixes HOW MANY rows a window function sees: `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` = a sliding 3-row window, the moving average. The default frame is 'everything up to now' — which is exactly why a running total grows. Optional, but now the mental model is yours.",
         exampleQuery:
