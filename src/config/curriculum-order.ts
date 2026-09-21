@@ -45,4 +45,24 @@ export const MODULE_CURRICULUM_ORDER: Record<string, { curriculumOrder: number; 
   'day-36': { curriculumOrder: 36, displayLabel: 'Day 36' }, // Final Assessment
   'day-37': { curriculumOrder: 37, displayLabel: 'Day 37' }, // Interview Gauntlet (timed)
   'day-38': { curriculumOrder: 38, displayLabel: 'Day 38' }, // Graduation & Portfolio
+  // ─── Milestone 4: Advanced Database Engineering (Days 39–57) ─────────────────
+  'day-39': { curriculumOrder: 39, displayLabel: 'Day 39' }, // Views & Saved Queries
+  'day-40': { curriculumOrder: 40, displayLabel: 'Day 40' }, // Views: Updatability & CHECK OPTION
+  'day-41': { curriculumOrder: 41, displayLabel: 'Day 41' }, // Recursive CTEs & Series
+  'day-42': { curriculumOrder: 42, displayLabel: 'Day 42' }, // Hierarchies & Graph Traversal
+  'day-43': { curriculumOrder: 43, displayLabel: 'Day 43' }, // Stored Functions
+  'day-44': { curriculumOrder: 44, displayLabel: 'Day 44' }, // Stored Procedures
+  'day-45': { curriculumOrder: 45, displayLabel: 'Day 45' }, // Procedural Control & Error Handling
+  'day-46': { curriculumOrder: 46, displayLabel: 'Day 46' }, // Triggers & Audit Logging
+  'day-47': { curriculumOrder: 47, displayLabel: 'Day 47' }, // Encapsulation Lab
+  'day-48': { curriculumOrder: 48, displayLabel: 'Day 48' }, // Milestone 4A Checkpoint
+  'day-49': { curriculumOrder: 49, displayLabel: 'Day 49' }, // Isolation & Concurrency
+  'day-50': { curriculumOrder: 50, displayLabel: 'Day 50' }, // Locking, Contention & Deadlocks
+  'day-51': { curriculumOrder: 51, displayLabel: 'Day 51' }, // Reading Query Plans (EXPLAIN)
+  'day-52': { curriculumOrder: 52, displayLabel: 'Day 52' }, // Composite & Covering Indexes
+  'day-53': { curriculumOrder: 53, displayLabel: 'Day 53' }, // Partitioning & Deep Pagination
+  'day-54': { curriculumOrder: 54, displayLabel: 'Day 54' }, // JSON & Semi-Structured Data
+  'day-55': { curriculumOrder: 55, displayLabel: 'Day 55' }, // Users, Roles & Least Privilege
+  'day-56': { curriculumOrder: 56, displayLabel: 'Day 56' }, // Migrations & Schema Evolution
+  'day-57': { curriculumOrder: 57, displayLabel: 'Day 57' }, // Production Capstone
 };
