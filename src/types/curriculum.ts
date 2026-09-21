@@ -54,6 +54,16 @@ export interface ValidationRule {
   requireFunction?: string;
   /** Require a top-level set operation: 'UNION', 'UNION ALL', or 'EXCEPT'. */
   requireSetOp?: 'UNION' | 'UNION ALL' | 'EXCEPT';
+  /** Require a CREATE [OR REPLACE] VIEW statement or querying a view. */
+  requireView?: boolean;
+  /** Require a CREATE TRIGGER statement. */
+  requireTrigger?: boolean;
+  /** Require a CREATE PROCEDURE or CALL statement. */
+  requireProcedure?: boolean;
+  /** Require a SAVEPOINT statement. */
+  requireSavepoint?: boolean;
+  /** Require a WITH RECURSIVE statement. */
+  requireRecursive?: boolean;
   /**
    * Deliberate-failure lab: the task REQUIRES the query to error (e.g. a
    * constraint violation mid-transaction). Passes when the engine rejects it.

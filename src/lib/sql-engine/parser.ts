@@ -68,7 +68,7 @@ export interface ParsedOrderBy {
 }
 
 export interface ParsedSqlQuery {
-  type: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'TRANSACTION' | 'CTE' | 'EXPLAIN' | 'DDL' | 'SET_OPERATION' | 'UNKNOWN';
+  type: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'TRANSACTION' | 'CTE' | 'EXPLAIN' | 'DDL' | 'SET_OPERATION' | 'ROUTINE' | 'TRIGGER' | 'UNKNOWN';
   raw: string;
   normalized: string;
   /** Set-operation kind (only for SET_OPERATION queries). */
@@ -93,14 +93,18 @@ export interface ParsedSqlQuery {
   updateTable?: string;
   updateSet?: Record<string, any>;
   deleteTable?: string;
-  transactionCommand?: 'BEGIN' | 'COMMIT' | 'ROLLBACK';
+  transactionCommand?: 'BEGIN' | 'COMMIT' | 'ROLLBACK' | 'SAVEPOINT' | 'ROLLBACK_TO_SAVEPOINT' | 'RELEASE_SAVEPOINT';
+  savepointName?: string;
   cteName?: string;
   cteQuery?: string;
   /** Chained CTE definitions (`WITH a AS (…), b AS (…) SELECT …`). */
   ctes?: { name: string; query: string }[];
+  isRecursiveCte?: boolean;
   mainQuery?: string;
   explainTarget?: string;
   ddlCommand?: string;
+  routineCommand?: string;
+  triggerCommand?: string;
   error?: string;
 }
 
@@ -159,24 +163,57 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     return { type: 'UNKNOWN', raw: rawSql, normalized: '', error: 'Empty query' };
   }
 
-  // Transaction keywords
+  // Transaction keywords & SAVEPOINT
   if (/^BEGIN(\s+TRANSACTION)?/i.test(sql) || /^START\s+TRANSACTION/i.test(sql)) {
     return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'BEGIN' };
   }
   if (/^COMMIT/i.test(sql)) {
     return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'COMMIT' };
   }
+  if (/^ROLLBACK\s+TO(\s+SAVEPOINT)?\s+([`"']?[\w_]+[`"']?)/i.test(sql)) {
+    const spMatch = sql.match(/^ROLLBACK\s+TO(\s+SAVEPOINT)?\s+([`"']?[\w_]+[`"']?)/i);
+    return {
+      type: 'TRANSACTION',
+      raw: rawSql,
+      normalized: sql,
+      transactionCommand: 'ROLLBACK_TO_SAVEPOINT',
+      savepointName: spMatch ? spMatch[2].replace(/[`"']/g, '').toLowerCase() : undefined,
+    };
+  }
+  if (/^RELEASE\s+SAVEPOINT\s+([`"']?[\w_]+[`"']?)/i.test(sql)) {
+    const spMatch = sql.match(/^RELEASE\s+SAVEPOINT\s+([`"']?[\w_]+[`"']?)/i);
+    return {
+      type: 'TRANSACTION',
+      raw: rawSql,
+      normalized: sql,
+      transactionCommand: 'RELEASE_SAVEPOINT',
+      savepointName: spMatch ? spMatch[1].replace(/[`"']/g, '').toLowerCase() : undefined,
+    };
+  }
+  if (/^SAVEPOINT\s+([`"']?[\w_]+[`"']?)/i.test(sql)) {
+    const spMatch = sql.match(/^SAVEPOINT\s+([`"']?[\w_]+[`"']?)/i);
+    return {
+      type: 'TRANSACTION',
+      raw: rawSql,
+      normalized: sql,
+      transactionCommand: 'SAVEPOINT',
+      savepointName: spMatch ? spMatch[1].replace(/[`"']/g, '').toLowerCase() : undefined,
+    };
+  }
   if (/^ROLLBACK/i.test(sql)) {
     return { type: 'TRANSACTION', raw: rawSql, normalized: sql, transactionCommand: 'ROLLBACK' };
   }
 
-  // CTE (WITH name AS (...) SELECT ...) — supports chained CTEs:
-  //   WITH a AS (...), b AS (...) SELECT ...
-  if (/^WITH\b/i.test(sql)) {
+  // CTE (WITH [RECURSIVE] name AS (...) SELECT ...) — supports chained CTEs:
+  //   WITH [RECURSIVE] a AS (...), b AS (...) SELECT ...
+  const withMatch = sql.match(/^WITH(\s+RECURSIVE)?\b/i);
+  if (withMatch) {
+    const isRecursive = !!withMatch[1];
+    const withPrefixLen = withMatch[0].length;
     const mainIdx = findMainSelectAfterWith(sql);
-    const cteSection = sql.slice(4, mainIdx).trim();
+    const cteSection = sql.slice(withPrefixLen, mainIdx).trim();
     const mainQuery = sql.slice(mainIdx).trim();
-    if (mainIdx > 4 && mainQuery && /AS\s*\(/i.test(cteSection)) {
+    if (mainIdx > withPrefixLen && mainQuery && /AS\s*\(/i.test(cteSection)) {
       const ctes: { name: string; query: string }[] = [];
       for (const def of splitFunctionArgs(cteSection)) {
         const m = def.match(/^\s*([a-zA-Z0-9_]+)\s+AS\s*\(([\s\S]+)\)\s*$/i);
@@ -191,6 +228,7 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
           cteName: first.name,
           cteQuery: first.query,
           ctes,
+          isRecursiveCte: isRecursive,
           mainQuery,
         };
       }
@@ -208,8 +246,28 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     };
   }
 
-  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX, DROP INDEX)
-  if (/^(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(UNIQUE\s+)?INDEX|DROP\s+INDEX)/i.test(sql)) {
+  // Routines (Stored Procedures & Functions) & CALL statements
+  if (/^(CREATE\s+(OR\s+REPLACE\s+)?(PROCEDURE|FUNCTION)|DROP\s+(PROCEDURE|FUNCTION)|CALL)\b/i.test(sql)) {
+    return {
+      type: 'ROUTINE',
+      raw: rawSql,
+      normalized: sql,
+      routineCommand: sql,
+    };
+  }
+
+  // Triggers (CREATE / DROP TRIGGER)
+  if (/^(CREATE\s+TRIGGER|DROP\s+TRIGGER)\b/i.test(sql)) {
+    return {
+      type: 'TRIGGER',
+      raw: rawSql,
+      normalized: sql,
+      triggerCommand: sql,
+    };
+  }
+
+  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX, DROP INDEX, CREATE/DROP VIEW)
+  if (/^(CREATE\s+(OR\s+REPLACE\s+)?VIEW|DROP\s+VIEW|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(UNIQUE\s+)?INDEX|DROP\s+INDEX)/i.test(sql)) {
     return {
       type: 'DDL',
       raw: rawSql,
@@ -920,7 +978,8 @@ export function parseCaseExpression(input: string): ParsedCaseWhen | null {
 function findMainSelectAfterWith(sql: string): number {
   let depth = 0;
   let opened = false;
-  for (let i = 4; i < sql.length - 6; i++) {
+  const startIdx = /^WITH\s+RECURSIVE\b/i.test(sql) ? 14 : 4;
+  for (let i = startIdx; i < sql.length - 6; i++) {
     const ch = sql[i];
     if (ch === '(') { depth++; opened = true; }
     else if (ch === ')') { depth--; }

@@ -41,3 +41,7 @@ export { Day_35_MODULE } from './day-35-zero-state-hardening';
 export { Day_36_MODULE } from './day-36-final-assessment';
 export { Day_37_MODULE } from './day-37-interview-gauntlet';
 export { Day_38_MODULE } from './day-38-graduation-portfolio';
+export { Day_39_MODULE } from './day-39-views-saved-queries';
+export { Day_40_MODULE } from './day-40-views-updatability-check-option';
+export { Day_41_MODULE } from './day-41-recursive-ctes-series';
+export { Day_42_MODULE } from './day-42-hierarchies-graph-traversal';

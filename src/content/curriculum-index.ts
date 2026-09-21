@@ -39,6 +39,10 @@ import { Day_35_MODULE } from './modules/day-35-zero-state-hardening';
 import { Day_36_MODULE } from './modules/day-36-final-assessment';
 import { Day_37_MODULE } from './modules/day-37-interview-gauntlet';
 import { Day_38_MODULE } from './modules/day-38-graduation-portfolio';
+import { Day_39_MODULE } from './modules/day-39-views-saved-queries';
+import { Day_40_MODULE } from './modules/day-40-views-updatability-check-option';
+import { Day_41_MODULE } from './modules/day-41-recursive-ctes-series';
+import { Day_42_MODULE } from './modules/day-42-hierarchies-graph-traversal';
 
 /** Raw module definitions, in canonical day order (1-38). */
 const RAW_MODULES: ModuleData[] = [
@@ -80,6 +84,10 @@ const RAW_MODULES: ModuleData[] = [
   Day_36_MODULE,
   Day_37_MODULE,
   Day_38_MODULE,
+  Day_39_MODULE,
+  Day_40_MODULE,
+  Day_41_MODULE,
+  Day_42_MODULE,
 ];
 
 /**
@@ -112,3 +120,5 @@ export function getModuleByDay(day: number): ModuleData | undefined {
 export function getModuleByOrder(order: number): ModuleData | undefined {
   return ALL_MODULES.find(m => (m.curriculumOrder ?? m.day) === order);
 }
+
+

@@ -76,6 +76,23 @@ export interface DatabaseState {
    * from the schemas' PRIMARY KEYs.
    */
   indexes?: Record<string, SqlIndexDef>;
+  /**
+   * Runtime view registry, keyed by lowercase view name.
+   * Stores the view's defined SELECT query and options (e.g. checkOption).
+   */
+  views?: Record<string, { name: string; query: string; checkOption?: boolean; isUpdatable?: boolean }>;
+  /**
+   * Stored procedures / functions registry, keyed by lowercase routine name.
+   */
+  routines?: Record<string, { name: string; type: 'FUNCTION' | 'PROCEDURE'; params: string[]; body: string; returnType?: string }>;
+  /**
+   * Trigger registry, keyed by lowercase trigger name.
+   */
+  triggers?: Record<string, { name: string; timing: 'BEFORE' | 'AFTER'; event: 'INSERT' | 'UPDATE' | 'DELETE'; table: string; body: string }>;
+  /**
+   * Active savepoint snapshots for partial rollback.
+   */
+  savepoints?: Record<string, DatabaseState>;
 }
 
 export interface QueryExecutionResult {

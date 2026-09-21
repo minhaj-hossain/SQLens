@@ -693,6 +693,27 @@ export function validateTaskSolution(
     failConstruct(`This task requires combining two result sets with a top-level ${rule.requireSetOp} operator (e.g. SELECT … ${rule.requireSetOp} SELECT …).`);
   }
 
+  // 7.8 Milestone 4 construct checks
+  if (rule.requireView && !/\bVIEW\b/i.test(structural)) {
+    failConstruct(`This task requires creating or querying a VIEW (e.g. CREATE VIEW ... AS ...).`);
+  }
+
+  if (rule.requireTrigger && !/\bTRIGGER\b/i.test(structural)) {
+    failConstruct(`This task requires creating an event trigger (CREATE TRIGGER ...).`);
+  }
+
+  if (rule.requireProcedure && !/\b(PROCEDURE|CALL)\b/i.test(structural)) {
+    failConstruct(`This task requires creating or invoking a stored procedure (CREATE PROCEDURE or CALL ...).`);
+  }
+
+  if (rule.requireSavepoint && !/\bSAVEPOINT\b/i.test(structural)) {
+    failConstruct(`This task requires setting or rolling back to a SAVEPOINT.`);
+  }
+
+  if (rule.requireRecursive && !/\bWITH\s+RECURSIVE\b/i.test(structural)) {
+    failConstruct(`This task requires a recursive CTE using WITH RECURSIVE.`);
+  }
+
   // 8. Check LIMIT (S2-5: the feature set sees CTE / set-op / nested LIMITs)
   if (rule.requireLimit !== undefined) {
     const requiredLimit =
