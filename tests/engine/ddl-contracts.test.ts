@@ -142,8 +142,8 @@ describe('DDL column contract (Workstream A)', () => {
         record: false,
       });
       expect(out.passed).toBe(false);
-      expect(out.feedback).toMatch(/was declared NUMBER/);
-      expect(out.feedback).toMatch(/requires STRING/);
+      expect(out.feedback).toMatch(/was declared as a number type/);
+      expect(out.feedback).toMatch(/requires a text type/);
     });
   });
 });

@@ -53,18 +53,56 @@
     created columns) — outside the A blocking scope; consider extending
     `BLOCKING_DAYS` after a Day 33+ content pass.
 
-## B — Datatype grading (engine) ⬜ NOT STARTED
+## B — Datatype grading (engine) ✅
 
-Planned (from the audit plan):
-- [ ] Canonical `DATA_TYPE_KINDS` map in `executor.parseColumnDefs` — unknown
-  type → named error with suggestion (today `VARCHR(20)` silently becomes
-  `string`; `INTEGER` falls through to `string` because `'INTEGER'.includes('INT')`
-  is false — reproduce & fix).
-- [ ] Missing datatype → error (`CREATE TABLE t (id)` currently defaults to
-  TEXT silently).
-- [ ] Enable/wire `verifyColumnTypes` coverage guarantees + audit hook for
-  justification comments (policy already allows 27-29).
-- [ ] Tests: missing-type, typo-type, INT→VARCHAR rejected, VARCHAR(50)≡VARCHAR(200).
+- [x] **B1** Canonical registry `src/lib/sql-engine/sql-type-registry.ts` —
+  32 base types → 5 internal kinds, exact match on the base word, with
+  Levenshtein ≤ 2 "did you mean" suggestions. Replaces the old prefix chain
+  `sqlTypeToDataType` whose `return 'string'` catch-all silently accepted any
+  typo (`VARCHR(20)` became a string column).
+- [x] **B2** Missing/unknown types are now NAMED errors on both the CREATE and
+  the ALTER paths (plus empty column lists):
+  - `Column 'id' needs a data type (e.g. id INT, id VARCHAR(50)).`
+  - `Unknown data type 'VARCHR(20)' for column 'id' — did you mean 'VARCHAR'? (supported: … see docs/DIALECT.md §5).`
+  - `CREATE TABLE needs a column list (e.g. CREATE TABLE t (id INT));`
+- [x] **B3** `verifyColumnTypes` was already wired end-to-end (used since A);
+  failure messages upgraded from engine jargon to learner labels via
+  `describeSqlKind`: `was declared as a number type (INT), but this task
+  requires a text type (VARCHAR/TEXT).`
+- [x] **B4** Phantom-column fix found during B: table-level
+  `PRIMARY KEY (…)` / `FOREIGN KEY …` / `UNIQUE (…)` were misparsed as columns
+  named `PRIMARY`/`FOREIGN`/… (type token `KEY` → string), polluting the
+  explorer and state diffs. Column parsing is now shape-gated (constraint
+  metadata still registers); quoted identifiers and `key TEXT`-style columns
+  still parse as columns.
+- [x] **B5** Tests `tests/engine/ddl-types.test.ts` — 13 tests: registry units,
+  typo suggestions, CREATE/ALTER missing+unknown errors, kind mapping across
+  all 5 families, no-phantom-columns (metadata kept), learner-facing
+  verifyColumnTypes message, kind-equality (precision) case.
+- [x] **B6** DIALECT §5 "Column type registry" section — normative table,
+  error contracts, and the rule "amend registry + table together".
+- [x] **B7** Acceptance (2026-09-23) — **zero regressions**:
+  - ✅ `tsc` · vitest **572/572** (559 + 13 new) · `test:engine` 46/46 ·
+    `test:db-lifecycle` · `verify:curriculum` (identical baseline output) ·
+    `audit:ddl-contracts` 0 blocking · `audit:keyword-case` 0 ·
+    `audit:equivalence` 28/28 · `audit:equivalence:tasks` 0 ·
+    `audit:custom-validators` 17/17 · `audit-all-tasks` **423/424** (same
+    pre-existing Day-45 lab) · `audit:grading-pipeline` **6 findings =
+    baseline byte-for-byte** (Day 42 ×4, Day 54 ×2) · grading-policy /
+    taught-before-tested untouched (B changes no curriculum content).
+  - Probe-driven whitelist: a temporary collector enumerated every executable
+    type token first (INT/INTEGER/VARCHAR/DECIMAL/DATE/DATETIME/BOOLEAN/TEXT
+    are the real set; NUMERIC/FLOAT/DOUBLE/REAL/CHAR/ENUM/JSON/SERIAL also
+    whitelisted), so no passing task could regress.
+
+**CORRECTIONS to the original audit plan — both claims came from truncated
+reads and were WRONG:**
+- `INTEGER` was ALWAYS fine — the old regex `^(INT|…)` matches `INTEGER`
+  (it literally starts with `INT`). It is whitelisted and tested anyway.
+- Missing types were NOT defaulted to `TEXT` — the old parser silently
+  **dropped the whole column definition** (`if (!colMatch) continue`), so
+  `CREATE TABLE t (id, name VARCHAR(5))` lost `id` entirely. Both old
+  behaviors are named errors now.
 
 ## C — Keyword / highlight / format / autocomplete parity ⬜ NOT STARTED
 
@@ -99,10 +137,14 @@ Planned (from the audit plan):
   no answers).
 - [ ] Explorer "expected schema" panel sourced from `requiredColumns`.
 
-## Known engine quirks surfaced during the audit (parked for B)
+## Known tooling quirks surfaced during the audits (parked)
 
-- `INTEGER` type normalizes to `string` (no `INT` substring) — `executor.ts`.
-- `VARCHAR`-family typos fall through to `string` with no error.
-- Ranged `read_files` (start_line/end_line) returned placeholder content in
-  this repo's tooling; PowerShell `Get-Content -Skip/-First` used instead —
-  note for future audits.
+- ~~`INTEGER` → `string`~~ / ~~VARCHAR typos silently accepted~~ — **fixed in
+  B** (the INTEGER half was a misdiagnosis; see B corrections above).
+- Ranged `read_files` (start_line/end_line) returns placeholder content in
+  this tooling. PowerShell `Get-Content` slices work but intermittently return
+  empty/lost output at high offsets. Fallbacks that worked: `Select-String`
+  for line numbers, write a slice to a scratch file + full-read it, or recover
+  content from terminal scrollback.
+- Batched `run_commands` arrays occasionally execute concurrently and collide
+  on the shared terminal — keep gate-run batches ≤ 3 commands.

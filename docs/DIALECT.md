@@ -119,6 +119,30 @@ When content touches dialect variance, authors add a **dialect note** callout
 `AUTO_INCREMENT`). Dialect notes are informational only — tasks always validate
 against the canonical form.
 
+### Column type registry (binding — Workstream B)
+
+Type tokens in `CREATE TABLE (...)` / `ALTER TABLE … ADD COLUMN` resolve through
+`src/lib/sql-engine/sql-type-registry.ts`. An unknown or missing type is a
+**named error**, never a silent default ("fails loudly by design"):
+
+| Kind | Accepted base types | Internal kind |
+|---|---|---|
+| Integer | `TINYINT` `SMALLINT` `MEDIUMINT` `INT` `INTEGER` `BIGINT` `SERIAL` `BIGSERIAL` | `number` |
+| Numeric | `DEC` `DECIMAL` `NUMERIC` `FLOAT` `DOUBLE` `REAL` | `decimal` |
+| Text | `CHAR` `VARCHAR` `TINYTEXT` `TEXT` `MEDIUMTEXT` `LONGTEXT` `ENUM` `JSON` | `string` |
+| Temporal | `DATE` `DATETIME` `TIMESTAMP` `TIME` | `date` |
+| Boolean | `BOOL` `BOOLEAN` | `boolean` |
+
+- Length/precision (`VARCHAR(50)`, `DECIMAL(10,2)`) never changes the kind —
+  `verifyColumnTypes` compares kinds only: `VARCHAR(50) ≡ VARCHAR(200)`,
+  `INT ≠ TEXT`. Failure messages use learner labels
+  (`a number type (INT)`, `a text type (VARCHAR/TEXT)`), not engine jargon.
+- Typo'd types fail with `Unknown data type 'VARCHR(20)' for column 'id' — did
+  you mean 'VARCHAR'?`; a column with no type fails with
+  `Column 'id' needs a data type (e.g. id INT, id VARCHAR(50)).`.
+- Adding a supported type = amend the registry **and** this table in the same
+  change (`tests/engine/ddl-types.test.ts` guards both).
+
 ## 6. EXPLAIN — the simulation contract
 
 SQLens teaches query plans through a **defined simulation**, and says so in content

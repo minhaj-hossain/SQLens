@@ -1,6 +1,7 @@
 import { DatabaseState, QueryExecutionResult, TableRow, ColumnDefinition, TableSchema, TxnStatus } from '../../types/database';
 import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, ParsedCaseWhen, ParsedSelectColumn } from './parser';
 import { splitStatements } from './split-statements';
+import { resolveSqlType } from './sql-type-registry';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { SIMULATED_TODAY } from '../../config/simulated-date';
@@ -144,14 +145,28 @@ interface DdlTableMeta {
   fks: { col: string; refTable: string; refCol: string }[];
 }
 
-/** Map a SQL column type token to the internal data type. */
-function sqlTypeToDataType(sqlType: string): string {
-  const t = (sqlType || '').toUpperCase();
-  if (/^(INT|BIGINT|SMALLINT|TINYINT|MEDIUMINT)/.test(t)) return 'number';
-  if (/^BOOL/.test(t)) return 'boolean';
-  if (/^(DEC|NUMERIC|FLOAT|DOUBLE|REAL)/.test(t)) return 'decimal';
-  if (/^(DATE|TIME)/.test(t)) return 'date';
-  return 'string'; // VARCHAR / CHAR / TEXT / ENUM
+/**
+ * First words of a TABLE-level constraint — never a column definition.
+ * (Without this guard, `PRIMARY KEY (id)` was misparsed as a column named
+ * 'PRIMARY' with type 'KEY' → string, leaving phantom columns in the explorer
+ * and in state comparisons. Workstream B, DDL audit.)
+ */
+const DDL_CONSTRAINT_STARTERS = new Set([
+  'primary', 'foreign', 'unique', 'check', 'constraint', 'key', 'index',
+]);
+
+/** Learner-facing error for a column declared without a data type. */
+function missingTypeError(col: string): string {
+  return `Column '${col}' needs a data type (e.g. ${col} INT, ${col} VARCHAR(50)).`;
+}
+
+/** Learner-facing error for a type token outside the registry (with suggestion). */
+function unknownTypeError(col: string, sqlType: string, suggestion?: string): string {
+  return (
+    `Unknown data type '${sqlType}' for column '${col}'` +
+    (suggestion ? ` — did you mean '${suggestion}'?` : '') +
+    ` (supported: INT, VARCHAR, DECIMAL, DATE/DATETIME, BOOLEAN, TEXT — see docs/DIALECT.md §5).`
+  );
 }
 
 /**
@@ -161,21 +176,48 @@ function sqlTypeToDataType(sqlType: string): string {
  * NOT NULL, UNIQUE, DEFAULT <lit>, CHECK (<expr>), and table-level
  * `FOREIGN KEY (col) REFERENCES tbl(col)`.
  */
-function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTableMeta } {
+function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTableMeta; error?: string } {
   const parts = splitFunctionArgs(body);
   const cols: ColumnDefinition[] = [];
   const meta: DdlTableMeta = { notNull: [], uniques: [], defaults: {}, checks: [], fks: [] };
+  const fail = (error: string) => ({ cols: [] as ColumnDefinition[], meta, error });
 
   for (const part of parts) {
     const p = part.trim();
+    if (!p) continue;
+    // Table-level constraints are handled in the loop below — never parse them
+    // as column definitions (`PRIMARY KEY (id)` used to become a column named
+    // 'PRIMARY' with type 'KEY'). Shape-gated so an unquoted column that merely
+    // has a reserved-word name (`key TEXT`) still parses as a column.
+    // Quoted identifiers (`unique` INT) are always columns.
+    const leadTok = p.match(/^([`"']?[\w]+[`"']?)/);
+    const lead = (leadTok?.[1] ?? '').replace(/[`"']/g, '').toLowerCase();
+    const isTableConstraint =
+      leadTok !== null &&
+      !/^[`"]/.test(leadTok[1]) &&
+      DDL_CONSTRAINT_STARTERS.has(lead) &&
+      (/^(primary|foreign)\s+key\b/i.test(p) ||
+        /^unique\b/i.test(p) ||
+        /^check\s*\(/i.test(p) ||
+        /^constraint\b/i.test(p) ||
+        /^(key|index)\s*\(/i.test(p));
+    if (isTableConstraint) {
+      continue;
+    }
     const colMatch = p.match(/^([`"']?[\w]+[`"']?)\s+([A-Za-z]+(?:\([^)]*\))?)\s*([\s\S]*)$/i);
-    if (!colMatch) continue;
+    if (!colMatch) {
+      const bare = p.match(/^([`"']?[\w]+[`"']?)$/);
+      if (bare) return fail(missingTypeError(bare[1].replace(/[`"']/g, '')));
+      return fail(`Cannot parse column definition: '${p}'.`);
+    }
     const name = colMatch[1].replace(/[`"']/g, '');
     const sqlType = colMatch[2];
     const rest = colMatch[3];
+    const resolved = resolveSqlType(sqlType);
+    if (!resolved.ok) return fail(unknownTypeError(name, sqlType, resolved.suggestion));
     const def: ColumnDefinition = {
       name,
-      type: sqlTypeToDataType(sqlType) as any,
+      type: resolved.kind,
       description: 'Runtime-created column',
     };
 
@@ -1543,7 +1585,27 @@ export class SqlExecutor {
       }
       const bodyMatch = cmd.match(/\(([\s\S]+)\)\s*$/i);
       const body = bodyMatch ? bodyMatch[1] : '';
-      const { cols, meta } = parseColumnDefs(body);
+      if (!body.trim()) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `CREATE TABLE needs a column list (e.g. CREATE TABLE ${tbl} (id INT));`,
+        };
+      }
+      const { cols, meta, error: colError } = parseColumnDefs(body);
+      if (colError) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: colError,
+        };
+      }
       const schema: TableSchema = {
         name: tbl,
         displayName: tbl
@@ -1611,6 +1673,23 @@ export class SqlExecutor {
 
     // ALTER TABLE
     const alterMatch = cmd.match(/ALTER\s+TABLE\s+([`"']?[\w_]+[`"']?)\s+ADD\s+COLUMN\s+([`"']?[\w_]+[`"']?)\s+([a-zA-Z0-9_()]+)(?:\s+DEFAULT\s+([\s\S]+))?/i);
+    if (!alterMatch && /^\s*ALTER\s+TABLE\b/i.test(cmd)) {
+      // `ALTER TABLE t ADD COLUMN x;` — a column name with no type must fail
+      // loudly with the missing-type message instead of falling through to the
+      // generic "Unsupported DDL" error (Workstream B).
+      const addBare = cmd.match(/\bADD\s+(?:COLUMN\s+)?([`"']?[\w]+[`"']?)\s*;?\s*$/i);
+      if (addBare) {
+        const bareCol = addBare[1].replace(/[`"']/g, '');
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: missingTypeError(bareCol),
+        };
+      }
+    }
     if (alterMatch) {
       const tbl = alterMatch[1].replace(/[`"']/g, '').toLowerCase();
       const colName = alterMatch[2].replace(/[`"']/g, '');
@@ -1636,10 +1715,21 @@ export class SqlExecutor {
           columns: [],
         };
       }
-      const colType = alterMatch[3].toUpperCase().replace(/\(.*$/, '');
+      const colType = alterMatch[3];
+      const resolvedType = resolveSqlType(colType);
+      if (!resolvedType.ok) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: unknownTypeError(colName, colType, resolvedType.suggestion),
+        };
+      }
       const colDef: ColumnDefinition = {
         name: colName,
-        type: sqlTypeToDataType(colType) as any,
+        type: resolvedType.kind,
         description: 'Runtime-created column',
       };
       if (defVal !== null) {

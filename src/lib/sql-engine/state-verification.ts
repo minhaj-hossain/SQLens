@@ -1,4 +1,5 @@
 import { SqlExecutor } from './executor';
+import { describeSqlKind } from './sql-type-registry';
 import { DatabaseState, TableRow } from '../../types/database';
 import { isDataPreservingTxnControlOnly } from './txn-expectation';
 
@@ -231,7 +232,7 @@ export function compareFinalState(
           if (got && want && got !== want) {
             return {
               ok: false,
-              message: `Column '${col.name}' in table '${eorig}' was declared ${got}, but this task requires ${want}.`,
+              message: `Column '${col.name}' in table '${eorig}' was declared as ${describeSqlKind(got)}, but this task requires ${describeSqlKind(want)}.`,
             };
           }
         }
