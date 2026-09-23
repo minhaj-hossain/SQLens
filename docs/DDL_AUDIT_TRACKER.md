@@ -48,6 +48,13 @@
     Day 54 ×2) · `audit-all-tasks` Day 45 `day45-t3` expectFailure lab fails ·
     Day-50 `primaryTable 'accounts'` note (verify script has no `process.exit`,
     always exits 0). NONE touch Workstream-A files.
+  - ✅ **ALL FIVE REDS RESOLVED** by the Milestone-4 P0 pass (2026-09-23, see
+    `docs/MILESTONE_4_AUDIT.md` §0 + P0 Execution Log): 18× `requireExactResult`
+    added · 6 prompt/construct gaps closed · Day 42/54 pipeline failures fixed by
+    unconditional `fresh` reset + harness `allowDdlOverwrite` parity · `day45-t3`
+    fixed via engine UPDATE-constraint enforcement + script first-error surfacing ·
+    `verify-curriculum` now scans `setupSql`. Post-P0: `audit:all` fully green,
+    `audit-all-tasks` 424/424, `verify:curriculum` 100% clean.
   - Advisory output worth a later pass: Day 33 `cap-ch-t1` has real
     `missing-column-in-prompt` findings (challenge prompt doesn't name its
     created columns) — outside the A blocking scope; consider extending
