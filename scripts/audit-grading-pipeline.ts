@@ -47,8 +47,11 @@ const findings: Finding[] = [];
 let checked = 0;
 let stateGraded = 0;
 
-/** Hooks over a REAL session executor — identical to the provider's wiring. */
+/** Hooks over a REAL session executor — identical to the provider's wiring
+ *  (`SqlExecutorProvider` sets `allowDdlOverwrite = true` for sandbox retry
+ *  leniency; the harness must match or its verdicts diverge from the UI). */
 function hooksFor(exec: SqlExecutor): SubmitHooks {
+  exec.allowDdlOverwrite = true;
   return {
     execute: (sql: string) => exec.executeQuery(sql),
     getDatabaseState: () => exec.getDatabaseState(),

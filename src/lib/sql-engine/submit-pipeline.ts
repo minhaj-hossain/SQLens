@@ -185,8 +185,15 @@ export function runAndGradeSubmission(options: SubmitOptions): SubmitOutcome {
 
   // Step 1: `fresh` tasks reset BEFORE the snapshot. DDL tasks without explicit 'inherit'
   // reset to seed so retries never accumulate duplicate definitions.
+  // P0 FIX: the reset used to be gated on `isStateGraded(task)` (mutation
+  // solutions only), so a `fresh` READ-ONLY task never replayed from seed —
+  // its verdict depended on whatever state the session happened to hold
+  // (the Day 42/54 ladder-pollution failures: 30 rows where 4 were graded).
+  // `fresh` means seed, full stop; `tests/content/solution-sql.test.ts` has
+  // always reset unconditionally on `fresh` before setupSql, which is exactly
+  // the sequence now guaranteed here. `inherit` chains never reset.
   const isDdl = /CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX/i.test(task.solutionSql || '');
-  const reset = (task.databaseLifecycle === 'fresh' || (isDdl && task.databaseLifecycle !== 'inherit')) && isStateGraded(task);
+  const reset = task.databaseLifecycle === 'fresh' || (isDdl && task.databaseLifecycle !== 'inherit');
   if (reset) resetDatabase?.();
 
   // If task defines prerequisite setupSql (e.g. multi-stage capstone), bootstrap it
