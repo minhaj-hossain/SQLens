@@ -114,7 +114,8 @@ function auditTask(task: PracticeTask, module: ModuleData, where: 'lesson' | 'ch
     task.solutionSql,
     result,
     task.validation,
-    expectedFor(task, exec)
+    expectedFor(task, exec),
+    task.validation.judgment?.map((j) => j.correctIndex),
   );
 
   if (outcome.passed) {

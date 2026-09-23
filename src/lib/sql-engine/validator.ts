@@ -335,6 +335,8 @@ export function validateTaskSolution(
   result: QueryExecutionResult,
   rule: ValidationRule,
   expected?: QueryExecutionResult,
+  /** P1: index-aligned answers to `rule.judgment` (null/omitted = unanswered). */
+  judgmentAnswers?: (number | null)[],
 ): ValidationOutcome {
   const cleanSql = userSql.trim();
 
@@ -947,6 +949,36 @@ export function validateTaskSolution(
   //     are returned as advisory notes in the success feedback, UNLESS the task
   //     sets `strictConstruct` (the construct itself is the deliverable there).
   // ---------------------------------------------------------------------
+  // 15. Judgment gate (P1) — reasoning questions attached to the task.
+  // Runs ONLY when the SQL verdict would otherwise pass: a broken query must
+  // surface its SQL problem first; the reasoning check is the last gate. A
+  // missing answer is a failure (the predicate must be reachable and
+  // refutable), and a wrong answer fails with the authored explanation.
+  const sqlWouldPass = datasetGraded ? !datasetMismatch : constructFailures.length === 0;
+  if (
+    sqlWouldPass &&
+    !(strictConstruct && constructFailures.length > 0) &&
+    rule.judgment &&
+    rule.judgment.length > 0
+  ) {
+    for (let ji = 0; ji < rule.judgment.length; ji++) {
+      const jq = rule.judgment[ji];
+      const given = judgmentAnswers?.[ji];
+      if (given === undefined || given === null) {
+        return {
+          passed: false,
+          feedback: `Your query is correct — but answer every reasoning question before submitting. Question ${ji + 1}: "${jq.prompt}"`,
+        };
+      }
+      if (given !== jq.correctIndex) {
+        return {
+          passed: false,
+          feedback: `Question ${ji + 1} is not quite right: "${jq.prompt}" — ${jq.explanation}`,
+        };
+      }
+    }
+  }
+
   if (datasetGraded) {
     if (datasetMismatch) {
       // B: dataset is wrong — fail. Lead with the construct note when present.

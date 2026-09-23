@@ -4,6 +4,7 @@ import { PracticeTask, Concept } from '../../types/curriculum';
 import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
 import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
 import { TaskInstructions } from './TaskInstructions';
+import { JudgmentBlock } from './JudgmentBlock';
 import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
@@ -69,6 +70,10 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   const [executionResult, setExecutionResult] = useState<QueryExecutionResult | null>(null);
   const [taskPassed, setTaskPassed] = useState<boolean>(isCompleted);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  // P1: answers to the task's `validation.judgment` (null = unanswered).
+  const [judgmentAnswers, setJudgmentAnswers] = useState<(number | null)[]>(() =>
+    (task.validation.judgment ?? []).map(() => null),
+  );
 
   // Phase 5: 1-based submit counter for the CURRENT task session. Telemetry only
   // — a high attempt count with value mismatches is the signal that a task's
@@ -80,6 +85,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     const scaffold = splitTaskScaffold(task.initialSql);
     const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : scaffold.code;
     setCurrentSql(codeToSet);
+    setJudgmentAnswers((task.validation.judgment ?? []).map(() => null));
     setExecutionResult(null);
     setTaskPassed(isCompleted);
     setValidationMessage(null);
@@ -122,6 +128,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
         getTransactionState,
         resetDatabase: onResetDatabase,
       },
+      judgmentAnswers,
       surface: 'lesson',
       // Phase 5: attempt count feeds telemetry only (never the verdict).
       attempt: attemptRef.current++,
@@ -200,6 +207,24 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               onViewSolution={() => setViewedSolution(true)}
             />
           </div>
+
+          {/* P1: reasoning questions attached to this task (if any) */}
+          {(task.validation.judgment?.length ?? 0) > 0 && (
+            <div className="order-2 min-w-0 w-full">
+              <JudgmentBlock
+                exercises={task.validation.judgment!}
+                answers={judgmentAnswers}
+                onChange={(qi, oi) =>
+                  setJudgmentAnswers((prev) => {
+                    const next = [...prev];
+                    next[qi] = oi;
+                    return next;
+                  })
+                }
+                disabled={taskPassed}
+              />
+            </div>
+          )}
 
           {/* Order 4 on Mobile (or below task on desktop): Database Explorer */}
           <div className="order-4 lg:order-2 min-w-0 w-full">

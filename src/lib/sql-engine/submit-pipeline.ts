@@ -74,6 +74,13 @@ export interface SubmitOptions {
    * must not be written by bulk verification runs.
    */
   record?: boolean;
+  /**
+   * P1: index-aligned answers to `task.validation.judgment` reasoning
+   * questions. Audits/scripts pass the reference answers (`correctIndex`);
+   * the UI passes the learner's picks. Omitted = unanswered (fails a judged
+   * task only once its SQL verdict would otherwise pass).
+   */
+  judgmentAnswers?: (number | null)[];
 }
 
 export interface GradedVerdict extends ValidationOutcome {
@@ -122,11 +129,13 @@ export function gradeSubmission(input: {
   expected?: QueryExecutionResult;
   /** Extra final-state comparison options (Batch B: txn context). */
   stateOptions?: StateCompareOptions;
+  /** P1: index-aligned answers to `task.validation.judgment`. */
+  judgmentAnswers?: (number | null)[];
 }): GradedVerdict {
-  const { task, sql, result, preState, postState, expected, stateOptions } = input;
+  const { task, sql, result, preState, postState, expected, stateOptions, judgmentAnswers } = input;
 
-  // Step 5: result-level validation (count / construct / dataset).
-  const outcome = validateTaskSolution(sql, result, task.validation, expected);
+  // Step 5: result-level validation (count / construct / dataset / judgment).
+  const outcome = validateTaskSolution(sql, result, task.validation, expected, judgmentAnswers);
 
   // Step 6: mutations/DDL are graded on FINAL STATE. A wrong-row UPDATE or a
   // wrong-value INSERT reports the same affectedRows as the right one, so the
@@ -180,7 +189,7 @@ export function gradeSubmission(input: {
  * mutations (28 → 29 → 30 → 31 made every grader message off-by-one).
  */
 export function runAndGradeSubmission(options: SubmitOptions): SubmitOutcome {
-  const { task, sql, hooks, surface, attempt = 1, record = true } = options;
+  const { task, sql, hooks, surface, attempt = 1, record = true, judgmentAnswers } = options;
   const { execute, getDatabaseState, getCommittedState, getTransactionState, resetDatabase } = hooks;
 
   // Step 1: `fresh` tasks reset BEFORE the snapshot. DDL tasks without explicit 'inherit'
@@ -274,6 +283,7 @@ export function runAndGradeSubmission(options: SubmitOptions): SubmitOutcome {
     preState,
     postState,
     expected,
+    judgmentAnswers,
     // Batch B: replay the reference in the SAME transaction context the learner
     // was in (a `COMMIT;` reference is only legal inside an inherited txn), and
     // compare the sandbox's session view for provisional tasks.

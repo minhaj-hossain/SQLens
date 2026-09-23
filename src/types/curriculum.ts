@@ -118,6 +118,16 @@ export interface ValidationRule {
    * Set this to `true` to require exact value parity with the reference solution.
    */
   strictValues?: boolean;
+  /**
+   * P1 — reasoning questions attached to the task's GRADING (DIALECT §10:
+   * reasoning is graded by `judgment[]`, never by keyword regex). Lives here
+   * — not on the task — because `validateTaskSolution` gates on it as the LAST
+   * check: SQL problems surface first; an unanswered question or a wrong pick
+   * fails with the authored explanation. Index-aligned answers arrive via the
+   * `judgmentAnswers` parameter (audits pass `correctIndex`, the UI the
+   * learner's picks).
+   */
+  judgment?: JudgmentExercise[];
 }
 
 export interface PracticeTask {
@@ -149,7 +159,6 @@ export interface PracticeTask {
   dialect?: DialectId;
   matchPolicy?: DialectMatchPolicy;
   variants?: { mysql?: DialectVariant; postgres?: DialectVariant };
-  judgment?: JudgmentExercise[];
 }
 
 export interface SyntaxBlock {

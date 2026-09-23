@@ -94,6 +94,9 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask, exec:
   checked++;
 
   const hooks = hooksFor(exec);
+  // P1: reference answers for `judgment[]` — the audits simulate a perfect
+  // learner (right SQL + right reasoning).
+  const judgmentAnswers = task.validation.judgment?.map((j) => j.correctIndex);
 
   // ---- Attempt 1: does the reference solution actually pass? ----------------
   let first: ReturnType<typeof runAndGradeSubmission>;
@@ -101,6 +104,7 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask, exec:
     first = runAndGradeSubmission({
       task,
       sql: task.solutionSql,
+      judgmentAnswers,
       hooks,
       surface: where,
       attempt: 1,
@@ -161,6 +165,7 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask, exec:
       const second = runAndGradeSubmission({
         task,
         sql: task.solutionSql,
+        judgmentAnswers,
         hooks,
         surface: where,
         attempt: 2,
@@ -189,7 +194,7 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask, exec:
       // Same fingerprint on both attempts == no accumulation.
       const a = JSON.stringify(tableCounts(exec.getDatabaseState()));
       hooks.resetDatabase?.();
-      runAndGradeSubmission({ task, sql: task.solutionSql, hooks, surface: where, attempt: 3, record: false });
+      runAndGradeSubmission({ task, sql: task.solutionSql, judgmentAnswers, hooks, surface: where, attempt: 3, record: false });
       const b = JSON.stringify(tableCounts(exec.getDatabaseState()));
       if (a !== b) {
         report(

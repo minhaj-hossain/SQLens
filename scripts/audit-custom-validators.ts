@@ -115,6 +115,7 @@ function probeInLadder(
     runAndGradeSubmission({
       task,
       sql: task.solutionSql,
+      judgmentAnswers: task.validation.judgment?.map((j) => j.correctIndex),
       hooks: hooksFor(exec),
       surface: where,
       attempt: 1,
@@ -136,6 +137,7 @@ function probeInLadder(
     const verdict = runAndGradeSubmission({
       task,
       sql: task.solutionSql,
+      judgmentAnswers: task.validation.judgment?.map((j) => j.correctIndex),
       hooks: hooksFor(exec),
       surface: where,
       attempt: 1,

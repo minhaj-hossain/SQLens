@@ -4,6 +4,7 @@ import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
 import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
 import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
+import { JudgmentBlock } from './JudgmentBlock';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
@@ -95,6 +96,10 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
   // Progressive Hint States
   const [revealedHintLevel, setRevealedHintLevel] = useState<number>(0);
+  // P1: answers to the current task's `validation.judgment` (null = unanswered).
+  const [judgmentAnswers, setJudgmentAnswers] = useState<(number | null)[]>(() =>
+    (currentTask.validation.judgment ?? []).map(() => null),
+  );
   const [failedAttemptsCount, setFailedAttemptsCount] = useState<number>(0);
 
   // Database Inspector Modal / Drawer
@@ -130,6 +135,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     setFailedAttemptsCount(0);
     setInspectTable(currentTask.primaryTable || 'products');
     attemptRef.current = 1;
+    setJudgmentAnswers((currentTask.validation.judgment ?? []).map(() => null));
     // v2 database lifecycle: a `fresh` challenge resets the database to seed
     // on every task switch so each task is independently verifiable. `inherit`
     // (or default) keeps the mutated state for connected multi-step tasks.
@@ -221,6 +227,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         getTransactionState,
         resetDatabase: onResetDatabase,
       },
+      judgmentAnswers,
       surface: 'challenge',
       // Phase 5: telemetry only — never affects the verdict.
       attempt: attemptRef.current++,
@@ -369,6 +376,22 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           </div>
         )}
       </div>
+
+      {/* P1: reasoning questions attached to this task (if any) */}
+      {(currentTask.validation.judgment?.length ?? 0) > 0 && (
+        <JudgmentBlock
+          exercises={currentTask.validation.judgment!}
+          answers={judgmentAnswers}
+          onChange={(qi, oi) =>
+            setJudgmentAnswers((prev) => {
+              const next = [...prev];
+              next[qi] = oi;
+              return next;
+            })
+          }
+          disabled={taskPassed}
+        />
+      )}
 
       {/* 2. SQL EDITOR CENTERPIECE */}
       <div className="bg-surface rounded-xl border border-border overflow-visible shadow-lg">
