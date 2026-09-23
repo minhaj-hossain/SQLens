@@ -3,6 +3,13 @@ import { NextResponse } from 'next/server';
 import { authorize } from '@/lib/authorize';
 import { getProgress, saveProgress, resetProgress, deleteProgress } from '@/lib/server/progress-store';
 import { getResetEpoch, type CloudProgress } from '@/lib/progress/merge';
+import {
+  RATE_LIMITS,
+  bucketedKey,
+  checkRateLimit,
+  ipFromHeaders,
+  sessionTokenFromCookie,
+} from '@/lib/rate-limit';
 
 /**
  * Per-user progress sync (Phase 2). `userId` always comes from the verified
@@ -18,6 +25,22 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  // Item 13: cap write rate before touching the session lookup or Mongo.
+  const rl = checkRateLimit(
+    bucketedKey('progress-write', ipFromHeaders(req.headers), sessionTokenFromCookie(req.headers.get('cookie'))),
+    RATE_LIMITS.progressPut,
+  );
+  if (!rl.allowed) {
+    return NextResponse.json(
+      {
+        error: 'rate_limited',
+        message: 'You are saving progress faster than expected — wait a few seconds and try again.',
+        retryAfterSeconds: rl.retryAfterSeconds,
+      },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSeconds) } },
+    );
+  }
+
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
 
