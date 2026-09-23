@@ -16,6 +16,21 @@ Milestone 4 elevates learners from query writers and schema builders to producti
 2. **1 Day = 1 Primary Construct:** Complex multi-concept bundles are decomposed. Supporting concepts are clearly separated from syntax and graded distinctly via judgment items.
 3. **Full Dual-Validator Architecture (MySQL + PostgreSQL):** Dialects are integrated at the step/exercise level via a three-tier model rather than maintaining redundant, parallel curriculum trees.
 
+> **Implementation status (2026-09-23, Milestone-4 audit P1):**
+> - **Directive 2 (`judgment[]`) — DONE.** `ValidationRule.judgment` is graded by
+>   `validateTaskSolution` as the final gate (SQL first, reasoning second); 14
+>   items are authored (days 39, 41, 43, 46–51, 53–57) and rendered by
+>   `JudgmentBlock` in both task views. Audits submit the reference answers, so
+>   CI grades reasoning exactly the way a perfect learner would.
+> - **Directive 3 (`dialect` / `variants` two-engine validator) — DEFERRED by
+>   decision.** The engine executes one dialect; populating `variants` would
+>   ship semantics nothing can verify until a reference-DB CI exists to replay
+>   both legs (audit §6, item P4.19). Content stays single-dialect with
+>   dialect callouts in theory prose; `DialectId` / `DialectMatchPolicy` /
+>   `DialectVariant` types remain reserved, and `docs/DIALECT.md` §9 now carries
+>   the explicit SPEC — NOT IMPLEMENTED status. The three-tier tables below are
+>   the spec for that future work, not a description of runtime behavior.
+
 ---
 
 ## 2. Dialect Architecture: Three-Tier Model

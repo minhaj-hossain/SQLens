@@ -353,6 +353,16 @@ procedural BEGIN and transaction BEGIN are the same keyword.
 
 ## 9. Dual-validator semantics (Milestone 4)
 
+> **Status (2026-09-23, Milestone-4 audit P1): SPEC — NOT IMPLEMENTED.**
+> No runtime code consumes `dialect` / `matchPolicy` / `variants` today: the
+> engine executes a single dialect and the grading pipeline compares one
+> dataset. Content is authored single-dialect (MySQL-flavored) with
+> MySQL/PostgreSQL callouts kept in theory prose. The semantics below remain
+> binding for whoever implements the layer — which cannot honestly ship before
+> a reference MySQL/PostgreSQL CI exists to replay both legs (see
+> `docs/MILESTONE_4_AUDIT.md` §6, item P4.19). The defect was documenting a
+> feature nothing consumes; this note makes the consumption state explicit.
+
 `dialect: 'both'` does NOT mean "pass if either dialect happens to match".
 The learner is validated independently per leg:
 
