@@ -151,7 +151,7 @@ fall-through that reported success while executing nothing.
 
 | Statement | Status |
 |---|---|
-| `CREATE TABLE [IF NOT EXISTS] t ( … )` | executable — type registry above; constraint metadata enforced on INSERT |
+| `CREATE TABLE [IF NOT EXISTS] t ( … )` | executable — type registry above; constraint metadata enforced on INSERT. The interactive sandbox may re-create an existing table under `allowDdlOverwrite` (preview/retry UX) and **says so in the status row** (Workstream E) — real SQL errors instead |
 | `DROP TABLE [IF EXISTS] t` | executable — plain DROP of a MISSING table now errors (real-SQL; Day 29 teaches this), `IF EXISTS` gets the idempotent no-op; one table per statement, no trailing clauses. Graded on the statement text on Day 29 (`validation.requireIfExists`) |
 | `ALTER TABLE t ADD COLUMN col <type> [DEFAULT v]` | executable — **ONE clause per statement**; a trailing second clause is a named error |
 | `CREATE [UNIQUE] INDEX` / `DROP INDEX` | executable |

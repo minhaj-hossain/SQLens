@@ -213,13 +213,41 @@ actions / multi-clause ALTER execution — revisit only if a lesson needs them).
     stale milestone-4 leftover unrelated to A–D; candidate for a separate
     fix).
 
-## E — Sandbox honesty + grading precision ⬜ NOT STARTED
+## E — Sandbox honesty + grading precision ✅
 
-- [ ] `allowDdlOverwrite` retry note ("real DBs would need IF NOT EXISTS").
-- [ ] `expectedRowCount:1` no longer the primary DDL signal (state +
-  requiredColumns now carry it — mostly landed with A4; formalize policy).
-- [ ] `requireIfExists?: boolean` validator flag so Day 29 idempotency lesson
-  is graded, not masked.
+- [x] **E1** `allowDdlOverwrite` retry honesty — the re-create paths now SAY
+  SO in the result row instead of pretending legal SQL:
+  - CREATE TABLE → `already existed — dropped and re-created for retry (real
+    SQL would error here; use IF NOT EXISTS or DROP TABLE first — §5)`;
+  - CREATE INDEX → same shape (`DROP INDEX first`);
+  - bare CREATE VIEW → `already existed — replaced for retry (real SQL would
+    error without OR REPLACE — §5)`; the legal `CREATE OR REPLACE` path stays
+    quiet; first-create text unchanged. A grep proved no test/script asserts
+    the old status strings, and statuses are never graded (tables hold data
+    rows, not status rows) — solution-sql/all-tasks/pipeline stayed baseline.
+- [x] **E2** Policy formalized (GRADING_POLICY Rule 2, "DDL precision" bullet):
+  for CREATE/ALTER the SCHEMA is the grade — `requiredColumns` + final-state
+  column diff (+ type kinds under `verifyColumnTypes`); `expectedRowCount: 1`
+  is only an execution signal and can never carry correctness alone. DIALECT
+  §5's CREATE row documents the sandbox re-create behavior.
+- [x] **E3** State-diff messages name the empty-table shapes:
+  expected-empty vs rows → `should be EMPTY at this step … extra INSERT?`;
+  rows-expected vs empty → `missing N row(s) … skip the follow-up INSERT?`
+  (replacing count-speak that read like DML advice on schema tasks). The
+  existing named messages (missing/extra table, missing/unexpected column,
+  type-kind) are pinned by tests — schema diffs, never row counts, decide DDL.
+- [x] **E4** `requireIfExists` grading — **landed in Workstream D (D3)**;
+  counted here for completeness.
+- [x] **E5** Tests: `tests/engine/ddl-honesty.test.ts` — 7 tests (4 sandbox
+  honesty incl. strict re-CREATE still erroring + OR REPLACE staying quiet,
+  3 state-diff message shapes).
+- [x] **E6** Acceptance (2026-09-23) — **zero regressions**: `tsc` · vitest
+  **612/612** (52 files) · engine 46/46 · db-lifecycle 34/34 · keyword-case 0
+  · ddl-contracts 0 blocking = baseline · equivalence 28/28 · tasks 0 ·
+  custom-validators 17/17 · verify baseline output · all-tasks **423/424**
+  (same Day-45 lab) · pipeline **6 = baseline** · taught **6 = baseline** ·
+  policy **18 = baseline**. (`test:module-order` remains the D-documented
+  pre-existing baseline red — stale 38-module script.)
 
 ## F — Editor / Explorer scaffold ⬜ NOT STARTED
 

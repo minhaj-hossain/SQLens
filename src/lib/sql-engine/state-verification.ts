@@ -310,6 +310,20 @@ export function compareFinalState(
         }
       }
 
+      // Workstream E: name the empty-table shapes — the generic count message
+      // reads like DML advice ("which rows you targeted") on a schema task.
+      if (eRows.length === 0 && aRows.length > 0) {
+        return {
+          ok: false,
+          message: `Table '${eorig}' should be EMPTY at this step, but contains ${aRows.length} row(s) — did you run an extra INSERT?`,
+        };
+      }
+      if (aRows.length === 0 && eRows.length > 0) {
+        return {
+          ok: false,
+          message: `Table '${eorig}' is missing ${eRows.length} row(s) that the reference state has — did you skip the follow-up INSERT?`,
+        };
+      }
       // Phase 1: prefer a value-level diff over the cryptic count message.
       // Same-size mismatch (the classic wrong-INSERT: "expected 16, found 16")
       // names the differing columns; count mismatch keeps the count framing.

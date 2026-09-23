@@ -1548,6 +1548,10 @@ export class SqlExecutor {
 
       // Register view in views and expose as dynamic virtual table in this.db.tables
       const isUpdatable = !/(GROUP\s+BY|DISTINCT|COUNT\(|SUM\(|AVG\(|MIN\(|MAX\(|UNION)/i.test(viewBody);
+      // Workstream E: a bare re-`CREATE VIEW` under allowDdlOverwrite would
+      // have errored in real SQL — the status row says it replaced instead.
+      const silentReplace =
+        !isReplace && this.views[viewName] !== undefined && this.allowDdlOverwrite;
       this.views[viewName] = {
         name: viewName,
         query: viewBody,
@@ -1565,7 +1569,13 @@ export class SqlExecutor {
       return {
         success: true,
         columns: ['status'],
-        rows: [{ status: `View '${viewName}' created successfully` }],
+        rows: [
+          {
+            status: silentReplace
+              ? `View '${viewName}' already existed — replaced for retry (real SQL would error without OR REPLACE — docs/DIALECT.md §5).`
+              : `View '${viewName}' created successfully`,
+          },
+        ],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       };
@@ -1612,11 +1622,13 @@ export class SqlExecutor {
     if (createMatch) {
       const tbl = createMatch[2].replace(/[`"']/g, '').toLowerCase();
       const ifNotExists = !!createMatch[1];
+      let recreated = false; // Workstream E: honest status row on overwrite-retry
       if (this.db.tables[tbl]) {
         // v2 DDL fix: re-creating an existing table is an error (mirrors
         // real SQL behavior). `IF NOT EXISTS` suppresses it silently.
         // If allowDdlOverwrite is active (interactive sandbox default), drop and re-create cleanly.
         if (this.allowDdlOverwrite) {
+          recreated = true;
           delete this.db.tables[tbl];
           delete this.db.schemas[tbl];
           delete this.tableMeta[tbl];
@@ -1691,7 +1703,13 @@ export class SqlExecutor {
       return {
         success: true,
         columns: ['status'],
-        rows: [{ status: `Table '${tbl}' created successfully (0 rows affected)` }],
+        rows: [
+          {
+            status: recreated
+              ? `Table '${tbl}' already existed — dropped and re-created for retry (real SQL would error here; use IF NOT EXISTS or DROP TABLE first — docs/DIALECT.md §5).`
+              : `Table '${tbl}' created successfully (0 rows affected)`,
+          },
+        ],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       };
@@ -1880,8 +1898,10 @@ export class SqlExecutor {
           error: `Table '${tbl}' doesn't exist — cannot create index '${name}'.`,
         };
       }
+      let recreatedIndex = false; // Workstream E: honest status row on overwrite-retry
       if (this.indexes[key]) {
         if (this.allowDdlOverwrite) {
+          recreatedIndex = true;
           delete this.indexes[key];
         } else {
           return {
@@ -1900,7 +1920,13 @@ export class SqlExecutor {
       return {
         success: true,
         columns: ['status'],
-        rows: [{ status: `Index '${name}' created on ${tbl}(${cols.join(', ')})` }],
+        rows: [
+          {
+            status: recreatedIndex
+              ? `Index '${name}' already existed — dropped and re-created for retry (real SQL would error; DROP INDEX first — docs/DIALECT.md §5).`
+              : `Index '${name}' created on ${tbl}(${cols.join(', ')})`,
+          },
+        ],
         rowCount: 1,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       };

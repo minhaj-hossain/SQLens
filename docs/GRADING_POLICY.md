@@ -39,6 +39,14 @@ the state comparison can tell them apart.
 - Reference solutions that fail to run are `INCONCLUSIVE`: the learner still
   passes, but CI fails. A silently-passing broken task is an authoring bug that
   never gets fixed.
+- DDL precision (Workstream E): for CREATE/ALTER tasks the SCHEMA is the grade
+  — `validation.requiredColumns` (validator stage) plus the final-state
+  column-name diff (and type kinds under `verifyColumnTypes`) decide
+  pass/fail. `expectedRowCount: 1` on a DDL task only confirms the statement
+  ran and affected one object — it can never carry correctness alone. The
+  interactive sandbox's `allowDdlOverwrite` re-create path says so explicitly
+  in the result row (`already existed — dropped and re-created for retry`), so
+  leniency is never mistaken for legal SQL.
 
 ### Rule 3 — Dataset decides, construct advises
 When the learner's dataset is identical to the reference solution's, construct
