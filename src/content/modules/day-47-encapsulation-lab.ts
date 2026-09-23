@@ -34,6 +34,33 @@ export const Day_47_MODULE: ModuleData = {
       theory: {
         summary:
           'Software architecture is about putting code where it belongs. In modern database engineering, you have four core encapsulation tools. Choosing the right one keeps your codebase clean, fast, and secure.',
+        targetQuery: {
+          sql: 'SELECT * FROM v_cheap;',
+          explanation: 'The end-user experience of encapsulation: query one clean name; the stored definition (price < 20 over products) runs underneath.',
+          badge: 'The query the tools actually send',
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: One clean name',
+            sqlSnippet: 'FROM v_cheap',
+            clause: 'FROM',
+            explanation: 'Callers never see JOIN or WHERE complexity — the view name is the whole contract.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The stored definition expands',
+            sqlSnippet: 'SELECT product_id, name, price FROM products WHERE price < 20',
+            explanation: "The database substitutes the view's stored SELECT before execution.",
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Live rows, no copy',
+            sqlSnippet: 'WHERE price < 20',
+            clause: 'WHERE',
+            explanation: 'Rows are computed at query time — insert a cheap product and it appears in the view immediately.',
+          },
+        ],
         introTable: {
           tableName: 'Database tool decision matrix',
           description: 'Quick reference for picking the right database construct.',

@@ -36,6 +36,33 @@ export const Day_52_MODULE: ModuleData = {
       theory: {
         summary:
           'A composite index is an index on two or more columns. The database sorts entries by the first column, then by the second within matching values of the first. Because of this sorting, the index can only be used if your query filters on the leftmost columns.',
+        targetQuery: {
+          sql: 'CREATE INDEX idx_prod_cat_price ON products (category_id, price);\nEXPLAIN SELECT * FROM products WHERE category_id = 1 AND price <= 25;',
+          explanation: 'Build the two-column index, then prove the optimizer can seek it with a leftmost-prefix predicate pair.',
+          badge: 'The build-and-verify loop',
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Column order is the contract',
+            sqlSnippet: 'CREATE INDEX idx_prod_cat_price ON products (category_id, price)',
+            clause: 'CREATE INDEX',
+            explanation: 'Entries sort by category_id first, price second — only this order defines the seekable prefixes.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Filter on the prefix',
+            sqlSnippet: 'WHERE category_id = 1 AND price <= 25',
+            clause: 'WHERE',
+            explanation: "Both columns start from the leftmost key, so the engine seeks the index instead of scanning — check EXPLAIN's key column.",
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The forbidden shape',
+            sqlSnippet: '-- WHERE price <= 25 alone cannot seek',
+            explanation: 'A predicate on price alone skips category_id — the B-tree is sorted by price only within each category, so the seek is impossible.',
+          },
+        ],
         explanation: [
           'Think of a phone directory: names are sorted by `(last_name, first_name)`.',
           '- Can you quickly find all people with `last_name = "Smith"`? Yes! (Leftmost column)',

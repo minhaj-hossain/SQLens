@@ -36,6 +36,32 @@ export const Day_46_MODULE: ModuleData = {
       theory: {
         summary:
           'Unlike procedures that you must manually run with CALL, a trigger runs automatically in the background whenever a specific event occurs — such as an INSERT, UPDATE, or DELETE on a table.',
+        targetQuery: {
+          sql: 'CREATE TRIGGER trg_on_product_update\nAFTER UPDATE ON products\nFOR EACH ROW\nBEGIN\n  INSERT INTO audit_log (table_name, action) VALUES ("products", "UPDATE");\nEND;',
+          explanation: 'Registers the automatic rule: every future UPDATE on products writes one audit row — no application code involved.',
+          badge: "The statement we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Choose the event',
+            sqlSnippet: 'AFTER UPDATE ON products',
+            explanation: 'The trigger fires after each UPDATE statement on products — never on SELECT, never on a schedule.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Per-row scope',
+            sqlSnippet: 'FOR EACH ROW',
+            explanation: 'A statement touching 5 rows fires the body 5 times — once per changed row.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The automatic action',
+            sqlSnippet: 'INSERT INTO audit_log (table_name, action)',
+            clause: 'INSERT',
+            explanation: 'The body runs inside the database itself, so the audit trail cannot be skipped by a forgetful developer.',
+          },
+        ],
         introTable: {
           tableName: 'products (sample)',
           description: 'Products table whose changes should be logged automatically.',
@@ -135,6 +161,15 @@ export const Day_46_MODULE: ModuleData = {
       theory: {
         summary:
           'When updating a row, you often need to know both what the value WAS and what it BECAME. In an UPDATE trigger, SQL provides two special records: OLD (the row before the update) and NEW (the row after the update).',
+        introTable: {
+          tableName: 'price_log (written automatically by the trigger)',
+          description: "Engine output after the live demo's UPDATE products SET price = 25.00 WHERE product_id = 1, plus a second price change on product 2 — OLD.price and NEW.price captured for each.",
+          columns: ['product_id', 'old_price', 'new_price'],
+          rows: [
+            [1, 15.99, 25],
+            [2, 45.5, 41],
+          ],
+        },
         explanation: [
           'The transition records give you complete visibility:',
           '- `OLD.column_name`: the value before the modification',
@@ -227,6 +262,15 @@ export const Day_46_MODULE: ModuleData = {
       theory: {
         summary:
           'Triggers add overhead to every insert or update. If an audit workflow is deprecated or replaced, remove the trigger cleanly using DROP TRIGGER IF EXISTS.',
+        introTable: {
+          tableName: 'Schema state — trigger lifecycle',
+          description: 'Engine responses from the live demo: the trigger is registered on products, then removed; existing rows are untouched.',
+          columns: ['statement', 'engine response'],
+          rows: [
+            ['CREATE TRIGGER trg_dummy AFTER UPDATE ON products …', "Trigger 'trg_dummy' created successfully on products"],
+            ['DROP TRIGGER IF EXISTS trg_dummy;', "Trigger 'trg_dummy' dropped"],
+          ],
+        },
         explanation: [
           'To remove a trigger:',
           '```sql\nDROP TRIGGER IF EXISTS trg_audit_product;\n```',

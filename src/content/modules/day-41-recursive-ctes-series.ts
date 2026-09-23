@@ -36,6 +36,33 @@ export const Day_41_MODULE: ModuleData = {
       theory: {
         summary:
           'A regular CTE (WITH ...) runs once and returns a result. A recursive CTE (WITH RECURSIVE ...) runs in a loop: it starts with one row, uses that row to generate the next, then uses THAT row to generate the one after, and so on — until the loop condition says stop.',
+        targetQuery: {
+          sql: "WITH RECURSIVE counter AS (\n  SELECT 1 AS n          -- ANCHOR: start at 1\n  UNION ALL\n  SELECT n + 1 FROM counter WHERE n < 10  -- STEP: stop at 10\n)\nSELECT n FROM counter;",
+          explanation: 'A recursive CTE that generates 1..10: one anchor row, then a loop step that keeps feeding itself until the WHERE fails.',
+          badge: "The query we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: The anchor member',
+            sqlSnippet: 'SELECT 1 AS n',
+            explanation: 'The first SELECT runs exactly once and produces the seed row n = 1.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The recursive step',
+            sqlSnippet: 'SELECT n + 1 FROM counter',
+            clause: 'UNION ALL',
+            explanation: 'Each iteration reads the previous result of counter and emits the next value — 2, 3, 4 …',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The termination guard',
+            sqlSnippet: 'WHERE n < 10',
+            clause: 'WHERE',
+            explanation: 'When n reaches 10 the condition is false, the step returns no rows, and the loop stops at exactly 10 rows.',
+          },
+        ],
         explanation: [
           'The structure has exactly two parts, joined by UNION ALL:',
           '1. The ANCHOR — the starting row. Runs exactly once.',

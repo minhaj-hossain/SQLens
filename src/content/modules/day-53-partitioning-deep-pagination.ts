@@ -36,6 +36,46 @@ export const Day_53_MODULE: ModuleData = {
       theory: {
         summary:
           'When you run `LIMIT 10 OFFSET 1000`, the database does NOT jump to row 1001. It must read, sort, and process all 1,000 preceding rows, only to throw them away and return the remaining 10. As OFFSET increases, queries get slower and slower.',
+        targetQuery: {
+          sql: 'SELECT product_id, name, price FROM products ORDER BY product_id ASC LIMIT 5 OFFSET 5;',
+          explanation: 'Page 2 of the catalog: five rows returned — after the engine read and discarded the first five.',
+          badge: "The query we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Establish order',
+            sqlSnippet: 'ORDER BY product_id ASC',
+            clause: 'ORDER BY',
+            explanation: 'Pagination needs a stable sort; without it page boundaries are undefined.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Discard the prefix',
+            sqlSnippet: 'OFFSET 5',
+            clause: 'OFFSET',
+            explanation: 'The engine reads five rows and throws them away — this discarded prefix is what grows O(N) on deep pages.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Return the page',
+            sqlSnippet: 'LIMIT 5',
+            clause: 'LIMIT',
+            explanation: 'Only rows 6–10 come back (engine output above), but rows 1–5 were still processed to get here.',
+          },
+        ],
+        introTable: {
+          tableName: 'Page 2 via LIMIT 5 OFFSET 5 (engine output)',
+          description: 'The live demo returns rows 6–10 — but OFFSET 5 made the engine read and discard rows 1–5 first. Every extra page deepens that discarded prefix.',
+          columns: ['product_id', 'name', 'price'],
+          rows: [
+            [6, 'Stainless Steel Pan Set', 55],
+            [7, 'Ceramic Mixing Bowls', 22.3],
+            [8, 'Electric Kettle', 34.99],
+            [9, 'Cutting Board Set', 18],
+            [10, 'Knife Sharpener', 12.5],
+          ],
+        },
         explanation: [
           'Consider flipping through a physical ledger. If someone asks for page 500, a naive reader starts at page 1 and counts 499 pages before looking at page 500.',
           'Under the hood with OFFSET:',
@@ -124,6 +164,18 @@ export const Day_53_MODULE: ModuleData = {
       theory: {
         summary:
           'Keyset pagination (also called cursor-based pagination) replaces OFFSET with a WHERE condition on an indexed column. Instead of "skip 10,000 rows", you tell the database "give me the first 10 rows WHERE id > 10000".',
+        introTable: {
+          tableName: 'Same page via WHERE product_id > 5 (engine output)',
+          description: "Engine output of the live demo: identical rows 6–10 as the OFFSET version, but the primary-key seek jumps straight past the cursor — rows 1–5 are never scanned.",
+          columns: ['product_id', 'name', 'price'],
+          rows: [
+            [6, 'Stainless Steel Pan Set', 55],
+            [7, 'Ceramic Mixing Bowls', 22.3],
+            [8, 'Electric Kettle', 34.99],
+            [9, 'Cutting Board Set', 18],
+            [10, 'Knife Sharpener', 12.5],
+          ],
+        },
         explanation: [
           'How Keyset pagination works:',
           '1. Page 1: `SELECT * FROM products ORDER BY product_id ASC LIMIT 5;` -> Last seen `product_id = 5`',
@@ -213,6 +265,16 @@ export const Day_53_MODULE: ModuleData = {
       theory: {
         summary:
           'Table partitioning splits a large table into smaller physical pieces called partitions, while presenting a single unified table to applications. Partition pruning allows queries to touch only the specific partitions containing relevant data.',
+        introTable: {
+          tableName: 'Partitioning schemes',
+          description: 'The three schemes from this concept: a WHERE clause on the partition key lets the optimizer prune every partition that cannot match.',
+          columns: ['scheme', 'splits data by', 'lesson example'],
+          rows: [
+            ['RANGE', 'contiguous value ranges', 'p2024 / p2025 / p2026 by year'],
+            ['LIST', 'explicit value sets', 'region: Asia / Europe / Americas'],
+            ['HASH', 'hash(key) mod N', 'even spread across N by user_id'],
+          ],
+        },
         explanation: [
           'Common partitioning strategies:',
           '- **RANGE Partitioning**: Data is split into ranges of values (e.g. by year: `p2024`, `p2025`, `p2026`). Ideal for time-series logs and audit tables.',

@@ -36,6 +36,44 @@ export const Day_55_MODULE: ModuleData = {
       theory: {
         summary:
           'A production database has multiple types of actors: backend apps, data analysts, automated migration scripts, and human administrators. Instead of assigning permissions to individuals, modern databases group permissions into ROLES and assign roles to USERS.',
+        targetQuery: {
+          sql: 'CREATE ROLE analyst_role;\nCREATE USER analyst_jane;\nGRANT analyst_role TO analyst_jane;',
+          explanation: 'The RBAC trio: bundle privileges into a role, create a principal, then attach one to the other.',
+          badge: "The provisioning script we'll dissect",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Bundle privileges',
+            sqlSnippet: 'CREATE ROLE analyst_role',
+            clause: 'CREATE ROLE',
+            explanation: 'The role is the permission container — grant SELECT to the role once, not to every analyst account.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Create the principal',
+            sqlSnippet: 'CREATE USER analyst_jane',
+            clause: 'CREATE USER',
+            explanation: 'The user is the login identity — it starts with no table privileges at all.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Attach the role',
+            sqlSnippet: 'GRANT analyst_role TO analyst_jane',
+            clause: 'GRANT',
+            explanation: "Jane inherits everything the role holds; change the role's grants later and every member follows automatically.",
+          },
+        ],
+        introTable: {
+          tableName: 'RBAC actors and their privilege ceilings',
+          description: 'The three production actors from this concept: each role gets exactly what it needs — and nothing it must never hold.',
+          columns: ['role', 'needs', 'must never have'],
+          rows: [
+            ['App Server', 'SELECT, INSERT, UPDATE', 'DROP TABLE, ALTER TABLE'],
+            ['Analyst / BI', 'SELECT only', 'row mutation, raw passwords'],
+            ['Migration Runner', 'CREATE/ALTER TABLE (deploy time)', 'always-on application access'],
+          ],
+        },
         explanation: [
           'Why role-based access control (RBAC) matters:',
           '- **App Server Role**: Needs SELECT, INSERT, UPDATE on core tables. Should NEVER have DROP TABLE or ALTER TABLE permissions.',
@@ -124,6 +162,19 @@ export const Day_55_MODULE: ModuleData = {
       theory: {
         summary:
           'In multi-tenant SaaS applications or regional franchises, users from one territory must never see data from another. A secure filtered view enforces this boundary at the database layer.',
+        introTable: {
+          tableName: 'v_dhaka_cust (engine output)',
+          description: "Engine output of the live demo's SELECT * FROM v_dhaka_cust — only Dhaka customers cross the boundary; every other city is invisible through this view.",
+          columns: ['customer_id', 'name', 'city'],
+          rows: [
+            [1, 'Rafiul Islam', 'Dhaka'],
+            [2, 'Priya Akter', 'Dhaka'],
+            [6, 'Farhana Rahman', 'Dhaka'],
+            [8, 'Mim Akter', 'Dhaka'],
+            [11, 'Imran Hossain', 'Dhaka'],
+            [15, 'Jahid Karim', 'Dhaka'],
+          ],
+        },
         explanation: [
           'If you rely solely on application code (`WHERE tenant_id = 42`), a developer could forget the WHERE clause in a new endpoint, causing a catastrophic cross-tenant data leak.',
           'Database-enforced isolation:',

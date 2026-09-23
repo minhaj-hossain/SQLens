@@ -25,7 +25,8 @@
     "audit:taught-before-tested": "tsx scripts/audit-taught-before-tested.ts",
     "audit:custom-validators": "tsx scripts/audit-custom-validators.ts",
     "audit:ddl-contracts": "tsx scripts/audit-ddl-contracts.ts",
-    "audit:all": "npm run verify:curriculum && npx tsx scripts/audit-all-tasks.ts && npm run audit:equivalence && npm run audit:equivalence:tasks && npm run audit:validation-overlap && npm run audit:keyword-case && npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators && npm run audit:ddl-contracts"
+    "audit:visual-coverage": "tsx scripts/audit-visual-coverage.ts",
+    "audit:all": "npm run verify:curriculum && npx tsx scripts/audit-all-tasks.ts && npm run audit:equivalence && npm run audit:equivalence:tasks && npm run audit:validation-overlap && npm run audit:keyword-case && npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators && npm run audit:ddl-contracts && npm run audit:visual-coverage"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.3",

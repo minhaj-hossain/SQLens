@@ -58,6 +58,28 @@ export const Day_39_MODULE: ModuleData = {
             'This saves the query "products costing more than $30" under the name v_expensive_products. From now on, any SELECT against v_expensive_products runs this filter automatically.',
           badge: 'The view we will create',
         },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Name the saved query',
+            sqlSnippet: 'CREATE VIEW v_expensive_products AS',
+            explanation: 'CREATE VIEW registers a new named object in the schema; the body that follows is stored as text, not as copied rows.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The stored SELECT',
+            sqlSnippet: 'SELECT product_id, name, price FROM products',
+            clause: 'SELECT',
+            explanation: "This projection is what every future query against the view runs — it defines the view's shape.",
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The stored filter',
+            sqlSnippet: 'WHERE price > 30',
+            clause: 'WHERE',
+            explanation: 'The filter is saved with the view. Insert a new product priced above $30 and it appears automatically on the next query.',
+          },
+        ],
         syntaxBlocks: [
           {
             title: 'CREATE VIEW',
@@ -139,6 +161,19 @@ export const Day_39_MODULE: ModuleData = {
       theory: {
         summary:
           'After creating a view, you query it exactly the same way you query any table. You can add WHERE, ORDER BY, LIMIT, JOINs — everything. The database transparently replaces the view name with its stored query before running yours.',
+        introTable: {
+          tableName: 'v_expensive_products (view result)',
+          description: 'Engine output of SELECT name, price FROM v_expensive_products ORDER BY price DESC — every product above $30, computed live from products.',
+          columns: ['name', 'price'],
+          rows: [
+            ['Office Chair', 120],
+            ['Filing Cabinet', 89.99],
+            ['Mechanical Keyboard', 65],
+            ['Stainless Steel Pan Set', 55],
+            ['Tennis Racket', 55],
+            ['Bluetooth Speaker', 45.5],
+          ],
+        },
         explanation: [
           'Querying a view is no different from querying a table:',
           '```sql\n-- After creating the view:\nSELECT name, price\nFROM v_expensive_products\nORDER BY price DESC;\n```',
@@ -255,6 +290,12 @@ export const Day_39_MODULE: ModuleData = {
       theory: {
         summary:
           'Just like you can DROP TABLE, you can DROP VIEW. This removes the saved query — not the underlying data. The real tables are completely unaffected.',
+        introTable: {
+          tableName: 'v_temp (before DROP VIEW)',
+          description: "Engine output of SELECT * FROM v_temp — the view's saved result. DROP VIEW removes this name only; the products table never changes.",
+          columns: ['product_id'],
+          rows: [[2], [4], [6], [14], [15], [17], [20]],
+        },
         explanation: [
           'Dropping a view is one line:',
           '```sql\nDROP VIEW v_expensive_products;\n```',

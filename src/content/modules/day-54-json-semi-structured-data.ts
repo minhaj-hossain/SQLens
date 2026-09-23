@@ -37,6 +37,42 @@ export const Day_54_MODULE: ModuleData = {
       theory: {
         summary:
           'JSON columns store JavaScript Object Notation text. To read a specific key from a JSON document, you use JSON_EXTRACT(column, \'$.key\') where $ represents the root of the JSON document.',
+        targetQuery: {
+          sql: "SELECT username, JSON_EXTRACT(preferences, '$.theme') AS theme\nFROM user_profiles;",
+          explanation: 'Pulls the theme key out of each preferences document — no ALTER TABLE needed.',
+          badge: "The query we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Read the document column',
+            sqlSnippet: 'FROM user_profiles',
+            clause: 'FROM',
+            explanation: 'preferences holds raw JSON text per row — alice and bob can have entirely different keys.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Navigate the path',
+            sqlSnippet: "JSON_EXTRACT(preferences, '$.theme')",
+            explanation: '$ is the document root; .theme descends one level and returns the value (or NULL when the key is absent).',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Present the result',
+            sqlSnippet: 'AS theme',
+            clause: 'SELECT',
+            explanation: 'The extracted value gets a clean column header — engine output: alice → dark, bob → light.',
+          },
+        ],
+        introTable: {
+          tableName: 'user_profiles (concept demo table)',
+          description: "The concept's own INSERT artifact; the theme column is engine output of JSON_EXTRACT(preferences, '$.theme').",
+          columns: ['id', 'username', 'preferences', 'theme'],
+          rows: [
+            [1, 'alice', '{"theme": "dark"}', 'dark'],
+            [2, 'bob', '{"theme": "light"}', 'light'],
+          ],
+        },
         explanation: [
           'Suppose you have a `preferences` column containing:',
           '```json\n{"theme": "dark", "notifications": true, "language": "en"}\n```',
@@ -126,6 +162,12 @@ export const Day_54_MODULE: ModuleData = {
       theory: {
         summary:
           'Just like scalar functions (UPPER, YEAR), JSON_EXTRACT can be placed directly inside a WHERE clause. This allows you to find rows matching specific nested criteria without having to alter the table schema.',
+        introTable: {
+          tableName: 'user_profiles — WHERE JSON_EXTRACT(...) = \'dark\'',
+          description: "Engine output of the live demo: only alice's document has theme = 'dark', so only row 1 survives the JSON filter.",
+          columns: ['id', 'username'],
+          rows: [[1, 'alice']],
+        },
         explanation: [
           'Filtering on nested JSON:',
           '```sql\nSELECT id, username\nFROM user_profiles\nWHERE JSON_EXTRACT(preferences, \'$.theme\') = \'dark\';\n```',
@@ -209,6 +251,12 @@ export const Day_54_MODULE: ModuleData = {
       theory: {
         summary:
           'In SQL, extracting a string from JSON often retains surrounding double quotes (e.g. \'"dark"\' instead of \'dark\'). JSON_UNQUOTE() strips these outer quotes to return clean plain text. Knowing when to use JSON versus normalized columns is a crucial architectural skill.',
+        introTable: {
+          tableName: 'user_profiles (single-row demo)',
+          description: "The concept's own INSERT artifact; engine output of JSON_UNQUOTE(JSON_EXTRACT(preferences, '$.theme')) returns the clean 'dark' text a report can render directly.",
+          columns: ['id', 'username', 'preferences', 'theme (unquoted)'],
+          rows: [[1, 'alice', '{"theme": "dark"}', 'dark']],
+        },
         explanation: [
           '**When to use JSON in SQL:**',
           '- Volatile or dynamic attributes (e.g. customizable product specs, form builder fields).',

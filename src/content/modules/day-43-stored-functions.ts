@@ -36,6 +36,33 @@ export const Day_43_MODULE: ModuleData = {
       theory: {
         summary:
           'You already know built-in SQL functions like ROUND(), UPPER(), and LENGTH(). A stored function is simply a custom function you write yourself. You give it parameters, write the formula, and it returns a single computed answer.',
+        targetQuery: {
+          sql: 'SELECT name, price, fn_calculate_tax(price, 0.08) AS tax\nFROM products\nWHERE product_id = 1;',
+          explanation: 'Calls the stored function like any built-in: parameters go in, a single computed tax value comes back per row.',
+          badge: "The query we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Invoke the stored function',
+            sqlSnippet: 'fn_calculate_tax(price, 0.08)',
+            explanation: 'The engine looks up the stored routine by name and passes price and the tax rate as typed arguments.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The stored formula runs',
+            sqlSnippet: 'RETURN subtotal * tax_rate',
+            clause: 'RETURN',
+            explanation: 'The body executes inside the database and hands back one DECIMAL value.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Name the output column',
+            sqlSnippet: 'AS tax',
+            clause: 'SELECT',
+            explanation: 'The computed value is projected beside the raw columns — for Wireless Mouse: 15.99 * 0.08 = 1.2792.',
+          },
+        ],
         introTable: {
           tableName: 'products (sample)',
           description: 'We will use product prices to compute tax and discounts consistently.',
@@ -135,6 +162,20 @@ export const Day_43_MODULE: ModuleData = {
       theory: {
         summary:
           'Once a function is registered, you can use it in your SELECT list, your WHERE conditions, and your ORDER BY clauses. It behaves just like built-in functions like UPPER() or ROUND().',
+        introTable: {
+          tableName: 'products (engine output of the live demo)',
+          description: "Engine output of SELECT name, price, fn_calc_tax(price, 0.05) AS tax FROM products WHERE fn_calc_tax(price, 0.05) > 2 — the stored function runs in both the filter and the projection.",
+          columns: ['name', 'price', 'tax'],
+          rows: [
+            ['Bluetooth Speaker', 45.5, 2.275],
+            ['Mechanical Keyboard', 65, 3.25],
+            ['Stainless Steel Pan Set', 55, 2.75],
+            ['Office Chair', 120, 6],
+            ['Filing Cabinet', 89.99, 4.4995],
+            ['Dumbbell Set 10kg', 42, 2.1],
+            ['Tennis Racket', 55, 2.75],
+          ],
+        },
         explanation: [
           'You can use a function to compute display values in SELECT:',
           '```sql\nSELECT name, fn_discounted_price(price, 15) AS sale_price\nFROM products;\n```',
@@ -223,6 +264,15 @@ export const Day_43_MODULE: ModuleData = {
       theory: {
         summary:
           'When business rules change or a temporary formula is no longer needed, clean up your schema using DROP FUNCTION. You can also use DROP FUNCTION IF EXISTS to prevent errors if the function was already removed.',
+        introTable: {
+          tableName: 'Schema state — function lifecycle',
+          description: "Engine responses from the live demo: the routine is added to the schema, then removed; data tables are untouched.",
+          columns: ['statement', 'engine response'],
+          rows: [
+            ['CREATE FUNCTION fn_temp(n INT) RETURNS INT RETURN n * 2;', "Function 'fn_temp' created successfully"],
+            ['DROP FUNCTION IF EXISTS fn_temp;', "Routine 'fn_temp' dropped"],
+          ],
+        },
         explanation: [
           'To remove a function:',
           '```sql\nDROP FUNCTION fn_calculate_tax;\n-- or safely:\nDROP FUNCTION IF EXISTS fn_calculate_tax;\n```',

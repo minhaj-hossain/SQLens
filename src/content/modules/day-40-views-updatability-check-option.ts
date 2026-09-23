@@ -36,6 +36,34 @@ export const Day_40_MODULE: ModuleData = {
       theory: {
         summary:
           'After creating a view, you might wonder: can I INSERT or UPDATE rows through it? Sometimes yes — if the view is simple enough. The rule of thumb is: if the database can trace exactly which table and which row to touch, the edit is allowed.',
+        targetQuery: {
+          sql: 'UPDATE v_cheap_products SET price = 18.00 WHERE product_id = 3;',
+          explanation: 'An edit issued against the VIEW lands directly in the base products row — single-table views with a simple WHERE are updatable.',
+          badge: "The edit we'll dissect",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Target the view',
+            sqlSnippet: 'UPDATE v_cheap_products',
+            clause: 'UPDATE',
+            explanation: 'The statement names the view, not the base table. The database resolves which underlying table and row to touch.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The new value',
+            sqlSnippet: 'SET price = 18.00',
+            clause: 'SET',
+            explanation: 'The assignment passes through to products.price because the view contains exactly one table and no aggregation.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Row selection',
+            sqlSnippet: 'WHERE product_id = 3',
+            clause: 'WHERE',
+            explanation: 'The predicate resolves through the view to the base row — the live demo then reads the changed value straight back from products.',
+          },
+        ],
         explanation: [
           'A view is editable when it meets ALL of these conditions:',
           '1. It reads from exactly ONE table (no JOINs)',
@@ -138,6 +166,21 @@ export const Day_40_MODULE: ModuleData = {
       theory: {
         summary:
           'There is a sneaky problem with editable views: you can INSERT or UPDATE a row so that it no longer matches the view filter — then it disappears from the view. WITH CHECK OPTION prevents this by rejecting any edit that would cause the row to fall outside the filter.',
+        introTable: {
+          tableName: 'v_safe_cheap (rows inside the view filter)',
+          description: "Engine output of the view's own WHERE clause (price <= 20), first 8 of 14 matching rows. WITH CHECK OPTION rejects any edit through this view that would push a row out of this set.",
+          columns: ['product_id', 'name', 'price'],
+          rows: [
+            [1, 'Wireless Mouse', 15.99],
+            [3, 'USB-C Charging Cable', 9.99],
+            [9, 'Cutting Board Set', 18],
+            [10, 'Knife Sharpener', 12.5],
+            [11, 'Desk Organizer', 14.25],
+            [12, 'Sticky Notes Pack', 4.99],
+            [13, 'Ballpoint Pen Box', 6.5],
+            [16, 'Yoga Mat', 19.99],
+          ],
+        },
         explanation: [
           'Without WITH CHECK OPTION, this works (but is surprising):',
           '```sql\nCREATE VIEW v_cheap_products AS\n  SELECT product_id, name, price FROM products WHERE price <= 20;\n\n-- This succeeds even though $999 is not "cheap":\nINSERT INTO v_cheap_products (product_id, name, price)\nVALUES (99, "Expensive Widget", 999.99);\n-- Row inserted into products, but vanishes from the view!\n```',
@@ -251,6 +294,15 @@ export const Day_40_MODULE: ModuleData = {
       theory: {
         summary:
           'Needs change. When your view definition is outdated, you can update it without going through DROP + CREATE. CREATE OR REPLACE VIEW overwrites the stored query in one step — if the view exists it is replaced, if it does not it is created fresh.',
+        introTable: {
+          tableName: 'v_expensive_products across CREATE OR REPLACE',
+          description: 'Engine COUNT(*) output from the live demo — one CREATE OR REPLACE VIEW statement swaps the filter from price > 30 to price > 50.',
+          columns: ['statement', 'filter', 'row count'],
+          rows: [
+            ['CREATE VIEW … price > 30', 'price > 30', 10],
+            ['CREATE OR REPLACE VIEW … price > 50', 'price > 50', 5],
+          ],
+        },
         explanation: [
           'The full pattern:',
           '```sql\nCREATE OR REPLACE VIEW v_expensive_products AS\n  SELECT product_id, name, price, supplier_id\n  FROM products\n  WHERE price > 50;  -- changed from 30 to 50\n```',

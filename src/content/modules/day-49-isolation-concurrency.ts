@@ -36,6 +36,33 @@ export const Day_49_MODULE: ModuleData = {
       theory: {
         summary:
           'When two transactions run at exactly the same time without any rules, four bad things can happen. Databases use isolation levels to block these problems — but each level costs more performance.',
+        targetQuery: {
+          sql: '-- Lost-update pattern:\nBEGIN;\nSELECT stock FROM products WHERE id = 1;  -- T1 sees 10\n-- T2 commits in between: stock = 8\nUPDATE products SET stock = 9 WHERE id = 1;  -- T1 overwrites!\nCOMMIT;',
+          explanation: 'The overwrite both sessions race into: each read a stock count, each decided "one left", and the second write erases the first.',
+          badge: "The script that goes wrong",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: T1 reads',
+            sqlSnippet: 'SELECT stock FROM products WHERE id = 1',
+            clause: 'SELECT',
+            explanation: 'T1 sees stock = 10 and plans to sell one unit.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: "Step 2: T2 commits underneath",
+            sqlSnippet: '-- T2: stock = 8',
+            explanation: "Between T1's read and write, T2 sells two units and commits — T1 never sees it.",
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: T1 blindly overwrites',
+            sqlSnippet: 'UPDATE products SET stock = 9 WHERE id = 1',
+            clause: 'UPDATE',
+            explanation: 'T1 writes 9 based on its stale 10 — T2\'s sale is erased (the lost update). Isolation levels exist to stop exactly this.',
+          },
+        ],
         explanation: [
           'Imagine two users — Alice and Bob — both connected to the same database at the same moment.',
           '**Problem 1 — Dirty Read**: Bob reads a row that Alice just changed but has not saved yet. If Alice cancels (ROLLBACK), Bob read data that never officially existed.',
@@ -218,6 +245,18 @@ export const Day_49_MODULE: ModuleData = {
       theory: {
         summary:
           'There is no "always correct" isolation level. The right choice depends on what kind of data integrity you need and how much concurrency (parallel users) your app must handle.',
+        introTable: {
+          tableName: 'Isolation level by workload',
+          description: 'The practical defaults from this concept: match the level to the risk of the transaction — reports can tolerate staleness, money cannot.',
+          columns: ['scenario', 'recommended level'],
+          rows: [
+            ['Dashboard / report query', 'READ COMMITTED'],
+            ['Profile or settings page read', 'READ COMMITTED'],
+            ['Check-then-act (inventory, tickets)', 'REPEATABLE READ'],
+            ['Banking / ledger transfer', 'SERIALIZABLE'],
+            ['Batch data migration', 'READ COMMITTED'],
+          ],
+        },
         explanation: [
           'Think about what your transaction is actually doing:',
           '**Report / Dashboard reads (no writes)**: READ COMMITTED is usually fine. Reports can tolerate slightly stale data — locking everything for a report makes other users wait unnecessarily.',

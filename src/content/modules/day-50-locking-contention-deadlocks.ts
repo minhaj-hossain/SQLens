@@ -36,6 +36,33 @@ export const Day_50_MODULE: ModuleData = {
       theory: {
         summary:
           'When you need to read a row and then update it, there is a gap between your SELECT and your UPDATE where another transaction could change the same row. SELECT ... FOR UPDATE eliminates that gap by locking the rows as soon as you read them.',
+        targetQuery: {
+          sql: 'BEGIN;\nSELECT id, balance FROM accounts WHERE id = 1 FOR UPDATE;\n-- Row 1 locked until COMMIT\nUPDATE accounts SET balance = balance - 200 WHERE id = 1 AND balance >= 200;\nCOMMIT;',
+          explanation: 'Read-lock-act: FOR UPDATE holds row 1 so no competing transaction can touch it between the SELECT and the UPDATE.',
+          badge: "The safe pattern we'll dissect",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Acquire the lock',
+            sqlSnippet: 'SELECT id, balance FROM accounts WHERE id = 1 FOR UPDATE',
+            clause: 'FOR UPDATE',
+            explanation: "Row 1 is locked for this transaction; any other session's FOR UPDATE or UPDATE on it now waits.",
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Act on the locked row',
+            sqlSnippet: 'UPDATE accounts SET balance = balance - 200 WHERE id = 1 AND balance >= 200',
+            clause: 'UPDATE',
+            explanation: 'Because the row cannot change underneath us, the balance check and the write form one safe unit — the guard can never race.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Release',
+            sqlSnippet: 'COMMIT;',
+            explanation: 'COMMIT ends the transaction and releases the lock; waiting sessions proceed and see the new value.',
+          },
+        ],
         explanation: [
           'Without locking, two transactions can both read the same inventory count, both decide they can sell one unit, and both succeed — selling more stock than exists.',
           '```sql\n-- WITHOUT locking (dangerous):\nBEGIN;\nSELECT stock FROM products WHERE id = 1;  -- both T1 and T2 see stock=1\n-- T1 and T2 both decide to sell\nUPDATE products SET stock = stock - 1 WHERE id = 1;  -- stock goes to 0 twice!\nCOMMIT;\n```',

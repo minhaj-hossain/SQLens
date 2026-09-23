@@ -36,6 +36,33 @@ export const Day_56_MODULE: ModuleData = {
       theory: {
         summary:
           'In production, application servers and databases are deployed asynchronously. If you rename column `price` to `unit_price` in the database before the new code is deployed, old servers will crash. If you deploy code first, it crashes because `unit_price` doesn\'t exist yet. The Expand / Contract pattern solves this.',
+        targetQuery: {
+          sql: 'ALTER TABLE products ADD COLUMN discount_price DECIMAL(10,2);\nSELECT product_id, name, price, discount_price FROM products;',
+          explanation: 'Phase 1 (Expand): add the new column beside the old one — old code keeps running untouched.',
+          badge: "The expand step we'll dissect",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Expand additively',
+            sqlSnippet: 'ALTER TABLE products ADD COLUMN discount_price DECIMAL(10,2)',
+            clause: 'ALTER',
+            explanation: 'ADD COLUMN is non-destructive: price stays, discount_price arrives nullable, both generations of app code coexist.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: See both columns',
+            sqlSnippet: 'SELECT product_id, name, price, discount_price',
+            clause: 'SELECT',
+            explanation: 'Historical rows show price filled and discount_price NULL — that NULL is the backfill backlog Phase 2 will fill.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Contract only after cutover',
+            sqlSnippet: '-- later: ALTER TABLE products DROP COLUMN price',
+            explanation: 'The old column is dropped in a SEPARATE deployment, once no server reads it anymore — never in this step.',
+          },
+        ],
         explanation: [
           'The Three Phases of Zero-Downtime Migration:',
           '1. **Phase 1: Expand (Additive)**',

@@ -36,6 +36,33 @@ export const Day_44_MODULE: ModuleData = {
       theory: {
         summary:
           'While a function computes and returns a single value, a stored procedure performs an action: updating tables, inserting records, or running administrative tasks. You execute a stored procedure using the CALL statement.',
+        targetQuery: {
+          sql: 'CALL sp_restock(1, 10);',
+          explanation: 'Runs the stored routine: arguments bind to parameters, and the packaged UPDATE executes in one round trip.',
+          badge: "The statement we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Invoke by name',
+            sqlSnippet: 'CALL sp_restock(1, 10)',
+            explanation: 'CALL looks up the stored procedure; the arguments (1, 10) bind positionally to (p_id, qty).',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Parameters substitute',
+            sqlSnippet: 'WHERE product_id = p_id',
+            clause: 'WHERE',
+            explanation: 'Inside the body, p_id becomes 1 and qty becomes 10 — a parameter is data, never a column name.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The packaged action runs',
+            sqlSnippet: 'SET quantity_in_stock = quantity_in_stock + qty',
+            clause: 'UPDATE',
+            explanation: 'One stock update executes: product 1 gains 10 units, reported as affected_rows = 1.',
+          },
+        ],
         introTable: {
           tableName: 'products (sample)',
           description: 'Stock levels we want to update safely using procedures.',
@@ -143,6 +170,15 @@ export const Day_44_MODULE: ModuleData = {
       theory: {
         summary:
           'In business applications, a single action often touches multiple tables. A stored procedure allows you to write all the steps in sequence between BEGIN and END so they can be triggered with one network call.',
+        introTable: {
+          tableName: 'orders.order_id 1 across CALL sp_mark_shipped(1)',
+          description: 'Engine output around the live demo: the CALL binds target_order_id = 1, runs the packaged UPDATE, and the status flips in one round trip.',
+          columns: ['checkpoint', 'order_id', 'status'],
+          rows: [
+            ['Seed (before CALL)', 1, 'delivered'],
+            ['After CALL sp_mark_shipped(1)', 1, 'shipped'],
+          ],
+        },
         explanation: [
           'Consider updating order status: when an order is cancelled, you might want to:',
           '1. Set order status = "cancelled"',
@@ -233,6 +269,15 @@ export const Day_44_MODULE: ModuleData = {
       theory: {
         summary:
           'When workflows are retired or procedures are replaced, use DROP PROCEDURE to remove them from the database schema.',
+        introTable: {
+          tableName: 'Schema state — procedure lifecycle',
+          description: 'Engine responses from the live demo: the routine is registered, then removed; product rows are untouched.',
+          columns: ['statement', 'engine response'],
+          rows: [
+            ['CREATE PROCEDURE sp_temp() BEGIN … END;', "Procedure 'sp_temp' created successfully"],
+            ['DROP PROCEDURE IF EXISTS sp_temp;', "Routine 'sp_temp' dropped"],
+          ],
+        },
         explanation: [
           'To remove a procedure:',
           '```sql\nDROP PROCEDURE IF EXISTS sp_old_routine;\n```',

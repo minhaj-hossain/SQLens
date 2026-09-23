@@ -36,6 +36,37 @@ export const Day_51_MODULE: ModuleData = {
       theory: {
         summary:
           'When you prepend EXPLAIN to a SELECT query, the database does not return data. Instead, it reports its planned execution strategy — which tables it accesses, what indexes it considered, and how many rows it expects to inspect.',
+        targetQuery: {
+          sql: 'EXPLAIN SELECT product_id, name FROM products WHERE price > 20;',
+          explanation: "EXPLAIN returns the optimizer's plan instead of data — one row describing how products will be accessed.",
+          badge: "The plan we'll read",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Ask for the plan',
+            sqlSnippet: 'EXPLAIN',
+            explanation: 'The prefix tells the engine to compile the query and report the strategy, not execute it to completion.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The access method',
+            sqlSnippet: 'type: ALL, key: NULL',
+            explanation: 'No index covers price > 20, so type = ALL with no key — every one of the 28 product rows will be read.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The cost estimate',
+            sqlSnippet: 'rows: 28',
+            explanation: "The rows column is the optimizer's estimate of how many rows it must examine — here, the whole table.",
+          },
+        ],
+        introTable: {
+          tableName: 'EXPLAIN SELECT product_id, name FROM products WHERE price > 20',
+          description: 'Engine-computed plan for the live demo: type = ALL with key = NULL means a full scan of all 28 products.',
+          columns: ['table', 'type', 'possible_keys', 'key', 'rows'],
+          rows: [['products', 'ALL', 'PRIMARY', null, 28]],
+        },
         explanation: [
           'Every SQL query gets compiled by a query optimizer before running. The optimizer chooses the fastest way to fetch the data based on available indexes and table statistics.',
           'Key columns in MySQL / standard EXPLAIN output:',
@@ -130,6 +161,15 @@ export const Day_51_MODULE: ModuleData = {
       theory: {
         summary:
           'Adding an index gives the optimizer a fast binary-search or B-tree path. When you create an index on a filtered column, subsequent EXPLAIN plans switch from ALL to range or ref.',
+        introTable: {
+          tableName: 'EXPLAIN WHERE price > 30 — before vs after CREATE INDEX',
+          description: "Engine-computed plans for the same query: after idx_prod_price exists the access type becomes range, key = idx_prod_price, and estimated rows drop from 28 to 7 (Extra: Using index condition; Using where).",
+          columns: ['when', 'type', 'key', 'rows'],
+          rows: [
+            ['Before CREATE INDEX', 'ALL', null, 28],
+            ['After CREATE INDEX idx_prod_price', 'range', 'idx_prod_price', 7],
+          ],
+        },
         explanation: [
           'An index is like an alphabetized index in the back of a book. Without it, you have to read the book page by page (ALL). With it, you jump directly to the target entries (range or ref).',
           'Comparing access types after indexing:',
@@ -216,6 +256,12 @@ export const Day_51_MODULE: ModuleData = {
       theory: {
         summary:
           'When you query by a table\'s PRIMARY KEY or a UNIQUE column with an equality filter (=), the database knows in advance that at most ONE row can match. This is type = const — an instant, constant-time lookup.',
+        introTable: {
+          tableName: 'EXPLAIN SELECT * FROM categories WHERE category_id = 1',
+          description: 'Engine-computed plan: PRIMARY key equality collapses to type = const with exactly 1 estimated row.',
+          columns: ['table', 'type', 'key', 'rows', 'Extra'],
+          rows: [['categories', 'const', 'PRIMARY', 1, 'Using where']],
+        },
         explanation: [
           'The optimizer treats `const` queries as having a cost of essentially zero. Because the key is unique, once the row is found, search stops immediately.',
           'Characteristics of `type = const`:',

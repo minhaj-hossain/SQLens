@@ -36,6 +36,34 @@ export const Day_42_MODULE: ModuleData = {
       theory: {
         summary:
           'Hierarchies — org charts, folder trees, product categories — are stored in a table where one column points back to the same table. An employees table might have employee_id and manager_id, where manager_id is the employee_id of the person above them.',
+        targetQuery: {
+          sql: 'SELECT e.name AS employee, m.name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.emp_id;',
+          explanation: 'A self-join reads the hierarchy: each employee row joins to the row of their manager in the same table.',
+          badge: "The query we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Read the table twice',
+            sqlSnippet: 'FROM employees e',
+            clause: 'FROM',
+            explanation: 'Two aliases (e and m) let one table play both roles: worker and manager.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Link one level up',
+            sqlSnippet: 'LEFT JOIN employees m ON e.manager_id = m.emp_id',
+            clause: 'JOIN',
+            explanation: 'manager_id points back into the same table — the join hops exactly one level per call.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Keep the CEO too',
+            sqlSnippet: 'LEFT JOIN',
+            clause: 'JOIN',
+            explanation: 'LEFT JOIN keeps employees whose manager_id is NULL (the CEO) with a blank manager instead of dropping the row.',
+          },
+        ],
         explanation: [
           'Our exercises use a virtual employees table (built with setupSql) so you can practice tree traversal without changing the core schema:',
           '```\nemployees\n  emp_id      — unique ID for this person\n  name        — the person name\n  manager_id  — the emp_id of their direct manager (NULL for the CEO)\n```',

@@ -35,6 +35,43 @@ export const Day_57_MODULE: ModuleData = {
       theory: {
         summary:
           'Multi-tenant systems must guarantee at the database layer that no tenant can inspect another\'s records. Encapsulate customer 1\'s orders behind an isolated reporting view.',
+        targetQuery: {
+          sql: 'CREATE VIEW v_customer1_orders AS SELECT order_id, customer_id, order_date, status FROM orders WHERE customer_id = 1;\nSELECT * FROM v_customer1_orders;',
+          explanation: 'Define the tenant boundary, then read through it — only customer 1 rows come back.',
+          badge: "The deliverable script we'll dissect",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Encode the tenant rule',
+            sqlSnippet: 'WHERE customer_id = 1',
+            clause: 'WHERE',
+            explanation: 'The tenant filter lives inside the view definition — every future reader inherits it automatically.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Project only safe columns',
+            sqlSnippet: 'SELECT order_id, customer_id, order_date, status',
+            clause: 'SELECT',
+            explanation: 'The view exposes exactly four columns — anything sensitive in orders never leaves the boundary.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: Read through the boundary',
+            sqlSnippet: 'SELECT * FROM v_customer1_orders',
+            explanation: 'Engine output: three rows (orders 1, 14, 18), all customer_id = 1 — cross-tenant rows are physically unreachable.',
+          },
+        ],
+        introTable: {
+          tableName: 'v_customer1_orders (engine output)',
+          description: "Engine output of the live demo: exactly customer 1's three orders — order 1's history and nothing from any other customer.",
+          columns: ['order_id', 'customer_id', 'order_date', 'status'],
+          rows: [
+            [1, 1, '2026-06-10', 'delivered'],
+            [14, 1, '2026-08-02', 'delivered'],
+            [18, 1, '2026-08-23', 'pending'],
+          ],
+        },
         explanation: [
           'In this deliverable, you will create a dedicated security boundary view `v_customer1_orders` that projects `order_id`, `customer_id`, `order_date`, and `status` strictly for `customer_id = 1`.',
           'This provides a secure endpoint for customer-facing dashboards that physically prevents cross-tenant data leakage.',
@@ -195,6 +232,12 @@ export const Day_57_MODULE: ModuleData = {
       theory: {
         summary:
           'To support endless mobile scrolling and massive API request volume, eliminate OFFSET completely by implementing keyset pagination using the primary key cursor.',
+        introTable: {
+          tableName: 'Keyset page for customer 1 (engine output)',
+          description: "Engine output of the live demo: the cursor order_id > 1 seeks straight to customer 1's next delivered order — no rows skipped, no OFFSET.",
+          columns: ['order_id', 'customer_id', 'order_date', 'status'],
+          rows: [[14, 1, '2026-08-02', 'delivered']],
+        },
         explanation: [
           'In this deliverable, you will construct a keyset cursor query that fetches delivered orders for customer 1 starting after `order_id = 1`.',
           'By seeking on `WHERE customer_id = 1 AND status = \'delivered\' AND order_id > 1 ORDER BY order_id ASC LIMIT 2`, the database navigates directly to the target record in O(1) time.',

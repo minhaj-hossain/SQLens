@@ -36,6 +36,34 @@ export const Day_45_MODULE: ModuleData = {
       theory: {
         summary:
           'Blindly updating tables is dangerous. If an application asks to deduct 100 units from an inventory that only has 10, the stock becomes negative. In database routines, you protect data by checking conditions before modifying rows.',
+        targetQuery: {
+          sql: 'UPDATE products SET quantity_in_stock = quantity_in_stock - 5 WHERE product_id = 2 AND quantity_in_stock >= 5;',
+          explanation: 'A guarded UPDATE: the safety condition in WHERE prevents the stock from ever going negative.',
+          badge: "The query we'll break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: The mutation',
+            sqlSnippet: 'SET quantity_in_stock = quantity_in_stock - 5',
+            clause: 'SET',
+            explanation: 'Requests a 5-unit deduction from the current stock value.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: Pick the row',
+            sqlSnippet: 'WHERE product_id = 2',
+            clause: 'WHERE',
+            explanation: 'Targets exactly the Bluetooth Speaker row.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The guard',
+            sqlSnippet: 'AND quantity_in_stock >= 5',
+            clause: 'WHERE',
+            explanation: 'If stock were below 5 the predicate fails and 0 rows update — inventory can never go negative, even under races.',
+          },
+        ],
         introTable: {
           tableName: 'products (sample)',
           description: 'Stock levels that must never become negative.',
@@ -132,6 +160,16 @@ export const Day_45_MODULE: ModuleData = {
       theory: {
         summary:
           'When an operation performs multiple mutations, an error on step 2 must cancel step 1. Wrapping operations in a transaction (BEGIN / COMMIT / ROLLBACK) ensures all changes happen together or none at all.',
+        introTable: {
+          tableName: 'products.quantity_in_stock (product 1) across ROLLBACK',
+          description: 'Engine output around the demo transaction: the −5 deduction is visible inside the transaction and erased by ROLLBACK.',
+          columns: ['checkpoint', 'quantity_in_stock'],
+          rows: [
+            ['Seed (before BEGIN)', 40],
+            ['Inside transaction (after UPDATE −5)', 35],
+            ['After ROLLBACK', 40],
+          ],
+        },
         explanation: [
           'Consider transferring stock between warehouses or placing an order:',
           '1. Step 1: Deduct $50 from customer balance',
@@ -222,6 +260,15 @@ export const Day_45_MODULE: ModuleData = {
       theory: {
         summary:
           'The most reliable way to prevent bad data from ever entering your database is by setting schema constraints (like CHECK constraints). When an update violates a rule, the database immediately halts the operation with a clear error.',
+        introTable: {
+          tableName: 'CHECK (balance >= 0) — engine responses',
+          description: 'Real engine output: the valid INSERT is accepted; the violating UPDATE is rejected with a named error instead of silently writing bad data.',
+          columns: ['statement', 'engine response'],
+          rows: [
+            ['INSERT INTO accounts (acc_id, balance) VALUES (1, 100);', 'Inserted 1 row(s) successfully'],
+            ['UPDATE accounts SET balance = -50 WHERE acc_id = 1;', 'ERROR: CHECK constraint violated: balance >= 0'],
+          ],
+        },
         explanation: [
           'In earlier milestones, you saw how CHECK constraints block invalid data automatically:',
           '```sql\nALTER TABLE products ADD CONSTRAINT chk_positive_price CHECK (price > 0);\n```',
