@@ -33,6 +33,8 @@ interface Finding {
 const findings: Finding[] = [];
 let tasksChecked = 0;
 let rewritesRun = 0;
+/** Variants whose dataset differed from the baseline (not form-equivalent). */
+let skippedNonEquivalent = 0;
 
 /** Replace text only OUTSIDE string literals. */
 function mapOutsideLiterals(sql: string, fn: (chunk: string) => string): string {
@@ -173,6 +175,47 @@ function equivalents(sql: string, hasOrderRequirement: boolean): Array<[string, 
     }
   }
 
+  // --- P1 batch — Milestone-4 shape families --------------------------------
+  // Every variant still flows through the row-equality guard in the caller
+  // (a rewrite whose dataset differs is dropped, never a false-reject), so
+  // these can be aggressive about form while staying honest about content.
+
+  // 5. Comment header + trailing semicolon tolerance.
+  const commented = `-- approach-fairness rewrite\n${sql.trim().replace(/;\s*$/, '')};`;
+  if (commented !== sql) out.push(['leading comment + trailing semicolon', commented]);
+
+  // 6. BETWEEN → inclusive range expansion (and the reverse via keyword-case
+  //    family doesn't apply here; this direction is the one learners rewrite).
+  const unBeted = mapOutsideLiterals(sql, (s) =>
+    s.replace(/\b([A-Za-z_][\w.]*)\s+BETWEEN\s+(-?[\w.]+)\s+AND\s+(-?[\w.]+)/gi, '$1 >= $2 AND $1 <= $3'),
+  );
+  if (unBeted !== sql) out.push(['BETWEEN → >= AND <=', unBeted]);
+
+  // 7. COALESCE ↔ IFNULL (both are registered equivalents in the dialect).
+  const coaToIf = mapOutsideLiterals(sql, (s) => s.replace(/\bCOALESCE\s*\(/gi, 'IFNULL('));
+  if (coaToIf !== sql) out.push(['COALESCE → IFNULL', coaToIf]);
+  const ifToCoa = mapOutsideLiterals(sql, (s) => s.replace(/\bIFNULL\s*\(/gi, 'COALESCE('));
+  if (ifToCoa !== sql) out.push(['IFNULL → COALESCE', ifToCoa]);
+
+  // 8. Integer cursor step (keyset pagination): `col > 5` ≡ `col >= 6` and
+  //    `col < 5` ≡ `col <= 4` for integer data. On non-integer datasets the
+  //    forms genuinely differ — the row-equality guard drops the variant then.
+  const stepped = mapOutsideLiterals(sql, (s) =>
+    s
+      .replace(/\b([A-Za-z_][\w.]*)\s*>\s*(\d+)(?!\.\d)/g, (_, c, n) => `${c} >= ${Number(n) + 1}`)
+      .replace(/\b([A-Za-z_][\w.]*)\s*<\s*(\d+)(?!\.\d)/g, (_, c, n) => `${c} <= ${Number(n) - 1}`),
+  );
+  if (stepped !== sql) out.push(['integer cursor step (> n → >= n+1)', stepped]);
+
+  // 9. JSON path quoting (MySQL-legal): '$.a.b' ≡ '$."a"."b"' ≡ '$["a"]'.
+  //    Path literals only — any other string literal is untouched.
+  const quotedSeg = sql.replace(/'(\$\.([\w]+(?:\.[\w]+)*)+)'/g, (_m, p: string) =>
+    `'${p.split('.').map((seg, i) => (i === 0 ? seg : `"${seg}"`)).join('.')}'`,
+  );
+  if (quotedSeg !== sql) out.push(['JSON path quoted segments ($.a → $."a")', quotedSeg]);
+  const bracketPath = sql.replace(/'\$\.([\w]+)'/g, (_m, seg: string) => `'$["${seg}"]'`);
+  if (bracketPath !== sql) out.push(['JSON path bracket form ($.a → $["a"])', bracketPath]);
+
   return out;
 }
 
@@ -229,6 +272,9 @@ for (const mod of ALL_MODULES as any[]) {
       // Safe because every task here passed `isReadOnlySelect`, so running the
       // rewrite cannot mutate the session.
       const hasOrderRequirement = !!(task.validation.requireOrderBy && task.validation.requireOrderBy.length);
+      // P1: reference answers for tasks carrying `judgment[]` — the audits
+      // simulate a perfect learner (right SQL + right reasoning).
+      const judgmentAnswers = task.validation.judgment?.map((j: { correctIndex: number }) => j.correctIndex);
       for (const [name, variant] of equivalents(task.solutionSql, hasOrderRequirement)) {
         rewritesRun++;
         let vr;
@@ -238,7 +284,17 @@ for (const mod of ALL_MODULES as any[]) {
           findings.push({ taskId: label, kind: 'EXEC_ERROR', detail: `${name} threw: ${e instanceof Error ? e.message : String(e)}` });
           continue;
         }
-        const o = validateTaskSolution(variant, vr, task.validation, expected);
+        // P1 guard: a "form" rewrite that changes the ROWS was never a form
+        // rewrite (e.g. the integer-cursor step on decimal data) — it is not a
+        // fairness candidate at all, so drop it silently but count it. Engine-
+        // side equivalence of these operators is proven separately by
+        // tests/engine/equivalence.test.ts; this gate proves the VALIDATOR
+        // accepts equivalent forms.
+        if (vr.success && !sameRows(vr.rows, expected.rows)) {
+          skippedNonEquivalent++;
+          continue;
+        }
+        const o = validateTaskSolution(variant, vr, task.validation, expected, judgmentAnswers);
         if (!o.passed) {
           findings.push({ taskId: label, kind: 'FALSE_REJECT', detail: `${name}: ${o.feedback}` });
         }
@@ -251,7 +307,7 @@ for (const mod of ALL_MODULES as any[]) {
         const sr = ex.executeQuery(stripped);
         if (sr.success && !sameRows(sr.rows, expected.rows)) {
           rewritesRun++;
-          const o = validateTaskSolution(stripped, sr, task.validation, expected);
+          const o = validateTaskSolution(stripped, sr, task.validation, expected, judgmentAnswers);
           if (o.passed) {
             findings.push({
               taskId: label,
@@ -265,7 +321,7 @@ for (const mod of ALL_MODULES as any[]) {
       // --- 3. strict rules must accept the reference answer ---------------------
       if (task.validation.strictConstruct) {
         const r = ex.executeQuery(task.solutionSql);
-        const o = validateTaskSolution(task.solutionSql, r, task.validation, expected);
+        const o = validateTaskSolution(task.solutionSql, r, task.validation, expected, judgmentAnswers);
         if (!o.passed) {
           findings.push({ taskId: label, kind: 'STRICT_IMPOSSIBLE', detail: o.feedback });
         }
@@ -274,7 +330,7 @@ for (const mod of ALL_MODULES as any[]) {
   }
 }
 
-console.log(`audit-equivalence: tasks=${tasksChecked} rewrites=${rewritesRun} findings=${findings.length}`);
+console.log(`audit-equivalence: tasks=${tasksChecked} rewrites=${rewritesRun} skipped-non-equivalent=${skippedNonEquivalent} findings=${findings.length}`);
 if (findings.length > 0) {
   for (const f of findings) console.log(`  ${f.kind.padEnd(18)} ${f.taskId}\n      ${f.detail}`);
   process.exit(1);
