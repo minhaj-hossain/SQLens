@@ -95,7 +95,8 @@ export const Day_27_MODULE: ModuleData = {
           description: 'Define the table schema for product tags to allow categorizing inventory items with tags.',
           instructions: [
             'Create a new table named `product_tags`.',
-            'Include an integer column named `tag_id` and a variable-length string column named `tag_name` with a maximum length of 50 characters.',
+            'Define `tag_id` as `INT`.',
+            'Define `tag_name` as `VARCHAR(50)` (a string of up to 50 characters).',
             'Terminate your SQL statement with a semicolon.',
           ],
           type: 'guided',
@@ -106,6 +107,8 @@ export const Day_27_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `CREATE TABLE product_tags (tag_id INT, tag_name VARCHAR(50));`' }],
           validation: {
             targetTable: 'product_tags',
+            requiredColumns: ['tag_id', 'tag_name'],
+            verifyColumnTypes: true,
             expectedRowCount: 1,
           },
           successMessage: 'Product tags table created!',
@@ -117,7 +120,8 @@ export const Day_27_MODULE: ModuleData = {
           description: 'Create a storage table named `quick_notes` for internal team notes.',
           instructions: [
             'Create a new table named `quick_notes`.',
-            'Define an integer column `note_id` and an unbounded text column `content` (TEXT type).',
+            'Define `note_id` as `INT`.',
+            'Define `content` as `TEXT` (unbounded text for long notes).',
             'Terminate your SQL statement with a semicolon.',
           ],
           type: 'independent',
@@ -128,6 +132,8 @@ export const Day_27_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `CREATE TABLE quick_notes (note_id INT, content TEXT);`' }],
           validation: {
             targetTable: 'quick_notes',
+            requiredColumns: ['note_id', 'content'],
+            verifyColumnTypes: true,
             expectedRowCount: 1,
           },
           successMessage: 'Well done! Quick notes table created.',
@@ -222,7 +228,7 @@ export const Day_27_MODULE: ModuleData = {
           instructions: [
             'Create a table named `product_metrics`.',
             'Define `product_id` as an INT.',
-            'Define `weight_kg` as a DECIMAL with 6 total digits of precision and 2 decimal scale places.',
+            'Define `weight_kg` as `DECIMAL(6,2)` (6 total digits, 2 after the decimal point).',
             'Define `is_fragile` as a BOOLEAN flag.',
             'Define `logged_at` as a DATETIME timestamp.',
             'Terminate your SQL statement with a semicolon.',
@@ -235,6 +241,8 @@ export const Day_27_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `CREATE TABLE product_metrics (product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME);`' }],
           validation: {
             targetTable: 'product_metrics',
+            requiredColumns: ['product_id', 'weight_kg', 'is_fragile', 'logged_at'],
+            verifyColumnTypes: true,
             expectedRowCount: 1,
           },
           successMessage: 'Product metrics table created!',
@@ -259,6 +267,8 @@ export const Day_27_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `CREATE TABLE customer_preferences (customer_id INT, newsletter_subscribed BOOLEAN, monthly_budget DECIMAL(10,2));`' }],
           validation: {
             targetTable: 'customer_preferences',
+            requiredColumns: ['customer_id', 'newsletter_subscribed', 'monthly_budget'],
+            verifyColumnTypes: true,
             expectedRowCount: 1,
           },
           successMessage: 'Well done! Data types declared accurately.',
@@ -356,6 +366,8 @@ export const Day_27_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `CREATE TABLE categories_new (category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100));`' }],
           validation: {
             targetTable: 'categories_new',
+            requiredColumns: ['category_id', 'name'],
+            verifyColumnTypes: true,
             expectedRowCount: 1,
           },
           successMessage: 'Categories table created with Primary Key!',
@@ -379,6 +391,8 @@ export const Day_27_MODULE: ModuleData = {
           hints: [{ level: 1, text: 'Use `CREATE TABLE departments (dept_id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(80));`' }],
           validation: {
             targetTable: 'departments',
+            requiredColumns: ['dept_id', 'title'],
+            verifyColumnTypes: true,
             expectedRowCount: 1,
           },
           successMessage: 'Perfect! Primary key constraint configured.',
@@ -419,6 +433,8 @@ export const Day_27_MODULE: ModuleData = {
         hints: [{ level: 1, text: 'Use `CREATE TABLE product_reviews (...)` with column definitions for review_id, product_id, customer_id, rating, comment, and created_at.' }],
         validation: {
           targetTable: 'product_reviews',
+          requiredColumns: ['review_id', 'product_id', 'customer_id', 'rating', 'comment', 'created_at'],
+          verifyColumnTypes: true,
           expectedRowCount: 1,
         },
         successMessage: 'Task 1 completed! product_reviews table schema defined.',

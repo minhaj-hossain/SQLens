@@ -66,5 +66,8 @@ jobs:
       - name: Custom-validator audit (predicates reachable, refutable, explainable)
         run: npm run audit:custom-validators
 
+      - name: DDL contract audit (prompt visibility + requiredColumns)
+        run: npm run audit:ddl-contracts
+
       - name: Production build
         run: npm run build

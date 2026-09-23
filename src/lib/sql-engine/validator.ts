@@ -2,6 +2,7 @@ import { QueryExecutionResult } from '../../types/database';
 import { ValidationRule, ExpectedErrorCategory } from '../../types/curriculum';
 import { parseSql, ParsedOrderBy } from './parser';
 import { splitStatements } from './split-statements';
+import { extractDdlColumns } from './ddl-columns';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 
 export interface ValidationOutcome {
@@ -635,11 +636,17 @@ export function validateTaskSolution(
     // explicitly taught via requiredAliases. This allows aliased / reordered
     // projections (SELECT name AS n, price) instead of false-failing them.
     if (!(rule.requireExactResult && expected?.success)) {
-    const resultCols = result.columns.map(c => c.toLowerCase());
+    // DDL contract (Workstream A): CREATE/ALTER statements return no result
+    // grid, so the required-column contract is read from the statement itself
+    // (`extractDdlColumns`). SELECT/DML keep the result-grid path below.
+    const ddlCols = extractDdlColumns(structural);
+    const isDdlContract = ddlCols.length > 0;
+    const sourceCols = isDdlContract ? ddlCols : result.columns;
+    const resultCols = sourceCols.map(c => c.toLowerCase());
     for (const reqCol of rule.requiredColumns) {
       if (!resultCols.includes(reqCol.toLowerCase())) {
-        // Look for possible typo in returned columns
-        const typoCandidates = result.columns.filter(c => levenshtein(c.toLowerCase(), reqCol.toLowerCase()) <= 2);
+        // Look for possible typo in returned/declared columns
+        const typoCandidates = sourceCols.filter(c => levenshtein(c.toLowerCase(), reqCol.toLowerCase()) <= 2);
         let typoHint = '';
         if (typoCandidates.length > 0) {
           typoHint = ` Did you mean '${reqCol}' instead of '${typoCandidates[0]}'?`;
@@ -647,7 +654,9 @@ export function validateTaskSolution(
 
         return {
           passed: false,
-          feedback: `Missing column '${reqCol}'.${typoHint} Your query currently outputs: [${result.columns.join(', ')}].`,
+          feedback: isDdlContract
+            ? `Missing column '${reqCol}'.${typoHint} Your statement currently declares: [${ddlCols.join(', ')}].`
+            : `Missing column '${reqCol}'.${typoHint} Your query currently outputs: [${result.columns.join(', ')}].`,
         };
       }
     }
