@@ -66,7 +66,7 @@ export const Day_50_MODULE: ModuleData = {
         exampleQueryExplanation:
           'The FOR UPDATE lock makes the read and the write atomic from a concurrency perspective. No other transaction can see the "pre-update" balance and act on it while this transaction is open.',
         liveDemoSql:
-          "CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, stock INTEGER);\nINSERT INTO products VALUES (1,'Widget',5),(2,'Gadget',0);\n-- Simulate a safe stock decrement:\nBEGIN;\nSELECT id, name, stock FROM products WHERE id = 1 FOR UPDATE;\nUPDATE products SET stock = stock - 1 WHERE id = 1 AND stock > 0;\nSELECT id, name, stock FROM products WHERE id = 1;\nCOMMIT;",
+          "CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, stock INTEGER);\nINSERT INTO products (id, name, stock) VALUES (1,'Widget',5),(2,'Gadget',0);\n-- Simulate a safe stock decrement:\nBEGIN;\nSELECT id, name, stock FROM products WHERE id = 1 FOR UPDATE;\nUPDATE products SET stock = stock - 1 WHERE id = 1 AND stock > 0;\nSELECT id, name, stock FROM products WHERE id = 1;\nCOMMIT;",
         liveDemoNotes:
           'In a single-session learning environment, FOR UPDATE has no visible effect — there is no second session to compete. But the pattern is correct and the syntax is what production code uses.',
         mcqs: [
@@ -156,7 +156,7 @@ export const Day_50_MODULE: ModuleData = {
         exampleQueryExplanation:
           'The audit log entry at the start is preserved. The failed transfer is rolled back to the savepoint. A failure-log entry is added. Only the audit trail is committed — the money never moved.',
         liveDemoSql:
-          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts VALUES (1,'Alice',500),(2,'Bob',300);\nBEGIN;\nSAVEPOINT before_debit;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nSELECT id, owner, balance FROM accounts;\nROLLBACK TO SAVEPOINT before_debit;\nSELECT id, owner, balance FROM accounts;\nCOMMIT;",
+          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts (id, owner, balance) VALUES (1,'Alice',500),(2,'Bob',300);\nBEGIN;\nSAVEPOINT before_debit;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nSELECT id, owner, balance FROM accounts;\nROLLBACK TO SAVEPOINT before_debit;\nSELECT id, owner, balance FROM accounts;\nCOMMIT;",
         liveDemoNotes:
           'First SELECT shows Alice at 400. After ROLLBACK TO SAVEPOINT, the second SELECT shows Alice back at 500. The debit never committed. The transaction closes with COMMIT — but there is nothing to commit since we rolled back to before the debit.',
         mcqs: [
@@ -250,7 +250,7 @@ export const Day_50_MODULE: ModuleData = {
         exampleQueryExplanation:
           'Locking both rows together with ORDER BY id guarantees consistent lock order. Any concurrent transaction doing the same will lock id=1 first, then id=2 — no circular wait possible.',
         liveDemoSql:
-          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts VALUES (1,'Alice',500),(2,'Bob',300);\n-- Safe ordered lock + transfer:\nBEGIN;\nSELECT id, balance FROM accounts WHERE id IN (1,2) ORDER BY id FOR UPDATE;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\nSELECT id, owner, balance FROM accounts;\nCOMMIT;",
+          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts (id, owner, balance) VALUES (1,'Alice',500),(2,'Bob',300);\n-- Safe ordered lock + transfer:\nBEGIN;\nSELECT id, balance FROM accounts WHERE id IN (1,2) ORDER BY id FOR UPDATE;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\nSELECT id, owner, balance FROM accounts;\nCOMMIT;",
         liveDemoNotes:
           'The ORDER BY id ensures consistent lock order. In a real system with two concurrent transfer transactions, this ordering prevents the circular-wait deadlock.',
         mcqs: [
@@ -326,7 +326,7 @@ export const Day_50_MODULE: ModuleData = {
           'SELECT id, label, status FROM seats WHERE id = 5 FOR UPDATE',
           'UPDATE seats SET status = \'reserved\' WHERE id = 5',
           'SAVEPOINT before_log',
-          "INSERT INTO booking_log VALUES (1, 5, '2025-01-01')",
+          "INSERT INTO booking_log (id, seat_id, booked_at) VALUES (1, 5, '2025-01-01')",
           'SELECT s.id, s.label, s.status, b.booked_at FROM seats s LEFT JOIN booking_log b ON s.id = b.seat_id WHERE s.id = 5',
           'COMMIT',
         ],

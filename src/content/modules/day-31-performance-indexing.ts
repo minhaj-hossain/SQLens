@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 31 (id: day-21, frozen legacy ID) — Performance & Indexing
@@ -275,7 +275,7 @@ export const Day_31_MODULE: ModuleData = {
           title: 'Task 2 (Independent): Create an index and watch the plan change',
           description: 'supplier_id has no index yet. Create one, then re-explain a supplier lookup — the plan should flip from ALL to ref.',
           instructions: [
-            'Create a secondary index named `idx_products_supplier` on the `supplier_id` column of `products`.',
+            'Run `CREATE INDEX idx_products_supplier ON products(supplier_id);` - a secondary index on the `supplier_id` column of `products`.',
             'In the same script, run an EXPLAIN query filtering `products` where `supplier_id` equals 2.',
             'Verify that the index lookup converts the execution plan from a full table scan (`ALL`) to an indexed lookup (`ref`).',
           ],

@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_27_MODULE: ModuleData = {
   id: 'day-27',
@@ -420,9 +420,9 @@ export const Day_27_MODULE: ModuleData = {
           'Create a table named `product_reviews`.',
           'Define `review_id` as an INT with AUTO_INCREMENT and PRIMARY KEY.',
           'Define `product_id` and `customer_id` as non-nullable integer columns (`INT NOT NULL`).',
-          'Define `rating` as `INT NOT NULL` with a CHECK constraint enforcing values BETWEEN 1 AND 5.',
+          'Define `rating` as `INT NOT NULL` with `CHECK (rating BETWEEN 1 AND 5)`.',
           'Define `comment` as a TEXT column for free-form review notes.',
-          'Define `created_at` as a DATETIME column defaulting to CURRENT_TIMESTAMP.',
+          'Define `created_at` as `DATETIME DEFAULT CURRENT_TIMESTAMP` (the column has a default).' ,
           'Terminate your SQL statement with a semicolon.',
         ],
         type: 'challenge',

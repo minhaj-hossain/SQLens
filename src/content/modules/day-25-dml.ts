@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_25_MODULE: ModuleData = {
   id: 'day-25',
@@ -110,7 +110,7 @@ export const Day_25_MODULE: ModuleData = {
           description: 'Add a new product record to the catalog with appropriate product attributes.',
           instructions: [
             'Write an `INSERT INTO products` statement specifying the column list: `name`, `supplier_id`, `category_id`, `price`, `quantity_in_stock`, and `reorder_level`.',
-            'Choose any product name, set `supplier_id` and `category_id` to any existing IDs, and supply a positive `price`, `quantity_in_stock`, and `reorder_level`.',
+            'Insert the product named ` Ultra Wireless Mouse` with `supplier_id` 1, `category_id` 1, `price` 49.99, `quantity_in_stock` 100, and `reorder_level` 20 - the reference check compares this exact tuple.',
             'Terminate your statement with a semicolon.',
           ],
           type: 'guided',
@@ -132,7 +132,7 @@ export const Day_25_MODULE: ModuleData = {
           description: 'Register a new customer profile in the customers table.',
           instructions: [
             'Write an `INSERT INTO customers` statement specifying the columns: `name`, `email`, `city`, and `signup_date`.',
-            'Provide your own customer values — any valid name, a properly formatted email address, a city, and a date in `YYYY-MM-DD` format.',
+            'Provide your own customer values - the reference tuple the check compares against is name `Sultana Begum`, email `sultana@example.com`, city `Dhaka`, signup_date `2026-08-25`.',
             'Terminate your statement with a semicolon.',
           ],
           type: 'independent',

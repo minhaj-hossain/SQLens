@@ -255,7 +255,7 @@ export const Day_57_MODULE: ModuleData = {
           hints: [
             { level: 1, text: "Filter with WHERE customer_id = 1 AND status = 'delivered' AND order_id > 1 ORDER BY order_id ASC LIMIT 2" },
           ],
-          validation: { requireSelect: true, expectedRowCount: 1 },
+          validation: { requireExactResult: true, requireSelect: true, expectedRowCount: 1 },
           successMessage: 'Deliverable 3 accepted! High-performance keyset pagination verified.',
           databaseLifecycle: 'fresh',
         },

@@ -191,7 +191,7 @@ export const Day_54_MODULE: ModuleData = {
           hints: [
             { level: 1, text: "Filter using WHERE JSON_EXTRACT(preferences, '$.theme') = 'dark'" },
           ],
-          validation: { requireSelect: true, expectedRowCount: 1 },
+          validation: { requireExactResult: true, requireSelect: true, expectedRowCount: 1 },
           successMessage: 'Filtered on nested JSON successfully! Only Alice matched the criteria.',
           databaseLifecycle: 'fresh',
         },
@@ -278,7 +278,7 @@ export const Day_54_MODULE: ModuleData = {
           hints: [
             { level: 1, text: "Use JSON_UNQUOTE(JSON_EXTRACT(preferences, '$.theme')) AS theme" },
           ],
-          validation: { requireSelect: true, expectedRowCount: 2 },
+          validation: { requireExactResult: true, requireSelect: true, expectedRowCount: 2 },
           successMessage: 'Clean unquoted string extracted! Perfectly formatted for client consumption.',
           databaseLifecycle: 'fresh',
         },

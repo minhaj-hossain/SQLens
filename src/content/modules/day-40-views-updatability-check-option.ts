@@ -374,7 +374,7 @@ export const Day_40_MODULE: ModuleData = {
         initialSql:
           'CREATE VIEW v_low_stock AS\n  SELECT product_id, name, quantity_in_stock\n  FROM products WHERE quantity_in_stock < 10\nWITH CHECK OPTION;\n\n-- Now update the threshold to < 5 using OR REPLACE:\n',
         solutionSql:
-          'CREATE VIEW v_low_stock AS\n  SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock < 10\nWITH CHECK OPTION;\nCREATE OR REPLACE VIEW v_low_stock AS\n  SELECT product_id, name, quantity_in_stock\n  FROM products\n  WHERE quantity_in_stock < 5\nWITH CHECK OPTION;',
+          'CREATE OR REPLACE VIEW v_low_stock AS\n  SELECT product_id, name, quantity_in_stock\n  FROM products\n  WHERE quantity_in_stock < 5\nWITH CHECK OPTION;',
         solutionExplanation:
           'CREATE OR REPLACE VIEW updates the definition in place. The new threshold is < 5, and WITH CHECK OPTION is preserved to maintain protection.',
         hints: [

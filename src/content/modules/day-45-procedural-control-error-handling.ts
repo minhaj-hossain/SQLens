@@ -270,18 +270,18 @@ export const Day_45_MODULE: ModuleData = {
           id: 'day45-t3',
           title: 'Observe Constraint Rejection on Invalid Data',
           description:
-            'A table authors exists with a CHECK constraint requiring author_id > 0. Attempting to insert an invalid author with author_id = -5 is rejected. Run this statement and observe the failure.',
+            'An accounts table exists with a CHECK constraint requiring balance >= 0. Setting balance = -50 on the existing account violates that rule. Run this script and observe the failure.',
           instructions: [
             'Create a table accounts: CREATE TABLE accounts (acc_id INT PRIMARY KEY, balance DECIMAL CHECK (balance >= 0));',
-            'Insert an initial valid account: INSERT INTO accounts VALUES (1, 100);',
+            'Insert an initial valid account: INSERT INTO accounts (acc_id, balance) VALUES (1, 100);',
             'Attempt an invalid update that would violate the check: UPDATE accounts SET balance = -50 WHERE acc_id = 1;',
           ],
           type: 'independent',
           primaryTable: 'products',
           initialSql:
-            'CREATE TABLE accounts (acc_id INT PRIMARY KEY, balance DECIMAL CHECK (balance >= 0));\nINSERT INTO accounts VALUES (1, 100);\n-- Now attempt the invalid negative balance update:\nUPDATE accounts SET balance = -50 WHERE acc_id = 1;\n',
+            'CREATE TABLE accounts (acc_id INT PRIMARY KEY, balance DECIMAL CHECK (balance >= 0));\nINSERT INTO accounts (acc_id, balance) VALUES (1, 100);\n-- Now attempt the invalid negative balance update:\nUPDATE accounts SET balance = -50 WHERE acc_id = 1;\n',
           solutionSql:
-            'CREATE TABLE accounts (acc_id INT PRIMARY KEY, balance DECIMAL CHECK (balance >= 0));\nINSERT INTO accounts VALUES (1, 100);\nUPDATE accounts SET balance = -50 WHERE acc_id = 1;',
+            'CREATE TABLE accounts (acc_id INT PRIMARY KEY, balance DECIMAL CHECK (balance >= 0));\nINSERT INTO accounts (acc_id, balance) VALUES (1, 100);\nUPDATE accounts SET balance = -50 WHERE acc_id = 1;',
           solutionExplanation:
             'The CHECK (balance >= 0) constraint rejects the UPDATE because -50 violates the rule. The database stops the invalid mutation immediately.',
           hints: [

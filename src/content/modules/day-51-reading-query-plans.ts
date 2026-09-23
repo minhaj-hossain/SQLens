@@ -112,7 +112,7 @@ export const Day_51_MODULE: ModuleData = {
             { level: 1, text: 'Prepend EXPLAIN to the SELECT query.' },
             { level: 2, text: 'EXPLAIN SELECT * FROM products WHERE price > 30;' },
           ],
-          validation: { requireSelect: true, expectedRowCount: 1 },
+          validation: { requireExactResult: true, requireSelect: true, expectedRowCount: 1 },
           successMessage: 'You inspected the plan! Notice type = ALL and key = NULL — a textbook full table scan.',
           databaseLifecycle: 'fresh',
         },
@@ -281,7 +281,7 @@ export const Day_51_MODULE: ModuleData = {
           hints: [
             { level: 1, text: 'Use EXPLAIN SELECT * FROM categories WHERE category_id = 1;' },
           ],
-          validation: { requireSelect: true, expectedRowCount: 1 },
+          validation: { requireExactResult: true, requireSelect: true, expectedRowCount: 1 },
           successMessage: 'type = const! The database uses the PRIMARY key index to fetch the row instantly.',
           databaseLifecycle: 'fresh',
         },

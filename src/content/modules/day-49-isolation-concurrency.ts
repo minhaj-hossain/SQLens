@@ -63,7 +63,7 @@ export const Day_49_MODULE: ModuleData = {
         exampleQueryExplanation:
           'Both sessions read 10, both subtract 1. Session 1 writes 9. Session 2 writes 8 (its own calculation). Session 1\'s COMMIT overwrites Session 2\'s result: net stock is 9 instead of the correct 8.',
         liveDemoSql:
-          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts VALUES (1,'Alice',500),(2,'Bob',300);\n-- Simulate what a second concurrent read would see at this moment:\nSELECT id, owner, balance FROM accounts;",
+          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts (id, owner, balance) VALUES (1,'Alice',500),(2,'Bob',300);\n-- Simulate what a second concurrent read would see at this moment:\nSELECT id, owner, balance FROM accounts;",
         liveDemoNotes:
           'This shows the baseline state. In a real multi-session database, a second transaction could modify these rows between your two reads.',
         mcqs: [
@@ -152,7 +152,7 @@ export const Day_49_MODULE: ModuleData = {
         exampleQueryExplanation:
           'SERIALIZABLE ensures that the SUM you calculate is consistent — no row can appear, disappear, or change while your transaction is open.',
         liveDemoSql:
-          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts VALUES (1,'Alice',500),(2,'Bob',300),(3,'Carol',750);\n-- Setting isolation level and running inside a transaction:\nSET TRANSACTION ISOLATION LEVEL READ COMMITTED;\nBEGIN;\nSELECT * FROM accounts;\nCOMMIT;",
+          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts (id, owner, balance) VALUES (1,'Alice',500),(2,'Bob',300),(3,'Carol',750);\n-- Setting isolation level and running inside a transaction:\nSET TRANSACTION ISOLATION LEVEL READ COMMITTED;\nBEGIN;\nSELECT * FROM accounts;\nCOMMIT;",
         liveDemoNotes:
           'In our single-session learning environment, isolation level effects cannot be demonstrated with a second live session. The important thing is knowing the syntax and what each level promises.',
         mcqs: [
@@ -244,7 +244,7 @@ export const Day_49_MODULE: ModuleData = {
         exampleQueryExplanation:
           'REPEATABLE READ ensures the seats_available number you read cannot be changed by another booking between your SELECT and your UPDATE. The AND seats_available > 0 guard prevents double-booking even if the read showed 1.',
         liveDemoSql:
-          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts VALUES (1,'Alice',500),(2,'Bob',300),(3,'Carol',750);\n-- Simulate a safe transfer: check balance, then update\nSET TRANSACTION ISOLATION LEVEL REPEATABLE READ;\nBEGIN;\nSELECT balance FROM accounts WHERE id = 1;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1 AND balance >= 100;\nSELECT balance FROM accounts WHERE id = 1;\nCOMMIT;",
+          "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts (id, owner, balance) VALUES (1,'Alice',500),(2,'Bob',300),(3,'Carol',750);\n-- Simulate a safe transfer: check balance, then update\nSET TRANSACTION ISOLATION LEVEL REPEATABLE READ;\nBEGIN;\nSELECT balance FROM accounts WHERE id = 1;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1 AND balance >= 100;\nSELECT balance FROM accounts WHERE id = 1;\nCOMMIT;",
         liveDemoNotes:
           'REPEATABLE READ protects the read. The AND balance >= 100 guard prevents the update if another transaction already drained the account between the read and the write.',
         mcqs: [

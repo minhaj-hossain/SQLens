@@ -289,7 +289,7 @@ focused workspace and remembers your draft + history between visits.
 │ SCHEMA (7)    │ query.sql                                       │
 │ customers     │ ┌─────────────────────────────────────────────┐ │
 │  id INT       │ │ CREATE TABLE demo (id INT);                 │ │
-│  name STRING  │ │ INSERT INTO demo VALUES (1),(2);            │ │
+│  name STRING  │ │ INSERT INTO demo (id) VALUES (1),(2);            │ │
 │ orders        │ │ SELECT COUNT(*) AS total FROM demo;         │ │
 │  …            │ └─────────────────────────────────────────────┘ │
 │               │ [Ctrl+Enter run] [Ctrl+Space suggest]    Run ▶  │

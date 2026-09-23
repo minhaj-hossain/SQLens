@@ -71,7 +71,7 @@ export const Day_42_MODULE: ModuleData = {
         exampleQueryExplanation:
           'A self-join shows each employee alongside their direct manager. But this only reveals ONE level. To walk the full chain, you need WITH RECURSIVE.',
         liveDemoSql:
-          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nSELECT e.name AS employee, m.name AS manager\nFROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id;",
+          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nSELECT e.name AS employee, m.name AS manager\nFROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id;",
         liveDemoNotes:
           'The self-join shows each person with their DIRECT manager only. Dave shows Carol as manager. But who is Carol manager? You need another JOIN — or WITH RECURSIVE.',
         mcqs: [
@@ -105,7 +105,7 @@ export const Day_42_MODULE: ModuleData = {
             'SELECT e.name AS employee, m.name AS manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id',
           ],
           type: 'guided',
-          primaryTable: 'products',
+          primaryTable: 'employees',
           setupSql:
             '',
           initialSql:
@@ -194,7 +194,7 @@ export const Day_42_MODULE: ModuleData = {
             'Final SELECT: name, level FROM chain ORDER BY level',
           ],
           type: 'guided',
-          primaryTable: 'products',
+          primaryTable: 'employees',
           setupSql:
             "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
           initialSql:
@@ -207,7 +207,7 @@ export const Day_42_MODULE: ModuleData = {
             { level: 1, text: 'The recursive step is: SELECT e.emp_id, e.name, e.manager_id, chain.level + 1 FROM employees e JOIN chain ON e.emp_id = chain.manager_id' },
             { level: 2, text: 'Full solution: WITH RECURSIVE chain AS (SELECT emp_id, name, manager_id, 1 AS level FROM employees WHERE emp_id = 4 UNION ALL SELECT e.emp_id, e.name, e.manager_id, chain.level + 1 FROM employees e JOIN chain ON e.emp_id = chain.manager_id) SELECT name, level FROM chain ORDER BY level;' },
           ],
-          validation: { requireRecursive: true, expectedRowCount: 4 },
+          validation: { requireExactResult: true, requireRecursive: true, expectedRowCount: 4 },
           successMessage: '4 rows: Dave, Carol, Bob, Alice. You walked the entire management chain from employee to CEO.',
           databaseLifecycle: 'fresh',
         },
@@ -249,7 +249,7 @@ export const Day_42_MODULE: ModuleData = {
         exampleQueryExplanation:
           'Result: "Alice > Bob > Carol > Dave" — the full management chain from CEO to the starting employee, as a single readable string.',
         liveDemoSql:
-          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nWITH RECURSIVE chain AS (\n  SELECT emp_id, name, manager_id, name AS path FROM employees WHERE emp_id = 4\n  UNION ALL\n  SELECT e.emp_id, e.name, e.manager_id, e.name || ' > ' || chain.path FROM employees e JOIN chain ON e.emp_id = chain.manager_id\n)\nSELECT path FROM chain WHERE manager_id IS NULL;",
+          "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER);\nINSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);\nWITH RECURSIVE chain AS (\n  SELECT emp_id, name, manager_id, name AS path FROM employees WHERE emp_id = 4\n  UNION ALL\n  SELECT e.emp_id, e.name, e.manager_id, e.name || ' > ' || chain.path FROM employees e JOIN chain ON e.emp_id = chain.manager_id\n)\nSELECT path FROM chain WHERE manager_id IS NULL;",
         liveDemoNotes:
           'You should see: "Alice > Bob > Carol > Dave" as a single row. Change emp_id = 4 to emp_id = 5 (Eve) to see her chain: "Alice > Bob > Eve".',
         mcqs: [
@@ -284,7 +284,7 @@ export const Day_42_MODULE: ModuleData = {
             'Final SELECT: SELECT path FROM chain WHERE manager_id IS NULL',
           ],
           type: 'guided',
-          primaryTable: 'products',
+          primaryTable: 'employees',
           setupSql:
             "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
           initialSql:
@@ -297,7 +297,7 @@ export const Day_42_MODULE: ModuleData = {
             { level: 1, text: "The path expression is: e.name || ' > ' || chain.path" },
             { level: 2, text: "WITH RECURSIVE chain AS (SELECT emp_id, name, manager_id, name AS path FROM employees WHERE emp_id = 4 UNION ALL SELECT e.emp_id, e.name, e.manager_id, e.name || ' > ' || chain.path FROM employees e JOIN chain ON e.emp_id = chain.manager_id) SELECT path FROM chain WHERE manager_id IS NULL;" },
           ],
-          validation: { requireRecursive: true, expectedRowCount: 1 },
+          validation: { requireExactResult: true, requireRecursive: true, expectedRowCount: 1 },
           successMessage: '"Alice > Bob > Carol > Dave" — one row containing the full management chain as a readable breadcrumb.',
           databaseLifecycle: 'fresh',
         },
@@ -312,7 +312,7 @@ export const Day_42_MODULE: ModuleData = {
             'Final SELECT: emp_id, path FROM chain WHERE manager_id IS NULL',
           ],
           type: 'independent',
-          primaryTable: 'products',
+          primaryTable: 'employees',
           setupSql:
             "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Eve',2);",
           initialSql:
@@ -325,7 +325,7 @@ export const Day_42_MODULE: ModuleData = {
             { level: 1, text: 'Change the anchor WHERE to: WHERE manager_id IS NOT NULL. Add emp_id AS start_id in the anchor to track which starting employee each chain belongs to.' },
             { level: 2, text: "WITH RECURSIVE chain AS (SELECT emp_id, name, manager_id, name AS path, emp_id AS start_id FROM employees WHERE manager_id IS NOT NULL UNION ALL SELECT e.emp_id, e.name, e.manager_id, e.name || ' > ' || chain.path, chain.start_id FROM employees e JOIN chain ON e.emp_id = chain.manager_id) SELECT start_id AS emp_id, path FROM chain WHERE manager_id IS NULL ORDER BY start_id;" },
           ],
-          validation: { requireRecursive: true, expectedRowCount: 4 },
+          validation: { requireExactResult: true, requireRecursive: true, expectedRowCount: 4 },
           successMessage: 'All 4 non-root employees have their full breadcrumb paths. Bob sees "Alice > Bob", Dave sees "Alice > Bob > Carol > Dave".',
           databaseLifecycle: 'fresh',
         },
@@ -352,7 +352,7 @@ export const Day_42_MODULE: ModuleData = {
           'SELECT emp_id, name, depth FROM chain ORDER BY depth',
         ],
         type: 'challenge',
-        primaryTable: 'products',
+        primaryTable: 'employees',
         setupSql:
           "CREATE TABLE employees (emp_id INTEGER PRIMARY KEY, name TEXT NOT NULL, manager_id INTEGER); INSERT INTO employees (emp_id, name, manager_id) VALUES (1,'Alice',NULL),(2,'Bob',1),(3,'Carol',2),(4,'Dave',3),(5,'Frank',4),(6,'Grace',5);",
         initialSql:
@@ -365,7 +365,7 @@ export const Day_42_MODULE: ModuleData = {
           { level: 1, text: 'Walking DOWN: recursive step uses e.manager_id = subtree.emp_id (find employees whose manager IS the current row).' },
           { level: 2, text: 'WITH RECURSIVE subtree AS (SELECT emp_id, name, manager_id, 1 AS depth FROM employees WHERE emp_id = 2 UNION ALL SELECT e.emp_id, e.name, e.manager_id, subtree.depth + 1 FROM employees e JOIN subtree ON e.manager_id = subtree.emp_id) SELECT emp_id, name, depth FROM subtree ORDER BY depth;' },
         ],
-        validation: { requireRecursive: true, expectedRowCount: 5 },
+        validation: { requireExactResult: true, requireRecursive: true, expectedRowCount: 5 },
         successMessage: 'You walked DOWN the tree. Bob + his 4 direct/indirect reports appear, in order by depth.',
         databaseLifecycle: 'fresh',
       },
