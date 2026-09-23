@@ -170,6 +170,39 @@ function unknownTypeError(col: string, sqlType: string, suggestion?: string): st
 }
 
 /**
+ * Workstream D: name the unsupported DDL form (never a silent no-op).
+ * Every branch quotes the support matrix (docs/DIALECT.md §5) so the learner
+ * can see exactly what IS executable. Privilege/principal statements never
+ * reach this — they are handled as simulations at the call site (§8).
+ */
+function unsupportedDdlError(cmd: string): string {
+  const c = cmd.trim();
+  if (/^TRUNCATE\b/i.test(c)) {
+    return `TRUNCATE is not supported by SQLens. Use DELETE FROM <table> to remove rows (the table itself stays) — docs/DIALECT.md §5.`;
+  }
+  if (/^RENAME\s+TABLE\b/i.test(c)) {
+    return `RENAME TABLE is not supported by SQLens — create the new table, copy the rows, then DROP the old one (docs/DIALECT.md §5).`;
+  }
+  if (/^ALTER\b/i.test(c)) {
+    if (/\bDROP\s+COLUMN\b/i.test(c)) {
+      return `ALTER ... DROP COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/DIALECT.md §5).`;
+    }
+    if (/\bRENAME\b/i.test(c)) {
+      return `ALTER ... RENAME is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/DIALECT.md §5).`;
+    }
+    if (/\b(MODIFY|ALTER\s+COLUMN|CHANGE\s+COLUMN)\b/i.test(c)) {
+      return `ALTER ... MODIFY/CHANGE COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/DIALECT.md §5).`;
+    }
+    if (/\bCONSTRAINT\b/i.test(c)) {
+      return `ALTER ... CONSTRAINT is not supported by SQLens. Declare constraints inside CREATE TABLE instead (docs/DIALECT.md §5).`;
+    }
+    return `Unsupported or malformed ALTER statement. SQLens supports: ALTER TABLE <table> ADD COLUMN <col> <type> [DEFAULT <value>] (docs/DIALECT.md §5).`;
+  }
+  const head = c.split('\n')[0].slice(0, 60);
+  return `Unsupported DDL statement${head ? `: "${head}${c.split('\n')[0].length > 60 ? '…' : ''}"` : ''} — SQLens cannot execute it. Supported forms are listed in docs/DIALECT.md §5.`;
+}
+
+/**
  * Parse the parenthesized body of a CREATE TABLE statement into column
  * definitions and constraint metadata. Understands the DDL-vocabulary SQLens
  * teaches: INT/VARCHAR/DECIMAL/DATE/BOOLEAN, PRIMARY KEY, AUTO_INCREMENT,
@@ -246,6 +279,15 @@ function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTab
     const chk = rest.match(/CHECK\s*\(([\s\S]+)\)$/i);
     if (chk) meta.checks.push({ expr: chk[1].trim() });
 
+    // Workstream D: column-level REFERENCES used to be silently ignored (the
+    // column landed with NO relationship registered). Fail loudly and point at
+    // the supported table-level form the Day 29 lesson teaches.
+    if (/\bREFERENCES\b/i.test(rest)) {
+      return fail(
+        `Column-level REFERENCES is not supported. Declare the relationship as a table-level constraint instead: FOREIGN KEY (${name}) REFERENCES <table>(<column>) inside CREATE TABLE (docs/DIALECT.md §5).`,
+      );
+    }
+
     cols.push(def);
   }
 
@@ -272,6 +314,14 @@ function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTab
         });
       }
     } else if (/^foreign\s+key\s*\(/i.test(p)) {
+      // Workstream D: ON DELETE / ON UPDATE actions used to be silently
+      // dropped (the FK registered WITHOUT its action — fails-silently, the
+      // exact class DIALECT's engine-honesty contract forbids).
+      if (/\bon\s+(delete|update)\b/i.test(p)) {
+        return fail(
+          `ON DELETE / ON UPDATE actions on FOREIGN KEY are not supported (docs/DIALECT.md §5). Declare a plain FOREIGN KEY (col) REFERENCES parent(col).`,
+        );
+      }
       const fm = p.match(/foreign\s+key\s*\(([^)]+)\)\s*references\s*([`"']?[\w]+[`"']?)\s*\(([^)]+)\)/i);
       if (fm) {
         const colName = fm[1].trim().replace(/[`"']/g, '');
@@ -281,6 +331,13 @@ function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTab
         const cd = cols.find((c) => c.name.toLowerCase() === colName.toLowerCase());
         if (cd) cd.foreignKey = { table: refTable, column: refCol };
       }
+    } else if (/^constraint\b/i.test(p)) {
+      // Workstream D: a NAMED constraint (`CONSTRAINT fk FOREIGN KEY …`) was
+      // silently dropped — the relationship never registered. Named error in
+      // the support-matrix style (docs/DIALECT.md §5).
+      return fail(
+        `Naming a constraint with CONSTRAINT is not supported. Write it without the name: FOREIGN KEY (col) REFERENCES parent(col), UNIQUE (col), or CHECK (rule) (docs/DIALECT.md §5).`,
+      );
     }
   }
 
@@ -1645,13 +1702,43 @@ export class SqlExecutor {
     const dropMatch = cmd.match(/DROP\s+TABLE\s+(IF\s+EXISTS\s+)?([`"']?[\w_]+[`"']?)/i);
     if (dropMatch) {
       const tbl = dropMatch[2].replace(/[`"']/g, '').toLowerCase();
-      if (!this.db.tables[tbl]) {
+      // Workstream D: `DROP TABLE a, b` (only the first name was dropped) or
+      // any trailing clause (e.g. CASCADE — deliberately unimplemented) used to
+      // be silently ignored. One table per statement, nothing after the name.
+      const dropLeftover = cmd
+        .slice((dropMatch.index ?? 0) + dropMatch[0].length)
+        .replace(/;\s*$/, '')
+        .trim();
+      if (dropLeftover) {
         return {
-          success: true,
-          columns: ['status'],
-          rows: [{ status: `Table '${tbl}' does not exist (IF EXISTS — no-op)` }],
-          rowCount: 1,
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Unsupported clause after DROP TABLE: "${dropLeftover.slice(0, 60)}${dropLeftover.length > 60 ? '…' : ''}". SQLens drops ONE table per statement and supports no trailing clauses (docs/DIALECT.md §5).`,
+        };
+      }
+      if (!this.db.tables[tbl]) {
+        // Workstream D: a PLAIN `DROP TABLE t` on a missing table must ERROR
+        // (real SQL does — Day 29's own lesson text teaches exactly this);
+        // only the IF EXISTS form gets the idempotent no-op.
+        if (dropMatch[1]) {
+          return {
+            success: true,
+            columns: ['status'],
+            rows: [{ status: `Table '${tbl}' does not exist (IF EXISTS — no-op)` }],
+            rowCount: 1,
+            executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          };
+        }
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Table '${tbl}' doesn't exist. Use DROP TABLE IF EXISTS ${tbl} to make this teardown idempotent (docs/DIALECT.md §5).`,
         };
       }
       delete this.db.tables[tbl];
@@ -1672,11 +1759,11 @@ export class SqlExecutor {
     }
 
     // ALTER TABLE
-    const alterMatch = cmd.match(/ALTER\s+TABLE\s+([`"']?[\w_]+[`"']?)\s+ADD\s+COLUMN\s+([`"']?[\w_]+[`"']?)\s+([a-zA-Z0-9_()]+)(?:\s+DEFAULT\s+([\s\S]+))?/i);
+    const alterMatch = cmd.match(/ALTER\s+TABLE\s+([`"']?[\w_]+[`"']?)\s+ADD\s+COLUMN\s+([`"']?[\w_]+[`"']?)\s+([a-zA-Z0-9_()]+)(?:\s+DEFAULT\s+((?:'[^']*'|[^,])+))?/i);
     if (!alterMatch && /^\s*ALTER\s+TABLE\b/i.test(cmd)) {
       // `ALTER TABLE t ADD COLUMN x;` — a column name with no type must fail
       // loudly with the missing-type message instead of falling through to the
-      // generic "Unsupported DDL" error (Workstream B).
+      // named unsupported-form error (Workstream D).
       const addBare = cmd.match(/\bADD\s+(?:COLUMN\s+)?([`"']?[\w]+[`"']?)\s*;?\s*$/i);
       if (addBare) {
         const bareCol = addBare[1].replace(/[`"']/g, '');
@@ -1691,6 +1778,25 @@ export class SqlExecutor {
       }
     }
     if (alterMatch) {
+      // Workstream D: a second clause (`... ADD COLUMN a INT, DROP COLUMN b`)
+      // or any other trailing operation used to be silently ignored (the
+      // statement reported success having run only the first clause). Flag
+      // clause-shaped leftovers; a constraint tail that belongs to THIS column
+      // definition (`NOT NULL DEFAULT FALSE`) stays allowed, as before.
+      const leftover = cmd
+        .slice((alterMatch.index ?? 0) + alterMatch[0].length)
+        .replace(/;\s*$/, '')
+        .trim();
+      if (leftover && /(^|,)\s*(DROP|RENAME|MODIFY|CHANGE|ADD|ALTER|CONSTRAINT)\b/i.test(leftover)) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Unsupported clause after ADD COLUMN: "${leftover.slice(0, 60)}${leftover.length > 60 ? '…' : ''}". SQLens runs ONE clause per ALTER TABLE statement — split it into separate statements (docs/DIALECT.md §5).`,
+        };
+      }
       const tbl = alterMatch[1].replace(/[`"']/g, '').toLowerCase();
       const colName = alterMatch[2].replace(/[`"']/g, '');
       const defVal = alterMatch[4] ? alterMatch[4].replace(/^['"]|['"]$/g, '').trim() : null;
@@ -1825,12 +1931,36 @@ export class SqlExecutor {
       };
     }
 
+    // Workstream D — two very different endings for an unmatched DDL
+    // statement (this fall-through used to report success while executing
+    // NOTHING — the audit's worst fails-silently finding):
+    //  (a) privilege/principal statements are DESIGNATED SIMULATIONS
+    //      (docs/DIALECT.md §8): Day-55 content executes them, so they keep
+    //      succeeding — but the status row now says what really happened;
+    //  (b) anything else fails LOUDLY with a named unsupported-form error.
+    const simulation = cmd.match(
+      /^(GRANT|REVOKE|CREATE\s+(?:USER|ROLE)|DROP\s+(?:USER|ROLE))\b/i,
+    );
+    if (simulation) {
+      return {
+        success: true,
+        columns: ['status'],
+        rows: [
+          {
+            status: `Simulated: ${simulation[0].trim()} — SQLens does not persist privileges or principals (concept-only simulation, docs/DIALECT.md §8).`,
+          },
+        ],
+        rowCount: 1,
+        executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      };
+    }
     return {
-      success: true,
-      columns: ['status'],
-      rows: [{ status: 'DDL command executed successfully' }],
-      rowCount: 1,
+      success: false,
+      columns: [],
+      rows: [],
+      rowCount: 0,
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      error: unsupportedDdlError(cmd),
     };
   }
 

@@ -746,6 +746,15 @@ export function validateTaskSolution(
     failConstruct(`This task requires a recursive CTE using WITH RECURSIVE.`);
   }
 
+  // 7.9 Idempotent teardown (Workstream D): graded on the statement text —
+  // fresh-lifecycle/sandbox tolerance would otherwise mask a missing
+  // IF EXISTS behind a lenient re-run.
+  if (rule.requireIfExists && !/\bDROP\s+TABLE\s+IF\s+EXISTS\b/i.test(structural)) {
+    failConstruct(
+      `This teardown must use IF EXISTS so it never errors on a missing table (e.g. DROP TABLE IF EXISTS temp_orders;).`,
+    );
+  }
+
   // 8. Check LIMIT (S2-5: the feature set sees CTE / set-op / nested LIMITs)
   if (rule.requireLimit !== undefined) {
     const requiredLimit =

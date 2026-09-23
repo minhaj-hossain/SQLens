@@ -68,6 +68,12 @@ export interface ValidationRule {
   /** Require a WITH RECURSIVE statement. */
   requireRecursive?: boolean;
   /**
+   * Require `DROP TABLE IF EXISTS` (the idempotent teardown form). Graded on
+   * the statement TEXT so sandbox re-run leniency can never mask the lesson
+   * (Workstream D — Day 29 C3).
+   */
+  requireIfExists?: boolean;
+  /**
    * Deliberate-failure lab: the task REQUIRES the query to error (e.g. a
    * constraint violation mid-transaction). Passes when the engine rejects it.
    */

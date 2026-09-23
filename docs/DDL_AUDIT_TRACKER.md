@@ -158,13 +158,60 @@ deliberately deferred to Workstream D).
   (`date`, `text`) now highlights as a keyword — accepted cosmetic, same
   class as the pre-existing `day`/`order` behavior.
 
-## D — Professional DDL coverage (engine + DIALECT) ⬜ NOT STARTED
+## D — Professional DDL coverage (engine + DIALECT) ✅
 
-- [ ] DIALECT §5 support matrix: `IF [NOT] EXISTS` CREATE-side contract;
-  supported ALTER sub-forms; explicit UNSUPPORTED list with NAMED errors
-  (today `Unsupported DDL` is generic; `DROP COLUMN`/`RENAME`/`MODIFY`/
-  `ADD CONSTRAINT`/`TRUNCATE`/`ON DELETE CASCADE` unsupported).
-- [ ] Option 1 (docs + named errors) vs Option 2 (implement) — decide.
+Option 1 adopted (document-first + named errors); **Option 2 stays deferred**
+(implementing DROP COLUMN / RENAME / MODIFY / TRUNCATE-data / ON DELETE
+actions / multi-clause ALTER execution — revisit only if a lesson needs them).
+
+- [x] **D1** DIALECT §5 "DDL statement support matrix" (binding): executable
+  forms incl. `CREATE TABLE IF [NOT] EXISTS` + single-clause ALTER; ❌-rows
+  quoting their exact named errors; the Day-55 `Simulated: …` row (§8
+  cross-ref); the CASCADE/RESTRICT/GRANT/REVOKE vocabulary ruling (stays out
+  of `SQL_KEYWORDS` until executable — C's test locks it).
+- [x] **D2** Named errors replace silent behavior — discoveries & fixes:
+  1. **The DDL fall-through was `success: true` executing NOTHING** — my
+     original "returns Unsupported DDL" claim was another truncated-read
+     misdiagnosis (that string never existed). Now: a simulation branch
+     (`GRANT`/`REVOKE`/`CREATE|DROP USER|ROLE` keep succeeding with an
+     explicit `Simulated: …` status row — Day-55 solutions execute them) plus
+     `unsupportedDdlError()` named errors for TRUNCATE / RENAME TABLE / ALTER
+     sub-ops (DROP COLUMN, RENAME, MODIFY/CHANGE, CONSTRAINT, malformed) /
+     anything else unrecognized.
+  2. `TRUNCATE` / `RENAME TABLE` classified as DDL in parser.ts so the named
+     error is reachable (previously a generic unknown-query failure).
+  3. ALTER: DEFAULT capture tightened (no comma-swallowing) + second-clause
+     guard (`… ADD COLUMN a INT, DROP COLUMN b` → named error; constraint
+     tails like `NOT NULL DEFAULT FALSE` remain legal).
+  4. DROP: plain `DROP TABLE <missing>` now **errors** like real SQL (it was
+     a silent no-op — contradicting Day-29's own lesson text; `IF EXISTS`
+     keeps the idempotent no-op) + one-table-per-statement guard (also
+     catches trailing `CASCADE`).
+  5. parseColumnDefs fails loudly on: column-level `REFERENCES` (was
+     silently unregistered), FK `ON DELETE/ON UPDATE` actions (the FK
+     registered WITHOUT its action), named `CONSTRAINT …` clauses inside
+     CREATE (silently vanished). Usage-greps proved no executed content
+     relies on any of them.
+- [x] **D3** `validation.requireIfExists` (type + validator rule 7.9): grades
+  the teardown TEXT so sandbox/lifecycle leniency can't mask the lesson; set
+  on all three Day-29 teardowns (`ddl3-c3-t1`, `ddl3-c3-t2`, `ddl3-hw-3`).
+- [x] **D4** keyword-case: one reasoned ALLOWLIST entry for the FK error
+  MESSAGE (its slash pair `DELETE /` + `docs/` false-positives as a regex).
+- [x] **D5** Tests: `tests/engine/ddl-unsupported.test.ts` — 13 tests (10
+  engine named-error/simulation/drop-guard + 3 requireIfExists incl. the
+  real Day-29 task flags).
+- [x] **D6** Acceptance (2026-09-23) — **zero regressions**:
+  - ✅ `tsc` · vitest **605/605** (51 files) · `test:engine` 46/46 ·
+    `test:db-lifecycle` 34/34 · `keyword-case` 0 (allowlisted) ·
+    `ddl-contracts` 0 blocking = baseline · `equivalence` 28/28 ·
+    `equivalence:tasks` 0 · `custom-validators` 17/17 ·
+    `verify:curriculum` identical baseline · `all-tasks` **423/424** (same
+    Day-45 lab) · `grading-pipeline` **6 = baseline** (D42×4 + D54×2) ·
+    `taught` 6 = baseline · `policy` 18 = baseline.
+  - ⚠️ `test:module-order` exit 1 **stash-verified as pre-existing baseline**
+    (the script still asserts 38 modules vs the 57-module curriculum — a
+    stale milestone-4 leftover unrelated to A–D; candidate for a separate
+    fix).
 
 ## E — Sandbox honesty + grading precision ⬜ NOT STARTED
 

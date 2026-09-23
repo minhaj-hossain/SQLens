@@ -143,6 +143,29 @@ Type tokens in `CREATE TABLE (...)` / `ALTER TABLE … ADD COLUMN` resolve throu
 - Adding a supported type = amend the registry **and** this table in the same
   change (`tests/engine/ddl-types.test.ts` guards both).
 
+### DDL statement support matrix (binding — Workstream D)
+
+`executeDdl` runs exactly the statements below. Everything else fails with a
+**named error that quotes this section** — Workstream D removed the old
+fall-through that reported success while executing nothing.
+
+| Statement | Status |
+|---|---|
+| `CREATE TABLE [IF NOT EXISTS] t ( … )` | executable — type registry above; constraint metadata enforced on INSERT |
+| `DROP TABLE [IF EXISTS] t` | executable — plain DROP of a MISSING table now errors (real-SQL; Day 29 teaches this), `IF EXISTS` gets the idempotent no-op; one table per statement, no trailing clauses. Graded on the statement text on Day 29 (`validation.requireIfExists`) |
+| `ALTER TABLE t ADD COLUMN col <type> [DEFAULT v]` | executable — **ONE clause per statement**; a trailing second clause is a named error |
+| `CREATE [UNIQUE] INDEX` / `DROP INDEX` | executable |
+| `CREATE [OR REPLACE] VIEW` / `DROP VIEW` | executable |
+| `TRUNCATE [TABLE] t` | ❌ named error → use `DELETE FROM t` (rows go, the table stays) |
+| `RENAME TABLE` / `ALTER … RENAME` | ❌ named error → create-copy-drop workflow |
+| `ALTER … DROP COLUMN / MODIFY / ALTER COLUMN / CHANGE COLUMN` | ❌ named error — the supported ALTER form is `ADD COLUMN` only |
+| `ALTER … ADD/DROP CONSTRAINT`; **named** `CONSTRAINT fk …` clauses inside `CREATE TABLE`; extra clauses after `ALTER … ADD COLUMN`; anything after `DROP TABLE <name>` | ❌ named errors — split into separate statements; write constraints unnamed inside `CREATE TABLE` |
+| Column-level `col T REFERENCES t(c)` | ❌ named error → table-level `FOREIGN KEY (col) REFERENCES t(c)` (the Day 29 form) |
+| `FOREIGN KEY … ON DELETE / ON UPDATE <action>` | ❌ named error — referential actions (incl. `CASCADE`, `RESTRICT`) are NOT implemented; plain `FOREIGN KEY` only |
+| `CREATE TABLE … AS SELECT` / `CREATE TABLE … LIKE` | ❌ named error — an explicit column list is required |
+| `CREATE USER/ROLE`, `DROP USER/ROLE`, `GRANT`, `REVOKE` | **simulated** — succeeds with an explicit `Simulated: …` status row; nothing is persisted or enforced (§8 "Execution vs simulation", Day 55) |
+| `CASCADE` / `RESTRICT` / `GRANT` / `REVOKE` in the editor vocabulary | deliberately absent from `SQL_KEYWORDS` (locked by `tests/ui/sql-keywords.test.ts`) until the rows above turn executable |
+
 ## 6. EXPLAIN — the simulation contract
 
 SQLens teaches query plans through a **defined simulation**, and says so in content

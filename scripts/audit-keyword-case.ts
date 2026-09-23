@@ -71,6 +71,12 @@ const ALLOWLIST: Array<{ file: string; needle: string; reason: string }> = [
     reason: '`rest` is sliced from `upperSql` (an uppercased copy) — case is already normalised.',
   },
   {
+    file: 'executor.ts',
+    needle: 'ON DELETE / ON UPDATE actions on FOREIGN KEY are not supported',
+    reason:
+      'learner-facing ERROR MESSAGE text handed to fail() verbatim (Workstream D) — the slash pair is `DELETE /` + `docs/`, not a pattern; no keyword matching ever runs on it.',
+  },
+  {
     file: 'autocomplete.ts',
     needle: 'const re = /\\b(DELETE\\s+FROM|FROM|INSERT\\s+INTO|INTO|JOIN|UPDATE|,)\\s+',
     reason: 'The receiver `masked` is `maskLiterals(...).toUpperCase()` in `referencedTables()` — normalised before matching.',

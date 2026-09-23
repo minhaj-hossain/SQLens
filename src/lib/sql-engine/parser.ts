@@ -269,8 +269,11 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     };
   }
 
-  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX, DROP INDEX, CREATE/DROP VIEW, CREATE/DROP USER/ROLE, GRANT, REVOKE)
-  if (/^(CREATE\s+(?:OR\s+REPLACE\s+)?VIEW|DROP\s+VIEW|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX|CREATE\s+(?:USER|ROLE)|DROP\s+(?:USER|ROLE)|GRANT|REVOKE)\b/i.test(sql)) {
+  // DDL Commands (CREATE TABLE, ALTER TABLE, DROP TABLE, CREATE INDEX, DROP INDEX, CREATE/DROP VIEW, CREATE/DROP USER/ROLE, GRANT, REVOKE;
+  // TRUNCATE / RENAME TABLE are classified too so executeDdl can answer them
+  // with a NAMED unsupported error instead of a generic unknown-query failure
+  // — Workstream D, docs/DIALECT.md §5.)
+  if (/^(CREATE\s+(?:OR\s+REPLACE\s+)?VIEW|DROP\s+VIEW|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX|CREATE\s+(?:USER|ROLE)|DROP\s+(?:USER|ROLE)|TRUNCATE(?:\s+TABLE)?|RENAME\s+TABLE|GRANT|REVOKE)\b/i.test(sql)) {
     return {
       type: 'DDL',
       raw: rawSql,
