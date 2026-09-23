@@ -138,5 +138,28 @@ renders it, and no earlier rule can see it. It MUST therefore satisfy all four:
    pass from seed every time.
 6. Writing a `customValidator`? → give every failing path a `message`, and key
    only off values the rendered prompt shows (Rule 7).
-7. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators` before
-   pushing. All four must be green.
+7. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators` before pushing. All four must be green.
+
+## Grading integrity vs. cloud progress (Milestone 4, S-2)
+
+Self-graded labs are a deliberate scope decision: this is a learning tool, not
+a credentialing system. The policy above keeps lab feedback honest *within the
+client* (deterministic engine, re-runnable reference solutions, validators that
+must pass the task's own `solutionSql`). The one integrity boundary to state
+explicitly:
+
+- **Cloud progress (`user_progress`) never backs a certificate, badge,
+  analytics claim, or leaderboard.** It is a convenience sync of learner-owned
+  state — written by the same client that could edit it in DevTools — and is
+  treated as such everywhere it is read.
+- **S-5 stance (admin `audit_log` — recommended by this audit, not yet
+  implemented):** if/when added, it must record **admin mutations only** (who
+  changed availability/announcements/roles), so operator actions are
+  attributable. It is not — and must not become — a record of learner mastery.
+- If certificate/credential features are ever added, they must re-grade
+  server-side (replaying tasks through the same engine) rather than trusting
+  stored progress flags. No such feature exists today; nothing in the current
+  codebase may be read as implying one.
+- Developer time knobs (`bypassDailyLock`, `simulatedTimeOffsetHours`) are
+  inert outside `next dev` (enforced by `devKnobsEnabled()`), so they cannot
+  distort unlock state in production either.
