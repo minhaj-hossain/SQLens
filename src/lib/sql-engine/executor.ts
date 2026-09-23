@@ -589,15 +589,21 @@ export class SqlExecutor {
     if (statements.length > 1) {
       let last: QueryExecutionResult | null = null;
       let lastData: QueryExecutionResult | null = null;
+      // P0 FIX: track the FIRST error in its OWN slot. The old code wrote the
+      // first failure into `last` (guarded by `if (!last)`) but any later
+      // successful statement OVERWROTE `last` — so every failure except one in
+      // statement position 1 was silently discarded and the script reported
+      // success (the shipped day45-t3 defect: CREATE ok → bad INSERT swallowed
+      // → trailing UPDATE "succeeded"). The Batch-A contract is unchanged:
+      // keep executing after a failure (so COMMIT-after-error is graded) and
+      // surface the FIRST error as the final verdict.
+      let firstError: QueryExecutionResult | null = null;
       for (const stmt of statements) {
         const r = this.execute(stmt);
         // Batch A: a failed statement inside an OPEN txn poisons it (Postgres).
-        // Keep executing the rest of the script so COMMIT-after-error is
-        // itself graded, but remember the FIRST error for the final verdict —
-        // silently returning the COMMIT row would hide the real failure.
         if (!r.success) {
           if (this.inTransaction) this.txnFailed = true;
-          if (!last) last = r;
+          if (!firstError) firstError = r;
           continue;
         }
         last = r;
@@ -611,13 +617,13 @@ export class SqlExecutor {
       const endControl = /^(BEGIN|COMMIT|ROLLBACK)\b/i.test(statements[statements.length - 1].trim());
       // Batch A: the script errored mid-way — surface the FIRST error, not the
       // trailing COMMIT row. `withTxn` already marked the txn FAILED.
-      if (last && !last.success) return this.withTxn({ ...last });
+      if (firstError) return this.withTxn({ ...firstError });
       if (
         endControl &&
         lastData &&
-        (last ?? null) !== null
+        last !== null
       )
-        return { ...lastData, executionTimeMs: last!.executionTimeMs };
+        return { ...lastData, executionTimeMs: last.executionTimeMs };
       return (
         last ?? {
           success: false,
@@ -3339,11 +3345,16 @@ export class SqlExecutor {
       throw new Error(`Table '${query.updateTable}' does not exist.`);
     }
 
-    let affected = 0;
-    const updatedPairs: { oldRow: TableRow; newRow: TableRow }[] = [];
-    this.db.tables[table] = this.db.tables[table].map(row => {
+    // P0 FIX — constraint parity with the INSERT path. Day-28 theory promises
+    // "the engine evaluates [CHECK] on INSERT and UPDATE", but UPDATE used to
+    // write newRow unchecked, so `SET balance = -50` sailed past
+    // `CHECK (balance >= 0)` (the day45-t3 expectFailure lab could never fail).
+    // Two-pass, all-or-nothing: compute every candidate row and validate it
+    // BEFORE any mutation — a multi-row UPDATE that violates a constraint
+    // changes nothing (same contract as a multi-row INSERT).
+    const candidates: { idx: number; oldRow: TableRow; newRow: TableRow }[] = [];
+    this.db.tables[table].forEach((row, idx) => {
       if (!query.whereClause || this.evaluateWhere(query.whereClause, row)) {
-        affected++;
         // v2 DML fix: evaluate each SET value against the CURRENT row, so
         // expressions like `price * 1.10`, `quantity_in_stock + 20` compute
         // properly instead of being stored as the raw string.
@@ -3351,9 +3362,65 @@ export class SqlExecutor {
         for (const [col, val] of Object.entries(query.updateSet ?? {})) {
           updates[col] = this.evaluateSetValue(String(val), row);
         }
-        const newRow = { ...row, ...updates };
-        updatedPairs.push({ oldRow: { ...row }, newRow });
-        return newRow;
+        candidates.push({ idx, oldRow: { ...row }, newRow: { ...row, ...updates } });
+      }
+    });
+
+    const meta = this.tableMeta[table];
+    if (meta) {
+      const matchedIdx = new Set(candidates.map((c) => c.idx));
+      for (const c of candidates) {
+        const row = c.newRow;
+        if (table === 'products' && row.category_id) {
+          const catExists = this.db.tables.categories.some((r: any) => r.category_id === row.category_id);
+          if (!catExists) {
+            throw new Error(`Cannot add or update child row: a foreign key constraint fails (category_id ${row.category_id} not found in categories).`);
+          }
+        }
+        for (const col of meta.notNull) {
+          if (row[col] === undefined || row[col] === null) {
+            throw new Error(`Column '${col}' cannot be null (NOT NULL constraint).`);
+          }
+        }
+        for (const col of meta.uniques) {
+          if (row[col] !== undefined && row[col] !== null) {
+            const clashOutside = this.db.tables[table].some(
+              (r, i) => !matchedIdx.has(i) && (r as any)[col] === row[col],
+            );
+            const clashSibling = candidates.some(
+              (o) => o.idx !== c.idx && (o.newRow as any)[col] === row[col],
+            );
+            if (clashOutside || clashSibling) {
+              throw new Error(`Duplicate entry '${row[col]}' for UNIQUE column '${col}'.`);
+            }
+          }
+        }
+        for (const chk of meta.checks) {
+          if (!this.evaluateWhere(chk.expr, row)) {
+            throw new Error(`CHECK constraint violated: ${chk.expr}`);
+          }
+        }
+        for (const fk of meta.fks) {
+          if (row[fk.col] !== undefined && row[fk.col] !== null) {
+            const refT = this.db.tables[fk.refTable];
+            const found = refT && refT.some((r: any) => r[fk.refCol] === row[fk.col]);
+            if (!found) {
+              throw new Error(`Cannot add or update a child row: a foreign key constraint fails (${fk.col} ${row[fk.col]} → ${fk.refTable}.${fk.refCol}).`);
+            }
+          }
+        }
+      }
+    }
+
+    let affected = 0;
+    const updatedPairs: { oldRow: TableRow; newRow: TableRow }[] = [];
+    const candByIdx = new Map(candidates.map((c) => [c.idx, c]));
+    this.db.tables[table] = this.db.tables[table].map((row, idx) => {
+      const c = candByIdx.get(idx);
+      if (c) {
+        affected++;
+        updatedPairs.push({ oldRow: c.oldRow, newRow: c.newRow });
+        return c.newRow;
       }
       return row;
     });
@@ -3389,6 +3456,10 @@ export class SqlExecutor {
   private evaluateSetValue(rawValue: string, row: TableRow): any {
     const v = String(rawValue ?? '').trim();
     if (v === '') return rawValue;
+
+    // Bare NULL → null (so NOT NULL constraints fire with their named error
+    // instead of the predicate evaluator rejecting `NULL` as a WHERE clause).
+    if (/^null$/i.test(v)) return null;
 
     // Bare quoted string → unquote.
     if (/^['"].*['"]$/.test(v)) return v.replace(/^['"]|['"]$/g, '');

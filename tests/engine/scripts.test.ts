@@ -94,3 +94,26 @@ describe('deliberate-failure labs (expectFailure)', () => {
     expect(outcome.passed).toBe(true);
   });
 });
+
+// P0 regression: the old runner stored the first failure in `last` (guarded by
+// `if (!last)`), so any later successful statement overwrote it and the script
+// reported success — day45-t3's CHECK violation was invisible.
+describe('first failing statement surfaces even after a success', () => {
+  it('a mid-script error is not swallowed by later successful statements', () => {
+    const ex = fresh();
+    const r = ex.executeQuery(
+      'SELECT product_id FROM products LIMIT 1;\nUPDATE no_such_table SET x = 1;\nSELECT 1 AS ok;'
+    );
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/does not exist/i);
+  });
+
+  it('the day45-t3 lab shape reports the CHECK violation, not the trailing statements', () => {
+    const ex = fresh();
+    const r = ex.executeQuery(
+      "CREATE TABLE accounts (acc_id INT PRIMARY KEY, balance DECIMAL CHECK (balance >= 0));\nINSERT INTO accounts (acc_id, balance) VALUES (1, 100);\nUPDATE accounts SET balance = -50 WHERE acc_id = 1;"
+    );
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/CHECK constraint violated/i);
+  });
+});

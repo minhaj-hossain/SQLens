@@ -147,3 +147,62 @@ describe('DDL constraint engine', () => {
     expect(r.rows[0].name).toBe('One');
   });
 });
+
+/**
+ * P0 — constraint parity on UPDATE. Day-28 theory promises the engine
+ * evaluates CHECK "on INSERT and UPDATE", and day45-t3's expectFailure lab
+ * depends on `UPDATE ... SET balance = -50` being rejected. The old
+ * executeUpdate wrote newRow unchecked.
+ */
+describe('UPDATE enforces constraints like INSERT', () => {
+  function updSetup(): SqlExecutor {
+    const ex = new SqlExecutor();
+    ex.executeQuery('DROP TABLE IF EXISTS up_accounts;');
+    ex.executeQuery(
+      'CREATE TABLE up_accounts (acc_id INT PRIMARY KEY, owner TEXT NOT NULL UNIQUE, balance INT NOT NULL CHECK (balance >= 0));'
+    );
+    ex.executeQuery("INSERT INTO up_accounts (acc_id, owner, balance) VALUES (1, 'Alice', 500), (2, 'Bob', 300);");
+    return ex;
+  }
+
+  it('CHECK rejects a violating UPDATE and the row keeps its old value', () => {
+    const ex = updSetup();
+    const r = ex.executeQuery('UPDATE up_accounts SET balance = -50 WHERE acc_id = 1;');
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/CHECK constraint violated/i);
+    const check = ex.executeQuery('SELECT balance FROM up_accounts WHERE acc_id = 1;');
+    expect(check.rows[0].balance).toBe(500);
+  });
+
+  it('NOT NULL rejects setting a required column to NULL', () => {
+    const ex = updSetup();
+    const r = ex.executeQuery('UPDATE up_accounts SET owner = NULL WHERE acc_id = 1;');
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/cannot be null/i);
+  });
+
+  it('UNIQUE rejects updating a row onto a duplicate value', () => {
+    const ex = updSetup();
+    const r = ex.executeQuery("UPDATE up_accounts SET owner = 'Bob' WHERE acc_id = 1;");
+    expect(r.success).toBe(false);
+    expect(String(r.error)).toMatch(/Duplicate entry/i);
+  });
+
+  it('a violating multi-row UPDATE is all-or-nothing', () => {
+    const ex = updSetup();
+    // Row 2 would go negative — no row may change.
+    const r = ex.executeQuery('UPDATE up_accounts SET balance = balance - 400 WHERE acc_id IN (1, 2);');
+    expect(r.success).toBe(false);
+    const check = ex.executeQuery('SELECT acc_id, balance FROM up_accounts ORDER BY acc_id;');
+    expect(check.rows.map((r2: any) => r2.balance)).toEqual([500, 300]);
+  });
+
+  it('a valid UPDATE still applies', () => {
+    const ex = updSetup();
+    const r = ex.executeQuery('UPDATE up_accounts SET balance = balance - 100 WHERE acc_id = 1;');
+    expect(r.success).toBe(true);
+    expect(r.affectedRows).toBe(1);
+    const check = ex.executeQuery('SELECT balance FROM up_accounts WHERE acc_id = 1;');
+    expect(check.rows[0].balance).toBe(400);
+  });
+});
