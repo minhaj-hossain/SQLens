@@ -381,7 +381,7 @@ export const Day_41_MODULE: ModuleData = {
             text: "WITH RECURSIVE dates AS (SELECT DATE('2024-01-01') AS d UNION ALL SELECT DATE(d, '+1 day') FROM dates WHERE d < DATE('2024-01-31')) SELECT dates.d AS sale_date, COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS daily_revenue FROM dates LEFT JOIN orders o ON DATE(o.order_date) = dates.d LEFT JOIN order_items oi ON o.order_id = oi.order_id GROUP BY dates.d ORDER BY dates.d;",
           },
         ],
-        validation: { requireExactResult: true, requireRecursive: true, expectedRowCount: 31 },
+        validation: {           requireExactResult: true, requireRecursive: true, expectedRowCount: 31,           judgment: [             { kind: 'compare-tradeoff', prompt: 'Why does the date-series recursion use UNION ALL instead of UNION?', options: ['UNION ALL appends rows with no duplicate check, and a date series has no duplicates', 'UNION is rejected inside WITH RECURSIVE', 'UNION sorts the rows before returning them', 'UNION only accepts numeric literals'], correctIndex: 0, explanation: 'Every generated date is unique, so the dedup pass UNION performs is wasted work; UNION ALL just appends the next row.' },           ],         },
         successMessage: 'All 31 days accounted for — the finance team will love this chart. No more gaps!',
         databaseLifecycle: 'fresh',
       },

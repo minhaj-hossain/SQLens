@@ -229,7 +229,7 @@ export const Day_55_MODULE: ModuleData = {
           { level: 1, text: 'Use GROUP BY customer_id with COUNT(*) AS order_count in the view definition.' },
           { level: 2, text: 'CREATE VIEW v_customer_order_counts AS SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id;\nCREATE ROLE vendor_role;\nGRANT SELECT ON v_customer_order_counts TO vendor_role;\nSELECT * FROM v_customer_order_counts;' },
         ],
-        validation: { requireSelect: true, expectedRowCount: { min: 1 } },
+        validation: {           requireSelect: true, expectedRowCount: { min: 1 },           judgment: [             { kind: 'choose-and-defend', prompt: 'The application connects with a role that can DROP TABLE. Why is that a problem?', options: ['One compromised query could destroy the database - the app needs only data-modification rights', 'DROP TABLE is a slow command', 'It blocks all other connections forever', 'It prevents backups from running'], correctIndex: 0, explanation: 'Least privilege: an application account limited to SELECT, INSERT, UPDATE and DELETE cannot become a destructive accident or an attacker weapon.' },           ],         },
         successMessage: 'Challenge complete! Aggregated boundary view protects raw transactional data from external vendors.',
         databaseLifecycle: 'fresh',
       },

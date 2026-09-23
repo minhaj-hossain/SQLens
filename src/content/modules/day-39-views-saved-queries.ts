@@ -393,7 +393,7 @@ export const Day_39_MODULE: ModuleData = {
             text: 'FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN payments p ON o.order_id = p.order_id',
           },
         ],
-        validation: { requireView: true, requireJoin: true, requireGroupBy: true },
+        validation: {           requireView: true, requireJoin: true, requireGroupBy: true,           judgment: [             { kind: 'predict-failure', prompt: 'Two analysts query v_monthly_revenue one second after new orders were inserted. What does each of them see?', options: ['Rows computed live from the current orders data', 'A snapshot saved when the view was created', 'Empty rows until the view is refreshed', 'An error, because views cannot be queried twice'], correctIndex: 0, explanation: 'A view stores only the query text, never rows, so every SELECT re-runs it against the live tables and both analysts see current data.' },           ],         },
         successMessage: 'Three-table join hidden inside a clean view — textbook encapsulation!',
         databaseLifecycle: 'fresh',
       },

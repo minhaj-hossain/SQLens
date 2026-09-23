@@ -289,6 +289,7 @@ export const Day_45_MODULE: ModuleData = {
             { level: 2, text: 'UPDATE accounts SET balance = -50 WHERE acc_id = 1; triggers the check violation.' },
           ],
           validation: {
+            requiredColumns: ['acc_id', 'balance'],
             expectFailure: true,
             expectedErrorCategory: 'CHECK_CONSTRAINT',
           },

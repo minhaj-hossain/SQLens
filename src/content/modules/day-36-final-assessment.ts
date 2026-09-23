@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_36_MODULE: ModuleData = {
   id: 'day-36',
@@ -220,6 +220,7 @@ export const Day_36_MODULE: ModuleData = {
         solutionExplanation: 'ALTER TABLE ADD COLUMN extends products in place, and the DEFAULT back-fills every existing row with ‘active’ so no legacy product is left with a NULL status.',
         hints: [{ level: 1, text: 'Use `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`' }],
         validation: {
+          requiredColumns: ['status'],
           targetTable: 'products',
           expectedRowCount: 1,
         },

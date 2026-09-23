@@ -108,7 +108,7 @@ export const Day_49_MODULE: ModuleData = {
             { level: 1, text: 'Use CREATE TABLE, then INSERT INTO accounts (id, owner, balance), then SELECT *' },
             { level: 2, text: "CREATE TABLE accounts (id INTEGER PRIMARY KEY, owner TEXT, balance INTEGER);\nINSERT INTO accounts (id, owner, balance) VALUES (1,'Alice',500),(2,'Bob',300),(3,'Carol',750);\nSELECT * FROM accounts;" },
           ],
-          validation: { requireSelect: true },
+          validation: {             requiredColumns: ['id', 'owner', 'balance'],             requireSelect: true,           },
           successMessage: 'Good — this is the data two competing transactions would fight over.',
           databaseLifecycle: 'fresh',
         },
@@ -335,7 +335,12 @@ export const Day_49_MODULE: ModuleData = {
           { level: 1, text: 'Create the table, insert 1 row, then write the transaction with SET TRANSACTION ISOLATION LEVEL REPEATABLE READ.' },
           { level: 2, text: 'The UPDATE guard is: WHERE id = 1 AND seats_available > 0 — this prevents updating when no tickets remain.' },
         ],
-        validation: { requireSelect: true, expectedRowCount: 1 },
+        validation: {
+          requiredColumns: ['id', 'name', 'seats_available'], requireSelect: true, expectedRowCount: 1,
+          judgment: [
+            { kind: 'predict-failure', prompt: 'Under READ COMMITTED, how do two transactions both book the last ticket?', options: ['Both read the committed seat count before either writes, so both subtract from the same number', 'READ COMMITTED disables UPDATE statements', 'Tickets are not stored as rows', 'The second UPDATE automatically rolls back'], correctIndex: 0, explanation: 'The check-then-update pattern reads a value the other pending change never protects, so each transaction subtracts from the original count and both succeed (lost update).' },
+          ],
+        },
         successMessage: 'The booking is safe. seats_available is now 0, and the UPDATE guard prevents any second booking.',
         databaseLifecycle: 'fresh',
       },

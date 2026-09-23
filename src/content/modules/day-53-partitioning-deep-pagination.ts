@@ -318,7 +318,7 @@ export const Day_53_MODULE: ModuleData = {
           { level: 1, text: "Filter by customer_id = 1 AND status = 'delivered' AND order_id > 1" },
           { level: 2, text: "SELECT order_id, customer_id, order_date, status FROM orders WHERE customer_id = 1 AND status = 'delivered' AND order_id > 1 ORDER BY order_id ASC LIMIT 2;" },
         ],
-        validation: { requireExactResult: true, requireSelect: true, expectedRowCount: 1 },
+        validation: {           requireExactResult: true, requireSelect: true, expectedRowCount: 1,           judgment: [             { kind: 'compare-tradeoff', prompt: 'Why does OFFSET pagination slow down on deep pages while keyset pagination does not?', options: ['OFFSET counts and discards every skipped row; keyset seeks straight to the cursor', 'OFFSET takes a table-level lock', 'Keyset runs on faster storage', 'OFFSET stops working after page 10'], correctIndex: 0, explanation: 'OFFSET costs O(offset) work per page, while a keyset predicate seeks directly to the last-seen cursor so each page costs about the same.' },           ],         },
         successMessage: 'Feed pagination complete! Keyset cursors provide scalable pagination for high-volume apps.',
         databaseLifecycle: 'fresh',
       },

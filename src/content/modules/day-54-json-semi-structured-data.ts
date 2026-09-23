@@ -108,7 +108,7 @@ export const Day_54_MODULE: ModuleData = {
             { level: 1, text: "Use JSON_EXTRACT(preferences, '$.theme') AS theme in your SELECT list." },
             { level: 2, text: "CREATE TABLE user_profiles (id INTEGER PRIMARY KEY, username TEXT, preferences TEXT);\nINSERT INTO user_profiles (id, username, preferences) VALUES (1, 'alice', '{\"theme\": \"dark\"}'), (2, 'bob', '{\"theme\": \"light\"}');\nSELECT id, username, JSON_EXTRACT(preferences, '$.theme') AS theme FROM user_profiles;" },
           ],
-          validation: { requireSelect: true, expectedRowCount: 2 },
+          validation: {             requiredColumns: ['id', 'username', 'preferences'],             requireSelect: true, expectedRowCount: 2,           },
           successMessage: 'JSON extracted successfully! You navigated the JSON path to project nested data.',
           databaseLifecycle: 'fresh',
         },
@@ -314,7 +314,12 @@ export const Day_54_MODULE: ModuleData = {
         hints: [
           { level: 1, text: "Create table, insert the two rows, then filter WHERE JSON_EXTRACT(specs, '$.storage') = '256GB'." },
         ],
-        validation: { requireSelect: true, expectedRowCount: 1 },
+        validation: {
+          requiredColumns: ['id', 'title', 'specs'], requireSelect: true, expectedRowCount: 1,
+          judgment: [
+            { kind: 'choose-and-defend', prompt: 'When does a JSON column make more sense than adding new columns?', options: ['When keys vary per row and change often, so schema churn would dominate', 'When the attributes need foreign keys', 'When the attributes must be NOT NULL', 'When you constantly GROUP BY every attribute'], correctIndex: 0, explanation: 'JSON fits sparse, per-row, fast-changing keys; anything you filter, join, constrain or aggregate regularly should be a real column.' },
+          ],
+        },
         successMessage: 'Challenge complete! Semi-structured JSON modeling gives you infinite flexibility without sacrificing SQL query power.',
         databaseLifecycle: 'fresh',
       },

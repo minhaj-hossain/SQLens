@@ -292,7 +292,12 @@ export const Day_57_MODULE: ModuleData = {
           { level: 1, text: 'Run ALTER TABLE to add is_priority INTEGER, then UPDATE to set is_priority = 0 where NULL, then SELECT.' },
           { level: 2, text: 'ALTER TABLE orders ADD COLUMN is_priority INTEGER;\nUPDATE orders SET is_priority = 0 WHERE is_priority IS NULL;\nSELECT order_id, customer_id, status, is_priority FROM orders;' },
         ],
-        validation: { requireSelect: true, expectedRowCount: { min: 1 } },
+        validation: {
+          requiredColumns: ['is_priority'], requireSelect: true, expectedRowCount: { min: 1 },
+          judgment: [
+            { kind: 'compare-tradeoff', prompt: 'A tenant filter exists only in application code and the database enforces nothing. What is the core risk?', options: ['Any bug or raw query can read another tenant rows - the database is the last line of defense', 'It makes every query slower', 'It disables the primary keys', 'It prevents index creation'], correctIndex: 0, explanation: 'Application filters are advisory; a missing WHERE clause, a new endpoint or hand-written SQL skips them - isolation must be enforced by views or policies the database itself applies.' },
+          ],
+        },
         successMessage: 'Capstone complete! You have architected, secured, optimized, and evolved a production-grade database system. Milestone 4 is fully conquered!',
         databaseLifecycle: 'fresh',
       },

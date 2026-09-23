@@ -114,6 +114,7 @@ export const Day_46_MODULE: ModuleData = {
             { level: 2, text: 'INSERT INTO product_audit (product_id, action) VALUES (NEW.product_id, "PRICE_UPDATED"); goes inside the trigger body.' },
           ],
           validation: {
+            requiredColumns: ['audit_id', 'product_id', 'action'],
             requireTrigger: true,
             expectedRowCount: 1,
           },
@@ -205,6 +206,7 @@ export const Day_46_MODULE: ModuleData = {
             { level: 2, text: 'The SELECT at the end should pick product_id, old_price, new_price from price_history WHERE product_id = 1;' },
           ],
           validation: {
+            requiredColumns: ['hist_id', 'product_id', 'old_price', 'new_price'],
             requireTrigger: true,
             expectedRowCount: 1,
           },
@@ -330,6 +332,8 @@ export const Day_46_MODULE: ModuleData = {
           { level: 2, text: 'Follow the CREATE TABLE and CREATE TRIGGER with DELETE FROM order_items WHERE order_item_id = 1; and SELECT order_id, product_id FROM deleted_items_log;' },
         ],
         validation: {
+          judgment: [             { kind: 'choose-and-defend', prompt: 'Why should an AFTER UPDATE trigger on products avoid running UPDATE products on that same table?', options: ['The update can re-fire the trigger and recurse until the engine stops it with an error', 'Triggers are not allowed to contain UPDATE at all', 'The inner update would run before the original row change', 'It would silently convert the trigger to BEFORE'], correctIndex: 0, explanation: 'Each UPDATE fires the AFTER UPDATE trigger again; without a guard the chain recurses until the engine aborts the statement.' },           ],
+          requiredColumns: ['log_id', 'order_id', 'product_id'],
           requireTrigger: true,
           expectedRowCount: 1,
         },

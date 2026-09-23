@@ -115,7 +115,7 @@ export const Day_50_MODULE: ModuleData = {
             { level: 1, text: 'After BEGIN, use SELECT ... FOR UPDATE before your UPDATE.' },
             { level: 2, text: "BEGIN;\nSELECT id, name, stock FROM store_inventory WHERE id = 1 FOR UPDATE;\nUPDATE store_inventory SET stock = stock - 1 WHERE id = 1 AND stock > 0;\nSELECT id, name, stock FROM store_inventory;\nCOMMIT;" },
           ],
-          validation: { requireSelect: true, expectedRowCount: 2 },
+          validation: {             requiredColumns: ['id', 'name', 'stock'],             requireSelect: true, expectedRowCount: 2,           },
           successMessage: 'Widget stock is now 4. The FOR UPDATE lock guaranteed no concurrent transaction could interfere.',
           databaseLifecycle: 'fresh',
         },
@@ -343,7 +343,12 @@ export const Day_50_MODULE: ModuleData = {
           { level: 1, text: 'Create both tables first. Then BEGIN; SELECT ... FOR UPDATE; UPDATE; SAVEPOINT; INSERT into log; SELECT to verify; COMMIT.' },
           { level: 2, text: 'The savepoint goes between the UPDATE (reservation) and the INSERT (log), so the log can be rolled back without losing the reservation.' },
         ],
-        validation: { requireSelect: true, expectedRowCount: 1 },
+        validation: {
+          requiredColumns: ['id', 'label', 'status', 'seat_id', 'booked_at'], requireSelect: true, expectedRowCount: 1,
+          judgment: [
+            { kind: 'diagnose-plan', prompt: 'Two open transactions each hold a lock the other needs. What is the simplest prevention rule?', options: ['Acquire locks on the same rows in the same order, always (for example by id)', 'Make every transaction as long as possible', 'Switch every session to READ COMMITTED', 'Avoid savepoints'], correctIndex: 0, explanation: 'A deadlock needs a circular wait; a global lock order removes the circle, which is why the ordered transfer pattern cannot deadlock.' },
+          ],
+        },
         successMessage: 'Seat A5 is reserved and logged. The savepoint pattern makes the audit log optional without risking the core booking.',
         databaseLifecycle: 'fresh',
       },

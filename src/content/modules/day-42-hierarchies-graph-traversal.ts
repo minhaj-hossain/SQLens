@@ -118,7 +118,7 @@ export const Day_42_MODULE: ModuleData = {
             { level: 1, text: 'The self-join is: FROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id' },
             { level: 2, text: 'SELECT e.name AS employee, m.name AS manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id;' },
           ],
-          validation: { requireJoin: true },
+          validation: {             requiredColumns: ['emp_id', 'name', 'manager_id'],             requireJoin: true,           },
           successMessage: 'You can see each person with their direct manager. Now you are ready to walk the entire chain.',
           databaseLifecycle: 'fresh',
         },

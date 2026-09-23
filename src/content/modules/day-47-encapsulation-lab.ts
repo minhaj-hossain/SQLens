@@ -218,6 +218,8 @@ export const Day_47_MODULE: ModuleData = {
           { level: 2, text: 'Follow the CREATE TABLE and CREATE TRIGGER with the UPDATE and the final SELECT from customer_audit.' },
         ],
         validation: {
+          judgment: [             { kind: 'choose-and-defend', prompt: 'A workflow must run four statements atomically and roll back on any failure. Which tool fits?', options: ['A stored procedure - only it sequences steps inside one transaction boundary', 'A view - it saves the whole workflow as one name', 'A scalar function - it returns success or failure', 'An AFTER trigger - it runs after every insert'], correctIndex: 0, explanation: 'Views save queries and functions compute values, but only a procedure can wrap BEGIN, COMMIT and ROLLBACK around multiple statements as one unit.' },           ],
+          requiredColumns: ['audit_id', 'customer_id', 'old_city', 'new_city'],
           requireTrigger: true,
           expectedRowCount: 1,
         },

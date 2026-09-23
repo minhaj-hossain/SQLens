@@ -317,7 +317,7 @@ export const Day_51_MODULE: ModuleData = {
           { level: 1, text: 'First CREATE INDEX idx_customers_city ON customers (city);' },
           { level: 2, text: "Then EXPLAIN SELECT * FROM customers WHERE city = 'Dhaka';" },
         ],
-        validation: { requireSelect: true, expectedRowCount: 1 },
+        validation: {           requireSelect: true, expectedRowCount: 1,           judgment: [             { kind: 'diagnose-plan', prompt: 'EXPLAIN shows type=ALL and rows equal to the whole table for WHERE id = 5. What does that mean?', options: ['The engine scanned every row - the id index was not used', 'The query is sorted by id', 'The table is partitioned', 'The query returned every row'], correctIndex: 0, explanation: 'type ALL is a full table scan; a primary-key lookup should show type=const or ref with key=PRIMARY, so the plan says the index was skipped.' },           ],         },
         successMessage: 'The city search is now optimized! The query plan uses idx_customers_city with type = ref.',
         databaseLifecycle: 'fresh',
       },

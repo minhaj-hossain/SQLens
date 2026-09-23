@@ -194,6 +194,7 @@ export const Day_48_MODULE: ModuleData = {
             { level: 2, text: 'Execute the table creation, trigger creation, product update, and audit select in sequence.' },
           ],
           validation: {
+            requiredColumns: ['audit_id', 'product_id', 'old_qty', 'new_qty'],
             requireTrigger: true,
             expectedRowCount: 1,
           },
@@ -235,6 +236,7 @@ export const Day_48_MODULE: ModuleData = {
           { level: 2, text: 'CREATE VIEW v_low_stock_alerts AS SELECT product_id, name, quantity_in_stock FROM products WHERE quantity_in_stock < 20;\nCREATE PROCEDURE sp_emergency_reorder(min_stock INT) BEGIN UPDATE products SET quantity_in_stock = quantity_in_stock + 50 WHERE quantity_in_stock < min_stock; END;\nCALL sp_emergency_reorder(20);\nSELECT * FROM v_low_stock_alerts;' },
         ],
         validation: {
+          judgment: [             { kind: 'diagnose-plan', prompt: 'An audit table must record every price change even if the application forgets. Where does that logic belong?', options: ['In an AFTER UPDATE trigger - it runs inside the database on every qualifying write', 'In each client application front end', 'In the view definition used for reports', 'In a monthly batch script'], correctIndex: 0, explanation: 'A trigger is the only option here that executes within the database on every qualifying write, independent of which client made the change.' },           ],
           requireView: true,
           requireProcedure: true,
         },

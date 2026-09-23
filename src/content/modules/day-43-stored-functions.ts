@@ -328,6 +328,7 @@ export const Day_43_MODULE: ModuleData = {
           { level: 2, text: 'SELECT product_id, name, price, fn_retail_price(price) AS retail_price FROM products ORDER BY retail_price DESC;' },
         ],
         validation: {
+          judgment: [             { kind: 'predict-failure', prompt: 'A stored function body contains COMMIT. What happens when a sales report calls it?', options: ['The database rejects the definition or call - functions cannot commit', 'The outer transaction commits silently', 'COMMIT is treated as a comment inside functions', 'A second connection is opened and committed'], correctIndex: 0, explanation: 'Functions execute inside the calling statement; letting them commit would break the caller atomicity, so transaction control is banned in function bodies.' },           ],
           requireCustomFunction: true,
           requireOrderBy: [{ column: 'retail_price', direction: 'DESC' }],
         },
