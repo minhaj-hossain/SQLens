@@ -2,8 +2,8 @@
  * Module Order & Identity Regression Check
  * ─────────────────────────────────────────────────────────────────────────────
  * Verifies the position-independent curriculum ordering system:
- *   1. All 38 modules keep a canonical, strictly increasing order that is
- *      exactly `day-01`…`day-38` (IDs are day-based and must never encode
+ *   1. All 57 modules keep a canonical, strictly increasing order that is
+ *      exactly `day-01`…`day-57` (IDs are day-based and must never encode
  *      anything beyond the day).
  *   2. Order-based prev/next navigation is identical to the old day±1 logic.
  *   3. Gate-0 (always-unlocked) resolves to the first module only.
@@ -31,15 +31,15 @@ function assert(name: string, cond: boolean, detail = '') {
   console.log(`${cond ? 'PASS' : 'FAIL'} — ${name}${cond || !detail ? '' : ` (${detail})`}`);
 }
 
-// ── 1. Canonical order: exactly day-01..day-38 ─────────────────────────────
-// 38 modules loaded.
-assert('38 modules loaded', ALL_MODULES.length === 38, String(ALL_MODULES.length));
+// ── 1. Canonical order: exactly day-01..day-57 ─────────────────────────────
+// 57 modules loaded.
+assert('57 modules loaded', ALL_MODULES.length === 57, String(ALL_MODULES.length));
 const dayId = (n: number) => `day-${String(n).padStart(2, '0')}`;
 const ordered = getModulesByOrder(ALL_MODULES);
 
 assert(
   'canonical order is exactly day-01..day-38',
-  ordered.length === 38 && ordered.every((m, i) => m.id === dayId(i + 1)),
+  ordered.length === 57 && ordered.every((m, i) => m.id === dayId(i + 1)),
   ordered.map((m) => m.id).join(',')
 );
 assert(
@@ -59,7 +59,7 @@ assert('order 37 is day-37 (interview gauntlet)', ordered[36].id === 'day-37', o
 // modules slot exactly where intended (10/11/12).
 const orders = getModulesByOrder(ALL_MODULES).map((m) => getModuleOrder(m));
 assert(
-  'all 38 module orders are unique',
+  'all 57 module orders are unique',
   new Set(orders).size === orders.length,
   orders.join(',')
 );
@@ -68,12 +68,12 @@ assert(
 const lastModule = getModulesByOrder(ALL_MODULES)[getModulesByOrder(ALL_MODULES).length - 1];
 assert('first module is day-01', isFirstModule(ALL_MODULES[0], ALL_MODULES) && getModuleOrder(ALL_MODULES[0]) === 1);
 assert('no other module reports first', ALL_MODULES.slice(1).every((m) => !isFirstModule(m, ALL_MODULES)));
-assert('last module (canonical order) is day-38', lastModule.id === 'day-38', lastModule.id);
-assert('day-38 has no next module', getNextModule(lastModule, ALL_MODULES) === undefined);
+assert('last module (canonical order) is day-57', lastModule.id === 'day-57', lastModule.id);
+assert('last module has no next module', getNextModule(lastModule, ALL_MODULES) === undefined);
 
 // Display labels resolve to the canonical day label
 assert('display label resolves for day-01', getModuleDisplayLabel(ALL_MODULES[0]) === 'Day 1');
-assert('display label resolves for day-38', getModuleDisplayLabel(lastModule) === 'Day 38');
+assert('display label resolves for day-57', getModuleDisplayLabel(lastModule) === 'Day 57');
 
 // ── 4. Insertion safety (the reason this system exists) ─────────────────────
 // A brand-new probe module proves a future module can slot in without touching
@@ -104,9 +104,9 @@ assert("probe's prev is day-09", getPreviousModule(probe, expanded)?.id === 'day
 // Probe is inserted directly BEFORE day-10 (order 10).
 assert('day-10 now follows the probe', getNextModule(probe, expanded)?.id === 'day-10', getNextModule(probe, expanded)?.id ?? 'undefined');
 assert('first module unchanged after insertion', isFirstModule(expanded[0], expanded) && getModuleOrder(expanded[0]) === 1);
-const day38Module = ALL_MODULES.find((m) => m.id === 'day-38');
+const day38Module = ALL_MODULES.find((m) => m.id === 'day-57');
 assert('last module unchanged after insertion', !!day38Module && isLastModule(day38Module, expanded), day38Module ? String(isLastModule(day38Module, expanded)) : 'day-38 missing');
-assert('original 38 modules untouched by probe test', ALL_MODULES.length === 38, String(ALL_MODULES.length));
+assert('original 57 modules untouched by probe test', ALL_MODULES.length === 57, String(ALL_MODULES.length));
 
 console.log(failures === 0 ? '\n✅ Module order system verified.' : `\n❌ ${failures} check(s) FAILED.`);
 process.exit(failures === 0 ? 0 : 1);

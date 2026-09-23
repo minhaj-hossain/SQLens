@@ -46,14 +46,27 @@ for (const module of ALL_MODULES) {
   // TABLE and DROP TABLE prevents false positives.
   const moduleCreatedTables = new Set<string>();
   const ddlSources: string[] = [];
+  // P0 FIX: scan `setupSql` too — M4's Day 49/50 create `accounts` in setup,
+  // not in the solution, so Day 50 was flagged 'unknown primaryTable' while
+  // the identical Day 49 pattern passed (the checker read only two of the
+  // three SQL sources a table can be born from). Array-valued setupSql
+  // (Day 30) is flattened element-wise.
+  const pushSql = (sql: string | string[] | undefined) => {
+    if (Array.isArray(sql)) ddlSources.push(...sql);
+    else if (sql) ddlSources.push(sql);
+  };
   for (const concept of module.concepts) {
     for (const task of concept.tasks || []) {
-      ddlSources.push(task.solutionSql || '', task.initialSql || '');
+      pushSql(task.solutionSql);
+      pushSql(task.initialSql);
+      pushSql(task.setupSql);
     }
   }
   if (module.challenge) {
     for (const task of module.challenge.tasks) {
-      ddlSources.push(task.solutionSql || '', task.initialSql || '');
+      pushSql(task.solutionSql);
+      pushSql(task.initialSql);
+      pushSql(task.setupSql);
     }
   }
   for (const sql of ddlSources) {
