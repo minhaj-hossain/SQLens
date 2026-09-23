@@ -104,16 +104,59 @@ reads and were WRONG:**
   `CREATE TABLE t (id, name VARCHAR(5))` lost `id` entirely. Both old
   behaviors are named errors now.
 
-## C — Keyword / highlight / format / autocomplete parity ⬜ NOT STARTED
+## C — Keyword / highlight / format / autocomplete parity ✅
 
-- [ ] `src/lib/sql-keywords.ts` single source (keywords + data types + DDL
-  modifiers), consumed by `highlight-sql.ts`, `format-sql.ts`, `autocomplete.ts`.
-- [ ] Data types (`INT`, `VARCHAR`, `DECIMAL`, `DATETIME`, `BOOLEAN`, `TEXT`…)
-  highlight as `.text-code-kw`; `IF [NOT] EXISTS`, `OR REPLACE`, `CASCADE`…
-- [ ] Format: uppercase types/modifiers.
-- [ ] Autocomplete: DDL contexts (after `CREATE TABLE (` → types; after type →
-  constraint keywords; after `DROP TABLE` → `IF EXISTS`).
-- [ ] Snapshot tests for highlight + format.
+Scope adopted: full recommendations D1-D7 (CASCADE/RESTRICT/GRANT/REVOKE
+deliberately deferred to Workstream D).
+
+- [x] **C1** `src/lib/sql-keywords.ts` (new) — canonical `SQL_KEYWORDS`
+  (moved from highlight-sql) + curated `SQL_DATA_TYPES` (28 bases, Day-27
+  teaching order) + `SQL_DDL_MODIFIERS` (`IF NOT EXISTS`, `IF EXISTS`,
+  `OR REPLACE`, `CONSTRAINT`). `highlight-sql.ts` imports for the tokenizer
+  and re-exports the same names → format-sql / autocomplete / editor-errors /
+  existing tests keep their import paths (zero churn).
+- [x] **C2** Highlight: data types + modifiers + taught-but-missing gap fill
+  (`CHECK`, `EXISTS`, `NOT EXISTS`, `SAVEPOINT`, `ROLLBACK TO SAVEPOINT`,
+  `WITH RECURSIVE`, `CREATE/DROP VIEW`, `CREATE OR REPLACE VIEW`,
+  `IS [NOT] TRUE/FALSE`, `CREATE/DROP TRIGGER|FUNCTION|PROCEDURE`, `CALL`)
+  render as `.text-code-kw` in lessons AND the editor overlay (one list).
+  Longest-first matching guarantees `DATETIME` ≻ `DATE`, `BOOLEAN` ≻ `BOOL`,
+  `IF NOT EXISTS` ≻ `IF EXISTS` ≻ `EXISTS`. Unsupported vocabulary stays out
+  (asserted by test) until Workstream D rules on it.
+- [x] **C3** Format uppercases types/modifiers; precision untouched
+  (`decimal(10,2)` → `DECIMAL(10,2)`); the FULL-JOIN exclusion stays green.
+- [x] **C4** Autocomplete: new `ddl-columns` context (paren-depth-aware —
+  depth 1 = types-first pool that flips to constraints-first once the current
+  definition declares a type; depth > 1 = expression rules) and `ddl-modifier`
+  context (`IF EXISTS`/`IF NOT EXISTS` ranked first ahead of the statement
+  pool + tables); `CHECK`/`CONSTRAINT` added to `DDL_KWS`; the whole
+  `SQL_KEYWORDS` list joins `ALL_KEYWORDS` (prefix-reachable from any cursor,
+  no empty-prefix noise); `NON_STARTER_FIRST_WORDS = {OR, WITH}` stops
+  `OR `/`WITH ` from hijacking their expression/CTE pools (reachability kept
+  via their own prefixes); ~35 new `SUGGESTION_DOCS` one-liners.
+- [x] **C5** `editor-errors.ts` pre-classifies Workstream-B engine messages:
+  `Unknown data type 'VARCHR(20)' …` → syntax kind, token `VARCHR`,
+  did-you-mean `VARCHAR` (types are now candidates); `Column 'x' needs a
+  data type` → surfaced as-is with NO keyword suggestion ('id'→'IN' would be
+  a lie), and never misread as an unknown-column error despite its
+  `for column 'id'` tail.
+- [x] **C6** Tests (+20): new `sql-keywords.test.ts` (drift guard — set
+  equality with the engine type registry + gap-fill membership +
+  unsupported-excluded) and `format-sql.test.ts`; extended highlight (+4),
+  autocomplete-coverage (+5), autocomplete-context (+2 incl. telemetry
+  labels), editor-errors (+2).
+- [x] **C7** Acceptance (2026-09-23) — **zero regressions**:
+  - ✅ `tsc` · vitest **592/592** (572 + 20 new, all 50 files green) ·
+    `audit:keyword-case` **0 findings** (every new regex carries /i) ·
+    `audit:ddl-contracts` **0 blocking / 32 advisory = baseline** · all
+    pre-existing autocomplete/highlight/editor/solution suites green.
+  - Content & engine untouched → grading-policy / taught / pipeline /
+    verify:curriculum / all-tasks hold their A/B baselines by construction.
+- Implementation notes: `highlight-sql.test.ts` needed an `insert_line` EOF
+  append (the replacement matcher could not find its final block — invisible
+  char/line-ending quirk in that file). A column that shadows a type name
+  (`date`, `text`) now highlights as a keyword — accepted cosmetic, same
+  class as the pre-existing `day`/`order` behavior.
 
 ## D — Professional DDL coverage (engine + DIALECT) ⬜ NOT STARTED
 

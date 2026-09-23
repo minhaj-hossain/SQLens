@@ -1,4 +1,5 @@
 import { SQL_KEYWORDS } from './highlight-sql';
+import { SQL_DATA_TYPES } from './sql-keywords';
 import { TableSchema } from '../types/database';
 import { maskLiterals } from './sql-mask';
 import { connectedTables, parseQueryScope, QueryScope } from './sql-scope';
@@ -84,6 +85,39 @@ export const SUGGESTION_DOCS: Record<string, string> = {
   REFERENCES: 'names the parent table/column',
   'NOT NULL': 'rejects missing values',
   'CREATE INDEX': 'speeds up lookups on a column',
+  CHECK: 'enforces a rule on every row',
+  CONSTRAINT: 'names a table rule (optional)',
+  'IF NOT EXISTS': 'skip creation when it already exists',
+  'IF EXISTS': 'no error when the object is missing',
+  'OR REPLACE': 'overwrites the view in place',
+  'CREATE VIEW': 'saves a query under a name',
+  'DROP VIEW': 'removes a saved query',
+  'CREATE OR REPLACE VIEW': 'updates a saved query in place',
+  EXISTS: 'true when the subquery returns rows',
+  'NOT EXISTS': 'true when the subquery returns none',
+  SAVEPOINT: 'marks a rollback point inside a transaction',
+  'ROLLBACK TO SAVEPOINT': 'undoes back to a marked point',
+  'WITH RECURSIVE': 'a CTE that references itself',
+  // Data types (Workstream C)
+  INT: 'whole numbers / IDs',
+  INTEGER: 'whole numbers (INT synonym)',
+  BIGINT: 'very large whole numbers',
+  VARCHAR: 'variable-length text',
+  CHAR: 'fixed-length text',
+  TEXT: 'long unbounded text',
+  DECIMAL: 'exact fixed-point numbers (money)',
+  NUMERIC: 'exact fixed-point numbers',
+  FLOAT: 'approximate decimal (avoid for money)',
+  DOUBLE: 'approximate decimal (avoid for money)',
+  REAL: 'approximate decimal (avoid for money)',
+  DATE: 'calendar day (YYYY-MM-DD)',
+  DATETIME: 'date + time of day',
+  TIMESTAMP: 'date + time point',
+  TIME: 'time of day',
+  BOOLEAN: 'true / false flag',
+  BOOL: 'true / false flag',
+  JSON: 'structured JSON document',
+  ENUM: 'fixed set of allowed strings',
   BEGIN: 'opens a transaction',
   COMMIT: 'saves the open transaction',
   ROLLBACK: 'undoes the open transaction',
@@ -99,7 +133,13 @@ export function suggestionDoc(text: string): string | undefined {
   return undefined;
 }
 
-export type SuggestionContext = 'statement-start' | 'tables' | 'columns' | 'after-table';
+export type SuggestionContext =
+  | 'statement-start'
+  | 'tables'
+  | 'columns'
+  | 'after-table'
+  | 'ddl-columns'
+  | 'ddl-modifier';
 type Ctx = SuggestionContext;
 
 const EXPRESSION_KWS = [
@@ -120,7 +160,7 @@ const AFTER_TABLE_KWS = [
 const DDL_KWS = [
   'CREATE TABLE', 'DROP TABLE', 'ALTER TABLE', 'ADD COLUMN', 'DROP COLUMN',
   'CREATE INDEX', 'DROP INDEX', 'PRIMARY KEY', 'FOREIGN KEY', 'REFERENCES',
-  'NOT NULL', 'DEFAULT', 'AUTO_INCREMENT', 'UNIQUE',
+  'NOT NULL', 'DEFAULT', 'AUTO_INCREMENT', 'UNIQUE', 'CHECK', 'CONSTRAINT',
 ];
 
 const TXN_KWS = ['BEGIN', 'COMMIT', 'ROLLBACK', 'START TRANSACTION'];
@@ -156,6 +196,10 @@ const ALL_KEYWORDS: string[] = [
   ...EXPR_CONTINUATION,
   ...DDL_KWS,
   ...TXN_KWS,
+  // Workstream C: the canonical vocabulary (data types, DDL modifiers,
+  // CHECK/EXISTS/SAVEPOINT/VIEW forms, …) joins the reachability pool so
+  // every blessed keyword is prefix-reachable from any cursor position.
+  ...SQL_KEYWORDS,
   // Batch 4: a multi-word TEMPLATE starter. Listing it here (instead of a
   // separate pool) gives it the same reachability contract as any keyword:
   // `CASE ` is a MULTI_STARTERS word, so typing it injects the candidate.
@@ -168,8 +212,16 @@ const GLOBAL_POOL: string[] = ALL_KEYWORDS;
 /** First words of every multi-word keyword — a cursor sitting after one of
  *  these (e.g. after `ORDER `, `IS `, `INSERT `) implies ONLY its multi-word
  *  continuations, never the whole keyword universe. */
+/** First words that must NOT hijack the empty-prefix pool (Workstream C):
+ *  `OR ` is overwhelmingly expression use (`OR REPLACE` stays reachable by
+ *  typing its own prefix), and `WITH ` must keep offering its normal context
+ *  rather than collapsing to only `WITH RECURSIVE`. */
+const NON_STARTER_FIRST_WORDS = new Set(['OR', 'WITH']);
+
 const MULTI_STARTERS = new Set(
-  ALL_KEYWORDS.filter((k) => k.includes(' ')).map((k) => k.split(/\s+/)[0].toUpperCase()),
+  ALL_KEYWORDS.filter((k) => k.includes(' '))
+    .map((k) => k.split(/\s+/)[0].toUpperCase())
+    .filter((w) => !NON_STARTER_FIRST_WORDS.has(w)),
 );
 
 /** Table names already referenced in the query (FROM/JOIN/INTO/UPDATE targets). */
@@ -213,6 +265,29 @@ export function suggestionContext(prefix: string, queryBeforeCursor: string): Su
 function detectContext(beforeCursor: string, prefix: string): Ctx {
   const masked = maskLiterals(beforeCursor).toUpperCase();
   if (!masked.trim()) return 'statement-start';
+
+  // ---- Workstream C: DDL cursor states ------------------------------------
+  // Inside a CREATE TABLE column list (paren depth 1) or a single ALTER ...
+  // ADD COLUMN clause → types/constraints pool (ddl-columns). Deeper parens
+  // (CHECK (…)) are expression positions. A CREATE with no '(' yet or a DROP
+  // with no ';' yet gets the idempotence modifier (IF [NOT] EXISTS) ranked
+  // first (ddl-modifier).
+  const region = ddlRegionStart(masked);
+  if (region) {
+    const seg = masked.slice(region.start);
+    let depth = 0;
+    for (const ch of seg) {
+      if (ch === '(') depth++;
+      else if (ch === ')') depth = Math.max(0, depth - 1);
+    }
+    if (depth > 1) return 'columns';
+    if (depth === 1) return 'ddl-columns';
+    if (region.kind === 'add') return 'ddl-columns';
+    if (!seg.includes('(')) return 'ddl-modifier';
+    // Fully parenthesized CREATE — statement complete; fall through.
+  }
+  if (/\bDROP\s+TABLE\b[^;]*$/i.test(masked)) return 'ddl-modifier';
+
   const last = lastKeywordEnd(masked);
   if (!last.kw) return 'statement-start';
 
@@ -234,6 +309,71 @@ function detectContext(beforeCursor: string, prefix: string): Ctx {
     return 'columns';
   }
   return 'tables';
+}
+
+/** Start offset of the DDL definition region the cursor sits in — the later
+ *  of CREATE TABLE / ADD COLUMN (Workstream C). */
+function ddlRegionStart(masked: string): { start: number; kind: 'create' | 'add' } | null {
+  const createIdx = masked.lastIndexOf('CREATE TABLE');
+  const addIdx = masked.lastIndexOf('ADD COLUMN');
+  if (addIdx > createIdx && addIdx >= 0) return { start: addIdx, kind: 'add' };
+  if (createIdx >= 0) return { start: createIdx, kind: 'create' };
+  return null;
+}
+
+/** Text of the column definition currently being typed: after the first '('
+ *  of the CREATE list / after the ADD COLUMN keywords, re-anchored on every
+ *  column-separator comma (depth 1 inside CREATE, depth 0 after ADD). */
+function currentDdlSegment(
+  masked: string,
+  region: { start: number; kind: 'create' | 'add' },
+): string {
+  const seg = masked.slice(region.start);
+  let depth = 0;
+  let anchor = 0;
+  for (let i = 0; i < seg.length; i++) {
+    const ch = seg[i];
+    if (ch === '(') {
+      depth++;
+      if (depth === 1 && region.kind === 'create') anchor = i + 1;
+    } else if (ch === ')') {
+      depth = Math.max(0, depth - 1);
+    } else if (
+      ch === ',' &&
+      ((region.kind === 'create' && depth === 1) || (region.kind === 'add' && depth === 0))
+    ) {
+      anchor = i + 1;
+    }
+  }
+  return seg.slice(anchor);
+}
+
+/** Constraint keywords offered inside a column definition (Workstream C). */
+const DDL_COLUMN_CONSTRAINTS = [
+  'NOT NULL', 'DEFAULT', 'PRIMARY KEY', 'UNIQUE', 'CHECK', 'REFERENCES',
+  'AUTO_INCREMENT', 'FOREIGN KEY', 'CONSTRAINT',
+];
+
+/** Pool for ddl-columns: types first until the current definition already
+ *  declares one, then constraints first (types stay prefix-reachable). */
+function ddlColumnPool(beforeCursor: string): Suggestion[] {
+  const masked = maskLiterals(beforeCursor).toUpperCase();
+  const region = ddlRegionStart(masked);
+  const seg = (region ? currentDdlSegment(masked, region) : '').replace(/^ADD\s+COLUMN\s+/i, '');
+  const m = /^[`"]?[\w]+[`"]?\s+([A-Z_]+)/.exec(seg);
+  const typeSet = new Set(SQL_DATA_TYPES);
+  const typeDeclared = m !== null && typeSet.has(m[1]);
+  const kw = (k: string): Suggestion => ({ text: k, type: 'keyword' });
+  const types = SQL_DATA_TYPES.map(kw);
+  const constraints = DDL_COLUMN_CONSTRAINTS.map(kw);
+  return typeDeclared ? [...constraints, ...types] : [...types, ...constraints];
+}
+
+/** The IF [NOT] EXISTS modifier for a ddl-modifier cursor (DROP vs CREATE). */
+function ddlModifierSuggestion(beforeCursor: string): Suggestion {
+  const masked = maskLiterals(beforeCursor).toUpperCase();
+  const isDrop = /\bDROP\s+TABLE\b[^;]*$/i.test(masked);
+  return { text: isDrop ? 'IF EXISTS' : 'IF NOT EXISTS', type: 'keyword' };
 }
 
 /** Resolve a dotted qualifier (`table.` or `alias.`) to real table names. */
@@ -308,6 +448,9 @@ function keywordSuggestions(ctx: Ctx): Suggestion[] {
   // Context-scoped heads only — this preserves the intentional routing
   // (e.g. NO SELECT after a completed FROM list). The global ALL_KEYWORDS
   // superset is added in buildSuggestions for typed prefixes/continuations.
+  // (ddl contexts are served by ddlColumnPool / ddlModifierSuggestion at the
+  // buildSuggestions call site — they never route through here.)
+  if (ctx === 'ddl-columns' || ctx === 'ddl-modifier') return [];
   let pool: string[];
   if (ctx === 'statement-start') {
     pool = [...['SELECT', 'WITH', 'EXPLAIN'], ...DDL_KWS, ...TXN_KWS, 'FROM', 'WHERE', 'ORDER BY'];
@@ -529,15 +672,23 @@ export function buildSuggestions(params: {
   // (or left a multi-word keyword starter like `ORDER ` / `IS `), inject the
   // GLOBAL keyword superset so ANY syntax is reachable.
   const ctxPool: Suggestion[] =
-    ctx === 'columns'
-      ? [
-          ...joinConds,
-          ...columnSuggestions(prefix, queryBeforeCursor, schemas, fallbackTable),
-          ...keywordSuggestions('columns'),
-        ]
-      : ctx === 'after-table'
-        ? [...joinConds, ...keywordSuggestions('after-table')]
-        : [...tableSuggestions(schemas, scope), ...keywordSuggestions(ctx)];
+    ctx === 'ddl-columns'
+      ? ddlColumnPool(queryBeforeCursor)
+      : ctx === 'ddl-modifier'
+        ? [
+            ddlModifierSuggestion(queryBeforeCursor),
+            ...tableSuggestions(schemas, scope),
+            ...keywordSuggestions('statement-start'),
+          ]
+        : ctx === 'columns'
+          ? [
+              ...joinConds,
+              ...columnSuggestions(prefix, queryBeforeCursor, schemas, fallbackTable),
+              ...keywordSuggestions('columns'),
+            ]
+          : ctx === 'after-table'
+            ? [...joinConds, ...keywordSuggestions('after-table')]
+            : [...tableSuggestions(schemas, scope), ...keywordSuggestions(ctx)];
   const pool: Suggestion[] =
     up || continuation
       ? [

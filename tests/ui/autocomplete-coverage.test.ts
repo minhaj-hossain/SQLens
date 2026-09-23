@@ -135,4 +135,38 @@ describe('autocomplete keyword coverage (every syntax discoverable)', () => {
     expect(suggest('SELECT CASE W')).toContain('CASE WHEN');
     expect(suggest('SELECT CASE ')).toContain('CASE WHEN');
   });
+
+  // ---- DDL contexts (Workstream C) ----
+
+  it('OFFERS data types inside a CREATE TABLE column list', () => {
+    expect(suggest('CREATE TABLE t (id VA')).toContain('VARCHAR');
+    expect(suggest('CREATE TABLE t (id ')).toContain('INT');
+    expect(suggest('CREATE TABLE t (price DEC')).toContain('DECIMAL');
+    expect(suggest('CREATE TABLE t (active BOO')).toContain('BOOLEAN');
+  });
+
+  it('OFFERS constraint keywords once a type is declared', () => {
+    const items = suggest('CREATE TABLE t (id INT ');
+    expect(items).toContain('NOT NULL');
+    expect(items).toContain('PRIMARY KEY');
+    expect(items).toContain('UNIQUE');
+    expect(items).toContain('CHECK');
+  });
+
+  it('OFFERS types again on a second column (after the comma)', () => {
+    expect(suggest('CREATE TABLE t (id INT, name VA')).toContain('VARCHAR');
+    expect(suggest('CREATE TABLE t (id INT, name ')).toContain('TEXT');
+  });
+
+  it('OFFERS IF [NOT] EXISTS at DDL modifier positions', () => {
+    expect(suggest('DROP TABLE legacy_t ')).toContain('IF EXISTS');
+    expect(suggest('CREATE TABLE new_t ')).toContain('IF NOT EXISTS');
+    expect(suggest('DROP TABLE IF EX')).toContain('IF EXISTS');
+    expect(suggest('CREATE TABLE t IF N')).toContain('IF NOT EXISTS');
+  });
+
+  it('OFFERS types/constraints inside an ALTER ADD COLUMN clause', () => {
+    expect(suggest('ALTER TABLE products ADD COLUMN tagline VA')).toContain('VARCHAR');
+    expect(suggest('ALTER TABLE products ADD COLUMN tagline VARCHAR(120) ')).toContain('DEFAULT');
+  });
 });

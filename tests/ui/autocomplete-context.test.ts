@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSuggestions, Suggestion, referencedTables } from '../../src/lib/autocomplete';
+import { buildSuggestions, Suggestion, referencedTables, suggestionContext } from '../../src/lib/autocomplete';
 import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
 
 const sug = (opts: {
@@ -102,6 +102,25 @@ describe('autocomplete context routing (tracker item 12)', () => {
       queryBeforeCursor: 'SELECT * FROM customers c JOIN orders o ',
     });
     expect(s.some((item) => item.text.includes('o.customer_id = c.customer_id'))).toBe(true);
+  });
+
+  // ---- DDL cursor states (Workstream C) ----
+
+  it('treats CHECK (...) inside DDL as an expression position (depth > 1)', () => {
+    const before = 'CREATE TABLE t (score INT CHECK (sco';
+    expect(suggestionContext('sco', before)).toBe('columns');
+    const s = sug({ prefix: 'sco', queryBeforeCursor: before });
+    expect(has(s, 'VARCHAR')).toBe(false); // the types pool is not active here
+  });
+
+  it('classifies DDL cursor positions for telemetry', () => {
+    expect(suggestionContext('', 'CREATE TABLE t (id INT, ')).toBe('ddl-columns');
+    expect(suggestionContext('', 'ALTER TABLE products ADD COLUMN tagline ')).toBe('ddl-columns');
+    expect(suggestionContext('', 'DROP TABLE legacy_t ')).toBe('ddl-modifier');
+    expect(suggestionContext('', 'CREATE TABLE new_t ')).toBe('ddl-modifier');
+    // Non-DDL positions keep their old labels
+    expect(suggestionContext('', 'SELECT * FROM products ')).toBe('after-table');
+    expect(suggestionContext('', '')).toBe('statement-start');
   });
 });
 

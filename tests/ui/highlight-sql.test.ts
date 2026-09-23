@@ -104,3 +104,41 @@ describe('highlightSql — P9.2 unification', () => {
     expect(out).not.toContain('SELECT');
   });
 });
+
+describe('highlightSql — DDL vocabulary (Workstream C)', () => {
+  it('wraps data types in text-code-kw spans (precision stays a number)', () => {
+    const out = highlightSql('CREATE TABLE t (id INT, name VARCHAR(50));');
+    expect(out).toContain('<span class="text-code-kw font-bold">INT</span>');
+    expect(out).toContain('<span class="text-code-kw font-bold">VARCHAR</span>');
+    expect(out).toContain('<span class="text-code-num font-semibold">50</span>');
+    expect(out).toContain('<span class="text-code-ident">id</span>');
+    expect(out).not.toMatch(/___TOKEN_\d+___/);
+  });
+
+  it('matches longest type/modifier forms first (no split tokens)', () => {
+    const dt = highlightSql('CREATE TABLE t (logged DATETIME);');
+    expect(dt).toContain('>DATETIME<');
+    expect(dt).not.toMatch(/>(DATE|TIME)</);
+    expect(highlightSql('CREATE TABLE t (ok BOOLEAN);')).toContain('>BOOLEAN<');
+    expect(highlightSql('DROP TABLE IF EXISTS staging;')).toContain('>IF EXISTS<');
+    expect(highlightSql('CREATE TABLE IF NOT EXISTS t (id INT);')).toContain('>IF NOT EXISTS<');
+  });
+
+  it('highlights CHECK / SAVEPOINT / EXISTS / VIEW forms (taught gap fill)', () => {
+    expect(highlightSql('CHECK (score BETWEEN 1 AND 5)')).toContain('>CHECK<');
+    expect(highlightSql('SAVEPOINT sp1;')).toContain('>SAVEPOINT<');
+    expect(highlightSql('WHERE NOT EXISTS (SELECT 1);')).toContain('>NOT EXISTS<');
+    expect(highlightSql('CREATE OR REPLACE VIEW v AS SELECT 1;')).toContain(
+      '>CREATE OR REPLACE VIEW<',
+    );
+    expect(highlightSql('WITH RECURSIVE t AS (SELECT 1);')).toContain('>WITH RECURSIVE<');
+    expect(highlightSql('col IS TRUE')).toContain('>IS TRUE<');
+  });
+
+  it('preserves case for lowercase DDL typing', () => {
+    const strip = (html: string) => html.replace(/<[^>]+>/g, '');
+    const out = strip(highlightSql('create table t (id int);'));
+    expect(out).toContain('int');
+    expect(out).not.toContain('INT');
+  });
+});

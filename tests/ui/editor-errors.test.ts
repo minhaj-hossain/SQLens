@@ -70,4 +70,34 @@ describe('editor error parsing & did-you-mean', () => {
     expect(parsed?.didYouMean === undefined || parsed?.didYouMean.toLowerCase() !== 'products').toBe(true);
     expect(parsed?.displayMessage ?? '').not.toContain("Did you mean 'products'?");
   });
+
+  // ---- Engine DDL typing errors (Workstream C / B messages) ----
+
+  it('parses Unknown data type and suggests the closest canonical type', () => {
+    const sql = 'CREATE TABLE t (id VARCHR(20));';
+    const parsed = parseEditorError(
+      "Unknown data type 'VARCHR(20)' for column 'id' — did you mean 'VARCHAR'? (supported: INT, VARCHAR, … see docs/DIALECT.md §5).",
+      sql,
+      DATABASE_SCHEMAS,
+    );
+    expect(parsed).not.toBeNull();
+    expect(parsed?.token).toBe('VARCHR');
+    expect(parsed?.didYouMean).toBe('VARCHAR');
+    expect(parsed?.displayMessage).toContain("Unknown data type 'VARCHR'. Did you mean 'VARCHAR'?");
+    // The `for column 'id'` tail must NOT be misread as an unknown-column error
+    expect(parsed?.displayMessage ?? '').not.toContain('No column named');
+  });
+
+  it('surfaces a missing-data-type error without a bogus keyword suggestion', () => {
+    const sql = 'CREATE TABLE t (id);';
+    const parsed = parseEditorError(
+      "Column 'id' needs a data type (e.g. id INT, id VARCHAR(50)).",
+      sql,
+      DATABASE_SCHEMAS,
+    );
+    expect(parsed).not.toBeNull();
+    expect(parsed?.token).toBe('id');
+    expect(parsed?.didYouMean).toBeUndefined(); // 'id' → 'IN' would be a lie
+    expect(parsed?.displayMessage).toContain('needs a data type');
+  });
 });

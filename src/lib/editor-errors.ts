@@ -85,6 +85,20 @@ export function parseEditorError(
   let token: string | undefined;
   let kind: 'table' | 'column' | 'syntax' | 'generic' = 'generic';
 
+  // Workstream C: engine DDL typing errors (Workstream B messages). Handle
+  // BEFORE the table/column branches — `for column 'id'` inside a type-typo
+  // message must never classify as an unknown-column error, and a missing
+  // declaration must not earn a bogus keyword suggestion ('id' → 'IN').
+  const dataTypeMatch = msg.match(/Unknown data type\s+['"`]([^'"`\s]+)['"`]/i);
+  const missingTypeMatch = msg.match(/^Column\s+['"`]([^'"`]+)['"`]\s+needs a data type/i);
+  if (dataTypeMatch) {
+    token = dataTypeMatch[1].split('(')[0]; // 'VARCHR(20)' → 'VARCHR'
+    kind = 'syntax';
+  } else if (missingTypeMatch) {
+    token = missingTypeMatch[1];
+    kind = 'generic';
+  }
+
   // 1. Check for table errors
   const tblMatch =
     msg.match(/Table\s+['"`]([^'"`]+)['"`]/i) ||
@@ -169,7 +183,9 @@ export function parseEditorError(
     const best = findClosestMatch(token, [...SQL_KEYWORDS]);
     if (best) {
       didYouMean = best;
-      displayMessage = `Syntax error near '${token}'. Did you mean '${best}'?`;
+      displayMessage = dataTypeMatch
+        ? `Unknown data type '${token}'. Did you mean '${best}'?`
+        : `Syntax error near '${token}'. Did you mean '${best}'?`;
     }
   }
 
