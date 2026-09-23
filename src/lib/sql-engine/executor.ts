@@ -1108,7 +1108,18 @@ export class SqlExecutor {
         if (rawJson === null || rawJson === undefined) return null;
         try {
           const obj = typeof rawJson === 'object' ? rawJson : JSON.parse(String(rawJson));
-          const segments = path.replace(/^\$\.?/, '').split('.').filter(Boolean);
+          // P1 fix: MySQL-legal quoted segments (`$."theme"`) and bracket paths
+          // (`$['theme']`) used to keep their quotes as literal key characters
+          // and resolve to undefined — a silent NULL where MySQL returns the
+          // value. Normalize the path to bare dot segments first.
+          const normalized = path
+            .replace(/^\$/, '')
+            .replace(/\[\s*(['"])([\s\S]*?)\1\s*\]/g, '.$2');
+          const segments = normalized
+            .replace(/^\./, '')
+            .split('.')
+            .map((seg) => seg.replace(/^["']|["']$/g, ''))
+            .filter((seg) => seg.length > 0);
           let cur: any = obj;
           for (const seg of segments) {
             if (cur === null || cur === undefined) return null;
