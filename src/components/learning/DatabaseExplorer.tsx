@@ -21,6 +21,13 @@ interface DatabaseExplorerProps {
   /** Batch B: session txn state — when OPEN, the delta band reads “(uncommitted)”. */
   txnStatus?: 'none' | 'open' | 'failed';
   refreshKey?: unknown;
+  /**
+   * Workstream F (expected schema): the DDL task's contract columns —
+   * PracticeTaskView passes `validation.requiredColumns` ONLY for DDL tasks
+   * (statement-kind gate, the same classifier the submit pipeline uses). The
+   * panel never derives a contract from solutionSql.
+   */
+  expectedColumns?: string[];
 }
 
 export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
@@ -30,6 +37,7 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
   className = '',
   getDatabaseState, txnStatus,
   refreshKey,
+  expectedColumns,
 }) => {
   const [activeTable, setActiveTable] = useState<string>(initialTableName);
   const [activeTab, setActiveTab] = useState<'preview' | 'schema' | 'graph'>('preview');
@@ -83,6 +91,19 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
     deltaLabel,
   } = resolveLiveRows(tableKey, liveTables);
 
+  // Workstream F (expected schema): the contract comes from the EXPLICIT
+  // expectedColumns prop (= validation.requiredColumns for DDL tasks), never
+  // from solutionSql. When the table doesn't exist yet, the schema lookup
+  // below falls back to `products`; when contract columns are absent from the
+  // live schema, a pending ALTER adds them. Either way the panel states the
+  // real contract instead of letting the fallback mislead.
+  const expectedTable = initialTableName.toLowerCase();
+  const expectedMissingTable = !allTableNames.includes(expectedTable);
+  const existingColNames = new Set(schema.columns.map((c) => c.name.toLowerCase()));
+  const pendingCols = (expectedColumns ?? []).filter((c) => !existingColNames.has(c.toLowerCase()));
+  const showExpected =
+    (expectedColumns?.length ?? 0) > 0 && (expectedMissingTable || pendingCols.length > 0);
+
   const filteredRows = rawRows.filter((row) => {
     if (!searchFilter) return true;
     return Object.values(row).some((val) =>
@@ -102,6 +123,36 @@ export const DatabaseExplorer: React.FC<DatabaseExplorerProps> = ({
       id="database-explorer-container"
       className={`flex flex-col bg-surface rounded-xl border border-border overflow-hidden w-full min-w-0 ${className}`}
     >
+      {/* Workstream F: expected-schema contract (sourced from requiredColumns
+          via the expectedColumns prop — never solutionSql). Shown when the
+          target table does not exist yet or contract columns are missing from
+          the live schema; the fallback below would otherwise display another
+          table's schema. */}
+      {showExpected && (
+        <div
+          id="expected-schema-panel"
+          className="px-3 py-2 border-b border-border bg-surface-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 min-w-0"
+        >
+          <span className="text-[10px] font-mono tracking-wider text-text-faint shrink-0">
+            {expectedMissingTable
+              ? `EXPECTED SCHEMA · ${expectedTable} (not created yet)`
+              : `EXPECTED COLUMNS · ${expectedTable} (to be added)`}
+          </span>
+          <span className="flex flex-wrap items-center gap-1.5 min-w-0">
+            {(expectedColumns ?? []).map((col) => (
+              <span
+                key={col}
+                className="font-mono text-[11px] text-text bg-surface border border-border rounded px-1.5 py-0.5"
+              >
+                {col}
+              </span>
+            ))}
+          </span>
+          <span className="text-[10px] font-body text-text-faint italic ml-auto shrink-0">
+            types &amp; constraints: see the instructions
+          </span>
+        </div>
+      )}
       {/* Header & Table Selector */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-surface border-b border-border-soft min-w-0">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">

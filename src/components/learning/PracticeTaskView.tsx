@@ -206,6 +206,13 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
             <DatabaseExplorer
               initialTableName={task.primaryTable}
               highlightedColumns={task.validation.requiredColumns}
+              expectedColumns={
+                /\b(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX)\b/i.test(
+                  task.solutionSql,
+                )
+                  ? task.validation.requiredColumns
+                  : undefined
+              }
               getDatabaseState={getDatabaseState}
               refreshKey={executionResult}
               onSelectColumn={(colName) => {

@@ -249,11 +249,54 @@ actions / multi-clause ALTER execution — revisit only if a lesson needs them).
   policy **18 = baseline**. (`test:module-order` remains the D-documented
   pre-existing baseline red — stale 38-module script.)
 
-## F — Editor / Explorer scaffold ⬜ NOT STARTED
+## F — Editor / Explorer scaffold ✅
 
-- [ ] DDL-aware `initialSql` skeleton (table name + commented column stubs —
-  no answers).
-- [ ] Explorer "expected schema" panel sourced from `requiredColumns`.
+- [x] **F1** DDL-aware `initialSql` skeletons — all **27** Day-27…30 DDL tasks
+  (19 lesson + 8 challenge) now open the editor with structure instead of a
+  blank buffer:
+  - **CREATE** → table name + one commented `-- column` stub per contract
+    column **inside the parens** (leading comments are stripped by
+    `splitTaskScaffold`, so the stubs must live in the body). Names only —
+    no types, constraints, or values leak (same discoverability line A drew;
+    types live in the instructions).
+  - **ALTER** → `ALTER TABLE … ADD COLUMN <name>;` — Run-as-is yields D's
+    named `Column '<name>' needs a data type …` guidance.
+  - **DROP** → plain `DROP TABLE <t>;` — Run-as-is yields D's
+    `… doesn't exist. Use DROP TABLE IF EXISTS …` guidance. Starters now
+    TEACH through the named-error channel instead of staring at nothing.
+  - Guarantee verified: the `initialSql does not already pass` gate is green —
+    every lesson starter fails validation with guidance; `solutionSql`
+    untouched (solution-sql/all-tasks/pipeline stayed baseline).
+- [x] **F2** Explorer expected-schema panel (`#expected-schema-panel` in
+  `DatabaseExplorer`):
+  - Contract sourced ONLY from the explicit `expectedColumns` prop (=
+    `validation.requiredColumns`), **never from `solutionSql`**; DDL-gated in
+    `PracticeTaskView` with the same statement classifier the submit pipeline
+    uses, so SELECT tasks cannot false-trigger (computed requiredColumns on
+    SELECT stay invisible to the panel).
+  - `EXPECTED SCHEMA · <table> (not created yet)` for fresh CREATEs — covers
+    the explorer's silent `products`-schema fallback that would otherwise
+    display another table's columns under the new table's header;
+    `EXPECTED COLUMNS · <table> (to be added)` for pending ALTER columns;
+    trailing `types & constraints: see the instructions` (types stay where A
+    put them — the panel adds no type claims it can't source).
+  - Discovered along the way: the task card's meta strip ALREADY lists
+    `COLUMNS = requiredColumns` (A's field surfaced in TaskInstructions) —
+    the task-card half of the contract was live before F; F delivered the
+    explorer half.
+  - Scope: the lesson workbench mounts the explorer; challenge tasks
+    (incl. Day-30) are covered by their F1 skeleton + instructions. Day-33+
+    DDL stays advisory, matching A's blocking scope.
+- [x] **F3** Tests: `tests/ui/expected-schema.test.tsx` — 3 tests (panel for
+  not-yet-created table, pending-ALTER wording, hidden for SELECT).
+- [x] **F4** Acceptance (2026-09-23) — **zero regressions**: `tsc` · vitest
+  **615/615** (53 files; initial-sql gate green with all 19 lesson skeletons)
+  · keyword-case 0 · ddl-contracts 0 blocking/32 advisory = baseline ·
+  verify baseline output · all-tasks **423/424** (same Day-45) · pipeline
+  **6 = baseline** · taught **6 = baseline** · policy **18 = baseline** ·
+  custom-validators 0/17 · db-lifecycle 34/34 · engine suite/equivalence
+  justified-skipped (F touches zero engine files) · module-order remains the
+  D-documented pre-existing red.
 
 ## Known tooling quirks surfaced during the audits (parked)
 
