@@ -105,7 +105,10 @@ describe('Set operations — chained (left-associative folding)', () => {
 
   it('UNION ALL chain stacks every side', () => {
     const ex = fresh();
-    const r = rows(ex, "SELECT 'customer' AS source, city FROM customers UNION ALL SELECT 'student' AS source, city FROM students UNION ALL SELECT 'supplier' AS source, city FROM suppliers;");
+    // suppliers genuinely have no city column (Day 17's lesson names this exact
+    // fact and teaches `NULL AS city` as the alignment repair) — the chain must
+    // use that repair, not a column that does not exist.
+    const r = rows(ex, "SELECT 'customer' AS source, city FROM customers UNION ALL SELECT 'student' AS source, city FROM students UNION ALL SELECT 'supplier' AS source, NULL AS city FROM suppliers;");
     expect(r.rowCount).toBe(26);
     expect(r.columns).toEqual(['source', 'city']);
     const sources = new Set(r.rows!.map((x: any) => x.source));
@@ -129,9 +132,12 @@ describe('Set operations — chained (left-associative folding)', () => {
 
   it('mixed operators: UNION then EXCEPT folds left-to-right', () => {
     const ex = fresh();
-    // (students ∪ suppliers) − customers = cities we serve/staff but no customers
-    const r = rows(ex, 'SELECT city FROM students UNION SELECT city FROM suppliers EXCEPT SELECT city FROM customers;');
+    // (students ∪ customers) − customers = student cities with no customer there.
+    // Left-fold is what makes Dhaka disappear: a right-fold would evaluate
+    // (customers − customers) = {} and leave Dhaka in from the students side.
+    const r = rows(ex, 'SELECT city FROM students UNION SELECT city FROM customers EXCEPT SELECT city FROM customers;');
     const cities = new Set(r.rows!.map((x: any) => x.city));
+    expect(cities.size).toBe(2);
     expect(cities.has('Dhaka')).toBe(false); // customers in Dhaka → removed
     expect(cities.has('Gazipur') || cities.has('Chattogram')).toBe(true);
   });

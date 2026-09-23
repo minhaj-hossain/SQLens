@@ -5,6 +5,7 @@ import { resolveSqlType } from './sql-type-registry';
 import { INITIAL_TABLES } from '../../content/database/tables';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
 import { SIMULATED_TODAY } from '../../config/simulated-date';
+import { SQL_KEYWORDS } from '../sql-keywords';
 
 function getRowValue(row: TableRow, colExpr: string): any {
   if (!row) return undefined;
@@ -43,6 +44,51 @@ function getRowValue(row: TableRow, colExpr: string): any {
  */
 function isInternalMirrorKey(key: string): boolean {
   return key.includes('.');
+}
+
+/**
+ * Substitutes a routine parameter identifier with a SQL literal, skipping
+ * occurrences inside string / backtick literals and qualified references
+ * (`alias.param`). Token boundaries prevent `id` from matching inside
+ * `order_id`. Used by CALL argument binding (P2-B).
+ */
+function substituteIdentifier(sql: string, param: string, literal: string): string {
+  let out = '';
+  let i = 0;
+  let inQuote: string | null = null;
+  const paramLower = param.toLowerCase();
+  while (i < sql.length) {
+    const ch = sql[i];
+    if (inQuote) {
+      out += ch;
+      if (ch === inQuote) inQuote = null;
+      i++;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === '`') {
+      inQuote = ch;
+      out += ch;
+      i++;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i;
+      while (j < sql.length && /[\w$]/.test(sql[j])) j++;
+      const token = sql.slice(i, j);
+      const prev = i > 0 ? sql[i - 1] : '';
+      const qualified = prev === '.' || prev === '`';
+      if (!qualified && token.toLowerCase() === paramLower) {
+        out += literal;
+      } else {
+        out += token;
+      }
+      i = j;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
 }
 
 function splitLogicalClauses(expr: string, operator: 'OR' | 'AND'): string[] {
@@ -650,6 +696,20 @@ export class SqlExecutor {
     }
 
     try {
+      // P2-A: named errors for unknown column references (projection + WHERE).
+      // Governing rule — never a plausible-looking wrong answer: `SELECT no_col`
+      // used to return all-NULL rows and `WHERE no_col = 5` an empty set, where
+      // MySQL names the column instead. Suppressed inside routine/trigger bodies
+      // (parameter / substituted tokens) and skipped entirely when any FROM
+      // relation is unresolvable (CTE bodies, dynamic names) — no coverage
+      // beats a false error.
+      if (
+        !this.suppressIdentCheck &&
+        (parsed.type === 'SELECT' || parsed.type === 'UPDATE' || parsed.type === 'DELETE')
+      ) {
+        this.assertKnownIdentifiers(parsed);
+      }
+
       if (parsed.type === 'CTE') {
         return this.executeCte(parsed, startTime);
       }
@@ -739,7 +799,99 @@ export class SqlExecutor {
       if (beginEndMatch) {
         cleanBody = beginEndMatch[1].trim();
       }
-      const res = this.execute(cleanBody);
+
+      // P2-B: BIND call arguments to parameter names before running the body.
+      // Without substitution a parameter identifier fell through to column
+      // resolution (the ident-guard is suppressed for routine bodies) and
+      // resolved as NULL — `WHERE order_id = target_order_id` matched 0 rows,
+      // so CALL reported success while silently doing nothing. Every lesson
+      // demo (day 44/47/48) depends on this binding.
+      const paramNames = routine.params
+        .map((p) => p.trim().split(/\s+/)[0].replace(/[`"']/g, ''))
+        .filter(Boolean);
+      const rawArgs = callMatch[2] !== undefined ? splitFunctionArgs(callMatch[2]).map((s) => s.trim()).filter((s) => s.length > 0) : [];
+      if (rawArgs.length !== paramNames.length) {
+        return {
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Procedure '${name}' expects ${paramNames.length} argument(s) (${paramNames.join(', ')}), got ${rawArgs.length}`,
+        };
+      }
+      for (let i = 0; i < paramNames.length; i++) {
+        const argText = rawArgs[i];
+        let value: string | number | null;
+        if (/^null$/i.test(argText)) {
+          value = null;
+        } else {
+          let evaluated: unknown;
+          try {
+            evaluated = this.evaluateScalar({}, argText);
+          } catch (err: any) {
+            return {
+              success: false,
+              columns: [], rows: [], rowCount: 0,
+              executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+              error: `Invalid argument '${argText}' for parameter '${paramNames[i]}' in CALL: ${err.message}`,
+            };
+          }
+          if (evaluated === null || evaluated === undefined) {
+            if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(argText)) {
+              // A bare identifier that evaluated to nothing can only be an
+              // unresolvable reference — name it instead of binding NULL.
+              return {
+                success: false,
+                columns: [], rows: [], rowCount: 0,
+                executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+                error: `Unknown column '${argText}' in 'call arguments'`,
+              };
+            }
+            value = null;
+          } else if (typeof evaluated === 'number') {
+            value = evaluated;
+          } else {
+            value = String(evaluated);
+          }
+        }
+        const literal = value === null
+          ? 'NULL'
+          : typeof value === 'number'
+            ? String(value)
+            : `'${value.replace(/'/g, "''")}'`;
+        cleanBody = substituteIdentifier(cleanBody, paramNames[i], literal);
+      }
+
+      // P2-A: routine parameters are identifiers, not table columns — suppress
+      // the unknown-column guard while the body runs. Parameters themselves are
+      // already substituted above, so what remains is genuinely body-local.
+      this.suppressIdentCheck = true;
+      let res: QueryExecutionResult | undefined;
+      try {
+        // Multi-statement bodies run in order; stop at the first failure so a
+        // half-applied routine never looks like full success.
+        for (const stmt of splitStatements(cleanBody)) {
+          if (!stmt.trim()) continue;
+          res = this.execute(stmt);
+          if (!res.success) {
+            return {
+              ...res,
+              executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+            };
+          }
+        }
+      } finally {
+        this.suppressIdentCheck = false;
+      }
+      if (!res) {
+        return {
+          success: false,
+          columns: [], rows: [], rowCount: 0,
+          executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
+          error: `Procedure '${name}' has an empty body`,
+        };
+      }
       return {
         ...res,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
@@ -898,7 +1050,14 @@ export class SqlExecutor {
           body = body.replace(new RegExp(`\\bOLD\\.${k}\\b`, 'gi'), valStr);
         }
       }
-      this.execute(body);
+      // P2-A: trigger bodies may reference tokens that are not table columns
+      // after partial substitution — suppress the unknown-column guard.
+      this.suppressIdentCheck = true;
+      try {
+        this.execute(body);
+      } finally {
+        this.suppressIdentCheck = false;
+      }
     }
   }
 
@@ -2183,6 +2342,143 @@ export class SqlExecutor {
       executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
       error: 'Unknown transaction command',
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // P2-A: unknown-column named errors (projection + WHERE)
+  // ---------------------------------------------------------------------------
+
+  /** Suppression flag while executing stored routine/trigger bodies. */
+  private suppressIdentCheck = false;
+  private _identKw?: Set<string>;
+
+  /** Columns of a resolvable relation (seed table, created table, view) or null. */
+  private relationColumns(name: string): string[] | null {
+    const t = name.replace(/[`"']/g, '').toLowerCase();
+    const schema = (this.db.schemas as any)?.[t] ?? (DATABASE_SCHEMAS as any)[t];
+    if (schema && Array.isArray(schema.columns)) {
+      return schema.columns.map((c: any) => String(c?.name ?? c));
+    }
+    return null;
+  }
+
+  /** Keyword universe: canonical vocabulary + date parts / literals extras.
+   *  Multi-word entries (`IS NOT NULL`, `GROUP BY`, `INSERT INTO`, …) also
+   *  contribute each of their words, so a WHERE clause is not misread when the
+   *  phrase is split across tokens (`price IS NOT NULL`) or shortened
+   *  (`price < 10 GROUP BY name` / bare `IS`, `NOT`, `BY`). */
+  private identKeywords(): Set<string> {
+    if (!this._identKw) {
+      const kw = new Set<string>();
+      for (const k of SQL_KEYWORDS) {
+        const up = String(k).toUpperCase();
+        kw.add(up);
+        for (const word of up.split(/\s+/)) if (word) kw.add(word);
+      }
+      for (const k of [
+        'NULL', 'TRUE', 'FALSE', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND',
+        'DUAL', 'INTERVAL', 'ESCAPE', 'REGEXP', 'RLIKE', 'UNSIGNED', 'SIGNED',
+        'CAST', 'CONVERT', 'DECIMAL', 'VARCHAR', 'DATETIME', 'TIMESTAMP',
+      ]) kw.add(k);
+      this._identKw = kw;
+    }
+    return this._identKw;
+  }
+
+  /** Blank out balanced paren groups whose body starts with SELECT (subselects). */
+  private blankSubselects(sql: string): string {
+    const remove: [number, number][] = [];
+    const stack: number[] = [];
+    for (let i = 0; i < sql.length; i++) {
+      if (sql[i] === '(') stack.push(i);
+      else if (sql[i] === ')') {
+        const s = stack.pop();
+        if (s === undefined) continue;
+        if (/^\s*SELECT\b/i.test(sql.slice(s + 1, i))) remove.push([s, i]);
+      }
+    }
+    if (remove.length === 0) return sql;
+    let out = '';
+    let pos = 0;
+    for (const [s, e] of remove.sort((a, b) => a[0] - b[0])) {
+      if (e < pos) continue; // nested inside an already-removed span
+      out += sql.slice(pos, s) + ' ';
+      pos = e + 1;
+    }
+    out += sql.slice(pos);
+    return out;
+  }
+
+  /**
+   * Validate bare column references in the SELECT field list and the WHERE
+   * clause against the statement's relation universe. Conservative by
+   * construction — see the call-site comment in `execute()`.
+   */
+  private assertKnownIdentifiers(parsed: ParsedSqlQuery): void {
+    const rels: string[] = [];
+    if (parsed.type === 'SELECT') {
+      if (parsed.fromTable) rels.push(parsed.fromTable);
+      for (const j of parsed.joins ?? []) rels.push(j.table);
+    } else if (parsed.type === 'UPDATE' && parsed.updateTable) {
+      rels.push(parsed.updateTable);
+    } else if (parsed.type === 'DELETE' && parsed.deleteTable) {
+      rels.push(parsed.deleteTable);
+    }
+    if (rels.length === 0) return; // FROM-less SELECT — constant context
+
+    const known = new Set<string>();
+    for (const r of rels) {
+      const cols = this.relationColumns(r);
+      if (!cols || cols.length === 0) return; // unresolved relation → skip conservatively
+      for (const c of cols) known.add(c.toLowerCase());
+    }
+
+    // Output aliases declared by this statement are legal identifiers for its
+    // own projection — and `AGG(...) OVER (...) AS x` / window items reach the
+    // projection check as `{ expression: 'x', alias: 'x' }`, so this is also
+    // what keeps ranking/rolling-metric queries (Days 23/24) error-free.
+    for (const col of parsed.columns ?? []) {
+      if (col.alias) known.add(String(col.alias).toLowerCase());
+    }
+
+    const kw = this.identKeywords();
+
+    // --- projection: bare column items only (literals/expressions/functions pass) ---
+    for (const col of parsed.columns ?? []) {
+      const expr = String(col.expression ?? '').trim();
+      if (!expr || expr === '*') continue;
+      if (/^['"]/.test(expr)) continue; // string literal
+      if (col.caseExpression || col.functionCall || col.aggregate) continue; // computed item
+      const bare = expr.match(/^([A-Za-z_][A-Za-z0-9_]*)((?:\s*\.\s*[A-Za-z_][A-Za-z0-9_]*)+)?$/);
+      if (!bare) continue; // arithmetic / expression / alias → not a bare ref
+      const joined = `${bare[1]}${bare[2] ?? ''}`;
+      const parts = joined.split('.').map((s) => s.trim().toLowerCase());
+      const target = parts[parts.length - 1];
+      if (kw.has(target.toUpperCase())) continue; // bare literal keyword (NULL / TRUE / FALSE)
+      if (!known.has(target)) {
+        throw new Error(`Unknown column '${target}' in 'field list'.`);
+      }
+    }
+
+    // --- WHERE: tokenize after masking literals, comments, and subselects ---
+    const where = parsed.whereClause?.trim();
+    if (!where) return;
+    let text = where.replace(/'(?:[^'\\]|\\.|'')*'/g, " '' ").replace(/"(?:[^"\\]|\\.)*"/g, ' "" ');
+    text = text.replace(/--[^\n\r]*/g, ' ').replace(/#[^\n\r]*/g, ' ').replace(/\/\*[\s\S]*?\*\//g, ' ');
+    text = this.blankSubselects(text);
+
+    const re = /[A-Za-z_][A-Za-z0-9_]*(?:\s*\.\s*[A-Za-z_][A-Za-z0-9_]*)?/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      const after = text.slice(m.index + m[0].length);
+      if (/^\s*\(/.test(after)) continue; // function name (its args are scanned as their own tokens)
+      const segments = m[0].split('.').map((s) => s.trim());
+      const target = segments[segments.length - 1];
+      if (kw.has(target.toUpperCase())) continue;
+      if (!known.has(target.toLowerCase())) {
+        throw new Error(`Unknown column '${target}' in 'where clause'.`);
+      }
+    }
   }
 
   private executeSelect(query: ParsedSqlQuery, startTime: number): QueryExecutionResult {

@@ -35,6 +35,34 @@ export const Day_48_MODULE: ModuleData = {
       theory: {
         summary:
           'Over the last 10 days, you moved from writing one-off queries to engineering permanent database components: Views for query reusability, Recursive CTEs for tree structures, Functions for formulas, Procedures for actions, and Triggers for automatic logging. Now put all these pieces together.',
+        targetQuery: {
+          sql: 'SELECT * FROM v_high_value_orders;',
+          explanation: 'The assessment query: read one encapsulated view that hides a JOIN + GROUP BY + HAVING pipeline.',
+          badge: 'The first deliverable you query',
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Read the encapsulated name',
+            sqlSnippet: 'FROM v_high_value_orders',
+            clause: 'FROM',
+            explanation: 'The view name is all the assessment sends — the complexity lives in its stored definition.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Step 2: The stored pipeline',
+            sqlSnippet: 'SUM(oi.quantity * oi.unit_price) AS total_value',
+            clause: 'JOIN',
+            explanation: 'orders joins order_items and sums line totals per order inside the view.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Step 3: The stored threshold',
+            sqlSnippet: 'HAVING SUM(oi.quantity * oi.unit_price) > 100',
+            clause: 'HAVING',
+            explanation: 'Only orders above $100 survive — the HAVING filter is part of the view, not the caller\'s job.',
+          },
+        ],
         introTable: {
           tableName: 'Milestone 4A Core Deliverables',
           description: 'The four database components you will construct.',
@@ -86,26 +114,29 @@ export const Day_48_MODULE: ModuleData = {
           id: 'day48-t1',
           title: 'Deliverable 1: High-Value Orders View',
           description:
-            'Create a view v_high_value_orders that selects order_id, customer_id, total_amount, and status from orders where total_amount >= 100. Then query the view ordered by total_amount DESC.',
+            'Create a view v_high_value_orders that exposes order_id, customer_id, status, and the order total aliased total_amount (SUM of quantity * unit_price) for orders whose total reaches 100 or more. Then query the view ordered by total_amount DESC.',
           instructions: [
-            'Create view: CREATE VIEW v_high_value_orders AS SELECT order_id, customer_id, total_amount, status FROM orders WHERE total_amount >= 100;',
+            'Create view: CREATE VIEW v_high_value_orders AS SELECT o.order_id, o.customer_id, o.status, SUM(oi.quantity * oi.unit_price) AS total_amount FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY o.order_id, o.customer_id, o.status HAVING SUM(oi.quantity * oi.unit_price) >= 100;',
             'Query view: SELECT * FROM v_high_value_orders ORDER BY total_amount DESC;',
           ],
           type: 'assignment',
           primaryTable: 'orders',
+          secondaryTables: ['order_items'],
           initialSql:
             '-- Deliverable 1: High-value orders view\n',
           solutionSql:
-            'CREATE VIEW v_high_value_orders AS\n  SELECT order_id, customer_id, total_amount, status\n  FROM orders\n  WHERE total_amount >= 100;\nSELECT * FROM v_high_value_orders ORDER BY total_amount DESC;',
+            'CREATE VIEW v_high_value_orders AS\n  SELECT o.order_id, o.customer_id, o.status,\n         SUM(oi.quantity * oi.unit_price) AS total_amount\n  FROM orders o\n  JOIN order_items oi ON o.order_id = oi.order_id\n  GROUP BY o.order_id, o.customer_id, o.status\n  HAVING SUM(oi.quantity * oi.unit_price) >= 100;\nSELECT * FROM v_high_value_orders ORDER BY total_amount DESC;',
           solutionExplanation:
-            'The view v_high_value_orders encapsulates the filtering logic (total_amount >= 100). The outer SELECT queries it sorted highest to lowest.',
+            'An order total is never stored on orders — it only exists as SUM(quantity * unit_price) over order_items, so the view hides a JOIN + GROUP BY behind one name, exactly like the Day-39 reporting layer. HAVING filters the aggregate (WHERE cannot) and the outer SELECT simply orders the 3 rows the view exposes.',
           hints: [
-            { level: 1, text: 'Define the view with CREATE VIEW v_high_value_orders AS ... and then query it.' },
-            { level: 2, text: 'CREATE VIEW v_high_value_orders AS SELECT order_id, customer_id, total_amount, status FROM orders WHERE total_amount >= 100;\nSELECT * FROM v_high_value_orders ORDER BY total_amount DESC;' },
+            { level: 1, text: 'CREATE VIEW v_high_value_orders AS ... first, then query it. The total is not a column on orders: SUM(oi.quantity * oi.unit_price) over a JOIN to order_items, filtered with HAVING — not WHERE.' },
+            { level: 2, text: 'CREATE VIEW v_high_value_orders AS SELECT o.order_id, o.customer_id, o.status, SUM(oi.quantity * oi.unit_price) AS total_amount FROM orders o JOIN order_items oi ON o.order_id = oi.order_id GROUP BY o.order_id, o.customer_id, o.status HAVING SUM(oi.quantity * oi.unit_price) >= 100;\nSELECT * FROM v_high_value_orders ORDER BY total_amount DESC;' },
           ],
           validation: {
             requireView: true,
-            requireWhere: true,
+            requireJoin: true,
+            requireGroupBy: true,
+            requireHaving: true,
             requireOrderBy: [{ column: 'total_amount', direction: 'DESC' }],
           },
           successMessage: 'Deliverable 1 passed! High-value orders view deployed.',
