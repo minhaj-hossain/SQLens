@@ -2,6 +2,7 @@ import { LEARNING_CONFIG } from '../../config/learning';
 import { UserLearningState, UnlockStatus } from '../../types/progress';
 import { ModuleData, Concept } from '../../types/curriculum';
 import { getAvailabilityForModule } from './availability-store';
+import { devKnobsEnabled } from './dev-knobs';
 import {
   getModuleDisplayLabel,
   getPreviousModule,
@@ -13,7 +14,8 @@ import {
  */
 export function getEffectiveNow(simulatedOffsetHours: number = 0): Date {
   const now = new Date();
-  if (simulatedOffsetHours !== 0) {
+  // Item 15: the time-travel offset only applies inside `next dev`.
+  if (simulatedOffsetHours !== 0 && devKnobsEnabled()) {
     now.setHours(now.getHours() + simulatedOffsetHours);
   }
   return now;
@@ -336,7 +338,7 @@ export function getModuleUnlockStatus(
   }
 
   // Bypass mode — skip all time/schedule gates; only require previous completion
-  if (state.bypassDailyLock) {
+  if (devKnobsEnabled() && state.bypassDailyLock) {
     const prevModule = getPreviousModule(module, allModules);
     const prevCompleted = prevModule ? !!state.completedModules[prevModule.id] : true;
     return {

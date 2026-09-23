@@ -4,6 +4,7 @@ import {
   CompletedConceptRecord,
   CompletedModuleRecord,
 } from '../../types/progress';
+import { devKnobsEnabled } from './dev-knobs';
 
 /**
  * Guest → Account progress merge (Phase 2 & Comprehensive Sync Overhaul).
@@ -175,8 +176,10 @@ export function fromCloudProgress(
     ...(cloud as Partial<UserLearningState>),
     resetEpoch: getResetEpoch(cloud),
     resetAt: cloud.resetAt ?? base.resetAt ?? null,
-    bypassDailyLock: base.bypassDailyLock,
-    simulatedTimeOffsetHours: base.simulatedTimeOffsetHours,
+    // Item 15: toggles only survive a merge inside `next dev` — production
+    // hydrates them to their inert defaults no matter what `base` carries.
+    bypassDailyLock: devKnobsEnabled() ? base.bypassDailyLock : false,
+    simulatedTimeOffsetHours: devKnobsEnabled() ? base.simulatedTimeOffsetHours : 0,
   };
 }
 
@@ -390,7 +393,7 @@ export function mergeProgress(
     resetAt: local.resetAt ?? cloud.resetAt ?? null,
     // Batch 6: tombstone list survives merges so the deletion keeps winning.
     resetModuleIds: local.resetModuleIds ?? cloud.resetModuleIds ?? undefined,
-    bypassDailyLock: local.bypassDailyLock,
-    simulatedTimeOffsetHours: local.simulatedTimeOffsetHours,
+    bypassDailyLock: devKnobsEnabled() ? local.bypassDailyLock : false,
+    simulatedTimeOffsetHours: devKnobsEnabled() ? local.simulatedTimeOffsetHours : 0,
   };
 }
