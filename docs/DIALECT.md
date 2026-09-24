@@ -188,6 +188,14 @@ the same change — the two must never diverge.
   syntactic shape. Multiple correct formulations of the same business question must
   all pass (e.g. second-highest price via subquery *or* `DISTINCT … LIMIT 1 OFFSET 1`).
 - Solution SQL is a *reference answer*, not the only accepted answer.
+- **An error names a place, not just a problem (P4.17).** Every engine error that
+  quotes a name (`Unknown column 'x'`, `Unknown data type 'V'`,
+  `Table 't' does not exist`) carries a 1-based line/column into the learner's
+  own text. Comments and string literals are masked first, so a name that only
+  appears inside text is never "located", and a name that appears more than once
+  is reported as *first of N* rather than as a confident position. The contract
+  lives in `src/lib/sql-engine/source-position.ts` and is pinned by
+  `tests/engine/error-positions.test.ts`.
 
 ### Decision-first grading (when the dataset is the answer)
 

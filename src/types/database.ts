@@ -1,3 +1,5 @@
+import type { SqlSourcePosition } from '../lib/sql-engine/source-position';
+
 export type SQLDataType = 'number' | 'string' | 'date' | 'boolean' | 'decimal';
 
 export interface ColumnDefinition {
@@ -103,6 +105,15 @@ export interface QueryExecutionResult {
   rowCount: number;
   executionTimeMs: number;
   error?: string;
+  /**
+   * P4-17: WHERE the error is, in the learner's own source. Present only when
+   * the engine can name the quoted token AND locate it in real code (never
+   * inside a comment or a string literal) — see `sql-engine/source-position.ts`.
+   * Absence is honest: the UI shows no gutter marker rather than a guess.
+   */
+  errorPosition?: SqlSourcePosition;
+  /** P4-17: how many times that token appears in real code (1 = unambiguous). */
+  errorTokenOccurrences?: number;
   affectedRows?: number;
   transactionStatus?: 'in_transaction' | 'committed' | 'rolled_back' | 'none';
   /**

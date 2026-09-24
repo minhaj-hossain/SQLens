@@ -54,7 +54,8 @@ import {
   toggleLineComment,
 } from '@/lib/editor-keybindings';
 import { recordSuggestEvent } from '@/lib/suggest-telemetry';
-import { parseEditorError, ParsedEditorError } from '@/lib/editor-errors';
+import { errorGutterLine, parseEditorError, ParsedEditorError } from '@/lib/editor-errors';
+import type { SqlSourcePosition } from '@/lib/sql-engine/source-position';
 
 export type QueryEditorHandle = {
   focus: () => void;
@@ -77,6 +78,14 @@ export interface QueryEditorProps {
   editorClassName?: string;
   /** Inline error from last run / validator */
   error?: string | null;
+  /**
+   * P4.17: the ENGINE's position for the failing token (from `execute()`).
+   * Preferred over the editor's own token search, which cannot know about
+   * comments, string literals or repeated names.
+   */
+  errorPosition?: SqlSourcePosition | null;
+  /** P4.17: how often the failing token appears in real code (1 = unambiguous). */
+  errorTokenOccurrences?: number | null;
 }
 
 /** Batch E1: fallback metrics when the computed style cannot be read. */
@@ -223,6 +232,8 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       className,
       editorClassName,
       error,
+      errorPosition,
+      errorTokenOccurrences,
     },
     ref,
   ) {
@@ -366,10 +377,26 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       setInlineError(error ?? null);
     }, [error]);
 
+    // P4.17: the engine's own position (when it has one) is threaded through so
+    // the inline bar, the squiggle and the gutter all agree on WHERE the error
+    // is — instead of the editor re-guessing it from the message text.
     const parsedError = useMemo(
-      () => (inlineError ? parseEditorError(inlineError, value, DATABASE_SCHEMAS) : null),
-      [inlineError, value],
+      () =>
+        inlineError
+          ? parseEditorError(
+              inlineError,
+              value,
+              DATABASE_SCHEMAS,
+              errorPosition
+                ? { position: errorPosition, occurrences: errorTokenOccurrences ?? undefined }
+                : null,
+            )
+          : null,
+      [inlineError, value, errorPosition, errorTokenOccurrences],
     );
+
+    /** Gutter row that carries the error marker (null when the spot is ambiguous). */
+    const errorLine = useMemo(() => errorGutterLine(parsedError), [parsedError]);
 
     const matchedBracket = useMemo(
       () => findMatchingBracket(value, caretPos),
@@ -967,22 +994,34 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             ref={gutterRef}
             className="w-11 select-none py-3 bg-editor-gutter text-text-faint text-right pr-3 font-mono border-r border-border-soft overflow-hidden flex flex-col shrink-0"
           >
-            {lines.map((ln) => (
-              <div
-                key={ln}
-                // Batch E1: a soft-wrapped line owns all of its visual rows, so
-                // the number stays beside the text it labels and the gutter keeps
-                // scrolling in step with the textarea.
-                style={{ height: `${gutterHeights[ln - 1] ?? editorMetrics.lineHeight}px` }}
-                className={`text-[11px] font-medium transition-colors ${
-                  ln === activeLine
-                    ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3'
-                    : ''
-                }`}
-              >
-                {ln}
-              </div>
-            ))}
+            {lines.map((ln) => {
+              const isErrorLine = ln === errorLine;
+              return (
+                <div
+                  key={ln}
+                  data-error-line={isErrorLine ? 'true' : undefined}
+                  title={isErrorLine ? parsedError?.displayMessage : undefined}
+                  // Batch E1: a soft-wrapped line owns all of its visual rows, so
+                  // the number stays beside the text it labels and the gutter keeps
+                  // scrolling in step with the textarea.
+                  style={{ height: `${gutterHeights[ln - 1] ?? editorMetrics.lineHeight}px` }}
+                  className={`relative text-[11px] font-medium transition-colors ${
+                    isErrorLine
+                      ? // P4.17: the error line outranks the active-line tint — a
+                        // red number + rail is where the learner should look.
+                        'text-error font-bold bg-error/10'
+                      : ln === activeLine
+                        ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3'
+                        : ''
+                  }`}
+                >
+                  {isErrorLine && (
+                    <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[2px] bg-error" />
+                  )}
+                  {ln}
+                </div>
+              );
+            })}
           </div>
 
           <div className="relative flex-1 self-stretch min-h-[180px] overflow-hidden">
@@ -1242,7 +1281,9 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             <div className="flex items-center gap-2 truncate">
               <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
               <span className="truncate">
-                {parsedError.line ? `Line ${parsedError.line}: ` : ''}
+                {parsedError.line
+                  ? `Line ${parsedError.line}${parsedError.col ? `, Col ${parsedError.col}` : ''}: `
+                  : ''}
                 {parsedError.displayMessage}
               </span>
             </div>

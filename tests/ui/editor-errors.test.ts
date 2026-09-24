@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseEditorError, findClosestMatch, levenshtein } from '../../src/lib/editor-errors';
+import { errorGutterLine, parseEditorError, findClosestMatch, levenshtein } from '../../src/lib/editor-errors';
 import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
 
 describe('editor error parsing & did-you-mean', () => {
@@ -99,5 +99,63 @@ describe('editor error parsing & did-you-mean', () => {
     expect(parsed?.token).toBe('id');
     expect(parsed?.didYouMean).toBeUndefined(); // 'id' → 'IN' would be a lie
     expect(parsed?.displayMessage).toContain('needs a data type');
+  });
+
+  // ---- P4.17: engine-reported positions (line/col + gutter marker) ----
+
+  it('P4.17: an engine location is used verbatim instead of being re-guessed', () => {
+    const parsed = parseEditorError(
+      "Unknown column 'emial'",
+      "SELECT 'emial' AS label,\n  emial\nFROM customers",
+      DATABASE_SCHEMAS,
+      // Synthetic on purpose: if the editor re-derived the position this could
+      // never come back unchanged.
+      { position: { line: 7, col: 4, offsetStart: 3, offsetEnd: 8 }, occurrences: 2 },
+    );
+    expect(parsed?.line).toBe(7);
+    expect(parsed?.col).toBe(4);
+    expect(parsed?.offsetStart).toBe(3);
+    expect(parsed?.offsetEnd).toBe(8);
+    expect(parsed?.tokenOccurrences).toBe(2);
+    expect(errorGutterLine(parsed)).toBeNull(); // ambiguous → no marker
+  });
+
+  it('P4.17: without an engine location the search stays comment/string aware', () => {
+    const sql = "SELECT 'emial' AS label,\n  emial\nFROM customers";
+    const parsed = parseEditorError("Unknown column 'emial'", sql, DATABASE_SCHEMAS);
+    // The old regex search matched the LITERAL on line 1 (offset 8) and sent the
+    // learner to text that is not code; the shared locator finds the real one.
+    expect(parsed?.line).toBe(2);
+    expect(parsed?.offsetStart).toBe(27);
+    expect(sql.slice(27, 32)).toBe('emial');
+    expect(parsed?.tokenOccurrences).toBe(1);
+  });
+
+  it('P4.17: reports no position when the name appears only inside a literal', () => {
+    const parsed = parseEditorError(
+      "Unknown column 'emial'",
+      "SELECT 'emial' FROM customers",
+      DATABASE_SCHEMAS,
+    );
+    expect(parsed).not.toBeNull();
+    expect(parsed?.token).toBe('emial');
+    expect(parsed?.line).toBeUndefined();
+    expect(parsed?.col).toBeUndefined();
+    expect(errorGutterLine(parsed)).toBeNull();
+  });
+
+  it('P4.17: counts occurrences and suppresses an ambiguous gutter marker', () => {
+    const twice = parseEditorError(
+      "Unknown column 'emial'",
+      'SELECT emial FROM t WHERE emial > 1',
+      DATABASE_SCHEMAS,
+    );
+    expect(twice?.tokenOccurrences).toBe(2);
+    expect(twice?.line).toBe(1);
+    expect(errorGutterLine(twice)).toBeNull();
+
+    const once = parseEditorError("Unknown column 'emial'", 'SELECT emial FROM t', DATABASE_SCHEMAS);
+    expect(once?.tokenOccurrences).toBe(1);
+    expect(errorGutterLine(once)).toBe(1);
   });
 });

@@ -9,6 +9,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { QueryEditor, QueryEditorHandle } from "./QueryEditor";
+import type { SqlSourcePosition } from "@/lib/sql-engine/source-position";
 
 interface SQLEditorProps {
   value: string;
@@ -35,6 +36,12 @@ interface SQLEditorProps {
   engineError?: string | null;
   /** @deprecated use engineError — kept for backwards compat. */
   lastError?: string | null;
+  /**
+   * P4.17: engine-reported position of the failing token, plus how many times
+   * that token appears in real code (so an ambiguous spot never gets a marker).
+   */
+  errorPosition?: SqlSourcePosition | null;
+  errorTokenOccurrences?: number | null;
 }
 
 export const SQLEditor: React.FC<SQLEditorProps> = ({
@@ -52,6 +59,8 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   resetSql,
   engineError,
   lastError,
+  errorPosition,
+  errorTokenOccurrences,
 }) => {
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<QueryEditorHandle>(null);
@@ -148,6 +157,8 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         readOnly={readOnly}
         textareaId="sql-query-textarea"
         error={evaluationState === "wrong" ? (engineError ?? lastError ?? null) : null}
+        errorPosition={evaluationState === "wrong" ? (errorPosition ?? null) : null}
+        errorTokenOccurrences={evaluationState === "wrong" ? (errorTokenOccurrences ?? null) : null}
       />
 
       <div className="flex items-center gap-1.5 px-3 py-2 bg-surface border-t border-border-soft overflow-x-auto text-xs scrollbar-none">

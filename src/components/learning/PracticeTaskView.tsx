@@ -287,6 +287,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               backLabel={backLabel}
               resetSql={taskScaffold.code}
               engineError={executionResult?.error ?? null}
+              errorPosition={executionResult?.errorPosition ?? null}
+              errorTokenOccurrences={executionResult?.errorTokenOccurrences ?? null}
             />
           </div>
 

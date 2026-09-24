@@ -452,6 +452,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           // renders in the banner below; passing it here forged the false
           // "Table 'products' does not exist" message.
           error={!taskPassed ? (executionResult?.error ?? null) : null}
+          errorPosition={!taskPassed ? (executionResult?.errorPosition ?? null) : null}
+          errorTokenOccurrences={!taskPassed ? (executionResult?.errorTokenOccurrences ?? null) : null}
         />
 
         {/* Editor Bottom Actions */}

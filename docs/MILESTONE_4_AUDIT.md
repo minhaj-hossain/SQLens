@@ -214,7 +214,7 @@ keyword/construct check, so `'-- drop'` inside a literal can't satisfy a rule.
 
 | Area | Reality in SQLens | Impact |
 |---|---|---|
-| Error **positions** | No line/column in parse errors; `editor-errors.ts` regex-scrapes message text (`near 'x'`) | Learner sees *what* failed, not *where* — longstanding backlog item (plan #5), still open |
+| Error **positions** | ✅ **CLOSED (P4.17, 2026-09-24):** the engine reports 1-based line/column for every error that quotes a name, computed on the raw source with comments/string literals masked (`sql-engine/source-position.ts`); `QueryEditor` marks the line in the gutter. *Diagnostics* below stay regex-based (P4.18, open) | Learner now sees *where* as well as *what* — the last blocker on this row was the backlog item (plan #5) |
 | Diagnostics | Regex heuristics, not AST-based, plus autocomplete/schema checks | Misses semantically-wrong-but-parseable SQL (e.g. column from the wrong table) except where `requiredColumns` is declared — the M4 under-declaration in §2.2 amplifies this |
 | Concurrency (days 49–50) | Single-threaded engine: `FOR UPDATE`, isolation levels, deadlocks, `SKIP LOCKED` cannot actually block/interleave — graded by script shape + final state | A learner can pass while misunderstanding the behavior; DIALECT honestly lists these as *concept/simulation* — the **tasks should be graded as reasoning (`judgment[]`)**, which brings us back to the unimplemented `judgment` field |
 | `GRANT`/RLS (day 55) | Simulated, nothing persisted/enforced | Same: shape-graded only |
@@ -624,9 +624,60 @@ taught-before-tested 0 · custom-validators 0 · **ddl-contracts 0/0**) ·
 `npm run build` pass - live probes: headers 5/5, PUT 429 at #121, bucket
 isolation.
 
+## P4 Execution Log (2026-09-24) - item 17 done; 18-19 still parked
+
+### 17. Line/column positions in parser errors + gutter markers - DONE
+- **New engine module `src/lib/sql-engine/source-position.ts`** is now the single
+  source of truth for "where did it fail": `maskNonTokenText` blanks string
+  literals and `--` / `#` / block comments length- and newline-preserving;
+  `locateToken` does a hand-rolled whole-word scan (no `\b` surprises on
+  `VARCHR(20)`, and no lookbehind regex - `(?<=…)` throws at construction time
+  on Safari < 16.4, and this code runs in the browser) and counts every real
+  occurrence; `offsetToLineCol` keeps CRLF honest; `extractNamedToken` moves the
+  "which name does this message quote" rules OUT of the editor and next to the
+  messages that are being parsed, so the two can never drift; plus
+  `statementStartPosition` + `shiftPosition` for unparseable statements and
+  multi-statement scripts.
+- **Engine wiring:** `execute()` now wraps `executeCore()` and attaches
+  `errorPosition` + `errorTokenOccurrences` at ONE boundary. The engine reports
+  errors two ways - `return { success: false, error }` and `throw` (caught
+  inside) - so a boundary hook is the only way to cover every family without
+  editing ~100 sites. The parser adds the statement start for unparseable
+  statements; the multi-statement loop re-anchors each statement's position onto
+  the learner's full script (before this, `SELECT 1;\nSELECT no_col …` reported
+  line 1 for an error on line 2). No engine message, validator rule or grading
+  path changed - the fields are additive and optional.
+- **Honesty rule (matches the governing engine rule):** a position is a claim.
+  The engine reports the FIRST real occurrence *plus* its count, and
+  `errorGutterLine` suppresses the gutter marker when the name occurs more than
+  once instead of pointing confidently at a line that may be innocent; a name
+  that appears only inside a comment or a string literal yields NO position.
+- **UI:** `parseEditorError(message, sql, schemas, location?)` prefers the engine
+  position and only falls back to its own (now comment/string-aware) locator;
+  `QueryEditor` renders a red gutter number + 2px rail on the error line
+  (`data-error-line`, title = the message) and the inline bar reads
+  `Line N, Col M: …`. Wired through `SQLEditor` -> `PracticeTaskView` and
+  `IndependentChallengeView`.
+- **Tests (+28):** `tests/engine/source-position.test.ts` (16 primitives),
+  `tests/engine/error-positions.test.ts` (8 end-to-end - every assertion
+  re-reads the offsets out of the original SQL, so a position that drifts from
+  the source cannot pass), `tests/ui/editor-errors.test.ts` (+4).
+- **One real bug this caught:** `parseSql`'s UNKNOWN branch first computed the
+  statement start on the *normalized* text, so a leading comment was invisible
+  and the marker landed on line 1. Now computed on `rawSql`; the test pins it.
+
+### 18-19. Parked (unchanged)
+- 18 (AST-walk semantic diagnostics) stays open: `editor-errors.ts` no longer
+  guesses *positions*, but its diagnostics are still regex heuristics.
+- 19 (reference-DB CI replay) remains the precondition for the deferred
+  dual-dialect layer - see `DIALECT.md` §9 and `MILESTONE_4_PLAN.md` Directive 3.
+
+### Final verification (P4-17)
+`lint` 0 - `npm test` **690/690** (60 files; +28) - `audit:all` **11/11 green** (**0 blocking / 17 advisory**, unchanged from P3) - `npm run build` pass.
+
 ---
 
-*Generated by the Milestone 4 audit, 2026-09-23 (P0 executed same day; P1 executed same day; P2 executed same day; P3 executed same day). Evidence: every
+*Generated by the Milestone 4 audit, 2026-09-23 (P0 executed same day; P1 executed same day; P2 executed same day; P3 executed same day; P4-17 executed 2026-09-24). Evidence: every
 gate run listed in §0 plus greps over `src/content/modules/day-{39..57}-*.ts`,
 `ConceptMentalModel.tsx`, `submit-pipeline.ts`, and all of `src/app/api` — plus
 P3 live probes of `next.config.ts` headers, `/api/auth/*` and

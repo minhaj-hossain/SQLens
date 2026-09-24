@@ -1,3 +1,6 @@
+import { errorPositionFields, statementStartPosition } from './source-position';
+import type { SqlSourcePosition } from './source-position';
+
 export interface ParsedSelectColumn {
   raw: string;
   expression: string;
@@ -106,6 +109,12 @@ export interface ParsedSqlQuery {
   routineCommand?: string;
   triggerCommand?: string;
   error?: string;
+  /**
+   * P4-17: where an unparseable statement begins in the learner's source. The
+   * parser cannot classify it, so it reports the statement start (comments and
+   * leading whitespace skipped) instead of inventing a failing token.
+   */
+  errorPosition?: SqlSourcePosition;
 }
 
 /**
@@ -319,7 +328,15 @@ export function parseSql(rawSql: string): ParsedSqlQuery {
     return parseDelete(sql, rawSql);
   }
 
-  return { type: 'UNKNOWN', raw: rawSql, normalized: sql, error: 'Unsupported or unparseable SQL statement' };
+  return {
+    type: 'UNKNOWN',
+    raw: rawSql,
+    normalized: sql,
+    error: 'Unsupported or unparseable SQL statement',
+    // NOTE: `rawSql`, not the normalized `sql` — the position must refer to the
+    // learner's own text (and `statementStartPosition` masks comments itself).
+    errorPosition: statementStartPosition(rawSql) ?? undefined,
+  };
 }
 
 function findTopLevelKeyword(sql: string, keyword: string): number {
@@ -528,7 +545,11 @@ function parseSelect(sql: string, rawSql: string): ParsedSqlQuery {
 
     return query;
   } catch (err: any) {
-    return { ...query, error: err.message || 'Error parsing SQL query' };
+    return {
+      ...query,
+      error: err.message || 'Error parsing SQL query',
+      ...errorPositionFields(err.message, rawSql),
+    };
   }
 }
 

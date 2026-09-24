@@ -1,5 +1,6 @@
 import { DatabaseState, QueryExecutionResult, TableRow, ColumnDefinition, TableSchema, TxnStatus } from '../../types/database';
 import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, ParsedCaseWhen, ParsedSelectColumn } from './parser';
+import { errorPositionFields, shiftPosition, statementStartPosition } from './source-position';
 import { splitStatements } from './split-statements';
 import { resolveSqlType } from './sql-type-registry';
 import { INITIAL_TABLES } from '../../content/database/tables';
@@ -614,6 +615,19 @@ export class SqlExecutor {
   }
 
   public execute(sql: string): QueryExecutionResult {
+    const result = this.executeCore(sql);
+    // P4-17: ONE uniform place where a failed statement gains its source
+    // position. The engine reports errors two ways — `return { success: false,
+    // error }` and `throw` (caught inside `executeCore`) — so attaching at the
+    // public boundary is the only way to cover every family without editing
+    // ~100 throw/return sites. An explicit position (parser statement-start,
+    // unsupported statement type) already present wins over this fallback.
+    if (result.success || !result.error || result.errorPosition) return result;
+    return { ...result, ...errorPositionFields(result.error, sql) };
+  }
+
+  /** P4.17: the real execution body — public `execute()` adds the position. */
+  private executeCore(sql: string): QueryExecutionResult {
     const startTime = performance.now();
 
     // Multi-statement scripts (e.g. `BEGIN; INSERT …; COMMIT;` or migration
@@ -644,8 +658,23 @@ export class SqlExecutor {
       // keep executing after a failure (so COMMIT-after-error is graded) and
       // surface the FIRST error as the final verdict.
       let firstError: QueryExecutionResult | null = null;
+      // P4-17: each recursive execute() computes positions relative to ITS OWN
+      // statement text, so re-anchor every result onto the script the learner
+      // actually typed. A statement the splitter rewrote (not found verbatim)
+      // keeps NO position — pointing at the wrong line is worse than silence.
+      let cursor = 0;
       for (const stmt of statements) {
+        const stmtStart = sql.indexOf(stmt, cursor);
+        if (stmtStart >= 0) cursor = stmtStart + stmt.length;
         const r = this.execute(stmt);
+        if (r.errorPosition) {
+          if (stmtStart >= 0) {
+            r.errorPosition = shiftPosition(sql, r.errorPosition, stmtStart);
+          } else {
+            delete r.errorPosition;
+            delete r.errorTokenOccurrences;
+          }
+        }
         // Batch A: a failed statement inside an OPEN txn poisons it (Postgres).
         if (!r.success) {
           if (this.inTransaction) this.txnFailed = true;
@@ -692,6 +721,11 @@ export class SqlExecutor {
         rowCount: 0,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         error: parsed.error,
+        // P4-17: the parser knows where an unparseable statement begins; for
+        // every other parse failure fall back to the quoted token.
+        ...(parsed.errorPosition
+          ? { errorPosition: parsed.errorPosition }
+          : errorPositionFields(parsed.error, sql)),
       });
     }
 
@@ -761,6 +795,8 @@ export class SqlExecutor {
         rowCount: 0,
         executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
         error: 'Unsupported statement type',
+        // P4-17: no token to blame — point at where the statement starts.
+        errorPosition: statementStartPosition(sql) ?? undefined,
       });
     } catch (err: any) {
       return this.withTxn({

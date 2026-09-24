@@ -1,5 +1,19 @@
 import { TableSchema } from '../types/database';
 import { SQL_KEYWORDS } from './highlight-sql';
+// P4-17: the engine owns "which name does this message quote" + "where does it
+// sit in real code" (comments and string literals excluded).
+import { extractNamedToken, locateToken } from './sql-engine/source-position';
+import type { SqlSourcePosition } from './sql-engine/source-position';
+
+/**
+ * P4-17: an engine-reported location for the failing token. `occurrences` is
+ * how often the token appears in real code — >1 means the engine is telling us
+ * "first of several", so the UI must not claim that line is the culprit.
+ */
+export interface EditorErrorLocation {
+  position: SqlSourcePosition;
+  occurrences?: number;
+}
 
 export interface ParsedEditorError {
   rawMessage: string;
@@ -10,6 +24,8 @@ export interface ParsedEditorError {
   col?: number;
   offsetStart?: number;
   offsetEnd?: number;
+  /** How many times `token` appears in real code (engine-reported or located). */
+  tokenOccurrences?: number;
 }
 
 export function levenshtein(a: string, b: string): number {
@@ -49,6 +65,8 @@ export function parseEditorError(
   rawError: string | null | undefined,
   sql: string,
   schemas: Record<string, TableSchema>,
+  /** P4-17: the engine's own position for the failing token, when it has one. */
+  location?: EditorErrorLocation | null,
 ): ParsedEditorError | null {
   if (!rawError || !rawError.trim()) return null;
   const msg = rawError.trim();
@@ -82,80 +100,42 @@ export function parseEditorError(
     new Set(Object.values(schemas).flatMap((s) => s.columns.map((c) => c.name))),
   );
 
-  let token: string | undefined;
-  let kind: 'table' | 'column' | 'syntax' | 'generic' = 'generic';
+  // P4-17: the name-extraction rules moved into the engine
+  // (`sql-engine/source-position.ts`), next to the messages they parse, so the
+  // editor and the engine cannot drift about which token failed.
+  const named = extractNamedToken(msg);
+  const token = named.token;
+  const kind = named.kind;
 
-  // Workstream C: engine DDL typing errors (Workstream B messages). Handle
-  // BEFORE the table/column branches — `for column 'id'` inside a type-typo
-  // message must never classify as an unknown-column error, and a missing
-  // declaration must not earn a bogus keyword suggestion ('id' → 'IN').
-  const dataTypeMatch = msg.match(/Unknown data type\s+['"`]([^'"`\s]+)['"`]/i);
-  const missingTypeMatch = msg.match(/^Column\s+['"`]([^'"`]+)['"`]\s+needs a data type/i);
-  if (dataTypeMatch) {
-    token = dataTypeMatch[1].split('(')[0]; // 'VARCHR(20)' → 'VARCHR'
-    kind = 'syntax';
-  } else if (missingTypeMatch) {
-    token = missingTypeMatch[1];
-    kind = 'generic';
-  }
-
-  // 1. Check for table errors
-  const tblMatch =
-    msg.match(/Table\s+['"`]([^'"`]+)['"`]/i) ||
-    msg.match(/no such table:\s*([A-Za-z0-9_]+)/i);
-  if (tblMatch) {
-    token = tblMatch[1];
-    kind = 'table';
-  }
-
-  // 2. Check for column errors
-  if (!token) {
-    const colMatch =
-      msg.match(/(?:column|Column)\s+['"`]([^'"`]+)['"`]/i) ||
-      msg.match(/Unknown column\s+['"`]?([^'"`\s,]+)['"`]?/i) ||
-      msg.match(/no such column:\s*([A-Za-z0-9_.]+)/i);
-    if (colMatch) {
-      token = colMatch[1];
-      if (token.includes('.')) token = token.split('.').pop();
-      kind = 'column';
-    }
-  }
-
-  // 3. Check for syntax error near token
-  if (!token) {
-    const synMatch =
-      msg.match(/near\s+['"`]([^'"`\n]+)['"`]/i) ||
-      msg.match(/syntax error near\s+['"`]?([^'"`\s\n]+)['"`]?/i) ||
-      msg.match(/unexpected token\s+['"`]?([^'"`\s\n]+)['"`]?/i);
-    if (synMatch) {
-      token = synMatch[1];
-      kind = 'syntax';
-    }
-  }
-
-  // 4. Line matching if reported
+  // 4. Where is it? An engine-supplied position is authoritative — it was
+  // computed over the raw source with comments and string literals masked. Only
+  // when the caller has none do we locate the token ourselves, and if that
+  // finds nothing (the name appears only inside a comment or a string literal)
+  // we report NO position: a missing marker beats a marker on an innocent line.
   const lineMatch = msg.match(/(?:at|on)?\s*line\s+(\d+)/i);
   let line = lineMatch ? parseInt(lineMatch[1], 10) : undefined;
   let col: number | undefined;
   let offsetStart: number | undefined;
   let offsetEnd: number | undefined;
+  let tokenOccurrences: number | undefined;
 
-  if (token && sql) {
-    const regex = new RegExp(`\\b${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    const m = sql.match(regex);
-    if (m && m.index !== undefined) {
-      offsetStart = m.index;
-      offsetEnd = m.index + m[0].length;
-      line = sql.slice(0, offsetStart).split('\n').length;
-      col = offsetStart - (sql.lastIndexOf('\n', offsetStart - 1) + 1) + 1;
-    } else {
-      const idx = sql.toLowerCase().indexOf(token.toLowerCase());
-      if (idx >= 0) {
-        offsetStart = idx;
-        offsetEnd = idx + token.length;
-        line = sql.slice(0, offsetStart).split('\n').length;
-        col = offsetStart - (sql.lastIndexOf('\n', offsetStart - 1) + 1) + 1;
-      }
+  if (location?.position) {
+    const p = location.position;
+    line = p.line;
+    col = p.col;
+    offsetStart = p.offsetStart;
+    offsetEnd = p.offsetEnd;
+    tokenOccurrences = location.occurrences ?? 1;
+  }
+
+  if (!location?.position && token && sql) {
+    const found = locateToken(sql, token);
+    if (found) {
+      line = found.line;
+      col = found.col;
+      offsetStart = found.offsetStart;
+      offsetEnd = found.offsetEnd;
+      tokenOccurrences = found.occurrences;
     }
   }
 
@@ -183,7 +163,7 @@ export function parseEditorError(
     const best = findClosestMatch(token, [...SQL_KEYWORDS]);
     if (best) {
       didYouMean = best;
-      displayMessage = dataTypeMatch
+      displayMessage = named.isDataType
         ? `Unknown data type '${token}'. Did you mean '${best}'?`
         : `Syntax error near '${token}'. Did you mean '${best}'?`;
     }
@@ -198,5 +178,20 @@ export function parseEditorError(
     col,
     offsetStart,
     offsetEnd,
+    tokenOccurrences,
   };
+}
+
+/**
+ * P4.17 — the gutter line that may carry an error marker, or null.
+ *
+ * Honesty guard: the engine reports the FIRST real occurrence plus how many
+ * there are. When the same name appears more than once, "the error is on this
+ * line" would be a guess, so the marker is suppressed (the inline bar still
+ * names the line it counted from, and the squiggle still marks the token).
+ */
+export function errorGutterLine(parsed: ParsedEditorError | null | undefined): number | null {
+  if (!parsed?.line) return null;
+  if (parsed.tokenOccurrences != null && parsed.tokenOccurrences > 1) return null;
+  return parsed.line;
 }
