@@ -214,8 +214,8 @@ keyword/construct check, so `'-- drop'` inside a literal can't satisfy a rule.
 
 | Area | Reality in SQLens | Impact |
 |---|---|---|
-| Error **positions** | ✅ **CLOSED (P4.17, 2026-09-24):** the engine reports 1-based line/column for every error that quotes a name, computed on the raw source with comments/string literals masked (`sql-engine/source-position.ts`); `QueryEditor` marks the line in the gutter. *Diagnostics* below stay regex-based (P4.18, open) | Learner now sees *where* as well as *what* — the last blocker on this row was the backlog item (plan #5) |
-| Diagnostics | Regex heuristics, not AST-based, plus autocomplete/schema checks | Misses semantically-wrong-but-parseable SQL (e.g. column from the wrong table) except where `requiredColumns` is declared — the M4 under-declaration in §2.2 amplifies this |
+| Error **positions** | ✅ **CLOSED (P4.17, 2026-09-24):** the engine reports 1-based line/column for every error that quotes a name, computed on the raw source with comments/string literals masked (`sql-engine/source-position.ts`); `QueryEditor` marks the line in the gutter | Learner now sees *where* as well as *what* — the last blocker on this row was the backlog item (plan #5) |
+| Diagnostics | ✅ **CLOSED (P4.18, 2026-09-24):** `src/lib/editor-diagnostics.ts` walks `parseSql` output against the statement's real FROM/JOIN scope. Suggestions are scoped to the tables a query actually reads, computed expressions are checked, and CTE or otherwise unresolved scopes stay silent rather than guessing | Semantic typos and wrong-table column references are caught before execution, without false positives from guessed global matches |
 | Concurrency (days 49–50) | Single-threaded engine: `FOR UPDATE`, isolation levels, deadlocks, `SKIP LOCKED` cannot actually block/interleave — graded by script shape + final state | A learner can pass while misunderstanding the behavior; DIALECT honestly lists these as *concept/simulation* — the **tasks should be graded as reasoning (`judgment[]`)**, which brings us back to the unimplemented `judgment` field |
 | `GRANT`/RLS (day 55) | Simulated, nothing persisted/enforced | Same: shape-graded only |
 | Parser coverage | `JOIN … USING`, window frames, `ALTER … CONSTRAINT`, column-level `REFERENCES`, `CTAS` unsupported | Named errors (correct policy) — but learners coming from real editors hit walls lessons don't always foreshadow |
@@ -223,9 +223,8 @@ keyword/construct check, so `'-- drop'` inside a literal can't satisfy a rule.
 | Reference DB | No real MySQL/Postgres execution anywhere | Dual-dialect claims (MySQL vs Postgres variants) are currently untestable end-to-end |
 
 **Bottom line:** the engine is *honest* (better than most toy engines) but *narrower than a
-real editor* in error positioning, semantic diagnostics, and true concurrency/privilege
-execution — and M4 is precisely the milestone that leans on those three missing capabilities,
-which is why its tasks ended up shape-graded.
+real editor* in true concurrency/privilege execution — and M4 is precisely the milestone
+that leans on those missing capabilities, which is why its tasks ended up shape-graded.
 
 ---
 
@@ -303,9 +302,9 @@ which is why its tasks ended up shape-graded.
 
 ### P4 — engine/editor parity (backlog)
 17. Line/column positions in parser errors + gutter markers in `QueryEditor` (backlog #5).
-18. Promote `editor-errors.ts` from regex to AST-walk using the existing `parseSql`
+18. ~~Promote `editor-errors.ts` from regex to AST-walk using the existing `parseSql`
     output for semantic diagnostics ("column `price` does not exist in `orders` — did you
-    mean `unit_price`?").
+    mean `unit_price`?").~~ **DONE — P4.18 (2026-09-24).**
 19. If MySQL/Postgres dual-dialect tasks stay in scope, add an **optional** CI job that
     replays `solutionSql` variants against real MySQL 8 / Postgres containers (test-only) —
     the only way to ever validate the `variants` layer for real.
@@ -624,7 +623,7 @@ taught-before-tested 0 · custom-validators 0 · **ddl-contracts 0/0**) ·
 `npm run build` pass - live probes: headers 5/5, PUT 429 at #121, bucket
 isolation.
 
-## P4 Execution Log (2026-09-24) - item 17 done; 18-19 still parked
+## P4 Execution Log (2026-09-24) - items 17-18 done; 19 still parked
 
 ### 17. Line/column positions in parser errors + gutter markers - DONE
 - **New engine module `src/lib/sql-engine/source-position.ts`** is now the single
@@ -666,18 +665,24 @@ isolation.
   statement start on the *normalized* text, so a leading comment was invisible
   and the marker landed on line 1. Now computed on `rawSql`; the test pins it.
 
-### 18-19. Parked (unchanged)
-- 18 (AST-walk semantic diagnostics) stays open: `editor-errors.ts` no longer
-  guesses *positions*, but its diagnostics are still regex heuristics.
-- 19 (reference-DB CI replay) remains the precondition for the deferred
-  dual-dialect layer - see `DIALECT.md` §9 and `MILESTONE_4_PLAN.md` Directive 3.
+### 18-19. P4.18 done; P4.19 still parked
+- **18 (AST-walk semantic diagnostics) DONE.** `src/lib/editor-diagnostics.ts`
+  resolves identifiers against the statement's actual FROM/JOIN scope, including
+  aliases, computed projections, function arguments, WHERE/GROUP/ORDER, and
+  UPDATE assignments. Suggestions are scoped to the tables the query reads;
+  ambiguous shared columns are reported as ambiguous. CTE, derived-table,
+  unknown-relation, and unparseable scopes stay silent. `QueryEditor` presents
+  these as non-blocking hints; engine errors remain authoritative.
+- **19 (reference-DB CI replay) remains parked** as the precondition for the
+  deferred dual-dialect layer - see `DIALECT.md` section 9 and
+  `MILESTONE_4_PLAN.md` Directive 3.
 
-### Final verification (P4-17)
-`lint` 0 - `npm test` **690/690** (60 files; +28) - `audit:all` **11/11 green** (**0 blocking / 17 advisory**, unchanged from P3) - `npm run build` pass.
+### Final verification (P4-18)
+`lint` 0 - `npm test` **702/702** (61 files; +12 P4.18 tests) - `audit:all` **11/11 green** (**0 blocking / 17 advisory**, unchanged from P3) - `npm run build` pass.
 
 ---
 
-*Generated by the Milestone 4 audit, 2026-09-23 (P0 executed same day; P1 executed same day; P2 executed same day; P3 executed same day; P4-17 executed 2026-09-24). Evidence: every
+*Generated by the Milestone 4 audit, 2026-09-23 (P0 executed same day; P1 executed same day; P2 executed same day; P3 executed same day; P4-17 and P4-18 executed 2026-09-24). Evidence: every
 gate run listed in §0 plus greps over `src/content/modules/day-{39..57}-*.ts`,
 `ConceptMentalModel.tsx`, `submit-pipeline.ts`, and all of `src/app/api` — plus
 P3 live probes of `next.config.ts` headers, `/api/auth/*` and

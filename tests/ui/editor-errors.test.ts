@@ -62,6 +62,25 @@ describe('editor error parsing & did-you-mean', () => {
     ).toBeNull();
   });
 
+  it('uses the AST scope for an engine-named column error', () => {
+    const scoped = parseEditorError(
+      "Unknown column 'unit_prce' in 'field list'",
+      'SELECT unit_prce FROM order_items;',
+      DATABASE_SCHEMAS,
+    );
+    expect(scoped?.didYouMean).toBe('unit_price');
+    expect(scoped?.displayMessage).toContain('in order_items');
+
+    const computed = parseEditorError(
+      "Unknown column 'emial' in 'field list'",
+      'SELECT UPPER(emial) FROM customers;',
+      DATABASE_SCHEMAS,
+    );
+    expect(computed?.didYouMean).toBe('email');
+    expect(computed?.line).toBe(1);
+    expect(computed?.col).toBe(14);
+  });
+
   it('P0: never suggests the token itself (no self "Fix to products")', () => {
     const sql = 'INSERT INTO products (name) VALUES (\'X\');';
     const parsed = parseEditorError("Table 'products' does not exist.", sql, DATABASE_SCHEMAS);

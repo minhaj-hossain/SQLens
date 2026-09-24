@@ -189,13 +189,31 @@ the same change — the two must never diverge.
   all pass (e.g. second-highest price via subquery *or* `DISTINCT … LIMIT 1 OFFSET 1`).
 - Solution SQL is a *reference answer*, not the only accepted answer.
 - **An error names a place, not just a problem (P4.17).** Every engine error that
-  quotes a name (`Unknown column 'x'`, `Unknown data type 'V'`,
-  `Table 't' does not exist`) carries a 1-based line/column into the learner's
-  own text. Comments and string literals are masked first, so a name that only
-  appears inside text is never "located", and a name that appears more than once
-  is reported as *first of N* rather than as a confident position. The contract
+  quotes a name carries a 1-based line/column into the learner's own text.
+  Comments and string literals are masked first, so a name that only appears
+  inside text is never "located", and a name that appears more than once is
+  reported as *first of N* rather than as a confident position. The contract
   lives in `src/lib/sql-engine/source-position.ts` and is pinned by
   `tests/engine/error-positions.test.ts`.
+- **Diagnostics know the statement's scope (P4.18).** The editor walks `parseSql`
+  output with table and alias scope, including projection expressions, function
+  arguments, joins, filters, grouping, ordering, and UPDATE assignments. A typo is
+  reported only when the statement has a trustworthy scope; CTEs, derived tables,
+  unknown relations, and FROM-less queries stay silent. Suggestions come from the
+  tables the query actually reads, and an unqualified column owned by several
+  tables is reported as ambiguous rather than assigned to an arbitrary owner.
+  These are non-blocking gold hints; engine errors and grading remain
+  authoritative. The contract lives in `src/lib/editor-diagnostics.ts`.
+- **AST semantics, not message scraping (P4.18).** When an engine error quotes a
+  column, the editor independently parses the learner's statement and judges that
+  name against the columns of the tables that statement actually reads. Its
+  message, scoped `did you mean`, and source position take precedence over the
+  regex-scraped error text. The same walk diagnoses complete SQL before execution,
+  including identifiers inside function arguments, CASE/window expressions, joins,
+  filters, grouping and `UPDATE ... SET`. The contract lives in
+  `src/lib/editor-diagnostics.ts` and is pinned by
+  `tests/ui/editor-diagnostics.test.ts`. An engine failure always outranks a live
+  hint; read-only editors and incomplete statements are not diagnosed.
 
 ### Decision-first grading (when the dataset is the answer)
 

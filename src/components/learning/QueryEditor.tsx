@@ -55,6 +55,7 @@ import {
 } from '@/lib/editor-keybindings';
 import { recordSuggestEvent } from '@/lib/suggest-telemetry';
 import { errorGutterLine, parseEditorError, ParsedEditorError } from '@/lib/editor-errors';
+import { diagnoseSql } from '@/lib/editor-diagnostics';
 import type { SqlSourcePosition } from '@/lib/sql-engine/source-position';
 
 export type QueryEditorHandle = {
@@ -397,6 +398,29 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
 
     /** Gutter row that carries the error marker (null when the spot is ambiguous). */
     const errorLine = useMemo(() => errorGutterLine(parsedError), [parsedError]);
+
+    /**
+     * P4.18: semantic diagnostics read from the AST (never scraped from a
+     * message). Only COMPLETE statements are diagnosed — mid-word, every
+     * half-typed name would flash as "unknown" — and an engine error always wins
+     * when both exist, because the engine is the authority on what really ran.
+     */
+    const diagnostic = useMemo(() => {
+      if (readOnly || parsedError || !value.trimEnd().endsWith(';')) return null;
+      return diagnoseSql(value, DATABASE_SCHEMAS)[0] ?? null;
+    }, [parsedError, readOnly, value]);
+
+    /**
+     * Gold gutter row for a live hint. Same honesty rule as P4.17: when the name
+     * occurs more than once we do not claim that ANY one line is the culprit.
+     */
+    const hintLine = useMemo(
+      () =>
+        diagnostic?.position && (diagnostic.occurrences ?? 1) <= 1
+          ? diagnostic.position.line
+          : null,
+      [diagnostic],
+    );
 
     const matchedBracket = useMemo(
       () => findMatchingBracket(value, caretPos),
@@ -996,11 +1020,19 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
           >
             {lines.map((ln) => {
               const isErrorLine = ln === errorLine;
+              const isHintLine = !isErrorLine && ln === hintLine;
               return (
                 <div
                   key={ln}
                   data-error-line={isErrorLine ? 'true' : undefined}
-                  title={isErrorLine ? parsedError?.displayMessage : undefined}
+                  data-hint-line={isHintLine ? 'true' : undefined}
+                  title={
+                    isErrorLine
+                      ? parsedError?.displayMessage
+                      : isHintLine
+                        ? diagnostic?.message
+                        : undefined
+                  }
                   // Batch E1: a soft-wrapped line owns all of its visual rows, so
                   // the number stays beside the text it labels and the gutter keeps
                   // scrolling in step with the textarea.
@@ -1010,13 +1042,20 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
                       ? // P4.17: the error line outranks the active-line tint — a
                         // red number + rail is where the learner should look.
                         'text-error font-bold bg-error/10'
-                      : ln === activeLine
-                        ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3'
-                        : ''
+                      : isHintLine
+                        ? // P4.18: gold, not red — SQL the engine would still run
+                          // is a hint, and must not look like a failure.
+                          'text-func font-bold bg-func/10'
+                        : ln === activeLine
+                          ? 'text-func font-bold bg-editor-active-line shadow-[inset_2px_0_0_0_var(--func)] -mr-3 pr-3'
+                          : ''
                   }`}
                 >
                   {isErrorLine && (
                     <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[2px] bg-error" />
+                  )}
+                  {isHintLine && (
+                    <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[2px] bg-func" />
                   )}
                   {ln}
                 </div>
@@ -1273,6 +1312,36 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             </div>
           </div>,
           document.body,
+        )}
+
+        {diagnostic && !parsedError && (
+          <div
+            role="status"
+            aria-live="polite"
+            data-editor-diagnostic={diagnostic.code}
+            className="flex items-center justify-between gap-2 px-3 py-1.5 bg-func/10 border-t border-func/20 text-xs font-mono text-func"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <span aria-hidden="true" className="shrink-0 w-1.5 h-1.5 rounded-full bg-func" />
+              <span className="truncate">
+                {diagnostic.position ? `Line ${diagnostic.position.line}, Col ${diagnostic.position.col}: ` : ''}
+                {diagnostic.message}
+              </span>
+            </div>
+            {diagnostic.didYouMean && diagnostic.position && (
+              <button
+                type="button"
+                onClick={() => {
+                  const { offsetStart, offsetEnd } = diagnostic.position!;
+                  onChange(value.slice(0, offsetStart) + diagnostic.didYouMean + value.slice(offsetEnd));
+                  textareaRef.current?.focus();
+                }}
+                className="shrink-0 px-2 py-0.5 rounded bg-func/20 hover:bg-func/30 text-text font-bold transition cursor-pointer text-[11px]"
+              >
+                Fix to {diagnostic.didYouMean}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Inline Error Bar & Fix Action */}

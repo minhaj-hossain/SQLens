@@ -4,6 +4,13 @@ import { SQL_KEYWORDS } from './highlight-sql';
 // sit in real code" (comments and string literals excluded).
 import { extractNamedToken, locateToken } from './sql-engine/source-position';
 import type { SqlSourcePosition } from './sql-engine/source-position';
+// P4.18: the AST walk owns "what is actually wrong with this statement" and the
+// scope-aware suggestion pool. The distance helpers moved there so there is
+// exactly one implementation; they are re-exported below to keep every existing
+// import path (`findClosestMatch`, `levenshtein`) working.
+import { diagnoseSql, findClosestMatch, suggestColumnInScope } from './editor-diagnostics';
+
+export { findClosestMatch, levenshtein } from './editor-diagnostics';
 
 /**
  * P4-17: an engine-reported location for the failing token. `occurrences` is
@@ -28,38 +35,8 @@ export interface ParsedEditorError {
   tokenOccurrences?: number;
 }
 
-export function levenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
-    }
-  }
-  return dp[m][n];
-}
-
-export function findClosestMatch(
-  word: string,
-  candidates: string[],
-): string | null {
-  const clean = word.toLowerCase().trim();
-  if (clean.length < 2) return null;
-  let best: string | null = null;
-  let bestDist = Infinity;
-  for (const cand of candidates) {
-    const d = levenshtein(clean, cand.toLowerCase());
-    if (d < bestDist) {
-      bestDist = d;
-      best = cand;
-    }
-  }
-  return best && bestDist <= Math.max(2, Math.floor(best.length / 3)) ? best : null;
-}
+// `levenshtein` / `findClosestMatch` now live in `editor-diagnostics.ts` and are
+// re-exported from here (see the import block) — one implementation, two callers.
 
 export function parseEditorError(
   rawError: string | null | undefined,
@@ -96,9 +73,6 @@ export function parseEditorError(
   }
 
   const allTables = Object.keys(schemas);
-  const allColumns = Array.from(
-    new Set(Object.values(schemas).flatMap((s) => s.columns.map((c) => c.name))),
-  );
 
   // P4-17: the name-extraction rules moved into the engine
   // (`sql-engine/source-position.ts`), next to the messages they parse, so the
@@ -106,6 +80,17 @@ export function parseEditorError(
   const named = extractNamedToken(msg);
   const token = named.token;
   const kind = named.kind;
+
+  // P4.18: ask the AST walk whether it independently identifies the same
+  // identifier. When it does, its message describes the statement's real scope
+  // (the tables it reads) and its position comes from the source map — so the
+  // regex-scraped message text becomes a fallback, never the source of truth.
+  const astHit =
+    sql && token
+      ? diagnoseSql(sql, schemas).find(
+          (d) => (d.token.split('.').pop() ?? '').toLowerCase() === token.toLowerCase(),
+        )
+      : undefined;
 
   // 4. Where is it? An engine-supplied position is authoritative — it was
   // computed over the raw source with comments and string literals masked. Only
@@ -128,7 +113,13 @@ export function parseEditorError(
     tokenOccurrences = location.occurrences ?? 1;
   }
 
-  if (!location?.position && token && sql) {
+  if (!location?.position && astHit?.position) {
+    line = astHit.position.line;
+    col = astHit.position.col;
+    offsetStart = astHit.position.offsetStart;
+    offsetEnd = astHit.position.offsetEnd;
+    tokenOccurrences = astHit.occurrences ?? 1;
+  } else if (!location?.position && token && sql) {
     const found = locateToken(sql, token);
     if (found) {
       line = found.line;
@@ -154,10 +145,20 @@ export function parseEditorError(
       displayMessage = `Table '${token}' does not exist. Did you mean '${best}'?`;
     }
   } else if (kind === 'column' && token) {
-    const best = findClosestMatch(token, allColumns);
-    if (best && best.toLowerCase() !== token.toLowerCase()) {
-      didYouMean = best;
-      displayMessage = `No column named '${token}'. Did you mean '${best}'?`;
+    if (astHit && astHit.code === 'unknown-column') {
+      // The AST walk confirmed this identifier against the statement's own
+      // scope, so its wording and suggestion are the ones to trust.
+      displayMessage = astHit.message;
+      didYouMean = astHit.didYouMean;
+    } else {
+      // No AST confirmation. If a trustworthy scope is unavailable, leave the
+      // engine's named error alone rather than borrowing a column from an
+      // unrelated table (CTE, derived table, DDL, or unknown relation).
+      const best = suggestColumnInScope(sql, token, schemas);
+      if (best && best.toLowerCase() !== token.toLowerCase()) {
+        didYouMean = best;
+        displayMessage = `No column named '${token}' in the tables this statement reads. Did you mean '${best}'?`;
+      }
     }
   } else if (kind === 'syntax' && token) {
     const best = findClosestMatch(token, [...SQL_KEYWORDS]);
