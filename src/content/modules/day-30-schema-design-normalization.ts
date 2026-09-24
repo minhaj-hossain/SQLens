@@ -89,7 +89,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c1-t1',
           title: 'Task 1 (Guided): Count the duplicates',
-          description: 'Query the fat_orders table and see how many times each product name is repeated.',
+          description: 'Redundancy check on fat_orders: select product_name and COUNT(*) AS copies, GROUP BY product_name, ORDER BY copies DESC so the most-repeated product shows first.',
           instructions: [
             'Query the `fat_orders` table to analyze product duplication.',
             'Select `product_name` and calculate the occurrence count for each product, aliased as `copies`.',
@@ -110,7 +110,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c1-t2',
           title: 'Task 2 (Independent): Redundancy in customers',
-          description: 'Find how many times each customer email appears in fat_orders.',
+          description: 'Redundancy check on fat_orders: select customer_email and COUNT(*) AS copies, GROUP BY customer_email, ORDER BY copies DESC so the most-repeated email shows first.',
           instructions: [
             'Write a GROUP BY query on fat_orders that counts how many rows each customer_email appears in.',
             'Sort so the most-repeated emails show first.',
@@ -186,7 +186,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c2-t1',
           title: 'Task 1 (Guided): Cause an update anomaly',
-          description: 'Change a product name on one row and watch the table disagree with itself.',
+          description: 'Cause an update anomaly in fat_orders: UPDATE product_name to Gaming Mouse Pro only where order_id = 1, leaving the other copies with the old name.',
           instructions: [
             'Perform a targeted update on `fat_orders` to demonstrate data anomaly.',
             "Set `product_name` to 'Gaming Mouse Pro' specifically for the record where `order_id` is 1.",
@@ -205,7 +205,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c2-t2',
           title: 'Task 2 (Independent): The delete anomaly',
-          description: 'Delete one order and watch a product vanish from your reports entirely.',
+          description: 'Cause a delete anomaly in fat_orders: DELETE the row where order_id = 3 — the only row holding Bluetooth Speaker — and watch that product vanish from reports.',
           instructions: [
             'Note how many distinct product names are in fat_orders right now (`SELECT DISTINCT product_name FROM fat_orders;`).',
             'Delete the only order for one product (Bluetooth Speaker lives only on order_id 3). Re-count. That product is now gone from your data entirely.',
@@ -284,7 +284,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c3-t1',
           title: 'Task 1 (Guided): Atomic cells make equality reliable',
-          description: 'Prove that WHERE works because cells hold single values.',
+          description: 'Prove WHERE is reliable on atomic cells: from students select name and department where department = CSE.',
           instructions: [
             'Query student records to demonstrate reliable scalar matching under 1NF.',
             'Select `name` and `department` from the `students` table.',
@@ -305,7 +305,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c3-t2',
           title: 'Task 2 (Independent): Atomic rows make counting natural',
-          description: 'Aggregate per department - impossible while values hide inside comma-strings.',
+          description: 'From students, list each department with COUNT(*) AS student_count, GROUP BY department, ORDER BY student_count DESC so the largest department shows first.',
           instructions: [
             'Write a GROUP BY query that counts students per department.',
             'Sort so the largest department shows first. Try to picture doing this if departments lived in one comma-separated cell.',
@@ -386,7 +386,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c4-t1',
           title: 'Task 1 (Guided): See a functional dependency',
-          description: 'combined_items has composite key (order_id, product_id). Watch product_name follow product_id, not the key.',
+          description: 'From combined_items with composite key (order_id, product_id): select product_id and product_name, GROUP BY both columns to show product_name follows product_id alone.',
           instructions: [
             'Investigate functional dependencies within the unnormalized `combined_items` table.',
             'Select `product_id` and `product_name`.',
@@ -408,7 +408,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c4-t2',
           title: 'Task 2 (Independent): Measure the partial dependency',
-          description: 'Count how many rows hold each copied product fact - the update cost of the partial dependency.',
+          description: 'From combined_items, list each product_name with COUNT(*) AS rows_holding, GROUP BY product_name, ORDER BY rows_holding DESC — that count is the update cost of the partial dependency.',
           instructions: [
             'Write a GROUP BY on combined_items that counts how many rows each product_name appears in.',
             'Sort so the most-copied fact shows first. That count is how many rows an UPDATE would have to touch.',
@@ -489,7 +489,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c5-t1',
           title: 'Task 1 (Guided): See the transitive chain',
-          description: 'In combined_orders, city rides with the customer - not with the order.',
+          description: 'From combined_orders, list customer_id, customer_name, customer_city with COUNT(*) AS orders, GROUP BY all three customer columns to show city follows the customer, not the order.',
           instructions: [
             'Examine transitive dependencies in `combined_orders` across customer and city attributes.',
             'Select `customer_id`, `customer_name`, and `customer_city`.',
@@ -512,7 +512,7 @@ export const Day_30_MODULE: ModuleData = {
         {
           id: 'norm-c5-t2',
           title: 'Task 2 (Independent): Price the transitive dependency',
-          description: 'Rahim moves to Rajshahi. Count the rows that must change - before and after the 3NF split.',
+          description: 'Rahim moves: from combined_orders where customer_name = Rahim, show customer_city with COUNT(*) AS rows_to_update, GROUP BY customer_city — that count is the update cost before the 3NF split.',
           instructions: [
             'Write a query that counts how many combined_orders rows belong to Rahim (customer_name = Rahim).',
             'That count is his update cost in the combined table. After the 3NF split, the same fact lives once in customers: cost 1, always.',
@@ -541,7 +541,7 @@ export const Day_30_MODULE: ModuleData = {
       {
         id: 'norm-hw-1',
         title: 'Task 1: Create the Customer Lookup Table',
-        description: 'Customer facts that repeat on every row in `fat_orders` belong in a dedicated table with exactly one row per customer. Design and create this lookup table.',
+        description: 'Create table clean_customers with customer_email VARCHAR(100) PRIMARY KEY and customer_name VARCHAR(100) NOT NULL — one row per customer instead of repeats in fat_orders.',
         instructions: [
           'Create a table named `clean_customers` to store dedicated customer records.',
           'Define `customer_email VARCHAR(100) PRIMARY KEY` as the unique customer identifier.',
@@ -562,7 +562,7 @@ export const Day_30_MODULE: ModuleData = {
       {
         id: 'norm-hw-2',
         title: 'Task 2: Create the Product Lookup Table with a Business Rule',
-        description: 'Product facts also repeat in `fat_orders`. Give them a single, authoritative home and encode a business constraint directly into the schema.',
+        description: 'Create table clean_products with product_name VARCHAR(100) PRIMARY KEY and product_price DECIMAL(8,2) NOT NULL CHECK (product_price >= 0) — one authoritative home for product facts.',
         instructions: [
           'Create a table named `clean_products` to store dedicated product records.',
           'Define `product_name VARCHAR(100) PRIMARY KEY` as the unique entity identifier.',
@@ -583,7 +583,7 @@ export const Day_30_MODULE: ModuleData = {
       {
         id: 'norm-hw-3',
         title: 'Task 3: Create the Normalized Orders Fact Table',
-        description: 'Replace the copied customer and product facts in `fat_orders` with enforced references. The orders table stores keys and transaction data; the lookups hold everything else.',
+        description: 'Create table clean_orders with order_id INT PRIMARY KEY, customer_email VARCHAR(100) NOT NULL, product_name VARCHAR(100) NOT NULL, quantity INT NOT NULL, plus FOREIGN KEY (customer_email) REFERENCES clean_customers(customer_email) and FOREIGN KEY (product_name) REFERENCES clean_products(product_name).',
         instructions: [
           'Create a table named `clean_orders` with `order_id INT PRIMARY KEY`.',
           'Define mandatory columns: `customer_email VARCHAR(100) NOT NULL`, `product_name VARCHAR(100) NOT NULL`, and `quantity INT NOT NULL`.',
