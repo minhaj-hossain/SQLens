@@ -9,9 +9,9 @@ import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import BlockedView from '@/components/auth/BlockedView';
-import { getModuleById } from '@/content/curriculum-index';
+import { useTrack, useTrackCurriculum } from '@/components/learn/use-track';
 import { getModuleDisplayLabel } from '@/lib/curriculum/module-order';
-import { dayIdFromPathname } from '@/lib/learn-routes';
+import { trackModuleIdFromPathname, trackRoadmapUrl } from '@/lib/track-routes';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useUiChrome } from '@/components/providers/UiChromeProvider';
@@ -29,12 +29,16 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   const { user: authUser, isAuthPending, signOut } = useAuth();
   const { openSchema } = useUiChrome();
 
-  // Route-derived context for the header.
-  const pathDayId = dayIdFromPathname(pathname);
+  // Route-derived context for the header (Phase 2: track-aware).
+  const track = useTrack();
+  const { getModuleById, meta } = useTrackCurriculum();
+  const pathDayId = trackModuleIdFromPathname(pathname);
   const pathModule = pathDayId ? getModuleById(pathDayId) : undefined;
   const activeViewTitle = pathModule
     ? `${getModuleDisplayLabel(pathModule)}: ${pathModule.shortTitle}`
-    : 'Learning Path';
+    : track === 'sql'
+      ? 'Learning Path'
+      : `${meta.label} Path`;
 
   // A blocked account gets a dedicated full-page screen instead of the app.
   // (Server-side enforcement happens independently on every authenticated API.)
@@ -55,7 +59,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             router.refresh();
           } else {
             await resetProgress();
-            router.push('/');
+            router.push(trackRoadmapUrl(track));
             router.refresh();
           }
         }}

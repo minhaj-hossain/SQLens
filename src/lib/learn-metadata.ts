@@ -4,7 +4,8 @@
  * never pass results across the server→client boundary).
  */
 import type { Metadata } from 'next';
-import { getModuleById } from '@/content/curriculum-index';
+import { getTrackModuleById } from '@/tracks/registry';
+import { TRACK_META, type TrackId } from '@/types/track';
 import type { LearnStage } from './learn-routes';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
@@ -13,17 +14,19 @@ interface LearnMetadataInput {
   dayId: string;
   stage: LearnStage;
   conceptId?: string;
+  /** Track that owns `dayId`. Defaults to SQL (pre-Phase-2 callers). */
+  track?: TrackId;
 }
 
-export function learnPageMetadata({ dayId, stage, conceptId }: LearnMetadataInput): Metadata {
-  const mod = getModuleById(dayId);
+export function learnPageMetadata({ dayId, stage, conceptId, track = 'sql' }: LearnMetadataInput): Metadata {
+  const mod = getTrackModuleById(track, dayId);
   if (!mod) return {};
 
   const stageSuffix =
     stage === 'theory' || stage === 'practice'
       ? (mod.concepts.find((c) => c.id === conceptId)?.title ?? '')
       : '';
-  const url = `${SITE_URL}/learn/${mod.id}${
+  const url = `${SITE_URL}${TRACK_META[track].basePath}/learn/${mod.id}${
     stage === 'theory' || stage === 'practice' ? `/${stage}/${conceptId ?? ''}` : `/${stage}`
   }`;
 
@@ -57,15 +60,15 @@ export function learnPageMetadata({ dayId, stage, conceptId }: LearnMetadataInpu
 }
 
 /** JSON-LD LearningResource for a module overview page. */
-export function moduleJsonLd(dayId: string): string | null {
-  const mod = getModuleById(dayId);
+export function moduleJsonLd(dayId: string, track: TrackId = 'sql'): string | null {
+  const mod = getTrackModuleById(track, dayId);
   if (!mod) return null;
   return JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'LearningResource',
     name: `Day ${mod.day}: ${mod.title}`,
     description: mod.description,
-    url: `${SITE_URL}/learn/${mod.id}`,
+    url: `${SITE_URL}${TRACK_META[track].basePath}/learn/${mod.id}`,
     timeRequired: `PT${mod.estimatedMinutes}M`,
     educationalLevel: 'Beginner',
     teaches: mod.concepts.map((c) => c.title),

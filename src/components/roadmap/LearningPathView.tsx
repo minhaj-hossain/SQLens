@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ALL_MODULES, getModuleById } from '../../content/curriculum-index';
-import { ROADMAP_MILESTONES } from '../../config/roadmap';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import {
   getModuleDisplayLabel,
   getNextModule,
@@ -42,6 +41,10 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   scrollToModuleId,
   onScrolledToModule,
 }) => {
+  // Phase 2: aliased to the original names so the whole view below is
+  // unchanged while resolving against the ACTIVE track.
+  const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById } =
+    useTrackCurriculum();
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [lockedAlert, setLockedAlert] = useState<{
     title: string;

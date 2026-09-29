@@ -16,12 +16,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getModuleById } from '@/content/curriculum-index';
-import { getPreviousStep } from '@/lib/learn-routes';
+import { getTrackPreviousStep } from '@/lib/track-routes';
+import { useTrack, useTrackCurriculum } from './use-track';
 
 export function useStepBack(dayId: string, taskQuery: string | null = null) {
   const router = useRouter();
   const pathname = usePathname();
+  const track = useTrack();
+  const { getModuleById } = useTrackCurriculum();
 
   const mod = getModuleById(dayId);
   const conceptIds = useMemo(() => mod?.concepts.map((c) => c.id) ?? [], [mod]);
@@ -32,8 +34,8 @@ export function useStepBack(dayId: string, taskQuery: string | null = null) {
   }, [mod]);
 
   const backStep = useMemo(
-    () => getPreviousStep(dayId, pathname, conceptIds, taskQuery, tasksByConcept),
-    [dayId, pathname, conceptIds, taskQuery, tasksByConcept],
+    () => getTrackPreviousStep(track, dayId, pathname, conceptIds, taskQuery, tasksByConcept),
+    [track, dayId, pathname, conceptIds, taskQuery, tasksByConcept],
   );
 
   const scrollKey = `${pathname}${taskQuery ? `?task=${taskQuery}` : ''}`;

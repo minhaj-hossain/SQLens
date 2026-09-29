@@ -6,13 +6,13 @@
  */
 import React, { useEffect } from 'react';
 import { useRouter, notFound } from 'next/navigation';
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { useTrack, useTrackCurriculum } from '@/components/learn/use-track';
 import {
   isConceptCompleted,
   isModuleChallengeUnlocked,
   getCompletedChallengeTaskIds,
 } from '@/lib/progress/unlock-calculator';
-import { learnUrl } from '@/lib/learn-routes';
+import { trackLearnUrl } from '@/lib/track-routes';
 import { IndependentChallengeView } from '@/components/learning/IndependentChallengeView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
@@ -23,6 +23,8 @@ interface ChallengeViewProps {
 }
 
 export default function ChallengeView({ dayId }: ChallengeViewProps) {
+  const track = useTrack();
+  const { modules: ALL_MODULES, getModuleById, meta } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   if (!mod) notFound();
 
@@ -40,8 +42,8 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
     if (!challengeUnlock.isUnlocked) {
       const firstIncomplete =
         mod.concepts.find((c) => !isConceptCompleted(c, mod.id, userState)) ?? mod.concepts[0];
-      if (firstIncomplete) router.replace(learnUrl(mod.id, 'theory', firstIncomplete.id));
-      else router.replace(`/learn/${mod.id}`);
+      if (firstIncomplete) router.replace(trackLearnUrl(track, mod.id, 'theory', firstIncomplete.id));
+      else router.replace(`${meta.basePath}/learn/${mod.id}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [challengeUnlock.isUnlocked]);
@@ -70,7 +72,7 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
       }}
       onBackToPractice={() => {
         const last = mod.concepts[mod.concepts.length - 1];
-        if (last) router.push(learnUrl(mod.id, 'practice', last.id, 0));
+        if (last) router.push(trackLearnUrl(track, mod.id, 'practice', last.id, 0));
       }}
     />
   );

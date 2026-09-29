@@ -8,7 +8,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
-import { getModuleById, ALL_MODULES } from '@/content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { getModuleDisplayLabel } from '@/lib/curriculum/module-order';
 import {
   getModuleUnlockStatus,
@@ -26,6 +26,7 @@ interface ModuleOverviewProps {
 }
 
 export default function ModuleOverview({ dayId }: ModuleOverviewProps) {
+  const { modules: ALL_MODULES, getModuleById } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   if (!mod) notFound();
   const { userState, availabilityVersion } = useLearning();

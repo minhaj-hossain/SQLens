@@ -6,10 +6,9 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
-import { ALL_MODULES } from '../../content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import ResetProgressModal from '@/components/ui/ResetProgressModal';
 
-const TOTAL_MODULES = ALL_MODULES.length;
 
 interface HeaderProps {
   userState: UserLearningState;
@@ -37,8 +36,10 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
+  const { modules, meta } = useTrackCurriculum();
+  const totalModules = modules.length;
   const completedCount = Object.keys(userState.completedModules).length;
-  const progressPct = Math.round((completedCount / TOTAL_MODULES) * 100);
+  const progressPct = Math.round((completedCount / totalModules) * 100);
 
   return (
     <header className="sticky top-0 w-full z-50 bg-ink/90 backdrop-blur-md pt-safe border-b border-border-soft">
@@ -46,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Left: brand dot + wordmark + current-route label (links home) */}
         <Link
-          href="/"
+          href={meta.basePath}
           className="flex items-center gap-[9px] min-w-0 hover:opacity-90 transition text-left focus:outline-none group"
           title="Return to Curriculum Homepage"
           aria-label="Return to Curriculum Homepage"
@@ -63,13 +64,13 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Streak Pill */}
           <div
             className="flex items-center gap-1.5 sm:gap-2 bg-surface-2 border border-border px-2 sm:px-3 py-1 rounded-full font-mono text-[11px] sm:text-xs text-text-dim whitespace-nowrap"
-            title={`${completedCount} of ${TOTAL_MODULES} modules completed`}
+            title={`${completedCount} of ${totalModules} modules completed`}
             aria-label={`Curriculum progress: ${completedCount} out of 57 Days completed`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-func">
               <path d="M12 2C12 2 6 9 6 14a6 6 0 0012 0c0-2-1-3.5-1-3.5s-.5 2-2 2c1-3-1-6-3-6.5 0 0 1 2.5-1 4.5-1.5 1-2 2.5-2 3.5" />
             </svg>
-            <span><strong className="text-func font-semibold">{completedCount}/{TOTAL_MODULES}</strong><span className="hidden min-[380px]:inline"> days</span></span>
+            <span><strong className="text-func font-semibold">{completedCount}/{totalModules}</strong><span className="hidden min-[380px]:inline"> days</span></span>
           </div>
 
           {/* Database Schema */}

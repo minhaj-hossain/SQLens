@@ -1,8 +1,7 @@
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
-import { ROADMAP_MILESTONES } from '../../config/roadmap';
-import { ALL_MODULES } from '../../content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { UserLearningState } from '../../types/progress';
 import { getModuleUnlockStatus, isModuleFullyComplete } from '../../lib/progress/unlock-calculator';
 import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
@@ -23,6 +22,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({
   onSelectModule,
   onClose,
 }) => {
+  // Phase 2: aliased to the original names (see LearningPathView).
+  const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES } = useTrackCurriculum();
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Close when clicking/tapping anywhere outside the modal panel.

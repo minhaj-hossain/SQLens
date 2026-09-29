@@ -10,9 +10,9 @@
 import React, { useEffect } from 'react';
 import { useParams, usePathname, useRouter, notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { useTrack, useTrackConceptId, useTrackCurriculum } from '@/components/learn/use-track';
 import { getModuleUnlockStatus } from '@/lib/progress/unlock-calculator';
-import { conceptIdFromPathname } from '@/lib/learn-routes';
+import { TRACK_META } from '@/types/track';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -21,6 +21,8 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
   const { dayId } = useParams<{ dayId: string }>();
   const pathname = usePathname();
   const router = useRouter();
+  const track = useTrack();
+  const { modules: ALL_MODULES, getModuleById } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   if (!mod) notFound();
 
@@ -33,7 +35,7 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
   // the same concept and task→task within a concept keep continuity.
   // (Content audit: Day 19 DML / Day 20 DDL need cross-concept isolation —
   // e.g. re-running a Day 20 CREATE TABLE task must not hit "table exists".)
-  const conceptId = conceptIdFromPathname(pathname);
+  const conceptId = useTrackConceptId();
   useEffect(() => {
     resetDatabase();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,9 +45,9 @@ export default function DayLayout({ children }: { children: React.ReactNode }) {
   // deeper stage (theory/practice/challenge/complete) bounces back to it.
   const unlockStatus = getModuleUnlockStatus(mod, ALL_MODULES, userState);
   const isLocked = !unlockStatus.isUnlocked && !userState.completedModules[mod.id];
-  const isOverview = pathname === `/learn/${mod.id}`;
+  const isOverview = pathname === `${TRACK_META[track].basePath}/learn/${mod.id}`;
   useEffect(() => {
-    if (isLocked && !isOverview) router.replace(`/learn/${mod.id}`);
+    if (isLocked && !isOverview) router.replace(`${TRACK_META[track].basePath}/learn/${mod.id}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocked, isOverview, mod.id]);
 

@@ -7,7 +7,7 @@
  */
 import React from 'react';
 import { useRouter, notFound } from 'next/navigation';
-import { getModuleById } from '@/content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
@@ -21,6 +21,7 @@ interface TheoryViewProps {
 }
 
 export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
+  const { getModuleById, meta } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   const concept = mod?.concepts.find((c) => c.id === conceptId);
   if (!mod || !concept) notFound();
@@ -39,7 +40,7 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
   const completedCount = mod.concepts.filter((c) => isConceptCompleted(c, mod.id, userState)).length;
   const conceptLocked = !isConceptCompleted(concept, mod.id, userState) && conceptIndex > completedCount;
   if (conceptLocked) {
-    router.replace(`/learn/${mod.id}`);
+    router.replace(`${meta.basePath}/learn/${mod.id}`);
     return null;
   }
 

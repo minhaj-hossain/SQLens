@@ -45,20 +45,20 @@ export function legacyNavigationToRoute(params: LegacySearchParams): string | nu
 
   switch (stage) {
     case 'lesson':
-      return `/learn/${mod.id}/theory/${conceptId ?? ''}`;
+      return `/sql/learn/${mod.id}/theory/${conceptId ?? ''}`;
     case 'practice':
-      return `/learn/${mod.id}/practice/${conceptId ?? ''}${taskSuffix}`;
+      return `/sql/learn/${mod.id}/practice/${conceptId ?? ''}${taskSuffix}`;
     case 'challenge':
-      return `/learn/${mod.id}/challenge`;
+      return `/sql/learn/${mod.id}/challenge`;
     case 'day_complete':
-      return `/learn/${mod.id}/complete`;
+      return `/sql/learn/${mod.id}/complete`;
     case 'concept_complete': {
       // "Just finished concept I" → continue to the NEXT concept's theory,
       // else the challenge, else the completion screen.
       const next = concepts[conceptIdx + 1];
-      if (next) return `/learn/${mod.id}/theory/${next.id}`;
-      if (mod.challenge) return `/learn/${mod.id}/challenge`;
-      return `/learn/${mod.id}/complete`;
+      if (next) return `/sql/learn/${mod.id}/theory/${next.id}`;
+      if (mod.challenge) return `/sql/learn/${mod.id}/challenge`;
+      return `/sql/learn/${mod.id}/complete`;
     }
     default:
       return null;

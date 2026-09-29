@@ -62,3 +62,106 @@ export function trackFromPathname(pathname: string | null): TrackId | null {
   if (pathname === '/prisma' || pathname.startsWith('/prisma/')) return 'prisma';
   return null;
 }
+
+/**
+ * Track-aware `getPreviousStep` (P11.2 step-chain Back).
+ *
+ * Same contract as `learn-routes.ts#getPreviousStep` but every URL it returns
+ * is namespaced (`/sql/learn/…`, `/prisma/learn/…`) and it accepts ids of both
+ * shapes. The SQL file stays frozen; callers that live on a track-namespaced
+ * route use this one instead.
+ *
+ *   practice ?task=N>0 → that task's previous task
+ *   practice ?task=0   → that concept's theory
+ *   theory concept i>0 → previous concept's LAST task, or its theory
+ *   theory concept 0   → the track roadmap, highlighting this module's card
+ *   challenge          → last concept's last task (or its theory)
+ *   complete           → challenge
+ *   overview           → null (the roadmap link covers it)
+ */
+export function getTrackPreviousStep(
+  track: TrackId,
+  moduleId: string,
+  pathname: string,
+  conceptIds: string[],
+  taskQuery: string | null,
+  tasksByConcept?: Record<string, number>,
+): { url: string; label: string; hint: string } | null {
+  const overview = `${TRACK_META[track].basePath}/learn/${moduleId}`;
+  if (pathname === overview) return null;
+
+  const conceptId = trackConceptIdFromPathname(pathname) ?? '';
+  const lastTaskOf = (cid: string): { url: string; hint: string } | null => {
+    const count = tasksByConcept?.[cid] ?? 0;
+    if (count > 0) {
+      return {
+        url: trackLearnUrl(track, moduleId, 'practice', cid, count - 1),
+        hint: `Back to Task ${count}`,
+      };
+    }
+    return null;
+  };
+
+  // practice /[track]/learn/<moduleId>/practice/<conceptId>?task=N
+  if (pathname.startsWith(`${overview}/practice/`)) {
+    const taskIdx = parseInt(taskQuery ?? '0', 10);
+    if (!Number.isFinite(taskIdx) || taskIdx < 0) {
+      return {
+        url: trackLearnUrl(track, moduleId, 'theory', conceptId),
+        label: 'Back',
+        hint: 'Back to Lesson',
+      };
+    }
+    if (taskIdx > 0) {
+      return {
+        url: trackLearnUrl(track, moduleId, 'practice', conceptId, taskIdx - 1),
+        label: 'Back',
+        hint: `Back to Task ${taskIdx}`,
+      };
+    }
+    return {
+      url: trackLearnUrl(track, moduleId, 'theory', conceptId),
+      label: 'Back',
+      hint: 'Back to Lesson',
+    };
+  }
+
+  // theory /[track]/learn/<moduleId>/theory/<conceptId>
+  if (pathname.startsWith(`${overview}/theory/`)) {
+    const idx = conceptIds.indexOf(conceptId);
+    if (idx > 0) {
+      const prevId = conceptIds[idx - 1];
+      const prevTask = lastTaskOf(prevId);
+      if (prevTask) return { ...prevTask, label: 'Back' };
+      return {
+        url: trackLearnUrl(track, moduleId, 'theory', prevId),
+        label: 'Back',
+        hint: 'Back to Lesson',
+      };
+    }
+    return { url: trackRoadmapUrl(track, moduleId), label: 'Back', hint: 'Back to Module' };
+  }
+
+  // challenge
+  if (pathname === `${overview}/challenge`) {
+    const last = conceptIds[conceptIds.length - 1];
+    if (last) {
+      const lastTask = lastTaskOf(last);
+      if (lastTask) return { ...lastTask, label: 'Back' };
+      return {
+        url: trackLearnUrl(track, moduleId, 'theory', last),
+        label: 'Back',
+        hint: 'Back to Lesson',
+      };
+    }
+    return { url: trackRoadmapUrl(track, moduleId), label: 'Back', hint: 'Back to Module' };
+  }
+
+  // complete
+  if (pathname === `${overview}/complete`) {
+    return { url: `${overview}/challenge`, label: 'Back', hint: 'Back to Challenge' };
+  }
+
+  return null;
+}
+

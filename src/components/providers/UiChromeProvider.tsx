@@ -12,7 +12,9 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useLearning } from './LearningProgressProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
-import { dayIdFromPathname } from '@/lib/learn-routes';
+import { trackModuleIdFromPathname } from '@/lib/track-routes';
+import { useTrack } from '@/components/learn/use-track';
+import { getTrackMeta } from '@/tracks/registry';
 
 // Heavy, rarely-opened modals stay code-split out of the initial bundle.
 const SchemaModal = dynamic(
@@ -40,7 +42,8 @@ export function UiChromeProvider({ children }: { children: React.ReactNode }) {
   const { userState } = useLearning();
   const { selectModuleAndConcept } = useLearningNavigation();
   const pathname = usePathname();
-  const currentModuleId = dayIdFromPathname(pathname) ?? 'day-01';
+  const track = useTrack();
+  const currentModuleId = trackModuleIdFromPathname(pathname) ?? getTrackMeta(track).initialModuleId;
 
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
   const [isRoadmapModalOpen, setIsRoadmapModalOpen] = useState(false);

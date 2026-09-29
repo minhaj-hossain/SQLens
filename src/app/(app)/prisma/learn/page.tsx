@@ -9,30 +9,31 @@
  */
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
-import { learnUrl } from '@/lib/learn-routes';
+import { trackLearnUrl } from '@/lib/track-routes';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 
 export default function LearnIndexPage() {
   const { userState } = useLearning();
   const router = useRouter();
+  const { track, modules, getModuleById } = useTrackCurriculum();
 
   useEffect(() => {
-    const mod = getModuleById(userState.currentModuleId) ?? ALL_MODULES[0];
+    const mod = getModuleById(userState.currentModuleId) ?? modules[0];
     const firstIncompleteIdx = mod.concepts.findIndex(
       (c) => !isConceptCompleted(c, mod.id, userState),
     );
     if (firstIncompleteIdx >= 0) {
       const concept = mod.concepts[firstIncompleteIdx];
-      if (concept) router.replace(learnUrl(mod.id, 'theory', concept.id));
+      if (concept) router.replace(trackLearnUrl(track, mod.id, 'theory', concept.id));
       return;
     }
     if (mod.challenge && !userState.completedModules[mod.id]?.challengeCompleted) {
-      router.replace(learnUrl(mod.id, 'challenge'));
+      router.replace(trackLearnUrl(track, mod.id, 'challenge'));
       return;
     }
-    router.replace(learnUrl(mod.id, 'complete'));
+    router.replace(trackLearnUrl(track, mod.id, 'complete'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

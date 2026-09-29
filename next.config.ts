@@ -44,6 +44,15 @@ if (process.env.NODE_ENV === 'production') {
 
 const nextConfig = {
   reactStrictMode: true,
+  // Phase 2: the SQL track moved under /sql. Every pre-existing bookmark,
+  // shared link and indexed URL keeps working (temporary redirect: the old
+  // shape may be reused later, so we must not burn a 308 into browsers).
+  async redirects() {
+    return [
+      { source: '/learn', destination: '/sql/learn', permanent: false },
+      { source: '/learn/:path*', destination: '/sql/learn/:path*', permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

@@ -12,7 +12,7 @@ import { LearningPathView } from './LearningPathView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useUiChrome } from '@/components/providers/UiChromeProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
-import { ALL_MODULES } from '@/content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { deriveLastPosition } from '@/lib/progress/unlock-calculator';
 
 interface RoadmapPageProps {
@@ -21,6 +21,7 @@ interface RoadmapPageProps {
 
 export default function RoadmapPage({ highlightDayId }: RoadmapPageProps) {
   const { userState } = useLearning();
+  const { modules } = useTrackCurriculum();
   const { openSchema } = useUiChrome();
   const { selectModuleAndConcept } = useLearningNavigation();
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function RoadmapPage({ highlightDayId }: RoadmapPageProps) {
   // The resume card reflects where the learner ACTUALLY is — the first module
   // not fully complete at its first incomplete concept (P9.7) — not the stale
   // stored `userState.currentModuleId`, which navigation never updated.
-  const position = deriveLastPosition(ALL_MODULES, userState);
+  const position = deriveLastPosition(modules, userState);
 
   const handleScrolledToModule = () => {
     // Clean ?highlight= query param from the browser URL without triggering

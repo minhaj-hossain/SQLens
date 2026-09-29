@@ -7,7 +7,10 @@
  */
 import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { useTrack, useTrackCurriculum } from './use-track';
+import { trackLearnUrl, trackRoadmapUrl } from '@/lib/track-routes';
+import { TRACK_META, type TrackId } from '@/types/track';
+import { getTrackModuleById } from '@/tracks/registry';
 import { getNextModule } from '@/lib/curriculum/module-order';
 import { ModuleData } from '@/types/curriculum';
 import {
@@ -15,12 +18,14 @@ import {
   isConceptCompleted,
   isModuleChallengeUnlocked,
 } from '@/lib/progress/unlock-calculator';
-import { learnUrl, roadmapUrl } from '@/lib/learn-routes';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 
 export function useLearningNavigation() {
   const router = useRouter();
   const { userState, markConceptComplete, markModuleComplete } = useLearning();
+  // Phase 2: the active track comes from the URL (`/sql/…` / `/prisma/…`).
+  const track = useTrack();
+  const { modules, getModuleById } = useTrackCurriculum();
 
   const userStateRef = useRef(userState);
   userStateRef.current = userState;
@@ -39,20 +44,20 @@ export function useLearningNavigation() {
       if (!mod) return;
       const state = userStateRef.current;
 
-      const status = getModuleUnlockStatus(mod, ALL_MODULES, state);
+      const status = getModuleUnlockStatus(mod, modules, state);
       if (!status.isUnlocked && !state.completedModules[moduleId]) return;
 
       if (stage === 'challenge') {
-        const challengeUnlock = isModuleChallengeUnlocked(mod, ALL_MODULES, state);
+        const challengeUnlock = isModuleChallengeUnlocked(mod, modules, state);
         if (!challengeUnlock.isUnlocked) {
           const firstIncomplete =
             mod.concepts.find((c) => !isConceptCompleted(c, mod.id, state)) ?? mod.concepts[0];
           if (firstIncomplete) {
-            routerRef.current.push(learnUrl(moduleId, 'theory', firstIncomplete.id));
+            routerRef.current.push(trackLearnUrl(track, moduleId, 'theory', firstIncomplete.id));
           }
           return;
         }
-        routerRef.current.push(learnUrl(moduleId, 'challenge'));
+        routerRef.current.push(trackLearnUrl(track, moduleId, 'challenge'));
         return;
       }
 
@@ -60,9 +65,9 @@ export function useLearningNavigation() {
         (conceptId && mod.concepts.some((c) => c.id === conceptId) && conceptId) ||
         mod.concepts[0]?.id;
       if (!target) return;
-      routerRef.current.push(learnUrl(moduleId, stage, target));
+      routerRef.current.push(trackLearnUrl(track, moduleId, stage, target));
     },
-    [],
+    [track],
   );
 
   /** From a theory page: start the concept's practice (or complete a task-less concept). */
@@ -71,30 +76,30 @@ export function useLearningNavigation() {
     const concept = mod?.concepts.find((c) => c.id === conceptId);
     if (!mod || !concept) return;
     if (concept.tasks.length > 0) {
-      routerRef.current.push(learnUrl(moduleId, 'practice', conceptId, 0));
+      routerRef.current.push(trackLearnUrl(track, moduleId, 'practice', conceptId, 0));
     } else {
       markConceptComplete(moduleId, conceptId);
       // Task-less concept: advance straight to the next stage.
-      navigateAfterConcept(moduleId, conceptId, routerRef.current);
+      navigateAfterConcept(moduleId, conceptId, routerRef.current, track);
     }
-  }, [markConceptComplete]);
+  }, [markConceptComplete, track]);
 
   /** Finish a concept: write progress, then continue to next theory/challenge/complete. */
   const completeConcept = useCallback(
     (moduleId: string, conceptId: string) => {
       markConceptComplete(moduleId, conceptId);
-      navigateAfterConcept(moduleId, conceptId, routerRef.current);
+      navigateAfterConcept(moduleId, conceptId, routerRef.current, track);
     },
-    [markConceptComplete],
+    [markConceptComplete, track],
   );
 
   /** Finish the challenge: write full-module completion, show completion screen. */
   const finishModule = useCallback(
     (module: ModuleData) => {
       markModuleComplete(module);
-      routerRef.current.push(learnUrl(module.id, 'complete'));
+      routerRef.current.push(trackLearnUrl(track, module.id, 'complete'));
     },
-    [markModuleComplete],
+    [markModuleComplete, track],
   );
 
   /** Review a completed module from the first incomplete concept (or the start). */
@@ -105,30 +110,30 @@ export function useLearningNavigation() {
       mod.concepts.find((c) => !isConceptCompleted(c, mod.id, userStateRef.current)) ??
       mod.concepts[0];
     if (firstIncomplete) {
-      routerRef.current.push(learnUrl(moduleId, 'theory', firstIncomplete.id));
+      routerRef.current.push(trackLearnUrl(track, moduleId, 'theory', firstIncomplete.id));
     }
-  }, []);
+  }, [track]);
 
   /** Continue to the next module's lesson (canonical curriculum order). */
   const continueNextDay = useCallback((moduleId: string) => {
     const mod = getModuleById(moduleId);
     if (!mod) return;
-    const next = getNextModule(mod, ALL_MODULES);
+    const next = getNextModule(mod, modules);
     if (!next) return;
     const firstIncomplete =
       next.concepts.find((c) => !isConceptCompleted(c, next.id, userStateRef.current)) ??
       next.concepts[0];
     if (firstIncomplete) {
-      routerRef.current.push(learnUrl(next.id, 'theory', firstIncomplete.id));
+      routerRef.current.push(trackLearnUrl(track, next.id, 'theory', firstIncomplete.id));
     } else {
-      routerRef.current.push(`/learn/${next.id}`);
+      routerRef.current.push(`${TRACK_META[track].basePath}/learn/${next.id}`);
     }
-  }, []);
+  }, [track]);
 
   /** Back to the roadmap, auto-scrolling to this module's card. */
   const backToRoadmap = useCallback((highlightDayId?: string) => {
-    routerRef.current.push(roadmapUrl(highlightDayId));
-  }, []);
+    routerRef.current.push(trackRoadmapUrl(track, highlightDayId));
+  }, [track]);
 
   return {
     selectModuleAndConcept,
@@ -142,16 +147,21 @@ export function useLearningNavigation() {
 }
 
 /** Shared "what comes after finishing a concept" navigation. */
-function navigateAfterConcept(moduleId: string, conceptId: string, router: ReturnType<typeof useRouter>) {
-  const mod = getModuleById(moduleId);
+function navigateAfterConcept(
+  moduleId: string,
+  conceptId: string,
+  router: ReturnType<typeof useRouter>,
+  track: TrackId,
+) {
+  const mod = getTrackModuleById(track, moduleId);
   if (!mod) return;
   const idx = mod.concepts.findIndex((c) => c.id === conceptId);
   const next = idx >= 0 ? mod.concepts[idx + 1] : undefined;
   if (next) {
-    router.push(learnUrl(moduleId, 'theory', next.id));
+    router.push(trackLearnUrl(track, moduleId, 'theory', next.id));
   } else if (mod.challenge) {
-    router.push(learnUrl(moduleId, 'challenge'));
+    router.push(trackLearnUrl(track, moduleId, 'challenge'));
   } else {
-    router.push(learnUrl(moduleId, 'complete'));
+    router.push(trackLearnUrl(track, moduleId, 'complete'));
   }
 }

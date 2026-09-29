@@ -6,7 +6,7 @@
  */
 import React, { useEffect } from 'react';
 import { useRouter, notFound } from 'next/navigation';
-import { ALL_MODULES, getModuleById } from '@/content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { getNextModule } from '@/lib/curriculum/module-order';
 import { ModuleCompletionView } from '@/components/learning/ModuleCompletionView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
@@ -17,6 +17,7 @@ interface CompleteViewProps {
 }
 
 export default function CompleteView({ dayId }: CompleteViewProps) {
+  const { modules: ALL_MODULES, getModuleById, meta } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   if (!mod) notFound();
 
@@ -26,7 +27,7 @@ export default function CompleteView({ dayId }: CompleteViewProps) {
 
   const isCompleted = Boolean(userState.completedModules[mod.id]);
   useEffect(() => {
-    if (!isCompleted) router.replace(`/learn/${mod.id}`);
+    if (!isCompleted) router.replace(`${meta.basePath}/learn/${mod.id}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCompleted]);
 

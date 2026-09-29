@@ -8,9 +8,9 @@
  */
 import React, { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams, notFound } from 'next/navigation';
-import { getModuleById } from '@/content/curriculum-index';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 import { Concept, ModuleData } from '@/types/curriculum';
-import { learnUrl } from '@/lib/learn-routes';
+import { trackLearnUrl } from '@/lib/track-routes';
 import { PracticeTaskView } from '@/components/learning/PracticeTaskView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
@@ -23,6 +23,7 @@ interface PracticeViewProps {
 }
 
 export default function PracticeView({ dayId, conceptId }: PracticeViewProps) {
+  const { getModuleById } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   const concept = mod?.concepts.find((c) => c.id === conceptId);
   if (!mod || !concept) notFound();
@@ -41,6 +42,7 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
   const { executeQuery } = useSqlExecutor();
   const nav = useLearningNavigation();
 
+  const { track } = useTrackCurriculum();
   const rawTask = Number(searchParams.get('task') ?? 0);
   const taskIndex =
     Number.isFinite(rawTask) && rawTask > 0
@@ -97,7 +99,7 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
       backLabel={backStep?.label}
       onNextTask={() => {
         if (taskIndex < concept.tasks.length - 1) {
-          router.push(learnUrl(mod.id, 'practice', concept.id, taskIndex + 1));
+          router.push(trackLearnUrl(track, mod.id, 'practice', concept.id, taskIndex + 1));
         } else {
           nav.completeConcept(mod.id, concept.id);
         }

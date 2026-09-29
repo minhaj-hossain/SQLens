@@ -1,19 +1,23 @@
-import RoadmapPage from '@/components/roadmap/RoadmapPage';
+import TrackSelector from '@/components/tracks/TrackSelector';
 import { legacyNavigationToRoute, LegacySearchParams } from '@/lib/legacy-routes';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-  title: 'Learning Path — 57 Days of Hands-On SQL',
+  title: 'SQLens — Choose Your Learning Track',
   description:
-    'Your visual roadmap through 57 Days of SQL: mental models, guided practice tasks and independent challenges in the in-browser query engine.',
+    'Two hands-on data tracks in one visual learning system: 57 Days of SQL, or 14 Days of Prisma ORM. Mental models, guided practice and independent challenges in the browser.',
 };
 
 /**
- * `/` — the roadmap (Phase 3). Server component so it can honour legacy
- * lesson deep links (?day=N&stage=⬦) with a proper redirect before render;
- * see src/lib/legacy-routes.ts for the mapping table.
+ * `/` — the TRACK SELECTOR (Phase 2).
+ *
+ * The roadmap that used to live here is now `/sql` (SQL) and `/prisma`
+ * (Prisma). This page stays a server component for the same reason it always
+ * was one: it must honour legacy `?day=N&stage=…` lesson deep links with a
+ * proper redirect before render (see src/lib/legacy-routes.ts, which now
+ * targets the SQL track's namespaced URLs).
  */
-export default async function HomePage({
+export default async function TrackPickerPage({
   searchParams,
 }: {
   searchParams: Promise<LegacySearchParams>;
@@ -22,9 +26,5 @@ export default async function HomePage({
   const legacyRoute = legacyNavigationToRoute(params);
   if (legacyRoute) redirect(legacyRoute);
 
-  return (
-    <RoadmapPage
-      highlightDayId={typeof params.highlight === 'string' ? params.highlight : undefined}
-    />
-  );
+  return <TrackSelector />;
 }
