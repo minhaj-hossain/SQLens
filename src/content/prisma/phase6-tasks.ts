@@ -1,5 +1,6 @@
 import type { PracticeTask } from '../../types/curriculum';
 import type { PrismaMethod, PrismaValidationRule } from '../../types/prisma-curriculum';
+import { extractPrismaTarget } from '../../lib/prisma-engine/prisma-validator';
 
 /**
  * Phase-6 task factories. Every task runs its `solutionSql` on a FRESH DB
@@ -30,25 +31,13 @@ function usersIntro(description: string) {
 
 /**
  * Every method the Phase-6 factories can grade. Probed as `.name(`, so
- * `createMany` can never be read as `create`.
+ * `createMany` can never be read as `create`. Delegates to the engine's
+ * `extractPrismaTarget` so content and validator can never drift apart.
  */
-const METHOD_PROBES: [string, PrismaMethod][] = [
-  ['$transaction', '$transaction'],
-  ['findUnique', 'findUnique'],
-  ['findFirst', 'findFirst'],
-  ['findMany', 'findMany'],
-  ['createMany', 'createMany'],
-  ['create', 'create'],
-  ['updateMany', 'updateMany'],
-  ['update', 'update'],
-  ['upsert', 'upsert'],
-  ['deleteMany', 'deleteMany'],
-  ['delete', 'delete'],
-];
 
 export function methodOf(code: string): PrismaMethod {
-  const hit = METHOD_PROBES.find(([probe]) => code.includes(`.${probe}(`));
-  return hit ? hit[1] : 'findMany';
+  const { method } = extractPrismaTarget(code);
+  return (method as PrismaMethod | undefined) ?? 'findMany';
 }
 
 /**

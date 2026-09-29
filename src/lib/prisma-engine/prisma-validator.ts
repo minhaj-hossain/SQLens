@@ -1,9 +1,13 @@
 /**
  * Prisma track validator — Phase 1 (string checks) + Phase 6 (snippet checks).
  * ─────────────────────────────────────────────────────────────────────────────
- * String-level checks for Prisma client code (no execution yet — Phase 4 adds
- * the prisma→SQL generator + real execution via the SQL engine).
- * Pure + client-safe: safe to import from UI, tests, and audit scripts.
+ * String-level checks for Prisma client code. Stays pure + client-safe (safe
+ * to import from UI, tests, and audit scripts) — the Phase-4 execution layer
+ * lives in `prisma-execution.ts` (`gradePrismaCode`), the translator in
+ * `prisma-sql-generator.ts` (`generatePrismaSql`), the runner in
+ * `prisma-proxy-executor.ts` (`executePrismaCode`), and the schema reader in
+ * `prisma-schema-parser.ts`; those need a `SqlExecutor` and must NOT be
+ * imported by static-only surfaces.
  *
  * Phase 6 additions (additive only — existing rules keep their semantics):
  *  - `requiredCodeSnippets`: literal fragments that must appear in the raw
@@ -158,6 +162,7 @@ export function validatePrismaCode(
     }
   }
 
-  // expectFailure / expectedErrorCode / row counts need execution (Phase 4).
+  // expectFailure / expectedErrorCode / row counts need execution (Phase 4 —
+  // `gradePrismaCode` in prisma-execution.ts, run against a `SqlExecutor`).
   return { passed: true };
 }
