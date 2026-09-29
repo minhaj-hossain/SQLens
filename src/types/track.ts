@@ -39,6 +39,30 @@ export interface TrackMeta {
   initialModuleId: string;
 }
 
+/**
+ * LocalStorage key for a track (+ optional user id). Phase 3: the ONE place
+ * these strings are derived, so `progress/storage.ts` and
+ * `progress/track-storage.ts` can never drift. SQL yields exactly the
+ * historical keys (`sql_mastery_progress_v1` / `sqlens_progress_user_<id>`).
+ */
+export function trackStorageKey(track: TrackId, userId?: string | null): string {
+  const meta = TRACK_META[track];
+  return userId ? `${meta.userStorageKeyPrefix}${userId}` : meta.guestStorageKey;
+}
+
+/**
+ * Which track owns a localStorage key, or null when the key is not a
+ * progress key at all. Used to route `storage` events to the right tab and
+ * to ignore the other track's writes.
+ */
+export function trackOfStorageKey(key: string): TrackId | null {
+  for (const id of TRACK_IDS) {
+    const meta = TRACK_META[id];
+    if (key === meta.guestStorageKey || key.startsWith(meta.userStorageKeyPrefix)) return id;
+  }
+  return null;
+}
+
 export const TRACK_META: Record<TrackId, TrackMeta> = {
   sql: {
     id: 'sql',

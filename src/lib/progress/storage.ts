@@ -1,4 +1,5 @@
 ﻿import { LEARNING_CONFIG } from '../../config/learning';
+import { TRACK_META, trackStorageKey, type TrackId } from '../../types/track';
 import { UserLearningState, CompletedModuleRecord, CompletedConceptRecord, CompletedTaskRecord } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 
@@ -154,45 +155,62 @@ export function clearPlaygroundDraft(): void {
   }
 }
 
-export function getStorageKey(userId?: string | null): string {
-  if (userId) {
-    return `sqlens_progress_user_${userId}`;
-  }
-  return LEARNING_CONFIG.STORAGE_KEY;
+/**
+ * Phase 3: `track` is optional and defaults to `'sql'`, so every pre-Phase-3
+ * caller keeps producing the exact same SQL key. The key strings live in
+ * `TRACK_META` (via `trackStorageKey`).
+ */
+export function getStorageKey(userId?: string | null, track: TrackId = 'sql'): string {
+  return trackStorageKey(track, userId);
+}
+
+/**
+ * Fresh progress state for a track. SQL returns the frozen
+ * `INITIAL_USER_STATE` shape; other tracks start at their own first module
+ * with only that module unlocked.
+ */
+export function initialStateForTrack(track: TrackId = 'sql'): UserLearningState {
+  if (track === 'sql') return { ...INITIAL_USER_STATE };
+  const initialModuleId = TRACK_META[track].initialModuleId;
+  return {
+    ...INITIAL_USER_STATE,
+    currentModuleId: initialModuleId,
+    unlockedModuleIds: [initialModuleId],
+  };
 }
 
 /**
  * Load persisted state for a specific user (or guest if no userId provided).
  * Tolerates legacy position formats and migrates legacy module IDs.
  */
-export function loadUserState(userId?: string | null): UserLearningState & { currentConceptIndex?: number } {
+export function loadUserState(userId?: string | null, track: TrackId = 'sql'): UserLearningState & { currentConceptIndex?: number } {
   if (typeof window === 'undefined') {
-    return INITIAL_USER_STATE;
+    return initialStateForTrack(track);
   }
   try {
-    const key = getStorageKey(userId);
+    const key = getStorageKey(userId, track);
     let raw = localStorage.getItem(key);
     
     // If loading for a signed-in user and user-scoped key is empty, don't fall back to guest key
     // unless explicitly migrating.
-    if (!raw) return INITIAL_USER_STATE;
+    if (!raw) return initialStateForTrack(track);
     const parsed = JSON.parse(raw);
     return migrateLegacyModuleIds({
-      ...INITIAL_USER_STATE,
+      ...initialStateForTrack(track),
       ...parsed,
       bypassDailyLock: false,
       simulatedTimeOffsetHours: 0,
     });
   } catch (e) {
     console.error('Failed to load learning state from localStorage:', e);
-    return INITIAL_USER_STATE;
+    return initialStateForTrack(track);
   }
 }
 
-export function saveUserState(state: UserLearningState, userId?: string | null): void {
+export function saveUserState(state: UserLearningState, userId?: string | null, track: TrackId = 'sql'): void {
   if (typeof window === 'undefined') return;
   try {
-    const key = getStorageKey(userId);
+    const key = getStorageKey(userId, track);
     localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.error('Failed to save learning state:', e);
@@ -207,29 +225,36 @@ export function saveUserState(state: UserLearningState, userId?: string | null):
  * `resetUserState(userId)` with no epoch still resets to epoch 0 for legacy
  * call sites; the provider passes the live epoch.
  */
-export function resetUserState(userId?: string | null, prevEpoch?: number): UserLearningState {
+export function resetUserState(userId?: string | null, prevEpoch?: number, track: TrackId = 'sql'): UserLearningState {
   let epoch = 0;
   if (typeof prevEpoch === 'number' && Number.isFinite(prevEpoch) && prevEpoch >= 0) {
     epoch = Math.floor(prevEpoch) + 1;
   }
   if (typeof window !== 'undefined') {
     try {
-      const key = getStorageKey(userId);
+      const key = getStorageKey(userId, track);
       localStorage.removeItem(key);
-      localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
-      localStorage.removeItem('sql_mastery_nav_v1');
-      // Batch 5 (V7): playground draft/history would otherwise restore old
-      // editor text after a full reset and feel like "data back".
-      clearPlaygroundDraft();
-      try {
-        for (let i = sessionStorage.length - 1; i >= 0; i--) {
-          const k = sessionStorage.key(i);
-          if (k && k.startsWith('sqlens_scroll_')) {
-            sessionStorage.removeItem(k);
+      // SQL-only legacy cleanup: the pre-route nav snapshot, the legacy guest
+      // key and the playground editor all belong to the SQL surface, so
+      // resetting one track must never clear another track's surface.
+      if (track === 'sql') {
+        localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
+        localStorage.removeItem('sql_mastery_nav_v1');
+        // Batch 5 (V7): playground draft/history would otherwise restore old
+        // editor text after a full reset and feel like "data back".
+        clearPlaygroundDraft();
+      }
+      if (track === 'sql') {
+        try {
+          for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const k = sessionStorage.key(i);
+            if (k && k.startsWith('sqlens_scroll_')) {
+              sessionStorage.removeItem(k);
+            }
           }
+        } catch {
+          /* ignore sessionStorage failure */
         }
-      } catch {
-        /* ignore sessionStorage failure */
       }
     } catch (e) {
       console.error('Failed to clear learning state:', e);
@@ -237,7 +262,7 @@ export function resetUserState(userId?: string | null, prevEpoch?: number): User
   }
   const now = new Date().toISOString();
   return {
-    ...INITIAL_USER_STATE,
+    ...initialStateForTrack(track),
     lastActiveTimestamp: now,
     resetEpoch: epoch,
     resetAt: epoch > 0 ? now : null,
@@ -326,10 +351,15 @@ export function resetModuleProgress(
   return next;
 }
 
-export function clearGuestState(): void {
+/**
+ * Drop the GUEST progress key for a track. Signed-in keys and the other
+ * track's keys are never touched (`getStorageKey(null, 'sql')` is still
+ * exactly `LEARNING_CONFIG.STORAGE_KEY`).
+ */
+export function clearGuestState(track: TrackId = 'sql'): void {
   if (typeof window !== 'undefined') {
     try {
-      localStorage.removeItem(LEARNING_CONFIG.STORAGE_KEY);
+      localStorage.removeItem(getStorageKey(null, track));
     } catch {
       /* ignore */
     }

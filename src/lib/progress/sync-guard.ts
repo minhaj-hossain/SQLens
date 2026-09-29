@@ -1,5 +1,6 @@
 import { getResetEpoch, type CloudProgress } from './merge';
 import type { UserLearningState } from '../../types/progress';
+import type { TrackId } from '../../types/track';
 
 /**
  * Batch 1 — client write-serialization guards (pure, unit-testable).
@@ -71,6 +72,11 @@ export interface ProgressSyncMessage {
   userId: string | null;
   state: UserLearningState;
   resetEpoch: number;
+  /**
+   * Phase 3: track this state belongs to. ABSENT means a pre-Phase-3
+   * sender, which only ever spoke for SQL.
+   */
+  track?: TrackId;
 }
 
 /** Authoritative reset broadcast — forces stale tabs to converge to Day 1. */
@@ -80,28 +86,35 @@ export interface ProgressResetMessage {
   state: UserLearningState;
   resetEpoch: number;
   resetAt: string | null;
+  /** Phase 3: see `ProgressSyncMessage.track`. */
+  track?: TrackId;
 }
 
 export type ProgressBroadcastMessage = ProgressSyncMessage | ProgressResetMessage;
 
 /** Build a PROGRESS_SYNC for the given state (epoch stamped from state). */
-export function buildSyncMessage(userId: string | null, state: UserLearningState): ProgressSyncMessage {
-  return { type: 'PROGRESS_SYNC', userId, state, resetEpoch: getResetEpoch(state) };
+export function buildSyncMessage(userId: string | null, state: UserLearningState, track: TrackId = 'sql'): ProgressSyncMessage {
+  const msg: ProgressSyncMessage = { type: 'PROGRESS_SYNC', userId, state, resetEpoch: getResetEpoch(state) };
+  // Phase 3: SQL omits the field so pre-Phase-3 payloads stay identical.
+  if (track !== 'sql') msg.track = track;
+  return msg;
 }
 
 /** Build a PROGRESS_RESET for a freshly reset state. */
-export function buildResetMessage(userId: string | null, fresh: UserLearningState): ProgressResetMessage {
-  return {
+export function buildResetMessage(userId: string | null, fresh: UserLearningState, track: TrackId = 'sql'): ProgressResetMessage {
+  const msg: ProgressResetMessage = {
     type: 'PROGRESS_RESET',
     userId,
     state: fresh,
     resetEpoch: getResetEpoch(fresh),
     resetAt: fresh.resetAt ?? null,
   };
+  if (track !== 'sql') msg.track = track;
+  return msg;
 }
 
 export type IncomingSyncDecision =
-  | { action: 'ignore'; reason: 'user-mismatch' | 'stale-epoch' | 'invalid' }
+  | { action: 'ignore'; reason: 'user-mismatch' | 'stale-epoch' | 'invalid' | 'track-mismatch' }
   | { action: 'adopt-sync'; state: UserLearningState }
   | { action: 'adopt-reset'; state: UserLearningState; resetEpoch: number; resetAt: string | null };
 
@@ -114,10 +127,15 @@ export function decideIncomingBroadcast(
   data: unknown,
   signedInUserId: string | null,
   localEpoch: number,
+  track: TrackId = 'sql',
 ): IncomingSyncDecision {
   if (!data || typeof data !== 'object') return { action: 'ignore', reason: 'invalid' };
   const msg = data as Partial<ProgressBroadcastMessage>;
   if (msg.userId !== signedInUserId) return { action: 'ignore', reason: 'user-mismatch' };
+  // Phase 3: progress is per-track and both tracks share ONE channel. A tab on
+  // `/sql` must never adopt Prisma bytes (and vice versa). An absent `track`
+  // is a pre-Phase-3 sender, which only ever spoke SQL.
+  if ((msg.track ?? 'sql') !== track) return { action: 'ignore', reason: 'track-mismatch' };
   const state = (msg as { state?: unknown }).state;
   if (!state || typeof state !== 'object' || typeof (state as { currentModuleId?: unknown }).currentModuleId !== 'string') {
     return { action: 'ignore', reason: 'invalid' };

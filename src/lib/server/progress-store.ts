@@ -2,14 +2,30 @@ import 'server-only';
 import type { CloudProgress } from '@/lib/progress/merge';
 import { getResetEpoch } from '@/lib/progress/merge';
 import { db } from '@/lib/auth';
+import {
+  TRACK_PROJECTION,
+  emptyTombstone,
+  readTrackEpoch,
+  readTrackSlice,
+  trackResetFragment,
+  trackSetFragment,
+} from '@/lib/progress/track-cloud';
+import type { TrackId } from '@/types/track';
 
 /**
  * Server-side persistence for per-user learning progress (Phase 2).
  *
  * One document per user in the `user_progress` collection:
- *   { userId (unique), progress, version, updatedAt, resetEpoch, resetAt }
+ *   { userId (unique), progress, version, updatedAt, resetEpoch, resetAt,
+ *     tracks: { prisma: { progress, resetEpoch, resetAt } } }
  * `userId` ALWAYS comes from the verified session (requireUser), never from a
  * request body — a user can only ever read/write their own progress.
+ *
+ * Phase 3 — per-track progress: SQL keeps the top-level slot it has always
+ * used, so existing documents and SQL-only readers (admin analytics, exports)
+ * are untouched; every other track is namespaced under `tracks.<trackId>`.
+ * The physical layout lives in `src/lib/progress/track-cloud.ts` and `track`
+ * is the LAST argument of every reader/writer (default `'sql'`).
  *
  * Batch 2 — reset epoch fencing: every full reset bumps `resetEpoch` by 1 and
  * leaves a Day-1-empty tombstone doc (never a missing doc). A PUT carrying an
@@ -35,25 +51,24 @@ function ensureIndexes(): Promise<void> {
   return indexReady;
 }
 
-function storedEpochOf(doc: Record<string, unknown> | null | undefined): number {
-  if (!doc) return 0;
-  const top = doc.resetEpoch;
-  if (typeof top === 'number' && Number.isFinite(top) && top >= 0) return Math.floor(top);
-  return getResetEpoch((doc.progress as CloudProgress | undefined) ?? undefined);
-}
 
-/** Fetch a user's cloud progress, or null when they have none yet. */
-export async function getProgress(userId: string): Promise<{ progress: CloudProgress | null; version: number; updatedAt: string | null; resetEpoch: number; resetAt: string | null }> {
+/**
+ * Fetch a user's cloud progress for ONE track, or null when that track has
+ * none yet (documents written before Phase 3 only ever held SQL).
+ */
+export async function getProgress(
+  userId: string,
+  track: TrackId = 'sql',
+): Promise<{ progress: CloudProgress | null; version: number; updatedAt: string | null; resetEpoch: number; resetAt: string | null }> {
   await ensureIndexes();
   const doc = await db.collection('user_progress').findOne({ userId });
-  const progress = (doc?.progress as CloudProgress | undefined) ?? null;
-  const resetEpoch = storedEpochOf(doc as Record<string, unknown> | null);
+  const slice = readTrackSlice(doc, track);
   return {
-    progress,
+    progress: slice?.progress ?? null,
     version: (doc?.version as number) ?? 0,
     updatedAt: (doc?.updatedAt as string) ?? null,
-    resetEpoch,
-    resetAt: (doc?.resetAt as string | null) ?? (progress?.resetAt ?? null),
+    resetEpoch: readTrackEpoch(doc, track),
+    resetAt: slice?.resetAt ?? null,
   };
 }
 
@@ -69,11 +84,12 @@ export async function getProgress(userId: string): Promise<{ progress: CloudProg
 export async function saveProgress(
   userId: string,
   progress: CloudProgress,
+  track: TrackId = 'sql',
 ): Promise<{ ok: true; version: number; updatedAt: string; resetEpoch: number } | { ok: false; stale: true; storedEpoch: number; version: number; updatedAt: string | null }> {
   await ensureIndexes();
   const clientEpoch = getResetEpoch(progress);
-  const existing = await db.collection('user_progress').findOne({ userId }, { projection: { version: 1, updatedAt: 1, resetEpoch: 1, progress: 1 } });
-  const storedEpoch = storedEpochOf(existing as Record<string, unknown> | null);
+  const existing = await db.collection('user_progress').findOne({ userId }, { projection: TRACK_PROJECTION });
+  const storedEpoch = readTrackEpoch(existing, track);
   if (clientEpoch < storedEpoch) {
     return {
       ok: false,
@@ -84,11 +100,10 @@ export async function saveProgress(
     };
   }
   const updatedAt = new Date().toISOString();
-  const normalized: CloudProgress = { ...progress, resetEpoch: clientEpoch };
   const res = await db.collection('user_progress').findOneAndUpdate(
     { userId },
     {
-      $set: { progress: normalized, resetEpoch: clientEpoch, updatedAt },
+      $set: trackSetFragment(track, progress, clientEpoch, updatedAt),
       $setOnInsert: { userId },
       $inc: { version: 1 },
     },
@@ -104,29 +119,17 @@ export async function saveProgress(
  */
 export async function resetProgress(
   userId: string,
+  track: TrackId = 'sql',
 ): Promise<{ version: number; updatedAt: string; resetEpoch: number; resetAt: string }> {
   await ensureIndexes();
-  const existing = await db.collection('user_progress').findOne({ userId }, { projection: { resetEpoch: 1, progress: 1 } });
-  const nextEpoch = storedEpochOf(existing as Record<string, unknown> | null) + 1;
+  const existing = await db.collection('user_progress').findOne({ userId }, { projection: TRACK_PROJECTION });
+  const nextEpoch = readTrackEpoch(existing, track) + 1;
   const now = new Date().toISOString();
-  const tombstone: CloudProgress = {
-    currentModuleId: 'day-01',
-    currentConceptId: null,
-    currentTaskIndex: 0,
-    challengeTaskIndex: 0,
-    taskAttempts: {},
-    completedTasks: {},
-    completedConcepts: {},
-    completedModules: {},
-    unlockedModuleIds: ['day-01'],
-    lastActiveTimestamp: now,
-    resetEpoch: nextEpoch,
-    resetAt: now,
-  };
+  const tombstone: CloudProgress = emptyTombstone(track, now, nextEpoch);
   const res = await db.collection('user_progress').findOneAndUpdate(
     { userId },
     {
-      $set: { progress: tombstone, resetEpoch: nextEpoch, resetAt: now, updatedAt: now },
+      $set: trackResetFragment(track, tombstone, nextEpoch, now),
       $setOnInsert: { userId },
       $inc: { version: 1 },
     },

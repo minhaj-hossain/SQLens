@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { authorize } from '@/lib/authorize';
 import { getProgress, saveProgress, resetProgress, deleteProgress } from '@/lib/server/progress-store';
 import { getResetEpoch, type CloudProgress } from '@/lib/progress/merge';
+import { isTrackId, type TrackId } from '@/types/track';
 import {
   RATE_LIMITS,
   bucketedKey,
@@ -17,11 +18,22 @@ import {
  * Blocked/deleted accounts are rejected by `authorize` before anything here runs.
  */
 
+/**
+ * Phase 3: which track a request is for. `?track=prisma` selects the Prisma
+ * slot; a missing or unknown value falls back to `'sql'`, so every
+ * pre-Phase-3 client keeps reading and writing SQL exactly as before.
+ */
+function trackFrom(req: NextRequest): TrackId {
+  const raw = req.nextUrl.searchParams.get('track');
+  return isTrackId(raw) ? raw : 'sql';
+}
+
 export async function GET(req: NextRequest) {
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
-  const { progress, version, updatedAt, resetEpoch, resetAt } = await getProgress(res.user!.id);
-  return NextResponse.json({ progress, version, updatedAt, resetEpoch, resetAt });
+  const track = trackFrom(req);
+  const { progress, version, updatedAt, resetEpoch, resetAt } = await getProgress(res.user!.id, track);
+  return NextResponse.json({ track, progress, version, updatedAt, resetEpoch, resetAt });
 }
 
 export async function PUT(req: NextRequest) {
@@ -43,6 +55,8 @@ export async function PUT(req: NextRequest) {
 
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
+
+  const track = trackFrom(req);
 
   let body: { progress?: CloudProgress };
   try {
@@ -68,7 +82,7 @@ export async function PUT(req: NextRequest) {
   // unless a reset tombstone already bumped the stored epoch, in which case
   // saveProgress reports stale and we answer 409 so the tab refetches Day 1
   // instead of resurrecting pre-reset bytes.
-  const result = await saveProgress(res.user!.id, { ...body.progress, resetEpoch: getResetEpoch(body.progress) });
+  const result = await saveProgress(res.user!.id, { ...body.progress, resetEpoch: getResetEpoch(body.progress) }, track);
   if (!result.ok) {
     return NextResponse.json(
       { error: 'reset_stale', storedEpoch: result.storedEpoch, version: result.version, updatedAt: result.updatedAt },
@@ -82,6 +96,8 @@ export async function DELETE(req: NextRequest) {
   const res = await authorize(req, 'authenticated');
   if (!res.ok) return res.response as NextResponse;
 
+  const track = trackFrom(req);
+
   // Batch 2 — permanent fix for "reset, then refresh brings data back": a full
   // reset is now an authoritative epoch-bumped tombstone, NOT a deleteOne.
   // Deleting the doc left a hole that any racing/stale PUT (in-flight write,
@@ -91,6 +107,6 @@ export async function DELETE(req: NextRequest) {
   // deletion only. keepalive retained: the reset must commit even if the tab
   // navigates away mid-request.
   void deleteProgress;
-  const result = await resetProgress(res.user!.id);
+  const result = await resetProgress(res.user!.id, track);
   return NextResponse.json({ ok: true, ...result });
 }

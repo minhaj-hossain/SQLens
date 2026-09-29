@@ -13,6 +13,12 @@
  *  - Account isolation: prevents account progress leakage on logout/login
  *  - Server-controlled curriculum availability fetch
  *  - PURE progress actions (`mark*`) — writes with NO navigation side effects
+ *
+ * Phase 3 — progress is PER TRACK. The track comes from the URL (`useTrack()`),
+ * and every localStorage key, broadcast payload, cloud document slot and reset
+ * targets the active track only, so `/prisma` progress can never touch SQL
+ * progress. Switching `/sql` <-> `/prisma` flushes the outgoing track to its
+ * own key and swaps in the incoming track's state plus its cloud hydration.
  */
 import React, {
   createContext,
@@ -25,10 +31,12 @@ import React, {
   Dispatch,
   SetStateAction,
 } from 'react';
-import { getModuleById } from '@/content/curriculum-index';
-import { loadUserState, saveUserState, resetUserState, resetModuleProgress, clearGuestState, INITIAL_USER_STATE } from '@/lib/progress/storage';
+import { getTrackModuleById, trackForModuleId } from '@/tracks/registry';
+import { loadUserState, saveUserState, resetUserState, resetModuleProgress, clearGuestState } from '@/lib/progress/storage';
 import { UserLearningState, AvailabilityMap } from '@/types/progress';
 import { ModuleData } from '@/types/curriculum';
+import { TrackId, trackOfStorageKey } from '@/types/track';
+import { useTrack } from '@/components/learn/use-track';
 import { setAvailabilityMap } from '@/lib/progress/availability-store';
 import {
   mergeProgress,
@@ -94,33 +102,56 @@ const LEGACY_NAV_KEY = 'sql_mastery_nav_v1';
 
 /**
  * Phase 2 shim: persisted states may carry legacy numeric `currentConceptIndex`.
- * Resolve it to a valid slug and strip the field.
+ * Resolve it to a valid slug and strip the field. Phase 3: the module lookup is
+ * track-scoped, so a `prisma-NN` state is never resolved against SQL modules.
  */
-function resolveLegacyPosition(raw: UserLearningState & { currentConceptIndex?: number }): UserLearningState {
+function resolveLegacyPosition(
+  raw: UserLearningState & { currentConceptIndex?: number },
+  track: TrackId,
+): UserLearningState {
   const legacyIndex = raw.currentConceptIndex;
   if (raw.currentConceptId || typeof legacyIndex !== 'number') {
     if (raw.currentConceptId) {
-      const mod = getModuleById(raw.currentModuleId);
+      const mod = getTrackModuleById(track, raw.currentModuleId);
       if (mod && !mod.concepts.some((c) => c.id === raw.currentConceptId)) {
         return { ...raw, currentConceptId: null };
       }
     }
     return raw;
   }
-  const mod = getModuleById(raw.currentModuleId);
+  const mod = getTrackModuleById(track, raw.currentModuleId);
   const currentConceptId = mod?.concepts[legacyIndex]?.id ?? null;
   const resolved: UserLearningState = { ...raw, currentConceptId };
   delete (resolved as { currentConceptIndex?: number }).currentConceptIndex;
   return resolved;
 }
 
+/**
+ * Phase 3: which track a Tier-B state belongs to. Module ids are namespaced per
+ * track (`day-NN` vs `prisma-NN`), so a state always knows its own track — every
+ * storage/cloud target is derived from the STATE itself, never from a
+ * render-time track that a pending navigation may already have moved on from.
+ */
+function stateTrackOf(state: UserLearningState): TrackId {
+  return trackForModuleId(state.currentModuleId);
+}
+
 export function LearningProgressProvider({ children }: { children: React.ReactNode }) {
   const { user: authUser } = useAuth();
   const signedInUserId = authUser?.id && authUser.status !== 'blocked' ? authUser.id : null;
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
+  /**
+   * Phase 3: the active track comes from the URL (`/prisma/…` vs everywhere
+   * else). Progress records, localStorage keys, broadcasts and cloud document
+   * slots are ALL per-track, so the track a page renders with is also the track
+   * this provider reads and writes.
+   */
+  const track = useTrack();
+  /** Hydration is per (user, track): a track switch re-hydrates from its doc. */
+  const hydrationTicket = signedInUserId ? `${signedInUserId}::${track}` : null;
 
   const [userState, setUserState] = useState<UserLearningState>(() =>
-    resolveLegacyPosition(loadUserState(null)),
+    resolveLegacyPosition(loadUserState(null, track), track),
   );
 
   // Guest-progress prompt state
@@ -174,6 +205,42 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   const lastPushedJsonRef = useRef<string | null>(null);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
+  /** Track the previous committed render was on (Phase 3 switch detection). */
+  const previousTrackRef = useRef<TrackId>(track);
+
+  /**
+   * Phase 3 — track switch (`/sql/…` <-> `/prisma/…`).
+   *
+   * Declared BEFORE the persist/broadcast effect so, within the same commit,
+   * the outgoing state is flushed to its OWN key and the incoming state is
+   * loaded from the new track's key. Nothing is dropped (the outgoing write is
+   * re-flushed here) and nothing leaks (the incoming state replaces the
+   * in-memory one, and the persist effect refuses to write a state whose own
+   * track does not match the active one).
+   */
+  useEffect(() => {
+    const prevTrack = previousTrackRef.current;
+    if (prevTrack === track) return;
+    previousTrackRef.current = track;
+    // Flush the outgoing track's state under the outgoing track's key.
+    saveUserState(latestStateRef.current, signedInUserIdRef.current, prevTrack);
+    // A still-pending push (debounced or retrying) belongs to the OUTGOING
+    // track. `pushCloudNow` reads the state ref synchronously, so fire it
+    // before the swap: a quick track switch can then never drop an unsaved
+    // cloud write into the other track's slot (it targets its own track).
+    if (pendingPushRef.current) void pushCloudNow();
+    // Swap in the incoming track's local state (guest or signed-in key).
+    const next = resolveLegacyPosition(loadUserState(signedInUserIdRef.current, track), track);
+    latestStateRef.current = next;
+    pendingPushRef.current = false;
+    lastPushedJsonRef.current = null;
+    skipNextPushRef.current = true;
+    skipNextBroadcastRef.current = true;
+    // Hydration is per (user, track) — let the new track's cloud doc land.
+    hydratedForUserRef.current = null;
+    setMergePrompt(null);
+    setUserState(next);
+  }, [track]);
 
   /** Multi-tab listener: synchronize tabs in real-time on localhost/browser */
   useEffect(() => {
@@ -194,6 +261,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           event.data,
           signedInUserIdRef.current,
           getResetEpoch(latestStateRef.current),
+          // Phase 3: both tracks share this channel — reject the other track's
+          // traffic so `/sql` and `/prisma` tabs can never adopt each other.
+          stateTrackOf(latestStateRef.current),
         );
         if (decision.action === 'ignore') return;
         if (decision.action === 'adopt-reset') {
@@ -209,7 +279,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           skipNextPushRef.current = true;
           resetQuietUntilRef.current = Date.now() + RESET_QUIET_WINDOW_MS;
           latestStateRef.current = decision.state;
-          saveUserState(decision.state, signedInUserIdRef.current);
+          saveUserState(decision.state, signedInUserIdRef.current, stateTrackOf(decision.state));
           setMergePrompt(null);
           setUserState(decision.state);
           return;
@@ -222,21 +292,26 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     }
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key && e.newValue && e.key.startsWith('sqlens_progress')) {
-        try {
-          const incoming = JSON.parse(e.newValue);
-          // Batch 4: same epoch gate for the storage-event path (covers
-          // browsers without BroadcastChannel). Older generation ignored.
-          const decision = decideIncomingStorage(incoming, getResetEpoch(latestStateRef.current));
-          if (decision.action === 'ignore') return;
-          if (typeof decision.state?.currentModuleId !== 'string') return;
-          skipNextBroadcastRef.current = true;
-          skipNextPushRef.current = true;
-          latestStateRef.current = decision.state;
-          setUserState(decision.state);
-        } catch {
-          /* ignore */
-        }
+      if (!e.key || !e.newValue) return;
+      // Phase 3: route the event by the KEY's track. The guest key, a
+      // `sqlens_progress_user_*` write and a `prismalens_progress_*` write are
+      // three different stores now, and only the active track may be adopted
+      // (a `/sql` tab must never ingest a Prisma tab's bytes).
+      const keyTrack = trackOfStorageKey(e.key);
+      if (!keyTrack || keyTrack !== stateTrackOf(latestStateRef.current)) return;
+      try {
+        const incoming = JSON.parse(e.newValue);
+        // Batch 4: same epoch gate for the storage-event path (covers
+        // browsers without BroadcastChannel). Older generation ignored.
+        const decision = decideIncomingStorage(incoming, getResetEpoch(latestStateRef.current));
+        if (decision.action === 'ignore') return;
+        if (typeof decision.state?.currentModuleId !== 'string') return;
+        skipNextBroadcastRef.current = true;
+        skipNextPushRef.current = true;
+        latestStateRef.current = decision.state;
+        setUserState(decision.state);
+      } catch {
+        /* ignore */
       }
     };
     window.addEventListener('storage', onStorage);
@@ -250,6 +325,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   /** Immediate PUT of the current local state to the user's cloud doc. */
   const pushCloudNow = async (): Promise<boolean> => {
     if (!signedInUserIdRef.current) return false;
+    // Phase 3: always target the STATE's own track slot (see `stateTrackOf`).
+    const pushTrack = stateTrackOf(latestStateRef.current);
     if (isInResetQuietWindow(resetQuietUntilRef.current, Date.now())) {
       // Batch 1: a reset just settled — drop this background push so stale
       // bytes cannot recreate the deleted doc (V1/V3). The reset's own write
@@ -271,7 +348,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     inflightPutRef.current = controller;
     const payload = JSON.stringify({ progress: toCloudProgress(latestStateRef.current) });
     try {
-      const r = await fetch('/api/me/progress', {
+      const r = await fetch(`/api/me/progress?track=${pushTrack}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: payload,
@@ -286,7 +363,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         if (inflightPutRef.current === controller) inflightPutRef.current = null;
         try {
           const conflict = (await r.json()) as { storedEpoch?: number };
-          const get = await fetch('/api/me/progress');
+          const get = await fetch(`/api/me/progress?track=${pushTrack}`);
           if (get.ok) {
             const fresh = (await get.json()) as { progress: CloudProgress | null };
             if (fresh.progress && getResetEpoch(fresh.progress) >= getResetEpoch(latestStateRef.current)) {
@@ -335,12 +412,12 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     }
   };
 
-  /** User login / logout / switch reconciliation */
+  /** User login / logout / switch reconciliation (Phase 3: per track) */
   useEffect(() => {
     if (prevUserIdRef.current === undefined) {
       prevUserIdRef.current = signedInUserId;
       if (signedInUserId) {
-        const userSaved = loadUserState(signedInUserId);
+        const userSaved = loadUserState(signedInUserId, track);
         if (
           Object.keys(userSaved.taskAttempts ?? {}).length > 0 ||
           Object.keys(userSaved.completedModules ?? {}).length > 0
@@ -355,14 +432,14 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         prevUserIdRef.current = null;
         hydratedForUserRef.current = null;
         setMergePrompt(null);
-        const guestState = resolveLegacyPosition(loadUserState(null));
+        const guestState = resolveLegacyPosition(loadUserState(null, track), track);
         setUserState(guestState);
         latestStateRef.current = guestState;
         return;
       }
       // User signed in or switched account:
       prevUserIdRef.current = signedInUserId;
-      const userSaved = loadUserState(signedInUserId);
+      const userSaved = loadUserState(signedInUserId, track);
       if (
         Object.keys(userSaved.taskAttempts ?? {}).length > 0 ||
         Object.keys(userSaved.completedModules ?? {}).length > 0
@@ -376,20 +453,20 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       hydratedForUserRef.current = null;
       return;
     }
-    if (hydratedForUserRef.current === signedInUserId) return; // already done
-    hydratedForUserRef.current = signedInUserId;
+    if (hydratedForUserRef.current === hydrationTicket) return; // already done
+    hydratedForUserRef.current = hydrationTicket;
 
     let cancelled = false;
     void (async () => {
       try {
-        const r = await fetch('/api/me/progress');
+        const r = await fetch(`/api/me/progress?track=${track}`);
         if (cancelled || !r.ok) {
           return;
         }
         const body = (await r.json()) as { progress: CloudProgress | null };
         if (cancelled) return;
 
-        const guestState = resolveLegacyPosition(loadUserState(null));
+        const guestState = resolveLegacyPosition(loadUserState(null, track), track);
         const hasGuestProgress =
           Object.keys(guestState.taskAttempts ?? {}).length > 0 ||
           Object.keys(guestState.completedModules ?? {}).length > 0;
@@ -405,9 +482,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           if (cloudEpoch > localEpochNow) {
             const adopted = fromCloudProgress(cloud, latestStateRef.current);
             latestStateRef.current = adopted;
-            saveUserState(adopted, signedInUserId);
+            saveUserState(adopted, signedInUserId, track);
             setUserState(adopted);
-            if (hasGuestProgress) clearGuestState();
+            if (hasGuestProgress) clearGuestState(track);
             setMergePrompt(null);
             lastPushedJsonRef.current = JSON.stringify(toCloudProgress(adopted));
             pendingPushRef.current = false;
@@ -415,14 +492,14 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
             return;
           }
           if (localEpochNow > cloudEpoch) {
-            if (hasGuestProgress) clearGuestState();
+            if (hasGuestProgress) clearGuestState(track);
             await pushCloudNow();
             return;
           }
           if (isResetTombstone(cloud) && !hasGuestProgress) {
             const adopted = fromCloudProgress(cloud, latestStateRef.current);
             latestStateRef.current = adopted;
-            saveUserState(adopted, signedInUserId);
+            saveUserState(adopted, signedInUserId, track);
             setUserState(adopted);
             lastPushedJsonRef.current = JSON.stringify(toCloudProgress(adopted));
             pendingPushRef.current = false;
@@ -440,9 +517,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           const localSource = hasGuestProgress ? guestState : latestStateRef.current;
           const merged = mergeProgress(localSource, cloud);
           latestStateRef.current = merged;
-          saveUserState(merged, signedInUserId);
+          saveUserState(merged, signedInUserId, track);
           setUserState(merged);
-          if (hasGuestProgress) clearGuestState();
+          if (hasGuestProgress) clearGuestState(track);
           await pushCloudNow();
         } else {
           // First sign-in with no cloud doc — upload existing guest progress if any.
@@ -450,10 +527,10 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           // state is at least as new as the guest state just loaded, so a stale
           // ref cannot recreate a just-deleted cloud doc.
           if (hasGuestProgress) {
-            saveUserState(guestState, signedInUserId);
+            saveUserState(guestState, signedInUserId, track);
             latestStateRef.current = guestState;
             setUserState(guestState);
-            clearGuestState();
+            clearGuestState(track);
             await pushCloudNow();
           } else if (shouldPushOnNullCloud(latestStateRef.current, guestState)) {
             await pushCloudNow();
@@ -469,7 +546,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     return () => {
       cancelled = true;
     };
-  }, [signedInUserId]);
+  }, [signedInUserId, track]);
 
   /** Window focus / visibility change re-validation (cross-browser / cross-device) */
   useEffect(() => {
@@ -480,7 +557,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         return;
       }
       try {
-        const r = await fetch('/api/me/progress');
+        const r = await fetch(`/api/me/progress?track=${stateTrackOf(latestStateRef.current)}`);
         if (!r.ok) return;
         const body = (await r.json()) as { progress: CloudProgress | null };
         if (body.progress) {
@@ -493,7 +570,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           if (getResetEpoch(cloud) > getResetEpoch(current)) {
             const adopted = fromCloudProgress(cloud, current);
             latestStateRef.current = adopted;
-            saveUserState(adopted, signedInUserIdRef.current);
+            saveUserState(adopted, signedInUserIdRef.current, stateTrackOf(adopted));
             skipNextPushRef.current = true;
             setUserState(adopted);
             setMergePrompt(null);
@@ -505,7 +582,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           if (cloudTs > localTs) {
             const merged = mergeProgress(current, cloud);
             latestStateRef.current = merged;
-            saveUserState(merged, signedInUserIdRef.current);
+            saveUserState(merged, signedInUserIdRef.current, stateTrackOf(merged));
             skipNextPushRef.current = true;
             setUserState(merged);
           }
@@ -523,33 +600,39 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     };
   }, []);
 
-  // Sync state with localStorage (instant — offline-safe, user-scoped)
+  // Sync state with localStorage (instant — offline-safe, user-scoped, per track)
   useEffect(() => {
+    // Phase 3: a track switch commits with the OUTGOING state still in
+    // `userState` (the switch effect swaps it in the same commit). Never
+    // persist a state under the other track's key — the switch effect already
+    // flushed the outgoing state to its own key.
+    if (stateTrackOf(userState) !== track) return;
     // Batch 6 (remount clobber): the fresh mount seeds useState from the GUEST
     // key (epoch 0) while the session resolves. Persisting that snapshot under
     // the user's key would overwrite the tombstone lineage BEFORE hydration
-    // GETs it. Gate on: signed in AND hydration settled for this user. Guest
-    // (signed-out) writes still persist immediately; the second branch covers
-    // the signed-out case.
+    // GETs it. Gate on: signed in AND hydration settled for this user+track.
+    // Guest (signed-out) writes still persist immediately; the second branch
+    // covers the signed-out case.
     if (signedInUserId) {
-      if (hydratedForUserRef.current !== signedInUserId) return;
-      saveUserState(userState, signedInUserId);
+      if (hydratedForUserRef.current !== hydrationTicket) return;
+      saveUserState(userState, signedInUserId, track);
     } else {
-      saveUserState(userState, null);
+      saveUserState(userState, null, track);
     }
     if (!skipNextBroadcastRef.current) {
       // Batch 4: every broadcast carries its epoch so receivers can tell a
-      // stale sender from an authoritative one.
-      broadcastChannelRef.current?.postMessage(buildSyncMessage(signedInUserId, userState));
+      // stale sender from an authoritative one. Phase 3: it also carries its
+      // track, so `/sql` and `/prisma` tabs ignore each other's traffic.
+      broadcastChannelRef.current?.postMessage(buildSyncMessage(signedInUserId, userState, track));
     }
     skipNextBroadcastRef.current = false;
-  }, [userState, signedInUserId]);
+  }, [userState, signedInUserId, track]);
 
   // Debounced cloud sync for signed-in users
   useEffect(() => {
     // Batch 1: reset just settled — keep the local save, skip the cloud push.
     if (isInResetQuietWindow(resetQuietUntilRef.current, Date.now())) return;
-    if (!signedInUserId || hydratedForUserRef.current !== signedInUserId) return;
+    if (!signedInUserId || hydratedForUserRef.current !== hydrationTicket) return;
     if (skipNextPushRef.current) {
       skipNextPushRef.current = false;
       return;
@@ -570,7 +653,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         return;
       }
       try {
-        void fetch('/api/me/progress', {
+        // Phase 3: flush into the state's OWN track slot.
+        void fetch(`/api/me/progress?track=${stateTrackOf(latestStateRef.current)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ progress: toCloudProgress(latestStateRef.current) }),
@@ -770,6 +854,9 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   const resetProgress = useCallback(
     async (options?: { moduleId?: string }): Promise<void> => {
       const targetModuleId = options?.moduleId;
+      // Phase 3: everything below targets the STATE's own track — this callback
+      // is memoized once, so the render-time `track` would be stale here.
+      const resetTrack = stateTrackOf(latestStateRef.current);
 
       if (targetModuleId) {
         // Batch 1: serialize like full reset — drop pending/in-flight writes
@@ -782,15 +869,15 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
           syncTimerRef.current = null;
         }
         pendingPushRef.current = false;
-        const mod = getModuleById(targetModuleId);
+        const mod = getTrackModuleById(resetTrack, targetModuleId);
         const next = resetModuleProgress(targetModuleId, latestStateRef.current, mod);
         latestStateRef.current = next;
-        saveUserState(next, signedInUserIdRef.current);
+        saveUserState(next, signedInUserIdRef.current, resetTrack);
         setUserState(next);
 
         if (!skipNextBroadcastRef.current) {
           broadcastChannelRef.current?.postMessage(
-            buildSyncMessage(signedInUserIdRef.current, next),
+            buildSyncMessage(signedInUserIdRef.current, next, resetTrack),
           );
         }
 
@@ -801,7 +888,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         return;
       }
 
-      // Full curriculum reset back to Day 1.
+      // Full curriculum reset of THIS track back to its first module.
       // Batch 2: the reset bumps resetEpoch and commits an authoritative
       // server tombstone (DELETE writes epoch+1 empty doc, not deleteOne), so
       // racing/stale PUTs are 409-rejected and later GETs converge to Day 1.
@@ -813,11 +900,18 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       lastPushedJsonRef.current = null;
       skipNextPushRef.current = true;
 
-      const fresh = resetUserState(signedInUserIdRef.current, getResetEpoch(latestStateRef.current));
-      try {
-        localStorage.removeItem(LEGACY_NAV_KEY);
-      } catch {
-        /* ignore */
+      const fresh = resetUserState(
+        signedInUserIdRef.current,
+        getResetEpoch(latestStateRef.current),
+        resetTrack,
+      );
+      if (resetTrack === 'sql') {
+        // SQL-only legacy nav snapshot (Phase 3: not a Prisma surface).
+        try {
+          localStorage.removeItem(LEGACY_NAV_KEY);
+        } catch {
+          /* ignore */
+        }
       }
       // Batch 1 (V1): abort any in-flight PUT so stale bytes cannot land
       // after the DELETE below, then open a quiet window that silences
@@ -826,22 +920,24 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
       inflightPutRef.current = null;
       resetQuietUntilRef.current = Date.now() + RESET_QUIET_WINDOW_MS;
       latestStateRef.current = fresh;
-      saveUserState(fresh, signedInUserIdRef.current);
+      saveUserState(fresh, signedInUserIdRef.current, resetTrack);
       setUserState(fresh);
       setMergePrompt(null);
 
       if (!skipNextBroadcastRef.current) {
         // Batch 4: PROGRESS_RESET (not SYNC) — stale tabs that receive it drop
         // their pendingPush, abort in-flight PUTs, and converge to Day 1
-        // instead of re-uploading their older epoch.
+        // instead of re-uploading their older epoch. Phase 3: reset only the
+        // other tabs on the SAME track.
         broadcastChannelRef.current?.postMessage(
-          buildResetMessage(signedInUserIdRef.current, fresh),
+          buildResetMessage(signedInUserIdRef.current, fresh, resetTrack),
         );
       }
 
       if (signedInUserIdRef.current) {
         try {
-          const r = await fetch('/api/me/progress', {
+          // Phase 3: reset one track's slot, never the whole account.
+          const r = await fetch(`/api/me/progress?track=${resetTrack}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
@@ -871,7 +967,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
                   resetAt: committed.resetAt ?? fresh.resetAt ?? null,
                 };
                 latestStateRef.current = synced;
-                saveUserState(synced, signedInUserIdRef.current);
+                saveUserState(synced, signedInUserIdRef.current, resetTrack);
                 skipNextPushRef.current = true;
                 setUserState(synced);
                 lastPushedJsonRef.current = JSON.stringify(toCloudProgress(synced));
@@ -901,23 +997,26 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   );
 
 
-  /** Guest-progress prompt resolution */
+  /** Guest-progress prompt resolution (Phase 3: scoped to the prompt's track) */
   const resolveMergePrompt = useCallback((choice: 'combine' | 'useCloud') => {
     const prompt = mergePromptRef.current;
     if (!prompt) return;
+    // The prompt was raised while merging THIS track's guest key; this callback
+    // is memoized once, so derive the track from the prompt itself.
+    const promptTrack = stateTrackOf(prompt.local);
     setMergePrompt(null);
     if (choice === 'combine') {
       const merged = mergeProgress(prompt.local, prompt.cloud);
       latestStateRef.current = merged;
-      saveUserState(merged, signedInUserIdRef.current);
+      saveUserState(merged, signedInUserIdRef.current, promptTrack);
       setUserState(merged);
     } else {
       const adopted = fromCloudProgress(prompt.cloud, prompt.local);
       latestStateRef.current = adopted;
-      saveUserState(adopted, signedInUserIdRef.current);
+      saveUserState(adopted, signedInUserIdRef.current, promptTrack);
       setUserState(adopted);
     }
-    clearGuestState();
+    clearGuestState(promptTrack);
     void pushCloudNow();
   }, []);
 

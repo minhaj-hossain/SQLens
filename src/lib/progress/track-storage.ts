@@ -1,38 +1,35 @@
 /**
- * Track-aware progress storage keys — Phase 1 (multi-track foundation).
- * ─────────────────────────────────────────────────────────────────────────────
- * ADDITIVE ONLY. `src/lib/progress/storage.ts#getStorageKey` is NOT modified:
- * it keeps returning the SQL keys (`sql_mastery_progress_v1` /
- * `sqlens_progress_user_<id>`). These helpers derive the parallel Prisma keys
- * from `TRACK_META`, and `initialStateForTrack` stamps the correct starting
- * module + unlocked list per track.
+ * Track-scoped progress storage — the import surface for track-aware keys.
+ * ─────────────────────────────────────────────────────────────────────────
+ * Phase 3 moved the single source of truth into `src/lib/progress/storage.ts`:
+ *   - `getStorageKey(userId, track)`      — SQL keys byte-identical
+ *   - `initialStateForTrack(track)`       — `day-01` vs `prisma-01`
+ *   - `loadUserState / saveUserState / resetUserState(userId, …, track)`
+ *   - `clearGuestState(track)`
+ * `track` is the LAST, optional argument on every one of them and defaults to
+ * `'sql'`, so every pre-Phase-3 call site keeps its exact behaviour.
+ *
+ * This module re-exports the track helpers so the registry, the tests and
+ * `LearningProgressProvider` keep one stable import path.
  */
 
 import { LEARNING_CONFIG } from '../../config/learning';
-import { INITIAL_USER_STATE } from './storage';
+import { initialStateForTrack, getStorageKey } from './storage';
 import { TRACK_META, type TrackId } from '../../types/track';
-import type { UserLearningState } from '../../types/progress';
 
+export { initialStateForTrack };
+
+/** Guest key only (`sql_mastery_progress_v1` / `prismalens_progress_v1`). */
 export function getTrackGuestStorageKey(track: TrackId): string {
   return TRACK_META[track].guestStorageKey;
 }
 
-export function getTrackStorageKey(track: TrackId, userId?: string | null): string {
-  if (userId) return `${TRACK_META[track].userStorageKeyPrefix}${userId}`;
-  return getTrackGuestStorageKey(track);
-}
-
 /**
- * Fresh progress state for a track. SQL returns the frozen INITIAL_USER_STATE
- * shape untouched; Prisma starts at `prisma-01` with only it unlocked.
+ * `sqlens_progress_user_<id>` / `prismalens_progress_user_<id>`; the guest key
+ * for the track when no user id is given.
  */
-export function initialStateForTrack(track: TrackId): UserLearningState {
-  if (track === 'sql') return { ...INITIAL_USER_STATE };
-  return {
-    ...INITIAL_USER_STATE,
-    currentModuleId: TRACK_META.prisma.initialModuleId,
-    unlockedModuleIds: [TRACK_META.prisma.initialModuleId],
-  };
+export function getTrackStorageKey(track: TrackId, userId?: string | null): string {
+  return getStorageKey(userId, track);
 }
 
 /** Sanity check used by tests: SQL storage keys must stay exactly as today. */
