@@ -38,6 +38,15 @@ export interface PrismaValidationRule {
   requiredWhereClauses?: string[];
   requiredOrderBy?: { field: string; direction?: 'asc' | 'desc' }[];
   requirePagination?: { take?: number; skip?: number; cursor?: boolean };
+  /**
+   * Phase 6: literal fragments the raw code must contain, for labs the
+   * structural client validator cannot grade (CLI strings, schema.prisma
+   * blocks, connection URLs, Zod schemas). Checked verbatim via
+   * `String.includes` — keep them short and exact.
+   */
+  requiredCodeSnippets?: string[];
+  /** Phase 6: literal fragments the raw code must NOT contain. */
+  forbiddenCodeSnippets?: string[];
   /** Deliberate error lab (e.g. unique constraint violation). */
   expectFailure?: boolean;
   /** e.g. 'P2002' (unique key), 'P2025' (not found). */

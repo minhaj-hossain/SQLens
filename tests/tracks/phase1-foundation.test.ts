@@ -17,11 +17,24 @@ import { trackLearnUrl, trackRoadmapUrl } from '../../src/lib/track-routes';
 import { getTrackStorageKey, initialStateForTrack } from '../../src/lib/progress/track-storage';
 
 /** Minimal seeded `users` table for the pilot's executable solutionSql. */
+// Shared Prisma seed universe: the ONLY tables the SQL lens may reference.
+// The SQL engine executes every Prisma task's `solutionSql` against this
+// seed universe (fresh DB per task), so `users` is the ONLY table that can
+// appear in Phase-6 content.
+export const PRISMA_SEED_TABLES = ['users'] as const;
+
+// Shared users rows: id 1-3 only. Every task's solutionSql must be written
+// against exactly these rows.
+export const PRISMA_SEED_USERS_SQL =
+  "CREATE TABLE users (id INTEGER, name TEXT, email TEXT); " +
+  "INSERT INTO users (id, name, email) VALUES " +
+  "(1, 'Alex', 'alex@prisma.io'), " +
+  "(2, 'Mina', 'mina@prisma.io'), " +
+  "(3, 'Rafi', 'rafi@prisma.io');";
+
+/** Minimal seeded `users` table for the pilot's executable solutionSql. */
 function seedUsers(ex: SqlExecutor) {
-  ex.executeQuery('CREATE TABLE users (id INTEGER, name TEXT, email TEXT);');
-  ex.executeQuery(
-    "INSERT INTO users (id, name, email) VALUES (1, 'Alex', 'alex@prisma.io'), (2, 'Mina', 'mina@prisma.io'), (3, 'Rafi', 'rafi@prisma.io');",
-  );
+  ex.executeQuery(PRISMA_SEED_USERS_SQL);
 }
 
 describe('Phase 1 — track foundation', () => {

@@ -1,9 +1,16 @@
 /**
- * Prisma track validator — Phase 1.
+ * Prisma track validator — Phase 1 (string checks) + Phase 6 (snippet checks).
  * ─────────────────────────────────────────────────────────────────────────────
  * String-level checks for Prisma client code (no execution yet — Phase 4 adds
  * the prisma→SQL generator + real execution via the SQL engine).
  * Pure + client-safe: safe to import from UI, tests, and audit scripts.
+ *
+ * Phase 6 additions (additive only — existing rules keep their semantics):
+ *  - `requiredCodeSnippets`: literal fragments that must appear in the raw
+ *    code (used for CLI, schema.prisma, URL and Zod content before the client
+ *    validator exists). Checked BEFORE structural rules so snippet labs fail
+ *    fast with the authored message.
+ *  - `forbiddenCodeSnippets`: literal fragments that must NOT appear.
  */
 
 import type { PrismaValidationRule } from '../../types/prisma-curriculum';
@@ -45,6 +52,23 @@ export function validatePrismaCode(
   rule: PrismaValidationRule,
 ): PrismaValidationOutcome {
   const flat = normalize(code);
+
+  // Phase 6: snippet labs (CLI / schema.prisma / URL / Zod). The solution is
+  // authored to contain every snippet; the starter is authored to contain at
+  // least one missing or one forbidden fragment.
+  if (rule.requiredCodeSnippets) {
+    const missing = rule.requiredCodeSnippets.filter((s) => !code.includes(s));
+    if (missing.length > 0) {
+      return { passed: false, feedback: `Missing required code: ${missing.map((m) => `\`${m}\``).join(', ')}.` };
+    }
+  }
+
+  if (rule.forbiddenCodeSnippets) {
+    const present = rule.forbiddenCodeSnippets.filter((s) => code.includes(s));
+    if (present.length > 0) {
+      return { passed: false, feedback: `Remove forbidden code: ${present.map((m) => `\`${m}\``).join(', ')}.` };
+    }
+  }
 
   if (rule.targetModel) {
     const { model } = extractPrismaTarget(code);
