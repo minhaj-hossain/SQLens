@@ -1,0 +1,63 @@
+/**
+ * Track identity — Phase 1 (multi-track foundation).
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ADDITIVE ONLY: this file introduces the `TrackId` concept without touching
+ * any SQL code. SQL remains the default track (`'sql'`) everywhere.
+ *
+ * A "track" is one full learning path (SQL = 57 days, Prisma = 14 days).
+ * Tracks share UI/engine patterns but NEVER share:
+ *   - module IDs (sql: `day-NN`, prisma: `prisma-NN`)
+ *   - progress storage keys
+ *   - URL base paths
+ *   - curriculum arrays
+ */
+
+export type TrackId = 'sql' | 'prisma';
+
+export const TRACK_IDS: readonly TrackId[] = ['sql', 'prisma'] as const;
+
+export function isTrackId(value: unknown): value is TrackId {
+  return value === 'sql' || value === 'prisma';
+}
+
+/** Display metadata for the track selector (Phase 2 `/` page). */
+export interface TrackMeta {
+  id: TrackId;
+  /** Short label, e.g. "SQL" / "Prisma". */
+  label: string;
+  /** Full title, e.g. "SQLens — 57 Days of Hands-On SQL". */
+  title: string;
+  /** One-line pitch for the selector card. */
+  tagline: string;
+  /** URL base path for the track's roadmap. `/sql` / `/prisma`. */
+  basePath: string;
+  /** LocalStorage guest key (signed-in keys are derived per user + track). */
+  guestStorageKey: string;
+  /** Prefix for per-user storage keys: `sqlens_progress_user_<id>` etc. */
+  userStorageKeyPrefix: string;
+  /** First module of the track. */
+  initialModuleId: string;
+}
+
+export const TRACK_META: Record<TrackId, TrackMeta> = {
+  sql: {
+    id: 'sql',
+    label: 'SQL',
+    title: 'SQLens — 57 Days of Hands-On SQL',
+    tagline: 'Master SQL from SELECT to production engineering, entirely in your browser.',
+    basePath: '/sql',
+    guestStorageKey: 'sql_mastery_progress_v1',
+    userStorageKeyPrefix: 'sqlens_progress_user_',
+    initialModuleId: 'day-01',
+  },
+  prisma: {
+    id: 'prisma',
+    label: 'Prisma',
+    title: 'PrismaLens — 14 Days of Prisma ORM',
+    tagline: 'Master Prisma ORM, schema modeling and production database engineering.',
+    basePath: '/prisma',
+    guestStorageKey: 'prismalens_progress_v1',
+    userStorageKeyPrefix: 'prismalens_progress_user_',
+    initialModuleId: 'prisma-01',
+  },
+};

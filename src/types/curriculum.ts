@@ -1,3 +1,6 @@
+import type { PrismaTaskContent, PrismaTheoryContent } from './prisma-curriculum';
+import type { TrackId } from './track';
+
 export type DialectId = 'both' | 'mysql' | 'postgres';
 
 export type DialectMatchPolicy = 'both-required' | 'one-valid-variant' | 'dialect-specific';
@@ -159,6 +162,12 @@ export interface PracticeTask {
   dialect?: DialectId;
   matchPolicy?: DialectMatchPolicy;
   variants?: { mysql?: DialectVariant; postgres?: DialectVariant };
+  /**
+   * Prisma track extension (Phase 1 — optional, SQL tasks omit it).
+   * When present, the Prisma editor/validator/engine use this; `solutionSql`
+   * stays the executable reference (generated SQL runs via the SQL engine).
+   */
+  prisma?: PrismaTaskContent;
 }
 
 export interface SyntaxBlock {
@@ -222,6 +231,12 @@ export interface ConceptTheory {
   };
   liveDemoSql?: string;
   liveDemoNotes?: string;
+  /**
+   * Prisma track extension (Phase 1 — optional, SQL concepts omit it).
+   * `targetHero` mirrors `targetQuery` (shown before steps), `liveDemoCode`
+   * mirrors `liveDemoSql` for the TypeScript editor.
+   */
+  prisma?: PrismaTheoryContent;
   commonMistakes?: string[];
   understandingChecks?: { question: string; answer?: string }[];
   debuggingExercise?: { brokenSql: string; bugs: string[]; fixDescription: string };
@@ -281,6 +296,12 @@ export interface ModuleData {
   concepts: Concept[];
   challenge?: IndependentChallenge;
   completionLearnings: string[];
+  /**
+   * Track owner (Phase 1 — optional, defaults to `'sql'`).
+   * Existing 57 SQL modules omit it (zero edits); all `prisma-NN` modules
+   * MUST set `track: 'prisma'`.
+   */
+  track?: TrackId;
   /**
    * Position-independent sort key controlling the canonical curriculum order
    * (unlock sequence, roadmap ordering, prev/next navigation). Existing
