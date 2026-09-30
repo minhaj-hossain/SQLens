@@ -31,7 +31,7 @@ export default function ResetProgressModal({
   const [isResetting, setIsResetting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Task 0.2 — reset copy follows the ACTIVE track (SQL = 57 days, Prisma = 14).
+  // Task 0.2 — reset copy follows the ACTIVE track (count + label from useTrackCurriculum()).
   // Called before the `!isOpen` early return to keep hook order stable.
   const { modules, meta } = useTrackCurriculum();
   const totalModules = modules.length;
@@ -131,7 +131,7 @@ export default function ResetProgressModal({
                 />
                 <div className="text-xs">
                   <span className="font-semibold text-text block">
-                    Reset Entire Course (Days 1–38)
+                    Reset Entire Course (Days 1–{totalModules})
                   </span>
                   <span className="text-text-dim mt-0.5 block leading-relaxed">
                     Wipes all completed lessons, practice tasks, challenges, and daily unlock records back to Day 1.
