@@ -92,7 +92,7 @@ export const Prisma_03_MODULE: ModuleData = {
           description: 'Replace the free-text role with a closed set of two values.',
           instructions: ['`enum Role { ADMIN, MEMBER }`', 'Type the column as `Role`'],
           hint: 'Declare `enum Role` above the model, then use `role Role`.',
-          scaffold: '-- The enum still has to read this row:\nSELECT id, email FROM users WHERE id = 99;',
+          scaffold: '-- Configuration and schema validation runs automatically against the engine.\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
           why: 'A closed enum makes an invalid role impossible to insert.',
           cols: ['id', 'email'],
