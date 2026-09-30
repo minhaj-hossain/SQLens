@@ -158,6 +158,11 @@ describe('Phase 7 — submitForTask routing', () => {
     // No client call was translated: the lens admits the rows are the reference.
     expect(out.lens!.steps).toEqual([]);
     expect(out.lens!.note).toContain('reference dataset');
+    // P1.2: the CLI lab renders simulated terminal output instead of the
+    // authored reference rows.
+    expect(out.displayMode).toBe('terminal');
+    expect(out.terminalOutput).toContain('$ npx prisma generate');
+    expect(out.result).toBeUndefined();
   });
 
   it('refuses to pass a Prisma task that declares reasoning questions', () => {

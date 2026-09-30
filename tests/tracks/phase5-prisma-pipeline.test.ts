@@ -11,11 +11,15 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
 import { renderGeneratedSql } from '../../src/lib/prisma-engine/prisma-sql-generator';
 import {
+  isPrismaSchemaLab,
   isPrismaTask,
+  prismaCliCommandIn,
   prismaSeedContext,
   runAndGradePrismaSubmission,
   schemaForTask,
   setupSqlForPrismaTask,
+  simulatePrismaCliOutput,
+  snippetLabDisplay,
   PRISMA_SEED_SCHEMA,
 } from '../../src/lib/prisma-engine/prisma-submit-pipeline';
 import type { PracticeTask } from '../../src/types/curriculum';
@@ -226,5 +230,91 @@ describe('Phase 5 — Prisma submit pipeline', () => {
       label: 'update',
     };
     expect(renderGeneratedSql(reversed)).toBe('UPDATE users SET name = NULL WHERE id = 1;');
+  });
+});
+
+describe('P1.2 — snippet-lab terminal display contract', () => {
+  it('extracts the CLI command (flags included) and classifies schema labs', () => {
+    expect(prismaCliCommandIn('return "npx prisma migrate dev --name init";')).toBe(
+      'npx prisma migrate dev --name init',
+    );
+    expect(prismaCliCommandIn('const u = await prisma.user.findMany();')).toBeNull();
+    expect(isPrismaSchemaLab('model User {\n  id Int @id\n}')).toBe(true);
+    expect(isPrismaSchemaLab('const u = await prisma.user.findMany();')).toBe(false);
+  });
+
+  it('simulates the taught CLI commands deterministically, echoing the command', () => {
+    const generate = simulatePrismaCliOutput('npx prisma generate');
+    expect(generate.startsWith('$ npx prisma generate')).toBe(true);
+    expect(generate).toContain('✔ Generated Prisma Client (v7.0.0) in 34ms');
+
+    const migrate = simulatePrismaCliOutput('npx prisma migrate dev --name init');
+    expect(migrate).toContain('Applying migration `20260930000000_init`');
+    expect(migrate).toContain('✔ Your database is now in sync with your schema.');
+
+    // Unknown-but-real commands still get an honest, command-echoing output.
+    expect(simulatePrismaCliOutput('npx prisma validate')).toContain('$ npx prisma validate');
+    // Deterministic: same command → byte-identical output.
+    expect(simulatePrismaCliOutput('npx prisma generate')).toBe(generate);
+  });
+
+  it('attaches terminal output to CLI labs and drops the reference rows', () => {
+    const task = taskById('prisma02-c1-t1');
+    const { out } = submit(task, task.prisma!.solutionCode);
+    expect(out.passed).toBe(true);
+    expect(out.displayMode).toBe('terminal');
+    expect(out.terminalOutput).toContain('$ npx prisma generate');
+    // The authored reference rows are the dataset, not the learner's run.
+    expect(out.result).toBeUndefined();
+    expect(out.steps).toEqual([]);
+  });
+
+  it('schema.prisma labs get a comment notice, never a fake validate run', () => {
+    const display = snippetLabDisplay('model User {\n  id Int @id\n  email String @unique\n}');
+    expect(display?.displayMode).toBe('terminal');
+    expect(display?.terminalOutput).toContain('# schema.prisma lab');
+    // URL/Zod-style labs stay null → the read-through dataset contract applies.
+    expect(snippetLabDisplay('const url = process.env.DATABASE_URL')).toBeNull();
+  });
+
+  it('sweep: every CLI/schema lab renders terminal with no rows; other labs keep the dataset invariant', () => {
+    let cli = 0;
+    let schema = 0;
+    const failures: string[] = [];
+    for (const mod of PRISMA_MODULES) {
+      const all = [...mod.concepts.flatMap((c) => c.tasks), ...(mod.challenge?.tasks ?? [])];
+      for (const task of all) {
+        const ex = new SqlExecutor();
+        const out = runAndGradePrismaSubmission({
+          task,
+          code: task.prisma!.solutionCode,
+          hooks: hooksFor(ex),
+          surface: 'lesson',
+          record: false,
+        });
+        if (!out.readThrough) continue;
+        const display = snippetLabDisplay(task.prisma!.solutionCode);
+        if (display) {
+          if (prismaCliCommandIn(task.prisma!.solutionCode)) cli++;
+          else schema++;
+          if (out.displayMode !== 'terminal') failures.push(`${task.id}: no terminal display`);
+          if (!out.terminalOutput) failures.push(`${task.id}: empty terminal output`);
+          if (out.result !== undefined) failures.push(`${task.id}: reference rows leaked`);
+        } else {
+          if (out.displayMode !== undefined) failures.push(`${task.id}: unexpected displayMode`);
+          // Reference-dataset invariant for non-terminal labs: rows iff conclusive.
+          if (out.inconclusive && out.result !== undefined) {
+            failures.push(`${task.id}: inconclusive but rows attached`);
+          }
+          if (!out.inconclusive && out.result === undefined) {
+            failures.push(`${task.id}: conclusive but no rows attached`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+    // Non-vacuous: the curriculum really contains both kinds of snippet lab.
+    expect(cli).toBeGreaterThanOrEqual(1);
+    expect(schema).toBeGreaterThanOrEqual(1);
   });
 });
