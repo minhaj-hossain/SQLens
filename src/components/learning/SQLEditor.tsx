@@ -21,6 +21,18 @@ interface SQLEditorProps {
   onNextAction?: () => void;
   readOnly?: boolean;
   placeholder?: string;
+  /** Header file label. Prisma tasks edit TypeScript: `query.ts`. */
+  fileLabel?: string;
+  /**
+   * SQL keyword chips (`SELECT`, `FROM`, …) — SQL-only affordances. The Prisma
+   * editor turns them off rather than inserting SQL into TypeScript.
+   */
+  showQuickChips?: boolean;
+  /**
+   * Prisma Type Inspector: `prisma.expectedType`, the type the reference call
+   * resolves to. `null` renders nothing (the SQL track always passes null).
+   */
+  expectedType?: string | null;
   onBack?: () => void;
   backLabel?: string;
   /** Restore this SQL on reset (task scaffold). */
@@ -54,6 +66,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   onNextAction,
   readOnly = false,
   placeholder,
+  fileLabel = 'query.sql',
+  showQuickChips = true,
+  expectedType = null,
   onBack,
   backLabel = "Back",
   resetSql,
@@ -92,11 +107,19 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-surface-3 inline-block"></span>
           </div>
           <span className="text-[11px] font-mono text-text font-semibold tracking-wide">
-            query.sql
+            {fileLabel}
           </span>
           <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border">
             Active: {tableName}
           </span>
+          {expectedType && (
+            <span
+              className="hidden md:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[220px]"
+              title={`Expected type: ${expectedType}`}
+            >
+              Type: {expectedType}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -163,9 +186,10 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
       <div className="flex items-center gap-1.5 px-3 py-2 bg-surface border-t border-border-soft overflow-x-auto text-xs scrollbar-none">
         <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
-          Quick:
+          {showQuickChips ? 'Quick:' : 'Model:'}
         </span>
-        {["SELECT", "FROM", "WHERE", "ORDER BY", "LIMIT", "JOIN"].map(
+        {showQuickChips ? (
+          ["SELECT", "FROM", "WHERE", "ORDER BY", "LIMIT", "JOIN"].map(
           (chip) => (
             <button
               key={chip}
@@ -179,6 +203,11 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               {chip}
             </button>
           ),
+        )
+        ) : (
+          // Prisma track: no SQL chips (the editor is TypeScript). The row still
+          // names the model whose SQL this code will generate.
+          <span className="font-mono text-[11px] text-text-dim truncate">{tableName}</span>
         )}
       </div>
 

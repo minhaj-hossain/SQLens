@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PracticeTask, Concept } from '../../types/curriculum';
 import { BookOpen, CheckCircle2, ChevronDown, ChevronUp, Code, Copy, Check, HelpCircle } from 'lucide-react';
+import { solutionReveal } from '../../lib/track-submit';
 
 interface TaskInstructionsProps {
   task: PracticeTask;
@@ -51,6 +52,12 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   const [showSolution, setShowSolution] = useState<boolean>(false);
   const [copiedSolution, setCopiedSolution] = useState<boolean>(false);
 
+  // Phase 7: on the Prisma track the reference is TypeScript (`solutionCode`),
+  // not the SQL it generates — revealing `solutionSql` there would hand the
+  // learner the translated answer to a TypeScript exercise.
+  const reveal = solutionReveal(task);
+  const isPrismaSurface = reveal.language === 'typescript';
+
   const handleNextHint = () => {
     const nextLvl = Math.min(hintLevel + 1, task.hints.length);
     setHintLevel(nextLvl);
@@ -58,7 +65,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
   };
 
   const handleCopySolution = () => {
-    navigator.clipboard.writeText(task.solutionSql);
+    navigator.clipboard.writeText(reveal.code);
     setCopiedSolution(true);
     if (onViewSolution) onViewSolution();
     setTimeout(() => setCopiedSolution(false), 1500);
@@ -150,7 +157,9 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
         >
           <div className="flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
-            <span className="font-medium">Need help with this query?</span>
+            <span className="font-medium">
+              {isPrismaSurface ? 'Need help with this code?' : 'Need help with this query?'}
+            </span>
           </div>
           {isHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
@@ -201,7 +210,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
               <div className="mt-2 p-3 rounded-lg bg-ink border border-border relative text-xs">
                 <div className="flex items-center justify-between mb-1.5 text-text-dim text-[11px]">
                   <span className="font-bold text-text-dim flex items-center gap-1">
-                    <Code className="w-3 h-3" /> Solution SQL:
+                    <Code className="w-3 h-3" /> {reveal.label}:
                   </span>
                   <button
                     onClick={handleCopySolution}
@@ -217,7 +226,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
                   </button>
                 </div>
                 <pre className="text-editor-text font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-                  {task.solutionSql}
+                  {reveal.code}
                 </pre>
                 {task.solutionExplanation && (
                   <p className="mt-2 pt-2 border-t border-border text-text-dim text-[11px] font-body leading-relaxed">

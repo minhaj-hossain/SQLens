@@ -2,8 +2,16 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
-import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
-import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
+import {
+  editorStarterCode,
+  editorSurface,
+  idleLensState,
+  isPrismaTask,
+  solutionReveal,
+  submitForTask,
+  type SqlLensState,
+} from '../../lib/track-submit';
+import { buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { JudgmentBlock } from './JudgmentBlock';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/database/schema';
@@ -54,6 +62,7 @@ import { formatExecutionTime } from '@/lib/format-execution-time';
 import { formatSql } from '@/lib/format-sql';
 import { DataGrid } from './DataGrid';
 import { QueryEditor, QueryEditorHandle } from './QueryEditor';
+import { SqlLensPanel } from './SqlLensPanel';
 
 /**
  * Strips raw markdown backtick delimiters (`column` -> column)
@@ -86,13 +95,20 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     ...savedTaskSqls,
   }));
 
-  // Guidance comments become the editor PLACEHOLDER; only real code loads.
-  const taskScaffold = splitTaskScaffold(currentTask.initialSql);
-  const initialSqlForTask = taskSqlCache[currentTask.id] ?? taskScaffold.code;
+  // Phase 7: the editor's starter comes from the track (Prisma tasks edit
+  // TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
+  const initialSqlForTask = taskSqlCache[currentTask.id] ?? editorStarterCode(currentTask);
   const [currentSql, setCurrentSql] = useState<string>(initialSqlForTask);
   const [executionResult, setExecutionResult] = useState<QueryExecutionResult | null>(null);
   const [taskPassed, setTaskPassed] = useState<boolean>(() => completedTaskIds.includes(currentTask.id));
   const [validationFeedback, setValidationFeedback] = useState<string | null>(null);
+  /**
+   * Phase 7: Prisma SQL Lens for the current task (`null` on the SQL track —
+   * the results section then renders exactly as before).
+   */
+  const [sqlLens, setSqlLens] = useState<SqlLensState | null>(() => idleLensState(currentTask) ?? null);
+  const chrome = editorSurface(currentTask);
+  const isPrismaSurface = isPrismaTask(currentTask);
 
   // Progressive Hint States
   const [revealedHintLevel, setRevealedHintLevel] = useState<number>(0);
@@ -124,11 +140,17 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   // Sync state when selected task changes (tracked by currentTask.id)
   useEffect(() => {
     const isDone = completedTaskIds.includes(currentTask.id);
-    const scaffold = splitTaskScaffold(currentTask.initialSql);
-    const existingSql = taskSqlCache[currentTask.id] ?? (isDone && currentTask.solutionSql ? currentTask.solutionSql : scaffold.code);
+    // Phase 7: when a completed task reloads, show the track's own reference —
+    // TypeScript on the Prisma track, SQL otherwise — never raw `initialSql`.
+    const existingSql =
+      taskSqlCache[currentTask.id] ??
+      (isDone ? solutionReveal(currentTask).code : editorStarterCode(currentTask));
     
     setCurrentSql(existingSql);
     setExecutionResult(null);
+    // Phase 7: a new task starts with the LENS IDLE (or absent on the SQL
+    // track) — never showing the previous task's generated SQL.
+    setSqlLens(idleLensState(currentTask) ?? null);
     setTaskPassed(isDone);
     setValidationFeedback(null);
     setRevealedHintLevel(0);
@@ -179,9 +201,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
       list.push(`Structure your query as:\nSELECT ...\nFROM ${table};`);
     }
 
-    // Hint 4: Complete template structure
-    if (currentTask.solutionSql) {
-      list.push(`Reference Template:\n${currentTask.solutionSql}`);
+    // Hint 4: reference template in the track's own authoring surface — the
+    // TypeScript solution on the Prisma track (its `solutionSql` is the SQL the
+    // reference generates, not code the learner could paste into the editor).
+    if (solutionReveal(currentTask).code) {
+      list.push(`Reference Template:\n${solutionReveal(currentTask).code}`);
     }
 
     return list;
@@ -201,8 +225,12 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   // Phase 3 (single grading pipeline): this used to inline the same six-step
   // sequence as `PracticeTaskView`, which is how the blocking INSERT bug shipped
   // twice — a fix applied to one view left the other broken. Both now call
-  // `runAndGradeSubmission`, and the audit scripts call it too, so a CI failure
+  // `submitForTask`, and the audit scripts call it too, so a CI failure
   // is the same failure a learner would hit.
+  //
+  // Phase 7: `submitForTask` routes a Prisma task to the Prisma pipeline
+  // (translate the learner's TypeScript → execute the generated SQL → grade)
+  // and everything else to the SQL pipeline.
   // v2 lifecycle: a task-level `databaseLifecycle` overrides the challenge-level
   // one (challenge tasks usually inherit); `fresh` resets to seed at submit so
   // retries are idempotent instead of accumulating rows.
@@ -210,16 +238,18 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     const sql = typeof sqlToRun === 'string' ? sqlToRun : currentSql;
     const trimmed = sql.trim();
     if (!trimmed) {
-      setValidationFeedback('Please enter a SQL query before running.');
+      setValidationFeedback(
+        isPrismaSurface ? 'Please enter Prisma code before running.' : 'Please enter a SQL query before running.',
+      );
       return;
     }
 
-    const outcome = runAndGradeSubmission({
+    const outcome = submitForTask({
       task: {
         ...currentTask,
         databaseLifecycle: currentTask.databaseLifecycle ?? challenge.databaseLifecycle,
       },
-      sql,
+      code: sql,
       hooks: {
         execute: onExecuteSql,
         getDatabaseState,
@@ -234,11 +264,13 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     });
     // Batch B: the preview grid shows what RAN even when grading is blocked —
     // the verdict banner carries the open-txn warning, not an empty console.
-    setExecutionResult(outcome.result);
+    setExecutionResult(outcome.result ?? null);
+    // Phase 7: the Prisma SQL Lens renders whatever was graded.
+    if (outcome.lens) setSqlLens(outcome.lens);
 
     if (outcome.txnBlocked) {
       setTaskPassed(false);
-      setValidationFeedback(outcome.feedback);
+      setValidationFeedback(outcome.feedback ?? null);
       return;
     }
 
@@ -253,9 +285,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
       const errorText =
         outcome.feedback ||
-        (outcome.result.error
+        (outcome.result?.error
           ? `SQL execution error: ${outcome.result.error}`
-          : 'Your query output did not match the expected dataset.');
+          : isPrismaSurface
+            ? 'Your code did not meet this task requirement yet — check the SQL Lens below and the rules in the task card.'
+            : 'Your query output did not match the expected dataset.');
       setValidationFeedback(cleanBackticks(errorText));
     }
   };
@@ -393,30 +427,42 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         />
       )}
 
-      {/* 2. SQL EDITOR CENTERPIECE */}
+      {/* 2. SQL EDITOR CENTERPIECE (TypeScript on the Prisma track) */}
       <div className="bg-surface rounded-xl border border-border overflow-visible shadow-lg">
         {/* Editor Top Bar */}
         <div className="flex items-center justify-between px-4 py-2 bg-surface-2 border-b border-border-soft select-none">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono text-text-faint font-semibold tracking-wide">
-              SQL
+              {isPrismaSurface ? 'TYPESCRIPT' : 'SQL'}
             </span>
+            {chrome.expectedType && (
+              <span
+                className="hidden sm:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[240px]"
+                title={`Expected type: ${chrome.expectedType}`}
+              >
+                Type: {chrome.expectedType}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleFormatSql}
-              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
-              title="Capitalize SQL keywords"
-            >
-              <Sparkles className="w-3 h-3 text-text-dim" />
-              <span>Format</span>
-            </button>
+            {/* Format is SQL-only: `formatSql` capitalizes SQL keywords, which
+                would mangle Prisma TypeScript — so it hides on that surface. */}
+            {!isPrismaSurface && (
+              <button
+                onClick={handleFormatSql}
+                className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
+                title="Capitalize SQL keywords"
+              >
+                <Sparkles className="w-3 h-3 text-text-dim" />
+                <span>Format</span>
+              </button>
+            )}
 
             <button
               onClick={handleCopySql}
               className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
-              title="Copy SQL"
+              title={isPrismaSurface ? 'Copy code' : 'Copy SQL'}
             >
               {copiedSql ? <Check className="w-3 h-3 text-text" /> : <Copy className="w-3 h-3" />}
               <span>{copiedSql ? 'Copied' : 'Copy'}</span>
@@ -424,12 +470,13 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
             <button
               onClick={() => {
-                const scaffold = splitTaskScaffold(currentTask.initialSql);
-                handleTextChange(scaffold.code);
+                // Phase 7: reset restores the TRACK's starter (TypeScript on
+                // Prisma), not the SQL scaffold of `initialSql`.
+                handleTextChange(editorStarterCode(currentTask));
                 editorRef.current?.focus();
               }}
               className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface-2 rounded transition cursor-pointer"
-              title="Reset to the task starter query"
+              title={isPrismaSurface ? 'Reset to the task starter code' : 'Reset to the task starter query'}
             >
               <RotateCcw className="w-3 h-3" />
             </button>
@@ -448,12 +495,13 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           placeholder={buildEditorPlaceholder(currentTask)}
           textareaId="challenge-sql-textarea"
           minLineCount={5}
-          // P0 FIX: inline bar only understands ENGINE errors. Validation text
-          // renders in the banner below; passing it here forged the false
-          // "Table 'products' does not exist" message.
-          error={!taskPassed ? (executionResult?.error ?? null) : null}
-          errorPosition={!taskPassed ? (executionResult?.errorPosition ?? null) : null}
-          errorTokenOccurrences={!taskPassed ? (executionResult?.errorTokenOccurrences ?? null) : null}
+          // Phase 7: on the Prisma track the engine error belongs to the LAST
+          // generated statement (shown step-by-step in the SQL Lens below),
+          // not to a line of the learner's TypeScript — so the SQL-only
+          // gutter marker must stay off.
+          error={!taskPassed && !isPrismaSurface ? (executionResult?.error ?? null) : null}
+          errorPosition={!taskPassed && !isPrismaSurface ? (executionResult?.errorPosition ?? null) : null}
+          errorTokenOccurrences={!taskPassed && !isPrismaSurface ? (executionResult?.errorTokenOccurrences ?? null) : null}
         />
 
         {/* Editor Bottom Actions */}
@@ -462,7 +510,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-border text-text text-[10px]">
               Ctrl + Enter
             </kbd>
-            <span className="hidden sm:inline">to run query</span>
+            <span className="hidden sm:inline">
+              {isPrismaSurface ? 'to run & grade' : 'to run query'}
+            </span>
           </div>
 
           {/* SINGLE Unified Action Button for Run / Next Task */}
@@ -482,7 +532,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
               className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>{validationFeedback ? 'Try Again' : 'Run Query'}</span>
+              <span>
+                {validationFeedback ? 'Try Again' : isPrismaSurface ? 'Run & Check' : 'Run Query'}
+              </span>
             </button>
           )}
         </div>
@@ -523,6 +575,12 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 </div>
               </div>
             )}
+
+            {/* Phase 7: Prisma SQL Lens — label + substituted SQL + per-statement
+                result, above the output grid (which on the Prisma track shows the
+                rows of the last generated statement). Absent on the SQL track, so
+                that render path stays exactly as before. */}
+            {sqlLens && <SqlLensPanel lens={sqlLens} className="rounded-xl border border-border" />}
 
             {/* Query Results Table — shared DataGrid */}
             {executionResult && executionResult.success && executionResult.rows.length > 0 && (

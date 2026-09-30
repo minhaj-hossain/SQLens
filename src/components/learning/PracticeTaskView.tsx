@@ -2,13 +2,26 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { PracticeTask, Concept } from '../../types/curriculum';
 import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
-import { runAndGradeSubmission } from '../../lib/sql-engine/submit-pipeline';
+/**
+ * Phase 7: the track router. `submitForTask` picks the Prisma pipeline for tasks
+ * with a `prisma` block and the SQL pipeline for everything else, so this view
+ * keeps ONE submit path (and the SQL experience stays byte-identical).
+ */
+import {
+  editorStarterCode,
+  editorSurface,
+  idleLensState,
+  isPrismaTask,
+  previewPrismaTask,
+  submitForTask,
+  type SqlLensState,
+} from '../../lib/track-submit';
 import { TaskInstructions } from './TaskInstructions';
 import { JudgmentBlock } from './JudgmentBlock';
 import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
-import { splitTaskScaffold, buildEditorPlaceholder } from '../../lib/task-scaffold';
+import { buildEditorPlaceholder } from '../../lib/task-scaffold';
 
 interface PracticeTaskViewProps {
   task: PracticeTask;
@@ -61,15 +74,23 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   backLabel,
   canGoForward = false,
 }) => {
-  // Guidance comments become the editor PLACEHOLDER; only real code loads.
-  const taskScaffold = splitTaskScaffold(task.initialSql);
-  const initialCode = savedSql && savedSql.trim().length > 0 ? savedSql : taskScaffold.code;
+  // Phase 7: the editor's starter + chrome come from the track (Prisma tasks
+  // edit TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
+  const starterCode = editorStarterCode(task);
+  const chrome = editorSurface(task);
+  const initialCode = savedSql && savedSql.trim().length > 0 ? savedSql : starterCode;
   const [currentSql, setCurrentSql] = useState(initialCode);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [viewedSolution, setViewedSolution] = useState(false);
   const [executionResult, setExecutionResult] = useState<QueryExecutionResult | null>(null);
   const [taskPassed, setTaskPassed] = useState<boolean>(isCompleted);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  /**
+   * Phase 7: Prisma SQL Lens — the statements the learner's TypeScript
+   * translated to, with each statement's own result. `null` on the SQL track
+   * (the console then renders exactly as before).
+   */
+  const [sqlLens, setSqlLens] = useState<SqlLensState | null>(() => idleLensState(task) ?? null);
   // P1: answers to the task's `validation.judgment` (null = unanswered).
   const [judgmentAnswers, setJudgmentAnswers] = useState<(number | null)[]>(() =>
     (task.validation.judgment ?? []).map(() => null),
@@ -82,21 +103,39 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
 
   // Re-sync when switching tasks (tracked by task.id)
   useEffect(() => {
-    const scaffold = splitTaskScaffold(task.initialSql);
-    const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : scaffold.code;
+    const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : editorStarterCode(task);
     setCurrentSql(codeToSet);
     setJudgmentAnswers((task.validation.judgment ?? []).map(() => null));
     setExecutionResult(null);
     setTaskPassed(isCompleted);
     setValidationMessage(null);
+    // Phase 7: a new task starts with the LENS IDLE (or absent on the SQL
+    // track) — never showing the previous task's generated SQL.
+    setSqlLens(idleLensState(task) ?? null);
     attemptRef.current = 1;
     if (task.setupSql) {
       onExecuteSql(task.setupSql);
     }
   }, [task.id]);
 
-  // Run Preview (no grading / validation, purely executes and shows results)
+  // Run Preview (no grading / validation, purely executes and shows results).
+  //
+  // Currently unreachable from SQLEditor (its single action is Run & Check, which
+  // grades) but kept correct for both tracks: on the Prisma track a preview MUST
+  // translate first, or the "run" would execute TypeScript as SQL.
   const handleRunPreview = (sqlToRun: string = currentSql) => {
+    if (isPrismaTask(task)) {
+      const preview = previewPrismaTask(task, sqlToRun, {
+        execute: onExecuteSql,
+        getDatabaseState,
+        getCommittedState,
+        getTransactionState,
+        resetDatabase: onResetDatabase,
+      });
+      setSqlLens(preview.lens);
+      setExecutionResult(preview.result ?? null);
+      return preview.result ?? null;
+    }
     const isDdl = /CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX/i.test(task.solutionSql || '');
     if ((task.databaseLifecycle === 'fresh' || (isDdl && task.databaseLifecycle !== 'inherit')) && onResetDatabase) {
       onResetDatabase();
@@ -117,10 +156,14 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   // which is exactly how the blocking INSERT bug shipped twice. It now lives in
   // ONE testable function that the UI and the audits both call, so an audit
   // failure is a real learner-visible failure.
+  //
+  // Phase 7: that one function is now `submitForTask`, which routes a Prisma
+  // task to the Prisma pipeline (translate the learner's TypeScript → execute
+  // the generated SQL → grade) and everything else to the SQL pipeline above.
   const handleSubmitAndValidate = (sqlToRun: string = currentSql) => {
-    const outcome = runAndGradeSubmission({
+    const outcome = submitForTask({
       task,
-      sql: sqlToRun,
+      code: sqlToRun,
       hooks: {
         execute: onExecuteSql,
         getDatabaseState,
@@ -133,12 +176,16 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       // Phase 5: attempt count feeds telemetry only (never the verdict).
       attempt: attemptRef.current++,
     });
-    // Batch B: the preview grid shows what RAN even when grading is blocked —
+    // Batch B: the preview grid shows what RAN even when grading is blocked â€”
     // the verdict banner carries the open-txn warning, not an empty console.
-    setExecutionResult(outcome.result);
+    setExecutionResult(outcome.result ?? null);
+    // Phase 7: the Prisma SQL Lens renders whatever was graded — the generated
+    // statements on a pass or a fail, and the honest empty state of a snippet
+    // lab that has no client call to translate.
+    if (outcome.lens) setSqlLens(outcome.lens);
     if (outcome.txnBlocked) {
       setTaskPassed(false);
-      setValidationMessage(outcome.feedback);
+      setValidationMessage(outcome.feedback ?? null);
       return;
     }
 
@@ -150,9 +197,11 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
       setTaskPassed(false);
       setValidationMessage(
         outcome.feedback ||
-          (outcome.result.error
+          (outcome.result?.error
             ? `SQL Error: ${outcome.result.error}`
-            : 'Result did not match the expected dataset. Check your selected columns or filter condition.'),
+            : isPrismaTask(task)
+              ? 'Your code does not meet this task requirement yet — check the SQL Lens below and the rules in the task card.'
+              : 'Result did not match the expected dataset. Check your selected columns or filter condition.'),
       );
     }
 
@@ -273,6 +322,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               value={currentSql}
               tableName={task.primaryTable}
               placeholder={buildEditorPlaceholder(task)}
+              fileLabel={chrome.fileLabel}
+              showQuickChips={chrome.showQuickChips}
+              expectedType={chrome.expectedType}
               onChange={(newVal) => {
                 setCurrentSql(newVal);
                 if (evaluationState === 'wrong') {
@@ -285,7 +337,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               onNextAction={onNextTask}
               onBack={onBack}
               backLabel={backLabel}
-              resetSql={taskScaffold.code}
+              resetSql={starterCode}
               engineError={executionResult?.error ?? null}
               errorPosition={executionResult?.errorPosition ?? null}
               errorTokenOccurrences={executionResult?.errorTokenOccurrences ?? null}
@@ -299,6 +351,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               evaluationState={evaluationState}
               validationFeedback={validationMessage}
               sqlQuery={currentSql}
+              sqlLens={sqlLens}
             />
           </div>
         </div>

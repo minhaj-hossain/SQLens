@@ -11,10 +11,19 @@
  *   1. `fresh` lifecycle reset (idempotent retry: never accumulate rows)
  *   2. seed the task universe (`setupSql`, or the shared `users` seed)
  *   3. translate the learner's TypeScript (`generatePrismaSql`)
- *   4. execute the generated statement(s) on the session executor
+ *   4. execute the generated statement(s) on the session executor — through the
+ *      ONE shared runner (`runPrismaPlan`, also used by the Phase-4 proxy), so
+ *      the SQL Lens, the grader and the proxy can never execute different SQL
  *   5. static checks first (`validatePrismaCode`), then execution rules
  *      (`gradePrismaExecution`) — the same two layers as `gradePrismaCode`
  *   6. record one telemetry event (best-effort, never fatal)
+ *
+ * `previewPrismaSubmission` is the ungraded twin of step 1–4 (the editor's Run):
+ * same reset/seed/translate/execute path, no verdict.
+ *
+ * Every executed statement is reported as a `PrismaExecutionStep[]` — the
+ * payload the UI's SQL Lens renders (label + substituted SQL + per-statement
+ * result). `generatedSql` is a mirror of that array, derived in `emit` alone.
  *
  * Snippet labs (CLI / schema.prisma / URL / Zod) have no translatable call:
  * the generator says so honestly (`ok: false`) and the outcome carries the
@@ -33,7 +42,8 @@ import {
   PRISMA_SEED_ROWS,
   PRISMA_TASK_SETUP_SQL,
 } from '../../content/prisma/phase6-tasks';
-import { generatePrismaSql, renderGeneratedSql, PRISMA_DEMO_VARIABLES, type SeedContext } from './prisma-sql-generator';
+import { generatePrismaSql, PRISMA_DEMO_VARIABLES, type SeedContext } from './prisma-sql-generator';
+import { runPrismaPlan, type PrismaExecutionStep } from './prisma-proxy-executor';
 import { parsePrismaSchema, type PrismaSchema } from './prisma-schema-parser';
 import { gradePrismaCode, gradePrismaExecution } from './prisma-execution';
 import { validatePrismaCode } from './prisma-validator';
@@ -133,13 +143,24 @@ export interface PrismaSubmitOptions {
   record?: boolean;
 }
 
-export interface PrismaSubmitOutcome {
+/**
+ * The graded outcome MINUS the mirror field: `emit` derives `generatedSql` in
+ * one place, so no return site can hand the lens a stale statement list.
+ */
+export interface PrismaSubmitResult {
   passed: boolean;
   feedback?: string;
   /** Translation failed — the SQL Lens reason (shown, never executed). */
   untranslatable?: boolean;
-  /** The exact generated statement(s), in order (the SQL Lens). */
-  generatedSql: string[];
+  /**
+   * Graded WITHOUT translating a client call (snippet lab: CLI /
+   * schema.prisma / URL / Zod). Static checks decided the verdict; `result`,
+   * when present, is the authored `solutionSql` reference run, and the SQL Lens
+   * says so — never invented SQL, never an honest miss turned into a failure.
+   */
+  readThrough?: boolean;
+  /** The Prisma SQL Lens: one entry per executed statement (label + SQL + result). */
+  steps: PrismaExecutionStep[];
   /** Engine result of the last executed statement (undefined when nothing ran). */
   result?: QueryExecutionResult;
   stage: GradingStage;
@@ -147,23 +168,34 @@ export interface PrismaSubmitOutcome {
   inconclusive?: boolean;
 }
 
+export interface PrismaSubmitOutcome extends PrismaSubmitResult {
+  /** Mirror of `steps.map((s) => s.sql)` — the statements that ran, in order. */
+  generatedSql: string[];
+}
+
 function emit(
   task: PracticeTask,
-  outcome: PrismaSubmitOutcome,
+  outcome: PrismaSubmitResult,
   options: { surface: GradingSurface; attempt: number; record: boolean },
 ): PrismaSubmitOutcome {
+  // `generatedSql` is DERIVED here and nowhere else (see `PrismaSubmitResult`),
+  // so the lens strings and the graded statements can never disagree.
+  const full: PrismaSubmitOutcome = {
+    ...outcome,
+    generatedSql: outcome.steps.map((s) => s.sql),
+  };
   if (options.record) {
     recordGradingEvent({
       taskId: task.id,
-      stage: outcome.stage,
+      stage: full.stage,
       surface: options.surface,
-      validatorPassed: outcome.stage === 'pass' || outcome.stage === 'final-state',
-      affectedRows: outcome.result?.affectedRows ?? outcome.result?.rowCount,
-      inconclusive: outcome.inconclusive,
+      validatorPassed: full.stage === 'pass' || full.stage === 'final-state',
+      affectedRows: full.result?.affectedRows ?? full.result?.rowCount,
+      inconclusive: full.inconclusive,
       attempt: options.attempt,
     });
   }
-  return outcome;
+  return full;
 }
 
 
@@ -176,14 +208,14 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   const { task, code, hooks, surface, attempt = 1, record = true } = options;
   const { execute, resetDatabase } = hooks;
   const rule = task.prisma?.validation as PrismaValidationRule | undefined;
-  const done = (outcome: PrismaSubmitOutcome): PrismaSubmitOutcome =>
+  const done = (outcome: PrismaSubmitResult): PrismaSubmitOutcome =>
     emit(task, outcome, { surface, attempt, record });
 
   if (!rule) {
     return done({
       passed: false,
       feedback: 'This task has no Prisma contract to grade against.',
-      generatedSql: [],
+      steps: [],
       stage: 'validation',
     });
   }
@@ -210,7 +242,8 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
       return done({
         passed: false,
         feedback: staticOnly.feedback,
-        generatedSql: [],
+        readThrough: true,
+        steps: [],
         stage: 'validation',
       });
     }
@@ -223,7 +256,8 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
     return done({
       passed: execVerdict.passed,
       feedback: execVerdict.feedback,
-      generatedSql: [],
+      readThrough: true,
+      steps: [],
       result: expected.success ? expected : undefined,
       stage: execVerdict.passed ? 'pass' : 'validation',
       inconclusive: expected.success ? undefined : true,
@@ -234,54 +268,53 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
     return done({
       passed: false,
       feedback: staticAfterGen.feedback,
-      generatedSql: gen.statements.map((s) => s.sql),
+      steps: [],
       stage: 'validation',
     });
   }
 
-  // Static passed — execute statement-by-statement on the session executor
-  // (stop at the first failure — Prisma aborts the same way). `gen.rowEffect`
-  // decides what several statements count as (see `GenerateResult`): the array
-  // form of `$transaction` grades the SUM of the row effects it ran, every
-  // other translation the LAST statement's own count.
-  const generatedSql: string[] = [];
-  let last: QueryExecutionResult | undefined;
+  // Static passed — execute the plan on the session executor through the ONE
+  // shared statement runner: `runPrismaPlan` substitutes params through
+  // `renderGeneratedSql` (caller binding → field demo binding → honest NULL),
+  // stops at the first failure the way Prisma aborts a call, and labels every
+  // step for the SQL Lens. `gen.rowEffect` decides what several statements count
+  // as (see `GenerateResult`): the array form of `$transaction` grades the SUM
+  // of the row effects it ran, every other translation the LAST statement's own
+  // count.
+  const run = runPrismaPlan(gen, { executeQuery: execute }, { schema, seed });
+  const steps = run.steps;
+  // The rendered statements, joined — the same strings the lens renders (one
+  // `renderGeneratedSql` path, so the SQL the learner sees is the SQL that ran).
+  const renderedSql = steps.map((s) => s.sql).join('\n');
+  const last = steps.length > 0 ? steps[steps.length - 1].result : undefined;
   let affectedTotal = 0;
   let affectedSeen = false;
-  for (const stmt of gen.statements) {
-    if (stmt.sql.trim().startsWith('--')) continue;
-    // One substitution path with the proxy executor — `renderGeneratedSql`
-    // documents the order (caller binding → field demo binding → honest NULL),
-    // so the lens and the grader can never drift.
-    const sql = renderGeneratedSql(stmt, seed);
-    generatedSql.push(sql);
-    last = execute(sql);
-    if (typeof last.affectedRows === 'number') {
-      affectedTotal += last.affectedRows;
+  for (const step of steps) {
+    if (typeof step.result.affectedRows === 'number') {
+      affectedTotal += step.result.affectedRows;
       affectedSeen = true;
     }
-    if (!last.success) break;
   }
   if (!last) {
     return done({
       passed: false,
       feedback: 'Nothing executable was generated from this code.',
       untranslatable: true,
-      generatedSql,
+      steps,
       stage: 'validation',
     });
   }
   if (!last.success) {
     // Engine error is learner-visible — unless the lab EXPECTS failure, in
     // which case the grader decides (missing P2002 mapping → fail, not pass).
-    const afterError = gradePrismaCode(code, rule, last, generatedSql.join('\n'));
+    const afterError = gradePrismaCode(code, rule, last, renderedSql);
     if (rule.expectFailure && afterError.passed) {
-      return done({ passed: true, generatedSql, result: last, stage: 'pass' });
+      return done({ passed: true, steps, result: last, stage: 'pass' });
     }
     return done({
       passed: false,
       feedback: last.error ?? 'The generated SQL failed to run.',
-      generatedSql,
+      steps,
       result: last,
       stage: 'engine-error',
     });
@@ -295,12 +328,61 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
     gen.rowEffect === 'sum' && affectedSeen && last
       ? { ...last, affectedRows: affectedTotal }
       : last;
-  const final = gradePrismaCode(code, rule, graded, generatedSql.join('\n'));
+  const final = gradePrismaCode(code, rule, graded, renderedSql);
   return done({
     passed: final.passed,
     feedback: final.feedback,
-    generatedSql,
+    steps,
     result: graded,
     stage: final.passed ? 'pass' : 'validation',
   });
+}
+
+/**
+ * Translate + execute WITHOUT grading — the editor's Run (preview) on the
+ * Prisma track.
+ *
+ * Same reset → seed → translate → execute steps as the graded path (shared
+ * `generatePrismaSql` + `runPrismaPlan`, so the SQL Lens can never disagree with
+ * what grading ran), minus the static checks and telemetry: a Run exists to show
+ * the learner the SQL their code produces — including the SQL of code that would
+ * NOT pass yet.
+ */
+export interface PrismaPreviewOptions {
+  task: PracticeTask;
+  /** The learner's TypeScript, exactly as typed (no empty-guard here). */
+  code: string;
+  hooks: PrismaSubmitHooks;
+}
+
+export interface PrismaPreviewOutcome {
+  /** Translation succeeded — `steps` is what ran (`success` per statement). */
+  ok: boolean;
+  /** `ok: false` → the honest translation reason (there is no SQL to show). */
+  reason?: string;
+  steps: PrismaExecutionStep[];
+  /** Engine result of the last executed statement (undefined when none ran). */
+  result?: QueryExecutionResult;
+}
+
+export function previewPrismaSubmission(options: PrismaPreviewOptions): PrismaPreviewOutcome {
+  const { task, code, hooks } = options;
+  const { execute, resetDatabase } = hooks;
+
+  // Preview is idempotent the same way submit is: a `fresh` task replays from
+  // seed, so repeated Runs never accumulate rows.
+  if (task.databaseLifecycle === 'fresh') resetDatabase?.();
+  execute(setupSqlForPrismaTask(task));
+
+  const schema = schemaForTask(task);
+  const seed = prismaSeedContext();
+  const gen = generatePrismaSql(code, { schema, seed });
+  if (!gen.ok) return { ok: false, reason: gen.reason, steps: [] };
+
+  const run = runPrismaPlan(gen, { executeQuery: execute }, { schema, seed });
+  return {
+    ok: true,
+    steps: run.steps,
+    result: run.steps.length > 0 ? run.steps[run.steps.length - 1].result : undefined,
+  };
 }

@@ -3,13 +3,21 @@ import { QueryExecutionResult } from '../../types/database';
 import { CheckCircle2, AlertCircle, Terminal, HelpCircle, Sparkles } from 'lucide-react';
 import { explainQuery } from '../../lib/sql-explain';
 import { formatExecutionTime } from '../../lib/format-execution-time';
+import type { SqlLensState } from '../../lib/track-submit';
 import { DataGrid } from './DataGrid';
+import { SqlLensPanel } from './SqlLensPanel';
 
 interface ResultsConsoleProps {
   result: QueryExecutionResult | null;
   evaluationState: 'idle' | 'wrong' | 'correct';
   validationFeedback: string | null;
   sqlQuery?: string;
+  /**
+   * Phase 7: the Prisma SQL Lens for this run (`SqlLensState` from
+   * `track-submit`). `undefined`/`null` on the SQL track — the lens UI is
+   * Prisma-only, so every SQL render stays exactly as it was.
+   */
+  sqlLens?: SqlLensState | null;
   className?: string;
 }
 
@@ -18,6 +26,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   evaluationState,
   validationFeedback,
   sqlQuery = '',
+  sqlLens = null,
   className = '',
 }) => {
   const [activeTab, setActiveTab] = useState<'results' | 'explain'>('results');
@@ -26,6 +35,12 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   // Honest timing (tracker item 11): real value only — never a fabricated
   // fallback number like the old '1.2'.
   const timeDisplay = result ? formatExecutionTime(result.executionTimeMs) : null;
+  // Phase 7: the Explain tab explains SQL. On a Prisma task the editor holds
+  // TypeScript, so explaining it would be nonsense — the lens statements are the
+  // real SQL of this run and are what the breakdown must read.
+  const explainTarget = sqlLens && sqlLens.steps.length > 0
+    ? sqlLens.steps.map((s) => s.sql).join('\n')
+    : sqlQuery;
 
   return (
     <div
@@ -110,6 +125,12 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
         </div>
       )}
 
+      {/* Phase 7: Prisma SQL Lens — label + substituted SQL + per-statement
+          result. Placed under the verdict so a failed run still shows the SQL
+          it produced (that is the lesson) and a passed snippet lab explains
+          why no SQL appears at all. */}
+      {sqlLens && <SqlLensPanel lens={sqlLens} />}
+
       {/* Main Console Content */}
       <div className="relative">
         <div className="min-h-[160px] bg-surface">
@@ -120,7 +141,7 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
                 <span>Query Execution Breakdown</span>
               </div>
               <p className="p-3 bg-surface-2 rounded-lg border border-border text-text leading-relaxed font-normal">
-                {explainQuery(sqlQuery).join(' ')}
+                {explainQuery(explainTarget).join(' ')}
               </p>
               <div className="text-[11px] text-text-dim">
                 Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-keyword">EXPLAIN</code> keyword shows the query execution plan and table scans.
@@ -130,7 +151,11 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
             /* Empty / Initial State (design `.results-empty`) */
             <div className="flex flex-col items-center justify-center py-14 text-center space-y-3">
               <div className="font-mono text-[26px] leading-none text-text-faint">&gt;_</div>
-              <p className="text-[12.5px] text-text-dim max-w-[320px]">Run your query to preview rows and inspect execution output.</p>
+              <p className="text-[12.5px] text-text-dim max-w-[320px]">
+                {sqlLens
+                  ? 'Run your code to see the SQL Prisma generates and the rows it returns.'
+                  : 'Run your query to preview rows and inspect execution output.'}
+              </p>
             </div>
           ) : result.error ? (
             /* Error Display */
