@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 3 — Models, Fields, Enums & Constraints. */
 export const Prisma_03_MODULE: ModuleData = {
@@ -27,14 +27,47 @@ export const Prisma_03_MODULE: ModuleData = {
       order: 1,
       title: 'Scalar Types, Optionality & Primary Keys',
       shortDescription: 'Int / String / DateTime, the `?` modifier, and @id @default.',
-      theory: prismaTheory(
-        'Every Prisma field maps 1:1 onto a column: the scalar type picks the column type, `?` makes the column nullable, and `@id @default(...)` tells the database how to key each row.',
-        'Type + optionality + @id @default is the whole column contract.',
-        'SELECT id, name, email\nFROM users\nWHERE id = 1;',
-        'model User {\n  id        Int      @id @default(autoincrement())\n  name      String\n  email     String   @unique\n  createdAt DateTime @default(now())\n}',
-        'prisma',
-        'One model, four columns: an auto-increment key, two required strings and a defaulted timestamp.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'Every Prisma field maps 1:1 onto a column: the scalar type picks the column type, `?` makes the column nullable, and `@id @default(...)` tells the database how to key each row.',
+        takeaway: 'Type + optionality + @id @default is the whole column contract.',
+        sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
+        heroCode: 'model User {\n  id        Int      @id @default(autoincrement())\n  name      String\n  email     String   @unique\n  createdAt DateTime @default(now())\n}',
+        heroLang: 'prisma',
+        heroWhy: 'One model, four columns: an auto-increment key, two required strings and a defaulted timestamp.',
+        mentalModel: '**One line per column, one contract for both sides.** A field is the column: `name String` is required text, `confirmedAt DateTime?` is nullable, `@id @default(...)` decides how rows are keyed. The client and the database read this same contract — there is nowhere else to declare it.',
+        explanation: [
+          'The scalar type picks the column type, `?` makes the column nullable, and `@id @default(...)` decides how each row is identified.',
+          'Reads and writes are type-checked against the same model, so a renamed field cannot silently desync from the database.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'scalar types + `?` declare the columns',
+            codeSnippet: 'model User {\n  id          Int       @id @default(autoincrement())\n  email       String    @unique\n  confirmedAt DateTime?\n}',
+            explanation: 'Everything without `?` is `NOT NULL`; the type picks the column type — `Int`→INTEGER, `String`→TEXT, `DateTime`→TIMESTAMP.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'the call reads the declared column set',
+            codeSnippet: 'const user = await prisma.user.findUnique({\n  where: { id },\n  select: { id: true, name: true, email: true },\n});',
+            explanation: '`select` mirrors the model fields — the compiler types `user` from exactly this list.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the engine sends the declared projection',
+            codeSnippet: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
+            explanation: 'One parameterized SELECT over the column set you declared — the Lens shows it after every run.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the result is typed, never `any`',
+            codeSnippet: '{ id: number; name: string; email: string } | null',
+            explanation: 'The inferred type comes straight from `select` — rename a field in the model and the compiler flags every use.',
+            visualData: { type: 'type_preview', title: 'Inferred type', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma03-c1-t1',
@@ -77,14 +110,47 @@ export const Prisma_03_MODULE: ModuleData = {
       order: 2,
       title: 'Enums & Multi-Field Constraints',
       shortDescription: 'A closed `enum Role` plus @@unique / @@index at model level.',
-      theory: prismaTheory(
-        'Enums replace magic strings with a closed set the database enforces, while `@@unique` and `@@index` move uniqueness and lookup guarantees from application code to the table itself.',
-        'Enums for closed sets; @@unique and @@index for table-level guarantees.',
-        "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
-        'enum Role {\n  ADMIN\n  MEMBER\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  email String\n  role  Role   @default(MEMBER)\n\n  @@unique([name, email])\n  @@index([email])\n}',
-        'prisma',
-        'The enum, the composite unique key and the index all live in the model block.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'Enums replace magic strings with a closed set the database enforces, while `@@unique` and `@@index` move uniqueness and lookup guarantees from application code to the table itself.',
+        takeaway: 'Enums for closed sets; @@unique and @@index for table-level guarantees.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+        heroCode: 'enum Role {\n  ADMIN\n  MEMBER\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  email String\n  role  Role   @default(MEMBER)\n\n  @@unique([name, email])\n  @@index([email])\n}',
+        heroLang: 'prisma',
+        heroWhy: 'The enum, the composite unique key and the index all live in the model block.',
+        mentalModel: '**Closed values, table-level promises.** An enum makes an invalid value impossible to write; `@@unique` and `@@index` make duplicate rows and slow lookups impossible to ship. All three live in the model block — the database enforces what the schema declares.',
+        explanation: [
+          'An `enum` is a closed set: the database rejects anything outside it, so no validation code has to.',
+          '`@@unique` and `@@index` are table-level — the database, not your application, enforces the guarantee.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the enum closes the set of allowed values',
+            codeSnippet: 'enum Role {\n  ADMIN\n  MEMBER\n}',
+            explanation: '`role Role` accepts exactly these two values — a free-text `role String` could hold typos the compiler never sees.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'model-level attributes add the table guarantees',
+            codeSnippet: '@@unique([name, email])\n@@index([email])',
+            explanation: '`@@unique` blocks duplicate name+email pairs; `@@index` makes the lookups your queries actually run cheap.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the lookup rides the index',
+            codeSnippet: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+            explanation: 'With `@@index([email])` this WHERE becomes a direct seek instead of a full table scan.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the selected row stays narrow',
+            codeSnippet: '{ id: number; email: string } | null',
+            explanation: '`select` keeps the type narrow — the enum field only appears in the result when you ask for it.',
+            visualData: { type: 'type_preview', title: 'Inferred type', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma03-c2-t1',
