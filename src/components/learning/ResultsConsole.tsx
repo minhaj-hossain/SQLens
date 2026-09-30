@@ -3,9 +3,10 @@ import { QueryExecutionResult } from '../../types/database';
 import { CheckCircle2, AlertCircle, Terminal, HelpCircle, Sparkles } from 'lucide-react';
 import { explainQuery } from '../../lib/sql-explain';
 import { formatExecutionTime } from '../../lib/format-execution-time';
-import type { SqlLensState } from '../../lib/track-submit';
+import type { ConsoleDisplayMode, SqlLensState } from '../../lib/track-submit';
 import { DataGrid } from './DataGrid';
 import { SqlLensPanel } from './SqlLensPanel';
+import { TerminalOutput } from './TerminalOutput';
 
 interface ResultsConsoleProps {
   result: QueryExecutionResult | null;
@@ -18,6 +19,14 @@ interface ResultsConsoleProps {
    * Prisma-only, so every SQL render stays exactly as it was.
    */
   sqlLens?: SqlLensState | null;
+  /**
+   * P1.2 — console rendering hint from the submit outcome. `'terminal'` swaps
+   * the table grid for the simulated CLI card (snippet labs); `undefined`
+   * keeps the SQL-track behavior byte-identical.
+   */
+  displayMode?: ConsoleDisplayMode;
+  /** P1.2 — simulated terminal text rendered when `displayMode === 'terminal'`. */
+  terminalOutput?: string;
   className?: string;
 }
 
@@ -27,6 +36,8 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   validationFeedback,
   sqlQuery = '',
   sqlLens = null,
+  displayMode,
+  terminalOutput,
   className = '',
 }) => {
   const [activeTab, setActiveTab] = useState<'results' | 'explain'>('results');
@@ -146,6 +157,11 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               <div className="text-[11px] text-text-dim">
                 Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-keyword">EXPLAIN</code> keyword shows the query execution plan and table scans.
               </div>
+            </div>
+          ) : displayMode === 'terminal' && terminalOutput ? (
+            /* P1.2 — snippet lab: simulated CLI output instead of reference rows */
+            <div className="p-3 sm:p-4">
+              <TerminalOutput output={terminalOutput} />
             </div>
           ) : !result ? (
             /* Empty / Initial State (design `.results-empty`) */
