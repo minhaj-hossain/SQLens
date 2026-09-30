@@ -14,7 +14,7 @@
 | :--- | :--- | :---: | :---: | :---: |
 | **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[x]` | 806 / 806 | 2026-09-30 (Task 0.3 — Phase 0 complete) |
 | **Phase 1** | Honest Snippet Labs & View Polymorphism | `[x]` | 815 / 815 | 2026-09-30 (Task 1.3 — Phase 1 complete) |
-| **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[/]` | 818 / 818 | 2026-09-30 (Task 2.1) |
+| **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[x]` | 823 / 823 | 2026-10-01 (Task 2.2 — Phase 2 complete) |
 | **Phase 3** | Homepage Redesign & Conversion Island | `[ ]` | - | - |
 | **Phase 4** | Generic Multi-Track Scaling Architecture | `[ ]` | - | - |
 
@@ -74,12 +74,14 @@
   - [x] *Automated verification:* `tsc --noEmit` clean · phase6 13→16 · full suite 818/818 · `verify:curriculum` pass · `taught-before-tested` 22/22. *(Manual dev-server recommended: `/prisma` Day 2 → hero + steps render, no placeholder; Day 5 → hero, no steps section; `/sql` lesson unchanged.)*
   - *Gate Command:* `npm run verify:curriculum` + `npx vitest run tests/content/taught-before-tested.test.ts` ✅
   *(Flagged follow-up: extend `richPrismaTheory` to the plan's remaining named modules — prisma-04/07/08/10, then 05/06/09/11/13/14; `liveDemoCode` stays unrendered.)*
-- [ ] **Task 2.2: Add Missing Production Concepts**
-  - [ ] Prisma Client Extensions (`prisma.$extends`).
-  - [ ] Raw SQL escape hatch (`$queryRaw`, `$executeRaw`).
-  - [ ] Aggregations (`groupBy`, `_avg`, `_count`).
-  - [ ] Cursor-based pagination vs offset pagination.
-  - *Gate Command:* `npx vitest run tests/tracks/phase8-prisma-audit.test.ts`
+- [x] **Task 2.2: Add Missing Production Concepts**
+  - [x] **Client Extensions (`$extends`)** — new concept 3 on `prisma-13` (`client-extensions`); lab bans the deprecated `$use` and adds a `query`/`$allOperations` hook + a `model` method.
+  - [x] **Raw SQL escape hatch** — new concept 3 on `prisma-14` (`raw-sql-escape-hatch`): `$queryRaw` tagged template + `Prisma.sql` composition; `$queryRawUnsafe` banned. *(Plan correction: `$use` did not exist and was not "replaced" — prisma-13 teaches error middleware, so `$extends` is an addition.)*
+  - [x] **Aggregations (`groupBy` + `_count`)** — new concept 3 on `prisma-08` (`aggregating-grouping`): `groupBy({ by: ['name'], _count: true })` + ordering on the aggregate. *(Plan correction: no `categories` table exists in the seed universe → grouped on a real `users` column.)*
+  - [x] **Cursor vs offset** — *(already shipped)*: the contrast is now **taught**, not just two labs — `prisma-08`'s pagination concept migrated to `richPrismaTheory` with a mental model + 4 steps (LIMIT/OFFSET vs keyed WHERE). No new labs needed.
+  - [x] All three new concepts authored via `richPrismaTheory` (hero + mental model + 4 steps), honouring the 2.1 step contract; aggregation/extension/raw labs are honest read-through labs (engine-derived, never a hardcoded flag).
+  - [x] *Automated verification:* `tsc --noEmit` clean · phase8 gate (plan) green · phase6 16→21 · full suite 818→823. *(Manual dev-server recommended: `/prisma` Day 8 → Aggregating & Grouping; Day 13 → Client Extensions; Day 14 → Raw SQL Escape Hatch.)*
+  - *Gate Command:* `npx vitest run tests/tracks/phase8-prisma-audit.test.ts` ✅
 
 ---
 
@@ -115,3 +117,4 @@
 | 2026-09-30 22:11 | 1.2 | Polymorphic console output: `ConsoleDisplayMode` + `terminalOutput` on the submit outcome; `prismaCliCommandIn` / `isPrismaSchemaLab` / `simulatePrismaCliOutput` / `snippetLabDisplay` helpers; CLI & schema.prisma labs drop the authored reference rows (static fails stay plain); new `TerminalOutput` card + ResultsConsole branch + PracticeTaskView wiring; tests 810→815 | `8c90458` · `cf8311d` · `c752c58` · `b789507` (4 commits) · `tsc --noEmit` clean · phase5 13/13 · phase7 15/15 · full suite 815/815 |
 | 2026-09-30 22:24 | 1.3 | Scaffold honesty: prisma-02 crossword clues → engineering prompts + honest hint, 3 "Same proof" scaffolds → engine-validation comment; prisma-03 enum scaffold comment fixed; `phase6-tasks.ts` needed no change (plan file-list correction); content-only — no tests added | `70591bd` · `5b9dda4` (2 commits) · `tsc --noEmit` clean · phase6 13/13 · full suite 815/815 |
 | 2026-09-30 23:53 | 2.1 | Rich Prisma theory: `richPrismaTheory` factory (mentalModel + ≥3 genuine steps; placeholder step deleted globally), `PrismaTheoryContent.mentalModel` field, new `PrismaTheoryBlock` renderer (hero + steps were previously dead content), Days 2/3/12 rewritten (6 concepts × 4 steps w/ sql_lens + type_preview); invariant tests added (phase6 13→16); tests 815→818 | `57b35aa` · `6032879` · `b3a9411` · `204be75` · `2727a14` · `0832b68` (6 commits) · `tsc --noEmit` clean · phase6 16/16 · full suite 818/818 · `verify:curriculum` pass |
+| 2026-10-01 00:19 | 2.2 | Production concepts: `$extends` client extensions (prisma-13 c3, bans `$use`), `$queryRaw`/`Prisma.sql` escape hatch (prisma-14 c3), `groupBy`/`_count` aggregation (prisma-08 c3), and rich cursor-vs-offset pagination theory (prisma-08 c2) — all via `richPrismaTheory`; invariant tests added (phase6 16→21); tests 818→823 | `ca830a9` · `1e64bc2` · `c6b25f7` · `1d57fa5` (4 commits) · `tsc --noEmit` clean · phase8 green · full suite 823/823 |
