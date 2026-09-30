@@ -14,7 +14,7 @@
 | :--- | :--- | :---: | :---: | :---: |
 | **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[x]` | 806 / 806 | 2026-09-30 (Task 0.3 — Phase 0 complete) |
 | **Phase 1** | Honest Snippet Labs & View Polymorphism | `[x]` | 815 / 815 | 2026-09-30 (Task 1.3 — Phase 1 complete) |
-| **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[ ]` | - | - |
+| **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[/]` | 818 / 818 | 2026-09-30 (Task 2.1) |
 | **Phase 3** | Homepage Redesign & Conversion Island | `[ ]` | - | - |
 | **Phase 4** | Generic Multi-Track Scaling Architecture | `[ ]` | - | - |
 
@@ -66,11 +66,14 @@
 ---
 
 ### Phase 2: Deepening Prisma Pedagogy & Concept Coverage (P2)
-- [ ] **Task 2.1: Refactor `prismaTheory` & Author Rich Concept Steps**
-  - [ ] Deprecate the single dummy step in `prismaTheory`.
-  - [ ] Author 3–4 step breakdowns for Day 2 (Setup), Day 3 (Models & Enums), and Day 12 (Transactions).
-  - [ ] Ensure every concept includes AST breakdown, generated SQL, and TypeScript return type.
-  - *Gate Command:* `npm run verify:curriculum`
+- [x] **Task 2.1: Refactor `prismaTheory` & Author Rich Concept Steps**
+  - [x] Placeholder step deprecated: `prismaTheory` no longer auto-fills `stepBreakdowns` (`FROM users exists` is extinct); both factories share `basePrismaTheory`, and new `richPrismaTheory({ … })` takes `mentalModel` + ≥3 genuine steps.
+  - [x] `PrismaTheoryContent` gained `mentalModel?: string`; steps ride the already-typed `prisma.stepBreakdowns` (`PrismaStepBreakdown` with `visualData: sql_lens | type_preview`).
+  - [x] **Renderer added (scope note):** `theory.prisma.*` had ZERO consumers — authored `targetHero`/steps were dead content, while the dummy SQL step was what learners saw. New `PrismaTheoryBlock.tsx` (`PrismaTheoryHero` + `PrismaTheorySteps`) wired into `ConceptLessonView`, guarded on `theory.prisma` (SQL track byte-identical).
+  - [x] Day 2 (2 concepts), Day 3 (2), Day 12 (2) rewritten via `richPrismaTheory`: bespoke mental models + 4 steps each (call → SQL → type) with real `sql_lens`/`type_preview` snippets.
+  - [x] *Automated verification:* `tsc --noEmit` clean · phase6 13→16 · full suite 818/818 · `verify:curriculum` pass · `taught-before-tested` 22/22. *(Manual dev-server recommended: `/prisma` Day 2 → hero + steps render, no placeholder; Day 5 → hero, no steps section; `/sql` lesson unchanged.)*
+  - *Gate Command:* `npm run verify:curriculum` + `npx vitest run tests/content/taught-before-tested.test.ts` ✅
+  *(Flagged follow-up: extend `richPrismaTheory` to the plan's remaining named modules — prisma-04/07/08/10, then 05/06/09/11/13/14; `liveDemoCode` stays unrendered.)*
 - [ ] **Task 2.2: Add Missing Production Concepts**
   - [ ] Prisma Client Extensions (`prisma.$extends`).
   - [ ] Raw SQL escape hatch (`$queryRaw`, `$executeRaw`).
@@ -111,3 +114,4 @@
 | 2026-09-30 21:34 | 1.1 | Local variable bindings: `extractLocalVariableBindings()` (const/let/var literals — numbers incl. negative, quoted strings, booleans) merged into the translate-time seed with locals-first precedence, threaded through all dispatch paths; 4 phase4 tests added (9→13) | `a5796a3` · `724af27` (2 commits) · `tsc --noEmit` clean · phase4 13/13 · full suite 810/810 |
 | 2026-09-30 22:11 | 1.2 | Polymorphic console output: `ConsoleDisplayMode` + `terminalOutput` on the submit outcome; `prismaCliCommandIn` / `isPrismaSchemaLab` / `simulatePrismaCliOutput` / `snippetLabDisplay` helpers; CLI & schema.prisma labs drop the authored reference rows (static fails stay plain); new `TerminalOutput` card + ResultsConsole branch + PracticeTaskView wiring; tests 810→815 | `8c90458` · `cf8311d` · `c752c58` · `b789507` (4 commits) · `tsc --noEmit` clean · phase5 13/13 · phase7 15/15 · full suite 815/815 |
 | 2026-09-30 22:24 | 1.3 | Scaffold honesty: prisma-02 crossword clues → engineering prompts + honest hint, 3 "Same proof" scaffolds → engine-validation comment; prisma-03 enum scaffold comment fixed; `phase6-tasks.ts` needed no change (plan file-list correction); content-only — no tests added | `70591bd` · `5b9dda4` (2 commits) · `tsc --noEmit` clean · phase6 13/13 · full suite 815/815 |
+| 2026-09-30 23:53 | 2.1 | Rich Prisma theory: `richPrismaTheory` factory (mentalModel + ≥3 genuine steps; placeholder step deleted globally), `PrismaTheoryContent.mentalModel` field, new `PrismaTheoryBlock` renderer (hero + steps were previously dead content), Days 2/3/12 rewritten (6 concepts × 4 steps w/ sql_lens + type_preview); invariant tests added (phase6 13→16); tests 815→818 | `57b35aa` · `6032879` · `b3a9411` · `204be75` · `2727a14` · `0832b68` (6 commits) · `tsc --noEmit` clean · phase6 16/16 · full suite 818/818 · `verify:curriculum` pass |
