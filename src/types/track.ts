@@ -12,17 +12,34 @@
  *   - curriculum arrays
  */
 
-export type TrackId = 'sql' | 'prisma';
+/**
+ * Every track id the build ships — the ONE source of truth.
+ *
+ * Phase 4 (multi-track generalization): `BuiltinTrackId` is derived from this
+ * tuple instead of a hand-written union, so adding a track starts here and
+ * `tsc` then fails until every exhaustive map (`TRACK_META`,
+ * `TRACK_REGISTRY`) covers it. The tuple is a literal type, so
+ * `TRACK_IDS[0]` is `'sql'` — not a widened `string`.
+ */
+export const TRACK_IDS = ['sql', 'prisma'] as const;
 
-export const TRACK_IDS: readonly TrackId[] = ['sql', 'prisma'] as const;
+/** Id of a track the build ships (`'sql' | 'prisma'`). */
+export type BuiltinTrackId = (typeof TRACK_IDS)[number];
+
+/**
+ * Public track identity — an alias of `BuiltinTrackId`, kept so the ~20
+ * existing `TrackId` import sites never had to change when the union became
+ * derived.
+ */
+export type TrackId = BuiltinTrackId;
 
 export function isTrackId(value: unknown): value is TrackId {
-  return value === 'sql' || value === 'prisma';
+  return typeof value === 'string' && (TRACK_IDS as readonly string[]).includes(value);
 }
 
 /** Display metadata for the track selector (Phase 2 `/` page). */
 export interface TrackMeta {
-  id: TrackId;
+  id: BuiltinTrackId;
   /** Short label, e.g. "SQL" / "Prisma". */
   label: string;
   /** Full title, e.g. "SQLens — 57 Days of Hands-On SQL". */
