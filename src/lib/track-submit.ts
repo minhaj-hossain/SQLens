@@ -28,6 +28,7 @@ import {
   previewPrismaSubmission,
   prismaSchemaSourceForTask,
   runAndGradePrismaSubmission,
+  type ConsoleDisplayMode,
   type PrismaSubmitOutcome,
 } from './prisma-engine/prisma-submit-pipeline';
 import {
@@ -41,6 +42,7 @@ import { splitTaskScaffold } from './task-scaffold';
 export type { SubmitHooks } from './sql-engine/submit-pipeline';
 export type { PrismaExecutionStep } from './prisma-engine/prisma-proxy-executor';
 export type { InferredField, InferredResultType } from './prisma-engine/prisma-type-inference';
+export type { ConsoleDisplayMode } from './prisma-engine/prisma-submit-pipeline';
 export { isPrismaTask } from './prisma-engine/prisma-submit-pipeline';
 
 /** Prisma SQL Lens payload — what `SqlLensPanel` renders. */
@@ -86,6 +88,10 @@ export interface TrackSubmitOutcome {
   reset?: boolean;
   /** Prisma track only: the SQL Lens (undefined on the SQL track). */
   lens?: SqlLensState;
+  /** P1.2 — console rendering hint (undefined → the table grid). */
+  displayMode?: ConsoleDisplayMode;
+  /** P1.2 — simulated terminal text when `displayMode === 'terminal'`. */
+  terminalOutput?: string;
 }
 
 /**
@@ -145,6 +151,8 @@ export function submitForTask(options: TrackSubmitOptions): TrackSubmitOutcome {
     feedback: outcome.feedback,
     stage: outcome.stage,
     result: outcome.result,
+    displayMode: outcome.displayMode,
+    terminalOutput: outcome.terminalOutput,
     lens: submitLensState(outcome),
   };
 }

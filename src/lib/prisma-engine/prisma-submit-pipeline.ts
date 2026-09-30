@@ -179,6 +179,14 @@ export interface PrismaSubmitResult {
    * says so — never invented SQL, never an honest miss turned into a failure.
    */
   readThrough?: boolean;
+  /**
+   * P1.2 — console rendering hint for read-through labs (undefined → the
+   * table grid). CLI/schema.prisma labs render a simulated terminal card
+   * instead of the authored reference rows.
+   */
+  displayMode?: ConsoleDisplayMode;
+  /** P1.2 — simulated terminal text when `displayMode === 'terminal'`. */
+  terminalOutput?: string;
   /** The Prisma SQL Lens: one entry per executed statement (label + SQL + result). */
   steps: PrismaExecutionStep[];
   /** Engine result of the last executed statement (undefined when nothing ran). */
@@ -191,6 +199,110 @@ export interface PrismaSubmitResult {
 export interface PrismaSubmitOutcome extends PrismaSubmitResult {
   /** Mirror of `steps.map((s) => s.sql)` — the statements that ran, in order. */
   generatedSql: string[];
+}
+
+/** P1.2 — what the results console renders for an outcome (default: the table). */
+export type ConsoleDisplayMode = 'table' | 'terminal' | 'schema_diff' | 'type_preview';
+
+/** First `npx prisma …` command in `code`, flags included (`npx prisma migrate dev --name init`). */
+export function prismaCliCommandIn(code: string): string | null {
+  const m = /\bnpx\s+prisma(?:\s+[^\s"'`;]+)*/.exec(code);
+  return m ? m[0].trim() : null;
+}
+
+/** `true` for a `schema.prisma` lab (model/enum/datasource/generator block, no client call). */
+export function isPrismaSchemaLab(code: string): boolean {
+  return /\b(?:model|enum|datasource|generator)\s+[A-Za-z_][A-Za-z0-9_]*\s*\{/.test(code);
+}
+
+/**
+ * Simulated CLI output for a snippet lab — deterministic, echoing the learner's
+ * own command. The browser has no shell; this faithfully reproduces what the
+ * real Prisma CLI prints for the taught commands, and the console card labels
+ * it as simulated (never a claim that a process ran).
+ */
+export function simulatePrismaCliOutput(command: string): string {
+  const sub = command.replace(/^npx\s+prisma\s*/, '');
+  if (sub.startsWith('generate')) {
+    return [
+      `$ ${command}`,
+      'Environment variables loaded from .env',
+      'Prisma schema loaded from prisma/schema.prisma',
+      '✔ Generated Prisma Client (v7.0.0) in 34ms',
+    ].join('\n');
+  }
+  if (sub.startsWith('migrate dev')) {
+    const name = /--name\s+([^\s-][^\s]*)/.exec(sub)?.[1] ?? 'init';
+    return [
+      `$ ${command}`,
+      'Prisma schema loaded from prisma/schema.prisma',
+      'Datasource "db": PostgreSQL database "app" at "localhost:5432"',
+      '',
+      `Applying migration \`20260930000000_${name}\``,
+      '',
+      '✔ Your database is now in sync with your schema.',
+      'Done in 1.24s',
+    ].join('\n');
+  }
+  if (sub.startsWith('migrate deploy')) {
+    return [
+      `$ ${command}`,
+      '1 migration found in prisma/migrations',
+      '',
+      'Applying migration `20260930000000_init`',
+      '',
+      '✔ All migrations have been successfully applied.',
+    ].join('\n');
+  }
+  if (sub.startsWith('db push')) {
+    return [
+      `$ ${command}`,
+      'Prisma schema loaded from prisma/schema.prisma',
+      '✔ Your database is now in sync with your Prisma schema. Done in 62ms',
+    ].join('\n');
+  }
+  if (sub.startsWith('migrate reset')) {
+    return [
+      `$ ${command}`,
+      '✔ Your database has been reset.',
+      '',
+      'Running seed command `tsx prisma/seed.ts` ...',
+      '✔ The seed command has been executed.',
+    ].join('\n');
+  }
+  if (sub.startsWith('db seed')) {
+    return [
+      `$ ${command}`,
+      'Running seed command `tsx prisma/seed.ts` ...',
+      '✔ The seed command has been executed.',
+    ].join('\n');
+  }
+  return [`$ ${command}`, '✔ Done.'].join('\n');
+}
+
+/**
+ * P1.2 — how a snippet lab should render in the results console.
+ *
+ * CLI labs (`npx prisma generate`) get simulated terminal output; schema.prisma
+ * labs get a comment-style notice (no fake `prisma validate` success claim —
+ * the static rules decided the verdict). URL/Zod/other labs return `null` and
+ * keep the read-through dataset contract untouched.
+ */
+export function snippetLabDisplay(
+  code: string,
+): { displayMode: ConsoleDisplayMode; terminalOutput: string } | null {
+  const command = prismaCliCommandIn(code);
+  if (command) return { displayMode: 'terminal', terminalOutput: simulatePrismaCliOutput(command) };
+  if (isPrismaSchemaLab(code)) {
+    return {
+      displayMode: 'terminal',
+      terminalOutput: [
+        '# schema.prisma lab — no SQL is generated for a schema edit.',
+        '# The static rules decided the verdict; the schema tab shows the full schema.',
+      ].join('\n'),
+    };
+  }
+  return null;
 }
 
 function emit(
@@ -252,6 +364,10 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   const seed = prismaSeedContext();
   const gen = generatePrismaSql(code, { schema, seed });
   if (!gen.ok) {
+    // P1.2 — how this snippet lab should render (CLI terminal / schema notice,
+    // else the read-through dataset contract). Purely presentational: the
+    // grading below is unchanged.
+    const display = snippetLabDisplay(code);
     // No client call to translate (snippet lab, middleware, lifecycle
     // scaffolding): fall back to the read-through contract — static checks
     // first, then the execution-only rules against the authored `solutionSql`
@@ -278,7 +394,11 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
       feedback: execVerdict.feedback,
       readThrough: true,
       steps: [],
-      result: expected.success ? expected : undefined,
+      // P1.2 — a CLI/schema lab shows the terminal card instead of the
+      // authored reference rows (they are the dataset, not the learner's run).
+      result: display ? undefined : expected.success ? expected : undefined,
+      displayMode: display?.displayMode,
+      terminalOutput: display?.terminalOutput,
       stage: execVerdict.passed ? 'pass' : 'validation',
       inconclusive: expected.success ? undefined : true,
     });
