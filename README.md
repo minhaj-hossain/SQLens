@@ -2,10 +2,13 @@
 
 # 🎓 SQLens
 
-### Master SQL — 38 Days, One Browser Tab
+### Two Tracks, One Browser Tab — 57 Days of SQL + 14 Days of Prisma
 
-**An interactive, self-contained SQL learning platform with a custom-built in-browser SQL engine.**
+**An interactive, self-contained learning platform with a custom-built in-browser SQL engine.**
 Write real queries. Get real results. No database server required.
+
+Learn **SQL** (57 modules) and **Prisma ORM** (14 days) through the same session engine: Prisma
+Client code is translated into real SQL and executed against the same in-browser database.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
@@ -22,9 +25,11 @@ Write real queries. Get real results. No database server required.
 ## 📖 Table of Contents
 
 - [What is SQLens?](#-what-is-sqlens)
+- [Tracks at a Glance](#-tracks-at-a-glance)
 - [Feature Highlights](#-feature-highlights)
 - [Architecture Overview](#️-architecture-overview)
 - [The SQL Engine](#-the-sql-engine)
+- [The Prisma Track](#-the-prisma-track)
 - [User Modes — Guest, Member, Admin](#-user-modes--guest-member-admin)
 - [Progress Synchronization](#-progress-synchronization)
 - [Module Unlock System](#-module-unlock-system)
@@ -44,9 +49,11 @@ Write real queries. Get real results. No database server required.
 
 ## 🔍 What is SQLens?
 
-SQLens is a **complete 38-day SQL curriculum** wrapped around a custom SQL engine
-that runs entirely in your browser — parser, executor, and validator are all written
-from scratch in TypeScript, with zero external query libraries.
+SQLens is **two complete curricula** — a **57-module SQL track** and a **14-day Prisma
+ORM track** — wrapped around a custom SQL engine that runs entirely in your browser:
+parser, executor, and validator are all written from scratch in TypeScript, with zero
+external query libraries. The Prisma track translates Prisma Client code into SQL and
+executes it on that very same engine.
 
 ```
  ┌─────────────────────────────────────────────────────────────────┐
@@ -59,6 +66,21 @@ from scratch in TypeScript, with zero external query libraries.
  │   (local + cloud)      parse → execute → validate               │
  └─────────────────────────────────────────────────────────────────┘
 ```
+
+## 🧭 Tracks at a Glance
+
+| | 🗄️ **SQL** | 🧬 **Prisma** |
+|---|---|---|
+| Route | `/sql` | `/prisma` |
+| Curriculum | 57 modules · 161 concepts · 424 tasks · 226 MCQs | 14 days · 4 milestones · 28 concepts · 70 tasks · 28 MCQs |
+| Task kinds | Executable queries graded against real results | 34 **executable** Prisma tasks · 36 **read-through** snippet labs |
+| Engine | SQL parser → executor → validator | Prisma Client AST proxy → SQL generator → *the same* SQL engine |
+| Grading entry point | `submitForTask` | `submitForTask` (one router, both tracks) |
+| Progress | `sql_mastery_progress_v1` (+ per-user keys) | `prismalens_progress_v1` (+ per-user keys) |
+
+Tracks are namespaced end to end: routes, module ids (`day-NN` vs `prisma-NN`), roadmap
+milestones, unlock state, and storage keys never overlap, so progress in one track can
+never disturb the other.
 
 Every day of the course follows the same loop:
 
@@ -209,6 +231,48 @@ Coverage highlights (all covered by tests):
 | Mutation | INSERT, UPDATE, DELETE (FK-aware) |
 | Definition | CREATE TABLE, ALTER TABLE ADD COLUMN, DROP TABLE IF EXISTS |
 | Introspection | EXPLAIN (mock plan output) |
+
+## 🧬 The Prisma Track
+
+The second track teaches **Prisma ORM (v7)**: 14 days across 4 milestones
+(`/prisma` roadmap → `/prisma/learn/<dayId>/theory|practice|challenge`). It runs on
+the *same* session SQL engine — Prisma code is graded by translating it to real SQL
+and looking at what the database actually did.
+
+```
+   Prisma Client TypeScript                    SQL Lens (what Prisma really sends)
+   prisma.user.update({ … })   ─────▶   UPDATE users SET … WHERE email = ?
+             │                                        ▲
+             ▼                                        │
+   ┌──────────────────┐  translate  ┌─────────────────┴──┐  execute  ┌─────────────┐
+   │ Prisma Client    │ ──────────▶ │ prisma-sql-        │ ────────▶ │ in-memory   │
+   │ AST proxy        │             │ generator          │           │ SQL engine  │
+   └────────┬─────────┘             └────────────────────┘           └──────┬──────┘
+            │ structural rules (required / forbidden constructs)            │
+            └────────────────────────┬───────────────────────────────────────┘
+                                     ▼
+                      verdict + per-statement results (rows / errors)
+```
+
+**Two honest task kinds.** A task is *executable* when its solution really is a
+`prisma.<model>.<method>(…)` client call the generator can translate — those are
+graded from the executed result. Everything the browser cannot truthfully run
+(CLI commands, `schema.prisma` edits, connection URLs, Zod schemas, lifecycle
+scaffolding) is a *read-through snippet lab*: graded statically plus against the
+authored reference dataset, with the SQL Lens saying so instead of inventing SQL.
+
+**How a submit is graded** (`submitForTask`, the same entry point the SQL track uses):
+
+1. `fresh` lifecycle reset, then seed the task universe (`setupSql`, else the shared `users` seed).
+2. Translate the learner's TypeScript → parameterized SQL.
+3. Execute through the one shared runner (`runPrismaPlan`) — the SQL Lens renders that exact output.
+4. Static checks (`validatePrismaCode`) first, then execution rules (`gradePrismaExecution`).
+5. One best-effort telemetry event (never fatal, never on audit runs).
+
+| Guardrail | Command |
+|---|---|
+| All 70 Prisma tasks through the real submit router — solution passes, starter fails, lens honesty, `fresh` retry idempotence, telemetry off | `npm run audit:prisma-grading-pipeline` |
+| Every grading gate, SQL + Prisma | `npm run audit:all` |
 
 ## 👤 User Modes — Guest, Member, Admin
 
@@ -387,7 +451,8 @@ sql_learning/
 │   │   │   ├── layout.tsx          # AppProviders + UiChrome + AppChrome
 │   │   │   ├── page.tsx            # `/` roadmap + legacy redirects
 │   │   │   ├── template.tsx        # route-transition animation
-│   │   │   └── learn/              # /learn + /learn/[dayId]/* lesson tree
+│   │   │   ├── sql/learn/          # /sql/learn/[dayId]/* lesson tree
+│   │   │   └── prisma/learn/       # /prisma/learn/[dayId]/* lesson tree
 │   │   ├── (auth)/                 # /signin, /signup (signed-in → redirect)
 │   │   ├── (admin)/admin/          # /admin, /admin/users, /admin/modules
 │   │   ├── robots.ts · sitemap.ts  # SEO plumbing
@@ -408,19 +473,27 @@ sql_learning/
 │   │   └── ui/Icon.tsx             # lucide-based icon registry
 │   ├── lib/
 │   │   ├── sql-engine/             # parser.ts · executor.ts · validator…
+│   │   ├── prisma-engine/          # Prisma Client proxy · SQL generator · submit pipeline
+│   │   ├── tracks/registry.ts      # the only module that knows both tracks
+│   │   ├── track-submit.ts         # submitForTask — one grading router, both tracks
 │   │   ├── progress/               # storage · unlock calculator · merge rules
 │   │   ├── admin/                  # server-side user management helpers
 │   │   ├── auth.ts                 # Better Auth + MongoDB adapter config
 │   │   └── auth-client.ts          # browser auth client
 │   ├── content/
-│   │   ├── curriculum-index.ts     # module ordering & lookups
+│   │   ├── curriculum-index.ts     # SQL module ordering & lookups
 │   │   ├── modules/                # one day-NN-<semantic>.ts file per module + index.ts barrel
+│   │   ├── prisma/                 # Prisma track: prisma-NN modules · roadmap · seed universe
 │   │   └── database/               # sample schema + seed rows
 │   ├── types/                      # shared TypeScript contracts
 │   └── config/                     # learning + schedule constants
+├── tests/
+│   ├── tracks/                     # SQL foundation + Prisma phase 1-8 suites
+│   └── engine · ui · content …     # engine regression, UI wiring, telemetry, curriculum
 └── scripts/
     ├── verify-curriculum.ts        # audits every task's solution via the engine
-    └── engine-tests.ts             # regression suite for the SQL engine
+    ├── engine-tests.ts             # regression suite for the SQL engine
+    └── audit-*.ts                  # grading & curriculum gates (npm run audit:all)
 ```
 
 ## 🧰 Available Scripts
@@ -431,8 +504,11 @@ sql_learning/
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 | `npm run lint` | TypeScript strict pass (`tsc --noEmit`) |
-| `npm run test:engine` | 46-case regression suite covering the SQL engine |
-| `npm run verify:curriculum` | Audits all 35 modules / 38 days — every task's solution is executed through the engine |
+| `npm test` | Vitest suite — 793 tests across 69 suites (engine, tracks, UI, grading, telemetry) |
+| `npm run test:engine` | 48-case regression suite covering the SQL engine |
+| `npm run verify:curriculum` | Audits all 57 modules / 161 concepts / 424 tasks — every task's solution is executed through the engine |
+| `npm run audit:prisma-grading-pipeline` | Prisma gate: all 70 Prisma tasks through the real submit router (lens honesty, retry safety, starter fails) |
+| `npm run audit:all` | All 13 curriculum & grading gates in one command (SQL + Prisma) — the release gate |
 | `npm run clean` | Remove build artifacts |
 
 ---
@@ -520,18 +596,23 @@ Adding a custom domain? Point `BETTER_AUTH_URL` (plus canonical/sitemap defaults
 ## ✓ Quality & Testing
 
 ```text
-$ npm test            # Vitest: 173 tests across 18 suites (engine, windows, set-ops,
-                      # transactions, EXPLAIN, DDL constraints, state-verification,
-                      # ui, content, module order)
-  ✓ 173 passed, 0 failed
+$ npm test            # Vitest: 793 tests across 69 suites (engine, tracks/phases 1-8,
+                      # grading + telemetry, windows, set-ops, transactions, EXPLAIN,
+                      # DDL constraints, state-verification, ui, content, module order)
+  ✓ 793 passed, 0 failed
 
 $ npm run test:engine
-  ✓ 46 passed, 0 failed
+  ✓ 48 passed, 0 failed
 
 $ npm run verify:curriculum
-  35 modules · 38 days · 98 concepts · 309 tasks · 153 MCQs
-  ========================================================
-  ALL MODULES VERIFIED — solutions execute cleanly end-to-end
+  57 modules · 161 concepts · 424 practice tasks · 226 MCQs
+  🎉 All curriculum rules pass 100% cleanly!
+
+$ npm run audit:all       # 13 gates: SQL equivalence, grading pipeline, Prisma grading
+                          # pipeline, policy, taught-before-tested, custom validators,
+                          # DDL contracts, visual coverage …
+  Prisma gate → Tasks graded: 70 · Lens-backed: 34 · Read-through: 36 · Findings: 0
+  ✓ every gate exits 0
 ```
 
 Recommended release checklist:
@@ -541,6 +622,7 @@ Recommended release checklist:
 - [ ] `test:engine` green
 - [ ] `test:module-order` green (identity/ordering regression)
 - [ ] `verify:curriculum` green
+- [ ] `npm run audit:all` green (13 gates — SQL **and** Prisma grading)
 - [ ] Manual smoke test: guest learns → signs up → merges → continues cross-device
 - [ ] Admin smoke test: block/unblock + lock one module before granting admin roles
 
