@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 2 — Setup & Connection. CLI lifecycle + pooled datasource. */
 export const Prisma_02_MODULE: ModuleData = {
@@ -27,14 +27,46 @@ export const Prisma_02_MODULE: ModuleData = {
       order: 1,
       title: 'The Prisma CLI Lifecycle',
       shortDescription: 'init scaffolds, generate compiles, migrate moves the schema.',
-      theory: prismaTheory(
-        'init scaffolds, generate compiles the client, migrate dev applies versioned SQL.',
-        'Generate after every schema change, then prove it with a read.',
-        'SELECT id, name, email\nFROM users\nWHERE id = 1;',
-        'export function getGenerateCommand(): string {\n  return "npx prisma generate";\n}',
-        'typescript',
-        'The command that recompiles the client.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'init scaffolds, generate compiles the client, migrate dev applies versioned SQL.',
+        takeaway: 'Generate after every schema change, then prove it with a read.',
+        sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
+        heroCode: 'export function getGenerateCommand(): string {\n  return "npx prisma generate";\n}',
+        heroLang: 'typescript',
+        heroWhy: 'The command that recompiles the client.',
+        mentalModel: '**Schema → client → database**, always in that order. `schema.prisma` is the single source of truth; `generate` compiles it into a typed client; `migrate dev` puts the database in sync — and only then does a read have anything to return.',
+        explanation: [
+          'Three commands build the pipeline: `init` scaffolds the project, `generate` compiles the client, `migrate dev` versions and applies the SQL.',
+          'Re-run `generate` after every schema edit — the client you call from TypeScript is a build artifact, not a live view of the schema.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'init writes the source of truth',
+            codeSnippet: '// prisma/schema.prisma\nmodel User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  email String @unique\n}',
+            explanation: 'Every CLI command reads this one file — it defines the models the whole toolchain speaks in.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'generate compiles the typed client',
+            codeSnippet: 'npx prisma generate',
+            explanation: 'Prisma reads the schema and emits a client whose types mirror the models — `User` fields reach your editor as real autocomplete.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the compiled client turns reads into calls',
+            codeSnippet: 'const user = await prisma.user.findUnique({\n  where: { id: 1 },\n  select: { id: true, name: true, email: true },\n});',
+            explanation: '`where` picks the row, `select` picks the fields — and the compiler already knows the result type.',
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'each call sends one parameterized SELECT',
+            codeSnippet: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
+            explanation: 'The Query Engine translates the call to SQL with bound parameters — the SQL Lens shows this exact statement after every run.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c1-t1',
@@ -73,14 +105,46 @@ export const Prisma_02_MODULE: ModuleData = {
       order: 2,
       title: 'Datasource & Schema Mapping',
       shortDescription: 'Env-sourced URL plus @map for legacy tables.',
-      theory: prismaTheory(
-        'Datasource reads the URL from env; @map keeps snake_case tables queryable.',
-        'Datasource via env; legacy names via @map.',
-        "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-        'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}',
-        'prisma',
-        'Provider plus env-sourced URL.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'Datasource reads the URL from env; @map keeps snake_case tables queryable.',
+        takeaway: 'Datasource via env; legacy names via @map.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
+        heroCode: 'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}',
+        heroLang: 'prisma',
+        heroWhy: 'Provider plus env-sourced URL.',
+        mentalModel: '**Shape vs names.** The model defines the SHAPE your code sees; `@map`/`@@map` define the NAMES the database actually stores. The engine resolves both before it sends any SQL.',
+        explanation: [
+          'The datasource block points at the environment: `env("DATABASE_URL")` keeps credentials out of the schema and lets one schema run in every environment.',
+          '`@map`/`@@map` keep TypeScript names clean while the table keeps its legacy `snake_case` name.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the datasource picks provider + URL',
+            codeSnippet: 'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}',
+            explanation: '`provider` selects the SQL dialect; `url` defers the connection string to the environment.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'the URL is resolved from the environment',
+            codeSnippet: '// .env\nDATABASE_URL="postgresql://user:pass@host:5432/app"',
+            explanation: 'The same schema runs everywhere — only the environment variable changes between dev and production.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: '@map keeps the legacy table name',
+            codeSnippet: 'model Customer {\n  id    Int    @id @default(autoincrement())\n  email String @map("cust_email")\n\n  @@map("tbl_customers")\n}',
+            explanation: 'Your code says `Customer.email`; the SQL says `tbl_customers.cust_email`. One mapping, resolved at query time.',
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the read is still plain SQL',
+            codeSnippet: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
+            explanation: 'Mapping changes names only — the statement the engine sends is ordinary SQL, which the Lens shows after every run.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c2-t1',
