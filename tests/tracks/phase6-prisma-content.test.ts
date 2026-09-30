@@ -5,6 +5,7 @@ import { PRISMA_MODULE_CURRICULUM_ORDER } from '../../src/content/prisma/prisma-
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution, isReadOnlySelect } from '../../src/lib/sql-engine/validator';
 import { validatePrismaCode } from '../../src/lib/prisma-engine/prisma-validator';
+import { isExecutablePrismaTask } from '../../src/lib/prisma-engine/prisma-submit-pipeline';
 import { PRISMA_SEED_TABLES, PRISMA_SEED_USERS_SQL } from './phase1-foundation.test';
 import type { PracticeTask } from '../../src/types/curriculum';
 
@@ -215,5 +216,70 @@ describe('P2.1 — rich Prisma theory', () => {
     expect(failures).toEqual([]);
     expect(sqlSteps).toBeGreaterThanOrEqual(6);
     expect(typeSteps).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('P2.2 — production concepts', () => {
+  const conceptById = (moduleId: string, conceptId: string) =>
+    PRISMA_MODULES.find((m) => m.id === moduleId)?.concepts.find((c) => c.id === conceptId);
+
+  it('the four production concepts exist in their modules', () => {
+    expect(conceptById('prisma-08', 'aggregating-grouping')).toBeDefined();
+    expect(conceptById('prisma-13', 'client-extensions')).toBeDefined();
+    expect(conceptById('prisma-14', 'raw-sql-escape-hatch')).toBeDefined();
+    // Cursor-vs-offset contrast stays taught by prisma-08's existing pagination concept.
+    expect(conceptById('prisma-08', 'pagination-strategies')).toBeDefined();
+  });
+
+  it('every new concept carries rich theory (hero + mental model + ≥3 steps)', () => {
+    const ids: [string, string][] = [
+      ['prisma-08', 'aggregating-grouping'],
+      ['prisma-13', 'client-extensions'],
+      ['prisma-14', 'raw-sql-escape-hatch'],
+    ];
+    const failures: string[] = [];
+    for (const [mod, cid] of ids) {
+      const c = conceptById(mod, cid);
+      if (!c) {
+        failures.push(`${mod}/${cid}: missing`);
+        continue;
+      }
+      const p = c.theory?.prisma;
+      if (!p?.targetHero) failures.push(`${mod}/${cid}: no targetHero`);
+      if (!p?.mentalModel?.trim()) failures.push(`${mod}/${cid}: no mentalModel`);
+      if ((p?.stepBreakdowns?.length ?? 0) < 3) failures.push(`${mod}/${cid}: <3 steps`);
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('aggregation lab: groupBy + _count, read-through by engine derivation', () => {
+    const c = conceptById('prisma-08', 'aggregating-grouping')!;
+    const lab = c.tasks.find((t) => t.id === 'prisma08-c3-t1');
+    expect(lab).toBeDefined();
+    expect(lab!.prisma!.solutionCode).toContain('groupBy(');
+    expect(lab!.prisma!.validation.requiredCodeSnippets).toContain('_count');
+    // The generator cannot translate groupBy — classification is the engine's answer,
+    // not a hardcoded flag (so the audit's read-through contract is honest).
+    expect(isExecutablePrismaTask(lab!)).toBe(false);
+  });
+
+  it('$extends concept bans the deprecated $use in its lab', () => {
+    const c = conceptById('prisma-13', 'client-extensions')!;
+    const lab = c.tasks.find((t) => t.id === 'prisma13-c3-t1')!;
+    expect(lab.prisma!.validation.requiredCodeSnippets).toContain('$extends');
+    expect(lab.prisma!.validation.forbiddenCodeSnippets).toContain('$use');
+    expect(lab.prisma!.solutionCode).toContain('$extends');
+    expect(lab.prisma!.solutionCode).not.toContain('$use');
+  });
+
+  it('$queryRaw concept composes with Prisma.sql and never concatenates', () => {
+    const c = conceptById('prisma-14', 'raw-sql-escape-hatch')!;
+    const t1 = c.tasks.find((t) => t.id === 'prisma14-c3-t1')!;
+    const t2 = c.tasks.find((t) => t.id === 'prisma14-c3-t2')!;
+    expect(t1.prisma!.solutionCode).toContain('$queryRaw');
+    expect(t1.prisma!.validation.forbiddenCodeSnippets).toContain('$queryRawUnsafe');
+    expect(t2.prisma!.solutionCode).toContain('Prisma.sql');
+    // No string-concatenation of values into raw SQL.
+    for (const t of [t1, t2]) expect(t.prisma!.solutionCode).not.toMatch(/\$\{?\w+\}?\s*\+/);
   });
 });
