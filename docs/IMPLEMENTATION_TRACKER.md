@@ -13,7 +13,7 @@
 | Phase | Description | Status | Tests Passing | Last Verified |
 | :--- | :--- | :---: | :---: | :---: |
 | **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[x]` | 806 / 806 | 2026-09-30 (Task 0.3 — Phase 0 complete) |
-| **Phase 1** | Honest Snippet Labs & View Polymorphism | `[/]` | 815 / 815 | 2026-09-30 (Task 1.2) |
+| **Phase 1** | Honest Snippet Labs & View Polymorphism | `[x]` | 815 / 815 | 2026-09-30 (Task 1.3 — Phase 1 complete) |
 | **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[ ]` | - | - |
 | **Phase 3** | Homepage Redesign & Conversion Island | `[ ]` | - | - |
 | **Phase 4** | Generic Multi-Track Scaling Architecture | `[ ]` | - | - |
@@ -57,10 +57,11 @@
   - [x] New `TerminalOutput.tsx` card (caption: "Simulated CLI output — no shell ran in your browser") + `ResultsConsole` terminal branch + `PracticeTaskView` wiring (set from outcome, cleared on task switch & preview).
   - [x] *Automated verification:* `tsc --noEmit` clean · phase5 gate 8→13 · phase7 passthrough assertions added · full suite 815/815. *(Manual: prisma-02 `npx prisma generate` lab → Check → terminal card, no reference rows; executable lab → unchanged grid.)*
   - *Gate Command:* `npx vitest run tests/tracks/phase5-prisma-pipeline.test.ts` ✅
-- [ ] **Task 1.3: Clean Up Misleading Scaffolds**
-  - [ ] Replace `-- Same proof:` and `-- The enum still has to read this row:` comments.
-  - [ ] Replace crossword clues in `prisma-02-setup-connection.ts` with real engineering prompts.
-  - *Gate Command:* `npx vitest run tests/tracks/phase6-prisma-content.test.ts`
+- [x] **Task 1.3: Clean Up Misleading Scaffolds**
+  - [x] `prisma-02-setup-connection.ts:43–44` crossword clues → engineering prompts (`Execute npx prisma generate to compile the client` / `Verify the output build artifact`) + de-crossworded hint; 3 "Same proof" scaffolds (`:60,:91,:107`) → `-- Configuration and schema validation runs automatically against the engine.`
+  - [x] `prisma-03-models-constraints.ts:95` enum-lab scaffold comment → the same honest line. *(Plan correction: `phase6-tasks.ts` needed **no change** — the target strings live only in the module files; scaffold comments aren't learner-visible on the Prisma track (the TS starter loads), so this is source-honesty hygiene.)*
+  - [x] *Automated verification:* `tsc --noEmit` clean · phase6 gate 13/13 · full suite 815/815 · `verify:curriculum` pass · string sweep: zero `Same proof` / `still has to read this row` / Starts with `npx prisma` left. *(Flagged follow-up: 4 sibling proof-claim scaffolds left out of plan scope — `-- Prove the chain:` prisma-02:45, `-- Same column set…` / `-- The lookup the index exists for:` / `-- The blueprint has to survive this read:` in prisma-03.)*
+  - *Gate Command:* `npx vitest run tests/tracks/phase6-prisma-content.test.ts` ✅
 
 ---
 
@@ -109,3 +110,4 @@
 | 2026-09-30 21:06 | 0.3 | Prisma playground sync: seed-model sidebar (User/Post + @id/@relation badges from the ERD AST), track-routed header terminal link, `?mode=prisma` on load via `playgroundModeFromSearch`; phase9b gate coverage added (6→8) | `3dbb604` · `1815f0a` · `66eebf1` · `461967a` (4 commits) · `tsc --noEmit` clean · phase9b 8/8 · full suite 806/806 |
 | 2026-09-30 21:34 | 1.1 | Local variable bindings: `extractLocalVariableBindings()` (const/let/var literals — numbers incl. negative, quoted strings, booleans) merged into the translate-time seed with locals-first precedence, threaded through all dispatch paths; 4 phase4 tests added (9→13) | `a5796a3` · `724af27` (2 commits) · `tsc --noEmit` clean · phase4 13/13 · full suite 810/810 |
 | 2026-09-30 22:11 | 1.2 | Polymorphic console output: `ConsoleDisplayMode` + `terminalOutput` on the submit outcome; `prismaCliCommandIn` / `isPrismaSchemaLab` / `simulatePrismaCliOutput` / `snippetLabDisplay` helpers; CLI & schema.prisma labs drop the authored reference rows (static fails stay plain); new `TerminalOutput` card + ResultsConsole branch + PracticeTaskView wiring; tests 810→815 | `8c90458` · `cf8311d` · `c752c58` · `b789507` (4 commits) · `tsc --noEmit` clean · phase5 13/13 · phase7 15/15 · full suite 815/815 |
+| 2026-09-30 22:24 | 1.3 | Scaffold honesty: prisma-02 crossword clues → engineering prompts + honest hint, 3 "Same proof" scaffolds → engine-validation comment; prisma-03 enum scaffold comment fixed; `phase6-tasks.ts` needed no change (plan file-list correction); content-only — no tests added | `70591bd` · `5b9dda4` (2 commits) · `tsc --noEmit` clean · phase6 13/13 · full suite 815/815 |
