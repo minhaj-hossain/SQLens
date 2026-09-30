@@ -1116,15 +1116,45 @@ function genTransaction(code: string, seed: SeedContext | undefined, schema: Pri
 }
 
 /**
+ * P1.1 — literal local bindings the learner declares before a client call:
+ * `const targetId = 2;` / `let label = 'Rafi';` / `var active = false;`.
+ * Numbers (incl. negative/decimal), quoted strings and booleans only —
+ * computed values, template literals, objects/arrays and destructuring stay
+ * unresolved and keep flowing through the param-marker path.
+ */
+export function extractLocalVariableBindings(code: string): Record<string, unknown> {
+  const bindings: Record<string, unknown> = {};
+  const decl =
+    /\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*(?:(-?\d+(?:\.\d+)?)|('(?:[^'\\]|\\.)*')|("(?:[^"\\]|\\.)*")|(true|false))(?=\s*(?:[;,\n]|$))/g;
+  let m: RegExpExecArray | null;
+  while ((m = decl.exec(code)) !== null) {
+    const [, name, num, single, double, bool] = m;
+    if (num !== undefined) bindings[name] = Number(num);
+    else if (single !== undefined) bindings[name] = single.slice(1, -1).replace(/\\(['"\\])/g, '$1');
+    else if (double !== undefined) bindings[name] = double.slice(1, -1).replace(/\\(['"\\])/g, '$1');
+    else if (bool !== undefined) bindings[name] = bool === 'true';
+  }
+  return bindings;
+}
+
+/**
  * Translate one Prisma client call into executable SQL. Dispatches on the
  * detected method; anything without a `prisma.<model>.<method>(…)` call
  * (CLI / schema.prisma / URL / Zod / middleware labs) is an honest miss.
  */
 export function generatePrismaSql(code: string, options: GenerateOptions = {}): GenerateResult {
+  // P1.1 — literal locals declared in the learner's own code become seed
+  // variables, so `const targetId = 2;` + `where: { id: targetId }` translates
+  // to `id = 2` instead of falling through to the demo binding for `id`.
+  const locals = extractLocalVariableBindings(code);
+  const seed: SeedContext | undefined =
+    Object.keys(locals).length > 0
+      ? { tables: options.seed?.tables ?? {}, variables: { ...options.seed?.variables, ...locals } }
+      : options.seed;
   // `$transaction` first: `prisma.$transaction([ prisma.user.update(…) ])` also
   // contains a client call, so the inner-call regex would otherwise win.
   if (/(?:prisma|tx)\s*\.\s*\$transaction\s*\(/.test(code)) {
-    return genTransaction(code, options.seed, options.schema);
+    return genTransaction(code, seed, options.schema);
   }
   const { model, method } = extractPrismaTarget(code);
   if (!method || !model) {
@@ -1135,18 +1165,18 @@ export function generatePrismaSql(code: string, options: GenerateOptions = {}): 
     case 'findMany':
     case 'findUnique':
     case 'findFirst':
-      return genFind(code, model, m, options.schema, options.seed);
+      return genFind(code, model, m, options.schema, seed);
     case 'create':
     case 'createMany':
-      return genCreate(code, model, m, options.schema, options.seed);
+      return genCreate(code, model, m, options.schema, seed);
     case 'update':
     case 'updateMany':
     case 'upsert':
     case 'delete':
     case 'deleteMany':
-      return genUpdate(code, model, m, options.schema, options.seed);
+      return genUpdate(code, model, m, options.schema, seed);
     case '$transaction':
-      return genTransaction(code, options.seed, options.schema);
+      return genTransaction(code, seed, options.schema);
     default:
       return { ok: false, statements: [], method: m, model, reason: `Method \`${method}\` is not translatable.` };
   }
