@@ -22,6 +22,7 @@ import { InlineContent } from './InlineContent';
 import { ExplanationEvalContent, StepExplanation } from './TruthEval';
 import Icon from '@/components/ui/Icon';
 import { ConceptMentalModel, shouldSuppressTopIntroTable } from './mental-models/ConceptMentalModel';
+import { PrismaTheoryHero, PrismaTheorySteps } from './prisma/PrismaTheoryBlock';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
 
@@ -502,6 +503,9 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           </div>
         )}
 
+        {/* P2.1 — Prisma hero call: shown above the generated-SQL target card */}
+        <PrismaTheoryHero theory={theory} />
+
         {/* target query */}
         {theory.targetQuery && (
           <div className="mt-6">
@@ -518,6 +522,9 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             />
           </div>
         )}
+        {/* P2.1 — Prisma mental model + genuine steps (call → SQL → types) */}
+        <PrismaTheorySteps theory={theory} />
+
         {/* ---------- steps ---------- */}
         {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
           <>
