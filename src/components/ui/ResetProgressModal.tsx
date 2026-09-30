@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Icon } from '@/components/ui/Icon';
 import { ModuleData } from '@/types/curriculum';
 import { getModuleDisplayLabel } from '@/lib/curriculum/module-order';
+import { useTrackCurriculum } from '@/components/learn/use-track';
 
 export interface ResetProgressModalProps {
   isOpen: boolean;
@@ -29,6 +30,11 @@ export default function ResetProgressModal({
   const [resetMode, setResetMode] = useState<'all' | 'module'>('all');
   const [isResetting, setIsResetting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Task 0.2 — reset copy follows the ACTIVE track (SQL = 57 days, Prisma = 14).
+  // Called before the `!isOpen` early return to keep hook order stable.
+  const { modules, meta } = useTrackCurriculum();
+  const totalModules = modules.length;
 
   if (!isOpen) return null;
 
@@ -163,14 +169,14 @@ export default function ResetProgressModal({
               <span className="text-text font-semibold block mb-1">
                 Full Curriculum Reset
               </span>
-              This will reset all 57 days, task submissions, and unlock times back to Day 1.
+              This will reset all {totalModules} {meta.label} days, task submissions, and unlock times back to Day 1.
             </div>
           )}
 
           {/* Warning banner */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-[11px] text-text-dim mb-5">
             <Icon name="warning" className="text-warning shrink-0 text-[15px]" />
-            <span>This action cannot be undone. Saved SQL solutions will be cleared.</span>
+            <span>This action cannot be undone. Saved {meta.label} solutions will be cleared.</span>
           </div>
 
           {/* Batch 5: document the reset contract so "old data back" reports
