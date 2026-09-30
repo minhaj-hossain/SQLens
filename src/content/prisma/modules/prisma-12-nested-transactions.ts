@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 12 — Nested Writes & Transactions. */
 export const Prisma_12_MODULE: ModuleData = {
@@ -27,14 +27,46 @@ export const Prisma_12_MODULE: ModuleData = {
       order: 1,
       title: 'Nested Writes — create, connect, connectOrCreate',
       shortDescription: 'One call, several tables, still a single round trip.',
-      theory: prismaTheory(
-        'A nested write follows the relation: `create` inserts a new child, `connect` attaches an existing one by unique key, and `connectOrCreate` does whichever applies. Prisma wraps the work in a transaction for you.',
-        'create inserts, connect attaches, connectOrCreate decides.',
-        'SELECT id, email\nFROM users\nWHERE id = 1;',
-        'await prisma.user.create({\n  data: {\n    name,\n    email,\n    posts: { create: [{ title }] },\n  },\n  select: { id: true },\n});',
-        'typescript',
-        'One INSERT for the user, one for the post — inside a single transaction.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'A nested write follows the relation: `create` inserts a new child, `connect` attaches an existing one by unique key, and `connectOrCreate` does whichever applies. Prisma wraps the work in a transaction for you.',
+        takeaway: 'create inserts, connect attaches, connectOrCreate decides.',
+        sql: 'SELECT id, email\nFROM users\nWHERE id = 1;',
+        heroCode: 'await prisma.user.create({\n  data: {\n    name,\n    email,\n    posts: { create: [{ title }] },\n  },\n  select: { id: true },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'One INSERT for the user, one for the post — inside a single transaction.',
+        mentalModel: '**Follow the relation, not the code path.** A nested write is one call that walks the relation graph: `create` inserts a new child, `connect` attaches an existing row by key, `connectOrCreate` checks-then-decides. Every nested step runs inside ONE transaction — the whole graph lands, or none of it does.',
+        explanation: [
+          'Nested writes follow the relation: `create` inserts a child row, `connect` attaches an existing one, `connectOrCreate` does whichever applies.',
+          'The parent and its children are written atomically — you never see a half-built graph.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the data graph is built in one object',
+            codeSnippet: 'await prisma.user.create({\n  data: {\n    name,\n    email,\n    posts: { create: [{ title }] },\n  },\n});',
+            explanation: 'The nested `posts.create` describes a whole graph — the parent row plus its child rows in a single call.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'connectOrCreate decides per row',
+            codeSnippet: 'categories: {\n  connectOrCreate: {\n    where: { id: categoryId },\n    create: { name: categoryName },\n  },\n}',
+            explanation: 'Existing key → attach; missing → insert. One call replaces the "does it exist?" round trip.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'one transaction wraps the whole graph',
+            codeSnippet: 'BEGIN;\n-- INSERT the parent row\n-- INSERT the child rows\nCOMMIT;',
+            explanation: 'Parent and children are written in one transaction — if any nested step fails, the whole graph rolls back.',
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the result is narrowed by `select`',
+            codeSnippet: '{ id: number }',
+            explanation: 'The nested call returns the parent you selected — asking for only the id keeps the type (and the payload) small.',
+            visualData: { type: 'type_preview', title: 'Inferred type', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma12-c1-t1',
@@ -83,14 +115,47 @@ export const Prisma_12_MODULE: ModuleData = {
       order: 2,
       title: 'ACID Transactions — Sequential & Interactive',
       shortDescription: 'All-or-nothing across several statements.',
-      theory: prismaTheory(
-        'The array form `$transaction([...])` runs a fixed list of queries atomically, while the interactive form `$transaction(async (tx) => …)` lets you read, decide and write inside one transaction — every call on `tx`, never on `prisma`, or you leave the transaction.',
-        'Array form for a fixed list; interactive form for logic between steps.',
-        "SELECT id, name\nFROM users\nWHERE id IN (1, 2);",
-        'await prisma.$transaction([\n  prisma.user.update({ where: { id: fromId }, data: { name: \'Sent\' } }),\n  prisma.user.update({ where: { id: toId }, data: { name: \'Received\' } }),\n]);',
-        'typescript',
-        'If the second UPDATE fails the first is rolled back — both or neither.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'The array form `$transaction([...])` runs a fixed list of queries atomically, while the interactive form `$transaction(async (tx) => …)` lets you read, decide and write inside one transaction — every call on `tx`, never on `prisma`, or you leave the transaction.',
+        takeaway: 'Array form for a fixed list; interactive form for logic between steps.',
+        sql: 'SELECT id, name\nFROM users\nWHERE id IN (1, 2);',
+        heroCode: 'await prisma.$transaction([\n  prisma.user.update({ where: { id: fromId }, data: { name: \'Sent\' } }),\n  prisma.user.update({ where: { id: toId }, data: { name: \'Received\' } }),\n]);',
+        heroLang: 'typescript',
+        heroWhy: 'If the second UPDATE fails the first is rolled back — both or neither.',
+        mentalModel: '**One transaction, two shapes.** The array form runs a fixed list of queries atomically; the interactive form runs your callback inside one transaction — read, decide, write, with every call on `tx`. Both make the same promise: all of it lands, or none of it does.',
+        explanation: [
+          'The array form `$transaction([...])` is for a fixed list of writes you already know.',
+          'The interactive form `$transaction(async (tx) => …)` is for logic between steps — and every statement must use `tx`, never `prisma`.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the array form lists the statements',
+            codeSnippet: 'await prisma.$transaction([\n  prisma.user.update({ where: { id: fromId }, data: { name: \'Sent\' } }),\n  prisma.user.update({ where: { id: toId }, data: { name: \'Received\' } }),\n]);',
+            explanation: 'Both updates are queued in one atomic batch — the list is fixed before it starts.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'the interactive form reads before it writes',
+            codeSnippet: 'await prisma.$transaction(async (tx) => {\n  const sender = await tx.user.findUnique({ where: { id: fromId } });\n  if (!sender) throw new Error(\'no sender\');\n  await tx.user.update({\n    where: { id: fromId },\n    data: { name: \'Sent\' },\n  });\n});',
+            explanation: 'Every call inside the callback uses `tx` — a call on `prisma` would run OUTSIDE the transaction and break atomicity.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the engine sends both statements in one transaction',
+            codeSnippet: 'UPDATE users SET name = ? WHERE id = ?;\nUPDATE users SET name = ? WHERE id = ?;',
+            explanation: 'Two parameterized statements, one transaction — a failure in the second rolls the first back.',
+            visualData: { type: 'sql_lens', title: 'Statements in the batch', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the read shows both rows landed together',
+            codeSnippet: 'SELECT id, name\nFROM users\nWHERE id IN (1, 2);',
+            explanation: 'After COMMIT both updates are visible at once; after a rollback neither is — that is what atomic means.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma12-c2-t1',
