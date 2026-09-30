@@ -136,14 +136,26 @@ export function assertTrackRegistry(): string[] {
   return issues;
 }
 
-/** Track that owns a module id. `prisma-NN` → prisma, everything else → sql. */
+/**
+ * Track that owns a module id — the first registered `moduleIdPattern` that
+ * claims it, defaulting to `'sql'`.
+ *
+ * Historical semantics preserved exactly (asserted in
+ * `tests/tracks/phase10-registry.test.ts`): `prisma-NN` → prisma, everything
+ * else (legacy ids, junk) → sql. Classifying from the registry means a future
+ * track only declares its pattern in `TRACK_REGISTRY` — no third branch here.
+ */
 export function trackForModuleId(moduleId: string): TrackId {
-  return moduleId.startsWith('prisma-') ? 'prisma' : 'sql';
+  for (const id of TRACK_IDS) {
+    if (TRACK_REGISTRY[id].moduleIdPattern.test(moduleId)) return id;
+  }
+  return 'sql';
 }
 
 /**
  * Guard: every module id must be globally unique across tracks.
- * SQL uses `day-NN`, Prisma uses `prisma-NN` — this asserts no overlap.
+ * SQL uses `day-NN`, Prisma uses `prisma-NN` — this asserts no overlap,
+ * reading whichever tracks the registry declares.
  */
 export function assertNoModuleIdCollision(): string[] {
   const seen = new Map<string, TrackId>();
@@ -153,7 +165,8 @@ export function assertNoModuleIdCollision(): string[] {
     if (owner && owner !== track) collisions.push(m.id);
     else seen.set(m.id, track);
   };
-  for (const m of ALL_MODULES) register(m, 'sql');
-  for (const m of PRISMA_MODULES) register(m, 'prisma');
+  for (const id of TRACK_IDS) {
+    for (const m of TRACK_REGISTRY[id].modules) register(m, id);
+  }
   return collisions;
 }
