@@ -13,7 +13,7 @@
 | Phase | Description | Status | Tests Passing | Last Verified |
 | :--- | :--- | :---: | :---: | :---: |
 | **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[x]` | 806 / 806 | 2026-09-30 (Task 0.3 — Phase 0 complete) |
-| **Phase 1** | Honest Snippet Labs & View Polymorphism | `[ ]` | - | - |
+| **Phase 1** | Honest Snippet Labs & View Polymorphism | `[/]` | 810 / 810 | 2026-09-30 (Task 1.1) |
 | **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[ ]` | - | - |
 | **Phase 3** | Homepage Redesign & Conversion Island | `[ ]` | - | - |
 | **Phase 4** | Generic Multi-Track Scaling Architecture | `[ ]` | - | - |
@@ -45,11 +45,12 @@
 ---
 
 ### Phase 1: Honest Snippet Labs & View Polymorphism (P1)
-- [ ] **Task 1.1: Local Variable Binding Extractor**
-  - [ ] Add `extractLocalVariableBindings()` to `src/lib/prisma-engine/prisma-sql-generator.ts`.
-  - [ ] Merge extracted variables into `SeedContext.variables`.
-  - [ ] Add unit tests for variable assignment patterns.
-  - *Gate Command:* `npx vitest run tests/tracks/phase4-prisma-execution.test.ts`
+- [x] **Task 1.1: Local Variable Binding Extractor**
+  - [x] `extractLocalVariableBindings()` in `prisma-sql-generator.ts` — `const/let/var` literals (number incl. negative/decimal, `'...'`/`"..."` strings, booleans); computed values, template literals and objects/arrays keep the marker path.
+  - [x] Merged into the translate-time seed (locals win over caller/demo variables) and threaded through `genFind`/`genCreate`/`genUpdate`/`genTransaction` + the `$transaction` branch.
+  - [x] 4 new tests in `phase4-prisma-execution.test.ts` (extractor forms, plan's `const targetId = 2` case, string filter, end-to-end row id 2).
+  - [x] *Automated verification:* `tsc --noEmit` clean · phase4 gate 13/13 · full suite 810/810. *(Manual: playground `const targetId = 2;` + `where: { id: targetId }` → Lens shows `WHERE id = 2`.)*
+  - *Gate Command:* `npx vitest run tests/tracks/phase4-prisma-execution.test.ts` ✅
 - [ ] **Task 1.2: Polymorphic Console Output in `track-submit.ts`**
   - [ ] Add `displayMode?: 'table' | 'terminal' | 'schema_diff'` to `TrackSubmitOutcome`.
   - [ ] Update `prisma-submit-pipeline.ts` to return simulated CLI stdout for CLI tasks.
@@ -105,3 +106,4 @@
 | 2026-09-30 19:23 | 0.1 | Track-aware schema modal: created `PrismaSchemaModal.tsx` (ERD + raw source, seed schema) and `UiChromeProvider` now branches on `useTrack()` | `c4020ec` · `tsc --noEmit` clean · phase9 gate 5/5 · full suite 804/804 |
 | 2026-09-30 19:36 | 0.2 | Track-aware labels: Header pill aria-label (57/14 by track), ResetProgressModal copy (SQL/Prisma) + scope-radio day range (stale 1–38 fixed), track-neutral auth pitch, admin analytics counts from `ALL_MODULES.length` (stale "38" fixed) | `cf7ecdb` · `0f8f491` · `79ca3aa` · `54d2a7c` · `ebee69a` (5 atomic commits) · `tsc --noEmit` clean · full suite 804/804 |
 | 2026-09-30 21:06 | 0.3 | Prisma playground sync: seed-model sidebar (User/Post + @id/@relation badges from the ERD AST), track-routed header terminal link, `?mode=prisma` on load via `playgroundModeFromSearch`; phase9b gate coverage added (6→8) | `3dbb604` · `1815f0a` · `66eebf1` · `461967a` (4 commits) · `tsc --noEmit` clean · phase9b 8/8 · full suite 806/806 |
+| 2026-09-30 21:34 | 1.1 | Local variable bindings: `extractLocalVariableBindings()` (const/let/var literals — numbers incl. negative, quoted strings, booleans) merged into the translate-time seed with locals-first precedence, threaded through all dispatch paths; 4 phase4 tests added (9→13) | `a5796a3` · `724af27` (2 commits) · `tsc --noEmit` clean · phase4 13/13 · full suite 810/810 |
