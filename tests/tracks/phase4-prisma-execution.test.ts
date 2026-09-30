@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { PRISMA_TASK_SETUP_SQL } from '../../src/content/prisma/phase6-tasks';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { parsePrismaSchema, findModel } from '../../src/lib/prisma-engine/prisma-schema-parser';
-import { generatePrismaSql } from '../../src/lib/prisma-engine/prisma-sql-generator';
+import { extractLocalVariableBindings, generatePrismaSql } from '../../src/lib/prisma-engine/prisma-sql-generator';
 import { executePrismaCode } from '../../src/lib/prisma-engine/prisma-proxy-executor';
 import {
   gradePrismaCode,
@@ -277,5 +277,53 @@ describe('Phase 4 — transactions, proxy, grading', () => {
     expect(
       gradePrismaCode('prisma.user.findUnique({ where: { id } })', rule, res, 'SELECT 1;').passed,
     ).toBe(true);
+  });
+});
+
+describe('P1.1 — local variable bindings', () => {
+  it('extracts literal const/let/var bindings and skips computed ones', () => {
+    const bindings = extractLocalVariableBindings(
+      [
+        'const targetId = 2;',
+        "let label = 'Rafi';",
+        'var active = false;',
+        'const offset = -2;',
+        'const computed = getTarget();',
+        'const cfg = { id: 1 };',
+        'const tpl = `x`;',
+      ].join('\n'),
+    );
+    expect(bindings).toEqual({ targetId: 2, label: 'Rafi', active: false, offset: -2 });
+  });
+
+  it('binds a local const into the generated SQL (beats the demo binding)', () => {
+    const gen = generatePrismaSql(
+      'const targetId = 2;\nreturn await prisma.user.findUnique({ where: { id: targetId } });',
+      { schema: SCHEMA, seed: SEED },
+    );
+    expect(gen.ok).toBe(true);
+    expect(gen.statements[0].sql).toBe('SELECT id, name, email FROM users WHERE id = 2;');
+  });
+
+  it('binds a local string through a filter', () => {
+    const gen = generatePrismaSql(
+      "const buyer = 'rafi@prisma.io';\nreturn await prisma.user.findMany({ where: { email: buyer } });",
+      { schema: SCHEMA, seed: SEED },
+    );
+    expect(gen.ok).toBe(true);
+    expect(gen.statements[0].sql).toBe(
+      "SELECT id, name, email FROM users WHERE email = 'rafi@prisma.io';",
+    );
+  });
+
+  it('executes the binding end-to-end (row id 2, not the demo id 1)', () => {
+    const out = executePrismaCode(
+      'const targetId = 2;\nreturn await prisma.user.findUnique({ where: { id: targetId } });',
+      fresh(),
+      { schema: SCHEMA, seed: SEED },
+    );
+    expect(out.ok).toBe(true);
+    expect(out.steps[0].result.rows).toHaveLength(1);
+    expect(out.steps[0].result.rows[0]).toMatchObject({ name: 'Mina' });
   });
 });
