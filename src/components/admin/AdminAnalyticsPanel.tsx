@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { adminGetAnalytics, AdminAnalyticsData } from '@/lib/admin-api';
+// Task 0.2 — this panel renders SQL-track analytics (src/lib/admin/analytics.ts
+// aggregates ALL_MODULES only), so counts derive from the same source.
+import { ALL_MODULES } from '@/content/curriculum-index';
 
 export default function AdminAnalyticsPanel() {
   const [data, setData] = useState<AdminAnalyticsData | null>(null);
@@ -25,7 +28,7 @@ export default function AdminAnalyticsPanel() {
   if (loading) {
     return (
       <div className="py-16 text-center">
-        <p className="font-mono text-xs text-text-dim animate-pulse">Aggregating learner analytics across all 57 modules…</p>
+        <p className="font-mono text-xs text-text-dim animate-pulse">Aggregating learner analytics across all {ALL_MODULES.length} modules…</p>
       </div>
     );
   }
@@ -51,7 +54,7 @@ export default function AdminAnalyticsPanel() {
       <div>
         <h2 className="font-display text-xl sm:text-2xl font-bold text-text">Learner Progression Analytics</h2>
         <p className="text-xs sm:text-sm text-text-dim mt-1">
-          Real-time retention funnel, completion rates, and drop-off heatmap across all 38 curriculum days.
+          Real-time retention funnel, completion rates, and drop-off heatmap across all {ALL_MODULES.length} curriculum days.
         </p>
       </div>
 
@@ -72,7 +75,7 @@ export default function AdminAnalyticsPanel() {
         </div>
 
         <div className="bg-surface border border-border p-4 rounded-xl">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-text-dim mb-1">57/57 Graduates</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-text-dim mb-1">{ALL_MODULES.length}/{ALL_MODULES.length} Graduates</p>
           <p className="font-display text-2xl sm:text-3xl font-bold text-text">{data.completedCurriculumCount}</p>
           <p className="text-[11px] text-text-faint mt-1 font-mono">
             {Math.round((data.completedCurriculumCount / Math.max(data.totalLearners, 1)) * 100)}% graduation rate
@@ -112,11 +115,11 @@ export default function AdminAnalyticsPanel() {
         </div>
       </div>
 
-      {/* Drop-off Heatmap & 38-Day Funnel */}
+      {/* Drop-off Heatmap & Retention Funnel */}
       <div className="bg-surface border border-border rounded-xl p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-border-soft">
           <div>
-            <h3 className="font-display text-base font-semibold text-text">57-Day Drop-off Heatmap & Retention Matrix</h3>
+            <h3 className="font-display text-base font-semibold text-text">{ALL_MODULES.length}-Day Drop-off Heatmap & Retention Matrix</h3>
             <p className="text-xs text-text-dim mt-0.5">
               Inspect completion and drop-off per module to detect bottlenecks in the learning pipeline.
             </p>
@@ -126,7 +129,7 @@ export default function AdminAnalyticsPanel() {
           <div className="flex flex-wrap gap-1.5 font-mono text-xs">
             {(
               [
-                { id: 'all', label: 'All 57 Days' },
+                { id: 'all', label: `All ${ALL_MODULES.length} Days` },
                 { id: 'milestone-1', label: 'Stage 1' },
                 { id: 'milestone-2', label: 'Stage 2' },
                 { id: 'milestone-3', label: 'Stage 3' },
