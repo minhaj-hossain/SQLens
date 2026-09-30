@@ -12,7 +12,7 @@
 
 | Phase | Description | Status | Tests Passing | Last Verified |
 | :--- | :--- | :---: | :---: | :---: |
-| **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[/]` | 804 / 804 | 2026-09-30 (Task 0.2) |
+| **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[x]` | 806 / 806 | 2026-09-30 (Task 0.3 — Phase 0 complete) |
 | **Phase 1** | Honest Snippet Labs & View Polymorphism | `[ ]` | - | - |
 | **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[ ]` | - | - |
 | **Phase 3** | Homepage Redesign & Conversion Island | `[ ]` | - | - |
@@ -35,11 +35,12 @@
   - [x] `src/components/admin/AdminAnalyticsPanel.tsx:28,54,75,115,119,129` (counts from `ALL_MODULES.length`, matching the SQL-only analytics API; also fixed stale "38 curriculum days" copy).
   - [x] *Automated verification:* `tsc --noEmit` clean · full suite 804/804. *(Manual dev-server click-through recommended: `/prisma` header aria-label + reset modal; `/signup` copy; `/admin/analytics` labels.)*
   - *Gate Command:* `npx vitest run` ✅
-- [ ] **Task 0.3: Synchronize Playground Sidebar in Prisma Mode**
-  - [ ] `src/components/learning/Playground.tsx` (render Prisma models in sidebar when `mode === 'prisma'`).
-  - [ ] `src/components/layout/Header.tsx:89` (link `/playground?mode=prisma` when on Prisma track).
-  - [ ] `Playground.tsx` (read `?mode=` from URL on initial load).
-  - *Gate Command:* `npx vitest run tests/tracks/phase9b-prisma-playground.test.ts`
+- [x] **Task 0.3: Synchronize Playground Sidebar in Prisma Mode**
+  - [x] `src/components/learning/Playground.tsx:457–485` (Prisma mode renders the seed schema's `User`/`Post` with `@id`/`@relation` badges, from the same AST as the ERD).
+  - [x] `src/components/layout/Header.tsx:89` (terminal link → `/playground?mode=prisma` on the Prisma track; track-aware title/aria-label).
+  - [x] `Playground.tsx` (reads `?mode=` on mount via `playgroundModeFromSearch`; param kept so refresh preserves the mode).
+  - [x] *Automated verification:* `tsc --noEmit` clean · phase9b gate 8/8 · full suite 806/806. *(Manual dev-server click-through recommended: `/prisma` terminal → Prisma-mode playground with seed sidebar; `/sql` → SQL playground unchanged.)*
+  - *Gate Command:* `npx vitest run tests/tracks/phase9b-prisma-playground.test.ts` ✅
 
 ---
 
@@ -103,3 +104,4 @@
 | *Pending* | - | Initial plan and tracker setup | Initial baseline 804/804 tests green |
 | 2026-09-30 19:23 | 0.1 | Track-aware schema modal: created `PrismaSchemaModal.tsx` (ERD + raw source, seed schema) and `UiChromeProvider` now branches on `useTrack()` | `c4020ec` · `tsc --noEmit` clean · phase9 gate 5/5 · full suite 804/804 |
 | 2026-09-30 19:36 | 0.2 | Track-aware labels: Header pill aria-label (57/14 by track), ResetProgressModal copy (SQL/Prisma) + scope-radio day range (stale 1–38 fixed), track-neutral auth pitch, admin analytics counts from `ALL_MODULES.length` (stale "38" fixed) | `cf7ecdb` · `0f8f491` · `79ca3aa` · `54d2a7c` · `ebee69a` (5 atomic commits) · `tsc --noEmit` clean · full suite 804/804 |
+| 2026-09-30 21:06 | 0.3 | Prisma playground sync: seed-model sidebar (User/Post + @id/@relation badges from the ERD AST), track-routed header terminal link, `?mode=prisma` on load via `playgroundModeFromSearch`; phase9b gate coverage added (6→8) | `3dbb604` · `1815f0a` · `66eebf1` · `461967a` (4 commits) · `tsc --noEmit` clean · phase9b 8/8 · full suite 806/806 |
