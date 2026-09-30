@@ -15,7 +15,7 @@
 | **Phase 0** | Immediate Track-Aware Chrome & Label Fixes | `[x]` | 806 / 806 | 2026-09-30 (Task 0.3 — Phase 0 complete) |
 | **Phase 1** | Honest Snippet Labs & View Polymorphism | `[x]` | 815 / 815 | 2026-09-30 (Task 1.3 — Phase 1 complete) |
 | **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[x]` | 823 / 823 | 2026-10-01 (Task 2.2 — Phase 2 complete) |
-| **Phase 3** | Homepage Redesign & Conversion Island | `[ ]` | - | - |
+| **Phase 3** | Homepage Redesign & Conversion Island | `[x]` | 837 / 837 | 2026-10-01 (Task 3.1 — Phase 3 complete) |
 | **Phase 4** | Generic Multi-Track Scaling Architecture | `[ ]` | - | - |
 
 ---
@@ -86,11 +86,15 @@
 ---
 
 ### Phase 3: Homepage Redesign & Conversion (P3)
-- [ ] **Task 3.1: Modern Homepage Hero & Interactive Lens Island**
-  - [ ] Create `HeroLensInteractivePreview.tsx` with live SQL lens interactive switcher.
-  - [ ] Add returning learner continuity card (`Continue Day X [progress%] ->`).
-  - [ ] Add responsive grid with modern styling tokens and feature badges.
-  - *Gate Command:* `npm run build`
+- [x] **Task 3.1: Modern Homepage Hero & Interactive Lens Island**
+  - [x] `HeroLensInteractivePreview.tsx` (client island): two sample tabs — the Prisma `findUnique + include` call and the raw-SQL `JOIN` — over ONE seeded engine, lazy-loaded via `import('@/lib/sql-engine/executor')` + `import('@/lib/prisma-playground')` inside the run (the homepage stays a shell on the server; the prerender never executes anything).
+  - [x] The lens shows the REAL run: every statement with its label/role, row counts and `executionTimeMs`, then the call's own result peek (`+N more rows`). Run-id guard discards stale async results when tabs switch mid-run; staggered `lens-step-in` entrance (reduced-motion safe).
+  - [x] Samples + derivations live in `src/lib/homepage.ts` (`buildPrismaSampleRun`, `buildSqlSampleRun`) so the engine behaviour is testable without a DOM.
+  - [x] Returning-learner continuity card (`Resume Day 14: Nested Relations [80% Complete] ->`): reads THIS user's storage key per track (`loadUserState(userId, track)`), resumes at `deriveLastPosition` (first incomplete concept — never the stale `currentModuleId`), percent = finished task units via `getModuleProgressCounts`; hidden for first-time visitors AND absent from server markup (effect-only read); re-reads on `storage`/`focus`.
+  - [x] Feature badges (Zero setup · Typed by design · ERDs on demand · SQL Lens) under the hero headline "Master the Data Layer: From Bare-Metal SQL to Type-Safe Prisma ORM."; `TrackSelector` stays a server component (headline/badges/cards ship as HTML).
+  - [x] *Automated verification:* `tsc --noEmit` clean · new phase3 gates 14/14 (lens engine run incl. the honest-failure case; continuity truth; SSR render) · full suite 823→837 (74 files) · `npm run build` green (86 static pages, zero errors). *(Manual dev-server recommended: `/` — lens auto-runs the Prisma tab, tab switch re-runs, the card appears only with stored progress.)*
+  - *Gate Command:* `npm run build` ✅
+  - *(Infra note: `vitest.config.ts` gained `resolve.alias '@' -> src` — no test could previously load a component whose own imports used the Next alias.)*
 
 ---
 
@@ -118,3 +122,4 @@
 | 2026-09-30 22:24 | 1.3 | Scaffold honesty: prisma-02 crossword clues → engineering prompts + honest hint, 3 "Same proof" scaffolds → engine-validation comment; prisma-03 enum scaffold comment fixed; `phase6-tasks.ts` needed no change (plan file-list correction); content-only — no tests added | `70591bd` · `5b9dda4` (2 commits) · `tsc --noEmit` clean · phase6 13/13 · full suite 815/815 |
 | 2026-09-30 23:53 | 2.1 | Rich Prisma theory: `richPrismaTheory` factory (mentalModel + ≥3 genuine steps; placeholder step deleted globally), `PrismaTheoryContent.mentalModel` field, new `PrismaTheoryBlock` renderer (hero + steps were previously dead content), Days 2/3/12 rewritten (6 concepts × 4 steps w/ sql_lens + type_preview); invariant tests added (phase6 13→16); tests 815→818 | `57b35aa` · `6032879` · `b3a9411` · `204be75` · `2727a14` · `0832b68` (6 commits) · `tsc --noEmit` clean · phase6 16/16 · full suite 818/818 · `verify:curriculum` pass |
 | 2026-10-01 00:19 | 2.2 | Production concepts: `$extends` client extensions (prisma-13 c3, bans `$use`), `$queryRaw`/`Prisma.sql` escape hatch (prisma-14 c3), `groupBy`/`_count` aggregation (prisma-08 c3), and rich cursor-vs-offset pagination theory (prisma-08 c2) — all via `richPrismaTheory`; invariant tests added (phase6 16→21); tests 818→823 | `ca830a9` · `1e64bc2` · `c6b25f7` · `1d57fa5` (4 commits) · `tsc --noEmit` clean · phase8 green · full suite 823/823 |
+| 2026-10-01 01:10 | 3.1 | Homepage redesign: hero headline + live SQL Lens island (`HeroLensInteractivePreview.tsx`; lazy engine/playground imports, real statement labels/row counts/`executionTimeMs`, result peek, stale-run guard, `lens-step-in` animation) over `src/lib/homepage.ts` (both samples + continuity derivations), returning-learner card (own storage key per track, `deriveLastPosition`, task-unit %, server-silent), four feature badges; `vitest.config.ts` alias so components load in tests; new phase3 tests 14 (823→837), build green | `a1a3ecd` · `194994c` (2 commits) · `tsc --noEmit` clean · full suite 837/837 (74 files) · `npm run build` exit 0 (86 static pages) |
