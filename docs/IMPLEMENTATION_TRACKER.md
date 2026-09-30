@@ -30,7 +30,7 @@
   - *Gate Command:* `npx vitest run tests/tracks/phase9-prisma-surfaces.test.ts` ✅
 - [x] **Task 0.2: Fix Hardcoded "57 Days" Labels Across 4 Files**
   - [x] `src/components/layout/Header.tsx:68` (dynamic aria-label via `meta.label` + `totalModules`).
-  - [x] `src/components/ui/ResetProgressModal.tsx:166,173` (track-aware reset prompt & warning via `useTrackCurriculum()`).
+  - [x] `src/components/ui/ResetProgressModal.tsx:134,166,173` (track-aware reset prompt, warning & scope-radio day range via `useTrackCurriculum()`; radio was stale "Days 1–38").
   - [x] `src/components/auth/AuthView.tsx:331` (track-neutral signup pitch — auth routes have no track prefix, so `useTrack()` there is always `sql`).
   - [x] `src/components/admin/AdminAnalyticsPanel.tsx:28,54,75,115,119,129` (counts from `ALL_MODULES.length`, matching the SQL-only analytics API; also fixed stale "38 curriculum days" copy).
   - [x] *Automated verification:* `tsc --noEmit` clean · full suite 804/804. *(Manual dev-server click-through recommended: `/prisma` header aria-label + reset modal; `/signup` copy; `/admin/analytics` labels.)*
@@ -102,4 +102,4 @@
 | :--- | :---: | :--- | :--- |
 | *Pending* | - | Initial plan and tracker setup | Initial baseline 804/804 tests green |
 | 2026-09-30 19:23 | 0.1 | Track-aware schema modal: created `PrismaSchemaModal.tsx` (ERD + raw source, seed schema) and `UiChromeProvider` now branches on `useTrack()` | `c4020ec` · `tsc --noEmit` clean · phase9 gate 5/5 · full suite 804/804 |
-| 2026-09-30 19:36 | 0.2 | Track-aware labels: Header pill aria-label (57/14 by track), ResetProgressModal copy (SQL/Prisma), track-neutral auth pitch, admin analytics counts from `ALL_MODULES.length` (stale "38" fixed) | `cf7ecdb` · `0f8f491` · `79ca3aa` · `54d2a7c` (4 atomic commits) · `tsc --noEmit` clean · full suite 804/804 |
+| 2026-09-30 19:36 | 0.2 | Track-aware labels: Header pill aria-label (57/14 by track), ResetProgressModal copy (SQL/Prisma) + scope-radio day range (stale 1–38 fixed), track-neutral auth pitch, admin analytics counts from `ALL_MODULES.length` (stale "38" fixed) | `cf7ecdb` · `0f8f491` · `79ca3aa` · `54d2a7c` · `ebee69a` (5 atomic commits) · `tsc --noEmit` clean · full suite 804/804 |
