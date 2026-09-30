@@ -143,3 +143,77 @@ describe('Phase 6 — full Prisma track (prisma-01 … prisma-14)', () => {
     expect(failures).toEqual([]);
   });
 });
+
+describe('P2.1 — rich Prisma theory', () => {
+  it('the placeholder step is gone everywhere', () => {
+    const offenders: string[] = [];
+    for (const mod of PRISMA_MODULES) {
+      for (const c of mod.concepts) {
+        for (const s of c.theory?.stepBreakdowns ?? []) {
+          if (/FROM users exists/i.test(s.stepTitle)) offenders.push(`${mod.id}/${c.id}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('steps are genuine: ≥3, ordered, non-empty, valid visualData', () => {
+    const failures: string[] = [];
+    let conceptsWithSteps = 0;
+    for (const mod of PRISMA_MODULES) {
+      for (const c of mod.concepts) {
+        const steps = c.theory?.prisma?.stepBreakdowns;
+        if (!steps || steps.length === 0) continue;
+        conceptsWithSteps++;
+        if (steps.length < 3) failures.push(`${mod.id}/${c.id}: only ${steps.length} step(s)`);
+        steps.forEach((s, i) => {
+          if (s.stepNumber !== i + 1) failures.push(`${mod.id}/${c.id}: step ${i + 1} numbered ${s.stepNumber}`);
+          if (!s.stepTitle?.trim()) failures.push(`${mod.id}/${c.id}#${s.stepNumber}: empty stepTitle`);
+          if (!s.codeSnippet?.trim()) failures.push(`${mod.id}/${c.id}#${s.stepNumber}: empty codeSnippet`);
+          if (!s.explanation?.trim()) failures.push(`${mod.id}/${c.id}#${s.stepNumber}: empty explanation`);
+          if (s.visualData && !['sql_lens', 'type_preview', 'table_diff', 'erd_highlight'].includes(s.visualData.type)) {
+            failures.push(`${mod.id}/${c.id}#${s.stepNumber}: unknown visualData type`);
+          }
+        });
+        // Hero + mental model are part of the rich contract (hero before steps).
+        if (!c.theory?.prisma?.targetHero) failures.push(`${mod.id}/${c.id}: steps without targetHero`);
+        if (!c.theory?.prisma?.mentalModel?.trim()) failures.push(`${mod.id}/${c.id}: steps without mentalModel`);
+      }
+    }
+    expect(failures).toEqual([]);
+    expect(conceptsWithSteps).toBeGreaterThanOrEqual(6);
+  });
+
+  it('migrated days carry real SQL + inferred-type steps (non-vacuous)', () => {
+    const migrated = ['prisma-02', 'prisma-03', 'prisma-12'];
+    const failures: string[] = [];
+    let sqlSteps = 0;
+    let typeSteps = 0;
+    for (const id of migrated) {
+      const mod = PRISMA_MODULES.find((m) => m.id === id);
+      if (!mod) {
+        failures.push(`${id}: module missing`);
+        continue;
+      }
+      for (const c of mod.concepts) {
+        const steps = c.theory?.prisma?.stepBreakdowns ?? [];
+        if (steps.length < 3) {
+          failures.push(`${id}/${c.id}: fewer than 3 steps`);
+          continue;
+        }
+        const sql = steps.filter((s) => s.visualData?.type === 'sql_lens');
+        const types = steps.filter((s) => s.visualData?.type === 'type_preview');
+        sqlSteps += sql.length;
+        typeSteps += types.length;
+        for (const s of sql) {
+          if (!/\b(SELECT|INSERT|UPDATE|DELETE|BEGIN)\b/i.test(s.codeSnippet)) {
+            failures.push(`${id}/${c.id}#${s.stepNumber}: sql_lens step without SQL`);
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+    expect(sqlSteps).toBeGreaterThanOrEqual(6);
+    expect(typeSteps).toBeGreaterThanOrEqual(3);
+  });
+});
