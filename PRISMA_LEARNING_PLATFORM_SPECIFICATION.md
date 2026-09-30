@@ -2216,13 +2216,13 @@ all 13 in order and is the release gate (also wired into CI via `.github/workflo
 | `npm run verify:curriculum` | SQL track census + pedagogy: 57 modules · 161 concepts · 424 practice tasks · 226 MCQs; target-query integrity, schema alignment, hint/solution/validation presence, MCQs well-formed. Non-zero exit on any finding. |
 | `npx tsx scripts/audit-all-tasks.ts` | Executes every SQL practice **and** challenge task through the real engine (424 passed / 0 failed). |
 | `npm run audit:grading-pipeline` | Every SQL task through the same `runAndGradeSubmission` pipeline the UI runs (validator + final-state + retry idempotence). |
-| `npm run audit:prisma-grading-pipeline` | **The Prisma gate (Phase 8).** Every Prisma task (70 = 34 executable + 36 read-through) through the same `submitForTask` router the UI uses, with telemetry off (`record: false`). Asserts SOLUTION_PASSES, STARTER_FAILS, LENS_RAN / LENS_HONEST, RETRY-SAFE (`fresh` re-submit fingerprint), AUTHORING_OK (no `inconclusive` references). Non-zero exit on any finding. |
+| `npm run audit:prisma-grading-pipeline` | **The Prisma gate (Phase 8).** Every Prisma task (70 = 35 executable + 35 read-through) through the same `submitForTask` router the UI uses, with telemetry off (`record: false`). Asserts SOLUTION_PASSES, STARTER_FAILS, LENS_RAN / LENS_HONEST, RETRY-SAFE (`fresh` re-submit fingerprint), AUTHORING_OK (no `inconclusive` references). Non-zero exit on any finding. |
 | `npm run audit:grading-policy` · `audit:taught-before-tested` · `audit:custom-validators` · `audit:ddl-contracts` · `audit:visual-coverage` · `audit:equivalence` · `audit:equivalence:tasks` · `audit:validation-overlap` · `audit:keyword-case` | The remaining SQL-side grading, authoring and content gates documented in `scripts/README.md`. |
 
 The Prisma contracts are additionally pinned by Vitest, so a regression is reported by a
 test and not only by a script someone has to remember to run:
-`tests/tracks/phase1-foundation.test.ts` … `tests/tracks/phase8-prisma-audit.test.ts`
-(793 tests across 69 suites in total).
+`tests/tracks/phase1-foundation.test.ts` … `tests/tracks/phase9b-prisma-playground.test.ts`
+(804 tests across 71 suites in total).
 
 ---
 
@@ -2330,6 +2330,9 @@ PrismaLens is the **`prisma` track of SQLens**, not a separate app. What that me
 | 6 | Full content: 14 modules / 4 milestones / 28 concepts / 70 tasks / 28 MCQs | `phase6-prisma-content.test.ts` |
 | 7 | UI wiring: practice + challenge views route through `submitForTask`, SQL Lens panel renders real per-statement results | `phase7-prisma-ui-wiring.test.ts` |
 | 8 | Bulk gate: `scripts/audit-prisma-grading-pipeline.ts` over all 70 tasks, wired into `npm run audit:all` + CI | `phase8-prisma-audit.test.ts` |
+| 9 | Editor surfaces: live ERD (`prisma-erd.ts` + `PrismaErdVisualizer`), Type Inspector (`prisma-type-inference.ts` + `PrismaTypeInspector`), `schema.prisma` tab (`PrismaSchemaTab` + `PrismaEditorTabs`) wired into practice + challenge via `track-submit` decisions | `phase9-prisma-surfaces.test.ts` |
+| 10 | Relation-grade execution: two-table seed universe (`users` + `posts`), `include` second queries + nested-write fan-out as real `role: 'relation'` statements, honest `--` notes when the FK is implicit | covered by `phase4/phase5` relation assertions |
+| 11 | Prisma playground: `/playground` SQL/Prisma mode toggle running `prisma-playground.ts` (same translator + session DB, no verdict) with a per-run SQL Lens | `phase9b-prisma-playground.test.ts` |
 
 ### 8.3 Deviations from this document (deliberate)
 
@@ -2338,38 +2341,46 @@ PrismaLens is the **`prisma` track of SQLens**, not a separate app. What that me
    Client proxy is a TypeScript AST walker (`prisma-proxy-executor.ts`,
    `prisma-sql-generator.ts`) rather than a compiled-`tsc`/Babel transpile step. Same
    contract, zero new runtime dependencies.
-2. **Single-table seed universe.** Executable tasks run against a seeded
-   `users(id, name, email)` database (plus per-task `setupSql` and demo variables), so
-   relation-heavy, CLI, schema-file and validation-library tasks are taught as
-   read-through snippet labs rather than executed.
+2. **Two-table seed universe.** Executable tasks run against a seeded
+   `users(id, name, email)` + `posts(id, title, authorId)` database (plus per-task
+   `setupSql` and demo variables), so `include` relation loads and nested writes run
+   as real follow-up statements; CLI, schema-file and validation-library tasks remain
+   read-through snippet labs.
 3. **Two honest task kinds.** `isExecutablePrismaTask` decides at submit time whether the
-   authored solution is a translatable client call. 34 tasks execute (graded from the real
-   result); 36 are graded statically against the authored reference dataset. Read-through
+   authored solution is a translatable client call. 35 tasks execute (graded from the real
+   result); 35 are graded statically against the authored reference dataset. Read-through
    tasks carry a SQL Lens *note* naming the reference dataset and never fabricate SQL —
    the bulk gate fails if either kind drifts.
 4. **Grading is routed, not duplicated.** The Prisma pipeline is reached only through
    `submitForTask`, so the path the audits test is the path a learner hits; telemetry is
    recorded per submission (best-effort) and explicitly disabled for audit runs.
 
-### 8.4 Still open (not part of Phases 1–8)
+### 8.4 Delivered in Phases 9–11 (closes the former “still open” list)
 
-- **Live ERD visualizer** — `prisma-schema-parser.ts` already produces the model/field/relation
-  AST (core principle #4); no UI renders it yet.
-- **TypeScript Type Inspector** (core principle #3) — the generated result shape is not
-  surfaced as an inferred interface.
-- **Dedicated `schema.prisma` editor tab** — the editor currently exposes one code surface
-  per task rather than the spec's two-tab Prisma/schema layout.
-- **Prisma playground** — `/playground` is SQL-only today.
-- **Relation-grade execution** — expanding the executable seed universe (relations, cascades,
-  nested writes) would move more snippet labs into the executed path.
+- **Live ERD visualizer** — `prisma-erd.ts` derives boxes/edges/layout from the same
+  parser AST the translator uses; `PrismaErdVisualizer` draws them (executable edges
+  solid with the FK, implicit-FK edges dashed with the reason). Only the child-list
+  direction executes; the FK-owning direction reports its columns honestly.
+- **TypeScript Type Inspector** (core principle #3) — `prisma-type-inference.ts`
+  infers the observed shape from the run's rows; `PrismaTypeInspector` shows it next
+  to the authored `prisma.expectedType` reference type. Empty/errored runs infer nothing.
+- **Dedicated `schema.prisma` editor tab** — `PrismaSchemaTab` + `PrismaEditorTabs`,
+  chosen per task via `editorSchemaTab` / `defaultEditorTab` in `track-submit.ts`
+  (`prisma.activeTab`, `prisma.schemaSource`; SQL track stays single-file).
+- **Prisma playground** — `/playground` gained a SQL/Prisma toggle running
+  `prisma-playground.ts` (same translator + session DB, no verdict) with a per-run
+  SQL Lens over the `users` + `posts` seed.
+- **Relation-grade execution** — the seed universe is two tables (`users` + `posts`
+  with `Post.authorId @relation(...)`); `include` loads and nested writes emit real
+  `role: 'relation'` follow-up statements, moving relation labs into the executed path.
 
 ### 8.5 Verify it yourself
 
 ```bash
 npx tsc --noEmit                          # strict type check
-npx vitest run                            # 793 tests / 69 suites (tracks/phase1-8 included)
+npx vitest run                            # 804 tests / 71 suites (tracks/phase1-9b included)
 npm run verify:curriculum                 # SQL curriculum census + pedagogy
-npm run audit:prisma-grading-pipeline     # 70 Prisma tasks · 34 lens-backed · 36 read-through · 0 findings
+npm run audit:prisma-grading-pipeline     # 70 Prisma tasks · 35 lens-backed · 35 read-through · 0 findings
 npm run audit:all                         # all 13 gates; exits non-zero on any defect
 ```
 

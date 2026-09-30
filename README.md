@@ -73,7 +73,7 @@ executes it on that very same engine.
 |---|---|---|
 | Route | `/sql` | `/prisma` |
 | Curriculum | 57 modules · 161 concepts · 424 tasks · 226 MCQs | 14 days · 4 milestones · 28 concepts · 70 tasks · 28 MCQs |
-| Task kinds | Executable queries graded against real results | 34 **executable** Prisma tasks · 36 **read-through** snippet labs |
+| Task kinds | Executable queries graded against real results | 35 **executable** Prisma tasks · 35 **read-through** snippet labs |
 | Engine | SQL parser → executor → validator | Prisma Client AST proxy → SQL generator → *the same* SQL engine |
 | Grading entry point | `submitForTask` | `submitForTask` (one router, both tracks) |
 | Progress | `sql_mastery_progress_v1` (+ per-user keys) | `prismalens_progress_v1` (+ per-user keys) |
@@ -134,7 +134,9 @@ Every day of the course follows the same loop:
 <details>
 <summary><b>🎮 SQL Playground</b></summary>
 
-- Dedicated full-page playground (terminal icon in the header)
+- Dedicated full-page playground (terminal icon in the header) with a **SQL / Prisma
+  mode toggle** — Prisma mode runs real client code against the `users` + `posts`
+  seed through the same translator as grading, with a per-run SQL Lens
 - **Multi-statement scripts** — paste a whole `CREATE … ; INSERT … ; SELECT …;` script, get numbered result sets
 - **Query history** (last 15, persisted) with one-click reload
 - Draft auto-persistence — refresh-proof editor content
@@ -344,7 +346,11 @@ Modules gate on **completion + time**, so learners build durable habits instead 
 ## 🎛️ SQL Playground
 
 Open it from the **⌨ terminal icon** in the header — it takes over the page like a
-focused workspace and remembers your draft + history between visits.
+focused workspace and remembers your draft + history between visits. The
+**SQL / Prisma toggle** switches the editor: Prisma mode runs client code
+(`await prisma.user.findUnique({ … include: { posts: true } })`) against the
+`users` + `posts` seed through the same translator the curriculum grades with,
+and the SQL Lens below shows every generated statement.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -504,7 +510,7 @@ sql_learning/
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 | `npm run lint` | TypeScript strict pass (`tsc --noEmit`) |
-| `npm test` | Vitest suite — 793 tests across 69 suites (engine, tracks, UI, grading, telemetry) |
+| `npm test` | Vitest suite — 804 tests across 71 suites (engine, tracks, UI, grading, telemetry) |
 | `npm run test:engine` | 48-case regression suite covering the SQL engine |
 | `npm run verify:curriculum` | Audits all 57 modules / 161 concepts / 424 tasks — every task's solution is executed through the engine |
 | `npm run audit:prisma-grading-pipeline` | Prisma gate: all 70 Prisma tasks through the real submit router (lens honesty, retry safety, starter fails) |
@@ -596,10 +602,10 @@ Adding a custom domain? Point `BETTER_AUTH_URL` (plus canonical/sitemap defaults
 ## ✓ Quality & Testing
 
 ```text
-$ npm test            # Vitest: 793 tests across 69 suites (engine, tracks/phases 1-8,
+$ npm test            # Vitest: 804 tests across 71 suites (engine, tracks/phases 1-11,
                       # grading + telemetry, windows, set-ops, transactions, EXPLAIN,
                       # DDL constraints, state-verification, ui, content, module order)
-  ✓ 793 passed, 0 failed
+  ✓ 804 passed, 0 failed
 
 $ npm run test:engine
   ✓ 48 passed, 0 failed
@@ -611,7 +617,7 @@ $ npm run verify:curriculum
 $ npm run audit:all       # 13 gates: SQL equivalence, grading pipeline, Prisma grading
                           # pipeline, policy, taught-before-tested, custom validators,
                           # DDL contracts, visual coverage …
-  Prisma gate → Tasks graded: 70 · Lens-backed: 34 · Read-through: 36 · Findings: 0
+  Prisma gate → Tasks graded: 70 · Lens-backed: 35 · Read-through: 35 · Findings: 0
   ✓ every gate exits 0
 ```
 
