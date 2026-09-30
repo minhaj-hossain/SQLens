@@ -57,6 +57,9 @@ jobs:
       - name: Grading-pipeline audit (real UI pipeline over every task)
         run: npm run audit:grading-pipeline
 
+      - name: Prisma grading-pipeline audit (submitForTask router over every Prisma task)
+        run: npm run audit:prisma-grading-pipeline
+
       - name: Grading-policy enforcement
         run: npm run audit:grading-policy
 
