@@ -32,6 +32,14 @@ export function prismaPlaygroundSchemaSource(): string {
   return PRISMA_SEED_SCHEMA;
 }
 
+/**
+ * P0.3 — which mode a `/playground` URL asks for. Only `mode=prisma` switches
+ * the surface; anything else (absent, `sql`, junk) keeps the SQL default.
+ */
+export function playgroundModeFromSearch(search: string): 'sql' | 'prisma' {
+  return new URLSearchParams(search).get('mode') === 'prisma' ? 'prisma' : 'sql';
+}
+
 /** A first snippet that works on the seed rows, so the mode is never a blank page. */
 export const PRISMA_PLAYGROUND_EXAMPLE = `// Prisma mode runs real Prisma client code against the seed database.
 // The SQL Lens below shows the SQL every call generates.

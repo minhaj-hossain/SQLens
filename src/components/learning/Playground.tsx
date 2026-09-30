@@ -6,6 +6,7 @@ import { SqlExecutor } from '@/lib/sql-engine/executor';
 import type { PrismaExecutionStep } from '@/lib/prisma-engine/prisma-proxy-executor';
 import {
   PRISMA_PLAYGROUND_EXAMPLE,
+  playgroundModeFromSearch,
   prismaPlaygroundSchemaSource,
   prismaPlaygroundSeedSql,
   runPrismaPlaygroundCode,
@@ -208,6 +209,9 @@ export default function Playground({ onClose }: PlaygroundProps) {
   useEffect(() => {
     // Restore a shared query from the URL hash first (#q=<encoded>), then draft.
     if (typeof window !== 'undefined') {
+      // P0.3 — open in Prisma mode when routed here via ?mode=prisma. The param
+      // is left in place so a refresh keeps the same mode.
+      setMode(playgroundModeFromSearch(window.location.search));
       const hash = window.location.hash;
       const match = hash.match(/^#q=(.+)$/);
       if (match) {
