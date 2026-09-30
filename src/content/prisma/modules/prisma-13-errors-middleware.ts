@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 13 — Errors + Express Error Middleware. */
 export const Prisma_13_MODULE: ModuleData = {
@@ -119,6 +119,92 @@ export const Prisma_13_MODULE: ModuleData = {
           code1:
             "export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {\n  if (!err) return next();\n  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {\n    return res.status(409).json({ error: 'Conflict' });\n  }\n  return res.status(500).json({ error: 'Server error' });\n}",
           need: ['err instanceof Prisma.PrismaClientKnownRequestError', 'res.status(409)'],
+        }),
+      ],
+    },
+    {
+      id: 'client-extensions',
+      order: 3,
+      title: 'Client Extensions — `$extends`',
+      shortDescription: 'Wrap every query or add model methods in one typed place — the modern `$use`.',
+      theory: richPrismaTheory({
+        summary: '`prisma.$extends({ … })` returns a new client that wraps every call: a `query` hook can rewrite args or results, a `model` hook adds methods, and a `result` hook adds computed fields. It is the typed successor to the deprecated `$use` middleware.',
+        takeaway: '`$extends` is the modern `$use`: intercept every query in one typed place.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'alex@prisma.io';",
+        heroCode: "const xprisma = prisma.$extends({\n  query: {\n    user: {\n      async $allOperations({ args, query }) {\n        const rows = await query(args);\n        return rows;\n      },\n    },\n  },\n});",
+        heroLang: 'typescript',
+        heroWhy: 'Every `user` query now flows through one interception point — typed, not stringly.',
+        mentalModel: '**Intercept once, not at every call site.** `query` hooks receive `{ args, query }` and return the result, so logging, soft-delete filters and tenant scoping live in ONE place. The deprecated `$use` middleware did the same job with `any` everywhere — `$extends` keeps the types.',
+        explanation: [
+          '`query` hooks wrap execution (args in, result out); `model` hooks add methods; `result` hooks add computed fields.',
+          'Extend once at startup and hand the extended client around — the base `prisma` client stays untouched.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the extension declares a query hook',
+            codeSnippet: "prisma.$extends({\n  query: {\n    user: {\n      async $allOperations({ args, query }) { /* … */ },\n    },\n  },\n});",
+            explanation: '`$allOperations` intercepts every `user` call — find, create, update and delete alike.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'the hook receives the args and runs the query',
+            codeSnippet: 'async $allOperations({ args, query }) {\n  const rows = await query(args);\n  return rows;\n}',
+            explanation: '`args` are the original call arguments; `query(args)` executes the real query. Change either to rewrite behaviour.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the wrapped call still emits one plain read',
+            codeSnippet: "SELECT id, email\nFROM users\nWHERE email = 'alex@prisma.io';",
+            explanation: 'An audit/logging hook does not change the SQL — the Lens still shows the ordinary statement.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the extended client keeps the model types',
+            codeSnippet: '{ id: number; email: string } | null',
+            explanation: 'The interception is typed end-to-end — no `any`, unlike the old `$use` middleware.',
+            visualData: { type: 'type_preview', title: 'Inferred type', details: null },
+          },
+        ],
+      }),
+      tasks: [
+        prismaSnippetTask({
+          id: 'prisma13-c3-t1',
+          title: 'Add an audit hook',
+          description: 'Wrap every user query with a timing hook — and drop the deprecated `$use`.',
+          instructions: ['Extend with `$extends`', 'Add a `query` hook using `$allOperations`'],
+          hint: 'Extend with a query hook keyed on the model, and call the injected query(args).',
+          scaffold: '-- The wrapped read still hits this row:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
+          why: 'One interception point replaces duplicated logging in every service method.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export function audit() {\n  return prisma.$use(async (params, next) => {\n    return next(params);\n  });\n}',
+          code1:
+            'export function audit() {\n  return prisma.$extends({\n    query: {\n      user: {\n        async $allOperations({ args, query }) {\n          const started = Date.now();\n          const rows = await query(args);\n          console.log(`${Date.now() - started}ms`);\n          return rows;\n        },\n      },\n    },\n  });\n}',
+          need: ['$extends', 'query:', '$allOperations'],
+          ban: ['$use'],
+          rtype: '{ id: number; email: string } | null',
+        }),
+        prismaSnippetTask({
+          id: 'prisma13-c3-t2',
+          title: 'Add a model method',
+          description: 'Give the extended client a `findByName` helper on `user`.',
+          instructions: ['Extend with `$extends`', 'Add a `model: { user: { … } }` method'],
+          hint: 'Model methods can call sibling delegates through `this`.',
+          scaffold: '-- The helper still reads the seed:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users;',
+          why: 'A named model method keeps call sites readable and typed.',
+          cols: ['id', 'email'],
+          rows: 3,
+          code0:
+            'export async function lookup(name: string) {\n  return await prisma.user.findMany({\n    where: { name },\n    select: { id: true, email: true },\n  });\n}',
+          code1:
+            "const xprisma = prisma.$extends({\n  model: {\n    user: {\n      findByName(name: string) {\n        return this.findMany({\n          where: { name },\n          select: { id: true, email: true },\n        });\n      },\n    },\n  },\n});",
+          need: ['$extends', 'model:', 'findByName'],
+          rtype: '{ id: number; email: string }[]',
         }),
       ],
     },
