@@ -33,6 +33,15 @@ function stepResultLabel(step: PrismaExecutionStep): { text: string; isError: bo
 }
 
 /**
+ * Phase 10: a relation step (`include` / nested write) is a REAL statement, but
+ * it is not what `await prisma.…()` resolves to — so it is labelled as such
+ * instead of being mistaken for the call's own result.
+ */
+function isRelationStep(step: PrismaExecutionStep): boolean {
+  return (step.role ?? 'main') === 'relation';
+}
+
+/**
  * Prisma SQL Lens (Phase 7) — the teaching payload of the Prisma track: the
  * TypeScript the learner wrote, translated into the SQL Prisma actually sends,
  * with each executed statement's own result.
@@ -96,6 +105,14 @@ export const SqlLensPanel: React.FC<SqlLensPanelProps> = ({ lens, className = ''
                     <span className="font-mono text-[10.5px] text-text-dim uppercase tracking-wide truncate">
                       {step.label}
                     </span>
+                    {isRelationStep(step) && (
+                      <span
+                        className="px-1.5 py-0.5 rounded bg-surface-3 text-func text-[9.5px] font-mono border border-border shrink-0"
+                        title="A follow-up query (include / nested write), not the call's own result"
+                      >
+                        relation
+                      </span>
+                    )}
                   </div>
                   <div
                     className={`flex items-center gap-1.5 font-mono text-[10.5px] min-w-0 ${

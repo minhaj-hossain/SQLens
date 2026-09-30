@@ -65,8 +65,18 @@ export interface PrismaValidationRule {
  * and runs it through the existing in-browser SQL executor (real execution).
  */
 export interface PrismaTaskContent {
-  /** Which editor surface this task uses. */
+  /**
+   * Which editor surface this task OPENS on. Default `editor` (the TypeScript
+   * file); `schema` opens the read-only `schema.prisma` tab, which also carries
+   * the live ERD of that schema.
+   */
   activeTab?: 'editor' | 'schema';
+  /**
+   * Phase 9: the `schema.prisma` this task is translated against. Omitted →
+   * the seed universe's two-model schema (`users` + `posts`) is shown, which is
+   * what the generated SQL actually runs on — never a decorative schema.
+   */
+  schemaSource?: string;
   /** Starter TypeScript shown in the editor. */
   initialCode: string;
   /** Reference solution TypeScript. */
@@ -103,4 +113,9 @@ export interface PrismaTheoryContent {
   targetHero?: PrismaTargetHero;
   stepBreakdowns?: PrismaStepBreakdown[];
   liveDemoCode?: string;
+  /**
+   * Phase 9: the `schema.prisma` the concept's ERD card draws. Omitted → the
+   * seed universe's schema is drawn (the one every probe executes against).
+   */
+  schemaSource?: string;
 }

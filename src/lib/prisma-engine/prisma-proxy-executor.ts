@@ -22,6 +22,12 @@ export interface PrismaExecutionStep {
   sql: string;
   /** Engine result for this statement. */
   result: QueryExecutionResult;
+  /**
+   * Phase 10: `main` (the call's own statement) or `relation` (a follow-up
+   * query from `include` / a nested write). The lens marks relation steps; the
+   * grader reads the MAIN one — see `prisma-submit-pipeline.ts`.
+   */
+  role?: 'main' | 'relation';
 }
 
 /**
@@ -73,7 +79,7 @@ export function runPrismaPlan(
     if (stmt.sql.trim().startsWith('--')) continue;
     const sql = renderGeneratedSql(stmt, options.seed);
     const result = runner.executeQuery(sql);
-    steps.push({ label: stmt.label, sql, result });
+    steps.push({ label: stmt.label, sql, result, role: stmt.role ?? 'main' });
     if (!result.success) {
       return { steps, success: false, error: result.error };
     }

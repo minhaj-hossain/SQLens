@@ -4,20 +4,36 @@ import { extractPrismaTarget } from '../../lib/prisma-engine/prisma-validator';
 
 /**
  * Phase-6 task factories. Every task runs its `solutionSql` on a FRESH DB
- * holding ONLY `users(id,name,email)` + 3 seed rows, stamped below. Without
- * setupSql the engine errors ("Table 'users' does not exist").
+ * holding the two-table seed (`users` + `posts`) + their seed rows, stamped
+ * below. Without setupSql the engine errors ("Table 'users' does not exist").
+ *
+ * Phase 10: `posts` joined the universe so relation loads (`include: { posts:
+ * true }`) are no longer a lens note — they execute as a real second query and
+ * the relation's rows are graded from the engine, not described.
  */
 export const PRISMA_TASK_SETUP_SQL =
   'CREATE TABLE users (id INTEGER, name TEXT, email TEXT); ' +
+  'CREATE TABLE posts (id INTEGER, title TEXT, authorId INTEGER); ' +
   'INSERT INTO users (id, name, email) VALUES ' +
   "(1, 'Alex', 'alex@prisma.io'), " +
   "(2, 'Mina', 'mina@prisma.io'), " +
-  "(3, 'Rafi', 'rafi@prisma.io');";
+  "(3, 'Rafi', 'rafi@prisma.io'); " +
+  'INSERT INTO posts (id, title, authorId) VALUES ' +
+  "(1, 'Hello Prisma', 1), " +
+  "(2, 'Typed queries', 1), " +
+  "(3, 'Migrations 101', 3);";
 
 export const PRISMA_SEED_ROWS: (string | number | null)[][] = [
   [1, 'Alex', 'alex@prisma.io'],
   [2, 'Mina', 'mina@prisma.io'],
   [3, 'Rafi', 'rafi@prisma.io'],
+];
+
+/** `posts(id, title, authorId)` — child rows of users 1 (two) and 3 (one). */
+export const PRISMA_SEED_POST_ROWS: (string | number | null)[][] = [
+  [1, 'Hello Prisma', 1],
+  [2, 'Typed queries', 1],
+  [3, 'Migrations 101', 3],
 ];
 
 function usersIntro(description: string) {

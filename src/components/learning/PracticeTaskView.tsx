@@ -8,12 +8,15 @@ import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/data
  * keeps ONE submit path (and the SQL experience stays byte-identical).
  */
 import {
+  defaultEditorTab,
+  editorSchemaTab,
   editorStarterCode,
   editorSurface,
   idleLensState,
   isPrismaTask,
   previewPrismaTask,
   submitForTask,
+  typeInspectorState,
   type SqlLensState,
 } from '../../lib/track-submit';
 import { TaskInstructions } from './TaskInstructions';
@@ -21,6 +24,7 @@ import { JudgmentBlock } from './JudgmentBlock';
 import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
+import { PrismaTypeInspector } from './prisma/PrismaTypeInspector';
 import { buildEditorPlaceholder } from '../../lib/task-scaffold';
 
 interface PracticeTaskViewProps {
@@ -78,6 +82,12 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   // edit TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
   const starterCode = editorStarterCode(task);
   const chrome = editorSurface(task);
+  // Phase 9: schema tab exists on the Prisma track only (`undefined` on SQL —
+  // the SQL editor keeps its single-file layout), and `activeTab: 'schema'`
+  // opens a task directly on it. The inspector state is derived per render so
+  // the panel always reflects the last run's rows.
+  const schemaTab = editorSchemaTab(task);
+  const openTab = defaultEditorTab(task);
   const initialCode = savedSql && savedSql.trim().length > 0 ? savedSql : starterCode;
   const [currentSql, setCurrentSql] = useState(initialCode);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -108,6 +118,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     setJudgmentAnswers((task.validation.judgment ?? []).map(() => null));
     setExecutionResult(null);
     setTaskPassed(isCompleted);
+    // Phase 9: the schema tab and Type Inspector derive from the task; the tab
+    // resets below once the task switch settles, the inspector re-derives at
+    // render from the fresh (cleared) `executionResult`.
     setValidationMessage(null);
     // Phase 7: a new task starts with the LENS IDLE (or absent on the SQL
     // track) — never showing the previous task's generated SQL.
@@ -325,6 +338,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               fileLabel={chrome.fileLabel}
               showQuickChips={chrome.showQuickChips}
               expectedType={chrome.expectedType}
+              schemaTab={schemaTab}
+              defaultTab={openTab}
               onChange={(newVal) => {
                 setCurrentSql(newVal);
                 if (evaluationState === 'wrong') {
@@ -346,6 +361,20 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
 
           {/* Order 3 on Mobile: Results Console */}
           <div className="order-3 lg:order-2 min-w-0 w-full">
+            {/* Phase 9: Type Inspector sits above the console on the Prisma
+                track only — re-derived from the run result every render so the
+                panel always reflects the latest rows, never stale state. */}
+            {(() => {
+              const inspectorState = typeInspectorState(task, executionResult);
+              return (
+                inspectorState && (
+                  <PrismaTypeInspector
+                    state={inspectorState}
+                    className="rounded-xl border border-border mb-3.5 sm:mb-4"
+                  />
+                )
+              );
+            })()}
             <ResultsConsole
               result={executionResult}
               evaluationState={evaluationState}

@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import { QueryEditor, QueryEditorHandle } from "./QueryEditor";
 import type { SqlSourcePosition } from "@/lib/sql-engine/source-position";
+import { PrismaEditorTabs } from "./prisma/PrismaEditorTabs";
+import { PrismaSchemaTab } from "./prisma/PrismaSchemaTab";
+import type { PrismaEditorTab } from "@/lib/track-submit";
 
 interface SQLEditorProps {
   value: string;
@@ -33,6 +36,13 @@ interface SQLEditorProps {
    * resolves to. `null` renders nothing (the SQL track always passes null).
    */
   expectedType?: string | null;
+  /**
+   * Phase 9: the `schema.prisma` tab (Prisma track only). `undefined` keeps the
+   * SQL editor's single-file layout byte-identical — no tab strip, no schema.
+   */
+  schemaTab?: { label: string; source: string; caption: string };
+  /** Phase 9: the tab to open on (`prisma.activeTab`, default `editor`). */
+  defaultTab?: PrismaEditorTab;
   onBack?: () => void;
   backLabel?: string;
   /** Restore this SQL on reset (task scaffold). */
@@ -76,9 +86,13 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   lastError,
   errorPosition,
   errorTokenOccurrences,
+  schemaTab,
+  defaultTab = 'editor',
 }) => {
   const [copied, setCopied] = useState(false);
+  const [tab, setTab] = useState<PrismaEditorTab>(defaultTab);
   const editorRef = useRef<QueryEditorHandle>(null);
+  const showSchema = Boolean(schemaTab) && tab === 'schema';
 
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
@@ -107,12 +121,16 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-surface-3 inline-block"></span>
           </div>
           <span className="text-[11px] font-mono text-text font-semibold tracking-wide">
-            {fileLabel}
+            {showSchema ? schemaTab!.label : fileLabel}
           </span>
-          <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border">
-            Active: {tableName}
-          </span>
-          {expectedType && (
+          {schemaTab ? (
+            <PrismaEditorTabs active={tab} onChange={setTab} className="ml-1" />
+          ) : (
+            <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border">
+              Active: {tableName}
+            </span>
+          )}
+          {!showSchema && expectedType && (
             <span
               className="hidden md:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[220px]"
               title={`Expected type: ${expectedType}`}
@@ -123,8 +141,13 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            id="format-sql-btn"
+          {/* The code actions belong to the code tab: the schema tab has its own
+              copy button, and formatting/copying a read-only schema from here
+              would silently act on the hidden TypeScript. */}
+          {!showSchema && (
+            <>
+              <button
+                id="format-sql-btn"
             type="button"
             onClick={() => editorRef.current?.format()}
             className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono text-text-dim hover:text-text hover:bg-surface rounded transition cursor-pointer"
@@ -154,20 +177,31 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             )}
           </button>
 
-          <button
-            id="reset-sql-btn"
-            type="button"
-            onClick={() =>
-              onChange(resetSql ?? `SELECT * FROM ${tableName};`)
-            }
-            className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono text-text-faint hover:text-text hover:bg-surface rounded transition cursor-pointer"
-            title="Reset to the task starter query"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+            <button
+              id="reset-sql-btn"
+              type="button"
+              onClick={() =>
+                onChange(resetSql ?? `SELECT * FROM ${tableName};`)
+              }
+              className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono text-text-faint hover:text-text hover:bg-surface rounded transition cursor-pointer"
+              title="Reset to the task starter query"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            </>
+          )}
         </div>
       </div>
 
+      {showSchema ? (
+        /* Phase 9: the dedicated schema.prisma surface — the source the SQL is
+           generated from, plus the live ERD of that same string. */
+        <PrismaSchemaTab
+          source={schemaTab!.source}
+          label={schemaTab!.label}
+          caption={schemaTab!.caption}
+        />
+      ) : (
       <QueryEditor
         ref={editorRef}
         value={value}
@@ -183,7 +217,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         errorPosition={evaluationState === "wrong" ? (errorPosition ?? null) : null}
         errorTokenOccurrences={evaluationState === "wrong" ? (errorTokenOccurrences ?? null) : null}
       />
+      )}
 
+      {!showSchema && (
       <div className="flex items-center gap-1.5 px-3 py-2 bg-surface border-t border-border-soft overflow-x-auto text-xs scrollbar-none">
         <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
           {showQuickChips ? 'Quick:' : 'Model:'}
@@ -210,6 +246,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <span className="font-mono text-[11px] text-text-dim truncate">{tableName}</span>
         )}
       </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-surface border-t border-border-soft min-w-0">
         <div className="hidden sm:flex items-center gap-2 text-xs text-text-faint font-mono">

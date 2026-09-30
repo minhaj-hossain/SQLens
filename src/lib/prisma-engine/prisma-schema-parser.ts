@@ -231,3 +231,114 @@ export function parsePrismaSchema(source: string): PrismaSchema {
 export function findModel(schema: PrismaSchema, modelName: string): PrismaSchemaModel | undefined {
   return schema.byName.get(modelName.toLowerCase());
 }
+
+/**
+ * Phase 10 — what a relation field actually connects, resolved from the AST.
+ *
+ * `User.posts` on its own says nothing executable: a relation LOAD only becomes
+ * real SQL once we know the child table and the foreign-key column that points
+ * back at the parent. Every field is optional-typed because a schema is allowed
+ * to be partial (`profile Profile?` with no `Profile` model is legal
+ * Prisma schema-side, and the seed universe is deliberately small): callers must
+ * degrade to an honest "not resolvable" instead of inventing a table.
+ */
+export interface PrismaRelationTarget {
+  /** The relation field itself (`posts`, `author`). */
+  field: PrismaSchemaField;
+  /** The model that DECLARES the relation field (the parent here). */
+  ownerModel: PrismaSchemaModel;
+  /** The model on the other side, when this schema declares it. */
+  targetModel?: PrismaSchemaModel;
+  /** Which side owns the FK (`true` when the TARGET model owns it). */
+  targetOwnsKey: boolean;
+  /** Physical child table (`posts`), when known. */
+  childTable?: string;
+  /** FK column on the child side (`authorId`) — absent for implicit relations. */
+  foreignKey?: string;
+  /** Key column on the parent side the FK references (`id`). */
+  referencedKey?: string;
+}
+
+/** `@id`-carrying scalar field name, else Prisma's conventional `id`. */
+export function primaryKeyOf(model: PrismaSchemaModel): string {
+  const id = model.fields.find((f) => f.isScalar && f.attributes.some((a) => a.startsWith('@id')));
+  return id?.name ?? 'id';
+}
+
+/** `lowerCamelCase`/`UpperCamelCase` model name → the snake_case plural table. */
+export function tableNameForModel(modelName: string): string {
+  const lower = modelName.toLowerCase();
+  const snake = lower.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+  return snake.endsWith('s') ? snake : `${snake}s`;
+}
+
+/**
+ * Resolve one relation field into the table + FK column a real load needs.
+ *
+ * The FK is looked up on the field that OWNS it first (`Post.author` carries
+ * `@relation(fields: [authorId], references: [id])`), then on the OTHER model
+ * for the back-reference side (`User.posts` resolves via `Post.author`'s FK).
+ * When neither side names a column — Prisma generates it implicitly, or the
+ * other side is missing from the schema — `foreignKey` stays `undefined` and
+ * the generator reports the relation as a load it cannot run yet.
+ */
+export function resolveRelation(
+  schema: PrismaSchema,
+  ownerModel: PrismaSchemaModel,
+  relationField: PrismaSchemaField,
+): PrismaRelationTarget {
+  const targetModel = findModel(schema, relationField.baseType);
+  const base: PrismaRelationTarget = {
+    field: relationField,
+    ownerModel,
+    targetModel,
+    targetOwnsKey: false,
+  };
+  if (!targetModel) return base;
+  base.childTable = tableNameForModel(targetModel.name);
+  // The list-loader direction: the TARGET owns the FK (`User.posts` resolves
+  // via `Post.author`'s `@relation(fields: [authorId])`). This is the ONLY
+  // direction the generator's second query implements (children by parent key).
+  // The FK-owning side (`Post.author` carries its own `fields: [authorId]`)
+  // resolves its columns here for honest reporting, but stays
+  // NON-executable: it loads ONE parent row through the owner's own FK value,
+  // which the list-loader does not do.
+  const ownsOwnFk = relationField.relationFields.length > 0;
+  if (ownsOwnFk) {
+    base.foreignKey = relationField.relationFields[0];
+    base.referencedKey =
+      relationField.relationReferences[0] ?? primaryKeyOf(targetModel);
+    return base;
+  }
+  // The child field whose `@relation(fields: [...])` points back here: first by
+  // type (`author User`), then by the columns it references (`references: [id]`).
+  const backRef =
+    targetModel.fields.find(
+      (f) =>
+        !f.isScalar &&
+        f.baseType.toLowerCase() === ownerModel.name.toLowerCase() &&
+        f.relationFields.length > 0,
+    ) ??
+    targetModel.fields.find(
+      (f) =>
+        !f.isScalar &&
+        f.relationFields.length > 0 &&
+        (f.relationReferences.length === 0 ||
+          f.relationReferences.some((col) => ownerModel.columns.includes(col))),
+    );
+  if (!backRef) return base;
+  base.targetOwnsKey = true;
+  base.foreignKey = backRef.relationFields[0];
+  base.referencedKey = backRef.relationReferences[0] ?? primaryKeyOf(ownerModel);
+  return base;
+}
+
+/** `true` when this relation can be turned into an executable second query. */
+export function relationIsExecutable(target: PrismaRelationTarget): boolean {
+  // The list-loader direction only: the TARGET must own the key. The FK-owning
+  // side reports its columns (for the ERD + honest notes) but never executes
+  // as a child-list load.
+  return Boolean(
+    target.targetOwnsKey && target.childTable && target.foreignKey && target.referencedKey,
+  );
+}

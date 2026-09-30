@@ -3,12 +3,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ModuleChallenge, PracticeTask } from '../../types/curriculum';
 import { QueryExecutionResult, DatabaseState, TxnStatus } from '../../types/database';
 import {
+  defaultEditorTab,
+  editorSchemaTab,
   editorStarterCode,
   editorSurface,
   idleLensState,
   isPrismaTask,
   solutionReveal,
   submitForTask,
+  typeInspectorState,
   type SqlLensState,
 } from '../../lib/track-submit';
 import { buildEditorPlaceholder } from '../../lib/task-scaffold';
@@ -63,6 +66,10 @@ import { formatSql } from '@/lib/format-sql';
 import { DataGrid } from './DataGrid';
 import { QueryEditor, QueryEditorHandle } from './QueryEditor';
 import { SqlLensPanel } from './SqlLensPanel';
+import { PrismaEditorTabs } from './prisma/PrismaEditorTabs';
+import { PrismaSchemaTab } from './prisma/PrismaSchemaTab';
+import { PrismaTypeInspector } from './prisma/PrismaTypeInspector';
+import type { PrismaEditorTab } from '../../lib/track-submit';
 
 /**
  * Strips raw markdown backtick delimiters (`column` -> column)
@@ -109,6 +116,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [sqlLens, setSqlLens] = useState<SqlLensState | null>(() => idleLensState(currentTask) ?? null);
   const chrome = editorSurface(currentTask);
   const isPrismaSurface = isPrismaTask(currentTask);
+  // Phase 9: schema tab exists on the Prisma track only; `activeTab: 'schema'`
+  // opens a task directly on it. Tab state resets on task switch below.
+  const schemaTab = editorSchemaTab(currentTask);
+  const [editorTab, setEditorTab] = useState<PrismaEditorTab>(() => defaultEditorTab(currentTask));
+  const showSchema = Boolean(schemaTab) && editorTab === 'schema';
 
   // Progressive Hint States
   const [revealedHintLevel, setRevealedHintLevel] = useState<number>(0);
@@ -151,6 +163,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     // Phase 7: a new task starts with the LENS IDLE (or absent on the SQL
     // track) — never showing the previous task's generated SQL.
     setSqlLens(idleLensState(currentTask) ?? null);
+    // Phase 9: reset the editor tab on task switch so a schema-first task
+    // opens on the schema (not on the previous task's leftover code tab).
+    setEditorTab(defaultEditorTab(currentTask));
     setTaskPassed(isDone);
     setValidationFeedback(null);
     setRevealedHintLevel(0);
@@ -432,9 +447,13 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
         {/* Editor Top Bar */}
         <div className="flex items-center justify-between px-4 py-2 bg-surface-2 border-b border-border-soft select-none">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-text-faint font-semibold tracking-wide">
-              {isPrismaSurface ? 'TYPESCRIPT' : 'SQL'}
-            </span>
+            {schemaTab ? (
+              <PrismaEditorTabs active={editorTab} onChange={setEditorTab} className="ml-1" />
+            ) : (
+              <span className="text-[11px] font-mono text-text-faint font-semibold tracking-wide">
+                {isPrismaSurface ? 'TYPESCRIPT' : 'SQL'}
+              </span>
+            )}
             {chrome.expectedType && (
               <span
                 className="hidden sm:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[240px]"
@@ -446,6 +465,11 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Format + Copy + Reset belong to the code surface: the schema tab
+                is read-only (it carries its own copy button), and formatting
+                TypeScript with the SQL formatter would mangle the code. */}
+            {!showSchema && (
+              <>
             {/* Format is SQL-only: `formatSql` capitalizes SQL keywords, which
                 would mangle Prisma TypeScript — so it hides on that surface. */}
             {!isPrismaSurface && (
@@ -480,9 +504,20 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             >
               <RotateCcw className="w-3 h-3" />
             </button>
+              </>
+            )}
           </div>
         </div>
 
+        {showSchema && schemaTab ? (
+          /* Phase 9: the dedicated schema.prisma surface — the source the SQL
+             is generated from, plus the live ERD of that same string. */
+          <PrismaSchemaTab
+            source={schemaTab.source}
+            label={schemaTab.label}
+            caption={schemaTab.caption}
+          />
+        ) : (
         <QueryEditor
           ref={editorRef}
           value={currentSql}
@@ -503,6 +538,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
           errorPosition={!taskPassed && !isPrismaSurface ? (executionResult?.errorPosition ?? null) : null}
           errorTokenOccurrences={!taskPassed && !isPrismaSurface ? (executionResult?.errorTokenOccurrences ?? null) : null}
         />
+        )}
 
         {/* Editor Bottom Actions */}
         <div className="flex items-center justify-between px-4 py-3 bg-surface border-t border-border">
@@ -581,6 +617,17 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 rows of the last generated statement). Absent on the SQL track, so
                 that render path stays exactly as before. */}
             {sqlLens && <SqlLensPanel lens={sqlLens} className="rounded-xl border border-border" />}
+
+            {/* Phase 9: Type Inspector — derived from the run result (never
+                stored), so it always reflects the latest rows, never stale. */}
+            {(() => {
+              const inspectorState = typeInspectorState(currentTask, executionResult);
+              return (
+                inspectorState && (
+                  <PrismaTypeInspector state={inspectorState} className="rounded-xl border border-border" />
+                )
+              );
+            })()}
 
             {/* Query Results Table — shared DataGrid */}
             {executionResult && executionResult.success && executionResult.rows.length > 0 && (

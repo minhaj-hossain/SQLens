@@ -26,14 +26,21 @@ import {
   isExecutablePrismaTask,
   isPrismaTask,
   previewPrismaSubmission,
+  prismaSchemaSourceForTask,
   runAndGradePrismaSubmission,
   type PrismaSubmitOutcome,
 } from './prisma-engine/prisma-submit-pipeline';
+import {
+  inferResultType,
+  type InferredField,
+  type InferredResultType,
+} from './prisma-engine/prisma-type-inference';
 import type { PrismaExecutionStep } from './prisma-engine/prisma-proxy-executor';
 import { splitTaskScaffold } from './task-scaffold';
 
 export type { SubmitHooks } from './sql-engine/submit-pipeline';
 export type { PrismaExecutionStep } from './prisma-engine/prisma-proxy-executor';
+export type { InferredField, InferredResultType } from './prisma-engine/prisma-type-inference';
 export { isPrismaTask } from './prisma-engine/prisma-submit-pipeline';
 
 /** Prisma SQL Lens payload — what `SqlLensPanel` renders. */
@@ -251,5 +258,70 @@ export function editorSurface(task: PracticeTask): {
     fileLabel: 'query.ts',
     showQuickChips: false,
     expectedType: task.prisma!.expectedType ?? null,
+  };
+}
+
+/** The editor surfaces a task can open: its code file, and (Prisma only) the schema. */
+export type PrismaEditorTab = 'editor' | 'schema';
+
+/**
+ * Phase 9 — the `schema.prisma` tab a Prisma editor shows.
+ *
+ * `undefined` on the SQL track: no schema UI exists there, so the SQL editor
+ * keeps its exact single-file layout. On the Prisma track the tab always exists
+ * (a Prisma task without an authored schema still runs against the two-model
+ * seed universe — and hiding that would make the generated SQL unexplainable).
+ */
+export function editorSchemaTab(
+  task: PracticeTask,
+): { label: string; source: string; caption: string } | undefined {
+  if (!isPrismaTask(task)) return undefined;
+  const authored = task.prisma!.schemaSource?.trim();
+  return {
+    label: 'schema.prisma',
+    source: prismaSchemaSourceForTask(task),
+    caption: authored
+      ? 'This lab ships its own schema.prisma — the SQL below is generated from THIS schema.'
+      : 'The seed universe schema every Prisma probe executes against (users + posts).',
+  };
+}
+
+/** Phase 9 — which editor tab a task OPENS on (`prisma.activeTab`, default `editor`). */
+export function defaultEditorTab(task: PracticeTask): PrismaEditorTab {
+  if (!isPrismaTask(task)) return 'editor';
+  return task.prisma!.activeTab === 'schema' ? 'schema' : 'editor';
+}
+
+/**
+ * Phase 9 — the Type Inspector payload for a task and the rows it just produced.
+ *
+ * `undefined` on the SQL track. Both halves are reported separately because they
+ * are different things: the authored reference type (a promise from the task
+ * author) and the type observed on THIS run (measured). Either can be absent —
+ * never faked.
+ */
+export interface TypeInspectorState {
+  /** `prisma.expectedType` — what the reference call resolves to. */
+  expectedType: string | null;
+  /** Measured from the run's rows. */
+  inferred: InferredResultType;
+  /** `inferred.fields`, hoisted for the panel's table. */
+  fields: InferredField[];
+  /** True when the panel has anything beyond "run your code" to show. */
+  hasReferenceType: boolean;
+}
+
+export function typeInspectorState(
+  task: PracticeTask,
+  result: QueryExecutionResult | null | undefined,
+): TypeInspectorState | undefined {
+  if (!isPrismaTask(task)) return undefined;
+  const inferred = inferResultType(result);
+  const expectedType = task.prisma!.expectedType?.trim() || null;
+  return {
+    expectedType,
+    inferred,
+    fields: inferred.fields,
+    hasReferenceType: expectedType !== null,
   };
 }

@@ -68,7 +68,8 @@ describe('Phase 5 — Prisma submit pipeline', () => {
     const seed = prismaSeedContext({ email: 'mina@prisma.io' });
     expect(seed.tables.users).toHaveLength(3);
     expect(seed.variables?.email).toBe('mina@prisma.io');
-    expect(schemaForTask(firstPrismaTask()).models.map((m) => m.name)).toEqual(['User']);
+    // Phase 10: the seed universe is two tables — `users` and its `posts`.
+    expect(schemaForTask(firstPrismaTask()).models.map((m) => m.name)).toEqual(['User', 'Post']);
     expect(setupSqlForPrismaTask(firstPrismaTask())).toContain('CREATE TABLE users');
     expect(PRISMA_SEED_SCHEMA).toContain('model User');
   });

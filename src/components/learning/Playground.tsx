@@ -3,6 +3,13 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Play, RotateCcw, Eraser, X, Download, Database, History } from 'lucide-react';
 import { SqlExecutor } from '@/lib/sql-engine/executor';
+import type { PrismaExecutionStep } from '@/lib/prisma-engine/prisma-proxy-executor';
+import {
+  PRISMA_PLAYGROUND_EXAMPLE,
+  prismaPlaygroundSchemaSource,
+  prismaPlaygroundSeedSql,
+  runPrismaPlaygroundCode,
+} from '@/lib/prisma-playground';
 import { QueryExecutionResult } from '@/types/database';
 import { DATABASE_SCHEMAS } from '@/content/database/schema';
 import { INITIAL_TABLES } from '@/content/database/tables';
@@ -13,6 +20,8 @@ import { PLAYGROUND_DRAFT_KEY, PLAYGROUND_HISTORY_KEY } from '@/lib/progress/sto
 
 const HISTORY_KEY = PLAYGROUND_HISTORY_KEY;
 const DRAFT_KEY = PLAYGROUND_DRAFT_KEY;
+/** Phase 11: Prisma mode draft — separate key so switching modes never clobbers SQL. */
+const PRISMA_DRAFT_KEY = 'sqlens_prisma_playground_draft_v1';
 const SCRATCH_DB = { tables: {}, schemas: {} };
 
 /** All schema-known table + column identifiers, used by autocomplete and
@@ -173,7 +182,13 @@ interface PlaygroundProps {
 }
 
 export default function Playground({ onClose }: PlaygroundProps) {
+  const [mode, setMode] = useState<'sql' | 'prisma'>('sql');
   const [sql, setSql] = useState('');
+  const [prismaCode, setPrismaCode] = useState(PRISMA_PLAYGROUND_EXAMPLE);
+  const [prismaLens, setPrismaLens] = useState<PrismaExecutionStep[]>([]);
+  const [prismaNote, setPrismaNote] = useState<string | null>(
+    'Run Prisma code to see the SQL it sends — the lens shows every statement.',
+  );
   const [results, setResults] = useState<StmtResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -183,6 +198,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
   const [shareCopied, setShareCopied] = useState(false);
 
   const execRef = useRef<SqlExecutor | null>(null);
+  const prismaSeededRef = useRef(false);
   const editorRef = useRef<QueryEditorHandle>(null);
 
   useEffect(() => {
@@ -220,6 +236,12 @@ export default function Playground({ onClose }: PlaygroundProps) {
       const ex = new SqlExecutor(dbMode === 'scratch' ? (SCRATCH_DB as never) : undefined);
       ex.allowDdlOverwrite = true; // sandbox leniency: re-running DDL never errors
       execRef.current = ex;
+    }
+    // Phase 11: Prisma mode shares this session DB — seed the universe once so
+    // `users`/`posts` exist, then Prisma writes persist until Reset data.
+    if (mode === 'prisma' && dbMode === 'lesson' && !prismaSeededRef.current) {
+      execRef.current.execute(prismaPlaygroundSeedSql());
+      prismaSeededRef.current = true;
     }
     const exec = execRef.current;
     const statements = splitStatements(source);
@@ -300,18 +322,63 @@ export default function Playground({ onClose }: PlaygroundProps) {
     URL.revokeObjectURL(url);
   }, []);
 
+  const runPrisma = useCallback(() => {
+    if (!prismaCode.trim()) return;
+    if (!execRef.current) {
+      const ex = new SqlExecutor(dbMode === 'scratch' ? (SCRATCH_DB as never) : undefined);
+      ex.allowDdlOverwrite = true;
+      execRef.current = ex;
+    }
+    if (dbMode === 'lesson' && !prismaSeededRef.current) {
+      execRef.current.execute(prismaPlaygroundSeedSql());
+      prismaSeededRef.current = true;
+    }
+    const exec = execRef.current;
+    // Same translator + runner as grading (no verdict, no static rules).
+    const out = runPrismaPlaygroundCode(prismaCode, { executeQuery: (stmt: string) => exec.execute(stmt) });
+    if (!out.ok) {
+      setPrismaLens([]);
+      setPrismaNote(out.reason ?? 'No translatable Prisma client call found.');
+      setResults([]);
+      setError(out.reason ?? 'No translatable Prisma client call found.');
+      return;
+    }
+    setPrismaLens(out.steps);
+    setPrismaNote(null);
+    setError(out.error ? friendlyError(out.error) : null);
+    const main = out.mainResult;
+    setResults(
+      main
+        ? [{ stmt: '-- prisma result (last main statement)', r: main }]
+        : [],
+    );
+    try {
+      localStorage.setItem(PRISMA_DRAFT_KEY, prismaCode);
+    } catch {
+      /* storage full — skip */
+    }
+  }, [prismaCode, dbMode]);
+
   const resetDb = useCallback(() => {
     execRef.current?.resetDatabase(dbMode === 'scratch' ? (SCRATCH_DB as never) : undefined);
+    prismaSeededRef.current = false;
     setResults([]);
     setError(null);
-  }, [dbMode]);
+    setPrismaLens([]);
+    setPrismaNote(
+      mode === 'prisma'
+        ? 'Run Prisma code to see the SQL it sends — the lens shows every statement.'
+        : null,
+    );
+  }, [dbMode, mode]);
 
   const clearEditor = useCallback(() => {
-    setSql('');
+    if (mode === 'prisma') setPrismaCode('');
+    else setSql('');
     setResults([]);
     setError(null);
     editorRef.current?.focus();
-  }, []);
+  }, [mode]);
 
   const tableNames = Object.keys(DATABASE_SCHEMAS);
 
@@ -335,8 +402,10 @@ export default function Playground({ onClose }: PlaygroundProps) {
               onChange={(e) => {
                 setDbMode(e.target.value as 'lesson' | 'scratch');
                 execRef.current = null;
+                prismaSeededRef.current = false;
                 setResults([]);
                 setError(null);
+                setPrismaLens([]);
               }}
               className="font-mono text-[10px] sm:text-xs px-2 py-1.5 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text transition cursor-pointer"
               title="Choose the dataset for this session"
@@ -417,10 +486,35 @@ export default function Playground({ onClose }: PlaygroundProps) {
 
         {/* Editor + results column */}
         <div className="flex flex-col gap-4 min-w-0">
+          {/* Phase 11: mode toggle — SQL keeps the original surface, Prisma edits
+              TypeScript against the seed universe. Additive: SQL path untouched. */}
+          <div className="flex items-center gap-1 rounded-xl border border-border bg-surface p-1 w-fit">
+            <button
+              type="button"
+              onClick={() => setMode('sql')}
+              className={`px-3 py-1.5 rounded-lg font-mono text-[11px] transition cursor-pointer ${
+                mode === 'sql' ? 'bg-surface-3 text-text' : 'text-text-dim hover:text-text'
+              }`}
+            >
+              SQL
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('prisma')}
+              className={`px-3 py-1.5 rounded-lg font-mono text-[11px] transition cursor-pointer ${
+                mode === 'prisma' ? 'bg-surface-3 text-text' : 'text-text-dim hover:text-text'
+              }`}
+              title="Run Prisma client code against the users + posts seed"
+            >
+              Prisma
+            </button>
+          </div>
           <div className="relative rounded-xl border border-border bg-editor-bg overflow-visible">
             <div className="flex items-center justify-between px-4 py-2.5 bg-surface/80 border-b border-border/60 rounded-t-xl">
               <span className="font-mono text-[11px] text-text-dim">
-                {dbMode === 'lesson' ? 'sqlens.db — lesson dataset' : 'sqlens.db — scratch space'}
+                {mode === 'prisma'
+                  ? 'playground.ts — users + posts seed'
+                  : dbMode === 'lesson' ? 'sqlens.db — lesson dataset' : 'sqlens.db — scratch space'}
               </span>
               <button
                 onClick={clearEditor}
@@ -431,10 +525,14 @@ export default function Playground({ onClose }: PlaygroundProps) {
             </div>
             <QueryEditor
               ref={editorRef}
-              value={sql}
-              onChange={setSql}
-              onRun={(next) => run(next)}
-              placeholder="Write SQL here… separate multiple statements with ;"
+              value={mode === 'prisma' ? prismaCode : sql}
+              onChange={mode === 'prisma' ? setPrismaCode : setSql}
+              onRun={(next) => (mode === 'prisma' ? runPrisma() : run(next))}
+              placeholder={
+                mode === 'prisma'
+                  ? 'Write Prisma client code here… e.g. await prisma.user.findMany()'
+                  : 'Write SQL here… separate multiple statements with ;'
+              }
               textareaId="playground-sql-textarea"
               minLineCount={8}
               editorClassName="max-h-[320px] min-h-[220px]"
@@ -451,13 +549,46 @@ export default function Playground({ onClose }: PlaygroundProps) {
               </div>
               <button
                 type="button"
-                onClick={() => run()}
+                onClick={() => (mode === 'prisma' ? runPrisma() : run())}
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold font-mono bg-func text-ink hover:brightness-110 transition cursor-pointer active:scale-95"
               >
                 <Play className="w-3.5 h-3.5 fill-current" /> Run
               </button>
             </div>
           </div>
+          {/* Phase 11: SQL Lens for Prisma mode — every generated statement shown. */}
+          {mode === 'prisma' && (
+            <div className="rounded-xl border border-border bg-surface overflow-hidden">
+              <div className="px-3 sm:px-4 py-2.5 border-b border-border-soft bg-surface-2 flex items-center gap-2">
+                <span className="font-mono text-[11px] font-semibold text-text-dim uppercase tracking-wider">
+                  SQL Lens
+                </span>
+                {prismaLens.length > 0 && (
+                  <span className="px-2 py-0.5 rounded bg-surface-3 text-text-dim text-[10px] font-mono border border-border">
+                    {prismaLens.length} statement{prismaLens.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
+              {prismaLens.length === 0 ? (
+                <p className="px-3 sm:px-4 py-3 font-mono text-[11.5px] text-text-dim leading-relaxed">
+                  {prismaNote ?? 'No statement ran yet.'}
+                </p>
+              ) : (
+                <div className="px-3 sm:px-4 py-3 space-y-2">
+                  {prismaLens.map((step, idx) => (
+                    <div key={`${idx}-${step.label}`} className="rounded-lg border border-border bg-surface overflow-hidden">
+                      <div className="px-3 py-1.5 bg-surface-2 border-b border-border-soft font-mono text-[10.5px] text-text-dim uppercase tracking-wide">
+                        {prismaLens.length > 1 ? `#${idx + 1} ` : ''}{step.label}
+                      </div>
+                      <pre className="px-3 py-2 font-mono text-[11.5px] text-editor-text bg-editor-bg overflow-x-auto whitespace-pre-wrap break-words">
+                        {step.sql}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Query history panel */}
           {showHistory && (

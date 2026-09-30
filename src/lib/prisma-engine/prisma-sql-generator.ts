@@ -9,15 +9,24 @@
  * variables by name, anything else → a named param marker the
  * executor substitutes at run time).
  *
- * Scope: single-table reads/writes on the seed universe + nested-write
- * fan-out + `$transaction` sequencing. Snippet labs (CLI / schema.prisma /
- * URLs / Zod) and `include` loads have no SQL of their own — the generator
- * says so honestly (`ok: false`) instead of inventing a statement.
+ * Scope: reads/writes on the seed universe (`users` + `posts`), relation loads
+ * (`include`) and nested-write fan-out emitted as REAL follow-up statements
+ * whenever the schema declares the FK, plus `$transaction` sequencing. Snippet
+ * labs (CLI / schema.prisma / URLs / Zod) have no SQL of their own — the
+ * generator says so honestly (`ok: false`) instead of inventing a statement.
+ * A relation it cannot resolve (no model, no FK column in the schema) degrades
+ * to a non-executable `--` comment, named in the lens — never a guessed JOIN.
  */
 
 import type { PrismaMethod } from '../../types/prisma-curriculum';
 import { extractPrismaTarget } from './prisma-validator';
-import { findModel, type PrismaSchema } from './prisma-schema-parser';
+import {
+  findModel,
+  primaryKeyOf,
+  relationIsExecutable,
+  resolveRelation,
+  type PrismaSchema,
+} from './prisma-schema-parser';
 
 /** One executable statement, in order. */
 export interface GeneratedStatement {
@@ -26,6 +35,17 @@ export interface GeneratedStatement {
   params: unknown[];
   /** Human label for the SQL Lens (`parent read`, `child write`, …). */
   label: string;
+  /**
+   * Phase 10: what this statement IS to the caller.
+   *
+   *   · `main` (default) — the statement the client call resolves to; the SQL
+   *     Lens, the console grid and the grader all read THIS one (`include`
+   *     loads are extra queries, never the call's return value).
+   *   · `relation` — a follow-up query a relation load (`include`) or a nested
+   *     write ran. It executes for real (a broken relation query must fail the
+   *     run), but it is never what `await prisma.…()` returns.
+   */
+  role?: 'main' | 'relation';
 }
 
 export interface GenerateResult {
@@ -441,6 +461,218 @@ function modelShape(
   return { table, columns: seedCols };
 }
 
+/**
+ * A relation step the schema cannot turn into SQL yet — honest, non-executable
+ * (every runner skips `--` statements) and named in the SQL Lens with the exact
+ * reason, so a learner sees WHY the second query is missing instead of a blank.
+ */
+function relationComment(label: string, reason: string): GeneratedStatement {
+  return { sql: `-- ${label}: ${reason}`, params: [], label };
+}
+
+/**
+ * Phase 10 — the second query Prisma sends for `include: { rel: true }`.
+ *
+ * Real SQL whenever the schema declares both sides of the relation:
+ *   · the CHILD owns the FK (`User.posts` — `Post.authorId` points back):
+ *       `SELECT <post cols> FROM posts WHERE authorId IN (SELECT id FROM users [WHERE …])`
+ *   · the OWNER owns the FK (`Post.author` — `Post.authorId` points out):
+ *       `SELECT <user cols> FROM users WHERE id IN (SELECT authorId FROM posts [WHERE …])`
+ *
+ * The subquery is what makes this executable for ANY parent filter shape (a
+ * literal id, a bound variable, `email`, `findMany()` with no filter at all):
+ * the generator never guesses the parent row's key, and the statement is
+ * labelled `role: 'relation'` because it is a follow-up load — the call itself
+ * resolves to the parent read.
+ */
+function relationLoadStatement(
+  rel: string,
+  model: string,
+  parentTable: string,
+  predicate: string | null,
+  params: unknown[],
+  schema: PrismaSchema | undefined,
+  seed: SeedContext | undefined,
+): GeneratedStatement {
+  const owner = schema ? findModel(schema, model) : undefined;
+  const field = owner?.fields.find((f) => f.name === rel);
+  if (!schema || !owner || !field) {
+    return relationComment(`include ${rel}`, 'no schema declares this relation');
+  }
+  const target = resolveRelation(schema, owner, field);
+  if (!target.targetModel) {
+    return relationComment(`include ${rel}`, `model '${field.baseType}' is not in this schema`);
+  }
+  const targetColumns = modelShape(target.targetModel.name, schema, seed).columns;
+  if (targetColumns.length === 0) {
+    return relationComment(`include ${rel}`, `table '${target.childTable}' has no columns in this schema`);
+  }
+  const where = predicate ? ` WHERE ${predicate}` : '';
+
+  if (relationIsExecutable(target)) {
+    // The TARGET model owns the FK: load children by the parent's key.
+    const inner = `SELECT ${target.referencedKey} FROM ${parentTable}${where}`;
+    return {
+      sql: `SELECT ${targetColumns.join(', ')} FROM ${target.childTable} WHERE ${target.foreignKey} IN (${inner});`,
+      params,
+      label: `include ${rel}`,
+      role: 'relation',
+    };
+  }
+
+  // The OWNER owns the FK: the relation is one parent row, loaded by the FK
+  // value the owner's own rows carry (`Post.author` → the `author` row).
+  const ownerFk = owner.fields.find(
+    (f) =>
+      f.relationFields.length > 0 &&
+      f.baseType.toLowerCase() === target.targetModel!.name.toLowerCase(),
+  );
+  if (ownerFk?.relationFields[0]) {
+    const targetKey = ownerFk.relationReferences[0] ?? 'id';
+    const inner = `SELECT ${ownerFk.relationFields[0]} FROM ${parentTable}${where}`;
+    return {
+      sql: `SELECT ${targetColumns.join(', ')} FROM ${target.childTable} WHERE ${targetKey} IN (${inner});`,
+      params,
+      label: `include ${rel}`,
+      role: 'relation',
+    };
+  }
+  return relationComment(
+    `include ${rel}`,
+    `the FK column for '${rel}' is implicit in this schema, so there is no column to load by`,
+  );
+}
+
+/** One `{ … }` row per `create` payload element (`[{…}]`, `{…}`, or `[]`). */
+function createPayloadRows(payload: string): string[] {
+  const trimmed = payload.trim();
+  if (trimmed.startsWith('[')) {
+    const list = balancedSpan(trimmed, 0);
+    if (!list) return [];
+    return splitArgs(list.trim().slice(1, -1))
+      .map((e) => bodyOf((e.value !== '' ? e.value : e.key).trim()))
+      .filter((r): r is string => r !== null);
+  }
+  const body = bodyOf(trimmed);
+  return body ? [body] : [];
+}
+
+/**
+ * Phase 10 — nested writes as REAL statements, but only where the FK value is
+ * knowable from the learner's own code:
+ *
+ *   · `parentKey` given (an `update` whose `where` names the parent row) → a
+ *     nested `create` row without an explicit FK gets `parentKey`, and
+ *     `connect: { id: N }` becomes `UPDATE child SET fk = parentKey WHERE id = N`.
+ *   · the row carries the FK scalar itself → used verbatim.
+ *
+ * Anything else — `create` of a NEW parent (its id does not exist yet),
+ * `disconnect` on a to-many list, `set` — stays an honest comment: this
+ * generator never invents the id a database is about to generate.
+ */
+function nestedWriteStatements(
+  relation: string,
+  op: string,
+  payload: string,
+  model: string,
+  parentKey: string | null,
+  schema: PrismaSchema | undefined,
+  seed: SeedContext | undefined,
+): GeneratedStatement[] {
+  const owner = schema ? findModel(schema, model) : undefined;
+  const field = owner?.fields.find((f) => f.name === relation);
+  if (!schema || !owner || !field) {
+    return [relationComment(`nested ${op} on ${relation}`, 'no schema declares this relation')];
+  }
+  const target = resolveRelation(schema, owner, field);
+  if (!target.targetModel) {
+    return [relationComment(`nested ${op} on ${relation}`, `model '${field.baseType}' is not in this schema`)];
+  }
+  const childColumns = modelShape(target.targetModel.name, schema, seed).columns;
+  if (childColumns.length === 0) {
+    return [
+      relationComment(`nested ${op} on ${relation}`, `table '${target.childTable}' has no columns in this schema`),
+    ];
+  }
+  if (!target.foreignKey) {
+    return [
+      relationComment(
+        `nested ${op} on ${relation}`,
+        `the FK column for '${relation}' is implicit in this schema, so no child row can be written`,
+      ),
+    ];
+  }
+  const fk = target.foreignKey;
+  const childTable = target.childTable!;
+
+  if (op === 'create') {
+    const rows = createPayloadRows(payload);
+    if (rows.length === 0) {
+      return [relationComment(`nested create on ${relation}`, 'the payload carries no `{ … }` row')];
+    }
+    const out: GeneratedStatement[] = [];
+    for (const row of rows) {
+      const entries = scalarDataEntries(row);
+      const carriesFk = entries.some((e) => e.field === fk);
+      if (!carriesFk && parentKey === null) {
+        out.push(
+          relationComment(
+            `nested create on ${relation}`,
+            `the ${fk} of the parent row is generated by the database, so this child INSERT is not knowable statically`,
+          ),
+        );
+        continue;
+      }
+      const fields = entries.map((e) => e.field);
+      const values = entries.map((e) => literalFor(e.value, seed, [], e.field));
+      if (!carriesFk) {
+        fields.push(fk);
+        values.push(parentKey!);
+      }
+      out.push({
+        sql: `INSERT INTO ${childTable} (${fields.join(', ')}) VALUES (${values.join(', ')});`,
+        params: [],
+        label: `nested create ${relation}`,
+        role: 'relation',
+      });
+    }
+    return out;
+  }
+
+  if (op === 'connect' || op === 'connectOrCreate') {
+    // `connect: { id: N }` names the CHILD row to attach; the parent's key has
+    // to come from the caller (`where:` on an update), or nothing can be set.
+    const inner = bodyOf(payload.trim());
+    const whereBody =
+      op === 'connectOrCreate' && inner ? bodyOf(argValue(inner, 'where') ?? null) : inner;
+    const pairs = whereBody ? splitArgs(whereBody).filter((p) => p.value.trim() !== '') : [];
+    const childKey = pairs[0];
+    if (parentKey === null || !childKey) {
+      return [
+        relationComment(
+          `nested ${op} on ${relation}`,
+          'attaching an existing child row needs the parent key (a `where:` on an update) — statically unknown here',
+        ),
+      ];
+    }
+    return [
+      {
+        sql: `UPDATE ${childTable} SET ${fk} = ${parentKey} WHERE ${childKey.key} = ${literalFor(childKey.value, seed, [], childKey.key)};`,
+        params: [],
+        label: `nested ${op} ${relation}`,
+        role: 'relation',
+      },
+    ];
+  }
+
+  return [
+    relationComment(
+      `nested ${op} on ${relation}`,
+      'this nested operation has no standalone SQL equivalent in the seed universe',
+    ),
+  ];
+}
+
 function genFind(
   code: string,
   model: string,
@@ -524,14 +756,10 @@ function genFind(
   sql += ';';
 
   const statements: GeneratedStatement[] = [{ sql, params, label: 'read' }];
-  // Relation loads are second queries in Prisma — the lens names them, but the
-  // single-table seed cannot run them, so mark them non-executable honestly.
+  // Relation loads are second queries in Prisma: real follow-up SQL when the
+  // schema declares the FK (Phase 10), an honest non-executable note otherwise.
   for (const rel of included) {
-    statements.push({
-      sql: `-- relation load: ${rel} (not executable on the single-table seed)`,
-      params: [],
-      label: `include ${rel}`,
-    });
+    statements.push(relationLoadStatement(rel, model, table, predicate, params, schema, seed));
   }
   return { ok: true, statements, method, model };
 }
@@ -633,18 +861,37 @@ function genCreate(
     },
   ];
   // Nested writes fan out into follow-up statements, in source order. A
-  // child insert needs real columns in the child table; when the transaction
-  // only knows the model name (`prisma.post.create(…)`), the lens emits an
-  // existence probe against the PARENT universe instead of inventing a
-  // `posts` table the seed never had.
-  for (const { relation } of nestedOps(dataBody)) {
-    statements.push({
-      sql: `-- nested write on ${relation} (child table not in the single-table seed)`,
-      params: [],
-      label: `nested ${relation}`,
-    });
+  // `create` has no parent key yet (`data` is what CREATES it), so only rows
+  // that carry the FK scalar themselves become real child INSERTs; the rest
+  // stay honest notes naming the statically-unknown key (Phase 10).
+  for (const { relation, op, payload } of nestedOps(dataBody)) {
+    statements.push(
+      ...nestedWriteStatements(relation, op, payload, model, null, schema, seed),
+    );
   }
   return { ok: true, statements, method, model };
+}
+
+/**
+ * The parent-key literal an update's `where` names (`where: { id: 2 }` → `2`).
+ * Prefers the model's `@id` column, else the single scalar pair. `null` when
+ * the `where` names no single scalar (compound or relational filters) — nested
+ * writes then stay honest notes instead of guessing a key.
+ */
+function parentKeyLiteral(
+  whereBody: string | null,
+  model: string,
+  schema: PrismaSchema | undefined,
+  seed: SeedContext | undefined,
+  params: unknown[],
+): string | null {
+  const pairs = wherePairs(whereBody);
+  if (pairs.length === 0) return null;
+  const owner = schema ? findModel(schema, model) : undefined;
+  const key = owner ? primaryKeyOf(owner) : 'id';
+  const pair = pairs.find((p) => p.field === key) ?? (pairs.length === 1 ? pairs[0] : null);
+  if (!pair) return null;
+  return literalFor(pair.value, seed, params, pair.field);
 }
 
 function genUpdate(
@@ -733,7 +980,19 @@ function genUpdate(
   if (!predicate) {
     return { ok: false, statements: [], method, model, reason: `\`${method}\` needs a translatable \`where\` — unconditional writes never run.` };
   }
-  return { ok: true, statements: [{ sql: `UPDATE ${table} SET ${setSql} WHERE ${predicate};`, params, label: 'update' }], method, model };
+  const statements: GeneratedStatement[] = [
+    { sql: `UPDATE ${table} SET ${setSql} WHERE ${predicate};`, params, label: 'update' },
+  ];
+  // Nested writes on an UPDATE do know the parent key: the caller's own `where`
+  // names the row (`where: { id: 2 }`), so a nested `create` gets `authorId = 2`
+  // and a nested `connect` becomes a real child UPDATE (Phase 10).
+  const parentKey = parentKeyLiteral(whereBody, model, schema, seed, params);
+  for (const { relation, op, payload } of nestedOps(dataBody)) {
+    statements.push(
+      ...nestedWriteStatements(relation, op, payload, model, parentKey, schema, seed),
+    );
+  }
+  return { ok: true, statements, method, model };
 }
 
 /** `field: { increment: 1 }` → `field = field + 1` (and siblings). */
