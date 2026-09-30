@@ -100,4 +100,4 @@
 | Timestamp | Task ID | Description | Commit / Verification Hash |
 | :--- | :---: | :--- | :--- |
 | *Pending* | - | Initial plan and tracker setup | Initial baseline 804/804 tests green |
-| 2026-09-30 19:23 | 0.1 | Track-aware schema modal: created `PrismaSchemaModal.tsx` (ERD + raw source, seed schema) and `UiChromeProvider` now branches on `useTrack()` | `tsc --noEmit` clean · phase9 gate 5/5 · full suite 804/804 |
+| 2026-09-30 19:23 | 0.1 | Track-aware schema modal: created `PrismaSchemaModal.tsx` (ERD + raw source, seed schema) and `UiChromeProvider` now branches on `useTrack()` | `c4020ec` · `tsc --noEmit` clean · phase9 gate 5/5 · full suite 804/804 |
