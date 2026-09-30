@@ -35,6 +35,18 @@ export interface GenerateResult {
   reason?: string;
   method?: PrismaMethod;
   model?: string;
+  /**
+   * How a MULTI-statement result is counted (`$transaction`), because the two
+   * forms resolve to different values:
+   *   · `sum` — the array form `$transaction([a, b, …])` resolves to the LIST
+   *     of operations it ran, so the batch's row effect is the sum of every
+   *     statement's `affectedRows` (the lens reference shows the touched rows).
+   *   · `last` — the interactive form `$transaction(async (tx) => …)` resolves
+   *     to the callback's return value, so the last statement's own count is
+   *     what the caller receives.
+   * Single-statement translations are always `last`.
+   */
+  rowEffect?: 'sum' | 'last';
 }
 
 export interface SeedContext {
@@ -48,6 +60,21 @@ export interface GenerateOptions {
   schema?: PrismaSchema;
   seed?: SeedContext;
 }
+
+/**
+ * Canonical demo bindings for the seed universe. Learner code refers to
+ * function parameters (`userId`, `email`, `id`) whose runtime values the
+ * translator cannot see; these seed-row values make the SQL Lens honest and
+ * let the generated SQL actually run against the 3 seeded users.
+ *
+ * Mirrors the test SEED in `tests/tracks/phase4-prisma-execution.test.ts` —
+ * keep both in sync.
+ */
+export const PRISMA_DEMO_VARIABLES: Record<string, unknown> = {
+  id: 1,
+  userId: 1,
+  email: 'mina@prisma.io',
+};
 
 const MODEL_TABLE_OVERRIDES: Record<string, string> = { user: 'users' };
 
@@ -252,8 +279,13 @@ function literalFor(
   if (/^(true|false)$/i.test(t)) return t.toUpperCase();
   if (/^".*"$/.test(t)) return `'${t.slice(1, -1).replace(/'/g, "''")}'`;
   const bare = /^[A-Za-z_][A-Za-z0-9_]*$/.exec(t)?.[0];
-  if (bare && seed?.variables && bare in seed.variables) {
-    return toLiteral(seed.variables[bare]);
+  // Demo bindings are the fallback so learner function params (`userId`,
+  // `email`, `id`) translate to seed-row literals even when the caller
+  // passes no seed context (e.g. the SQL Lens preview). Explicit caller
+  // seed variables always win.
+  const merged = { ...PRISMA_DEMO_VARIABLES, ...(seed?.variables ?? {}) };
+  if (bare && bare in merged) {
+    return toLiteral(merged[bare] as string | number | boolean | null);
   }
   params.push({ name: paramName, source: t });
   return `/* param:${paramName} */`;
@@ -302,6 +334,7 @@ function whereSql(
   whereBody: string | null,
   seed: SeedContext | undefined,
   params: unknown[],
+  columns?: string[],
 ): string | null {
   if (!whereBody) return null;
   const pairs = splitArgs(whereBody)
@@ -309,9 +342,16 @@ function whereSql(
     .filter((p) => p.value !== '');
   if (pairs.length === 0) return null;
 
+  // The seed universe has no such column (soft-delete tombstones,
+  // relation FKs, …): an honest miss, never a runtime engine error.
+  if (columns && pairs.some((p) => p.key !== 'AND' && p.key !== 'OR' && p.key !== 'NOT' && !columns.includes(p.key))) {
+    return null;
+  }
+
   const renderGroup = (items: { field: string; value: string }[]): string | null => {
     const conds: string[] = [];
     for (const { field, value } of items) {
+      if (columns && !columns.includes(field)) return null;
       const op = parseOperator(value);
       if (op) {
         if (op.sql === 'IN') {
@@ -395,7 +435,10 @@ function modelShape(
   const fromSchema = schema ? findModel(schema, model)?.columns : undefined;
   if (fromSchema?.length) return { table, columns: fromSchema };
   const seedCols = seed?.tables[table]?.[0] ? Object.keys(seed.tables[table][0]) : undefined;
-  return { table, columns: seedCols ?? ['id'] };
+  // No schema AND no seed rows for this model: the table does not exist in
+  // the seed universe. Callers turn this into an honest "untranslatable".
+  if (!seedCols) return { table, columns: [] };
+  return { table, columns: seedCols };
 }
 
 function genFind(
@@ -409,6 +452,15 @@ function genFind(
   // No args object: `findMany()` with zero args is a legal full-table scan.
   const body = args ?? '';
   const { table, columns } = modelShape(model, schema, seed);
+  if (columns.length === 0) {
+    return {
+      ok: false,
+      statements: [],
+      method,
+      model,
+      reason: `Table '${table}' does not exist.`,
+    };
+  }
 
   const selectBody = bodyOf(argValue(body, 'select') ?? null);
   const includeBody = bodyOf(argValue(body, 'include') ?? null);
@@ -427,7 +479,7 @@ function genFind(
 
   const whereBody = bodyOf(argValue(body, 'where') ?? null);
   const params: unknown[] = [];
-  const predicate = whereBody ? whereSql(whereBody, seed, params) : null;
+  const predicate = whereBody ? whereSql(whereBody, seed, params, columns) : null;
   if (whereBody && !predicate) {
     return {
       ok: false,
@@ -525,7 +577,16 @@ function genCreate(
   if (args === null) {
     return { ok: false, statements: [], method, model, reason: `Could not read the \`${method}\` argument object.` };
   }
-  const { table } = modelShape(model, schema, seed);
+  const { table, columns } = modelShape(model, schema, seed);
+  if (columns.length === 0) {
+    return {
+      ok: false,
+      statements: [],
+      method,
+      model,
+      reason: `Table '${table}' does not exist.`,
+    };
+  }
   const params: unknown[] = [];
 
   if (method === 'createMany') {
@@ -571,7 +632,11 @@ function genCreate(
       label: 'parent insert',
     },
   ];
-  // Nested writes fan out into follow-up statements, in source order.
+  // Nested writes fan out into follow-up statements, in source order. A
+  // child insert needs real columns in the child table; when the transaction
+  // only knows the model name (`prisma.post.create(…)`), the lens emits an
+  // existence probe against the PARENT universe instead of inventing a
+  // `posts` table the seed never had.
   for (const { relation } of nestedOps(dataBody)) {
     statements.push({
       sql: `-- nested write on ${relation} (child table not in the single-table seed)`,
@@ -593,10 +658,19 @@ function genUpdate(
   if (args === null) {
     return { ok: false, statements: [], method, model, reason: `Could not read the \`${method}\` argument object.` };
   }
-  const { table } = modelShape(model, schema, seed);
+  const { table, columns } = modelShape(model, schema, seed);
+  if (columns.length === 0) {
+    return {
+      ok: false,
+      statements: [],
+      method,
+      model,
+      reason: `Table '${table}' does not exist.`,
+    };
+  }
   const params: unknown[] = [];
   const whereBody = bodyOf(argValue(args, 'where') ?? null);
-  const predicate = whereBody ? whereSql(whereBody, seed, params) : null;
+  const predicate = whereBody ? whereSql(whereBody, seed, params, columns) : null;
   if (whereBody && !predicate && method !== 'upsert') {
     return { ok: false, statements: [], method, model, reason: 'This `where` shape has no SQL equivalent in the seed universe.' };
   }
@@ -618,7 +692,12 @@ function genUpdate(
         ? `INSERT INTO ${table} (${creates.map((e) => e.field).join(', ')}) VALUES (${creates.map((e) => literalFor(e.value, seed, params, e.field)).join(', ')});`
         : null;
     const statements: GeneratedStatement[] = [];
-    if (setSql && predicate) {
+    // An empty `update: {}` is a no-op probe ("insert-or-leave"): the branch
+    // decision is the row's existence, so the lens emits a SELECT probe
+    // instead of a zero-column UPDATE.
+    if (!setSql && predicate) {
+      statements.push({ sql: `SELECT 1 FROM ${table} WHERE ${predicate} LIMIT 1;`, params, label: 'upsert probe (existence check)' });
+    } else if (setSql && predicate) {
       statements.push({ sql: `UPDATE ${table} SET ${setSql} WHERE ${predicate};`, params, label: 'upsert probe (update branch)' });
     }
     if (insertSql) {
@@ -731,7 +810,7 @@ function genTransaction(code: string, seed: SeedContext | undefined, schema: Pri
     if (statements.length === 0) {
       return { ok: false, statements: [], method: '$transaction', reason: 'No executable statements inside `$transaction([...])`.' };
     }
-    return { ok: true, statements, method: '$transaction' };
+    return { ok: true, statements, method: '$transaction', rowEffect: 'sum' };
   }
 
   // Interactive form: every `tx.<model>.<method>({ … })` inside the callback.
@@ -745,6 +824,20 @@ function genTransaction(code: string, seed: SeedContext | undefined, schema: Pri
       const call = code.slice(m.index).replace(/^tx\s*\./, 'prisma.');
       const sub = generatePrismaSql(call, { schema, seed });
       if (!sub.ok) {
+        // The seed universe is single-table (`users`): a step touching any
+        // other model (a `posts` write inside a checkout transaction) has no
+        // SQL of its own. Skip the step, keep the translatable ones — the
+        // row-effect aggregate still grades the visible writes honestly.
+        const skippedTable = /Table '([^']+)' does not exist/.exec(sub.reason ?? '');
+        if (skippedTable) {
+          statements.push({
+            sql: `-- tx step ${n + 1}: ${sub.reason}`,
+            params: [],
+            label: `tx step ${n + 1}: skipped (${skippedTable[1]} not in seed)`,
+          });
+          n++;
+          continue;
+        }
         return { ok: false, statements: [], method: '$transaction', reason: `Callback step ${n + 1}: ${sub.reason ?? 'untranslatable'}.` };
       }
       n++;
@@ -756,7 +849,7 @@ function genTransaction(code: string, seed: SeedContext | undefined, schema: Pri
     if (statements.length === 0) {
       return { ok: false, statements: [], method: '$transaction', reason: 'No executable statements inside the transaction callback.' };
     }
-    return { ok: true, statements, method: '$transaction' };
+    return { ok: true, statements, method: '$transaction', rowEffect: 'last' };
   }
 
   void seed;
@@ -801,3 +894,52 @@ export function generatePrismaSql(code: string, options: GenerateOptions = {}): 
 }
 
 
+
+
+/**
+ * Render one statement's `param:` markers with the values the statement
+ * recorded — the ONE substitution path shared by the submit pipeline and the
+ * proxy executor (never two drifting copies).
+ *
+ * Markers are matched to their recorded param by NAME, never by position:
+ * params are recorded in EVALUATION order (`where` before `data`), which is
+ * the reverse of how those values appear in the finished statement.
+ *
+ * Resolution order, most specific first:
+ *   1. the learner's own expression when the caller bound it (`where: { id:
+ *      someId }` with `someId` in the seed context);
+ *   2. the FIELD the marker belongs to, through the demo universe (`where: {
+ *      email: buyerEmail }` → the seeded `email`), which is what keeps the SQL
+ *      Lens and the executor working on real seed rows when only the caller
+ *      could know the real value;
+ *   3. nothing to bind (`name: req.body.title`) → an honest `NULL`, never a
+ *      guessed literal.
+ *
+ * Literals never reach this function — `literalFor` renders them verbatim.
+ */
+export function renderGeneratedSql(stmt: GeneratedStatement, seed?: SeedContext): string {
+  const merged: Record<string, unknown> = { ...PRISMA_DEMO_VARIABLES, ...(seed?.variables ?? {}) };
+  const bound = (key: string | undefined): string | null => {
+    const name = (key ?? '').trim();
+    if (!name || !(name in merged)) return null;
+    const value = merged[name];
+    if (value === undefined) return null;
+    return toLiteral(value as string | number | boolean | null);
+  };
+  const records = stmt.params as { name?: string; source?: string }[];
+  const used = new Set<number>();
+  return stmt.sql.replace(/\/\*\s*param:([^*]+?)\s*\*\//g, (_match, rawName) => {
+    const marker = String(rawName).trim();
+    const at = records.findIndex((r, i) => !used.has(i) && (r?.name ?? '').trim() === marker);
+    if (at >= 0) used.add(at);
+    const record = at >= 0 ? records[at] : undefined;
+    const source = (record?.source ?? '').trim();
+    // 1. the learner's own expression, when the caller bound that name.
+    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(source)) {
+      const direct = bound(source);
+      if (direct !== null) return direct;
+    }
+    // 2. the FIELD this marker belongs to (the demo universe), else 3. NULL.
+    return bound(marker) ?? 'NULL';
+  });
+}

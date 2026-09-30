@@ -9,7 +9,7 @@
 
 import { SqlExecutor } from '../sql-engine/executor';
 import type { QueryExecutionResult } from '../../types/database';
-import { generatePrismaSql, type GenerateOptions, type GeneratedStatement, type SeedContext } from './prisma-sql-generator';
+import { generatePrismaSql, renderGeneratedSql, type GenerateOptions } from './prisma-sql-generator';
 
 export interface PrismaExecutionStep {
   /** SQL Lens label (`read`, `parent insert`, `tx step 1: update`, …). */
@@ -31,39 +31,6 @@ export interface PrismaExecutionOutcome {
   error?: string;
 }
 
-/** Substitute param markers with the recorded runtime values. */
-function substituteParams(stmt: GeneratedStatement, seed?: SeedContext): string {
-  const toLiteral = (value: unknown): string => {
-    if (value === null || value === undefined) return 'NULL';
-    if (typeof value === 'number') return String(value);
-    if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
-    return `'${String(value).replace(/'/g, "''")}'`;
-  };
-  let sql = stmt.sql;
-  for (const p of stmt.params) {
-    const rec = p as { name?: string; source?: string };
-    const src = (rec?.source ?? '').trim();
-    let lit: string;
-    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(src) && seed?.variables && src in seed.variables) {
-      // Late-bound variable (function param / outer scope): the seed context
-      // is authoritative at execution time.
-      lit = toLiteral((seed.variables as Record<string, unknown>)[src]);
-    } else if (
-      /^'[\s\S]*'$/.test(src) ||
-      /^-?\d+(\.\d+)?$/.test(src) ||
-      /^(TRUE|FALSE|NULL)$/i.test(src)
-    ) {
-      lit = src;
-    } else {
-      // Unresolvable expression (`getId()`, `args.x`, …) — honest NULL.
-      lit = 'NULL';
-    }
-    // Function replacer: `$` in values must not be treated as a pattern.
-    sql = sql.replace(/\/\*\s*param:[^*]+\*\//, () => lit);
-  }
-  return sql;
-}
-
 /**
  * Translate + execute `code` on `executor`. Stops at the first failing
  * statement (Prisma aborts the call the same way); later statements never run.
@@ -80,7 +47,7 @@ export function executePrismaCode(
   const steps: PrismaExecutionStep[] = [];
   for (const stmt of gen.statements) {
     if (stmt.sql.trim().startsWith('--')) continue;
-    const sql = substituteParams(stmt, options.seed);
+    const sql = renderGeneratedSql(stmt, options.seed);
     const result = executor.executeQuery(sql);
     steps.push({ label: stmt.label, sql, result });
     if (!result.success) {

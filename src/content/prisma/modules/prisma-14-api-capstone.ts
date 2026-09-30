@@ -59,10 +59,10 @@ export const Prisma_14_MODULE: ModuleData = {
           instructions: ['Export a class', 'Take `prisma` through the constructor'],
           hint: '`constructor(private prisma: PrismaClient) {}`.',
           scaffold: '-- Whatever the service reads, the seed still answers:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
+          solutionSql: 'SELECT id, email FROM users;',
           why: 'Constructor injection is the seam every test doubles against.',
           cols: ['id', 'email'],
-          rows: 1,
+          rows: 3,
           code0:
             'export async function listUsers() {\n  return await prisma.user.findMany({ select: { id: true, email: true } });\n}',
           code1:

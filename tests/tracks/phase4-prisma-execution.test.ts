@@ -217,8 +217,9 @@ describe('Phase 4 — transactions, proxy, grading', () => {
     expect(matchesPrismaErrorCode('Record to update not found.', 'P2025')).toBe(true);
   });
 
-  it('proxy substitutes param markers from the seed context, NULL for the unresolvable', () => {
-    // `getId()` cannot resolve at translation time → marker → NULL at run time.
+  it('proxy substitutes param markers: caller binding, field demo binding, else NULL', () => {
+    // `getId()` cannot resolve at translation time → marker `id` → the FIELD's
+    // demo binding, so the statement still runs on real seed rows.
     const out = executePrismaCode(
       'return await prisma.user.findMany({ where: { id: getId() } });',
       fresh(),
@@ -226,7 +227,17 @@ describe('Phase 4 — transactions, proxy, grading', () => {
     );
     expect(out.ok).toBe(true);
     expect(out.success).toBe(true);
-    expect(out.steps[0].sql).toBe('SELECT id, name, email FROM users WHERE id = NULL;');
+    expect(out.steps[0].sql).toBe('SELECT id, name, email FROM users WHERE id = 1;');
+    expect(out.steps[0].result.rows).toHaveLength(1);
+
+    // A field the demo universe does not bind (`name`) has nothing to fall back
+    // to: the marker stays an honest NULL.
+    const unbindable = executePrismaCode(
+      'return await prisma.user.findMany({ where: { name: getName() } });',
+      fresh(),
+      { schema: SCHEMA },
+    );
+    expect(unbindable.steps[0].sql).toBe('SELECT id, name, email FROM users WHERE name = NULL;');
 
     // Late-bound variable missing at translation, present at execution time.
     const late = executePrismaCode(
@@ -239,6 +250,20 @@ describe('Phase 4 — transactions, proxy, grading', () => {
       "SELECT id, name, email FROM users WHERE email = 'mina@prisma.io';",
     );
     expect(late.steps[0].result.rows).toHaveLength(1);
+
+    // Markers the translator could not resolve bind through the FIELD they
+    // belong to (buyerEmail -> the demo email), so the lens and the executor
+    // run real seed values instead of an honest-but-useless NULL.
+    const byField = executePrismaCode(
+      'return await prisma.user.findMany({ where: { email: buyerEmail } });',
+      fresh(),
+      { schema: SCHEMA },
+    );
+    expect(byField.ok).toBe(true);
+    expect(byField.steps[0].sql).toBe(
+      "SELECT id, name, email FROM users WHERE email = 'mina@prisma.io';",
+    );
+    expect(byField.steps[0].result.rows).toHaveLength(1);
   });
 
   it('static-first: gradePrismaCode rejects bad shapes before touching the engine', () => {
