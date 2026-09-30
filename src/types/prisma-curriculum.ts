@@ -111,6 +111,17 @@ export interface PrismaStepBreakdown {
 /** Prisma side of concept theory (SQL fields stay populated for reuse). */
 export interface PrismaTheoryContent {
   targetHero?: PrismaTargetHero;
+  /**
+   * P2.1 — markdown mental model shown above the steps: the one-picture
+   * explanation the call → SQL → type steps hang off. Rendered by
+   * `PrismaTheoryBlock` on the concept lesson.
+   */
+  mentalModel?: string;
+  /**
+   * P2.1 — genuine step breakdowns (client call → Query-Engine translation →
+   * inferred result type), authored per concept. Absent = the lesson renders
+   * no steps section (never an auto-filled placeholder).
+   */
   stepBreakdowns?: PrismaStepBreakdown[];
   liveDemoCode?: string;
   /**

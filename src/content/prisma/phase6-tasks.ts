@@ -1,5 +1,5 @@
 import type { PracticeTask } from '../../types/curriculum';
-import type { PrismaMethod, PrismaValidationRule } from '../../types/prisma-curriculum';
+import type { PrismaMethod, PrismaStepBreakdown, PrismaTargetHero, PrismaValidationRule } from '../../types/prisma-curriculum';
 import { extractPrismaTarget } from '../../lib/prisma-engine/prisma-validator';
 
 /**
@@ -263,6 +263,39 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
   };
 }
 
+/**
+ * Shared skeleton for the Prisma theory builders: seeded intro table, the
+ * generated-SQL target, the live demo and the hero card. P2.1: no placeholder
+ * steps — `stepBreakdowns` appears ONLY when real ones are authored
+ * (`richPrismaTheory`), never auto-filled.
+ */
+function basePrismaTheory(t: {
+  summary: string;
+  takeaway: string;
+  sql: string;
+  explanation: string[];
+  hero: PrismaTargetHero;
+  mentalModel?: string;
+  steps?: PrismaStepBreakdown[];
+}) {
+  return {
+    summary: t.summary,
+    introTable: usersIntro('Seeded table every probe reads from.'),
+    explanation: t.explanation,
+    targetQuery: { sql: t.sql, explanation: 'The exact SQL this concept generates.', badge: "The query we're going to break down" },
+    keyTakeaway: t.takeaway,
+    exampleQuery: t.sql,
+    exampleQueryExplanation: 'Run it — the grid matches the seed rows.',
+    liveDemoSql: t.sql,
+    liveDemoNotes: 'Run it against the seeded users table.',
+    prisma: {
+      targetHero: t.hero,
+      ...(t.mentalModel ? { mentalModel: t.mentalModel } : {}),
+      ...(t.steps && t.steps.length > 0 ? { stepBreakdowns: t.steps } : {}),
+    },
+  };
+}
+
 /** Shared theory builder: seeded intro table + one hero + SQL lens. */
 export function prismaTheory(
   summary: string,
@@ -272,22 +305,45 @@ export function prismaTheory(
   heroLang: 'typescript' | 'prisma' | 'bash',
   heroWhy: string,
 ) {
-  return {
+  return basePrismaTheory({
     summary,
-    introTable: usersIntro('Seeded table every probe reads from.'),
+    takeaway,
+    sql,
     explanation: [
       'Every probe runs against the same three seeded users.',
       'The SQL lens shows the exact query Prisma generates.',
     ],
-    targetQuery: { sql, explanation: 'The exact SQL this concept generates.', badge: "The query we're going to break down" },
-    stepBreakdowns: [
-      { stepNumber: 1, stepTitle: 'FROM users exists', sqlSnippet: 'FROM users', explanation: 'Setup SQL creates the table first.' },
+    hero: { code: heroCode, language: heroLang, explanation: heroWhy },
+  });
+}
+
+/**
+ * P2.1 — rich theory builder: a bespoke mental model plus ≥3 genuine steps
+ * (client call → Query-Engine translation → inferred result type). Steps live
+ * on the `prisma` block and render via `PrismaTheoryBlock` on the lesson.
+ */
+export function richPrismaTheory(t: {
+  summary: string;
+  takeaway: string;
+  sql: string;
+  heroCode: string;
+  heroLang: 'typescript' | 'prisma' | 'bash';
+  heroWhy: string;
+  mentalModel?: string;
+  /** Concept-specific explanation lines; falls back to the two generic ones. */
+  explanation?: string[];
+  steps: PrismaStepBreakdown[];
+}) {
+  return basePrismaTheory({
+    summary: t.summary,
+    takeaway: t.takeaway,
+    sql: t.sql,
+    explanation: t.explanation ?? [
+      'Every probe runs against the same three seeded users.',
+      'The SQL lens shows the exact query Prisma generates.',
     ],
-    keyTakeaway: takeaway,
-    exampleQuery: sql,
-    exampleQueryExplanation: 'Run it — the grid matches the seed rows.',
-    liveDemoSql: sql,
-    liveDemoNotes: 'Run it against the seeded users table.',
-    prisma: { targetHero: { code: heroCode, language: heroLang, explanation: heroWhy } },
-  };
+    hero: { code: t.heroCode, language: t.heroLang, explanation: t.heroWhy },
+    mentalModel: t.mentalModel,
+    steps: t.steps,
+  });
 }
