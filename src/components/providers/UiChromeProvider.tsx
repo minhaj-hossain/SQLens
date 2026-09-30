@@ -20,6 +20,9 @@ import { getTrackMeta } from '@/tracks/registry';
 const SchemaModal = dynamic(
   () => import('@/components/roadmap/SchemaModal').then((m) => m.SchemaModal),
 );
+const PrismaSchemaModal = dynamic(
+  () => import('@/components/roadmap/PrismaSchemaModal').then((m) => m.PrismaSchemaModal),
+);
 const RoadmapModal = dynamic(
   () => import('@/components/roadmap/RoadmapModal').then((m) => m.RoadmapModal),
 );
@@ -61,7 +64,11 @@ export function UiChromeProvider({ children }: { children: React.ReactNode }) {
   return (
     <UiChromeContext.Provider value={value}>
       {children}
-      <SchemaModal isOpen={isSchemaModalOpen} onClose={closeSchema} />
+      {track === 'prisma' ? (
+        <PrismaSchemaModal isOpen={isSchemaModalOpen} onClose={closeSchema} />
+      ) : (
+        <SchemaModal isOpen={isSchemaModalOpen} onClose={closeSchema} />
+      )}
       <RoadmapModal
         isOpen={isRoadmapModalOpen}
         userState={userState}
