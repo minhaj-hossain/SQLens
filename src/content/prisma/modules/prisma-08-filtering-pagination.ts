@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 8 — Filtering, Sorting & Pagination. */
 export const Prisma_08_MODULE: ModuleData = {
@@ -27,14 +27,47 @@ export const Prisma_08_MODULE: ModuleData = {
       order: 1,
       title: 'Advanced Filtering Operators',
       shortDescription: '`contains`, `in`, `not`, `AND` / `OR` — filters as data.',
-      theory: prismaTheory(
-        'A Prisma filter is an object, not a string: `contains` compiles to LIKE, `in` to IN, `not` to <>, and `AND`/`OR` nest them without string concatenation — so a filter can be built, typed and tested.',
-        'Filters are objects: `contains`, `in`, `not`, nested with AND/OR.',
-        "SELECT id, name\nFROM users\nWHERE email LIKE '%prisma.io';",
-        "await prisma.user.findMany({\n  where: { email: { contains: 'prisma.io' } },\n  select: { id: true, name: true },\n});",
-        'typescript',
-        '`contains` is a LIKE; the parameter is still bound, never concatenated.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'A Prisma filter is an object, not a string: `contains` compiles to LIKE, `in` to IN, `not` to <>, and `AND`/`OR` nest them without string concatenation — so a filter can be built, typed and tested.',
+        takeaway: 'Filters are objects: `contains`, `in`, `not`, nested with AND/OR.',
+        sql: "SELECT id, name\nFROM users\nWHERE email LIKE '%prisma.io';",
+        heroCode: "await prisma.user.findMany({\n  where: { email: { contains: 'prisma.io' } },\n  select: { id: true, name: true },\n});",
+        heroLang: 'typescript',
+        heroWhy: '`contains` is a LIKE; the parameter is still bound, never concatenated.',
+        mentalModel: '**Filters are data, not strings.** A filter is a typed object the engine walks: `contains` → `LIKE`, `in` → `IN`, `not` → `<>`, and `AND`/`OR` nest those objects arbitrarily. Nothing is concatenated, so every value stays a bound parameter.',
+        explanation: [
+          'Each operator has one SQL equivalent, chosen by the engine — you never hand-write the WHERE.',
+          'Because filters are objects, they can be composed, narrowed and unit-tested before they reach the database.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the filter object describes the predicate',
+            codeSnippet: "where: { email: { contains: 'prisma.io' } }",
+            explanation: 'A typed object — `contains` says "substring"; the engine decides how to express it.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'the engine picks the operator and binds the value',
+            codeSnippet: 'contains → LIKE\nin → IN\nnot → <>',
+            explanation: 'The value becomes a bound parameter — `%prisma.io%` is data, never SQL text.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the emitted read is a plain parameterized SELECT',
+            codeSnippet: "SELECT id, name\nFROM users\nWHERE email LIKE '%prisma.io';",
+            explanation: 'One predictable statement — the Lens shows it after every run.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the result is typed from `select`',
+            codeSnippet: '{ id: number; name: string }[]',
+            explanation: 'Only the selected fields appear — and the compiler knows exactly which.',
+            visualData: { type: 'type_preview', title: 'Inferred type', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma08-c1-t1',
@@ -77,14 +110,47 @@ export const Prisma_08_MODULE: ModuleData = {
       order: 2,
       title: 'Pagination — Offset vs Cursor',
       shortDescription: '`skip`/`take` for pages, `cursor` for streams.',
-      theory: prismaTheory(
-        'Offset paging (`skip`/`take`) is simple but re-reads everything before the page and shifts when rows are inserted. Cursor paging (`cursor` + `take`) asks for "everything after this row" and stays stable — which is why feeds use it and admin tables usually do not.',
-        'Offset for pages, cursor for endless streams — both need an ORDER BY.',
-        'SELECT id, name\nFROM users\nORDER BY id ASC\nLIMIT 1 OFFSET 1;',
-        "await prisma.user.findMany({\n  orderBy: { id: 'asc' },\n  skip: 1,\n  take: 1,\n  select: { id: true, name: true },\n});",
-        'typescript',
-        'Without ORDER BY, offset paging has no defined page boundaries at all.',
-      ),
+      theory: richPrismaTheory({
+        summary: 'Offset paging (`skip`/`take`) is simple but re-reads everything before the page and shifts when rows are inserted. Cursor paging (`cursor` + `take`) asks for "everything after this row" and stays stable — which is why feeds use it and admin tables usually do not.',
+        takeaway: 'Offset for pages, cursor for endless streams — both need an ORDER BY.',
+        sql: 'SELECT id, name\nFROM users\nORDER BY id ASC\nLIMIT 1 OFFSET 1;',
+        heroCode: "await prisma.user.findMany({\n  orderBy: { id: 'asc' },\n  skip: 1,\n  take: 1,\n  select: { id: true, name: true },\n});",
+        heroLang: 'typescript',
+        heroWhy: 'Without ORDER BY, offset paging has no defined page boundaries at all.',
+        mentalModel: '**Offset counts rows, cursor points at one.** `skip`/`take` says "give me N rows after M"; `cursor` + `take` says "give me N rows after this row". Offset stays correct only until a row is inserted; cursor holds its place because it anchors to a key — and both are meaningless without an ORDER BY.',
+        explanation: [
+          'Offset paging compiles to `LIMIT` + `OFFSET`; cursor paging compiles to a `WHERE` on the key plus a `LIMIT`.',
+          'Every paginated read needs an ORDER BY, or "page 2" has no defined boundaries.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'offset paging counts rows',
+            codeSnippet: "await prisma.user.findMany({\n  orderBy: { id: 'asc' },\n  skip: 1,\n  take: 1,\n});",
+            explanation: 'Sort, then skip M and take N — simple, but the database still walks everything before the page.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'cursor paging points at a row',
+            codeSnippet: "await prisma.user.findMany({\n  cursor: { id: 1 },\n  take: 2,\n  orderBy: { id: 'asc' },\n});",
+            explanation: 'The cursor is a unique key, not a count — inserts before the cursor do not shift the page.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the offset page becomes LIMIT/OFFSET',
+            codeSnippet: 'SELECT id, name\nFROM users\nORDER BY id ASC\nLIMIT 1 OFFSET 1;',
+            explanation: 'ORDER BY plus LIMIT/OFFSET — the exact shape `skip`/`take` compiles to.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the cursor page becomes a keyed WHERE',
+            codeSnippet: 'SELECT id, name\nFROM users\nWHERE id > 1\nORDER BY id ASC\nLIMIT 2;',
+            explanation: 'A `WHERE` on the cursor key plus a `LIMIT` — no offset to count, so it stays stable as the table grows.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma08-c2-t1',
@@ -123,6 +189,91 @@ export const Prisma_08_MODULE: ModuleData = {
           code1:
             'export async function afterRow(id: number) {\n  return await prisma.user.findMany({\n    cursor: { id },\n    take: 2,\n    orderBy: { id: \'asc\' },\n    select: { id: true, name: true },\n  });\n}',
           rtype: '{ id: number; name: string }[]',
+        }),
+      ],
+    },
+    {
+      id: 'aggregating-grouping',
+      order: 3,
+      title: 'Aggregating & Grouping',
+      shortDescription: '`groupBy` + `_count` — one row per group, computed by the database.',
+      theory: richPrismaTheory({
+        summary: 'Aggregation is a different shape of read: `groupBy` returns one row per distinct group, with `_count` (and `_sum`, `_avg`) computed by the database — not by your code.',
+        takeaway: '`groupBy` computes per-group aggregates in the database, not in JavaScript.',
+        sql: 'SELECT name, COUNT(*) AS total\nFROM users\nGROUP BY name;',
+        heroCode: "await prisma.user.groupBy({\n  by: ['name'],\n  _count: true,\n});",
+        heroLang: 'typescript',
+        heroWhy: 'One row per group, with the count computed by the database.',
+        mentalModel: '**Collapse the table into groups.** `groupBy` folds rows into one row per distinct value of `by`, and `_count` / `_sum` / `_avg` compute the aggregate in the database. The result is a new shape — a group per row, not a `User` — so its type is inferred from `by` plus the aggregations.',
+        explanation: [
+          'A plain `findMany` returns rows; `groupBy` returns GROUPS — one row per distinct value, each carrying its aggregate.',
+          'Counting in the database (rather than looping in JavaScript) is what keeps a report to a single round trip.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the call names the grouping column',
+            codeSnippet: "await prisma.user.groupBy({\n  by: ['name'],\n  _count: true,\n});",
+            explanation: '`by` is the GROUP BY column; `_count: true` asks for the size of each group.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'the engine emits GROUP BY + COUNT',
+            codeSnippet: 'SELECT name, COUNT(*) AS total\nFROM users\nGROUP BY name;',
+            explanation: 'One query, one aggregate — the database does the counting, not your code.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the result has one row per group',
+            codeSnippet: 'Alex  1\nMina  1\nRafi  1',
+            explanation: 'Three distinct names in the seed → three groups. A bigger table would show multi-row groups.',
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the type is a group shape, not a model',
+            codeSnippet: '{ name: string; _count: { name: number } }[]',
+            explanation: 'The inferred type follows `by` plus the requested aggregation — never the `User` model.',
+            visualData: { type: 'type_preview', title: 'Inferred type', details: null },
+          },
+        ],
+      }),
+      tasks: [
+        prismaSnippetTask({
+          id: 'prisma08-c3-t1',
+          title: 'Group and count',
+          description: 'Return one row per distinct name, with the number of rows in each group.',
+          instructions: ['Call `prisma.user.groupBy`', "Group with `by: ['name']`", 'Ask for `_count: true`'],
+          hint: '`groupBy({ by: [...], _count: true })` compiles to GROUP BY + COUNT(*).',
+          scaffold: '-- One row per name, counted:\nSELECT name, COUNT(*) AS total FROM users WHERE id = 99;',
+          solutionSql: 'SELECT name, COUNT(*) AS total FROM users GROUP BY name;',
+          why: 'The database collapses the rows into groups and counts each one in a single query.',
+          cols: ['name', 'total'],
+          rows: 3,
+          code0:
+            'export async function countsByName() {\n  return await prisma.user.findMany({\n    select: { name: true },\n  });\n}',
+          code1:
+            "export async function countsByName() {\n  return await prisma.user.groupBy({\n    by: ['name'],\n    _count: true,\n  });\n}",
+          need: ['groupBy(', "'name'", '_count'],
+          rtype: '{ name: string; _count: { name: number } }[]',
+        }),
+        prismaSnippetTask({
+          id: 'prisma08-c3-t2',
+          title: 'Order the groups by size',
+          description: 'Return the same groups, biggest first.',
+          instructions: ["Keep `by: ['name']` and `_count: true`", "Order with `orderBy: { _count: { name: 'desc' } }`"],
+          hint: '`orderBy` can target the aggregation itself.',
+          scaffold: '-- Biggest group first:\nSELECT name, COUNT(*) AS total FROM users WHERE id = 99;',
+          solutionSql: 'SELECT name, COUNT(*) AS total FROM users GROUP BY name ORDER BY total DESC;',
+          why: 'Sorting on the aggregate is what turns a count into a leaderboard.',
+          cols: ['name', 'total'],
+          rows: 3,
+          code0:
+            "export async function topGroups() {\n  return await prisma.user.groupBy({\n    by: ['name'],\n    _count: true,\n  });\n}",
+          code1:
+            "export async function topGroups() {\n  return await prisma.user.groupBy({\n    by: ['name'],\n    _count: true,\n    orderBy: { _count: { name: 'desc' } },\n  });\n}",
+          need: ['orderBy', '_count'],
+          rtype: '{ name: string; _count: { name: number } }[]',
         }),
       ],
     },
