@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 14 — Production REST API Capstone. */
 export const Prisma_14_MODULE: ModuleData = {
@@ -120,6 +120,92 @@ export const Prisma_14_MODULE: ModuleData = {
           code1:
             'export class UserService {\n  constructor(private prisma: PrismaClient) {}\n\n  list() {\n    return this.prisma.user.findMany({ select: { id: true, email: true } });\n  }\n\n  create(data: { name: string; email: string }) {\n    return this.prisma.user.create({ data, select: { id: true, email: true } });\n  }\n\n  update(id: number, data: { name?: string }) {\n    return this.prisma.user.update({ where: { id }, data, select: { id: true, email: true } });\n  }\n\n  remove(id: number) {\n    return this.prisma.user.delete({ where: { id }, select: { id: true } });\n  }\n}',
           need: ['create(', 'update(', 'remove(', 'delete({'],
+        }),
+      ],
+    },
+    {
+      id: 'raw-sql-escape-hatch',
+      order: 3,
+      title: 'The Raw SQL Escape Hatch',
+      shortDescription: '`$queryRaw` + `Prisma.sql` — drop to SQL without giving up parameterization.',
+      theory: richPrismaTheory({
+        summary: 'When the query builder cannot express something, `prisma.$queryRaw` runs SQL you write — and the tagged template (or `Prisma.sql`) keeps your values parameterized. `$executeRaw` is the write-side twin.',
+        takeaway: '`$queryRaw` for reads, `$executeRaw` for writes — always parameterized.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+        heroCode: "const rows = await prisma.$queryRaw`\n  SELECT id, email FROM users WHERE email = ${email}\n`;",
+        heroLang: 'typescript',
+        heroWhy: 'The tagged template binds the interpolated value as a parameter — never concatenated into the SQL.',
+        mentalModel: '**Escape hatch, seatbelt on.** `$queryRaw` hands you raw SQL, but the tagged template still binds every interpolated value as a parameter. Concatenating values into the string is the one thing you must never do; `Prisma.sql` composes fragments while keeping them bound.',
+        explanation: [
+          'Reach for `$queryRaw` only when the query builder cannot express the query — a database-specific function, a complex report, an index hint.',
+          '`$executeRaw` returns the affected-row count instead of rows, for writes.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'the tagged template carries the SQL',
+            codeSnippet: "prisma.$queryRaw`\n  SELECT id, email FROM users WHERE email = ${email}\n`",
+            explanation: 'The template literal is the query — `$queryRaw` executes it and returns rows.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'every interpolation becomes a bound parameter',
+            codeSnippet: 'WHERE email = $1',
+            explanation: 'The value is sent separately from the SQL text, so injection is impossible by construction.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'the database runs your SQL as written',
+            codeSnippet: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+            explanation: 'Nothing is rewritten — raw means raw. The Lens shows exactly what ran.',
+            visualData: { type: 'sql_lens', title: 'Executed SQL', details: null },
+          },
+          {
+            stepNumber: 4,
+            stepTitle: 'the raw result carries a declared row type',
+            codeSnippet: '{ id: number; email: string }[]',
+            explanation: 'You annotate the row type yourself — `$queryRaw` cannot infer it the way a model call does.',
+            visualData: { type: 'type_preview', title: 'Declared type', details: null },
+          },
+        ],
+      }),
+      tasks: [
+        prismaSnippetTask({
+          id: 'prisma14-c3-t1',
+          title: 'One raw read',
+          description: 'Fetch a user with a tagged-template query — no string concatenation.',
+          instructions: ['Use `prisma.$queryRaw` with a template literal', 'Bind the email as an interpolated parameter'],
+          hint: 'Write the SQL inside a $queryRaw tagged template; the value stays a bound parameter.',
+          scaffold: '-- The raw read still hits this row:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
+          why: 'The tagged template keeps the value bound while you write the SQL yourself.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export async function findRaw() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true },\n  });\n}',
+          code1:
+            'export async function findRaw(email: string) {\n  return await prisma.$queryRaw`\n    SELECT id, email FROM users WHERE email = ${email}\n  `;\n}',
+          need: ['$queryRaw', 'SELECT id, email FROM users'],
+          ban: ['$queryRawUnsafe'],
+          rtype: '{ id: number; email: string }[]',
+        }),
+        prismaSnippetTask({
+          id: 'prisma14-c3-t2',
+          title: 'Compose with Prisma.sql',
+          description: 'Build a reusable WHERE fragment and stitch it into the query.',
+          instructions: ['Use `Prisma.sql` for the fragment', 'Interpolate it into `$queryRaw`'],
+          hint: 'Prisma.sql returns a composable fragment; embed it in the tagged template.',
+          scaffold: '-- The composed query reads the seed:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users;',
+          why: 'Composable fragments keep dynamic SQL parameterized and readable.',
+          cols: ['id', 'email'],
+          rows: 3,
+          code0:
+            'export async function findAll() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true },\n  });\n}',
+          code1:
+            'export async function findWhere(id: number) {\n  const where = Prisma.sql`WHERE id = ${id}`;\n  return await prisma.$queryRaw`\n    SELECT id, email FROM users ${where}\n  `;\n}',
+          need: ['Prisma.sql', '$queryRaw'],
+          rtype: '{ id: number; email: string }[]',
         }),
       ],
     },
