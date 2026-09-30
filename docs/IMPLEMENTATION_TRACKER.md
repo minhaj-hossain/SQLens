@@ -16,7 +16,7 @@
 | **Phase 1** | Honest Snippet Labs & View Polymorphism | `[x]` | 815 / 815 | 2026-09-30 (Task 1.3 — Phase 1 complete) |
 | **Phase 2** | Prisma Pedagogy Depth & Concept Expansion | `[x]` | 823 / 823 | 2026-10-01 (Task 2.2 — Phase 2 complete) |
 | **Phase 3** | Homepage Redesign & Conversion Island | `[x]` | 837 / 837 | 2026-10-01 (Task 3.1 — Phase 3 complete) |
-| **Phase 4** | Generic Multi-Track Scaling Architecture | `[ ]` | - | - |
+| **Phase 4** | Generic Multi-Track Scaling Architecture | `[/]` | 850 / 850 | 2026-10-01 (Task 4.1 — registry generalized; 4.2 pending) |
 
 ---
 
@@ -99,9 +99,15 @@
 ---
 
 ### Phase 4: Pluggable Multi-Track Architectural Refactor (P4)
-- [ ] **Task 4.1: Generalize `TrackDefinition` & Registry**
-  - [ ] Refactor `TRACK_IDS` and create dictionary-based `TRACK_REGISTRY`.
-  - [ ] Eliminate ternary operators in `src/tracks/registry.ts`.
+- [x] **Task 4.1: Generalize `TrackDefinition` & Registry**
+  - [x] Refactor `TRACK_IDS` and create dictionary-based `TRACK_REGISTRY`.
+  - [x] Eliminate ternary operators in `src/tracks/registry.ts`.
+  - [x] `src/types/track.ts`: `TRACK_IDS = ['sql', 'prisma'] as const` (a real literal tuple; was `readonly TrackId[]`, where `as const` did nothing); `BuiltinTrackId = (typeof TRACK_IDS)[number]`; `TrackId` kept as an alias so all ~20 import sites compile unchanged; `isTrackId` derived from the tuple (identical results, incl. junk strings).
+  - [x] `src/tracks/registry.ts`: `TrackDefinition` (`meta` / `modules` / `getModuleById` / `milestones` / `moduleIdPattern`) + `TRACK_REGISTRY: Record<BuiltinTrackId, TrackDefinition>` — adding an id to `TRACK_IDS` without a definition is now a compile error, so the ternary cascade cannot come back. SQL entry holds `ALL_MODULES` / `ROADMAP_MILESTONES` / `TRACK_META.sql` BY REFERENCE (identity, never a copy); the 3 ternary getters are dictionary lookups; `trackForModuleId` classifies from the registered patterns (historical semantics preserved exactly: `prisma-xyz` → prisma, junk/legacy → sql); `assertNoModuleIdCollision` reads the registry; new `assertTrackRegistry()` invariant collector (metadata identity, `basePath`, resolvable `initialModuleId`, exactly-one-track pattern ownership).
+  - [x] *Scope corrections (recorded at execution time):* (1) plan premise "Change `type TrackId = string`" was stale — `TrackId` was already `'sql' | 'prisma'`; widening to `string` would have degraded the exhaustive `Record` maps (`TRACK_META`, storage keys), so the union is now DERIVED from the tuple instead. (2) The plan's "engine adapter" registration is **descoped**: the only grading seam is `submitForTask` (`src/lib/track-submit.ts:115`), which routes on task content (`task.prisma`), not on track — a consumerless registry field would be dead abstraction; revisit when a 3rd track needs a different executor.
+  - [x] New gate file `tests/tracks/phase10-registry.test.ts` (13 tests): entry-per-`TRACK_IDS` completeness, metadata identity, 71-id module lookup parity sweep (57 SQL + 14 Prisma, by identity), `assertTrackRegistry() === []`, pattern ownership (exactly one track per id), classifier parity + 71-id round-trip, and a static no-branch guard pinning the acceptance criterion (comments stripped before matching).
+  - [x] *Automated verification:* `tsc --noEmit` clean · phase10 13/13 · phase1 7/7 · phase2 8/8 · phase3-track-progress 23/23 · full suite 850/850 (75 files) · `npm run build` exit 0 (86/86 static pages). All 6 registry consumers in `src/` compiled unchanged — no consumer edits were needed.
+  - *Gate Command:* `npx vitest run tests/tracks/phase10-registry.test.ts tests/tracks/phase1-foundation.test.ts tests/tracks/phase2-routing.test.ts` ✅
 - [ ] **Task 4.2: Shared Route View Wrappers**
   - [ ] Extract `TrackDayLayoutView.tsx`.
   - [ ] Make `sql` and `prisma` layout files thin delegates to prevent route duplication.
@@ -123,3 +129,4 @@
 | 2026-09-30 23:53 | 2.1 | Rich Prisma theory: `richPrismaTheory` factory (mentalModel + ≥3 genuine steps; placeholder step deleted globally), `PrismaTheoryContent.mentalModel` field, new `PrismaTheoryBlock` renderer (hero + steps were previously dead content), Days 2/3/12 rewritten (6 concepts × 4 steps w/ sql_lens + type_preview); invariant tests added (phase6 13→16); tests 815→818 | `57b35aa` · `6032879` · `b3a9411` · `204be75` · `2727a14` · `0832b68` (6 commits) · `tsc --noEmit` clean · phase6 16/16 · full suite 818/818 · `verify:curriculum` pass |
 | 2026-10-01 00:19 | 2.2 | Production concepts: `$extends` client extensions (prisma-13 c3, bans `$use`), `$queryRaw`/`Prisma.sql` escape hatch (prisma-14 c3), `groupBy`/`_count` aggregation (prisma-08 c3), and rich cursor-vs-offset pagination theory (prisma-08 c2) — all via `richPrismaTheory`; invariant tests added (phase6 16→21); tests 818→823 | `ca830a9` · `1e64bc2` · `c6b25f7` · `1d57fa5` (4 commits) · `tsc --noEmit` clean · phase8 green · full suite 823/823 |
 | 2026-10-01 01:10 | 3.1 | Homepage redesign: hero headline + live SQL Lens island (`HeroLensInteractivePreview.tsx`; lazy engine/playground imports, real statement labels/row counts/`executionTimeMs`, result peek, stale-run guard, `lens-step-in` animation) over `src/lib/homepage.ts` (both samples + continuity derivations), returning-learner card (own storage key per track, `deriveLastPosition`, task-unit %, server-silent), four feature badges; `vitest.config.ts` alias so components load in tests; new phase3 tests 14 (823→837), build green | `a1a3ecd` · `194994c` (2 commits) · `tsc --noEmit` clean · full suite 837/837 (74 files) · `npm run build` exit 0 (86 static pages) |
+| 2026-10-01 01:26 | 4.1 | Multi-track registry generalization: `TRACK_IDS` const tuple + derived `BuiltinTrackId` (`TrackId` union KEPT — plan premise stale; no consumer edits), `TRACK_REGISTRY` `TrackDefinition` dictionary (meta/modules/by-id lookup/milestones/moduleIdPattern; SQL identity by reference), pattern-driven `trackForModuleId`, `assertNoModuleIdCollision` from registry, new `assertTrackRegistry()` invariants; engine-adapter field descoped (the only grading seam `submitForTask` routes on task content, not track); new phase10 gate 13 tests (837→850) | `0e5d2e0` · `197e2ab` · `5903bfb` (3 commits) · `tsc --noEmit` clean · phase10 13/13 · phase1 7/7 · phase2 8/8 · phase3-track-progress 23/23 · full suite 850/850 (75 files) · `npm run build` exit 0 (86/86 static pages) |
