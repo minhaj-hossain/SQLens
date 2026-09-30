@@ -17,6 +17,7 @@ import {
   previewPrismaTask,
   submitForTask,
   typeInspectorState,
+  type ConsoleDisplayMode,
   type SqlLensState,
 } from '../../lib/track-submit';
 import { TaskInstructions } from './TaskInstructions';
@@ -101,6 +102,15 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
    * (the console then renders exactly as before).
    */
   const [sqlLens, setSqlLens] = useState<SqlLensState | null>(() => idleLensState(task) ?? null);
+  /**
+   * P1.2: snippet labs (CLI / schema.prisma) render a simulated terminal card
+   * instead of the authored reference rows. `null` everywhere else — the
+   * console then renders exactly as before. Cleared on task switch + preview.
+   */
+  const [terminalDisplay, setTerminalDisplay] = useState<{
+    mode: ConsoleDisplayMode;
+    output: string;
+  } | null>(null);
   // P1: answers to the task's `validation.judgment` (null = unanswered).
   const [judgmentAnswers, setJudgmentAnswers] = useState<(number | null)[]>(() =>
     (task.validation.judgment ?? []).map(() => null),
@@ -125,6 +135,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     // Phase 7: a new task starts with the LENS IDLE (or absent on the SQL
     // track) — never showing the previous task's generated SQL.
     setSqlLens(idleLensState(task) ?? null);
+    // P1.2: never carry the previous task's terminal card into this one.
+    setTerminalDisplay(null);
     attemptRef.current = 1;
     if (task.setupSql) {
       onExecuteSql(task.setupSql);
@@ -137,6 +149,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   // grades) but kept correct for both tracks: on the Prisma track a preview MUST
   // translate first, or the "run" would execute TypeScript as SQL.
   const handleRunPreview = (sqlToRun: string = currentSql) => {
+    // P1.2: a preview is not a graded run — drop any terminal card so the
+    // console shows the preview grid (or its honest empty state).
+    setTerminalDisplay(null);
     if (isPrismaTask(task)) {
       const preview = previewPrismaTask(task, sqlToRun, {
         execute: onExecuteSql,
@@ -192,6 +207,13 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     // Batch B: the preview grid shows what RAN even when grading is blocked â€”
     // the verdict banner carries the open-txn warning, not an empty console.
     setExecutionResult(outcome.result ?? null);
+    // P1.2: snippet labs render the simulated CLI card instead of reference
+    // rows — the outcome decides, so SQL-track and executable labs are untouched.
+    setTerminalDisplay(
+      outcome.displayMode === 'terminal' && outcome.terminalOutput
+        ? { mode: outcome.displayMode, output: outcome.terminalOutput }
+        : null,
+    );
     // Phase 7: the Prisma SQL Lens renders whatever was graded — the generated
     // statements on a pass or a fail, and the honest empty state of a snippet
     // lab that has no client call to translate.
@@ -381,6 +403,8 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               validationFeedback={validationMessage}
               sqlQuery={currentSql}
               sqlLens={sqlLens}
+              displayMode={terminalDisplay?.mode}
+              terminalOutput={terminalDisplay?.output}
             />
           </div>
         </div>
