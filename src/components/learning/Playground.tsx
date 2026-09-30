@@ -10,6 +10,7 @@ import {
   prismaPlaygroundSeedSql,
   runPrismaPlaygroundCode,
 } from '@/lib/prisma-playground';
+import { buildErdDiagramFromSource } from '@/lib/prisma-engine/prisma-erd';
 import { QueryExecutionResult } from '@/types/database';
 import { DATABASE_SCHEMAS } from '@/content/database/schema';
 import { INITIAL_TABLES } from '@/content/database/tables';
@@ -30,6 +31,9 @@ const ALL_TABLES = Object.keys(DATABASE_SCHEMAS);
 const ALL_COLUMNS = Array.from(
   new Set(ALL_TABLES.flatMap((t) => DATABASE_SCHEMAS[t]?.columns.map((c) => c.name) ?? [])),
 );
+
+/** P0.3 — the Prisma sidebar shows the seed schema's models (same AST as the ERD). */
+const PRISMA_SIDEBAR_MODELS = buildErdDiagramFromSource(prismaPlaygroundSchemaSource()).models;
 
 /** Levenshtein distance — powers the "did you mean" typo hint. */
 function editDistance(a: string, b: string): number {
@@ -460,11 +464,39 @@ export default function Playground({ onClose }: PlaygroundProps) {
             <div className="px-3 py-2.5 bg-surface-2 border-b border-border flex items-center gap-2">
               <Database className="w-4 h-4 text-func" />
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-text">
-                Schema ({tableNames.length})
+                Schema ({mode === 'prisma' ? PRISMA_SIDEBAR_MODELS.length : tableNames.length})
               </span>
             </div>
             <div className="max-h-[60vh] overflow-y-auto p-2 space-y-1.5">
-              {tableNames.map((t) => (
+              {mode === 'prisma'
+                ? PRISMA_SIDEBAR_MODELS.map((m) => (
+                    <div key={m.name} className="text-xs">
+                      <div className="font-mono font-semibold text-text px-1 py-0.5">{m.name}</div>
+                      <div className="px-3 space-y-0.5 text-text-faint font-mono text-[10.5px]">
+                        {m.fields.map((f) => (
+                          <div key={f.name} className="flex items-center justify-between gap-2">
+                            <span className="truncate">{f.name}</span>
+                            <span className="flex items-center gap-1 shrink-0">
+                              {f.flags.includes('pk') && (
+                                <span className="px-1 rounded bg-func/15 text-func border border-func/30 text-[9px]">@id</span>
+                              )}
+                              {f.flags.includes('fk') && (
+                                <span className="px-1 rounded bg-surface-3 text-text-dim border border-border text-[9px]">@relation</span>
+                              )}
+                              {f.flags.includes('unique') && (
+                                <span className="px-1 rounded bg-surface-3 text-text-dim border border-border text-[9px]">@unique</span>
+                              )}
+                              <span className="text-text-faint/70">{f.type}</span>
+                            </span>
+                          </div>
+                        ))}
+                        <div className="text-[10px] text-text-faint/70 border-t border-border-soft mt-1 pt-1">
+                          table {m.table}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                : tableNames.map((t) => (
                 <div key={t} className="text-xs">
                   <div className="font-mono font-semibold text-text px-1 py-0.5">{t}</div>
                   <div className="px-3 space-y-0.5 text-text-faint font-mono text-[10.5px]">
