@@ -10,6 +10,7 @@ import {
 } from '../../src/lib/track-submit';
 import {
   PRISMA_PLAYGROUND_EXAMPLE,
+  playgroundModeFromSearch,
   prismaPlaygroundSchemaSource,
   prismaPlaygroundSeedSql,
   runPrismaPlaygroundCode,
@@ -20,6 +21,7 @@ import {
   PRISMA_SEED_SCHEMA,
   prismaSchemaSourceForTask,
 } from '../../src/lib/prisma-engine/prisma-submit-pipeline';
+import { buildErdDiagramFromSource } from '../../src/lib/prisma-engine/prisma-erd';
 
 function firstPrismaTask(): PracticeTask {
   const mod = PRISMA_MODULES.find((m) => m.id === 'prisma-01')!;
@@ -89,5 +91,21 @@ describe('Phase 11 — Prisma playground contract', () => {
     expect(out.ok).toBe(false);
     expect(out.steps).toHaveLength(0);
     expect('passed' in out).toBe(false);
+  });
+});
+
+describe('P0.3 — playground mode + sidebar model source', () => {
+  it('switches to prisma only for ?mode=prisma', () => {
+    expect(playgroundModeFromSearch('?mode=prisma')).toBe('prisma');
+    expect(playgroundModeFromSearch('?mode=sql')).toBe('sql');
+    expect(playgroundModeFromSearch('?foo=1')).toBe('sql');
+    expect(playgroundModeFromSearch('')).toBe('sql');
+  });
+
+  it('sidebar models come from the seed schema with id/relation flags', () => {
+    const models = buildErdDiagramFromSource(prismaPlaygroundSchemaSource()).models;
+    expect(models.map((m) => m.name)).toEqual(['User', 'Post']);
+    expect(models[0].fields.find((f) => f.name === 'id')!.flags).toContain('pk');
+    expect(models[1].fields.find((f) => f.name === 'authorId')!.flags).toContain('fk');
   });
 });
