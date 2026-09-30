@@ -648,3 +648,18 @@
   background: var(--text-faint);
 }
 
+
+/* ── Homepage Lens steps (Phase 3, Task 3.1) ─────────────────────────────────
+   Each statement the hero's Prisma call sent animates in, in execution order —
+   the lens reads like the query log it actually is. Reduced-motion users get
+   the same content with no animation. */
+@keyframes lens-step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lens-step-in { animation: lens-step-in 0.38s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lens-step-in { animation: none; }
+}

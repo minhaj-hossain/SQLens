@@ -1,6 +1,15 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    // Tests import source by relative path; this alias exists so a test can also
+    // render a component whose OWN imports use Next's `@/*` alias (e.g. the
+    // homepage render test) — it mirrors tsconfig `paths` for the test runner.
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   test: {
     // The legacy audit worktree is intentionally kept in the repo for reference.
     // It ships its own copy of src/tests — never run those duplicates.
