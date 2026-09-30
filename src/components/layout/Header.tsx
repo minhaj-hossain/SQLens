@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
-  const { modules, meta } = useTrackCurriculum();
+  const { track, modules, meta } = useTrackCurriculum();
   const totalModules = modules.length;
   const completedCount = Object.keys(userState.completedModules).length;
   const progressPct = Math.round((completedCount / totalModules) * 100);
@@ -84,11 +84,11 @@ export const Header: React.FC<HeaderProps> = ({
             <Icon name="database" className="text-[16px]" />
           </button>
 
-          {/* SQL Playground — real route since Phase 1 */}
+          {/* Playground — real route since Phase 1; track-routed since P0.3 */}
           <Link
-            href="/playground"
-            title="Open SQL Playground"
-            aria-label="Open SQL Playground"
+            href={track === 'prisma' ? '/playground?mode=prisma' : '/playground'}
+            title={`Open ${meta.label} Playground`}
+            aria-label={`Open ${meta.label} Playground`}
             className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150"
           >
             <Icon name="terminal" className="text-[16px]" />
