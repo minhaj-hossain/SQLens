@@ -52,6 +52,8 @@ export const Prisma_13_MODULE: ModuleData = {
           code1:
             "try {\n  await prisma.user.create({ data: { name, email } });\n} catch (error) {\n  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {\n    throw new ConflictError('Email already registered');\n  }\n  throw error;\n}",
           need: ['Prisma.PrismaClientKnownRequestError', "code === 'P2002'"],
+          // Task 0.2: the failing `create` param must not render NULL.
+          demoVariables: { name: 'Alexandra' },
         }),
         prismaSnippetTask({
           id: 'prisma13-c1-t2',
@@ -69,6 +71,8 @@ export const Prisma_13_MODULE: ModuleData = {
           code1:
             "export async function rename(req: Request, res: Response) {\n  try {\n    const user = await prisma.user.update({\n      where: { id: Number(req.params.id) },\n      data: { name: req.body.name },\n    });\n    return res.json(user);\n  } catch (error) {\n    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {\n      return res.status(404).json({ error: 'User not found' });\n    }\n    return res.status(500).json({ error: 'Server error' });\n  }\n}",
           need: ["code === 'P2025'", 'res.status(404)'],
+          // Task 0.2: `data: { name: req.body.name }` must render a real value.
+          demoVariables: { name: 'Alexandra' },
         }),
       ],
     },

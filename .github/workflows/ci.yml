@@ -60,6 +60,9 @@ jobs:
       - name: Prisma grading-pipeline audit (submitForTask router over every Prisma task)
         run: npm run audit:prisma-grading-pipeline
 
+      - name: Prisma equivalence audit (approach-fairness + no-false-accept)
+        run: npm run audit:prisma-equivalence
+
       - name: Grading-policy enforcement
         run: npm run audit:grading-policy
 

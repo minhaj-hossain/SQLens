@@ -48,8 +48,9 @@ export const Prisma_09_MODULE: ModuleData = {
           cols: ['id', 'email'],
           select: ['id', 'email'],
           method: 'create',
-          generatedSql:
-            "INSERT INTO users (id, name, email) VALUES (3, 'Rafi', 'rafi@prisma.io');",
+          // Task 0.2: bind the write params the translator cannot see, so the
+          // reference renders the intended row instead of `INSERT … NULL`.
+          demoVariables: { name: 'Rafi', email: 'rafi@prisma.io' },
           rows: 1,
           code0:
             'export async function registerUser(name: string, email: string) {\n  return await prisma.user.create({\n    data: { name, email },\n  });\n}',
@@ -69,8 +70,6 @@ export const Prisma_09_MODULE: ModuleData = {
           cols: ['id'],
           select: [],
           method: 'createMany',
-          generatedSql:
-            "INSERT INTO users (id, name, email) VALUES (1, 'Alex', 'alex@prisma.io'), (2, 'Mina', 'mina@prisma.io'), (3, 'Rafi', 'rafi@prisma.io');",
           rows: 3,
           code0:
             'export async function importUsers() {\n  return await prisma.user.findMany({\n    select: { id: true },\n  });\n}',

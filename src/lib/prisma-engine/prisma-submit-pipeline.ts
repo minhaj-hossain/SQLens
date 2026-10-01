@@ -16,7 +16,11 @@
  *      the SQL Lens, the grader and the proxy can never execute different SQL
  *   5. static checks first (`validatePrismaCode`), then execution rules
  *      (`gradePrismaExecution`) — the same two layers as `gradePrismaCode`
- *   6. record one telemetry event (best-effort, never fatal)
+ *   6. final-state check for MUTATIONS (Task 0.1 — SQL-pipeline step 6 parity):
+ *      the learner's post-state must match a sandbox replay of the reference's
+ *      own translated SQL; deferred while a reference still renders unresolved
+ *      NULL params (the Task 0.2 carve-out, asserted in the phase12 tests)
+ *   7. record one telemetry event (best-effort, never fatal)
  *
  * `previewPrismaSubmission` is the ungraded twin of step 1–4 (the editor's Run):
  * same reset/seed/translate/execute path, no verdict.
@@ -37,17 +41,24 @@
 
 import type { PracticeTask } from '../../types/curriculum';
 import type { PrismaValidationRule } from '../../types/prisma-curriculum';
-import type { QueryExecutionResult } from '../../types/database';
+import type { DatabaseState, QueryExecutionResult } from '../../types/database';
 import {
   PRISMA_SEED_POST_ROWS,
   PRISMA_SEED_ROWS,
   PRISMA_TASK_SETUP_SQL,
 } from '../../content/prisma/phase6-tasks';
-import { generatePrismaSql, PRISMA_DEMO_VARIABLES, type SeedContext } from './prisma-sql-generator';
+import {
+  generatePrismaSql,
+  PRISMA_DEMO_VARIABLES,
+  renderGeneratedSql,
+  type GenerateResult,
+  type SeedContext,
+} from './prisma-sql-generator';
 import { runPrismaPlan, type PrismaExecutionStep } from './prisma-proxy-executor';
 import { parsePrismaSchema, type PrismaSchema } from './prisma-schema-parser';
 import { gradePrismaCode, gradePrismaExecution } from './prisma-execution';
 import { validatePrismaCode } from './prisma-validator';
+import { gradeFinalState } from '../sql-engine/state-verification';
 import {
   type GradingStage,
   type GradingSurface,
@@ -91,6 +102,17 @@ export function prismaSeedContext(
   };
 }
 
+/**
+ * Task 0.2 — the seed context for ONE task: the shared demo universe plus the
+ * task's author-declared `demoVariables`, so a reference param the translator
+ * cannot see (`update({ data: { name } })`) renders a real value instead of the
+ * honest NULL. Learner and reference share this context, so a param the learner
+ * writes and the reference both bind to the same value and stay in agreement.
+ */
+function taskSeedContext(task: PracticeTask): SeedContext {
+  return prismaSeedContext(task.prisma?.demoVariables);
+}
+
 
 /**
  * Prisma read-through contract — Phase 5.
@@ -122,9 +144,69 @@ export function isExecutablePrismaTask(task: PracticeTask): boolean {
   if (!isPrismaTask(task)) return false;
   const gen = generatePrismaSql(task.prisma!.solutionCode, {
     schema: schemaForTask(task),
-    seed: prismaSeedContext(),
+    seed: taskSeedContext(task),
   });
   return gen.ok;
+}
+
+/**
+ * Task 0.1 — translate a task's REFERENCE client code (schema + seed): the raw
+ * material of the state layer. `null` = the reference is not translatable
+ * (snippet lab), which is never state-graded.
+ */
+function translateReference(task: PracticeTask): { gen: GenerateResult; seed: SeedContext } | null {
+  const seed = taskSeedContext(task);
+  const gen = generatePrismaSql(task.prisma!.solutionCode, { schema: schemaForTask(task), seed });
+  return gen.ok ? { gen, seed } : null;
+}
+
+/** SQL verbs that make a plan a STATE change — the Prisma mirror of `isStateGraded`. */
+const MUTATING_SQL_RE = /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE)\b/i;
+
+/**
+ * Task 0.1 — the Prisma mirror of the SQL track's `isStateGraded(task)`: the
+ * task's REFERENCE call mutates state, so the learner's post-state must match a
+ * sandbox replay of the reference (wrong row / wrong value → different state).
+ * Reads (`findMany` / `findUnique` / `findFirst`) stay result-graded; snippet
+ * labs are never executable, and `$transaction` / nested writes classify by
+ * their own statements.
+ */
+export function isStateGradedPrismaTask(task: PracticeTask): boolean {
+  if (!isPrismaTask(task)) return false;
+  const ref = translateReference(task);
+  return (
+    !!ref &&
+    ref.gen.statements.some(
+      (s) => !s.sql.trim().startsWith('--') && MUTATING_SQL_RE.test(s.sql.trim()),
+    )
+  );
+}
+
+/**
+ * Render the reference plan into executable SQL (the exact `renderGeneratedSql`
+ * path the learner's plan takes) and report whether any param-marker statement
+ * fell back to the honest NULL.
+ *
+ * Task 0.2 deferral: comparing against a NULL-writing reference would
+ * false-reject a learner who wrote the value the task intends (e.g.
+ * `data: { name: 'Alexandra' }` against a reference that renders `SET name =
+ * NULL`), so those tasks skip the state layer until the reference demo
+ * bindings are fixed — a temporary carve-out explicitly asserted in
+ * `tests/tracks/phase12-prisma-state-parity.test.ts`.
+ */
+function referenceStateSql(
+  gen: GenerateResult,
+  seed: SeedContext,
+): { sql: string; unresolvedNull: boolean } {
+  const parts: string[] = [];
+  let unresolvedNull = false;
+  for (const stmt of gen.statements) {
+    if (stmt.sql.trim().startsWith('--')) continue;
+    const rendered = renderGeneratedSql(stmt, seed).trimEnd();
+    if (/\/\*\s*param:/.test(stmt.sql) && /\bNULL\b/.test(rendered)) unresolvedNull = true;
+    parts.push(rendered.endsWith(';') ? rendered : `${rendered};`);
+  }
+  return { sql: parts.join('\n'), unresolvedNull };
 }
 
 /** The `schema.prisma` a task's code is translated against (authored wins). */
@@ -146,6 +228,13 @@ export function setupSqlForPrismaTask(task: PracticeTask): string {
 export interface PrismaSubmitHooks {
   /** Execute SQL on the session executor (same hook the SQL pipeline takes). */
   execute: (sql: string) => QueryExecutionResult;
+  /**
+   * Task 0.1: deep-cloning state snapshot hook — the SAME hook the SQL
+   * pipeline grades mutations with (`SqlExecutorProvider` already supplies
+   * it). Absent → the final-state layer is skipped (legacy hosts/tests keep
+   * their old verdicts, no crash).
+   */
+  getDatabaseState?: () => DatabaseState;
   /** Reset to seed. Absent → `fresh` retries keep prior mutations. */
   resetDatabase?: () => void;
 }
@@ -194,6 +283,14 @@ export interface PrismaSubmitResult {
   stage: GradingStage;
   /** True when the task's own reference fails (authoring bug — file it). */
   inconclusive?: boolean;
+  /**
+   * Task 0.1: final-state layer verdict. `undefined` when the layer did not
+   * run (reads, snippet labs, expectFailure labs, deferred NULL references, or
+   * a host without the snapshot hook). Mirrors the SQL pipeline's `stateOk`.
+   */
+  stateOk?: boolean;
+  /** Columns whose VALUES differed on a same-size row mismatch (state layer). */
+  diffColumns?: string[];
 }
 
 export interface PrismaSubmitOutcome extends PrismaSubmitResult {
@@ -323,6 +420,8 @@ function emit(
       surface: options.surface,
       validatorPassed: full.stage === 'pass' || full.stage === 'final-state',
       affectedRows: full.result?.affectedRows ?? full.result?.rowCount,
+      stateOk: full.stateOk,
+      diffColumns: full.diffColumns,
       inconclusive: full.inconclusive,
       attempt: options.attempt,
     });
@@ -338,7 +437,7 @@ function emit(
  */
 export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): PrismaSubmitOutcome {
   const { task, code, hooks, surface, attempt = 1, record = true } = options;
-  const { execute, resetDatabase } = hooks;
+  const { execute, getDatabaseState, resetDatabase } = hooks;
   const rule = task.prisma?.validation as PrismaValidationRule | undefined;
   const done = (outcome: PrismaSubmitResult): PrismaSubmitOutcome =>
     emit(task, outcome, { surface, attempt, record });
@@ -356,12 +455,15 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   // every submit so retries never accumulate rows.
   if (task.databaseLifecycle === 'fresh') resetDatabase?.();
   execute(setupSqlForPrismaTask(task));
+  // Task 0.1: the state layer's pre-state — snapshot AFTER seeding and BEFORE
+  // the learner's plan runs (the exact state `gradeFinalState` replays from).
+  const preState = getDatabaseState?.();
 
   // Translate, then grade STATIC-first: `validatePrismaCode` decides before
   // anything executes (SQL-pipeline parity — a starter that happens to
   // generate runnable SQL still fails its structural rules untouched).
   const schema = schemaForTask(task);
-  const seed = prismaSeedContext();
+  const seed = taskSeedContext(task);
   const gen = generatePrismaSql(code, { schema, seed });
   if (!gen.ok) {
     // P1.2 — how this snippet lab should render (CLI terminal / schema notice,
@@ -379,6 +481,23 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
         passed: false,
         feedback: staticOnly.feedback,
         readThrough: true,
+        steps: [],
+        stage: 'validation',
+      });
+    }
+    // Task 0.4: a task whose OWN reference is a translatable client call is a
+    // client-code lab — a submission that does not translate (e.g. the `where`
+    // clause deleted from an update) must FAIL. Falling through to the
+    // read-through dataset contract would grade the REFERENCE's dataset as if
+    // the learner's code had run: the Prisma phantom pass (proven by
+    // `audit:prisma-equivalence`'s drop-where probe). Snippet labs — whose
+    // references have no client call to translate — keep the contract below,
+    // and `expectFailure` labs keep their execution-graded path untouched.
+    if (isExecutablePrismaTask(task) && !rule.expectFailure) {
+      return done({
+        passed: false,
+        feedback: gen.reason ?? 'This code could not be translated into SQL.',
+        untranslatable: true,
         steps: [],
         stage: 'validation',
       });
@@ -423,6 +542,9 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   // count.
   const run = runPrismaPlan(gen, { executeQuery: execute }, { schema, seed });
   const steps = run.steps;
+  // Task 0.1: post-plan snapshot (`getDatabaseState` deep-clones). Captured
+  // before any grading read; unused when the run failed (that path returns).
+  const postState = getDatabaseState?.();
   // The rendered statements, joined — the same strings the lens renders (one
   // `renderGeneratedSql` path, so the SQL the learner sees is the SQL that ran).
   const renderedSql = steps.map((s) => s.sql).join('\n');
@@ -484,12 +606,59 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
       ? { ...mainStep.result, affectedRows: affectedTotal }
       : (mainStep?.result ?? last);
   const final = gradePrismaCode(code, rule, graded, renderedSql);
+  if (!final.passed) {
+    return done({
+      passed: false,
+      feedback: final.feedback,
+      steps,
+      result: graded,
+      stage: 'validation',
+    });
+  }
+
+  // Task 0.1 — final-state layer (SQL-pipeline step 6 parity). A passed
+  // MUTATION is re-checked against the DATABASE: the learner's post-state must
+  // match a sandbox replay of the reference's own translated SQL, so a
+  // wrong-row / wrong-value write fails where `affectedRows` alone cannot tell
+  // (the class `GRADING_POLICY.md` Rule 2 exists to close on the SQL track).
+  if (!rule.expectFailure && preState && postState && isStateGradedPrismaTask(task)) {
+    const ref = translateReference(task);
+    if (ref) {
+      const referenceSql = referenceStateSql(ref.gen, ref.seed);
+      if (!referenceSql.unresolvedNull) {
+        const stateCheck = gradeFinalState(preState, referenceSql.sql, postState);
+        if (!stateCheck.ok) {
+          return done({
+            passed: false,
+            feedback:
+              stateCheck.message ??
+              'The resulting database state does not match the expected outcome.',
+            steps,
+            result: graded,
+            stage: 'final-state',
+            stateOk: false,
+            diffColumns: stateCheck.diffColumns,
+          });
+        }
+        return done({
+          passed: true,
+          feedback: final.feedback,
+          steps,
+          result: graded,
+          stage: 'pass',
+          stateOk: true,
+          inconclusive: stateCheck.inconclusive,
+        });
+      }
+    }
+  }
+
   return done({
-    passed: final.passed,
+    passed: true,
     feedback: final.feedback,
     steps,
     result: graded,
-    stage: final.passed ? 'pass' : 'validation',
+    stage: 'pass',
   });
 }
 
@@ -530,7 +699,7 @@ export function previewPrismaSubmission(options: PrismaPreviewOptions): PrismaPr
   execute(setupSqlForPrismaTask(task));
 
   const schema = schemaForTask(task);
-  const seed = prismaSeedContext();
+  const seed = taskSeedContext(task);
   const gen = generatePrismaSql(code, { schema, seed });
   if (!gen.ok) return { ok: false, reason: gen.reason, steps: [] };
 

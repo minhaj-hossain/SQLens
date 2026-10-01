@@ -86,6 +86,8 @@ export const Prisma_12_MODULE: ModuleData = {
           code1:
             'export async function signUp(name: string, email: string, title: string) {\n  return await prisma.user.create({\n    data: {\n      name,\n      email,\n      posts: { create: [{ title }] },\n    },\n  });\n}',
           need: ['posts: { create:'],
+          // Task 0.2: nested write params (`name`, `title`) must not render NULL.
+          demoVariables: { name: 'Alexandra', title: 'Hello Prisma' },
         }),
         prismaSnippetTask({
           id: 'prisma12-c1-t2',
@@ -106,6 +108,8 @@ export const Prisma_12_MODULE: ModuleData = {
           code1:
             'export async function publish(title: string, categoryId: number, categoryName: string) {\n  return await prisma.post.create({\n    data: {\n      title,\n      categories: {\n        connectOrCreate: {\n          where: { id: categoryId },\n          create: { name: categoryName },\n        },\n      },\n    },\n  });\n}',
           need: ['connectOrCreate:', 'where: { id: categoryId }'],
+          // Task 0.2: the created child's `title` must not render NULL.
+          demoVariables: { title: 'Hello Prisma', categoryName: 'General' },
           ban: ['connect: { id: categoryId }'],
         }),
       ],
@@ -191,6 +195,8 @@ export const Prisma_12_MODULE: ModuleData = {
           code1:
             'export async function promote(name: string, email: string) {\n  return await prisma.$transaction(async (tx) => {\n    const existing = await tx.user.findFirst({ where: { email } });\n    if (existing) return existing;\n    return await tx.user.create({ data: { name, email } });\n  });\n}',
           need: ['$transaction(async (tx)', 'tx.user.create('],
+          // Task 0.2: the in-transaction `create` param must not render NULL.
+          demoVariables: { name: 'Alexandra' },
           noModelContract: true,
           ban: ['await prisma.user.create('],
         }),

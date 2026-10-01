@@ -105,6 +105,29 @@ describe('Phase 8 — the Prisma audit is wired into every gate', () => {
       'audit-prisma-grading-pipeline.ts',
     );
   });
+
+  it('Task 0.4 — the Prisma equivalence audit is wired the same way', () => {
+    const src = readFileSync(repoFile('scripts/audit-prisma-equivalence.ts'), 'utf8');
+    expect(src).toContain('submitForTask');
+    expect(src).toContain('record: false');
+    expect(src).toContain('process.exit(1)');
+    const pkg = JSON.parse(readFileSync(repoFile('package.json'), 'utf8')) as {
+      scripts: Record<string, string>;
+    };
+    expect(pkg.scripts['audit:prisma-equivalence']).toBe('tsx scripts/audit-prisma-equivalence.ts');
+    const chain = pkg.scripts['audit:all'];
+    expect(chain).toContain('npm run audit:prisma-equivalence');
+    // Same ordering rule: it must not run before the Prisma gate it audits against.
+    expect(chain.indexOf('npm run audit:prisma-equivalence')).toBeGreaterThan(
+      chain.indexOf('npm run audit:prisma-grading-pipeline &&'),
+    );
+    expect(readFileSync(repoFile('.github/workflows/ci.yml'), 'utf8')).toContain(
+      'npm run audit:prisma-equivalence',
+    );
+    expect(readFileSync(repoFile('scripts/README.md'), 'utf8')).toContain(
+      'audit-prisma-equivalence.ts',
+    );
+  });
 });
 
 describe('Phase 8 — bulk router contract over every Prisma task', () => {

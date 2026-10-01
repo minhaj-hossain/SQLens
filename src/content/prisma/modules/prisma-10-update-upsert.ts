@@ -48,7 +48,8 @@ export const Prisma_10_MODULE: ModuleData = {
           cols: ['id', 'name'],
           select: ['id', 'name'],
           method: 'update',
-          generatedSql: "UPDATE users SET name = 'Alexandra' WHERE id = 1;",
+          // Task 0.2: bind `name` so the reference renders `SET name = 'Alexandra'`.
+          demoVariables: { name: 'Alexandra' },
           rows: 1,
           code0:
             'export async function rename(id: number, name: string) {\n  return await prisma.user.findUnique({\n    where: { id },\n    select: { id: true, name: true },\n  });\n}',
@@ -68,7 +69,6 @@ export const Prisma_10_MODULE: ModuleData = {
           cols: ['id'],
           select: [],
           method: 'updateMany',
-          generatedSql: "UPDATE users SET name = 'Alexandra' WHERE name = 'Alex';",
           rows: 1,
           code0:
             'export async function renameAll() {\n  return await prisma.user.updateMany({\n    where: {},\n    data: { name: \'Alexandra\' },\n  });\n}',
@@ -104,8 +104,6 @@ export const Prisma_10_MODULE: ModuleData = {
           cols: ['id', 'email'],
           select: ['id', 'email'],
           method: 'upsert',
-          generatedSql:
-            "INSERT INTO users (id, name, email) VALUES (2, 'Mina', 'mina@prisma.io');",
           rows: 1,
           code0:
             'export async function ensureUser(name: string, email: string) {\n  return await prisma.user.create({\n    data: { name, email },\n    select: { id: true, email: true },\n  });\n}',
@@ -129,6 +127,8 @@ export const Prisma_10_MODULE: ModuleData = {
           code1:
             'export async function syncUser(name: string, email: string) {\n  return await prisma.user.upsert({\n    where: { email },\n    update: { name },\n    create: { name, email },\n  });\n}',
           need: ['update: { name }', 'where: { email }'],
+          // Task 0.2: `update: { name }` must render a real value, not NULL.
+          demoVariables: { name: 'Alexandra' },
         }),
       ],
     },
@@ -153,8 +153,8 @@ export const Prisma_10_MODULE: ModuleData = {
           select: ['id', 'email'],
           noCols: ['name'],
           method: 'upsert',
-          generatedSql:
-            "INSERT INTO users (id, name, email) VALUES (3, 'Rafi', 'rafi@prisma.io');",
+          // Task 0.2: upsert's `update: { name }` branch must render a real value.
+          demoVariables: { name: 'Rafi', email: 'rafi@prisma.io' },
           rows: 1,
           code0:
             'export async function reconcile(name: string, email: string) {\n  return await prisma.user.update({\n    where: { email },\n    data: { name },\n    select: { id: true, email: true },\n  });\n}',

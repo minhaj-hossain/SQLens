@@ -61,8 +61,12 @@ export function methodOf(code: string): PrismaMethod {
  * reproduces the Phase-6 pilot behaviour exactly.
  */
 export interface PrismaTaskExtras {
-  /** What Prisma really sends (INSERT/UPDATE/DELETE). Defaults to `solutionSql`. */
-  generatedSql?: string;
+  /**
+   * Task 0.2 — runtime bindings for write params the translator cannot see
+   * (`data: { name }` → `name`). Threaded to `prisma.demoVariables` so the
+   * reference renders a real value instead of the honest `NULL`.
+   */
+  demoVariables?: Record<string, unknown>;
   /** Override the graded method (defaults to the method found in `code1`). */
   method?: PrismaMethod;
   /** Override the graded model (defaults to `user`). */
@@ -178,8 +182,8 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
     prisma: {
       initialCode: t.code0,
       solutionCode: t.code1,
-      generatedSql: t.generatedSql ?? t.solutionSql,
       expectedType: t.rtype,
+      ...(t.demoVariables ? { demoVariables: t.demoVariables } : {}),
       validation: {
         ...prismaRules(t, selectFields),
         ...(t.noCols ? { forbiddenFieldsInSelect: t.noCols } : {}),
@@ -248,8 +252,8 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     prisma: {
       initialCode: t.code0,
       solutionCode: t.code1,
-      generatedSql: t.generatedSql ?? t.solutionSql,
       expectedType: t.rtype ?? 'string',
+      ...(t.demoVariables ? { demoVariables: t.demoVariables } : {}),
       validation: {
         requiredCodeSnippets: t.need,
         ...(t.ban ? { forbiddenCodeSnippets: t.ban } : {}),

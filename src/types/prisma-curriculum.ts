@@ -81,10 +81,17 @@ export interface PrismaTaskContent {
   initialCode: string;
   /** Reference solution TypeScript. */
   solutionCode: string;
-  /** Generated SQL preview for the SQL Lens (authored; engine verifies). */
-  generatedSql?: string;
   /** Inferred result type preview for the Type Inspector. */
   expectedType?: string;
+  /**
+   * Task 0.2 — author-declared runtime bindings for params the translator
+   * cannot see (`update({ data: { name } })`). Resolved by
+   * `renderGeneratedSql` (source identifier first, then field name) through the
+   * seed context, so a reference renders `SET name = 'Alexandra'` instead of the
+   * honest `NULL` for an unresolved param. Omitted → the shared demo universe
+   * (`id` / `userId` / `email`) applies and unresolved params stay `NULL`.
+   */
+  demoVariables?: Record<string, unknown>;
   validation: PrismaValidationRule;
 }
 

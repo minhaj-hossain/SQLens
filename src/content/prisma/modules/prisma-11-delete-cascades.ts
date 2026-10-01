@@ -65,7 +65,6 @@ export const Prisma_11_MODULE: ModuleData = {
           cols: ['id'],
           select: [],
           method: 'deleteMany',
-          generatedSql: "DELETE FROM users WHERE email LIKE '%spam%';",
           rows: 0,
           code0:
             'export async function purgeSpam() {\n  return await prisma.user.deleteMany({\n    where: {},\n  });\n}',

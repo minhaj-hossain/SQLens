@@ -140,7 +140,13 @@ export function submitForTask(options: TrackSubmitOptions): TrackSubmitOutcome {
   const outcome = runAndGradePrismaSubmission({
     task,
     code,
-    hooks: { execute: hooks.execute, resetDatabase: hooks.resetDatabase },
+    // Task 0.1: forward the SAME state snapshot hook the SQL pipeline grades
+    // mutations with — the Prisma final-state layer is a no-op without it.
+    hooks: {
+      execute: hooks.execute,
+      resetDatabase: hooks.resetDatabase,
+      getDatabaseState: hooks.getDatabaseState,
+    },
     surface,
     attempt,
     record,

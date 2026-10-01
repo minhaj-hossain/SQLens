@@ -142,7 +142,6 @@ export const Prisma_01_MODULE: ModuleData = {
               "export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    // Complete the query\n  });\n}",
             solutionCode:
               'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: { id: true, name: true, email: true },\n  });\n}',
-            generatedSql: 'SELECT id, name, email FROM users WHERE id = 1;',
             expectedType: '{ id: number; name: string; email: string } | null',
             validation: {
               targetModel: 'user',
@@ -179,7 +178,6 @@ export const Prisma_01_MODULE: ModuleData = {
               'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { user_mail: email } as any,\n  });\n}',
             solutionCode:
               'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
-            generatedSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
             expectedType: '{ id: number; email: string } | null',
             validation: {
               targetModel: 'user',
@@ -227,7 +225,6 @@ export const Prisma_01_MODULE: ModuleData = {
             'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    // TODO: where + select\n  });\n}',
           solutionCode:
             'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
-          generatedSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           expectedType: '{ id: number; email: string } | null',
           validation: {
             targetModel: 'user',
