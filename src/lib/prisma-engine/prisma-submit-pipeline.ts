@@ -57,7 +57,7 @@ import {
 import { runPrismaPlan, type PrismaExecutionStep } from './prisma-proxy-executor';
 import { parsePrismaSchema, type PrismaSchema } from './prisma-schema-parser';
 import { gradePrismaCode, gradePrismaExecution } from './prisma-execution';
-import { validatePrismaCode } from './prisma-validator';
+import { PRISMA_CLI_RUNNER_SRC, validatePrismaCode } from './prisma-validator';
 import { gradeFinalState } from '../sql-engine/state-verification';
 import {
   type GradingStage,
@@ -301,10 +301,21 @@ export interface PrismaSubmitOutcome extends PrismaSubmitResult {
 /** P1.2 — what the results console renders for an outcome (default: the table). */
 export type ConsoleDisplayMode = 'table' | 'terminal' | 'schema_diff' | 'type_preview';
 
-/** First `npx prisma …` command in `code`, flags included (`npx prisma migrate dev --name init`). */
+/**
+ * First Prisma CLI command in `code` — ANY supported runner, flags included
+ * (`npx prisma migrate dev --name init`, `pnpm dlx prisma generate`,
+ * `bunx prisma migrate deploy`). Quoted flag values stay verbatim, bare
+ * tokens stop at a quote/semicolon/backtick (so a command embedded in a JS
+ * string never swallows its closing quote), and whitespace runs — including
+ * newline splits — stay untouched: the terminal echoes what the learner typed.
+ * Shares its runner alias set with the validator (`PRISMA_CLI_RUNNER_SRC`)
+ * so a submission the normalizer accepts always renders, and vice versa.
+ */
 export function prismaCliCommandIn(code: string): string | null {
-  const m = /\bnpx\s+prisma(?:\s+[^\s"'`;]+)*/.exec(code);
-  return m ? m[0].trim() : null;
+  const m = new RegExp(
+    PRISMA_CLI_RUNNER_SRC + '(?:\\s+(?:"[^"]*"|\'[^\']*\'|[^\\s"`\';]+))*',
+  ).exec(code);
+  return m ? m[0] : null;
 }
 
 /** `true` for a `schema.prisma` lab (model/enum/datasource/generator block, no client call). */
@@ -319,7 +330,12 @@ export function isPrismaSchemaLab(code: string): boolean {
  * it as simulated (never a claim that a process ran).
  */
 export function simulatePrismaCliOutput(command: string): string {
-  const sub = command.replace(/^npx\s+prisma\s*/, '');
+  // Runner-agnostic (Phase 1.1): strip ANY runner → `prisma …`, then collapse
+  // whitespace so branch detection survives double-space / newline typing.
+  // The `$ ${command}` echo below still shows the learner's OWN command.
+  const sub = command
+    .replace(new RegExp('^' + PRISMA_CLI_RUNNER_SRC + '\\s*'), '')
+    .replace(/\s+/g, ' ');
   if (sub.startsWith('generate')) {
     return [
       `$ ${command}`,
@@ -329,7 +345,10 @@ export function simulatePrismaCliOutput(command: string): string {
     ].join('\n');
   }
   if (sub.startsWith('migrate dev')) {
-    const name = /--name\s+([^\s-][^\s]*)/.exec(sub)?.[1] ?? 'init';
+    // Phase 1.1: accept `--name init`, `--name "init"` and `--name=init` —
+    // the migration name is the unwrapped value either way (never `"init"`).
+    const nameMatch = /--name(?:=|\s+)(?:"([^"]*)"|'([^']*)'|([^\s-][^\s]*))/.exec(sub);
+    const name = (nameMatch && (nameMatch[1] ?? nameMatch[2] ?? nameMatch[3])) || 'init';
     return [
       `$ ${command}`,
       'Prisma schema loaded from prisma/schema.prisma',

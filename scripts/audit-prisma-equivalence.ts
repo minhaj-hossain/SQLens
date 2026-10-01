@@ -14,9 +14,15 @@
  *        · equals-form          — `where: { f: v }` → `where: { f: { equals: v } }`
  *        · normalize-strings    — string literals in the call args flipped `'` ⇄ `"`
  *      A variant is only generated when it keeps every authored
- *      `requiredCodeSnippets` fragment (the task's own literal contract defines
- *      its accepted language — dropping a fragment is Phase-1 normalization
- *      territory, not a fairness probe).
+ *      `requiredCodeSnippets` fragment — judged in the SAME contract the
+ *      learner is graded with (`snippetMatches`: canonical for CLI fragments
+ *      since Phase 1.1, literal `String.includes` for everything else).
+ *      Phase 1.1 fairness families (only where the reference carries a CLI
+ *      line; `npx` ≡ every supported package runner):
+ *        · cli-runner:*          — `npx prisma …` → `pnpm dlx` / `pnpm exec` /
+ *                                  `npm exec` / `yarn` / `yarn dlx` / `bunx`
+ *        · cli-flag:*            — `--name init` ⇄ `--name "init"` ⇄ `--name=init`
+ *        · cli-whitespace:*      — double-spaced / newline-split command
  *
  *   2. NO FALSE-ACCEPT — a submission that CHANGES the outcome must FAIL:
  *        · wrong-value   — first write value replaced with a sentinel
@@ -27,12 +33,11 @@
  *      `forbiddenCodeSnippets` fragment.
  *
  * SCOPE (Task 0.4 "Option A" — strict now): quoted object keys (`"name": true`)
- * and CLI/snippet normalization (quote styles, `--flag=value`, alternate
- * runners) are KNOWN false-reject families that are NOT asserted here — the
- * validator's literal `String.includes` contract owns them until Phase 1.1
- * (CLI) and Phase 1.2 (quoted keys / structural normalization) land. They fail
- * today BY DESIGN of those tasks' authored fragments, so asserting them now
- * would only re-report a scheduled fix.
+ * are deferred to Phase 1.2 (quoted keys / structural normalization) —
+ * asserting them now would only re-report a scheduled fix. CLI/snippet
+ * normalization (runner aliases, quote styles, `--flag=value`, whitespace)
+ * landed in Phase 1.1 and IS asserted here, through the `cli-*` fairness
+ * families listed above.
  *
  * POLICY NOTES (each surface is counted as a skip, never silently dropped):
  *   · flexible-insert — `compareFinalState`'s documented carve-out accepts
@@ -58,9 +63,11 @@ import { submitForTask, type TrackSubmitOutcome } from '../src/lib/track-submit'
 import {
   isExecutablePrismaTask,
   isStateGradedPrismaTask,
+  prismaCliCommandIn,
   prismaSeedContext,
   schemaForTask,
 } from '../src/lib/prisma-engine/prisma-submit-pipeline';
+import { PRISMA_CLI_RUNNER_SRC, snippetMatches } from '../src/lib/prisma-engine/prisma-validator';
 import { generatePrismaSql } from '../src/lib/prisma-engine/prisma-sql-generator';
 import type { ModuleData, PracticeTask } from '../src/types/curriculum';
 
@@ -346,6 +353,54 @@ const TRANSFORMS: [string, (code: string) => string | null][] = [
   ['normalize-strings', normalizeStrings],
 ];
 
+// ── Phase 1.1 CLI fairness transforms (null = inapplicable) ──────────────────
+// All share `PRISMA_CLI_RUNNER_SRC` — the same single source of truth the
+// validator and the display pipeline import, so a variant that is "equivalent"
+// here is exactly what the learner is graded with.
+
+/** The reference's command head (`npx prisma`) swapped for another runner. */
+function cliRunnerVariant(code: string, runner: string): string | null {
+  const m = new RegExp(PRISMA_CLI_RUNNER_SRC).exec(code);
+  if (!m || m[0] === runner) return null;
+  return code.slice(0, m.index) + runner + code.slice(m.index + m[0].length);
+}
+
+/** `--flag value` → `--flag "value"` (null = no value-carrying flag). */
+function cliQuotedFlag(code: string): string | null {
+  const m = /--([A-Za-z][\w-]*)\s+(?![-"])([^\s"']+)/.exec(code);
+  if (!m) return null;
+  return code.slice(0, m.index) + `--${m[1]} "${m[2]}"` + code.slice(m.index + m[0].length);
+}
+
+/** `--flag value` → `--flag=value` (null = no value-carrying flag). */
+function cliEqualsFlag(code: string): string | null {
+  const m = /--([A-Za-z][\w-]*)\s+(?![-=])([^\s"']+)/.exec(code);
+  if (!m) return null;
+  return code.slice(0, m.index) + `--${m[1]}=${m[2]}` + code.slice(m.index + m[0].length);
+}
+
+/** The command head with every space doubled, or split across lines. */
+function cliWhitespaceVariant(code: string, mode: 'double' | 'newline'): string | null {
+  const m = new RegExp(PRISMA_CLI_RUNNER_SRC).exec(code);
+  if (!m) return null;
+  const rewritten = m[0].replace(/ /g, mode === 'double' ? '  ' : '\n');
+  if (rewritten === m[0]) return null;
+  return code.slice(0, m.index) + rewritten + code.slice(m.index + m[0].length);
+}
+
+const CLI_TRANSFORMS: [string, (code: string) => string | null][] = [
+  ['cli-runner:pnpm-dlx', (c) => cliRunnerVariant(c, 'pnpm dlx prisma')],
+  ['cli-runner:pnpm-exec', (c) => cliRunnerVariant(c, 'pnpm exec prisma')],
+  ['cli-runner:npm-exec', (c) => cliRunnerVariant(c, 'npm exec prisma')],
+  ['cli-runner:yarn', (c) => cliRunnerVariant(c, 'yarn prisma')],
+  ['cli-runner:yarn-dlx', (c) => cliRunnerVariant(c, 'yarn dlx prisma')],
+  ['cli-runner:bunx', (c) => cliRunnerVariant(c, 'bunx prisma')],
+  ['cli-flag:quoted', cliQuotedFlag],
+  ['cli-flag:equals', cliEqualsFlag],
+  ['cli-whitespace:double', (c) => cliWhitespaceVariant(c, 'double')],
+  ['cli-whitespace:newline', (c) => cliWhitespaceVariant(c, 'newline')],
+];
+
 
 // ── false-accept variant generators (null = inapplicable) ────────────────────
 
@@ -429,9 +484,13 @@ function dropSnippetVariant(code: string, snippet: string): string | null {
 
 // ── guard helpers ────────────────────────────────────────────────────────────
 
-/** Required literal snippets the variant must keep to remain a fairness candidate. */
+/**
+ * Required snippets the variant must keep to remain a fairness candidate —
+ * judged in the SAME contract the learner is graded with (`snippetMatches`:
+ * canonical for CLI fragments since Phase 1.1, literal otherwise).
+ */
 function snippetsPreserved(task: PracticeTask, variant: string): boolean {
-  return (task.prisma!.validation.requiredCodeSnippets ?? []).every((s) => variant.includes(s));
+  return (task.prisma!.validation.requiredCodeSnippets ?? []).every((s) => snippetMatches(variant, s));
 }
 
 /** Tables a plan touches (INSERT / UPDATE / DELETE / FROM), lowercased. */
@@ -658,6 +717,27 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask) {
     probes.push({ name, code: variant, expect: 'PASS' });
   }
 
+  // Phase 1.1 CLI fairness families — only where the reference carries a CLI
+  // line, with the same guards, in the learner's own grading contract.
+  if (prismaCliCommandIn(code)) {
+    for (const [name, transform] of CLI_TRANSFORMS) {
+      const variant = transform(code);
+      if (variant === null) {
+        hit(skips, 'cli transform inapplicable');
+        continue;
+      }
+      if (variant === code) {
+        hit(skips, 'cli transform is a no-op');
+        continue;
+      }
+      if (!snippetsPreserved(task, variant)) {
+        hit(skips, 'cli variant drops a required code snippet (canonical CLI contract)');
+        continue;
+      }
+      probes.push({ name, code: variant, expect: 'PASS' });
+    }
+  }
+
   const insertTables = new Set<string>();
   if (executable) {
     for (const t of referenceInsertTables(code, task)) insertTables.add(t);
@@ -695,7 +775,8 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask) {
 
 console.log('\n=== Prisma equivalence audit (Task 0.4 — Phase 0 gate) ===');
 console.log('Form-equivalent rewrites must PASS; outcome-changing variants must FAIL.');
-console.log('Deferred by design to Phase 1.1/1.2: quoted select keys, CLI quote/= /runner normalization.\n');
+console.log('Phase 1.1 asserted: cli-* fairness families (runner / flag syntax / whitespace).');
+console.log('Deferred by design to Phase 1.2: quoted select keys (literal includes contract).\n');
 
 for (const module of PRISMA_MODULES) {
   const before = findings.length;

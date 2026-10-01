@@ -115,7 +115,7 @@ graph TD
    - **Deliveries beyond the original text (each one evidence-driven, from the spike):**
      - The drop-`where` probes exposed a phantom-pass hole: learner code that fails translation on a **client-code lab** (its reference IS translatable) fell into the read-through contract and was graded against the **reference's** dataset. `runAndGradePrismaSubmission` now fails untranslatable submissions there (`isExecutablePrismaTask` + `!expectFailure`); snippet labs keep the contract untouched. The three affected probes (`prisma12-c2-t1`, `prisma12-hw-1`, `prisma13-c1-t2`) now fail at `stage: 'validation'`.
      - `compareFinalState`'s documented flexible-insert carve-out (custom VALUES accepted on rows a reference INSERTs — SQL-track parity policy) owns 6 probes: they are **skipped with the reason named**, never flagged.
-   - **Deferred by design (named in the audit header, asserted nowhere):** quoted object keys (`"name": true`) → Phase 1.2; CLI quote / `=`-flag / runner normalization → Phase 1.1. They fail today because those tasks' authored literal fragments define their language; asserting them now would only re-report a scheduled fix.
+   - **Deferred by design (named in the audit header):** quoted object keys (`"name": true`) → Phase 1.2 — they fail today because those tasks' authored literal fragments define their language; asserting them now would only re-report a scheduled fix. The CLI half (quote / `=`-flag / runner normalization) was delivered by Task 1.1 and is NOW asserted: the audit runs `cli-*` fairness families (**173** fairness probes · 0 findings, was 147).
    - **Gate:** `npm run audit:prisma-equivalence` → **147** fairness probes passed · **158** false-accept probes caught · **279** named skips · **0 findings · exit 0**; wired into CI + `audit:all` (after `audit:prisma-grading-pipeline`); `npm test` 880/880; `audit:all` exit 0.
 
 ---
@@ -123,11 +123,12 @@ graph TD
 ### Phase 1: Prisma Static Robustness & Snippet Normalization (P1)
 **Objective:** Eliminate false-rejects in snippet labs and structural checks when learners write valid variants.
 
-1. **Task 1.1: Flexible CLI & Snippet Matching**
-   - **Files:** `src/lib/prisma-engine/prisma-validator.ts`
-   - Normalize quotes (`--name "init"` ≡ `--name 'init'` ≡ `--name init`).
+1. **Task 1.1: Flexible CLI & Snippet Matching** — ✅ delivered 2026-10-01
+   - **Files:** `src/lib/prisma-engine/prisma-validator.ts` (canonical matcher: `PRISMA_CLI_RUNNER_SRC` + `isCliFragment` + `canonicalizeCli` + `snippetMatches`, wired into required AND forbidden snippets) and `src/lib/prisma-engine/prisma-submit-pipeline.ts` (display: `prismaCliCommandIn` + `simulatePrismaCliOutput` share the same contract).
+   - Normalize quotes (`--name "init"` ≡ `--name 'init'` ≡ `--name init`) — for CLI-shaped fragments only; failure feedback quotes the AUTHORED fragment.
    - Support equal-sign flags (`--name=init` ≡ `--name init`).
-   - Normalize package runner prefixes (`pnpm dlx prisma`, `bunx prisma`, `yarn prisma` ≡ `npx prisma`).
+   - Normalize package runner prefixes (`pnpm dlx prisma`, `bunx prisma`, `yarn prisma` ≡ `npx prisma`) and whitespace splits (double space / newline) — in grading AND in the terminal simulation, where the `$ …` echo keeps the learner's own spelling and the migration name is the unwrapped value either way.
+   - **Gate:** characterization matrix **11/39 → 39/39** (the forbidden side still catches a whitespace-mangled command); `phase5-prisma-pipeline.test.ts` `P1.1` block, 5 tests (suite **885/885**); `audit:prisma-equivalence` gained the `cli-*` fairness families → **173 fairness probes · 158 false-accept probes · 283 named skips · 0 findings**.
 2. **Task 1.2: Quoted Object Keys & Structural Normalization**
    - **Files:** `src/lib/prisma-engine/prisma-validator.ts`
    - Fix `requiredFieldsInSelect`: Replace `/\\b${f}\\s*:\\s*true\\b/` with a regex matching both bare and quoted keys: `/(['"]?)${f}\\1\\s*:\\s*true/`.

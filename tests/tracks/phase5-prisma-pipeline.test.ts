@@ -22,6 +22,11 @@ import {
   snippetLabDisplay,
   PRISMA_SEED_SCHEMA,
 } from '../../src/lib/prisma-engine/prisma-submit-pipeline';
+import {
+  canonicalizeCli,
+  isCliFragment,
+  validatePrismaCode,
+} from '../../src/lib/prisma-engine/prisma-validator';
 import type { PracticeTask } from '../../src/types/curriculum';
 
 function hooksFor(ex: SqlExecutor, resets: { n: number } = { n: 0 }) {
@@ -316,5 +321,122 @@ describe('P1.2 — snippet-lab terminal display contract', () => {
     // Non-vacuous: the curriculum really contains both kinds of snippet lab.
     expect(cli).toBeGreaterThanOrEqual(1);
     expect(schema).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('P1.1 — CLI snippet normalization (validator + display)', () => {
+  /** The curriculum's only CLI-shaped labs (4 CLI fragments — 1.1.0 census). */
+  const CLI_TASK_IDS = ['prisma02-c1-t1', 'prisma05-c1-t1', 'prisma05-c1-t2'];
+  /** Every runner alias from the Task-1.1 D3b set — all ≡ `npx prisma`. */
+  const RUNNERS = [
+    'pnpm dlx prisma',
+    'pnpm exec prisma',
+    'npm exec prisma',
+    'yarn prisma',
+    'yarn dlx prisma',
+    'bunx prisma',
+  ];
+
+  it('accepts every package-runner variant of every CLI lab, rendering its own command', () => {
+    let cliFragments = 0;
+    for (const id of CLI_TASK_IDS) {
+      const task = taskById(id);
+      cliFragments += (task.prisma!.validation.requiredCodeSnippets ?? []).filter((s) => isCliFragment(s)).length;
+      const sol = task.prisma!.solutionCode;
+      // The authored form must be untouched by the normalizer.
+      expect(submit(task, sol).out.passed, `${id} authored`).toBe(true);
+      for (const runner of RUNNERS) {
+        const code = sol.replace('npx prisma', runner);
+        expect(code === sol ? 'REWRITE-FAILED' : runner, `${id} rewrite`).toBe(runner);
+        const { out } = submit(task, code);
+        expect(out.passed, `${id} / ${runner}`).toBe(true);
+        expect(out.displayMode, `${id} / ${runner} display`).toBe('terminal');
+        // The terminal echoes the LEARNER'S runner, not the authored one.
+        expect(out.terminalOutput ?? '', `${id} / ${runner} echo`).toContain(runner);
+      }
+    }
+    // Non-vacuous: exactly the 3 CLI labs / 4 CLI fragments the census found.
+    expect(CLI_TASK_IDS).toHaveLength(3);
+    expect(cliFragments).toBe(4);
+  });
+
+  it('accepts quoted / equals flag values and parses the migration name from them', () => {
+    const task = taskById('prisma05-c1-t1');
+    const sol = task.prisma!.solutionCode; // `… --name init_users`
+    const quoted = sol.replace('--name init_users', '--name "init_users"');
+    const equals = sol.replace('--name init_users', '--name=init_users');
+    expect(quoted).not.toBe(sol);
+    expect(equals).not.toBe(sol);
+    for (const [label, code] of [
+      ['quoted', quoted],
+      ['equals', equals],
+    ] as const) {
+      const { out } = submit(task, code);
+      expect(out.passed, label).toBe(true);
+      expect(out.displayMode, label).toBe('terminal');
+      // The migration name is the unwrapped VALUE — never `"init_users"`.
+      expect(out.terminalOutput ?? '', label).toContain('Applying migration `20260930000000_init_users`');
+    }
+    // Extraction keeps the learner's own flag spelling in the echoed command…
+    expect(prismaCliCommandIn(quoted)).toBe('npx prisma migrate dev --name "init_users"');
+    expect(prismaCliCommandIn(equals)).toBe('npx prisma migrate dev --name=init_users');
+  });
+
+  it('treats double-spaced and newline-split commands as the same command', () => {
+    const gen = taskById('prisma02-c1-t1');
+    const t1 = taskById('prisma05-c1-t1');
+    const t2 = taskById('prisma05-c1-t2');
+    expect(submit(gen, gen.prisma!.solutionCode.replace('npx prisma generate', 'npx prisma\n  generate')).out.passed).toBe(true);
+    expect(submit(t1, t1.prisma!.solutionCode.replace('npx prisma', 'npx  prisma')).out.passed).toBe(true);
+    expect(submit(t1, t1.prisma!.solutionCode.replace('migrate dev', 'migrate\n    dev')).out.passed).toBe(true);
+    expect(submit(t2, t2.prisma!.solutionCode.replace('npx prisma', 'npx\n  prisma')).out.passed).toBe(true);
+  });
+
+  it('still rejects starters, dropped fragments, wrong subcommands and forbidden commands', () => {
+    // Every authored starter keeps failing at the validation stage.
+    for (const id of CLI_TASK_IDS) {
+      const task = taskById(id);
+      const { out } = submit(task, task.prisma!.initialCode);
+      expect(out.passed, `${id} starter`).toBe(false);
+      expect(out.stage, `${id} starter stage`).toBe('validation');
+    }
+    const t1 = taskById('prisma05-c1-t1'); // migrate dev lab; forbids `db push`
+    const t2 = taskById('prisma05-c1-t2'); // migrate deploy lab; forbids `migrate dev`
+    // A runner variant with the WRONG subcommand still fails.
+    expect(submit(t1, 'const cmd = "pnpm dlx prisma db push";').out.passed).toBe(false);
+    // A runner variant missing the `--name` fragment still fails.
+    expect(submit(t1, 'const cmd = "bunx prisma migrate dev";').out.passed).toBe(false);
+    // The forbidden command via ANOTHER runner still fails.
+    const cross = submit(t2, 'const cmd = "pnpm dlx prisma migrate deploy";\nconst evil = "bunx prisma migrate dev";');
+    expect(cross.out.passed).toBe(false);
+    expect(cross.out.stage).toBe('validation');
+    // Forbidden caught under whitespace mangling raw `includes` would miss.
+    const spaced = submit(t2, 'const cmd = "npx prisma migrate deploy";\n// migrate   dev');
+    expect(spaced.out.passed).toBe(false);
+    expect(spaced.out.feedback ?? '').toContain('Remove forbidden code: `migrate dev`');
+  });
+
+  it('quotes the AUTHORED fragment in failures; non-CLI fragments keep the literal contract', () => {
+    const gen = taskById('prisma02-c1-t1');
+    // Failure text always shows the authored spelling, even for runner variants.
+    const miss = validatePrismaCode('return "pnpm dlx prisma validate";', gen.prisma!.validation);
+    expect(miss.passed).toBe(false);
+    expect(miss.feedback).toBe('Missing required code: `npx prisma generate`.');
+    // Fragment classification: command vocabulary is canonicalized…
+    for (const f of ['npx prisma migrate dev', '--name', 'db push', 'migrate dev', 'pnpm dlx prisma generate']) {
+      expect(isCliFragment(f), f).toBe(true);
+    }
+    // …everything else (schema / client / Zod / SQL) stays literal.
+    for (const f of ['z.object(', 'z.string().email()', '@map("cust_email")', 'select: { id: true, email: true }', 'sqlite', 'prisma.user.create(']) {
+      expect(isCliFragment(f), f).toBe(false);
+    }
+    // Canonical view: the same command, spelled differently.
+    expect(canonicalizeCli('pnpm dlx prisma migrate dev --name "init"')).toBe('npx prisma migrate dev --name init');
+    expect(canonicalizeCli('bunx prisma migrate\n  dev --name=init')).toBe('npx prisma migrate dev --name init');
+    // A NON-CLI fragment must NOT normalize (quoted keys stay Phase 1.2).
+    const zod = taskById('prisma09-c2-t1');
+    const spacedZod = zod.prisma!.solutionCode.replace('z.object(', 'z . object(');
+    expect(spacedZod).not.toBe(zod.prisma!.solutionCode);
+    expect(validatePrismaCode(spacedZod, zod.prisma!.validation).passed).toBe(false);
   });
 });
