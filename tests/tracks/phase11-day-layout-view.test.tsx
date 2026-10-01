@@ -14,8 +14,12 @@
  * differ only in their `track` literal; the route inventory, the canonical
  * sitemap contract and the legacy redirect table are frozen.
  */
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import sitemap from '../../src/app/sitemap';
 import { ALL_MODULES } from '../../src/content/curriculum-index';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
 import { initialStateForTrack } from '../../src/lib/progress/track-storage';
@@ -221,6 +225,133 @@ describe('Phase 4.2 — resolveDayLayoutState locks, exempts the overview, targe
     );
     expect(sql.isLocked).toBe(false);
     expect(prisma.isLocked).toBe(false);
+  });
+});
+
+/** Repo file, resolved from this test file so `process.cwd()` cannot matter. */
+function repoFile(rel: string): string {
+  return fileURLToPath(new URL(`../../${rel}`, import.meta.url));
+}
+
+/**
+ * Route-layout source: CRLF-normalized, then comments stripped so the header
+ * prose may freely describe the logic the file must NOT contain (the static
+ * guard targets real code, phase10 precedent).
+ */
+function layoutSource(rel: string): string {
+  return readFileSync(repoFile(rel), 'utf8')
+    .replace(/\r\n/g, '\n')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '');
+}
+
+/** Every file under a directory (absolute paths). */
+function walk(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else if (entry.isFile()) out.push(full);
+  }
+  return out;
+}
+
+const SQL_LAYOUT = 'src/app/(app)/sql/learn/[dayId]/layout.tsx';
+const PRISMA_LAYOUT = 'src/app/(app)/prisma/learn/[dayId]/layout.tsx';
+const VIEW = 'src/components/learn/TrackDayLayoutView.tsx';
+
+describe('Phase 4.2 — both day layouts are thin, parity-checked delegates', () => {
+  it('each delegate renders the shared view with its own track literal', () => {
+    const importLine = "import TrackDayLayoutView from '@/components/learn/TrackDayLayoutView'";
+    const sql = layoutSource(SQL_LAYOUT);
+    expect(sql).toContain(importLine);
+    expect(sql).toContain('<TrackDayLayoutView track="sql">');
+    const prisma = layoutSource(PRISMA_LAYOUT);
+    expect(prisma).toContain(importLine);
+    expect(prisma).toContain('<TrackDayLayoutView track="prisma">');
+  });
+
+  it('delegates contain none of the day-boundary logic (single owner: the view)', () => {
+    const markers = [
+      'useEffect',
+      'useState',
+      'useParams',
+      'usePathname',
+      'useRouter',
+      'useTrack',
+      'useTrackCurriculum',
+      'useTrackConceptId',
+      'notFound',
+      'resetDatabase',
+      'getModuleUnlockStatus',
+      'backToRoadmap',
+      'TRACK_META',
+      'Icon',
+      'resolveDayLayoutState',
+    ];
+    for (const rel of [SQL_LAYOUT, PRISMA_LAYOUT]) {
+      const src = layoutSource(rel);
+      for (const marker of markers) {
+        expect(src, `${rel} must not contain ${marker}`).not.toMatch(
+          new RegExp(`\\b${marker}\\b`),
+        );
+      }
+    }
+  });
+
+  it('the shared view is the positive owner of that same logic', () => {
+    const src = layoutSource(VIEW);
+    for (const marker of [
+      'useEffect',
+      'notFound',
+      'resetDatabase',
+      'getModuleUnlockStatus',
+      'backToRoadmap',
+      'resolveDayLayoutState',
+      'getTrackDefinition',
+    ]) {
+      expect(src, `TrackDayLayoutView must own ${marker}`).toContain(marker);
+    }
+  });
+
+  it('the two delegates differ ONLY in the track literal (zero drift, forever)', () => {
+    const sql = layoutSource(SQL_LAYOUT);
+    const prisma = layoutSource(PRISMA_LAYOUT);
+    expect(sql.replace('track="sql"', 'track="prisma"')).toBe(prisma);
+  });
+});
+
+describe('Phase 4.2 — route inventory, sitemap and redirect contracts stay frozen', () => {
+  it('exactly the two learn-day layouts exist under src/app', () => {
+    const learnLayouts = walk(repoFile('src/app'))
+      .map((p) => p.replace(/\\/g, '/'))
+      .filter((p) => p.includes('/learn/') && p.endsWith('/layout.tsx'))
+      .map((p) => p.slice(p.indexOf('/src/app') + 1))
+      .sort();
+    expect(
+      learnLayouts,
+      'Adding a track? Add its delegate layout AND update this pinned list (Task 4.2 tripwire).',
+    ).toEqual([PRISMA_LAYOUT, SQL_LAYOUT].sort());
+  });
+
+  it('the canonical sitemap still emits both track surfaces and every module overview', () => {
+    const paths = sitemap().map((entry) => new URL(entry.url).pathname);
+    expect(paths).toContain('/sql');
+    expect(paths).toContain('/prisma');
+    expect(paths).toContain('/sql/learn');
+    expect(paths).toContain('/prisma/learn');
+    expect(paths).toContain('/sql/learn/day-01');
+    expect(paths).toContain('/sql/learn/day-57');
+    expect(paths).toContain('/prisma/learn/prisma-01');
+    expect(paths).toContain('/prisma/learn/prisma-14');
+    expect(paths).toHaveLength(5 + ALL_MODULES.length + PRISMA_MODULES.length);
+  });
+
+  it('the legacy /learn redirect bridge in next.config is still declared verbatim', () => {
+    const src = readFileSync(repoFile('next.config.ts'), 'utf8');
+    expect(src).toContain("{ source: '/learn', destination: '/sql/learn', permanent: false }");
+    expect(src).toContain(
+      "{ source: '/learn/:path*', destination: '/sql/learn/:path*', permanent: false }",
+    );
   });
 });
 
