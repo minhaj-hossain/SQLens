@@ -212,36 +212,36 @@ export const Prisma_14_MODULE: ModuleData = {
   ],
   challenge: {
     id: 'prisma14-challenge',
-    title: 'Capstone — REST API Diagnostic',
+    title: 'Final Capstone — Member Management API',
     scenario:
-      'Two unassisted tasks synthesising the full track: strict projection discipline then relational profile loading.',
+      'Architect a production-grade Member Management API synthesizing query projection, transactional writes, and defensive conflict translation.',
     databaseLifecycle: 'fresh',
     tasks: [
       {
         ...prismaReadTask({
           id: 'prisma14-hw-1',
-          title: 'Strict projection — all users, no `name`',
+          title: 'Member Directory — Deterministic Public Roster',
           description:
-            'Return the public roster (id + email) for every user ordered by id. The `name` column must never leave the database.',
+            'Implement a privacy-compliant member directory endpoint. Return the first 2 registered users ordered by ID ascending. Protect personal identifying details: only id and email may leave the database.',
           instructions: [
-            'Use `findMany`',
-            '`orderBy: { id: "asc" }`',
-            'Select `id` and `email` only — never `name`',
+            'Retrieve the first 2 users ordered by `id` ascending',
+            'Project `id` and `email` only — never include `name`',
           ],
-          hint: 'A minimal, ordered projection is the contract every client depends on.',
+          hint: 'Use projection to omit sensitive columns and offset/ordering modifiers to enforce determinism.',
           scaffold:
-            '-- The roster your endpoint must return:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, email FROM users ORDER BY id ASC;',
+            '-- Directory contract (initial probe):\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users ORDER BY id ASC LIMIT 2;',
           why:
-            'Projection discipline prevents over-fetching; ORDER BY keeps pagination and tests deterministic.',
+            'Projection discipline prevents column leaks while deterministic ordering guarantees consistent pagination.',
           cols: ['id', 'email'],
           noCols: ['name'],
           orderBy: [{ field: 'id', direction: 'asc' }],
-          rows: 3,
+          pagination: { take: 2 },
+          rows: 2,
           code0:
-            'export async function roster() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true, name: true },\n  });\n}',
+            'export async function getDirectoryPage() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true, name: true },\n  });\n}',
           code1:
-            'export async function roster() {\n  return await prisma.user.findMany({\n    orderBy: { id: \'asc\' },\n    select: { id: true, email: true },\n  });\n}',
+            'export async function getDirectoryPage() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true },\n    orderBy: { id: \'asc\' },\n    take: 2,\n  });\n}',
           rtype: '{ id: number; email: string }[]',
         }),
         type: 'challenge',
@@ -249,31 +249,61 @@ export const Prisma_14_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma14-hw-2',
-          title: 'Relational profile — user with posts',
+          title: 'Onboarding Pipeline — Atomic Registration & Initial Post',
           description:
-            'Fetch one user by email and eagerly load all their posts. Use `include`, not root `select` — they cannot coexist at the top level.',
+            'When a new user registers, create their account and publish an initial onboarding post. Both writes must execute atomically in an all-or-nothing transaction so a failure in post creation never leaves an orphaned user.',
           instructions: [
-            'Use `findUnique` with `where: { email }`',
-            'Load posts via `include: { posts: true }`',
-            'Do NOT add a root `select` block',
+            'Wrap both write operations in an interactive transaction callback',
+            'Create the user and the initial post using the transaction client `tx`',
           ],
-          hint: '`include` eagerly loads the relation; root `select` would conflict with it.',
+          hint: '`prisma.$transaction(async (tx) => { ... })` guarantees atomicity across related writes.',
           scaffold:
-            '-- Profile query: user + their posts\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email, name FROM users WHERE email = 'alex@prisma.io';",
+            '-- All-or-nothing registration verification:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           why:
-            '`include: { posts: true }` is the idiomatic Prisma pattern for loading a one-to-many relation — no raw JOIN required.',
+            'Atomic transactions prevent partial writes and database corruption when operations consist of multiple steps.',
           cols: ['id', 'email'],
-          select: [],
           rows: 1,
-          includes: ['posts'],
           code0:
-            'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+            'export async function registerWithWelcomePost(email: string, title: string) {\n  // BUG: Disconnected writes can fail halfway and leave orphaned records\n  const user = await prisma.user.create({ data: { email, name: \'New Member\' } });\n  const post = await prisma.post.create({ data: { title, authorId: user.id } });\n  return { user, post };\n}',
           code1:
-            'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    include: { posts: true },\n  });\n}',
-          need: ['findUnique(', 'include:', 'posts: true'],
-          ban: ['select: {'],
-          rtype: '({ id: number; email: string; name: string; posts: { id: number; title: string; authorId: number }[] }) | null',
+            'export async function registerWithWelcomePost(email: string, title: string) {\n  return await prisma.$transaction(async (tx) => {\n    const user = await tx.user.create({ data: { email, name: \'New Member\' } });\n    const post = await tx.post.create({ data: { title, authorId: user.id } });\n    return { user, post };\n  });\n}',
+          need: ['prisma.$transaction(async (tx)', 'tx.user.create(', 'tx.post.create('],
+          ban: ['await prisma.user.create('],
+          demoVariables: { title: 'Welcome to the Community', authorId: 1, email: 'newuser@prisma.io' },
+        }),
+        type: 'challenge',
+      },
+      {
+        ...prismaSnippetTask({
+          id: 'prisma14-hw-3',
+          title: 'Member Service Route — Validation & Conflict Mapping',
+          description:
+            'Construct an Express route controller for member creation. Validate the payload using Zod. If the database rejects the write due to a unique constraint violation, translate that error into an HTTP 409 Conflict response. Forward unknown errors to the global error middleware.',
+          instructions: [
+            'Validate `req.body` using `MemberSchema.safeParse`',
+            'Handle `Prisma.PrismaClientKnownRequestError` with code `P2002` and respond with status 409',
+            'Pass unhandled errors down the pipeline with `next(err)`',
+          ],
+          hint: 'Check schema validity before writing to the database, and inspect known request errors for duplicate keys.',
+          scaffold:
+            "-- Conflict handling protects uniqueness:\nSELECT id, email FROM users WHERE email = 'nobody@prisma.io';",
+          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
+          why:
+            'A production service cleanly separates input validation, database constraint translation, and unexpected crashes.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export async function createMemberHandler(req: Request, res: Response, next: NextFunction) {\n  // BUG: Crashes server on invalid payload or duplicate email\n  const user = await prisma.user.create({ data: req.body });\n  return res.status(201).json(user);\n}',
+          code1:
+            'export async function createMemberHandler(req: Request, res: Response, next: NextFunction) {\n  const parsed = MemberSchema.safeParse(req.body);\n  if (!parsed.success) {\n    return res.status(400).json({ errors: parsed.error.flatten() });\n  }\n  try {\n    const user = await prisma.user.create({ data: parsed.data });\n    return res.status(201).json(user);\n  } catch (err) {\n    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === \'P2002\') {\n      return res.status(409).json({ error: \'Email already registered\' });\n    }\n    return next(err);\n  }\n}',
+          need: [
+            'MemberSchema.safeParse',
+            'err instanceof Prisma.PrismaClientKnownRequestError',
+            "err.code === 'P2002'",
+            'res.status(409)',
+            'next(err)',
+          ],
         }),
         type: 'challenge',
       },

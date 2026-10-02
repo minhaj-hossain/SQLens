@@ -200,6 +200,32 @@ export const Prisma_12_MODULE: ModuleData = {
           noModelContract: true,
           ban: ['await prisma.user.create('],
         }),
+        prismaSnippetTask({
+          id: 'prisma12-c2-t3',
+          title: 'Atomic rollback under failure',
+          description:
+            'When an error is thrown inside an interactive transaction, every write in that transaction is rolled back, leaving database state completely untouched.',
+          instructions: [
+            'Use interactive `$transaction(async (tx) => { ... })`',
+            'Perform the write using `tx.user.update`',
+            'Throw an error to trigger automatic rollback and catch it outside',
+          ],
+          hint: 'Any unhandled error inside the $transaction callback triggers a ROLLBACK before propagating to your catch block.',
+          scaffold:
+            '-- Database state invariant: User 1 name is preserved after rollback:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'ACID atomicity guarantees that either all operations succeed or the database state remains completely unmodified.',
+          cols: ['id', 'name'],
+          rows: 1,
+          code0:
+            'export async function executeWithRollback(id: number, newName: string, shouldFail: boolean) {\n  // BUG: Direct write without transaction persists partial state even if an error throws\n  await prisma.user.update({ where: { id }, data: { name: newName } });\n  if (shouldFail) throw new Error(\'Simulated failure\');\n}',
+          code1:
+            'export async function executeWithRollback(id: number, newName: string, shouldFail: boolean) {\n  try {\n    await prisma.$transaction(async (tx) => {\n      await tx.user.update({ where: { id }, data: { name: newName } });\n      if (shouldFail) {\n        throw new Error(\'Simulated failure: rolling back\');\n      }\n    });\n  } catch (err) {\n    console.log(\'Rollback preserved invariant state.\');\n  }\n}',
+          need: ['prisma.$transaction(async (tx)', 'tx.user.update(', 'throw new Error(', 'catch (err)'],
+          ban: ['await prisma.user.update('],
+          demoVariables: { newName: 'Alex Updated', name: 'Alex Updated' },
+          noModelContract: true,
+        }),
       ],
     },
   ],

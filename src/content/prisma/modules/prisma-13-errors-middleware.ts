@@ -245,6 +245,37 @@ export const Prisma_13_MODULE: ModuleData = {
         }),
         type: 'challenge',
       },
+      {
+        ...prismaSnippetTask({
+          id: 'prisma13-hw-2',
+          title: 'Diagnostic Repair — Unsafe Error Property Access',
+          description:
+            'The following error middleware crashes at runtime with "Cannot read properties of undefined (reading \'code\')" whenever an ordinary Error or Zod validation error reaches it. Diagnose the bug and add the appropriate type guard so Prisma error codes are only checked on genuine PrismaClientKnownRequestError instances.',
+          instructions: [
+            'Diagnose why accessing `err.code` directly crashes on non-Prisma errors',
+            'Add `err instanceof Prisma.PrismaClientKnownRequestError` type guard before reading `err.code`',
+            'Forward any error that does not match via `next(err)`',
+          ],
+          hint: 'Use `instanceof` to narrow `err` from `unknown` to `Prisma.PrismaClientKnownRequestError`.',
+          scaffold: '-- Safe error handling protects route availability:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
+          why: 'Type guards ensure that untyped runtime errors never cause unhandled secondary exceptions in middleware.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            "export function safeErrorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {\n  // BUG: Runtime crash on native Error or ZodError (err.code is undefined or err is not an object)\n  if ((err as any).code === 'P2002') {\n    return res.status(409).json({ error: 'Unique conflict' });\n  }\n  return next(err);\n}",
+          code1:
+            "export function safeErrorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {\n  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {\n    return res.status(409).json({ error: 'Unique conflict' });\n  }\n  return next(err);\n}",
+          need: [
+            'err instanceof Prisma.PrismaClientKnownRequestError',
+            "err.code === 'P2002'",
+            'res.status(409)',
+            'next(err)',
+          ],
+          ban: ['(err as any)'],
+        }),
+        type: 'challenge',
+      },
     ],
   },
 };

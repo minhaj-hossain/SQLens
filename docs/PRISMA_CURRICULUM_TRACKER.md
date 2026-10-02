@@ -4,7 +4,7 @@
 > **Version:** 3.0 (Synthesized Architecture Baseline)  
 > **Implementation Plan:** [`docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md)  
 > **Review Reference:** [`docs/PRISMA_CURRICULUM_REVIEW.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_REVIEW.md)  
-> **Overall Progress:** **`4 / 14 Complete (29%)`**
+> **Overall Progress:** **`7 / 14 Complete (50%)`**
 
 ---
 
@@ -16,9 +16,9 @@
 | [x] | **P1-B** | P1 | `select-vs-include` Mental Model Correction | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Theory Update | ✅ Completed |
 | [x] | **P1-C** | P1 | Datasource Config Challenge Redesign | [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts) | Snippet-Lab | ✅ Completed |
 | [x] | **P1-D** | P1 | Client Extensions (`$extends`) Transition Bridge | [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Theory Update | ✅ Completed |
-| [ ] | **P2-A** | P2 | Capstone Redesign (Member Management API) | [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) | Executable + Lab | Pending |
-| [ ] | **P2-B** | P2 | Transaction Rollback Invariant Demonstration | [`src/content/prisma/modules/prisma-12-nested-transactions.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-12-nested-transactions.ts) | Snippet-Lab | Pending |
-| [ ] | **P2-C** | P2 | Diagnostic Repair Tasks (Days 10 & 13) | [`prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) & [`prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | Pending |
+| [x] | **P2-A** | P2 | Capstone Redesign (Member Management API) | [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) | Executable + Lab | ✅ Completed |
+| [x] | **P2-B** | P2 | Transaction Rollback Invariant Demonstration | [`src/content/prisma/modules/prisma-12-nested-transactions.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-12-nested-transactions.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P2-C** | P2 | Diagnostic Repair Tasks (Days 10 & 13) | [`prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) & [`prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | ✅ Completed |
 | [ ] | **P3-A** | P3 | Add `findUniqueOrThrow` Executable Task | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Executable | Pending |
 | [ ] | **P3-B** | P3 | Add Schema `@unique` Selector Bridge | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Theory Update | Pending |
 | [ ] | **P3-C** | P3 | Restructure Day 8 Filter Hierarchy | [`src/content/prisma/modules/prisma-08-filtering-pagination.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-08-filtering-pagination.ts) | Structure Update | Pending |
@@ -70,7 +70,7 @@
 
 ## 3. Priority 2 — Assessment Strengthening Details
 
-### [ ] P2-A: Day 14 Capstone Overhaul (Member Management API)
+### [x] P2-A: Day 14 Capstone Overhaul (Member Management API)
 - **Target File:** [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) (L200–295)
 - **Grading Type:** Hybrid (`executable` + `snippet-lab`)
 - **Action Required:** Rebuild challenges into a 3-part Member Management API using business-requirement phrasing:
@@ -82,7 +82,7 @@
   - Tasks test multi-day synthesis across schema, CRUD, transactions, and error handling.
   - All Day 14 test suites pass.
 
-### [ ] P2-B: Day 12 Transaction Rollback Invariant Demonstration
+### [x] P2-B: Day 12 Transaction Rollback Invariant Demonstration
 - **Target File:** [`src/content/prisma/modules/prisma-12-nested-transactions.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-12-nested-transactions.ts)
 - **Grading Type:** `snippet-lab` (`prismaSnippetTask`)
 - **Action Required:** Add task `prisma12-c2-t3` under `interactive-tx` demonstrating that if step 2 throws in an interactive transaction, step 1's mutation is aborted and rolled back.
@@ -90,7 +90,7 @@
   - Task shows observable before/after state diagram.
   - Learner writes error handling and confirms atomicity invariant.
 
-### [ ] P2-C: Diagnostic Repair Tasks in Days 10 & 13
+### [x] P2-C: Diagnostic Repair Tasks in Days 10 & 13
 - **Target Files:** [`prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) & [`prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts)
 - **Grading Type:** `snippet-lab` (`prismaSnippetTask`)
 - **Action Required:**

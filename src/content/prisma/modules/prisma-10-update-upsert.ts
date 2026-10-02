@@ -184,6 +184,32 @@ export const Prisma_10_MODULE: ModuleData = {
         }),
         type: 'challenge',
       },
+      {
+        ...prismaSnippetTask({
+          id: 'prisma10-hw-2',
+          title: 'Diagnostic Repair — Non-Unique Selector Rejection',
+          description:
+            'The following sync utility fails to compile with a TypeScript/Prisma error: "Property \'name\' does not exist in type \'UserWhereUniqueInput\'". Diagnose why Prisma rejects the selector and repair the query to use a valid unique criteria.',
+          instructions: [
+            'Diagnose why `where: { name }` is rejected by the compiler',
+            'Repair the selector to target the unique `email` field',
+          ],
+          hint: 'The `where` clause of an upsert only accepts fields marked with `@id` or `@unique` in your schema.',
+          scaffold: '-- Repaired upsert resolves to this record:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
+          why: 'Prisma Client enforces database unique constraints at compile-time to prevent ambiguous multi-row updates.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export async function syncMember(name: string, email: string) {\n  // BUG: TypeScript error — name is not a unique input selector\n  return await prisma.user.upsert({\n    where: { name },\n    update: { name },\n    create: { name, email },\n  });\n}',
+          code1:
+            'export async function syncMember(name: string, email: string) {\n  return await prisma.user.upsert({\n    where: { email },\n    update: { name },\n    create: { name, email },\n  });\n}',
+          need: ['where: { email }', 'update: { name }', 'create: { name, email }'],
+          ban: ['where: { name }'],
+          demoVariables: { name: 'Alex', email: 'alex@prisma.io' },
+        }),
+        type: 'challenge',
+      },
     ],
   },
 };
