@@ -13,7 +13,7 @@
 |-------|------|--------|
 | P1 | Prisma copy fixes in `LearningPathView` | ✅ Done |
 | P2 | Prisma locked-day back link fix | ✅ Done |
-| P3 | Header minimal variant | ⬜ Not started |
+| P3 | Header minimal variant | ✅ Done |
 | P4 | AppChrome minimal mode detection | ⬜ Not started |
 | P5 | Homepage strip & simplify | ⬜ Not started |
 
@@ -155,7 +155,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Tasks
 
-- [ ] **P3-A — Add `isMinimal` to `HeaderProps` interface** (after line ~23)
+- [x] **P3-A — Add `isMinimal` to `HeaderProps` interface** (after line ~23)
 
   ```tsx
   /** When true: render logo + auth only. Hides progress pill, database icon,
@@ -164,7 +164,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   isMinimal?: boolean;
   ```
 
-- [ ] **P3-B — Accept `isMinimal` in the component signature**
+- [x] **P3-B — Accept `isMinimal` in the component signature**
 
   ```tsx
   export const Header: React.FC<HeaderProps> = ({
@@ -173,7 +173,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   }) => {
   ```
 
-- [ ] **P3-C — Brand logo links to `/` when minimal** (line ~50)
+- [x] **P3-C — Brand logo links to `/` when minimal** (line ~50)
 
   ```tsx
   // BEFORE:
@@ -183,7 +183,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   href={isMinimal ? '/' : meta.basePath}
   ```
 
-- [ ] **P3-D — Hide streak pill when minimal** (wrap lines ~65-74)
+- [x] **P3-D — Hide streak pill when minimal** (wrap lines ~65-74)
 
   ```tsx
   {!isMinimal && (
@@ -193,7 +193,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   )}
   ```
 
-- [ ] **P3-E — Hide database icon when minimal** (wrap lines ~77-85)
+- [x] **P3-E — Hide database icon when minimal** (wrap lines ~77-85)
 
   ```tsx
   {!isMinimal && (
@@ -203,7 +203,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   )}
   ```
 
-- [ ] **P3-F — Hide playground link when minimal** (wrap lines ~88-95)
+- [x] **P3-F — Hide playground link when minimal** (wrap lines ~88-95)
 
   ```tsx
   {!isMinimal && (
@@ -213,7 +213,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   )}
   ```
 
-- [ ] **P3-G — Hide guest reset button when minimal** (wrap lines ~101-110)
+- [x] **P3-G — Hide guest reset button when minimal** (wrap lines ~101-110)
 
   ```tsx
   {!isMinimal && !user && !isAuthPending && (
@@ -225,11 +225,11 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Acceptance Criteria
 
-- [ ] Homepage header contains: SQLens logo · ThemeToggle · Sign In / user avatar
-- [ ] Homepage header does NOT contain: streak pill, database icon, playground link, reset button
-- [ ] `/sql` header: fully unchanged, all items visible
-- [ ] `/prisma` header: fully unchanged, all items visible
-- [ ] Logo on homepage links to `/`, not `/sql`
+- [x] Homepage header contains: SQLens logo · ThemeToggle · Sign In / user avatar
+- [x] Homepage header does NOT contain: streak pill, database icon, playground link, reset button
+- [x] `/sql` header: fully unchanged, all items visible
+- [x] `/prisma` header: fully unchanged, all items visible
+- [x] Logo on homepage links to `/`, not `/sql`
 
 ---
 

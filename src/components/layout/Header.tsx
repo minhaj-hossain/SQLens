@@ -21,6 +21,10 @@ interface HeaderProps {
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
   isAuthPending?: boolean;
   onSignOut?: () => void;
+  /** When true: render logo + auth only. Hides progress pill, database icon,
+   *  playground link and reset button. Used on homepage where there is no
+   *  active track context. */
+  isMinimal?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   isAuthPending,
   onSignOut,
+  isMinimal = false,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [resetModalOpen, setResetModalOpen] = useState(false);
@@ -47,58 +52,66 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Left: brand dot + wordmark + current-route label (links home) */}
         <Link
-          href={meta.basePath}
+          href={isMinimal ? '/' : meta.basePath}
           className="flex items-center gap-[9px] min-w-0 hover:opacity-90 transition text-left focus:outline-none group"
           title="Return to Curriculum Homepage"
           aria-label="Return to Curriculum Homepage"
         >
           <BrandLogo size="sm" />
-          <span className="hidden sm:inline-block font-body text-xs text-text-faint truncate pl-[9px] border-l border-border ml-[2px]">
-            {activeViewTitle}
-          </span>
+          {!isMinimal && (
+            <span className="hidden sm:inline-block font-body text-xs text-text-faint truncate pl-[9px] border-l border-border ml-[2px]">
+              {activeViewTitle}
+            </span>
+          )}
         </Link>
 
         {/* Right: Streak Pill + Icon Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
           {/* Streak Pill */}
-          <div
-            className="flex items-center gap-1.5 sm:gap-2 bg-surface-2 border border-border px-2 sm:px-3 py-1 rounded-full font-mono text-[11px] sm:text-xs text-text-dim whitespace-nowrap"
-            title={`${completedCount} of ${totalModules} modules completed`}
-            aria-label={`Curriculum progress: ${completedCount} out of ${totalModules} ${meta.label} Days completed`}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-func">
-              <path d="M12 2C12 2 6 9 6 14a6 6 0 0012 0c0-2-1-3.5-1-3.5s-.5 2-2 2c1-3-1-6-3-6.5 0 0 1 2.5-1 4.5-1.5 1-2 2.5-2 3.5" />
-            </svg>
-            <span><strong className="text-func font-semibold">{completedCount}/{totalModules}</strong><span className="hidden min-[380px]:inline"> days</span></span>
-          </div>
+          {!isMinimal && (
+            <div
+              className="flex items-center gap-1.5 sm:gap-2 bg-surface-2 border border-border px-2 sm:px-3 py-1 rounded-full font-mono text-[11px] sm:text-xs text-text-dim whitespace-nowrap"
+              title={`${completedCount} of ${totalModules} modules completed`}
+              aria-label={`Curriculum progress: ${completedCount} out of ${totalModules} ${meta.label} Days completed`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-func">
+                <path d="M12 2C12 2 6 9 6 14a6 6 0 0012 0c0-2-1-3.5-1-3.5s-.5 2-2 2c1-3-1-6-3-6.5 0 0 1 2.5-1 4.5-1.5 1-2 2.5-2 3.5" />
+              </svg>
+              <span><strong className="text-func font-semibold">{completedCount}/{totalModules}</strong><span className="hidden min-[380px]:inline"> days</span></span>
+            </div>
+          )}
 
           {/* Database Schema */}
-          <button
-            id="header-schema-btn"
-            onClick={onOpenSchemaModal}
-            title="Inspect Database Schema"
-            aria-label="Inspect Database Schema"
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150 cursor-pointer"
-          >
-            <Icon name="database" className="text-[16px]" />
-          </button>
+          {!isMinimal && (
+            <button
+              id="header-schema-btn"
+              onClick={onOpenSchemaModal}
+              title="Inspect Database Schema"
+              aria-label="Inspect Database Schema"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150 cursor-pointer"
+            >
+              <Icon name="database" className="text-[16px]" />
+            </button>
+          )}
 
           {/* Playground — real route since Phase 1; track-routed since P0.3 */}
-          <Link
-            href={track === 'prisma' ? '/playground?mode=prisma' : '/playground'}
-            title={`Open ${meta.label} Playground`}
-            aria-label={`Open ${meta.label} Playground`}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150"
-          >
-            <Icon name="terminal" className="text-[16px]" />
-          </Link>
+          {!isMinimal && (
+            <Link
+              href={track === 'prisma' ? '/playground?mode=prisma' : '/playground'}
+              title={`Open ${meta.label} Playground`}
+              aria-label={`Open ${meta.label} Playground`}
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150"
+            >
+              <Icon name="terminal" className="text-[16px]" />
+            </Link>
+          )}
 
           {/* Color theme switcher (graphite / sky) */}
           <ThemeToggle />
 
           {/* Guest reset progress trigger */}
-          {!user && !isAuthPending && (
+          {!isMinimal && !user && !isAuthPending && (
             <button
               onClick={() => setResetModalOpen(true)}
               title="Reset course progress"
