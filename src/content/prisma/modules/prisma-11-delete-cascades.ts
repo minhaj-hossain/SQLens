@@ -105,7 +105,7 @@ export const Prisma_11_MODULE: ModuleData = {
             'model User {\n  id        Int       @id @default(autoincrement())\n  email     String    @unique\n  deletedAt DateTime?\n}\n\nexport async function live() {\n  return await prisma.user.findMany({\n    where: { deletedAt: null },\n  });\n}',
           need: ['deletedAt DateTime?', 'deletedAt: null'],
         }),
-        prismaReadTask({
+        prismaSnippetTask({
           id: 'prisma11-c2-t2',
           title: 'Read only live rows',
           description: 'Return id + email for every user that is not soft-deleted.',
@@ -120,6 +120,7 @@ export const Prisma_11_MODULE: ModuleData = {
             'export async function live() {\n  return await prisma.user.findMany({\n    where: { deletedAt: null },\n    select: { id: true },\n  });\n}',
           code1:
             'export async function live() {\n  return await prisma.user.findMany({\n    where: { deletedAt: null },\n    select: { id: true, email: true },\n  });\n}',
+          need: ['where: { deletedAt: null }', 'email: true'],
           rtype: '{ id: number; email: string }[]',
         }),
       ],

@@ -22,7 +22,7 @@ export const Prisma_01_MODULE: ModuleData = {
   curriculumOrder: 1,
   displayLabel: 'Day 1',
   completionLearnings: [
-    'Explain the object-relational impedance mismatch in one minute',
+    'Convert raw SQL queries into type-safe findUnique calls',
     'Compare raw SQL drivers vs query builders vs Prisma ORM',
     'Read one user with prisma.user.findUnique + select',
     'See the exact SQL Prisma generates (Generated SQL Lens)',

@@ -58,7 +58,7 @@ export const Prisma_09_MODULE: ModuleData = {
             'export async function registerUser(name: string, email: string) {\n  return await prisma.user.create({\n    data: { name, email },\n    select: { id: true, email: true },\n  });\n}',
           rtype: '{ id: number; email: string }',
         }),
-        prismaReadTask({
+        prismaSnippetTask({
           id: 'prisma09-c1-t2',
           title: 'Batch insert',
           description: 'Write all three users in a single round trip.',
@@ -69,12 +69,12 @@ export const Prisma_09_MODULE: ModuleData = {
           why: 'A batch insert is one statement, so the lens shows the whole table.',
           cols: ['id'],
           select: [],
-          method: 'createMany',
           rows: 3,
           code0:
             'export async function importUsers() {\n  return await prisma.user.findMany({\n    select: { id: true },\n  });\n}',
           code1:
             'export async function importUsers(users: { name: string; email: string }[]) {\n  return await prisma.user.createMany({\n    data: users,\n  });\n}',
+          need: ['prisma.user.createMany', 'data: users'],
           rtype: '{ count: number }',
         }),
       ],

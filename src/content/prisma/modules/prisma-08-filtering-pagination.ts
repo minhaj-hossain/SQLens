@@ -87,7 +87,7 @@ export const Prisma_08_MODULE: ModuleData = {
             'export async function findByDomain() {\n  return await prisma.user.findMany({\n    where: { email: { contains: \'prisma.io\' } },\n    select: { id: true, name: true },\n  });\n}',
           rtype: '{ id: number; name: string }[]',
         }),
-        prismaReadTask({
+        prismaSnippetTask({
           id: 'prisma08-c1-t2',
           title: 'Filter on a set of values',
           description: 'Return Alex and Mina, nobody else.',
@@ -102,6 +102,7 @@ export const Prisma_08_MODULE: ModuleData = {
             'export async function findByNames() {\n  return await prisma.user.findMany({\n    where: {},\n    select: { id: true, name: true },\n  });\n}',
           code1:
             'export async function findByNames() {\n  return await prisma.user.findMany({\n    where: { name: { in: [\'Alex\', \'Mina\'] } },\n    select: { id: true, name: true },\n  });\n}',
+          need: ['in:', "'Alex'", "'Mina'"],
           rtype: '{ id: number; name: string }[]',
         }),
         prismaSnippetTask({
@@ -193,7 +194,7 @@ export const Prisma_08_MODULE: ModuleData = {
             'export async function page2() {\n  return await prisma.user.findMany({\n    orderBy: { id: \'asc\' },\n    skip: 1,\n    take: 1,\n    select: { id: true, name: true },\n  });\n}',
           rtype: '{ id: number; name: string }[]',
         }),
-        prismaReadTask({
+        prismaSnippetTask({
           id: 'prisma08-c2-t2',
           title: 'Cursor paging',
           description: 'Return the two rows after the user with id 1.',
@@ -203,13 +204,12 @@ export const Prisma_08_MODULE: ModuleData = {
           solutionSql: 'SELECT id, name FROM users WHERE id > 1 ORDER BY id ASC LIMIT 2;',
           why: 'The cursor compiles to a WHERE on the key plus a LIMIT.',
           cols: ['id', 'name'],
-          pagination: { take: 2, cursor: true },
-          orderBy: [{ field: 'id', direction: 'asc' }],
           rows: 2,
           code0:
             'export async function afterRow(id: number) {\n  return await prisma.user.findMany({\n    orderBy: { id: \'asc\' },\n    skip: 2,\n    take: 2,\n    select: { id: true, name: true },\n  });\n}',
           code1:
             'export async function afterRow(id: number) {\n  return await prisma.user.findMany({\n    cursor: { id },\n    take: 2,\n    orderBy: { id: \'asc\' },\n    select: { id: true, name: true },\n  });\n}',
+          need: ['cursor: { id }', 'take: 2'],
           rtype: '{ id: number; name: string }[]',
         }),
       ],

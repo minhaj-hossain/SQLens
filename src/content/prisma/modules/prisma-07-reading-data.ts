@@ -19,7 +19,7 @@ export const Prisma_07_MODULE: ModuleData = {
     'Choose between findUnique, findFirst and findMany',
     'Return only the columns the screen needs',
     'Know when `include` is the right answer',
-    'Predict the SQL each read method generates',
+    'Use select to trim payloads or include to load relations',
   ],
   concepts: [
     {

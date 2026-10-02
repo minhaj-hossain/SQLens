@@ -16,7 +16,7 @@ export const Prisma_14_MODULE: ModuleData = {
   curriculumOrder: 14,
   displayLabel: 'Day 14',
   completionLearnings: [
-    'Keep routers, controllers and services in separate layers',
+    'Delegate route handlers to controller methods and service classes',
     'Inject PrismaClient instead of importing it everywhere',
     'Cover the full CRUD lifecycle through the service',
     'Return relation-safe, minimal responses',
