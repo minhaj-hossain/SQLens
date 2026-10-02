@@ -24,6 +24,21 @@ export type PrismaMethod =
   | 'deleteMany'
   | '$transaction';
 
+/**
+ * Pedagogical skill level for a task (Phase 3 Quality Rubric):
+ * - `introduce`: Introduces exactly one new mechanism or concept.
+ * - `practice`: Builds fluency with introduced concepts in different combinations.
+ * - `assess`: Diagnostic/synthesis challenge without hand-holding or direct method naming.
+ */
+export type SkillType = 'introduce' | 'practice' | 'assess';
+
+/**
+ * Strategy C Grading Channel (Phase 3 Quality Rubric):
+ * - `executable`: Graded by SQLite engine execution and SQL Lens comparison.
+ * - `snippet-lab`: Graded by AST / code snippet matching and structural validation.
+ */
+export type GradingType = 'executable' | 'snippet-lab';
+
 export interface PrismaValidationRule {
   /** e.g. "user", "post", "product" (lowercase model name). */
   targetModel?: string;
@@ -65,6 +80,10 @@ export interface PrismaValidationRule {
  * and runs it through the existing in-browser SQL executor (real execution).
  */
 export interface PrismaTaskContent {
+  /** Phase 3 Quality Rubric: pedagogical role ('introduce' | 'practice' | 'assess'). */
+  skillType?: SkillType;
+  /** Phase 3 Quality Rubric: grading channel ('executable' | 'snippet-lab'). */
+  gradingType?: GradingType;
   /**
    * Which editor surface this task OPENS on. Default `editor` (the TypeScript
    * file); `schema` opens the read-only `schema.prisma` tab, which also carries

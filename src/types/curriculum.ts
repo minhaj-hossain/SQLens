@@ -1,5 +1,12 @@
-import type { PrismaTaskContent, PrismaTheoryContent } from './prisma-curriculum';
+import type {
+  GradingType,
+  PrismaTaskContent,
+  PrismaTheoryContent,
+  SkillType,
+} from './prisma-curriculum';
 import type { TrackId } from './track';
+
+export type { GradingType, SkillType };
 
 export type DialectId = 'both' | 'mysql' | 'postgres';
 
@@ -139,6 +146,10 @@ export interface PracticeTask {
   description: string;
   instructions: string[];
   type: TaskType;
+  /** Phase 3 Quality Rubric: pedagogical role ('introduce' | 'practice' | 'assess'). */
+  skillType?: SkillType;
+  /** Phase 3 Quality Rubric: Strategy C grading channel ('executable' | 'snippet-lab'). */
+  gradingType?: GradingType;
   primaryTable: string;
   secondaryTables?: string[];
   initialSql: string;
