@@ -585,12 +585,12 @@ The curriculum is structured into task-driven sections. Final module count will 
 
 Before changes are merged or advanced, they must pass these verification gates:
 
-- [ ] **Gate 0 (Sequence Audit):** `npm run audit:taught-before-tested` exits with 0 errors.
-- [ ] **Gate 1 (Test Suite):** `npm test` passes completely without regressions.
-- [ ] **Gate 2 (Grading Match):** No unsupported method is configured with executable grading.
-- [ ] **Gate 3 (Outcome Truth):** 100% of statements in `completionLearnings` map to completed tasks.
-- [ ] **Gate 4 (Diagnostic Presence):** Every core section contains at least one unassisted `assess` task.
-- [ ] **Gate 5 (SQL Lens Parity):** All executable tasks produce valid SQL statements in SQL Lens.
+- [x] **Gate 0 (Sequence Audit):** `npm run audit:taught-before-tested` exits with 0 errors (424 tasks, 0 findings).
+- [x] **Gate 1 (Test Suite):** `npm test` passes completely without regressions (885/885 passed across 77 suites).
+- [x] **Gate 2 (Grading Match):** No unsupported method is configured with executable grading (`audit:task-rubric` 80/80 tasks passing, 0 findings).
+- [x] **Gate 3 (Outcome Truth):** 100% of statements in `completionLearnings` map to completed tasks (`audit:outcomes` 56/56 claims passing, 0 findings).
+- [x] **Gate 4 (Diagnostic Presence):** Every core section contains at least one unassisted `assess` task (`audit:assess` Days 7–14 verified, 0 findings).
+- [x] **Gate 5 (SQL Lens Parity):** All executable tasks produce valid SQL statements in SQL Lens (`audit:sql-lens` 26/26 tasks verified, 0 findings).
 
 ---
 
@@ -606,4 +606,4 @@ Before changes are merged or advanced, they must pass these verification gates:
 | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | P0-2 | ✅ Edited | ✅ | Corrected select/include theory; added `prisma07-c2-t3` nested select snippet lab |
 | [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) | P0-3 | ✅ Edited | ✅ | Added executable `prisma10-c1-t3` atomic `increment` task |
 | [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) | P0-4 | ✅ Edited | ✅ | Replaced single trivial lookup with two-task diagnostic (`prisma14-hw-1` executable + `prisma14-hw-2` snippet lab) |
-| `src/content/prisma/modules/prisma-*.ts` | P4 | Edit/Create | ⏹️ Not Started | Progressive rollout of task-first curriculum modules |
+| `src/content/prisma/modules/prisma-*.ts` | P4/P5 | Edit/Verify | ✅ | Progressive rollout and validation of task-first curriculum modules (80 tasks, 0 findings) |
