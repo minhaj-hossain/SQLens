@@ -12,7 +12,7 @@
 | Phase | Name | Status |
 |-------|------|--------|
 | P1 | Prisma copy fixes in `LearningPathView` | ✅ Done |
-| P2 | Prisma locked-day back link fix | ⬜ Not started |
+| P2 | Prisma locked-day back link fix | ✅ Done |
 | P3 | Header minimal variant | ⬜ Not started |
 | P4 | AppChrome minimal mode detection | ⬜ Not started |
 | P5 | Homepage strip & simplify | ⬜ Not started |
@@ -118,7 +118,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Tasks
 
-- [ ] **P2-A — Add `meta` to existing `useTrackCurriculum()` destructure** (line ~29)
+- [x] **P2-A — Add `meta` to existing `useTrackCurriculum()` destructure** (line ~29)
 
   ```tsx
   // BEFORE:
@@ -128,7 +128,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   const { modules: ALL_MODULES, getModuleById, meta } = useTrackCurriculum();
   ```
 
-- [ ] **P2-B — Fix the back link href in the locked-day view** (line ~54)
+- [x] **P2-B — Fix the back link href in the locked-day view** (line ~54)
 
   ```tsx
   // BEFORE:
@@ -140,9 +140,9 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Acceptance Criteria
 
-- [ ] Locked Prisma day → "Back to Learning Path" → lands on `/prisma`
-- [ ] Locked SQL day → "Back to Learning Path" → lands on `/sql`
-- [ ] Neither routes to `/`
+- [x] Locked Prisma day → "Back to Learning Path" → lands on `/prisma`
+- [x] Locked SQL day → "Back to Learning Path" → lands on `/sql`
+- [x] Neither routes to `/`
 
 ---
 

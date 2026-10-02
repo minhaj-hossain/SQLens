@@ -6,6 +6,7 @@
  * notice instead of the content (client-side unlock rules, per the plan).
  */
 import React from 'react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { useTrackCurriculum } from '@/components/learn/use-track';
@@ -26,7 +27,7 @@ interface ModuleOverviewProps {
 }
 
 export default function ModuleOverview({ dayId }: ModuleOverviewProps) {
-  const { modules: ALL_MODULES, getModuleById } = useTrackCurriculum();
+  const { modules: ALL_MODULES, getModuleById, meta } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   if (!mod) notFound();
   const { userState, availabilityVersion } = useLearning();
@@ -50,13 +51,13 @@ export default function ModuleOverview({ dayId }: ModuleOverviewProps) {
         <p className="text-sm text-text-dim font-body leading-relaxed mb-6">
           {unlockStatus.reason || 'Complete the previous days to unlock this lesson.'}
         </p>
-        <a
-          href="/"
+        <Link
+          href={meta.basePath}
           className="inline-flex items-center gap-2 font-mono text-xs bg-func text-ink font-bold px-4 py-2 rounded-lg hover:brightness-110 transition"
         >
           <Icon name="arrow_back" className="text-[15px]" />
           Back to Learning Path
-        </a>
+        </Link>
       </div>
     );
   }
