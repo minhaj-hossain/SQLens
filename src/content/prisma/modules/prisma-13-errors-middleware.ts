@@ -129,19 +129,25 @@ export const Prisma_13_MODULE: ModuleData = {
     {
       id: 'client-extensions',
       order: 3,
-      title: 'Client Extensions — `$extends`',
-      shortDescription: 'Wrap every query or add model methods in one typed place — the modern `$use`.',
+      title: 'Architectural Transition: Client Extensions — `$extends`',
+      shortDescription:
+        'From HTTP route error boundaries to engine-level query extensions — the typed successor to $use.',
       theory: richPrismaTheory({
-        summary: '`prisma.$extends({ … })` returns a new client that wraps every call: a `query` hook can rewrite args or results, a `model` hook adds methods, and a `result` hook adds computed fields. It is the typed successor to the deprecated `$use` middleware.',
+        summary:
+          'Architectural Transition: While Concepts 1 & 2 handle runtime errors at the HTTP routing boundary, Client Extensions operate at the engine client layer. `prisma.$extends({ … })` returns a new client that wraps every call: a `query` hook can rewrite args or results, a `model` hook adds methods, and a `result` hook adds computed fields. It serves as the modern, type-safe successor to deprecated `$use` middleware and forms the architectural bridge into Day 14.',
         takeaway: '`$extends` is the modern `$use`: intercept every query in one typed place.',
         sql: "SELECT id, email\nFROM users\nWHERE email = 'alex@prisma.io';",
-        heroCode: "const xprisma = prisma.$extends({\n  query: {\n    user: {\n      async $allOperations({ args, query }) {\n        const rows = await query(args);\n        return rows;\n      },\n    },\n  },\n});",
+        heroCode:
+          "const xprisma = prisma.$extends({\n  query: {\n    user: {\n      async $allOperations({ args, query }) {\n        const rows = await query(args);\n        return rows;\n      },\n    },\n  },\n});",
         heroLang: 'typescript',
         heroWhy: 'Every `user` query now flows through one interception point — typed, not stringly.',
-        mentalModel: '**Intercept once, not at every call site.** `query` hooks receive `{ args, query }` and return the result, so logging, soft-delete filters and tenant scoping live in ONE place. The deprecated `$use` middleware did the same job with `any` everywhere — `$extends` keeps the types.',
+        mentalModel:
+          '**Intercept once, not at every call site.** `query` hooks receive `{ args, query }` and return the result, so logging, soft-delete filters and tenant scoping live in ONE place. The deprecated `$use` middleware did the same job with `any` everywhere — `$extends` keeps the types.',
         explanation: [
+          'Architectural Transition: Concepts 1 & 2 address perimeter HTTP errors; $extends operates internally at the client execution engine.',
           '`query` hooks wrap execution (args in, result out); `model` hooks add methods; `result` hooks add computed fields.',
           'Extend once at startup and hand the extended client around — the base `prisma` client stays untouched.',
+          'This advanced client customization concept completes our core curriculum, serving as the bridge to enterprise service design in Day 14.',
         ],
         steps: [
           {

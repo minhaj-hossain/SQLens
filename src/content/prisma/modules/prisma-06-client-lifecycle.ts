@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaSnippetTask, prismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 6 — PrismaClient Lifecycle & Connections. */
 export const Prisma_06_MODULE: ModuleData = {
@@ -125,23 +125,27 @@ export const Prisma_06_MODULE: ModuleData = {
     databaseLifecycle: 'fresh',
     tasks: [
       {
-        ...prismaReadTask({
+        ...prismaSnippetTask({
           id: 'prisma06-hw-1',
-          title: 'Production Gateway Lookup',
-          description: 'Retrieve a verified user by unique email through the gateway, selecting only id and email.',
-          instructions: ['findUnique with `where: { email }`', 'Select `id` and `email`'],
-          hint: '`findUnique` on unique column `email` with `select: { id: true, email: true }`.',
-          scaffold: '-- Production gateway single lookup:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'A targeted findUnique read returns exactly the requested record without leaking extra fields.',
-          cols: ['id', 'email'],
-          noCols: ['name'],
+          title: 'Production Gateway Singleton Pattern',
+          description:
+            'Implement the standard development singleton pattern to prevent connection pool exhaustion caused by hot-module reloading.',
+          instructions: [
+            'Check if `globalThis.prisma` already exists; if not, instantiate `new PrismaClient()`',
+            'In non-production environments (`process.env.NODE_ENV !== \'production\'`), assign the instance to `globalThis.prisma`',
+          ],
+          hint: 'Assign `globalForPrisma.prisma || new PrismaClient()` and cache when `process.env.NODE_ENV !== \'production\'`.',
+          scaffold: '-- Database gateway singleton verification:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'Preserving the client instance on globalThis prevents opening hundreds of duplicate database connections during development.',
+          cols: ['id', 'name'],
           rows: 1,
           code0:
-            'export async function getUser(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n  });\n}',
+            "import { PrismaClient } from '@prisma/prisma-client';\n\n// TODO: Prevent multiple PrismaClient instances across hot reloads\nexport const prisma = new PrismaClient();",
           code1:
-            'export async function getUser(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
-          rtype: '{ id: number; email: string } | null',
+            "import { PrismaClient } from '@prisma/prisma-client';\n\nconst globalForPrisma = globalThis as unknown as { prisma: PrismaClient };\n\nexport const prisma = globalForPrisma.prisma || new PrismaClient();\n\nif (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;",
+          need: ['globalThis', 'new PrismaClient()', "process.env.NODE_ENV !== 'production'"],
+          ban: ['findMany', 'orderBy'],
         }),
         type: 'challenge',
       },

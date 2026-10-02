@@ -77,14 +77,14 @@ export const Prisma_07_MODULE: ModuleData = {
       id: 'select-vs-include',
       order: 2,
       title: 'Data Shaping (`select`) vs Relation Loading (`include`)',
-      shortDescription: '`select` trims the row; `include` adds the relation.',
+      shortDescription: '`select` defines returned shape; `include` attaches relations to base shape.',
       theory: prismaTheory(
-        '`select` is a projection: name the fields you want and Prisma sends exactly those columns. `include` returns every scalar column plus the relation you asked for. You cannot use both at the same root level — to fetch relation fields while controlling scalars, nest a `select` inside your projection.',
-        '`select` and `include` cannot appear at the same root level; use nested `select` for fine-grained relations.',
+        '`select` is a projection: you explicitly define the exact shape of the returned object by choosing which fields to retrieve. `include` is relation attachment: it preserves all scalar columns of the model and appends the requested relation. Combining both at the root level is ambiguous because `select` declares an exclusive field set while `include` implies a full base model. To shape both the parent model and related records without over-fetching, nest a `select` inside the relation field.',
+        '`select` projects specific fields; `include` appends relations. Use nested `select` to shape parent and relation fields together.',
         'SELECT id, email\nFROM users\nWHERE id = 3;',
         'const leanWithPosts = await prisma.user.findUnique({\n  where: { id: 3 },\n  select: {\n    id: true,\n    email: true,\n    posts: { select: { title: true } },\n  },\n});',
         'typescript',
-        'Nested select fetches related records while preventing over-fetching on both models.',
+        'Nested select shapes related records while preventing over-fetching on both models.',
       ),
       tasks: [
         prismaReadTask({

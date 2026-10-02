@@ -1,8 +1,9 @@
-# Prisma Curriculum Redesign — Implementation Plan
+# Prisma Curriculum Redesign — Implementation Plan (Archived Baseline)
 
-> **Document Version:** 2.0 (Post-Verification Baseline)  
+> **SUPERSEDED:** This v2.0 document has been superseded by the definitive [PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md) (v3.0) and tracked in [PRISMA_CURRICULUM_TRACKER.md](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_TRACKER.md).  
+> **Document Version:** 2.0 (Historical Reference)  
 > **Reference Review:** [`docs/PRISMA_CURRICULUM_REVIEW.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_REVIEW.md)  
-> **Status:** Pending Strategy Sign-Off & Execution
+> **Status:** Superseded by v3.0
 
 ---
 

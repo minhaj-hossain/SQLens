@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
+import { prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 2 — Setup & Connection. CLI lifecycle + pooled datasource. */
 export const Prisma_02_MODULE: ModuleData = {
@@ -182,26 +182,33 @@ export const Prisma_02_MODULE: ModuleData = {
   ],
   challenge: {
     id: 'prisma02-challenge',
-    title: 'Final Challenge — Connect and Prove It',
-    scenario: 'Wire the client and prove the database answers.',
+    title: 'Final Challenge — Configure Enterprise Datasource & Environment Wire',
+    scenario: 'Wire the enterprise client to production PostgreSQL and map legacy database tables.',
     databaseLifecycle: 'fresh',
     tasks: [
       {
-        ...prismaReadTask({
+        ...prismaSnippetTask({
           id: 'prisma02-hw-1',
-          title: 'Key lookup over the wire',
-          description: 'Return id + email for alex@prisma.io.',
-          instructions: ['findUnique on where: { email }', 'select id + email only'],
-          hint: 'where on email, select id + email.',
-          scaffold: "-- Expected shape:\nSELECT id, email FROM users WHERE email = 'nobody@prisma.io';",
+          title: 'Configure Enterprise Datasource & Environment Wire',
+          description:
+            'Complete the schema configuration by declaring an env-sourced PostgreSQL datasource and mapping the User model to legacy tbl_users.',
+          instructions: [
+            'Set datasource provider to "postgresql"',
+            'Source the database connection url from env("DATABASE_URL")',
+            'Map the User model to table "tbl_users" using @@map',
+          ],
+          hint: '`provider = "postgresql"`, `url = env("DATABASE_URL")`, and `@@map("tbl_users")`.',
+          scaffold: '-- Validates schema configuration against the engine:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'One row, two columns — connected.',
+          why: 'Configuring the datasource via environment variables and mapping legacy tables enables zero-code database portability.',
           cols: ['id', 'email'],
-          noCols: ['name'],
           rows: 1,
-          code0: 'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    // TODO: where + select\n  });\n}',
-          code1: 'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
-          rtype: '{ id: number; email: string } | null',
+          code0:
+            'datasource db {\n  provider = "sqlite"\n  url      = "file:./dev.db"\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n}',
+          code1:
+            'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n\n  @@map("tbl_users")\n}',
+          need: ['provider = "postgresql"', 'env("DATABASE_URL")', '@@map("tbl_users")'],
+          ban: ['provider = "sqlite"', '"file:./dev.db"'],
         }),
         type: 'challenge',
       },
