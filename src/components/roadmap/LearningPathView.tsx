@@ -43,7 +43,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
 }) => {
   // Phase 2: aliased to the original names so the whole view below is
   // unchanged while resolving against the ACTIVE track.
-  const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById } =
+  const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, track, meta } =
     useTrackCurriculum();
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [lockedAlert, setLockedAlert] = useState<{
@@ -141,14 +141,19 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       <section className="pt-16 pb-14 grid grid-cols-1 md:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
         <div>
           <div className="font-mono text-xs text-text-faint tracking-[0.06em] uppercase mb-5">
-            SQLENS <span className="text-func">/</span> CURRICULUM ROADMAP
+            {track === 'prisma' ? 'PRISMALENS' : 'SQLENS'} <span className="text-func">/</span> CURRICULUM ROADMAP
           </div>
           <h1 className="font-mono font-bold text-[32px] md:text-[42px] leading-[1.14] tracking-tight text-text">
-            Go from <span className="text-func">SELECT *</span> to shipped.
+            {track === 'prisma' ? (
+              <>Go from <span className="text-func">prisma.findMany()</span> to production.</>
+            ) : (
+              <>Go from <span className="text-func">SELECT *</span> to shipped.</>
+            )}
           </h1>
           <p className="mt-4 text-[15.5px] text-text-dim max-w-[480px] leading-[1.65]">
-            Hands-on SQL, one query at a time — because &quot;I sort of know JOINs&quot;
-            isn&apos;t a personality trait.
+            {track === 'prisma'
+              ? "Type-safe queries, one schema at a time — because guessing your DB shape isn't a strategy."
+              : <>&quot;I sort of know JOINs&quot; isn&apos;t a personality trait — hands-on SQL, one query at a time.</>}
           </p>
           <div className="mt-[30px] flex items-center gap-4 flex-wrap">
             <button
@@ -225,7 +230,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       {/* ============ EXECUTION PATH ============ */}
       <section id="execution-path">
         <div className="font-mono text-[11.5px] text-text-faint tracking-[0.08em] uppercase mb-[18px]">
-          Execution path
+          {track === 'prisma' ? 'Learning path' : 'Execution path'}
         </div>
 
         <div className="relative pb-5">
@@ -383,7 +388,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       </section>
 
       <footer className="mt-[74px] mb-11 text-center font-mono text-[11px] text-text-faint">
-        SQLens — {overallPct}% through the path.
+        {track === 'prisma' ? 'PrismaLens' : 'SQLens'} — {overallPct}% through the path.
       </footer>
     </div>
   );
