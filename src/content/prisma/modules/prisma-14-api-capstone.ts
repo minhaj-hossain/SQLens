@@ -212,28 +212,68 @@ export const Prisma_14_MODULE: ModuleData = {
   ],
   challenge: {
     id: 'prisma14-challenge',
-    title: 'Capstone — Enterprise Publishing REST API',
-    scenario: 'The published-record endpoint that closes the track.',
+    title: 'Capstone — REST API Diagnostic',
+    scenario:
+      'Two unassisted tasks synthesising the full track: strict projection discipline then relational profile loading.',
     databaseLifecycle: 'fresh',
     tasks: [
       {
         ...prismaReadTask({
           id: 'prisma14-hw-1',
-          title: 'Published record read',
-          description: 'One record by unique email, id + email only, never `name`.',
-          instructions: ['findUnique on `where: { email }`', 'Select `id` and `email`'],
-          hint: 'Unique lookup, minimal projection — the shape every client gets.',
-          scaffold: '-- The published record:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
-          why: 'Fourteen days end with one typed, minimal, unique-key read.',
+          title: 'Strict projection — all users, no `name`',
+          description:
+            'Return the public roster (id + email) for every user ordered by id. The `name` column must never leave the database.',
+          instructions: [
+            'Use `findMany`',
+            '`orderBy: { id: "asc" }`',
+            'Select `id` and `email` only — never `name`',
+          ],
+          hint: 'A minimal, ordered projection is the contract every client depends on.',
+          scaffold:
+            '-- The roster your endpoint must return:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users ORDER BY id ASC;',
+          why:
+            'Projection discipline prevents over-fetching; ORDER BY keeps pagination and tests deterministic.',
           cols: ['id', 'email'],
           noCols: ['name'],
-          rows: 1,
+          orderBy: [{ field: 'id', direction: 'asc' }],
+          rows: 3,
           code0:
-            'export async function published(email: string) {\n  return await prisma.user.findMany({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+            'export async function roster() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true, name: true },\n  });\n}',
           code1:
-            'export async function published(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
-          rtype: '{ id: number; email: string } | null',
+            'export async function roster() {\n  return await prisma.user.findMany({\n    orderBy: { id: \'asc\' },\n    select: { id: true, email: true },\n  });\n}',
+          rtype: '{ id: number; email: string }[]',
+        }),
+        type: 'challenge',
+      },
+      {
+        ...prismaSnippetTask({
+          id: 'prisma14-hw-2',
+          title: 'Relational profile — user with posts',
+          description:
+            'Fetch one user by email and eagerly load all their posts. Use `include`, not root `select` — they cannot coexist at the top level.',
+          instructions: [
+            'Use `findUnique` with `where: { email }`',
+            'Load posts via `include: { posts: true }`',
+            'Do NOT add a root `select` block',
+          ],
+          hint: '`include` eagerly loads the relation; root `select` would conflict with it.',
+          scaffold:
+            '-- Profile query: user + their posts\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email, name FROM users WHERE email = 'alex@prisma.io';",
+          why:
+            '`include: { posts: true }` is the idiomatic Prisma pattern for loading a one-to-many relation — no raw JOIN required.',
+          cols: ['id', 'email'],
+          select: [],
+          rows: 1,
+          includes: ['posts'],
+          code0:
+            'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+          code1:
+            'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    include: { posts: true },\n  });\n}',
+          need: ['findUnique(', 'include:', 'posts: true'],
+          ban: ['select: {'],
+          rtype: '({ id: number; email: string; name: string; posts: { id: number; title: string; authorId: number }[] }) | null',
         }),
         type: 'challenge',
       },
