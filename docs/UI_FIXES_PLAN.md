@@ -15,7 +15,7 @@
 | P2 | Prisma locked-day back link fix | ✅ Done |
 | P3 | Header minimal variant | ✅ Done |
 | P4 | AppChrome minimal mode detection | ✅ Done |
-| P5 | Homepage strip & simplify | ⬜ Not started |
+| P5 | Homepage strip & simplify | ✅ Done |
 
 **Status key:** ⬜ Not started · 🔄 In progress · ✅ Done · ❌ Blocked
 
@@ -280,7 +280,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Tasks
 
-- [ ] **P5-A — Simplify the import** (line ~1-5)
+- [x] **P5-A — Simplify the import** (line ~1-5)
 
   ```tsx
   // BEFORE:
@@ -292,20 +292,20 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
   import { ReturningLearnerCard } from '@/components/tracks/HeroLensInteractivePreview';
   ```
 
-- [ ] **P5-B — Remove `HeroLensInteractivePreview` from JSX** (line ~79)
+- [x] **P5-B — Remove `HeroLensInteractivePreview` from JSX** (line ~79)
 
   ```tsx
   // REMOVE this line entirely:
   <HeroLensInteractivePreview />
   ```
 
-- [ ] **P5-C — Remove the `FEATURES` array and badge grid** (lines ~24-89)
+- [x] **P5-C — Remove the `FEATURES` array and badge grid** (lines ~24-89)
 
   Remove:
   - The `FEATURES` const (lines ~24-45)
   - The `<ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">` badge section (lines ~81-89)
 
-- [ ] **P5-D — Remove the redundant footer tip** (lines ~146-148)
+- [x] **P5-D — Remove the redundant footer tip** (lines ~146-148)
 
   ```tsx
   // REMOVE:
@@ -316,7 +316,7 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
   `ReturningLearnerCard` handles this already.
 
-- [ ] **P5-E — Tighten vertical padding on the wrapper** (line ~62)
+- [x] **P5-E — Tighten vertical padding on the wrapper** (line ~62)
 
   ```tsx
   // BEFORE:
@@ -342,13 +342,13 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Acceptance Criteria
 
-- [ ] No live engine demo on homepage
-- [ ] No feature badge grid on homepage
-- [ ] No redundant "Already started?" tip
-- [ ] Page renders fast — no auto-running JS engine imports on `/`
-- [ ] `ReturningLearnerCard` still appears for returning users
-- [ ] Track cards (SQL + Prisma) still render correctly
-- [ ] `/sql` and `/prisma` roadmap pages: completely unaffected
+- [x] No live engine demo on homepage
+- [x] No feature badge grid on homepage
+- [x] No redundant "Already started?" tip
+- [x] Page renders fast — no auto-running JS engine imports on `/`
+- [x] `ReturningLearnerCard` still appears for returning users
+- [x] Track cards (SQL + Prisma) still render correctly
+- [x] `/sql` and `/prisma` roadmap pages: completely unaffected
 
 ---
 

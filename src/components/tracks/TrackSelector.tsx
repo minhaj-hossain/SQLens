@@ -1,48 +1,13 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
-import HeroLensInteractivePreview, {
-  ReturningLearnerCard,
-} from '@/components/tracks/HeroLensInteractivePreview';
+import { ReturningLearnerCard } from '@/components/tracks/HeroLensInteractivePreview';
 import { TRACK_IDS, TRACK_META } from '@/types/track';
 import { getTrackMilestones, getTrackModules } from '@/tracks/registry';
 
 /**
- * TrackSelector — the content of `/` (Phase 2; reshaped by Phase 3, Task 3.1).
- * ─────────────────────────────────────────────────────────────────────────────
- * The homepage is a CHOICE, not a roadmap, and it now DEMONSTRATES the system
- * before asking for that choice: a hero whose live SQL Lens runs the real
- * engine, a continuity strip for learners who already started, feature badges,
- * then two cards — one per track — linking to that track's namespaced roadmap.
- *
- * Still a SERVER component: it reads static curriculum metadata and places the
- * two client islands (`HeroLensInteractivePreview`, `ReturningLearnerCard`), so
- * the headline, badges and cards ship as HTML and the engine chunk arrives only
- * when the island runs.
+ * TrackSelector — the content of `/`.
+ * Minimal track selection hub allowing learners to pick between SQL and Prisma.
  */
-
-/** What the platform does, as scannable proof between the hero and the cards. */
-const FEATURES = [
-  {
-    icon: 'database',
-    title: 'Zero setup',
-    detail: 'A real SQL engine runs in the browser — no install, no server, no waiting.',
-  },
-  {
-    icon: 'code',
-    title: 'Typed by design',
-    detail: 'Prisma days end in TypeScript: autocomplete and inferred types as you learn.',
-  },
-  {
-    icon: 'schema',
-    title: 'ERDs on demand',
-    detail: 'Schema diagrams for both tracks, generated from the same source the lessons use.',
-  },
-  {
-    icon: 'terminal',
-    title: 'SQL Lens',
-    detail: 'Every Prisma call is translated live, statement by statement, with real timings.',
-  },
-] as const;
 
 export default function TrackSelector() {
   const cards = TRACK_IDS.map((id) => {
@@ -59,7 +24,7 @@ export default function TrackSelector() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col px-4 py-10 sm:px-6 lg:px-8 sm:py-16">
+    <div className="mx-auto flex w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 sm:py-12">
       <header className="text-center">
         <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-text-dim">
           Two tracks · one visual learning system
@@ -76,19 +41,7 @@ export default function TrackSelector() {
 
       <ReturningLearnerCard />
 
-      <HeroLensInteractivePreview />
-
-      <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {FEATURES.map((feature) => (
-          <li key={feature.title} className="rounded-lg border border-border bg-surface-2 p-4">
-            <Icon name={feature.icon} className="text-[18px] text-func" />
-            <p className="mt-2 text-sm font-semibold text-text">{feature.title}</p>
-            <p className="mt-1 text-xs leading-relaxed text-text-dim">{feature.detail}</p>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-12 sm:mt-14">
+      <div className="mt-10 sm:mt-12">
         <p className="mb-4 text-center font-mono text-[11px] uppercase tracking-[0.2em] text-text-dim">
           Choose your track
         </p>
@@ -142,10 +95,6 @@ export default function TrackSelector() {
           ))}
         </div>
       </div>
-
-      <p className="mt-8 text-center font-mono text-[11px] text-text-dim">
-        Already started? Open a track and hit Resume on your roadmap.
-      </p>
     </div>
   );
 }
