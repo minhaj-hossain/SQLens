@@ -79,12 +79,12 @@ export const Prisma_07_MODULE: ModuleData = {
       title: 'Data Shaping (`select`) vs Relation Loading (`include`)',
       shortDescription: '`select` trims the row; `include` adds the relation.',
       theory: prismaTheory(
-        '`select` is a projection: name the fields you want and Prisma sends exactly those columns. `include` returns every scalar column plus the relation you asked for. You cannot use both at the same level — that is the whole decision.',
-        '`select` trims, `include` widens — never both at once.',
+        '`select` is a projection: name the fields you want and Prisma sends exactly those columns. `include` returns every scalar column plus the relation you asked for. You cannot use both at the same root level — to fetch relation fields while controlling scalars, nest a `select` inside your projection.',
+        '`select` and `include` cannot appear at the same root level; use nested `select` for fine-grained relations.',
         'SELECT id, email\nFROM users\nWHERE id = 3;',
-        'const lean = await prisma.user.findUnique({\n  where: { id: 3 },\n  select: { id: true, email: true },\n});\n\nconst fat = await prisma.user.findUnique({\n  where: { id: 3 },\n  include: { posts: true },\n});',
+        'const leanWithPosts = await prisma.user.findUnique({\n  where: { id: 3 },\n  select: {\n    id: true,\n    email: true,\n    posts: { select: { title: true } },\n  },\n});',
         'typescript',
-        'The lean read sends two columns; the include read sends all of them plus a second query.',
+        'Nested select fetches related records while preventing over-fetching on both models.',
       ),
       tasks: [
         prismaReadTask({
@@ -123,6 +123,25 @@ export const Prisma_07_MODULE: ModuleData = {
           code1:
             'export async function feed(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    include: { posts: true },\n  });\n}',
           rtype: 'User & { posts: Post[] } | null',
+        }),
+        prismaSnippetTask({
+          id: 'prisma07-c2-t3',
+          title: 'Fine-grained nested relation projection',
+          description: 'Fetch user posts while restricting columns on both the parent and child models.',
+          instructions: ['Use `select` with `id: true`', 'Nest `select: { title: true }` under `posts`'],
+          hint: '`posts: { select: { title: true } }` inside your outer `select`.',
+          scaffold: '-- Lean parent row:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users WHERE id = 1;',
+          why: 'Nested select avoids over-fetching on both parent and related models.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export async function userFeed(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    include: { posts: true },\n  });\n}',
+          code1:
+            'export async function userFeed(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    select: {\n      id: true,\n      posts: { select: { title: true } },\n    },\n  });\n}',
+          need: ['posts: {', 'select: { title: true }'],
+          ban: ['include:'],
+          rtype: '{ id: number; posts: { title: string }[] } | null',
         }),
       ],
     },
