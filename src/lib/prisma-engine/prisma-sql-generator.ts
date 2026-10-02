@@ -224,9 +224,28 @@ function bodyOf(span: string | null): string | null {
 /** Value span for `key:` inside an args body (`null` when absent). */
 function argValue(body: string, key: string): string | null {
   for (const { key: k, value } of splitArgs(body)) {
-    if (k === key) return value;
+    if (unquoteKey(k) === key) return value;
   }
   return null;
+}
+
+/**
+ * `"name"` / `'name'` → `name`. JS/TS treats a quoted object key and a bare one
+ * as the SAME key, so every clause reader normalizes the key before it looks it
+ * up or compares it. Only a fully quote-wrapped token is unwrapped — a VALUE
+ * that merely starts or ends with a quote (`'%a%'`) is returned untouched.
+ */
+function unquoteKey(key: string): string {
+  const t = key.trim();
+  if (t.length >= 2 && (t[0] === '"' || t[0] === "'") && t[t.length - 1] === t[0]) {
+    return t.slice(1, -1);
+  }
+  return t;
+}
+
+/** Every pair of an object body with its key normalized (`"id"` → `id`). */
+function keyedPairs(body: string): { key: string; value: string }[] {
+  return splitArgs(body).map((p) => ({ key: unquoteKey(p.key), value: p.value }));
 }
 
 /** JS shorthand (`{ id }` ≡ `{ id: id }`): empty value + bare key → key as value. */
@@ -238,7 +257,7 @@ function shorthand(p: { key: string; value: string }): { key: string; value: str
 /** `field: value` pairs inside a `where: { … }` body. */
 function wherePairs(whereBody: string | null): { field: string; value: string }[] {
   if (!whereBody) return [];
-  return splitArgs(whereBody)
+  return keyedPairs(whereBody)
     .map(shorthand)
     .filter((p) => p.value !== '')
     .map((p) => ({ field: p.key, value: p.value }));
@@ -247,7 +266,7 @@ function wherePairs(whereBody: string | null): { field: string; value: string }[
 /** `true`-valued keys of `select: { … }`; `null` when no select block. */
 function selectFields(selectBody: string | null): string[] | null {
   if (!selectBody) return null;
-  return splitArgs(selectBody)
+  return keyedPairs(selectBody)
     .filter((p) => /\btrue\b/.test(p.value))
     .map((p) => p.key);
 }
@@ -257,7 +276,7 @@ function selectFields(selectBody: string | null): string[] | null {
 /** `true`-valued keys of `include: { … }`; `[]` when no include block. */
 function includeNames(includeBody: string | null): string[] {
   if (!includeBody) return [];
-  return splitArgs(includeBody)
+  return keyedPairs(includeBody)
     .filter((p) => /\btrue\b/.test(p.value))
     .map((p) => p.key);
 }
@@ -265,7 +284,7 @@ function includeNames(includeBody: string | null): string[] {
 /** `{ field: 'asc'|'desc' }` of `orderBy: { … }`; `[]` when absent. */
 function orderEntries(orderBody: string | null): { field: string; dir: string }[] {
   if (!orderBody) return [];
-  return splitArgs(orderBody).map((p) => ({
+  return keyedPairs(orderBody).map((p) => ({
     field: p.key,
     dir: /desc/i.test(p.value) ? 'DESC' : 'ASC',
   }));
@@ -318,7 +337,7 @@ function parseOperator(value: string): { sql: string; values: string[]; like?: '
   const pairs = splitArgs(body);
   if (pairs.length !== 1) return null;
   const [{ key, value: v }] = pairs;
-  switch (key) {
+  switch (unquoteKey(key)) {
     case 'equals':
       return { sql: '=', values: [v] };
     case 'not':
@@ -357,7 +376,7 @@ function whereSql(
   columns?: string[],
 ): string | null {
   if (!whereBody) return null;
-  const pairs = splitArgs(whereBody)
+  const pairs = keyedPairs(whereBody)
     .map(shorthand)
     .filter((p) => p.value !== '');
   if (pairs.length === 0) return null;
@@ -425,7 +444,7 @@ function whereSql(
       const rendered = operands
         .map((b) =>
           renderGroup(
-            splitArgs(b)
+            keyedPairs(b)
               .map(shorthand)
               .filter((p) => p.value !== '')
               .map((p) => ({ field: p.key, value: p.value })),
@@ -645,7 +664,7 @@ function nestedWriteStatements(
     const inner = bodyOf(payload.trim());
     const whereBody =
       op === 'connectOrCreate' && inner ? bodyOf(argValue(inner, 'where') ?? null) : inner;
-    const pairs = whereBody ? splitArgs(whereBody).filter((p) => p.value.trim() !== '') : [];
+    const pairs = whereBody ? keyedPairs(whereBody).filter((p) => p.value.trim() !== '') : [];
     const childKey = pairs[0];
     if (parentKey === null || !childKey) {
       return [
@@ -695,6 +714,15 @@ function genFind(
   }
 
   const selectBody = bodyOf(argValue(body, 'select') ?? null);
+  if (selectBody && keyedPairs(selectBody).some((p) => p.value.trim().startsWith('{'))) {
+    return {
+      ok: false,
+      statements: [],
+      method,
+      model,
+      reason: 'Nested relation `select` is not translatable.',
+    };
+  }
   const includeBody = bodyOf(argValue(body, 'include') ?? null);
   const selected = selectFields(selectBody);
   const included = includeNames(includeBody);
@@ -766,7 +794,7 @@ function genFind(
 
 /** `data: { … }` entries, split off from nested relation ops (`posts: {…}`). */
 function scalarDataEntries(dataBody: string): { field: string; value: string }[] {
-  return splitArgs(dataBody)
+  return keyedPairs(dataBody)
     .map(shorthand)
     .filter((p) => p.value !== '')
     .filter((p) => {
@@ -779,10 +807,10 @@ function scalarDataEntries(dataBody: string): { field: string; value: string }[]
 /** Nested relation ops inside `data: { … }` (`posts: { create: […] }`). */
 function nestedOps(dataBody: string): { relation: string; op: string; payload: string }[] {
   const out: { relation: string; op: string; payload: string }[] = [];
-  for (const { key, value } of splitArgs(dataBody)) {
+  for (const { key, value } of keyedPairs(dataBody)) {
     const inner = bodyOf(value.trim());
     if (!inner) continue;
-    const ops = splitArgs(inner);
+    const ops = keyedPairs(inner);
     if (ops.length === 0) continue;
     if (!/create|connect|connectOrCreate|set|disconnect|delete|update|upsert/.test(ops[0].key)) continue;
     for (const { key: op, value: payload } of ops) {
@@ -1001,12 +1029,12 @@ function scalarAtomicSets(
   seed: SeedContext | undefined,
   params: unknown[],
 ): string | null {
-  const entries = splitArgs(dataBody).map(shorthand).filter((p) => p.value !== '');
+  const entries = keyedPairs(dataBody).map(shorthand).filter((p) => p.value !== '');
   let used = false;
   const sets = entries.map(({ key: field, value }) => {
     const body = bodyOf(value.trim());
     if (!body) return `${field} = ${literalFor(value, seed, params, field)}`;
-    const pairs = splitArgs(body);
+    const pairs = keyedPairs(body);
     if (pairs.length !== 1) return `${field} = ${literalFor(value, seed, params, field)}`;
     const [{ key, value: v }] = pairs;
     const lit = literalFor(v, seed, params, field);

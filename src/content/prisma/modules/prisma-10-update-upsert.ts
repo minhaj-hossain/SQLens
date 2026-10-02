@@ -28,12 +28,12 @@ export const Prisma_10_MODULE: ModuleData = {
       title: 'Updating Rows — update() & updateMany()',
       shortDescription: 'One row by unique key, or every row the filter matches.',
       theory: prismaTheory(
-        '`update()` needs a unique `where` and returns the changed row. `updateMany()` takes any filter and returns a count — so the safest habit is to read the `where` as a SELECT first, exactly like the SQL lens does.',
-        'update = unique key + returned row; updateMany = filter + count.',
+        '`update()` needs a unique `where` and returns the changed row. `updateMany()` takes any filter and returns a count. For concurrency-safe arithmetic without race conditions, pass `{ increment: n }` in `data`.',
+        'update = unique key; updateMany = filter; atomic math avoids race conditions.',
         'SELECT id, name\nFROM users\nWHERE id = 1;',
-        'await prisma.user.update({\n  where: { id: 1 },\n  data: { name: \'Alexandra\' },\n  select: { id: true, name: true },\n});',
+        'await prisma.user.update({\n  where: { id: 1 },\n  data: { id: { increment: 1 } },\n  select: { id: true },\n});',
         'typescript',
-        'One UPDATE on the primary key, and `select` shapes what comes back.',
+        'Atomic increment rewrites to `id = id + 1` in SQL, keeping writes concurrency-safe.',
       ),
       tasks: [
         prismaReadTask({
@@ -75,6 +75,26 @@ export const Prisma_10_MODULE: ModuleData = {
           code1:
             'export async function renameAll() {\n  return await prisma.user.updateMany({\n    where: { name: \'Alex\' },\n    data: { name: \'Alexandra\' },\n  });\n}',
           rtype: '{ count: number }',
+        }),
+        prismaReadTask({
+          id: 'prisma10-c1-t3',
+          title: 'Atomic numeric increment',
+          description: 'Increment a numeric field atomically without read-modify-write race conditions.',
+          instructions: ['Use `prisma.user.update`', '`where: { id: 1 }`', 'Increment `id` by 1 using `{ increment: 1 }`', 'Select `id`'],
+          hint: '`data: { id: { increment: 1 } }` avoids concurrent write collisions.',
+          scaffold: '-- The row before the atomic increment:\nSELECT id FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id FROM users WHERE id = 1;',
+          why: 'Atomic increment rewrites to id = id + 1 in SQL so concurrent updates cannot collide.',
+          cols: ['id'],
+          select: ['id'],
+          method: 'update',
+          snippets: ['increment: 1'],
+          rows: 1,
+          code0:
+            'export async function bumpUser(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { id: 2 },\n    select: { id: true },\n  });\n}',
+          code1:
+            'export async function bumpUser(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { id: { increment: 1 } },\n    select: { id: true },\n  });\n}',
+          rtype: '{ id: number }',
         }),
       ],
     },

@@ -24,6 +24,12 @@
  *        · cli-flag:*            — `--name init` ⇄ `--name "init"` ⇄ `--name=init`
  *        · cli-whitespace:*      — double-spaced / newline-split command
  *
+ *      Phase 1.2 fairness family:
+ *        · quote-object-keys    — `{ id: true }` → `{ "id": true }` (a quoted
+ *                                  key is the SAME key in JS/TS; both the
+ *                                  structural checks and every snippet
+ *                                  comparison read through it).
+ *
  *   2. NO FALSE-ACCEPT — a submission that CHANGES the outcome must FAIL:
  *        · wrong-value   — first write value replaced with a sentinel
  *        · wrong-row     — first `where` target replaced with a sentinel
@@ -32,12 +38,11 @@
  *      plus a reference self-consistency check: no reference contains its own
  *      `forbiddenCodeSnippets` fragment.
  *
- * SCOPE (Task 0.4 "Option A" — strict now): quoted object keys (`"name": true`)
- * are deferred to Phase 1.2 (quoted keys / structural normalization) —
- * asserting them now would only re-report a scheduled fix. CLI/snippet
- * normalization (runner aliases, quote styles, `--flag=value`, whitespace)
- * landed in Phase 1.1 and IS asserted here, through the `cli-*` fairness
- * families listed above.
+ * SCOPE (Task 0.4 + Phase 1.2): the Phase-0 gate asserted only form-equivalent
+ * rewrites of the reference; Phase 1.1 added CLI normalization (runner aliases,
+ * quote styles, `--flag=value`, whitespace) and Phase 1.2 added quoted object
+ * keys — BOTH are asserted here through the `cli-*` and `quote-object-keys`
+ * fairness families, all judged in the learner's own grading contract.
  *
  * POLICY NOTES (each surface is counted as a skip, never silently dropped):
  *   · flexible-insert — `compareFinalState`'s documented carve-out accepts
@@ -345,12 +350,78 @@ function normalizeStrings(code: string): string | null {
   return code.slice(0, call.parenIdx) + out + code.slice(closeIdx + 1);
 }
 
+/**
+ * Object KEYS quoted: `select: { id: true }` → `select: { "id": true }`. JS/TS
+ * treats the two spellings as the SAME key, and Phase 1.2 made every structural
+ * check + snippet comparison read through them, so this rewrite must PASS.
+ * String VALUES keep their spelling (only a key-position identifier immediately
+ * followed by `:` is quoted).
+ */
+function quoteObjectKeys(code: string): string | null {
+  const call = firstCallMatch(code);
+  if (!call) return null;
+  const closeIdx = balanced(code, call.parenIdx);
+  if (closeIdx === null) return null;
+  const inner = code.slice(call.parenIdx, closeIdx + 1);
+  let out = '';
+  let i = 0;
+  let quoted = 0;
+  let prev = '{'; // the args paren itself is a key position
+  while (i < inner.length) {
+    const ch = inner[i];
+    if (ch === "'" || ch === '"' || ch === '`') {
+      out += ch;
+      i++;
+      while (i < inner.length) {
+        if (inner[i] === '\\') {
+          out += inner[i] + (inner[i + 1] ?? '');
+          i += 2;
+          continue;
+        }
+        out += inner[i];
+        const done = inner[i] === ch;
+        i++;
+        if (done) break;
+      }
+      prev = ch;
+      continue;
+    }
+    if (ch === '{' || ch === ',' || ch === '(') {
+      out += ch;
+      prev = ch;
+      i++;
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(ch) && /[{,(]/.test(prev)) {
+      let j = i;
+      while (j < inner.length && /[A-Za-z0-9_$]/.test(inner[j])) j++;
+      let k = j;
+      while (k < inner.length && /\s/.test(inner[k])) k++;
+      if (inner[k] === ':' && inner[k + 1] !== ':') {
+        out += `"${inner.slice(i, j)}"`;
+        quoted++;
+      } else {
+        out += inner.slice(i, j);
+      }
+      prev = inner[j - 1];
+      i = j;
+      continue;
+    }
+    if (!/\s/.test(ch)) prev = ch;
+    out += ch;
+    i++;
+  }
+  if (quoted === 0) return null;
+  return code.slice(0, call.parenIdx) + out + code.slice(closeIdx + 1);
+}
+
 const TRANSFORMS: [string, (code: string) => string | null][] = [
   ['reorder-select-keys', reorderSelectKeys],
   ['wrap-assignment', wrapAssignment],
   ['reflow-multiline', reflowMultiline],
   ['equals-form', toEqualsForm],
   ['normalize-strings', normalizeStrings],
+  ['quote-object-keys', quoteObjectKeys],
 ];
 
 // ── Phase 1.1 CLI fairness transforms (null = inapplicable) ──────────────────
@@ -776,7 +847,7 @@ function auditTask(module: ModuleData, where: Surface, task: PracticeTask) {
 console.log('\n=== Prisma equivalence audit (Task 0.4 — Phase 0 gate) ===');
 console.log('Form-equivalent rewrites must PASS; outcome-changing variants must FAIL.');
 console.log('Phase 1.1 asserted: cli-* fairness families (runner / flag syntax / whitespace).');
-console.log('Deferred by design to Phase 1.2: quoted select keys (literal includes contract).\n');
+console.log('Phase 1.2 asserted: quote-object-keys (a quoted key is the same key).\n');
 
 for (const module of PRISMA_MODULES) {
   const before = findings.length;

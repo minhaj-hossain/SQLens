@@ -24,7 +24,9 @@ import {
 } from '../../src/lib/prisma-engine/prisma-submit-pipeline';
 import {
   canonicalizeCli,
+  canonicalizeObjectKeys,
   isCliFragment,
+  snippetMatches,
   validatePrismaCode,
 } from '../../src/lib/prisma-engine/prisma-validator';
 import type { PracticeTask } from '../../src/types/curriculum';
@@ -433,7 +435,7 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
     // Canonical view: the same command, spelled differently.
     expect(canonicalizeCli('pnpm dlx prisma migrate dev --name "init"')).toBe('npx prisma migrate dev --name init');
     expect(canonicalizeCli('bunx prisma migrate\n  dev --name=init')).toBe('npx prisma migrate dev --name init');
-    // A NON-CLI fragment must NOT normalize (quoted keys stay Phase 1.2).
+    // A NON-CLI fragment is literal about WHITESPACE (a split token never matches)…
     const zod = taskById('prisma09-c2-t1');
     const spacedZod = zod.prisma!.solutionCode.replace('z.object(', 'z . object(');
     expect(spacedZod).not.toBe(zod.prisma!.solutionCode);

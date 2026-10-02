@@ -23,6 +23,7 @@
     "audit:grading-pipeline": "tsx scripts/audit-grading-pipeline.ts",
     "audit:prisma-grading-pipeline": "tsx scripts/audit-prisma-grading-pipeline.ts",
     "audit:prisma-equivalence": "tsx scripts/audit-prisma-equivalence.ts",
+    "audit:task-rubric": "tsx scripts/audit-task-rubric.ts",
     "audit:grading-policy": "tsx scripts/audit-grading-policy.ts",
     "audit:taught-before-tested": "tsx scripts/audit-taught-before-tested.ts",
     "audit:custom-validators": "tsx scripts/audit-custom-validators.ts",

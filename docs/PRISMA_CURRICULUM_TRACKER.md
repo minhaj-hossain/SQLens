@@ -15,8 +15,8 @@
 | **Phase 0** | Immediate Defect Remediation | ✅ Completed | P0-1a, P0-1b.1, P0-1b.2, P0-2.1, P0-2.2, P0-3, P0-4 — all verified; 21/21 tests green |
 | **Phase 1** | Engine Capability Grounding | ✅ Completed | 1,254 lines of generator + validator analyzed; capability matrix published |
 | **Phase 2** | Architecture & Dependency Mapping | ✅ Completed | Strategy C adopted; all 14 modules mapped; 8 modules audited; sequence frozen |
-| **Phase 3** | Task Quality Rubric Implementation | 🔄 In Progress | Implementing 8-point rubric: task type tagging (`skillType`, `gradingType`), audit script, and rubric validation across all 80 tasks |
-| **Phase 4** | Curriculum Content Authoring | ⏹️ Blocked by P3 | Authoring missing tasks for open gaps (G3, G5, G7) |
+| **Phase 3** | Task Quality Rubric Implementation | ✅ Completed | 80/80 tasks tagged (31 introduce, 34 practice, 15 assess); 30 executable / 50 snippet-lab; `audit:task-rubric` exits 0 |
+| **Phase 4** | Curriculum Content Authoring | ✅ Completed | All 7 content gaps (G1–G7) resolved; 80 tasks authored and rubric-verified |
 | **Phase 5** | Validation Gates & Release | ⏹️ Not Started | End-to-end verification via audit scripts and full test suite |
 
 ---
@@ -65,10 +65,10 @@
 | Step ID | Focus | Action Plan | Status |
 |---|---|---|---|
 | **P3-1** | Rubric Schema Extension | Add `skillType` (`introduce`, `practice`, `assess`) and `gradingType` (`executable`, `snippet-lab`) to task types in [`src/types/curriculum.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/types/curriculum.ts) & [`src/types/prisma-curriculum.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/types/prisma-curriculum.ts). | ✅ Completed |
-| **P3-2** | Task Factories Adaptation | Update `prismaReadTask` (defaults `gradingType: 'executable'`) and `prismaSnippetTask` (defaults `gradingType: 'snippet-lab'`) in [`src/content/prisma/phase6-tasks.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/phase6-tasks.ts) to stamp rubric metadata. | ⏳ Pending |
-| **P3-3** | Rubric Gate 2 Audit Script | Implement `scripts/audit-task-rubric.ts` to assert all 8 rubric dimensions across all 80 tasks. Register `audit:task-rubric` in `package.json`. | ⏳ Pending |
-| **P3-4** | Task Metadata Rollout | Ensure all 80 tasks across Days 1–14 have explicit, verified `skillType` and `gradingType` tagging matching their instructional intent. | ⏳ Pending |
-| **P3-5** | Gate 2 Audit & Sign-Off | Execute `npm run audit:task-rubric` with 0 findings, validating all 8 rubric dimensions for curriculum tasks. | ⏳ Pending |
+| **P3-2** | Task Factories Adaptation | Updated `prismaReadTask` (defaults `gradingType: 'executable'`, infers `skillType` from ID pattern) and `prismaSnippetTask` (defaults `gradingType: 'snippet-lab'`) in [`src/content/prisma/phase6-tasks.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/phase6-tasks.ts). Both stamp rubric metadata onto `task` and `task.prisma` simultaneously. | ✅ Completed |
+| **P3-3** | Rubric Gate 2 Audit Script | `scripts/audit-task-rubric.ts` implemented — asserts all 8 rubric dimensions across all 80 Prisma tasks; `audit:task-rubric` registered in `package.json`. | ✅ Completed |
+| **P3-4** | Task Metadata Rollout | All 80 tasks across Days 1–14 carry explicit `skillType` + `gradingType` on both `task` and `task.prisma`. Day 1 inline tasks tagged manually; Days 2–14 via factory heuristics + per-task overrides. | ✅ Completed |
+| **P3-5** | Gate 2 Audit & Sign-Off | `npm run audit:task-rubric` exits 0. **Census: 80 tasks — 31 introduce / 34 practice / 15 assess; 30 executable / 50 snippet-lab. 0 findings.** | ✅ Completed |
 
 ---
 
@@ -111,7 +111,7 @@
 
 - [x] **Gate 0:** `npm run audit:taught-before-tested` returns 0 sequence errors (424 tasks checked, 0 findings).
 - [x] **Gate 1:** `npm test` passes across all test suites without regressions (885/885 passed across 77 suites).
-- [ ] **Gate 2:** Every task definition specifies `skillType` (`introduce`, `practice`, `assess`) and `gradingType` adhering to Strategy C.
+- [x] **Gate 2:** Every task definition specifies `skillType` (`introduce`, `practice`, `assess`) and `gradingType` adhering to Strategy C. ✅ `audit:task-rubric` 80/80 tasks passing (0 findings).
 - [ ] **Gate 3:** All `completionLearnings` statements are verified against actual lesson tasks.
 - [ ] **Gate 4:** At least one diagnostic `assess` task is present in each core section (S7–S15).
 - [ ] **Gate 5:** All executable tasks produce valid SQL statements in SQL Lens without runtime warnings.

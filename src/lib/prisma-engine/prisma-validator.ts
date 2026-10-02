@@ -21,8 +21,16 @@
  * phrase) are compared in a canonical command form — whitespace collapsed,
  * package runners (`npm exec` / `pnpm dlx|exec` / `yarn[ dlx]` / `bunx`)
  * mapped onto `npx`, `--flag=value` unified with `--flag value`, quotes after
- * a flag removed. Every other fragment keeps the exact `String.includes`
- * contract it was authored against (quoted object keys stay Phase 1.2).
+ * a flag removed.
+ *
+ * Phase 1.2 additions (quoted object keys & structural normalization): JS/TS
+ * treats `{ name: true }` and `{ "name": true }` as the SAME key, so every
+ * structural check reads keys through `fieldKeySrc` (bare or quoted) and every
+ * non-CLI snippet compares in a canonical key form (`canonicalizeObjectKeys`).
+ * A learner who quotes a key grades exactly like one who does not. String
+ * VALUES keep their exact spelling — only a quote-delimited identifier that is
+ * immediately followed by `:` (an object key) is normalized.
+ *
  * Feedback always quotes the AUTHORED fragment text, byte for byte.
  */
 
@@ -90,7 +98,37 @@ export function canonicalizeCli(text: string): string {
  */
 export function snippetMatches(code: string, fragment: string): boolean {
   if (isCliFragment(fragment)) return canonicalizeCli(code).includes(canonicalizeCli(fragment));
-  return code.includes(fragment);
+  return canonicalizeObjectKeys(code).includes(canonicalizeObjectKeys(fragment));
+}
+
+// ── Phase 1.2 — quoted object keys & structural normalization ────────────────
+
+/**
+ * Canonical view of object KEYS in non-CLI code: a quote-delimited identifier
+ * that is immediately followed by `:` becomes its bare form — but only where an
+ * object key can actually start (`{`, `(`, `,`, or the very beginning of the
+ * text). Applied to BOTH sides of a non-CLI snippet comparison, so
+ * `select: { "id": true }` and `select: { id: true }` are the same fragment
+ * while string VALUES keep their spelling (`@map("cust_email")` and
+ * `provider = "sqlite"` are untouched — no `:` follows the closing quote).
+ */
+export function canonicalizeObjectKeys(text: string): string {
+  return text
+    .replace(/([{,(]\s*)(['"])([A-Za-z_$][A-Za-z0-9_$]*)\2(\s*:)/g, '$1$3$4')
+    .replace(/^(['"])([A-Za-z_$][A-Za-z0-9_$]*)\1(\s*:)/, '$2$3');
+}
+
+/**
+ * Regex source for an object KEY `field` written bare (`id`) or quoted
+ * (`"id"` / `'id'`) — the three spellings JS/TS treats as the same key. The
+ * word boundaries keep `id` from matching inside `userId`, and the
+ * backreference forces the SAME quote character on both sides, so `"id'` never
+ * counts as a key. Exported so the structural checks and the equivalence audit
+ * share one definition.
+ */
+export function fieldKeySrc(field: string): string {
+  const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return `(['"]?)\\b${escaped}\\b\\1`;
 }
 
 /** Extract the model from `prisma.<model>.<method>(...)`. */
@@ -100,11 +138,17 @@ export function extractPrismaTarget(code: string): { model?: string; method?: st
   return { model: match[1].toLowerCase(), method: match[2] };
 }
 
+/**
+ * The `{ … }` block that BELONGS to `key` — anchored on the `key: {` shape
+ * (bare or quoted key) instead of the first `{` after the first occurrence of
+ * the word anywhere in the code. A `select` mentioned in a comment, a string,
+ * or another clause can no longer hand back the wrong block, and
+ * `"select": { … }` is read exactly like `select: { … }`.
+ */
 function extractBlock(code: string, key: 'select' | 'include' | 'where' | 'orderBy'): string | null {
-  const keyIdx = code.indexOf(key);
-  if (keyIdx < 0) return null;
-  const braceIdx = code.indexOf('{', keyIdx);
-  if (braceIdx < 0) return null;
+  const anchor = new RegExp(`${fieldKeySrc(key)}\\s*:\\s*{`).exec(code);
+  if (!anchor) return null;
+  const braceIdx = anchor.index + anchor[0].length - 1;
   let depth = 0;
   for (let i = braceIdx; i < code.length; i++) {
     if (code[i] === '{') depth++;
@@ -162,7 +206,7 @@ export function validatePrismaCode(
       return { passed: false, feedback: 'Add a `select` block listing the required fields.' };
     }
     const missing = rule.requiredFieldsInSelect.filter(
-      (f) => !new RegExp(`\\b${f}\\s*:\\s*true\\b`).test(selectBlock),
+      (f) => !new RegExp(`${fieldKeySrc(f)}\\s*:\\s*true\\b`).test(selectBlock),
     );
     if (missing.length > 0) {
       return { passed: false, feedback: `Missing in select: ${missing.map((m) => `\`${m}\``).join(', ')}.` };
@@ -173,7 +217,7 @@ export function validatePrismaCode(
     const selectBlock = extractBlock(code, 'select');
     if (selectBlock) {
       const leaked = rule.forbiddenFieldsInSelect.filter(
-        (f) => new RegExp(`\\b${f}\\s*:\\s*true\\b`).test(selectBlock),
+        (f) => new RegExp(`${fieldKeySrc(f)}\\s*:\\s*true\\b`).test(selectBlock),
       );
       if (leaked.length > 0) {
         return { passed: false, feedback: `Do not select: ${leaked.map((m) => `\`${m}\``).join(', ')}.` };
@@ -187,7 +231,7 @@ export function validatePrismaCode(
       return { passed: false, feedback: 'Add an `include` block for the required relation.' };
     }
     const missing = rule.requiredIncludes.filter(
-      (r) => !new RegExp(`\\b${r}\\s*:`).test(includeBlock),
+      (r) => !new RegExp(`${fieldKeySrc(r)}\\s*:`).test(includeBlock),
     );
     if (missing.length > 0) {
       return { passed: false, feedback: `Missing in include: ${missing.map((m) => `\`${m}\``).join(', ')}.` };
@@ -219,13 +263,13 @@ export function validatePrismaCode(
 
   if (rule.requirePagination) {
     const { take, skip, cursor } = rule.requirePagination;
-    if (take !== undefined && !new RegExp(`\\btake\\s*:\\s*${take}\\b`).test(flat)) {
+    if (take !== undefined && !new RegExp(`${fieldKeySrc('take')}\\s*:\\s*${take}\\b`).test(flat)) {
       return { passed: false, feedback: `Set \`take: ${take}\` for pagination.` };
     }
-    if (skip !== undefined && !new RegExp(`\\bskip\\s*:\\s*${skip}\\b`).test(flat)) {
+    if (skip !== undefined && !new RegExp(`${fieldKeySrc('skip')}\\s*:\\s*${skip}\\b`).test(flat)) {
       return { passed: false, feedback: `Set \`skip: ${skip}\` for pagination.` };
     }
-    if (cursor && !/\bcursor\b/.test(flat)) {
+    if (cursor && !new RegExp(fieldKeySrc('cursor')).test(flat)) {
       return { passed: false, feedback: 'Add a `cursor` for cursor pagination.' };
     }
   }

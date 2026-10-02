@@ -122,6 +122,8 @@ export const Prisma_01_MODULE: ModuleData = {
             'Use `select: { id: true, name: true, email: true }` to limit columns',
           ],
           type: 'guided',
+          skillType: 'introduce',
+          gradingType: 'executable',
           primaryTable: 'users',
           initialSql: '-- Prisma reads generate a single-row SELECT — fill in the id filter:\nSELECT id, name, email\nFROM users\nWHERE ;\n',
           solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
@@ -138,6 +140,8 @@ export const Prisma_01_MODULE: ModuleData = {
           },
           successMessage: 'Converted! Same SQL underneath, now with types on top.',
           prisma: {
+            skillType: 'introduce',
+            gradingType: 'executable',
             initialCode:
               "export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    // Complete the query\n  });\n}",
             solutionCode:
@@ -161,6 +165,8 @@ export const Prisma_01_MODULE: ModuleData = {
             'Keep the select to `id` and `email`',
           ],
           type: 'independent',
+          skillType: 'practice',
+          gradingType: 'executable',
           primaryTable: 'users',
           initialSql: "-- The real column is email — fix the filter:\nSELECT id, email\nFROM users\nWHERE user_mail = 'mina@prisma.io';\n",
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
@@ -174,6 +180,8 @@ export const Prisma_01_MODULE: ModuleData = {
           },
           successMessage: 'Fixed — the compiler is now your safety net.',
           prisma: {
+            skillType: 'practice',
+            gradingType: 'executable',
             initialCode:
               'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { user_mail: email } as any,\n  });\n}',
             solutionCode:
@@ -206,6 +214,8 @@ export const Prisma_01_MODULE: ModuleData = {
           'Select only `id` and `email`',
         ],
         type: 'challenge',
+        skillType: 'assess',
+        gradingType: 'executable',
         primaryTable: 'users',
         databaseLifecycle: 'fresh',
         initialSql: "-- Expected shape: one row with id + email — fill in the email filter:\nSELECT id, email\nFROM users\nWHERE ;\n",
@@ -221,6 +231,8 @@ export const Prisma_01_MODULE: ModuleData = {
         },
         successMessage: 'Challenge complete — minimal, typed, exact.',
         prisma: {
+          skillType: 'assess',
+          gradingType: 'executable',
           initialCode:
             'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    // TODO: where + select\n  });\n}',
           solutionCode:

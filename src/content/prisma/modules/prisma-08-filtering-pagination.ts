@@ -16,7 +16,7 @@ export const Prisma_08_MODULE: ModuleData = {
   curriculumOrder: 8,
   displayLabel: 'Day 8',
   completionLearnings: [
-    'Compose filters with `contains`, `in` and `not`',
+    'Compose scalar filters with `contains`/`in` and relational filters with `some`',
     'Always pair pagination with an ORDER BY',
     'Page with `skip`/`take` for small offsets',
     'Prefer `cursor` paging when the table grows',
@@ -26,17 +26,18 @@ export const Prisma_08_MODULE: ModuleData = {
       id: 'filter-operators',
       order: 1,
       title: 'Advanced Filtering Operators',
-      shortDescription: '`contains`, `in`, `not`, `AND` / `OR` — filters as data.',
+      shortDescription: '`contains`, `in`, `some`, `AND` / `OR` — filters as data.',
       theory: richPrismaTheory({
-        summary: 'A Prisma filter is an object, not a string: `contains` compiles to LIKE, `in` to IN, `not` to <>, and `AND`/`OR` nest them without string concatenation — so a filter can be built, typed and tested.',
-        takeaway: 'Filters are objects: `contains`, `in`, `not`, nested with AND/OR.',
+        summary: 'A Prisma filter is an object, not a string: `contains` compiles to LIKE, `in` to IN, and relational filters (`some`/`every`/`none`) filter across relations — all without string concatenation so filters can be built, typed and tested.',
+        takeaway: 'Filters are objects: `contains`, `in`, relational `some`/`every`, nested with AND/OR.',
         sql: "SELECT id, name\nFROM users\nWHERE email LIKE '%prisma.io';",
         heroCode: "await prisma.user.findMany({\n  where: { email: { contains: 'prisma.io' } },\n  select: { id: true, name: true },\n});",
         heroLang: 'typescript',
         heroWhy: '`contains` is a LIKE; the parameter is still bound, never concatenated.',
-        mentalModel: '**Filters are data, not strings.** A filter is a typed object the engine walks: `contains` → `LIKE`, `in` → `IN`, `not` → `<>`, and `AND`/`OR` nest those objects arbitrarily. Nothing is concatenated, so every value stays a bound parameter.',
+        mentalModel: '**Filters are data, not strings.** A filter is a typed object the engine walks: `contains` → `LIKE`, `in` → `IN`, and relational operators (`some`, `every`, `none`) inspect child records. Nothing is concatenated, so every value stays a bound parameter.',
         explanation: [
           'Each operator has one SQL equivalent, chosen by the engine — you never hand-write the WHERE.',
+          'Relational filters (`some`, `every`, `none`) let you query parent records by conditions on their child relations.',
           'Because filters are objects, they can be composed, narrowed and unit-tested before they reach the database.',
         ],
         steps: [
@@ -101,6 +102,27 @@ export const Prisma_08_MODULE: ModuleData = {
             'export async function findByNames() {\n  return await prisma.user.findMany({\n    where: {},\n    select: { id: true, name: true },\n  });\n}',
           code1:
             'export async function findByNames() {\n  return await prisma.user.findMany({\n    where: { name: { in: [\'Alex\', \'Mina\'] } },\n    select: { id: true, name: true },\n  });\n}',
+          rtype: '{ id: number; name: string }[]',
+        }),
+        prismaSnippetTask({
+          id: 'prisma08-c1-t3',
+          title: 'Filter across relations (some)',
+          description: 'Return users who have authored at least one post containing "Prisma".',
+          instructions: [
+            'Filter with `posts: { some: { title: { contains: "Prisma" } } }`',
+            'Select `id` and `name`',
+          ],
+          hint: '`some` tests if at least one related record matches the condition.',
+          scaffold: '-- Users with matching posts:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'Relational filters let you query parent records by conditions on related records.',
+          cols: ['id', 'name'],
+          rows: 1,
+          code0:
+            'export async function authorsWithPrismaPosts() {\n  return await prisma.user.findMany({\n    where: {},\n    select: { id: true, name: true },\n  });\n}',
+          code1:
+            "export async function authorsWithPrismaPosts() {\n  return await prisma.user.findMany({\n    where: {\n      posts: {\n        some: {\n          title: { contains: 'Prisma' },\n        },\n      },\n    },\n    select: { id: true, name: true },\n  });\n}",
+          need: ['posts: {', 'some: {', "contains: 'Prisma'"],
           rtype: '{ id: number; name: string }[]',
         }),
       ],

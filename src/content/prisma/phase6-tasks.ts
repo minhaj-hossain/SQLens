@@ -1,5 +1,12 @@
 import type { PracticeTask } from '../../types/curriculum';
-import type { PrismaMethod, PrismaStepBreakdown, PrismaTargetHero, PrismaValidationRule } from '../../types/prisma-curriculum';
+import type {
+  GradingType,
+  PrismaMethod,
+  PrismaStepBreakdown,
+  PrismaTargetHero,
+  PrismaValidationRule,
+  SkillType,
+} from '../../types/prisma-curriculum';
 import { extractPrismaTarget } from '../../lib/prisma-engine/prisma-validator';
 
 /**
@@ -83,6 +90,10 @@ export interface PrismaTaskExtras {
   forbidden?: string[];
   /** `true` for labs the structural validator cannot grade (e.g. $transaction). */
   noModelContract?: boolean;
+  /** Phase 3 Quality Rubric: pedagogical role ('introduce' | 'practice' | 'assess'). */
+  skillType?: SkillType;
+  /** Phase 3 Quality Rubric: Strategy C grading channel ('executable' | 'snippet-lab'). */
+  gradingType?: GradingType;
 }
 
 /** Rules shared by both factories' Prisma side (needs `code1` to infer the method). */
@@ -158,12 +169,17 @@ export type PrismaReadTaskOptions = PrismaTaskExtras & {
 export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
   const wf = whereFieldsOf(t.code1);
   const selectFields = t.select ?? t.cols ?? [];
+  const gradingType: GradingType = t.gradingType ?? 'executable';
+  const skillType: SkillType =
+    t.skillType ?? (t.id.includes('-hw-') ? 'assess' : t.id.endsWith('-t1') ? 'introduce' : 'practice');
   return {
     id: t.id,
     title: t.title,
     description: t.description,
     instructions: t.instructions,
     type: 'guided',
+    skillType,
+    gradingType,
     primaryTable: 'users',
     databaseLifecycle: 'fresh',
     setupSql: PRISMA_TASK_SETUP_SQL,
@@ -180,6 +196,8 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
     },
     successMessage: 'Correct — the SQL lens proves it.',
     prisma: {
+      skillType,
+      gradingType,
       initialCode: t.code0,
       solutionCode: t.code1,
       expectedType: t.rtype,
@@ -221,6 +239,9 @@ export type PrismaSnippetTaskOptions = PrismaTaskExtras & {
 
 export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
   const selectFields = t.select ?? t.cols ?? [];
+  const gradingType: GradingType = t.gradingType ?? 'snippet-lab';
+  const skillType: SkillType =
+    t.skillType ?? (t.id.includes('-hw-') ? 'assess' : t.id.endsWith('-t1') ? 'introduce' : 'practice');
   // Snippet labs only gain structural rules when the author *names* the
   // contract (method / relations / sort / pagination) — the CLI, schema.prisma,
   // URL and Zod labs have no `prisma.<model>.<method>(...)` call to grade.
@@ -235,6 +256,8 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     description: t.description,
     instructions: t.instructions,
     type: 'guided',
+    skillType,
+    gradingType,
     primaryTable: 'users',
     databaseLifecycle: 'fresh',
     setupSql: PRISMA_TASK_SETUP_SQL,
@@ -250,6 +273,8 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     },
     successMessage: 'Correct.',
     prisma: {
+      skillType,
+      gradingType,
       initialCode: t.code0,
       solutionCode: t.code1,
       expectedType: t.rtype ?? 'string',
