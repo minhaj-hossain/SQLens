@@ -74,6 +74,28 @@ export const Prisma_13_MODULE: ModuleData = {
           // Task 0.2: `data: { name: req.body.name }` must render a real value.
           demoVariables: { name: 'Alexandra' },
         }),
+        prismaSnippetTask({
+          id: 'prisma13-c1-t3',
+          title: 'Catch client validation errors',
+          description:
+            'When invalid field types or missing required fields bypass application validation, Prisma raises PrismaClientValidationError before querying the database. Catch it and respond with HTTP 400 Bad Request.',
+          instructions: [
+            'Check for `error instanceof Prisma.PrismaClientValidationError`',
+            'Respond with status 400 Bad Request',
+          ],
+          hint: '`PrismaClientValidationError` represents query structural/type mismatches, distinct from runtime database constraint failures.',
+          scaffold: '-- Valid requests resolve to this record:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
+          why: 'Catching PrismaClientValidationError prevents unhandled 500 crashes caused by malformed queries.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export async function handlePayload(req: Request, res: Response) {\n  try {\n    return await prisma.user.create({ data: req.body });\n  } catch (error) {\n    return res.status(500).json({ error: \'Internal error\' });\n  }\n}',
+          code1:
+            'export async function handlePayload(req: Request, res: Response) {\n  try {\n    return await prisma.user.create({ data: req.body });\n  } catch (error) {\n    if (error instanceof Prisma.PrismaClientValidationError) {\n      return res.status(400).json({ error: \'Invalid query arguments or missing fields\' });\n    }\n    return res.status(500).json({ error: \'Internal error\' });\n  }\n}',
+          need: ['Prisma.PrismaClientValidationError', 'res.status(400)'],
+          demoVariables: { name: 'Alexandra', email: 'alex@prisma.io' },
+        }),
       ],
     },
     {

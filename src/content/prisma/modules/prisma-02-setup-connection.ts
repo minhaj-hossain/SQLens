@@ -28,16 +28,20 @@ export const Prisma_02_MODULE: ModuleData = {
       title: 'The Prisma CLI Lifecycle',
       shortDescription: 'init scaffolds, generate compiles, migrate moves the schema.',
       theory: richPrismaTheory({
-        summary: 'init scaffolds, generate compiles the client, migrate dev applies versioned SQL.',
-        takeaway: 'Generate after every schema change, then prove it with a read.',
+        summary:
+          'schema.prisma compiles into two distinct targets: `prisma generate` compiles TypeScript types and query builders into application code, while `prisma migrate dev` creates and runs versioned SQL migrations against your live database.',
+        takeaway:
+          'generate compiles client application code; migrate dev applies database schema migrations.',
         sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
         heroCode: 'export function getGenerateCommand(): string {\n  return "npx prisma generate";\n}',
         heroLang: 'typescript',
         heroWhy: 'The command that recompiles the client.',
-        mentalModel: '**Schema → client → database**, always in that order. `schema.prisma` is the single source of truth; `generate` compiles it into a typed client; `migrate dev` puts the database in sync — and only then does a read have anything to return.',
+        mentalModel:
+          '**The Dual Compilation Pipeline.** `schema.prisma` is the single source of truth that branches into two parallel compilation targets:\n```\nschema.prisma (Single Source of Truth)\n     │\n     ├── npx prisma generate   ──▶  Prisma Client (TypeScript types + query builder)\n     │                              Target: node_modules/@prisma/client (Application Code)\n     │\n     └── npx prisma migrate dev ──▶  Database Schema (SQL migration files + DB tables)\n                                    Target: prisma/migrations/*.sql + Live Database\n```\nConflating them is the most common beginner mistake: `generate` builds your TypeScript autocomplete; `migrate dev` updates the tables your database actually stores.',
         explanation: [
-          'Three commands build the pipeline: `init` scaffolds the project, `generate` compiles the client, `migrate dev` versions and applies the SQL.',
-          'Re-run `generate` after every schema edit — the client you call from TypeScript is a build artifact, not a live view of the schema.',
+          'The Dual Pipeline: `generate` compiles application client code; `migrate dev` updates the database schema.',
+          'Re-run `generate` after every schema edit — the client in TypeScript is a generated build artifact, not a live runtime reflection.',
+          'Run `migrate dev` to generate versioned SQL migrations and apply them to your database.',
         ],
         steps: [
           {

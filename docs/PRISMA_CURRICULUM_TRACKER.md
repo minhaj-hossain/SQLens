@@ -4,7 +4,7 @@
 > **Version:** 3.0 (Synthesized Architecture Baseline)  
 > **Implementation Plan:** [`docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md)  
 > **Review Reference:** [`docs/PRISMA_CURRICULUM_REVIEW.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_REVIEW.md)  
-> **Overall Progress:** **`7 / 14 Complete (50%)`**
+> **Overall Progress:** **`14 / 14 Complete (100%)`**
 
 ---
 
@@ -19,13 +19,13 @@
 | [x] | **P2-A** | P2 | Capstone Redesign (Member Management API) | [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) | Executable + Lab | ✅ Completed |
 | [x] | **P2-B** | P2 | Transaction Rollback Invariant Demonstration | [`src/content/prisma/modules/prisma-12-nested-transactions.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-12-nested-transactions.ts) | Snippet-Lab | ✅ Completed |
 | [x] | **P2-C** | P2 | Diagnostic Repair Tasks (Days 10 & 13) | [`prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) & [`prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | ✅ Completed |
-| [ ] | **P3-A** | P3 | Add `findUniqueOrThrow` Executable Task | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Executable | Pending |
-| [ ] | **P3-B** | P3 | Add Schema `@unique` Selector Bridge | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Theory Update | Pending |
-| [ ] | **P3-C** | P3 | Restructure Day 8 Filter Hierarchy | [`src/content/prisma/modules/prisma-08-filtering-pagination.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-08-filtering-pagination.ts) | Structure Update | Pending |
-| [ ] | **P3-D** | P3 | Add Zod `safeParse` Non-Throwing Task | [`src/content/prisma/modules/prisma-09-create-zod.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-09-create-zod.ts) | Snippet-Lab | Pending |
-| [ ] | **P3-E** | P3 | Add Relational Mutation (`connect`) Task | [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) | Snippet-Lab | Pending |
-| [ ] | **P3-F** | P3 | Add `PrismaClientValidationError` Handler | [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | Pending |
-| [ ] | **P3-G** | P3 | Add Forward Compilation Pipeline Diagram | [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts) | Theory Update | Pending |
+| [x] | **P3-A** | P3 | Add `findUniqueOrThrow` Executable Task | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Executable | ✅ Completed |
+| [x] | **P3-B** | P3 | Add Schema `@unique` Selector Bridge | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Theory Update | ✅ Completed |
+| [x] | **P3-C** | P3 | Restructure Day 8 Filter Hierarchy | [`src/content/prisma/modules/prisma-08-filtering-pagination.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-08-filtering-pagination.ts) | Structure Update | ✅ Completed |
+| [x] | **P3-D** | P3 | Add Zod `safeParse` Non-Throwing Task | [`src/content/prisma/modules/prisma-09-create-zod.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-09-create-zod.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P3-E** | P3 | Add Relational Mutation (`connect`) Task | [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P3-F** | P3 | Add `PrismaClientValidationError` Handler | [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P3-G** | P3 | Add Forward Compilation Pipeline Diagram | [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts) | Theory Update | ✅ Completed |
 
 ---
 
@@ -104,7 +104,7 @@
 
 ## 4. Priority 3 — Targeted Concept Additions Details
 
-### [ ] P3-A: `findUniqueOrThrow` in Day 7
+### [x] P3-A: `findUniqueOrThrow` in Day 7
 - **Target File:** [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts)
 - **Grading Type:** `executable` (`prismaReadTask`)
 - **Action Required:** Add `prisma07-c1-t3` testing `prisma.user.findUniqueOrThrow`.
@@ -112,14 +112,14 @@
   - Executable against live SQLite engine.
   - Passes SQL Lens validation and test suite.
 
-### [ ] P3-B: Schema Uniqueness to Query Selector Bridge in Day 7 Theory
+### [x] P3-B: Schema Uniqueness to Query Selector Bridge in Day 7 Theory
 - **Target File:** [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts)
 - **Grading Type:** Theory Update
 - **Action Required:** Add narrative paragraph bridging Day 3 `@unique`/`@id` schema constraints to compile-time `where` selector limits in `findUnique`.
 - **Done Definition:**
   - Theory text updated with explicit explanation of TypeScript compile-time enforcement.
 
-### [ ] P3-C: Day 8 Filter Hierarchy Restructuring
+### [x] P3-C: Day 8 Filter Hierarchy Restructuring
 - **Target File:** [`src/content/prisma/modules/prisma-08-filtering-pagination.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-08-filtering-pagination.ts)
 - **Grading Type:** Structure + Snippet-Lab Task
 - **Action Required:** Restructure concepts into `scalar-filters` (executable) and `relational-filters` (snippet-lab: `some`, `every`, `none`). Add ASCII query modifier hierarchy diagram.
@@ -127,7 +127,7 @@
   - Hierarchy diagram present in concept theory.
   - Clear separation between executable scalar filters and snippet-lab relational filters.
 
-### [ ] P3-D: Zod `.safeParse()` Task in Day 9
+### [x] P3-D: Zod `.safeParse()` Task in Day 9
 - **Target File:** [`src/content/prisma/modules/prisma-09-create-zod.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-09-create-zod.ts)
 - **Grading Type:** `snippet-lab` (`prismaSnippetTask`)
 - **Action Required:** Add task `prisma09-c2-t3` requiring validation via `UserCreateInput.safeParse()` and handling `!result.success`.
@@ -135,21 +135,21 @@
   - Task tests non-throwing validation branching.
   - Verified by snippet token checker.
 
-### [ ] P3-E: Relation Mutation (`connect`/`disconnect`) in Day 10
+### [x] P3-E: Relation Mutation (`connect`/`disconnect`) in Day 10
 - **Target File:** [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts)
 - **Grading Type:** `snippet-lab` (`prismaSnippetTask`)
 - **Action Required:** Add task `prisma10-c1-t4` requiring updating post author via `author: { connect: { id } }`.
 - **Done Definition:**
   - Tests nested relational mutation syntax without manual foreign key editing.
 
-### [ ] P3-F: `PrismaClientValidationError` in Day 13
+### [x] P3-F: `PrismaClientValidationError` in Day 13
 - **Target File:** [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts)
 - **Grading Type:** `snippet-lab` (`prismaSnippetTask`)
 - **Action Required:** Add task `prisma13-c1-t3` handling `Prisma.PrismaClientValidationError` returning status 400.
 - **Done Definition:**
   - Demonstrates catching client validation errors before database error code checks.
 
-### [ ] P3-G: Compilation & Migration Pipeline Diagram in Day 2
+### [x] P3-G: Compilation & Migration Pipeline Diagram in Day 2
 - **Target File:** [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts)
 - **Grading Type:** Theory Update
 - **Action Required:** Add ASCII diagram showing `prisma generate` → application code vs `prisma migrate dev` → database schema.

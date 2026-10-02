@@ -126,6 +126,29 @@ export const Prisma_09_MODULE: ModuleData = {
             'export async function createUser(req: Request, res: Response) {\n  const parsed = CreateUserSchema.safeParse(req.body);\n  if (!parsed.success) {\n    return res.status(400).json({ errors: parsed.error.issues });\n  }\n\n  const user = await prisma.user.create({ data: parsed.data });\n  return res.status(201).json(user);\n}',
           need: ['CreateUserSchema.safeParse(', 'if (!parsed.success)', 'parsed.data'],
         }),
+        prismaSnippetTask({
+          id: 'prisma09-c2-t3',
+          title: 'Non-Throwing Validation with safeParse',
+          description:
+            'Validate incoming untrusted input using `UserCreateInput.safeParse()`. If validation fails, return structured errors instead of throwing unhandled exceptions.',
+          instructions: [
+            'Parse untrusted data using `UserCreateInput.safeParse(data)`',
+            'If validation fails (`!result.success`), return `{ ok: false, errors: result.error.flatten() }`',
+            'If validation succeeds, return `{ ok: true, data: result.data }`',
+          ],
+          hint: '`safeParse` returns a discriminated union: check `result.success` to access `result.data` or `result.error`.',
+          scaffold: '-- Validated input allows database operations:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
+          why: 'safeParse prevents server crashes and eliminates try/catch overhead for anticipated user input errors.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export function validateInput(data: unknown) {\n  // BUG: .parse() throws on invalid data, crashing routes without explicit try/catch\n  const valid = UserCreateInput.parse(data);\n  return { ok: true, data: valid };\n}',
+          code1:
+            'export function validateInput(data: unknown) {\n  const result = UserCreateInput.safeParse(data);\n  if (!result.success) {\n    return { ok: false, errors: result.error.flatten() };\n  }\n  return { ok: true, data: result.data };\n}',
+          need: ['UserCreateInput.safeParse(', '!result.success', 'result.error', 'result.data'],
+          ban: ['UserCreateInput.parse('],
+        }),
       ],
     },
   ],

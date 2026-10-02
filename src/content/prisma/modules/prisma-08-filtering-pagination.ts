@@ -25,17 +25,22 @@ export const Prisma_08_MODULE: ModuleData = {
     {
       id: 'filter-operators',
       order: 1,
-      title: 'Advanced Filtering Operators',
-      shortDescription: '`contains`, `in`, `some`, `AND` / `OR` — filters as data.',
+      title: 'Filter Hierarchy — Scalar & Relational Operators',
+      shortDescription: 'Scalar filters (contains, in) vs relational filters (some, every, none).',
       theory: richPrismaTheory({
-        summary: 'A Prisma filter is an object, not a string: `contains` compiles to LIKE, `in` to IN, and relational filters (`some`/`every`/`none`) filter across relations — all without string concatenation so filters can be built, typed and tested.',
-        takeaway: 'Filters are objects: `contains`, `in`, relational `some`/`every`, nested with AND/OR.',
+        summary:
+          'Prisma filters follow a structured query hierarchy: scalar comparison/membership filters (`contains`, `in`, `gt`/`lt`) translate directly to SQL WHERE predicates, while relational filters (`some`, `every`, `none`) inspect child relations. All filters are strongly typed data objects rather than concatenated SQL strings.',
+        takeaway:
+          'Scalar filters (contains, in, comparison) vs relational filters (some, every, none) — structured, typed query data.',
         sql: "SELECT id, name\nFROM users\nWHERE email LIKE '%prisma.io';",
-        heroCode: "await prisma.user.findMany({\n  where: { email: { contains: 'prisma.io' } },\n  select: { id: true, name: true },\n});",
+        heroCode:
+          "await prisma.user.findMany({\n  where: { email: { contains: 'prisma.io' } },\n  select: { id: true, name: true },\n});",
         heroLang: 'typescript',
         heroWhy: '`contains` is a LIKE; the parameter is still bound, never concatenated.',
-        mentalModel: '**Filters are data, not strings.** A filter is a typed object the engine walks: `contains` → `LIKE`, `in` → `IN`, and relational operators (`some`, `every`, `none`) inspect child records. Nothing is concatenated, so every value stays a bound parameter.',
+        mentalModel:
+          '**The Query Modifier Hierarchy.** Prisma organizes query modifications into a clear taxonomy:\n```\nQuery Modifiers\n├── Filtering (where)\n│   ├── Scalar Filters (Executable)\n│   │   ├── Equality:       { field: value }\n│   │   ├── Comparison:     { gt, gte, lt, lte }\n│   │   ├── String:         { contains, startsWith, endsWith }\n│   │   ├── Membership:     { in, notIn }\n│   │   └── Logical:        { AND, OR, NOT }\n│   └── Relational Filters (Snippet-Lab)\n│       ├── some:           At least one related record matches\n│       ├── every:          All related records match\n│       └── none:           No related records match\n└── Pagination & Sorting\n    ├── Ordering:           orderBy: { field: "asc" | "desc" }\n    └── Offset:             skip + take\n```\nNothing is concatenated: scalar predicates become parameterized SQL, while relational predicates evaluate related entities.',
         explanation: [
+          'The Query Modifier Hierarchy distinguishes scalar field operations from multi-table relational predicates.',
           'Each operator has one SQL equivalent, chosen by the engine — you never hand-write the WHERE.',
           'Relational filters (`some`, `every`, `none`) let you query parent records by conditions on their child relations.',
           'Because filters are objects, they can be composed, narrowed and unit-tested before they reach the database.',
@@ -217,10 +222,11 @@ export const Prisma_08_MODULE: ModuleData = {
     {
       id: 'aggregating-grouping',
       order: 3,
-      title: 'Aggregating & Grouping',
-      shortDescription: '`groupBy` + `_count` — one row per group, computed by the database.',
+      title: 'Optional Extension: Aggregating & Grouping — `groupBy`',
+      shortDescription: 'Advanced analytics query shape: group rows by key and aggregate with _count.',
       theory: richPrismaTheory({
-        summary: 'Aggregation is a different shape of read: `groupBy` returns one row per distinct group, with `_count` (and `_sum`, `_avg`) computed by the database — not by your code.',
+        summary:
+          'Optional Extension: Aggregation is a specialized analytical query shape distinct from row-level filtering: `groupBy` returns one row per distinct group, with `_count` (and `_sum`, `_avg`) computed directly by the database engine.',
         takeaway: '`groupBy` computes per-group aggregates in the database, not in JavaScript.',
         sql: 'SELECT name, COUNT(*) AS total\nFROM users\nGROUP BY name;',
         heroCode: "await prisma.user.groupBy({\n  by: ['name'],\n  _count: true,\n});",

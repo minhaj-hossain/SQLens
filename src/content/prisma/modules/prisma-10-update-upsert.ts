@@ -96,6 +96,30 @@ export const Prisma_10_MODULE: ModuleData = {
             'export async function bumpUser(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { id: { increment: 1 } },\n    select: { id: true },\n  });\n}',
           rtype: '{ id: number }',
         }),
+        prismaSnippetTask({
+          id: 'prisma10-c1-t4',
+          title: 'Relational Update via connect',
+          description:
+            "Reassign an existing post to a new author using Prisma's nested relation mutation syntax without manually editing foreign keys.",
+          instructions: [
+            'Call `prisma.post.update` with `where: { id: postId }`',
+            'Connect the new author via `author: { connect: { id: newAuthorId } }`',
+          ],
+          hint: '`author: { connect: { id: newAuthorId } }` updates foreign key relationships while preserving relational integrity.',
+          scaffold: '-- Validates relational mutation syntax against engine:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
+          why: 'connect lets you rebind foreign key relations using schema-level relation names rather than raw column manipulation.',
+          cols: ['id', 'email'],
+          select: [],
+          noModelContract: true,
+          rows: 1,
+          code0:
+            'export async function reassignPost(postId: number, newAuthorId: number) {\n  // BUG: Direct foreign key manipulation ignores relational safety contracts\n  return await prisma.post.update({\n    where: { id: postId },\n    data: { authorId: newAuthorId },\n  });\n}',
+          code1:
+            'export async function reassignPost(postId: number, newAuthorId: number) {\n  return await prisma.post.update({\n    where: { id: postId },\n    data: {\n      author: {\n        connect: { id: newAuthorId },\n      },\n    },\n  });\n}',
+          need: ['author:', 'connect:', 'id: newAuthorId'],
+          ban: ['authorId: newAuthorId'],
+        }),
       ],
     },
     {

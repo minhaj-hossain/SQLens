@@ -16,7 +16,7 @@ export const Prisma_07_MODULE: ModuleData = {
   curriculumOrder: 7,
   displayLabel: 'Day 7',
   completionLearnings: [
-    'Choose between findUnique, findFirst and findMany',
+    'Choose between findUnique, findUniqueOrThrow, findFirst and findMany',
     'Return only the columns the screen needs',
     'Know when `include` is the right answer',
     'Use select to trim payloads or include to load relations',
@@ -25,15 +25,15 @@ export const Prisma_07_MODULE: ModuleData = {
     {
       id: 'read-methods',
       order: 1,
-      title: 'findUnique, findFirst & findMany',
+      title: 'findUnique, findUniqueOrThrow, findFirst & findMany',
       shortDescription: 'One row by unique key, one row by filter, or many rows.',
       theory: prismaTheory(
-        'Prisma gives you three reads: `findUnique` (one row, unique key only, may be null), `findFirst` (one row by any filter, may be null) and `findMany` (an array, never null). Picking the wrong one is either a runtime error or an accidental table scan.',
-        'findUnique needs a unique key; findFirst takes any filter; findMany returns an array.',
+        'Prisma provides targeted read methods: `findUnique` (one row, unique selector only, may be null), `findFirst` (one row by any criteria, may be null), and `findMany` (an array, never null). Crucially, `findUnique` and `findUniqueOrThrow` only accept `where` selectors marked `@id` or `@unique` in your schema—enforced at compile time by TypeScript. When absence is exceptional, `findUniqueOrThrow` avoids boilerplate null checks by throwing NotFoundError (P2025) automatically.',
+        'findUnique requires an @id/@unique key; findUniqueOrThrow eliminates null checks; findFirst takes any filter; findMany returns an array.',
         'SELECT id, name\nFROM users\nWHERE id = 1;',
-        'const byId = await prisma.user.findUnique({ where: { id: 1 } });\nconst first = await prisma.user.findFirst({ where: { name: \'Alex\' } });\nconst all = await prisma.user.findMany();',
+        'const byId = await prisma.user.findUnique({ where: { id: 1 } });\nconst guaranteed = await prisma.user.findUniqueOrThrow({ where: { id: 1 } });\nconst first = await prisma.user.findFirst({ where: { name: \'Alex\' } });\nconst all = await prisma.user.findMany();',
         'typescript',
-        'Three methods, three SQL shapes — all parameterized.',
+        'Targeted read methods compile to optimal SQL while TypeScript enforces selector uniqueness.',
       ),
       tasks: [
         prismaReadTask({
@@ -70,6 +70,28 @@ export const Prisma_07_MODULE: ModuleData = {
           code1:
             'export async function getAlex() {\n  return await prisma.user.findFirst({\n    where: { name: \'Alex\' },\n    select: { id: true, name: true },\n  });\n}',
           rtype: '{ id: number; name: string } | null',
+        }),
+        prismaReadTask({
+          id: 'prisma07-c1-t3',
+          title: 'Guaranteed lookup with findUniqueOrThrow',
+          description:
+            'Retrieve User 1 by unique id without returning a nullable type. Use findUniqueOrThrow so the compiler guarantees the record exists or throws an exception if missing.',
+          instructions: [
+            'Use `prisma.user.findUniqueOrThrow` with `where: { id }`',
+            'Select `id` and `name`',
+          ],
+          hint: '`findUniqueOrThrow` avoids manual null checks by throwing NotFoundError when the row is absent.',
+          scaffold: '-- Unique read requiring non-null record:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'findUniqueOrThrow removes defensive "if (!user)" guards in API services by throwing directly on record absence.',
+          cols: ['id', 'name'],
+          noCols: ['email'],
+          rows: 1,
+          code0:
+            'export async function getRequiredUser(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    select: { id: true, name: true },\n  });\n}',
+          code1:
+            'export async function getRequiredUser(id: number) {\n  return await prisma.user.findUniqueOrThrow({\n    where: { id },\n    select: { id: true, name: true },\n  });\n}',
+          rtype: '{ id: number; name: string }',
         }),
       ],
     },
