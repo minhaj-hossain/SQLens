@@ -14,7 +14,7 @@
 | P1 | Prisma copy fixes in `LearningPathView` | ✅ Done |
 | P2 | Prisma locked-day back link fix | ✅ Done |
 | P3 | Header minimal variant | ✅ Done |
-| P4 | AppChrome minimal mode detection | ⬜ Not started |
+| P4 | AppChrome minimal mode detection | ✅ Done |
 | P5 | Homepage strip & simplify | ⬜ Not started |
 
 **Status key:** ⬜ Not started · 🔄 In progress · ✅ Done · ❌ Blocked
@@ -241,13 +241,13 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Tasks
 
-- [ ] **P4-A — Detect homepage pathname** (after line ~21 where `pathname` is set)
+- [x] **P4-A — Detect homepage pathname** (after line ~21 where `pathname` is set)
 
   ```tsx
   const isHomepage = pathname === '/';
   ```
 
-- [ ] **P4-B — Pass `isMinimal` to Header** (in the `<Header>` render, ~line 51)
+- [x] **P4-B — Pass `isMinimal` to Header** (in the `<Header>` render, ~line 51)
 
   ```tsx
   <Header
@@ -266,8 +266,8 @@ const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, tra
 
 ### Acceptance Criteria
 
-- [ ] `isMinimal` is `true` on `/` only
-- [ ] `isMinimal` is `false` on `/sql`, `/prisma`, `/prisma/learn/*`, `/admin`, etc.
+- [x] `isMinimal` is `true` on `/` only
+- [x] `isMinimal` is `false` on `/sql`, `/prisma`, `/prisma/learn/*`, `/admin`, etc.
 
 ---
 

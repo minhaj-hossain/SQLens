@@ -19,6 +19,7 @@ import AnnouncementBanner from '@/components/ui/AnnouncementBanner';
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isHomepage = pathname === '/';
   const router = useRouter();
   // Batch 5: resetProgress now THROWS when the tombstone write fails, and
   // exposes resetError. Only navigate after the server ack — navigating first
@@ -69,6 +70,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
         isAuthPending={isAuthPending}
         onSignOut={signOut}
         activeViewTitle={activeViewTitle}
+        isMinimal={isHomepage}
       />
 
       <AnnouncementBanner />
