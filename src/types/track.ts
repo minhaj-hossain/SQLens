@@ -84,7 +84,7 @@ export const TRACK_META: Record<TrackId, TrackMeta> = {
   sql: {
     id: 'sql',
     label: 'SQL',
-    title: 'SQLens — 57 Days of Hands-On SQL',
+    title: 'SQL — 57 Days of Hands-On SQL',
     tagline: 'Master SQL from SELECT to production engineering, entirely in your browser.',
     basePath: '/sql',
     guestStorageKey: 'sql_mastery_progress_v1',
@@ -94,7 +94,7 @@ export const TRACK_META: Record<TrackId, TrackMeta> = {
   prisma: {
     id: 'prisma',
     label: 'Prisma',
-    title: 'PrismaLens — 14 Days of Prisma ORM',
+    title: 'Prisma — 14 Days of Prisma ORM',
     tagline: 'Master Prisma ORM, schema modeling and production database engineering.',
     basePath: '/prisma',
     guestStorageKey: 'prismalens_progress_v1',

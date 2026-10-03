@@ -97,9 +97,11 @@ describe('Header — full track mode (lesson pages)', () => {
     <Header {...baseProps} isMinimal={false} activeViewTitle="Learning Path" />,
   );
 
-  it('renders the SQLens search lens logo (not Click) in track mode', () => {
-    // Circle from SQLens optic lens
-    expect(html).toContain('circle cx="12.5" cy="12.5" r="9"');
+  it('renders the Click brand logo and links to / in track mode', () => {
+    // The Click variant path is in the SVG
+    expect(html).toContain('M10 7V21L14 17L17 24L19.5 23L16.5 16.3H22Z');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('Click');
   });
 
   it('uses the 5xl max-width container and h-14', () => {

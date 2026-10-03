@@ -19,23 +19,17 @@
  * nothing on the server (and for first-time visitors) and appears after mount.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
-import { useAuth } from '@/components/providers/AuthProvider';
 import { formatExecutionTime } from '@/lib/format-execution-time';
-import { loadUserState } from '@/lib/progress/storage';
 import {
   HERO_PRISMA_SAMPLE,
   HERO_SQL_SAMPLE,
-  buildContinuityEntry,
   buildPrismaSampleRun,
   buildSqlSampleRun,
-  type ContinuityEntry,
   type HeroLensEngine,
   type HeroLensRun,
   type HeroLensStep,
 } from '@/lib/homepage';
-import { TRACK_IDS, TRACK_META } from '@/types/track';
 import type { QueryExecutionResult } from '@/types/database';
 import type { SqlExecutor } from '@/lib/sql-engine/executor';
 
@@ -96,74 +90,7 @@ function LensStepCard({ step, index }: { step: HeroLensStep; index: number }) {
 }
 
 /** A compact peek at the call's own result: first columns, first rows, real counts. */
-/* ── Returning-learner continuity ───────────────────────────────────────── */
 
-/**
- * The returning-learner strip: one line per started track, using this user's
- * OWN storage key (guest or signed-in). It renders nothing until a first
- * effect reads that storage — so the server HTML never guesses, and
- * first-time visitors see no card at all. It re-reads on cross-tab writes and
- * on window focus, because the progress provider hydrates cloud state after
- * this card mounts.
- */
-export function ReturningLearnerCard() {
-  const { user } = useAuth();
-  const userId = user?.id ?? null;
-  const [entries, setEntries] = useState<ContinuityEntry[]>([]);
-
-  const refresh = useCallback(() => {
-    const found: ContinuityEntry[] = [];
-    for (const track of TRACK_IDS) {
-      const entry = buildContinuityEntry(track, loadUserState(userId, track));
-      if (entry) found.push(entry);
-    }
-    setEntries(found);
-  }, [userId]);
-
-  useEffect(() => {
-    refresh();
-    window.addEventListener('storage', refresh);
-    window.addEventListener('focus', refresh);
-    return () => {
-      window.removeEventListener('storage', refresh);
-      window.removeEventListener('focus', refresh);
-    };
-  }, [refresh]);
-
-  if (entries.length === 0) return null;
-
-  return (
-    <section aria-label="Continue where you left off" className="mt-8 flex flex-col gap-2 sm:mt-10">
-      {entries.map((entry) => (
-        <Link
-          key={entry.track}
-          href={entry.url}
-          className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-2 px-4 py-3 transition hover:border-text-dim hover:bg-surface-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-dim"
-        >
-          <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text">
-            <Icon name="play_circle" className="text-[16px] text-func" />
-            <span className="font-mono text-[10.5px] uppercase tracking-wider text-text-dim">
-              {TRACK_META[entry.track].label}
-            </span>
-            <span>
-              Resume{' '}
-              <b className="font-semibold">
-                {entry.moduleLabel}: {entry.moduleTitle}
-              </b>
-            </span>
-            {entry.percent > 0 && (
-              <span className="font-mono text-[11px] text-func">[{entry.percent}% Complete]</span>
-            )}
-          </span>
-          <Icon
-            name="arrow_forward"
-            className="text-[16px] text-text-dim transition group-hover:translate-x-0.5 group-hover:text-text"
-          />
-        </Link>
-      ))}
-    </section>
-  );
-}
 
 /* ── Lens panel ─────────────────────────────────────────────────────────── */
 

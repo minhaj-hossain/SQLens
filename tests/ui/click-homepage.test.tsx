@@ -1,13 +1,8 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ClickHomepage } from '../../src/components/home/ClickHomepage';
 import { SqlDiagramSvg, PrismaDiagramSvg } from '../../src/components/home/TrackDiagrams';
-
-// Stub auth context so ReturningLearnerCard executes cleanly during SSR
-vi.mock('../../src/components/providers/AuthProvider', () => ({
-  useAuth: () => ({ user: null, isAuthPending: false, signOut: async () => {} }),
-}));
 
 describe('ClickHomepage Component', () => {
   const html = renderToStaticMarkup(<ClickHomepage />);

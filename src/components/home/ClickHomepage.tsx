@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { SqlDiagramSvg, PrismaDiagramSvg } from './TrackDiagrams';
-import { ReturningLearnerCard } from '@/components/tracks/HeroLensInteractivePreview';
 import { ClickFooter } from '@/components/layout/ClickFooter';
 
 export interface ClickHomepageProps {
@@ -45,11 +44,6 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({ className = '' }) 
         <p className="mt-5 max-w-[440px] text-[17px] leading-[1.6] text-[#8a9bbd]">
           Hands-on tracks. A real engine. All in your browser.
         </p>
-
-        {/* Seamless returning learner continuity (only renders if learner has progress) */}
-        <div className="w-full max-w-[720px]">
-          <ReturningLearnerCard />
-        </div>
       </section>
 
       {/* Tracks Grid Section */}

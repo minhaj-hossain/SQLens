@@ -52,12 +52,12 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Left: brand dot + wordmark + current-route label (links home) */}
         <Link
-          href={isMinimal ? '/' : meta.basePath}
+          href="/"
           className="flex items-center gap-[9px] min-w-0 hover:opacity-90 transition text-left focus:outline-none group"
           title="Return to Homepage"
           aria-label="Return to Homepage"
         >
-          <BrandLogo size="sm" variant={isMinimal ? 'click' : 'sqlens'} />
+          <BrandLogo size="sm" variant="click" />
           {!isMinimal && (
             <span className="hidden sm:inline-block font-body text-xs text-text-faint truncate pl-[9px] border-l border-border ml-[2px]">
               {activeViewTitle}
