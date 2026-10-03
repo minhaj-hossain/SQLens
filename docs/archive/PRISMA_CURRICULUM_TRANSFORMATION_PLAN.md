@@ -293,16 +293,45 @@ graph TD
 
 
 ### Batch 5: Phase 5 Writes & Mutations Overhaul
-* **Files:**
-  - [`prisma-09-create-zod.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-09-create-zod.ts)
-  - [`prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts)
-  - [`prisma-11-relations-delete.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-11-relations-delete.ts)
-  - [`prisma-12-nested-transactions.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-12-nested-transactions.ts)
-* **Changes:**
-  - Replace `zod-validation` in Module 9 with dedicated `delete()` and `deleteMany()` instruction.
-  - Teach `select` on write operations (`create({ data, select })`).
-  - Move `connect:` out of Module 10 Task 4, placing it into Module 12 (Nested Writes).
-  - Separate referential actions (`onDelete`) from general deletion tasks in Module 11.
+
+* **Target Modules & Files:**
+  - [`src/content/prisma/modules/prisma-09-create-zod.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-09-create-zod.ts) (Day 9: Create & Payload Validation)
+  - [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) (Day 10: Updates & Upserts)
+  - [`src/content/prisma/modules/prisma-11-delete-cascades.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-11-delete-cascades.ts) (Day 11: Deletions & Referential Cascades)
+  - [`src/content/prisma/modules/prisma-12-nested-transactions.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-12-nested-transactions.ts) (Day 12: Nested Writes & Transactions)
+
+* **Detailed Sub-Tasks:**
+
+#### Step 5.1: `select` on Write Operations & Dedicated Deletion (`delete()` / `deleteMany()`)
+- **Focus:** Day 9 and Day 11.
+- **Pedagogical Alignment:**
+  - In Day 9, ensure `select` on `create({ data, select })` is taught as a first-class citizen so learners understand that writes return shaped models, not just raw database payloads.
+  - In Day 11, add explicit primary instruction for single-row deletion (`prisma.user.delete({ where: { id } })`) which requires a unique selector, contrasting with bulk `deleteMany({ where: ... })`.
+
+#### Step 5.2: Relational Mutation Prerequisite Alignment (`connect:`)
+- **Current problem:** In Day 10 Task 4 (`prisma10-c1-t4`), `connect: { id: newAuthorId }` appears for the first time without any prior introduction to nested write syntax (which is supposed to be taught on Day 12).
+- **Pedagogical Alignment:**
+  - Day 10 focuses cleanly on scalar mutations (`update`, `updateMany`, `{ increment: 1 }`) and idempotent `upsert`.
+  - Day 12 serves as the comprehensive home for relation mutations (`create`, `connect`, `connectOrCreate`).
+
+#### Step 5.3: Referential Actions vs Application Deletion
+- **Focus:** Day 11 Concept 1 (`referential-actions`) and Concept 2 (`soft-delete`).
+- **Pedagogical Alignment:**
+  - Maintain the clean boundary:
+    - `onDelete: Cascade | SetNull | Restrict`: Schema-level foreign key enforcement executed by the database engine.
+    - Soft Deletion: Application-level tombstone pattern (`deletedAt DateTime?`) preserving audit history.
+
+#### Step 5.4: ACID Transactions & Rollback Invariant Demonstration
+- **Focus:** Day 12 Concept 2 (`transactions`).
+- **Pedagogical Alignment:**
+  - Contrast sequential array transactions (`$transaction([...])`) where all operations share one round-trip with interactive transactions (`$transaction(async (tx) => ...)`) requiring the strict `tx` isolation invariant ("always use `tx`, never `prisma`").
+  - Confirm rollback guarantees: if a subsequent step throws, previous writes in the transaction are completely aborted.
+
+#### Step 5.5: Batch 5 Verification & Test Gate
+- Run test suite: `npx vitest run tests/tracks/phase6-prisma-content.test.ts`.
+- Ensure all AST rules, snippet needs/bans, and SQL Lens evaluations pass cleanly.
+- Update [`docs/PRISMA_CURRICULUM_TRACKER.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_TRACKER.md) with Batch 5 status.
+
 
 ### Batch 6: Phase 6 Production & Out-of-Scope Decommissioning
 * **Files:**
