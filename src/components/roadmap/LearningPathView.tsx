@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Icon from '@/components/ui/Icon';
 import { useTrackCurriculum } from '@/components/learn/use-track';
 import {
   getModuleDisplayLabel,
@@ -141,7 +142,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       <section className="pt-16 pb-14 grid grid-cols-1 md:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
         <div>
           <div className="font-mono text-xs text-text-faint tracking-[0.06em] uppercase mb-5">
-            {track === 'prisma' ? 'PRISMALENS' : 'SQLENS'} <span className="text-func">/</span> CURRICULUM ROADMAP
+            {track === 'prisma' ? 'PRISMA' : 'SQL'} <span className="text-func">/</span> CURRICULUM ROADMAP
           </div>
           <h1 className="font-mono font-bold text-[32px] md:text-[42px] leading-[1.14] tracking-tight text-text">
             {track === 'prisma' ? (
@@ -336,49 +337,129 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                       <div className="font-mono text-[11px] text-func shrink-0">{activeTaskPct}% done</div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {calloutConcepts.map((concept, cIdx) => {
-                        const conceptDone = isConceptCompleted(concept, currentModule.id, userState);
-                        return (
-                          <button
-                            key={concept.id}
-                            onClick={() =>
-                              onSelectModuleAndConcept(currentModule.id, concept.id, conceptDone ? 'practice' : 'theory')
-                            }
-                            className="flex items-center gap-2 text-xs text-text-dim px-2.5 py-2 bg-surface border border-border-soft rounded-[7px] text-left hover:bg-surface-2 hover:-translate-y-px transition-all cursor-pointer"
-                          >
-                            <span
-                              className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] shrink-0 font-bold ${
-                                conceptDone
-                                  ? 'bg-func/20 text-func border border-func/40'
-                                  : cIdx === calloutConcepts.findIndex((c) => !isConceptCompleted(c, currentModule.id, userState))
-                                  ? 'bg-func text-ink'
-                                  : 'bg-surface-2 text-text-faint border border-border'
+                    {(() => {
+                      const firstIncompleteConceptIdx = currentModule.concepts.findIndex(
+                        (c) => !isConceptCompleted(c, currentModule.id, userState),
+                      );
+                      const activeChallengeUnlocked = firstIncompleteConceptIdx === -1;
+
+                      return (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {calloutConcepts.map((concept, cIdx) => {
+                              const conceptDone = isConceptCompleted(concept, currentModule.id, userState);
+                              const isConceptCurrent = !conceptDone && cIdx === firstIncompleteConceptIdx;
+                              const isConceptLocked =
+                                !conceptDone && firstIncompleteConceptIdx !== -1 && cIdx > firstIncompleteConceptIdx;
+
+                              return (
+                                <button
+                                  key={concept.id}
+                                  onClick={() => {
+                                    if (isConceptLocked) {
+                                      const requiredConcept =
+                                        firstIncompleteConceptIdx >= 0
+                                          ? currentModule.concepts[firstIncompleteConceptIdx]
+                                          : null;
+                                      setLockedAlert({
+                                        title: `${concept.title} is locked`,
+                                        message: `Complete ${
+                                          requiredConcept ? `"${requiredConcept.title}"` : 'earlier concept lessons'
+                                        } in ${getModuleDisplayLabel(currentModule)} first to unlock this lesson.`,
+                                      });
+                                      return;
+                                    }
+                                    onSelectModuleAndConcept(
+                                      currentModule.id,
+                                      concept.id,
+                                      conceptDone ? 'practice' : 'theory',
+                                    );
+                                  }}
+                                  title={
+                                    isConceptLocked
+                                      ? `${concept.title} (locked — complete earlier concepts first)`
+                                      : concept.title
+                                  }
+                                  className={`flex items-center gap-2 text-xs px-2.5 py-2 rounded-[7px] text-left transition-all ${
+                                    isConceptLocked
+                                      ? 'bg-surface/50 border border-border-soft/60 text-text-faint opacity-60 cursor-not-allowed'
+                                      : 'bg-surface border border-border-soft text-text-dim hover:bg-surface-2 hover:-translate-y-px cursor-pointer'
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] shrink-0 font-bold ${
+                                      conceptDone
+                                        ? 'bg-func/20 text-func border border-func/40'
+                                        : isConceptCurrent
+                                        ? 'bg-func text-ink'
+                                        : 'bg-surface-2 text-text-faint border border-border'
+                                    }`}
+                                  >
+                                    {conceptDone ? (
+                                      '✓'
+                                    ) : isConceptLocked ? (
+                                      <Icon name="lock" className="text-[9px]" />
+                                    ) : (
+                                      cIdx + 1
+                                    )}
+                                  </span>
+                                  <span
+                                    className={`truncate ${
+                                      conceptDone ? 'text-text' : isConceptLocked ? 'text-text-faint' : 'text-text-dim'
+                                    }`}
+                                  >
+                                    {concept.shortDescription || concept.title}
+                                  </span>
+                                  {isConceptLocked && (
+                                    <Icon name="lock" className="ml-auto text-[13px] text-text-faint shrink-0" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {currentModule.challenge && (
+                            <button
+                              onClick={() => {
+                                if (!activeChallengeUnlocked && !activeChallengeDone) {
+                                  const requiredConcept =
+                                    firstIncompleteConceptIdx >= 0
+                                      ? currentModule.concepts[firstIncompleteConceptIdx]
+                                      : null;
+                                  setLockedAlert({
+                                    title: 'Stage challenge is locked',
+                                    message: `Complete all concept lessons in ${getModuleDisplayLabel(
+                                      currentModule,
+                                    )} first to unlock the challenge.`,
+                                  });
+                                  return;
+                                }
+                                onSelectModuleAndConcept(currentModule.id, undefined, 'challenge');
+                              }}
+                              className={`mt-2.5 pt-2.5 border-t border-dashed border-border w-full flex items-center justify-between font-mono text-[11.5px] transition ${
+                                activeChallengeUnlocked || activeChallengeDone
+                                  ? 'text-func hover:brightness-110 cursor-pointer'
+                                  : 'text-text-faint opacity-60 cursor-not-allowed'
                               }`}
                             >
-                              {conceptDone ? '✓' : cIdx + 1}
-                            </span>
-                            <span className={conceptDone ? 'text-text' : 'text-text-dim'}>
-                              {concept.shortDescription || concept.title}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {currentModule.challenge && (
-                      <button
-                        onClick={() => onSelectModuleAndConcept(currentModule.id, undefined, 'challenge')}
-                        className="mt-2.5 pt-2.5 border-t border-dashed border-border w-full flex items-center justify-between font-mono text-[11.5px] text-func hover:brightness-110 transition cursor-pointer"
-                      >
-                        <span>🏆 Stage challenge</span>
-                        <span>
-                          {activeChallengeDone
-                            ? 'Complete'
-                            : `${activeChallengePct}% done`}
-                        </span>
-                      </button>
-                    )}
+                              <span className="flex items-center gap-1.5">
+                                <span>🏆 Stage challenge</span>
+                                {!activeChallengeUnlocked && !activeChallengeDone && (
+                                  <Icon name="lock" className="text-[12px]" />
+                                )}
+                              </span>
+                              <span>
+                                {activeChallengeDone
+                                  ? 'Complete'
+                                  : activeChallengeUnlocked
+                                  ? `${activeChallengePct}% done`
+                                  : 'Locked'}
+                              </span>
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -388,7 +469,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       </section>
 
       <footer className="mt-[74px] mb-11 text-center font-mono text-[11px] text-text-faint">
-        {track === 'prisma' ? 'PrismaLens' : 'SQLens'} — {overallPct}% through the path.
+        {track === 'prisma' ? 'Prisma' : 'SQL'} — {overallPct}% through the path.
       </footer>
     </div>
   );
