@@ -23,7 +23,8 @@ import {
   getEffectiveNow,
   isModuleFullyComplete,
 } from '../../lib/progress/unlock-calculator';
-import { learnUrl } from '../../lib/learn-routes';
+import { trackLearnUrl } from '../../lib/track-routes';
+import { useTrack } from '../learn/use-track';
 import { useStepBack } from '../learn/use-step-back';
 
 interface ModuleCompletionViewProps {
@@ -42,6 +43,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
   onContinueNextDay,
 }) => {
   const router = useRouter();
+  const track = useTrack();
   const { backStep, goBack } = useStepBack(module.id);
 
   const currentMilestone =
@@ -181,7 +183,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
         </button>
         {nextModule && (
           <button
-            onClick={() => router.push(learnUrl(nextModule.id, 'theory', nextModule.concepts[0].id))}
+            onClick={() => router.push(trackLearnUrl(track, nextModule.id, 'theory', nextModule.concepts[0].id))}
             title={`Open ${getModuleDisplayLabel(nextModule)}`}
             className='inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 font-mono text-xs text-text-dim transition hover:bg-surface-3 hover:text-text'
           >

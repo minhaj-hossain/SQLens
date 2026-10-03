@@ -80,7 +80,7 @@
 | **Phase 2** | Fix roadmap card locked concept interaction (no redirect, in-place alert/locked UI) | Completed |
 | **Phase 3** | Fix task page refresh behavior (prevent premature locked redirect while auth/progress hydrates) | Completed |
 | **Phase 4** | Remove `/learn/[dayId]` overview page & `ModuleOverview.tsx`, redirect day URLs directly to theory | Completed |
-| **Phase 5** | Clean up all remaining overview redirects (`TheoryView`, `ChallengeView`, `CompleteView`, `use-learning-navigation`) | Pending |
+| **Phase 5** | Clean up all remaining overview redirects (`TheoryView`, `ChallengeView`, `CompleteView`, `use-learning-navigation`) | Completed |
 | **Phase 6** | Verification, regression testing, and test suite alignment | Pending |
 
 ---
@@ -159,5 +159,36 @@ day, in both theory page wrappers. `moduleJsonLd` stays in use.
 `ChallengeView.tsx` and `CompleteView.tsx` (and `use-learning-navigation.ts`).
 They keep working (they now take the day redirect hop) but are still "overview"
 URLs to be cleaned up.
+
+---
+
+## Phase 5 — Implementation Notes (completed)
+
+No app source builds a bare `…/{track}/learn/{moduleId}` ("overview") URL any
+more. Each remaining fallback now targets theory or the track roadmap:
+
+- `ChallengeView.tsx` — locked challenge → first incomplete concept's theory,
+  else the track roadmap (`trackRoadmapUrl`); dropped the unused `meta`.
+- `CompleteView.tsx` — a not-completed `/complete` URL → the track roadmap
+  (`trackRoadmapUrl`, highlight = module); destructures `track` instead of `meta`.
+- `use-learning-navigation.ts` — `continueNextDay` fallback → next module's
+  first concept theory, else roadmap; `TRACK_META` import removed.
+- `TheoryView.tsx` — already overview-free (Phase 2); dropped the unused `meta`.
+- **Adjacent fix (beyond the tracker's list):** `ModuleCompletionView.tsx`
+  ("Next Module") built the legacy un-namespaced `/learn/...` URL via
+  `learnUrl` — wrong for Prisma (404 through the `/learn*`→`/sql/learn*`
+  redirect). It now uses `trackLearnUrl(track, …)` via `useTrack()`.
+
+**Left intentionally unchanged:** `src/lib/learn-routes.ts` (frozen legacy
+helpers), `sitemap.ts` (canonical day URLs), and the day-redirect pages.
+`learn-metadata.ts` still emits the bare day URL as canonical/JSON-LD `url`
+(now a 307 to concept 0) — an optional SEO repoint for Phase 6.
+
+**Tests:** two Phase 5 guards added to `phase11-day-layout-view.test.tsx`
+(now 27): the five cleaned files contain no `/learn/${…}` bare-overview
+signature, and each uses a track-aware builder (`trackLearnUrl` /
+`trackRoadmapUrl`). Full suite 918 passed (same 9 pre-existing Prisma
+failures); `tsc --noEmit` clean; `npm run build` green.
+
 
 

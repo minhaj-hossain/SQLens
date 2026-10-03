@@ -12,7 +12,7 @@ import {
   isModuleChallengeUnlocked,
   getCompletedChallengeTaskIds,
 } from '@/lib/progress/unlock-calculator';
-import { trackLearnUrl } from '@/lib/track-routes';
+import { trackLearnUrl, trackRoadmapUrl } from '@/lib/track-routes';
 import { IndependentChallengeView } from '@/components/learning/IndependentChallengeView';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
@@ -24,7 +24,7 @@ interface ChallengeViewProps {
 
 export default function ChallengeView({ dayId }: ChallengeViewProps) {
   const track = useTrack();
-  const { modules: ALL_MODULES, getModuleById, meta } = useTrackCurriculum();
+  const { modules: ALL_MODULES, getModuleById } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   if (!mod) notFound();
 
@@ -44,8 +44,10 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
     if (!challengeUnlock.isUnlocked) {
       const firstIncomplete =
         mod.concepts.find((c) => !isConceptCompleted(c, mod.id, userState)) ?? mod.concepts[0];
+      // Phase 5: never fall back to the removed overview URL — open the first
+      // incomplete concept's theory, else the track roadmap (concept-less module).
       if (firstIncomplete) router.replace(trackLearnUrl(track, mod.id, 'theory', firstIncomplete.id));
-      else router.replace(`${meta.basePath}/learn/${mod.id}`);
+      else router.replace(trackRoadmapUrl(track, mod.id));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [challengeUnlock.isUnlocked, isProgressReady]);

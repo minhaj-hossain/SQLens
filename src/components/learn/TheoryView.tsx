@@ -22,7 +22,7 @@ interface TheoryViewProps {
 }
 
 export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
-  const { getModuleById, meta, track } = useTrackCurriculum();
+  const { getModuleById, track } = useTrackCurriculum();
   const mod = getModuleById(dayId);
   const concept = mod?.concepts.find((c) => c.id === conceptId);
   if (!mod || !concept) notFound();

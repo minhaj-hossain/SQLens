@@ -369,4 +369,31 @@ describe('Phase 4.2 — route inventory, sitemap and redirect contracts stay fro
     );
   });
 });
+describe('Phase 5 — no app source builds a bare /learn/<moduleId> overview URL', () => {
+  const CLEANED_FILES = [
+    'src/components/learn/TheoryView.tsx',
+    'src/components/learn/ChallengeView.tsx',
+    'src/components/learn/CompleteView.tsx',
+    'src/components/learn/use-learning-navigation.ts',
+    'src/components/learning/ModuleCompletionView.tsx',
+  ];
+
+  it('the cleaned-up views/hooks never construct `…/learn/${moduleId}` without a stage', () => {
+    for (const rel of CLEANED_FILES) {
+      const src = layoutSource(rel);
+      expect(src, `${rel} must not build a bare overview URL`).not.toContain('/learn/${');
+    }
+  });
+
+  it('they build track-aware stage URLs instead (trackLearnUrl / trackRoadmapUrl)', () => {
+    for (const rel of CLEANED_FILES) {
+      const src = layoutSource(rel);
+      expect(src, `${rel} must use a track-aware builder`).toMatch(
+        /trackLearnUrl|trackRoadmapUrl/,
+      );
+    }
+  });
+});
+
+
 

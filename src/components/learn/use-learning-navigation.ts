@@ -9,7 +9,7 @@ import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTrack, useTrackCurriculum } from './use-track';
 import { trackLearnUrl, trackRoadmapUrl } from '@/lib/track-routes';
-import { TRACK_META, type TrackId } from '@/types/track';
+import { type TrackId } from '@/types/track';
 import { getTrackModuleById } from '@/tracks/registry';
 import { getNextModule } from '@/lib/curriculum/module-order';
 import { ModuleData } from '@/types/curriculum';
@@ -126,7 +126,9 @@ export function useLearningNavigation() {
     if (firstIncomplete) {
       routerRef.current.push(trackLearnUrl(track, next.id, 'theory', firstIncomplete.id));
     } else {
-      routerRef.current.push(`${TRACK_META[track].basePath}/learn/${next.id}`);
+      // Phase 5: never push the removed overview URL — fall back to the track
+      // roadmap (only reachable for a concept-less module).
+      routerRef.current.push(trackRoadmapUrl(track, next.id));
     }
   }, [track]);
 
