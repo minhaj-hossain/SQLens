@@ -5,7 +5,7 @@
 > **Transformation Master Plan:** [`docs/PRISMA_CURRICULUM_TRANSFORMATION_PLAN.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_TRANSFORMATION_PLAN.md)  
 > **Day 1 Onboarding Plan:** [`docs/PLAN_DAY1_RUN_AND_OBSERVE.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PLAN_DAY1_RUN_AND_OBSERVE.md)  
 > **Review Reference:** [`docs/PRISMA_CURRICULUM_REVIEW.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_REVIEW.md)  
-> **Overall Progress:** **`14 / 15 Items Complete (93%)`**
+> **Overall Progress:** **`All Batches Complete — Curriculum Transformation Finished ✅`**
 
 ---
 
@@ -33,6 +33,11 @@
 | [x] | **P3-E** | P3 | Add Relational Mutation (`connect`) Task | [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) | Snippet-Lab | ✅ Completed |
 | [x] | **P3-F** | P3 | Add `PrismaClientValidationError` Handler | [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | ✅ Completed |
 | [x] | **P3-G** | P3 | Add Forward Compilation Pipeline Diagram | [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts) | Theory Update | ✅ Completed |
+| [x] | **B5-1** | P0 | Day 11: Add `delete()` primary single-row deletion task | [`src/content/prisma/modules/prisma-11-delete-cascades.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-11-delete-cascades.ts) | Executable | ✅ Completed |
+| [x] | **B5-2** | P0 | Day 10: Remove out-of-order `connect:` from scalar updates | [`src/content/prisma/modules/prisma-10-update-upsert.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-10-update-upsert.ts) | Prerequisite Fix | ✅ Completed |
+| [x] | **B6-1** | P0 | Day 13: Replace `error-middleware` with `error-trapping` (P2025 + P2003) | [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **B6-2** | P0 | Day 14: Replace `clean-architecture` with `prisma-query-toolbox` | [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) | Executable + Lab | ✅ Completed |
+| [x] | **B6-3** | P0 | Day 14: Replace `crud-lifecycle` with `capstone-patterns` | [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts) | Executable + Lab | ✅ Completed |
 
 ---
 
@@ -176,3 +181,40 @@ All implementation work must respect these exclusions:
 - [x] `prisma db pull` excluded (reverse introspection pipeline).
 - [x] Unlisted error codes excluded (only P2002, P2025, P2003, `PrismaClientValidationError`).
 - [x] Non-executable schema attributes (`@updatedAt`, `@default(cuid())`) excluded from executable tasks.
+
+---
+
+## 6. Batch 6 — Phase 6 Decommissioning Details
+
+### [x] B6-1: Day 13 `error-middleware` → `error-trapping`
+- **Target File:** [`src/content/prisma/modules/prisma-13-errors-middleware.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-13-errors-middleware.ts)
+- **Grading Type:** `snippet-lab` (`prismaSnippetTask`)
+- **Action:** Removed Express 4-argument middleware arity concept (`error-middleware`). Replaced with `error-trapping` concept teaching pure Prisma in-route error branching:
+  - `prisma13-c2-t1`: Add P2025→404 branch next to existing P2002 handler.
+  - `prisma13-c2-t2`: Trap P2003 (foreign-key violation) → 409.
+- **Also:** Updated module `slug`, `title`, `shortTitle`, `description`, and `completionLearnings` to remove Express framing. Added P2003 to completion learnings.
+- **Done Definition:**
+  - No Express 4-arg arity (`NextFunction`, `next(err)`) in Concept 2 tasks.
+  - Tasks test P2025 and P2003 code branching only.
+  - `tsc --noEmit` exits 0; all 21 vitest tests pass.
+
+### [x] B6-2: Day 14 `clean-architecture` → `prisma-query-toolbox`
+- **Target File:** [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts)
+- **Grading Type:** Executable (`prismaReadTask`) + Snippet-Lab
+- **Action:** Removed Router→Controller→Service OOP layering concept. Replaced with `prisma-query-toolbox` surveying all 5 Prisma query families:
+  - `prisma14-c1-t1` (Executable): `findUniqueOrThrow` vs null-guard pattern synthesis.
+  - `prisma14-c1-t2` (Snippet): Soft-delete (`deletedAt: new Date()`) + live filter (`deletedAt: null`) lifecycle.
+- **Also:** Added `'findUniqueOrThrow'` to `PrismaMethod` union in `src/types/prisma-curriculum.ts`.
+- **Done Definition:**
+  - No `export class UserService`, `constructor(private prisma)`, or `router.get` in Concept 1 tasks.
+
+### [x] B6-3: Day 14 `crud-lifecycle` → `capstone-patterns`
+- **Target File:** [`src/content/prisma/modules/prisma-14-api-capstone.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-14-api-capstone.ts)
+- **Grading Type:** Executable + Snippet-Lab
+- **Action:** Removed CRUD-into-service-class concept. Replaced with `capstone-patterns` integration exercises:
+  - `prisma14-c2-t1` (Executable): Deterministic paginated roster (`findMany` + `orderBy` + `take: 2` + `select`).
+  - `prisma14-c2-t2` (Snippet): Atomic registration (`$transaction`) + inline P2002 conflict trap.
+- **Done Definition:**
+  - No OOP class service patterns in Concept 2 tasks.
+  - Tasks synthesise Day 9 (Zod/create), Day 12 ($transaction), and Day 13 (P2002) in one exercise.
+
