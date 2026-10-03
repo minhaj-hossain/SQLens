@@ -14,6 +14,7 @@
 export type PrismaMethod =
   | 'findMany'
   | 'findUnique'
+  | 'findUniqueOrThrow'
   | 'findFirst'
   | 'create'
   | 'createMany'

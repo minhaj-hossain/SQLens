@@ -1,25 +1,25 @@
 import type { ModuleData } from '../../../types/curriculum';
 import { prismaReadTask, prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
 
-/** Prisma Day 13 — Errors + Express Error Middleware. */
+/** Prisma Day 13 — Prisma Error Classification. */
 export const Prisma_13_MODULE: ModuleData = {
   id: 'prisma-13',
-  slug: 'errors-and-error-middleware',
+  slug: 'prisma-error-classification',
   day: 13,
-  title: 'Day 13 — Errors + Express Error Middleware',
-  shortTitle: 'Error Handling',
+  title: 'Day 13 — Prisma Error Classification',
+  shortTitle: 'Error Codes',
   type: 'module',
   track: 'prisma',
   milestoneId: 'prisma-milestone-4',
-  description: 'Turn Prisma error codes into the right HTTP status, in one place.',
+  description: 'Branch on typed Prisma error codes — P2002, P2025, P2003 — and turn them into correct HTTP responses without ever reading the error message.',
   estimatedMinutes: 55,
   curriculumOrder: 13,
   displayLabel: 'Day 13',
   completionLearnings: [
-    'Recognise `PrismaClientKnownRequestError`',
-    'Map `P2002` to 409 and `P2025` to 404',
-    'Never leak a stack trace to a client',
-    'Centralise the mapping in Express error middleware',
+    'Recognise `PrismaClientKnownRequestError` and guard with `instanceof`',
+    'Map `P2002` to 409 Conflict and `P2025` to 404 Not Found',
+    'Map `P2003` to 409 Conflict for foreign-key violations',
+    'Never branch on the error message string — always use the code',
   ],
   concepts: [
     {
@@ -99,52 +99,57 @@ export const Prisma_13_MODULE: ModuleData = {
       ],
     },
     {
-      id: 'error-middleware',
+      // NOTE: 'error-middleware' (Express 4-arg arity mechanics) is out-of-scope per the
+      // transformation plan. Replaced with 'error-trapping': pure Prisma in-route error
+      // branching covering P2025 (not found) and P2003 (foreign key violation).
+      id: 'error-trapping',
       order: 2,
-      title: 'Centralised Express Error Middleware',
-      shortDescription: 'One handler, four arguments, every route covered.',
+      title: 'In-Route Error Trapping — P2025 & P2003',
+      shortDescription: 'Add the missing branches: `P2025` is not found, `P2003` is a broken foreign key.',
       theory: prismaTheory(
-        'Express recognises error middleware by arity: four parameters, `err` first. Controllers call `next(err)` and the middleware translates the code into a status — so no route invents its own error shape.',
-        'Controllers `next(err)`; one 4-argument middleware answers.',
+        'The `code` field covers more than uniqueness violations. `P2025` fires when `update`, `delete`, or `findUniqueOrThrow` finds no matching row. `P2003` fires when a write violates a foreign-key constraint — the referenced record does not exist. Both are predictable failures that deserve precise HTTP status codes, not generic 500s.',
+        'P2025 = record missing (404); P2003 = broken FK (409).',
         "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-        "app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {\n  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {\n    return res.status(409).json({ error: 'Conflict' });\n  }\n  return res.status(500).json({ error: 'Server error' });\n});",
+        "try {\n  await prisma.user.update({ where: { id }, data: { name } });\n} catch (error) {\n  if (error instanceof Prisma.PrismaClientKnownRequestError) {\n    if (error.code === 'P2002') return res.status(409).json({ error: 'Conflict' });\n    if (error.code === 'P2025') return res.status(404).json({ error: 'Not found' });\n    if (error.code === 'P2003') return res.status(409).json({ error: 'Related record missing' });\n  }\n  throw error;\n}",
         'typescript',
-        '`next(err)` from anywhere lands in exactly one place.',
+        'Three codes handle the vast majority of API failures.',
       ),
       tasks: [
         prismaSnippetTask({
           id: 'prisma13-c2-t1',
-          title: 'Declare the error handler',
-          description: 'Four parameters, and errors keep flowing.',
-          instructions: ['Signature `(err, req, res, next)`', 'Call `next(err)` when unsure'],
-          hint: 'Express detects error middleware by the 4-argument signature.',
-          scaffold: '-- Requests still resolve to this row:\nSELECT id, email FROM users WHERE id = 99;',
+          title: 'Add the not-found branch',
+          description: 'The handler catches P2002 but lets P2025 crash as a 500. Add the missing case.',
+          instructions: ["Branch on `error.code === 'P2025'`", 'Respond with `res.status(404)`'],
+          hint: '`P2025` fires when `update` or `delete` finds no row to act on.',
+          scaffold: '-- The row a successful update would touch:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
-          why: 'Unknown errors are forwarded, so nothing is silently swallowed.',
+          why: 'A missing row is a client mistake — 404 tells the caller exactly what went wrong.',
           cols: ['id', 'email'],
           rows: 1,
           code0:
-            'export function errorHandler(err: unknown, req: Request, res: Response) {\n  return res.status(500).json({ error: \'Server error\' });\n}',
+            "export async function rename(id: number, name: string, res: Response) {\n  try {\n    return await prisma.user.update({ where: { id }, data: { name } });\n  } catch (error) {\n    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {\n      return res.status(409).json({ error: 'Conflict' });\n    }\n    return res.status(500).json({ error: 'Server error' });\n  }\n}",
           code1:
-            'export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {\n  if (!err) return next();\n  if (err instanceof HttpError) {\n    return res.status(err.status).json({ error: err.message });\n  }\n  return next(err);\n}',
-          need: ['next: NextFunction', 'next(err)'],
+            "export async function rename(id: number, name: string, res: Response) {\n  try {\n    return await prisma.user.update({ where: { id }, data: { name } });\n  } catch (error) {\n    if (error instanceof Prisma.PrismaClientKnownRequestError) {\n      if (error.code === 'P2002') return res.status(409).json({ error: 'Conflict' });\n      if (error.code === 'P2025') return res.status(404).json({ error: 'Not found' });\n    }\n    return res.status(500).json({ error: 'Server error' });\n  }\n}",
+          need: ["error.code === 'P2025'", 'res.status(404)'],
+          demoVariables: { name: 'Alexandra' },
         }),
         prismaSnippetTask({
           id: 'prisma13-c2-t2',
-          title: 'Translate the code centrally',
-          description: 'The middleware decides the status; controllers stay thin.',
-          instructions: ['Branch on `instanceof Prisma.PrismaClientKnownRequestError`', 'Answer 409 for `P2002`'],
-          hint: 'One mapping table, one place to change.',
-          scaffold: '-- Conflict responses refer to this row:\nSELECT id, email FROM users WHERE id = 99;',
+          title: 'Trap the foreign-key violation',
+          description: 'Creating a post with a non-existent `authorId` throws P2003. Map it to 409.',
+          instructions: ["Branch on `error.code === 'P2003'`", "Respond 409 with `{ error: 'Related record not found' }`"],
+          hint: '`P2003` = a referenced record does not exist in the parent table.',
+          scaffold: '-- A post that landed under a real author:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'Centralising the mapping removes duplicated catch blocks.',
+          why: 'A broken foreign key is the caller\'s fault — a 409 is more honest than a 500.',
           cols: ['id', 'email'],
           rows: 1,
           code0:
-            'export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {\n  if (!err) return next();\n  return res.status(500).json({ error: \'Server error\' });\n}',
+            'export async function publish(title: string, authorId: number, res: Response) {\n  try {\n    return await prisma.post.create({ data: { title, authorId } });\n  } catch (error) {\n    return res.status(500).json({ error: \'Server error\' });\n  }\n}',
           code1:
-            "export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {\n  if (!err) return next();\n  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {\n    return res.status(409).json({ error: 'Conflict' });\n  }\n  return res.status(500).json({ error: 'Server error' });\n}",
-          need: ['err instanceof Prisma.PrismaClientKnownRequestError', 'res.status(409)'],
+            "export async function publish(title: string, authorId: number, res: Response) {\n  try {\n    return await prisma.post.create({ data: { title, authorId } });\n  } catch (error) {\n    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {\n      return res.status(409).json({ error: 'Related record not found' });\n    }\n    return res.status(500).json({ error: 'Server error' });\n  }\n}",
+          need: ['Prisma.PrismaClientKnownRequestError', "error.code === 'P2003'", 'res.status(409)'],
+          demoVariables: { title: 'Hello Prisma' },
         }),
       ],
     },
