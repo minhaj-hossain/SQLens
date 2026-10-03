@@ -16,6 +16,7 @@ export const Prisma_11_MODULE: ModuleData = {
   curriculumOrder: 11,
   displayLabel: 'Day 11',
   completionLearnings: [
+    'Delete a single row with `delete()` using a unique selector',
     'Predict what happens to children when a parent is deleted',
     'Choose between Cascade, SetNull and Restrict',
     'Filter before you delete in bulk',
@@ -52,6 +53,25 @@ export const Prisma_11_MODULE: ModuleData = {
           code1:
             'model Post {\n  id       Int  @id @default(autoincrement())\n  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)\n  authorId Int\n}',
           need: ['onDelete: Cascade'],
+        }),
+        prismaReadTask({
+          id: 'prisma11-c1-t0',
+          title: 'Delete one row by its unique key',
+          description: 'Remove a single user — the selector must be unique or Prisma refuses to compile.',
+          instructions: ['Use `prisma.user.delete`', '`where: { id: 1 }`', 'Select `id` and `email`'],
+          hint: '`delete()` works exactly like `findUnique` and `update` — it demands a unique `where`.',
+          scaffold: '-- The row about to be deleted:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users WHERE id = 1;',
+          why: '`delete()` returns the deleted row, confirming exactly one record was removed.',
+          cols: ['id', 'email'],
+          select: ['id', 'email'],
+          method: 'delete',
+          rows: 1,
+          code0:
+            'export async function removeUser(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    select: { id: true, email: true },\n  });\n}',
+          code1:
+            'export async function removeUser(id: number) {\n  return await prisma.user.delete({\n    where: { id },\n    select: { id: true, email: true },\n  });\n}',
+          rtype: '{ id: number; email: string }',
         }),
         prismaReadTask({
           id: 'prisma11-c1-t2',
