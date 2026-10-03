@@ -107,7 +107,7 @@ Every day of the course follows the same loop:
 - **Spiral reinforcement** — every new concept's tasks force reuse of earlier skills (joins, NULL semantics, aggregation), so old knowledge returns as a tool, never as a re-lecture
 - Guided practice with step-by-step hints, attempt tracking, and optional solutions
 - Independent challenge sets per module
-- **Real App Router routes** — every lesson is a URL (`/learn/day-07/theory/aggregates`, `/learn/day-07/practice/aggregates?task=1`, `/learn/day-07/challenge`) with its own metadata, canonical URL and prefetch; module overviews are statically prerendered; browser Back/Forward and shared links land exactly on the lesson step
+- **Real App Router routes** — every lesson is a URL (`/sql/learn/day-07/theory/aggregates`, `/sql/learn/day-07/practice/aggregates?task=1`, `/sql/learn/day-07/challenge`; the Prisma track mirrors this under `/prisma/learn/...`) with its own metadata, canonical URL and prefetch; a bare day URL (`/sql/learn/day-07`) server-redirects straight to the day's first concept; browser Back/Forward and shared links land exactly on the lesson step
 - Legacy deep links (`?day=7&stage=practice&concept=2`) are **server-redirected** to the new URLs automatically
 - Reset-progress safety net per learner
 

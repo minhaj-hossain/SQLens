@@ -13,10 +13,6 @@
  * Both engines arrive via `import()` inside the run, so the homepage bundle
  * stays a demo shell until the island executes, and the prerender pass never
  * touches the executor (no effects on the server, no window at module scope).
- *
- * Also exports `ReturningLearnerCard` — the continuity strip that resumes the
- * track the learner actually started. It reads localStorage, so it renders
- * nothing on the server (and for first-time visitors) and appears after mount.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from '@/components/ui/Icon';

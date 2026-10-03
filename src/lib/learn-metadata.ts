@@ -59,7 +59,7 @@ export function learnPageMetadata({ dayId, stage, conceptId, track = 'sql' }: Le
   };
 }
 
-/** JSON-LD LearningResource for a module overview page. */
+/** JSON-LD LearningResource for a day — emitted on the day's first-concept theory page. */
 export function moduleJsonLd(dayId: string, track: TrackId = 'sql'): string | null {
   const mod = getTrackModuleById(track, dayId);
   if (!mod) return null;

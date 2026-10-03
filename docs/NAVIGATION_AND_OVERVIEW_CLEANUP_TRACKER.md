@@ -81,7 +81,7 @@
 | **Phase 3** | Fix task page refresh behavior (prevent premature locked redirect while auth/progress hydrates) | Completed |
 | **Phase 4** | Remove `/learn/[dayId]` overview page & `ModuleOverview.tsx`, redirect day URLs directly to theory | Completed |
 | **Phase 5** | Clean up all remaining overview redirects (`TheoryView`, `ChallengeView`, `CompleteView`, `use-learning-navigation`) | Completed |
-| **Phase 6** | Verification, regression testing, and test suite alignment | Pending |
+| **Phase 6** | Verification, regression testing, and test suite alignment | Completed |
 
 ---
 
@@ -189,6 +189,64 @@ helpers), `sitemap.ts` (canonical day URLs), and the day-redirect pages.
 signature, and each uses a track-aware builder (`trackLearnUrl` /
 `trackRoadmapUrl`). Full suite 918 passed (same 9 pre-existing Prisma
 failures); `tsc --noEmit` clean; `npm run build` green.
+
+---
+
+## Phase 6 — End-state Verification (completed)
+
+### Automated gates
+
+| Gate | Command | Result |
+|---|---|---|
+| Types | `npm run lint` (`tsc --noEmit`) | exit 0 |
+| Full suite | `npx vitest run` | **918 passed / 9 failed** (82 files; baseline below) |
+| Targeted gate | phase11 + learn-refresh-hydration + click-homepage + roadmap-concept-lock + phase2-routing | **51 passed / 5 files** |
+| Build | `npm run build` | exit 0 (day routes SSG) |
+
+### Known-failing baseline (pre-existing, out of scope)
+
+Reproducible on a clean checkout **before Phase 1**; unrelated to this cleanup
+(Prisma content/grading), deliberately **not** fixed here:
+
+| File | Fails | Root cause |
+|---|---|---|
+| `tests/tracks/phase5-prisma-pipeline.test.ts` | 5 | `prisma14-c1-t2` solution validation + CLI-snippet normalization |
+| `tests/tracks/phase7-prisma-ui-wiring.test.ts` | 2 | same `prisma14-c1-t2` solution/validation mismatch |
+| `tests/tracks/phase8-prisma-audit.test.ts` | 1 | same `prisma14-c1-t2` validation |
+| `tests/tracks/phase12-prisma-state-parity.test.ts` | 1 | corpus NULL-in-write-position sweep |
+
+### HTTP smoke (production build, `next start` on :3000)
+
+| Route | Result |
+|---|---|
+| `/` | 200; Click headline present; **no** resume card; `/sql` + `/prisma` cards present |
+| `/sql/learn/day-01` | 200 static shell whose payload carries `NEXT_REDIRECT;…;307` → `/sql/learn/day-01/theory/<firstConcept>` (no old overview CTA) |
+| `/prisma/learn/prisma-01` | 200 static shell → redirect to the Prisma first-concept theory |
+| `/learn/day-01` (legacy) | **307** `Location: /sql/learn/day-01` (next.config bridge) |
+| `/sitemap.xml` | 200; contains `/sql/learn/day-01` + `/prisma/learn/prisma-01` |
+
+Interactive sign-off uses the same invariants the guards assert: refresh holds
+the exact task route, locked deep links render `LockedDayNotice`, roadmap locked
+concepts show the in-place alert, homepage has no continuity card.
+
+### Definition of Done
+
+- [x] `tsc --noEmit` exit 0
+- [x] Full suite 918 pass / 9 documented baseline fail (no new failures)
+- [x] `npm run build` exit 0; day routes emit a redirect
+- [x] HTTP smoke matches the table above
+- [x] Zero `ReturningLearnerCard` / `buildContinuityEntry` / `ModuleOverview` /
+      bare-overview-URL references left in `src/` (guarded by tests)
+- [x] README + stale code comments corrected
+
+### Docs alignment
+
+`README.md` route bullet and two stale code comments
+(`HeroLensInteractivePreview.tsx`, `learn-metadata.ts`) updated to the current
+model. Historical trackers (`PHASES.md`, `VISUAL_PHASES.md`,
+`docs/UI_FIXES_PLAN.md`, `docs/HOMEPAGE_REDESIGN_TRACKER.md`) are left as dated
+records of their era; **this tracker is the authoritative end-state**.
+
 
 
 
