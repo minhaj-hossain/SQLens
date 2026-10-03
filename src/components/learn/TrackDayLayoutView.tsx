@@ -83,7 +83,7 @@ export default function TrackDayLayoutView({
   const mod = def.getModuleById(dayId);
   if (!mod) notFound();
 
-  const { userState } = useLearning();
+  const { userState, isProgressReady } = useLearning();
   const { resetDatabase } = useSqlExecutor();
   const { backToRoadmap } = useLearningNavigation();
 
@@ -108,13 +108,22 @@ export default function TrackDayLayoutView({
     userState,
   );
   useEffect(() => {
+    // Phase 3: never bounce while progress is still hydrating — on a signed-in
+    // refresh the seeded guest state looks empty and every day past Day 1 would
+    // appear locked. Only run the lock-rejection once progress has settled.
+    if (!isProgressReady) return;
     if (redirectUrl) router.replace(redirectUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [redirectUrl]);
+  }, [redirectUrl, isProgressReady]);
 
   // P11.2: back lives in-flow (concept footer / editor run-row) via
   // useStepBack, which also owns scroll memory + prefetch. The top bar only
   // carries the roadmap link + day chip.
+  //
+  // Phase 3: hold the exact route until the authoritative snapshot has landed
+  // (no redirect, no blank lock). This is what keeps a refreshed task page on
+  // that exact route/task instead of bouncing off it mid-hydration.
+  if (!isProgressReady) return null;
   if (isLocked && !isOverview) return null;
 
   return (

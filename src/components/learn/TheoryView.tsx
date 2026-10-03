@@ -27,7 +27,7 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
   const concept = mod?.concepts.find((c) => c.id === conceptId);
   if (!mod || !concept) notFound();
 
-  const { userState } = useLearning();
+  const { userState, isProgressReady } = useLearning();
   const { executeQuery } = useSqlExecutor();
   const nav = useLearningNavigation();
   const router = useRouter();
@@ -35,6 +35,10 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
   // task; the first concept goes back to the module card (hooks before any
   // conditional return, per rules-of-hooks).
   const { backStep, goBack } = useStepBack(mod.id);
+
+  // Phase 3: hold the exact route while progress hydrates, so a refresh on
+  // concept N cannot bounce to an earlier concept while the snapshot loads.
+  if (!isProgressReady) return null;
 
   const conceptIndex = mod.concepts.findIndex((c) => c.id === concept.id);
   // Concept-level lock: only concepts up to the first incomplete one are open.

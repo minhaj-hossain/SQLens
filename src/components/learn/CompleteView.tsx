@@ -21,17 +21,19 @@ export default function CompleteView({ dayId }: CompleteViewProps) {
   const mod = getModuleById(dayId);
   if (!mod) notFound();
 
-  const { userState } = useLearning();
+  const { userState, isProgressReady } = useLearning();
   const nav = useLearningNavigation();
   const router = useRouter();
 
   const isCompleted = Boolean(userState.completedModules[mod.id]);
   useEffect(() => {
+    // Phase 3: never redirect while progress is still hydrating.
+    if (!isProgressReady) return;
     if (!isCompleted) router.replace(`${meta.basePath}/learn/${mod.id}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCompleted]);
+  }, [isCompleted, isProgressReady]);
 
-  if (!isCompleted) return null;
+  if (!isCompleted || !isProgressReady) return null;
 
   const nextModule = getNextModule(mod, ALL_MODULES);
 

@@ -28,7 +28,7 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
   const mod = getModuleById(dayId);
   if (!mod) notFound();
 
-  const { userState, markChallengeTaskComplete } = useLearning();
+  const { userState, markChallengeTaskComplete, isProgressReady } = useLearning();
   const { executeQuery, resetDatabase, getDatabaseState, getCommittedState, getTransactionState } = useSqlExecutor();
   const nav = useLearningNavigation();
   const router = useRouter();
@@ -39,6 +39,8 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
   const completedTaskIds = getCompletedChallengeTaskIds(mod, userState);
 
   useEffect(() => {
+    // Phase 3: never redirect while progress is still hydrating.
+    if (!isProgressReady) return;
     if (!challengeUnlock.isUnlocked) {
       const firstIncomplete =
         mod.concepts.find((c) => !isConceptCompleted(c, mod.id, userState)) ?? mod.concepts[0];
@@ -46,9 +48,9 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
       else router.replace(`${meta.basePath}/learn/${mod.id}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [challengeUnlock.isUnlocked]);
+  }, [challengeUnlock.isUnlocked, isProgressReady]);
 
-  if (!mod.challenge || !challengeUnlock.isUnlocked) return null;
+  if (!mod.challenge || !challengeUnlock.isUnlocked || !isProgressReady) return null;
 
   return (
     <IndependentChallengeView

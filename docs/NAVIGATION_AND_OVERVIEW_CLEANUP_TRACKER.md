@@ -78,7 +78,40 @@
 |---|---|---|
 | **Phase 1** | Remove homepage resume card (`ReturningLearnerCard`) and unused continuity code | Completed |
 | **Phase 2** | Fix roadmap card locked concept interaction (no redirect, in-place alert/locked UI) | Completed |
-| **Phase 3** | Fix task page refresh behavior (prevent premature locked redirect while auth/progress hydrates) | Pending |
+| **Phase 3** | Fix task page refresh behavior (prevent premature locked redirect while auth/progress hydrates) | Completed |
 | **Phase 4** | Remove `/learn/[dayId]` overview page & `ModuleOverview.tsx`, redirect day URLs directly to theory | Pending |
 | **Phase 5** | Clean up all remaining overview redirects (`TheoryView`, `ChallengeView`, `CompleteView`, `use-learning-navigation`) | Pending |
 | **Phase 6** | Verification, regression testing, and test suite alignment | Pending |
+
+---
+
+## Phase 3 — Implementation Notes (completed)
+
+**Signal:** `isProgressReady` (new field on the learning context). It is derived
+from a *readiness ticket* — the `(user, track)` whose local snapshot the provider
+has actually applied. While Better Auth is resolving there is no expected ticket
+(`null`), so nothing is ready; on a signed-in refresh the seeded guest state
+(`completedModules` empty) is therefore never mistaken for the authoritative one.
+
+**Pure seam:** `src/lib/progress/readiness.ts`
+- `progressReadyTicket(authPending, signedInUserId, track) → string | null`
+- `deriveProgressReady(authPending, signedInUserId, track, readyTicket) → boolean`
+
+**Provider (`LearningProgressProvider.tsx`):**
+- Reads `isAuthPending` from `useAuth()` and owns `readyTicket` state.
+- The identity-reconciliation effect now early-returns while `isAuthPending`, so
+  readiness is never stamped mid-hydration; it stamps the ticket at the end of
+  the guest / logout / login reconciliation (in the same commit the snapshot is
+  applied). Deps extended to `[signedInUserId, track, isAuthPending]`.
+- Cloud hydration that follows only *refines* an already-ready state.
+
+**Consumers:** `TrackDayLayoutView`, `TheoryView`, `ChallengeView`, `CompleteView`
+all gate their lock-rejection/redirect on `isProgressReady` and hold the exact
+route (render nothing) until it is true — so a refreshed task page never bounces
+off its own route/task.
+
+**Tests:** `tests/tracks/learn-refresh-hydration.test.tsx` (pure seam truth
+table, 7 cases) + a new SSR case in `phase11-day-layout-view.test.tsx` ("holds
+the exact route … until progress is ready"), whose `useLearning` mock now
+supplies `isProgressReady`.
+

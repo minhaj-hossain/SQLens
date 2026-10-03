@@ -34,6 +34,7 @@ const h = vi.hoisted(() => ({
   params: { dayId: 'day-01' } as Record<string, string>,
   pathname: '/sql/learn/day-01',
   userState: null as unknown as UserLearningState,
+  isProgressReady: true,
   replace: vi.fn(),
   resetDatabase: vi.fn(),
   backToRoadmap: vi.fn(),
@@ -49,7 +50,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('../../src/components/providers/LearningProgressProvider', () => ({
-  useLearning: () => ({ userState: h.userState }),
+  useLearning: () => ({ userState: h.userState, isProgressReady: h.isProgressReady }),
 }));
 
 vi.mock('../../src/components/providers/SqlExecutorProvider', () => ({
@@ -80,6 +81,7 @@ describe('Phase 4.2 — TrackDayLayoutView renders both tracks from the registry
     h.params = { dayId: 'day-01' };
     h.pathname = '/sql/learn/day-01';
     h.userState = initialStateForTrack('sql');
+    h.isProgressReady = true;
     h.replace.mockClear();
     h.resetDatabase.mockClear();
     h.backToRoadmap.mockClear();
@@ -114,6 +116,16 @@ describe('Phase 4.2 — TrackDayLayoutView renders both tracks from the registry
   it('a locked deep link renders nothing (the effect bounces to the overview)', () => {
     const html = render('sql', 'day-02', '/sql/learn/day-02/theory/where-and-intersection');
     expect(html).toBe('');
+  });
+
+  it('holds the exact route (no chrome) until progress is ready — even for an unlocked day', () => {
+    // Phase 3: a signed-in refresh mounts with the seeded guest state (looks
+    // empty) before the user snapshot lands. The layout must render nothing —
+    // NOT bounce — until `isProgressReady`, so the refreshed task page survives.
+    h.isProgressReady = false;
+    const html = render('sql', 'day-01', '/sql/learn/day-01/theory/select-basics');
+    expect(html).toBe('');
+    expect(h.replace).not.toHaveBeenCalled();
   });
 
   it('a locked OVERVIEW still renders — the locked notice belongs to the page', () => {

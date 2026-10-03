@@ -58,10 +58,19 @@ import {
   RESET_QUIET_WINDOW_MS,
 } from '@/lib/progress/sync-guard';
 import { useAuth } from './AuthProvider';
+import { deriveProgressReady, progressReadyTicket } from '@/lib/progress/readiness';
 
 interface LearningContextValue {
   userState: UserLearningState;
   setUserState: Dispatch<SetStateAction<UserLearningState>>;
+  /**
+   * Phase 3 — true once the provider holds the AUTHORITATIVE progress for the
+   * current (session, user, track): auth has settled AND the matching local
+   * snapshot has been applied. Learn surfaces must NOT run a lock-rejection or
+   * redirect while this is false, so a signed-in page refresh never bounces off
+   * the exact task page mid-hydration.
+   */
+  isProgressReady: boolean;
   availabilityVersion: number;
   /**
    * Set when a signed-in user has meaningful progress BOTH locally and in the
@@ -137,7 +146,7 @@ function stateTrackOf(state: UserLearningState): TrackId {
 }
 
 export function LearningProgressProvider({ children }: { children: React.ReactNode }) {
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAuthPending } = useAuth();
   const signedInUserId = authUser?.id && authUser.status !== 'blocked' ? authUser.id : null;
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
   /**
@@ -153,6 +162,15 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
   const [userState, setUserState] = useState<UserLearningState>(() =>
     resolveLegacyPosition(loadUserState(null, track), track),
   );
+
+  /**
+   * Phase 3 — progress-readiness ticket: the (user, track) whose local snapshot
+   * this provider has actually applied. It stays null while auth is resolving
+   * (see `deriveProgressReady`) and is stamped in the identity-reconciliation
+   * effect once the authoritative local snapshot is in memory.
+   */
+  const [readyTicket, setReadyTicket] = useState<string | null>(null);
+  const isProgressReady = deriveProgressReady(isAuthPending, signedInUserId, track, readyTicket);
 
   // Guest-progress prompt state
   const [mergePrompt, setMergePrompt] = useState<{
@@ -414,6 +432,11 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
 
   /** User login / logout / switch reconciliation (Phase 3: per track) */
   useEffect(() => {
+    // Phase 3: never reconcile identity or stamp readiness while the auth
+    // session is still resolving — `signedInUserId` is unknown and the seeded
+    // guest state is not authoritative yet.
+    if (isAuthPending) return;
+
     if (prevUserIdRef.current === undefined) {
       prevUserIdRef.current = signedInUserId;
       if (signedInUserId) {
@@ -435,6 +458,8 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         const guestState = resolveLegacyPosition(loadUserState(null, track), track);
         setUserState(guestState);
         latestStateRef.current = guestState;
+        // Phase 3: the guest snapshot is now authoritative — readiness flips on.
+        setReadyTicket(progressReadyTicket(false, null, track));
         return;
       }
       // User signed in or switched account:
@@ -448,6 +473,11 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
         latestStateRef.current = userSaved;
       }
     }
+
+    // Phase 3: the authoritative local snapshot for this (session, user, track)
+    // is in memory now — readiness flips on. Cloud hydration that follows only
+    // refines it and must never gate the learn surfaces.
+    setReadyTicket(progressReadyTicket(false, signedInUserId, track));
 
     if (!signedInUserId) {
       hydratedForUserRef.current = null;
@@ -546,7 +576,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     return () => {
       cancelled = true;
     };
-  }, [signedInUserId, track]);
+  }, [signedInUserId, track, isAuthPending]);
 
   /** Window focus / visibility change re-validation (cross-browser / cross-device) */
   useEffect(() => {
@@ -1024,6 +1054,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     () => ({
       userState,
       setUserState,
+      isProgressReady,
       availabilityVersion,
       mergePrompt,
       resolveMergePrompt,
@@ -1036,6 +1067,7 @@ export function LearningProgressProvider({ children }: { children: React.ReactNo
     }),
     [
       userState,
+      isProgressReady,
       availabilityVersion,
       mergePrompt,
       resolveMergePrompt,
