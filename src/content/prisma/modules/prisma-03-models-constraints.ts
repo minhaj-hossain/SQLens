@@ -37,13 +37,14 @@ export const Prisma_03_MODULE: ModuleData = {
         mentalModel: '**One line per column, one contract for both sides.** A field is the column: `name String` is required text, `confirmedAt DateTime?` is nullable, `@id @default(...)` decides how rows are keyed. The client and the database read this same contract — there is nowhere else to declare it.',
         explanation: [
           'The scalar type picks the column type, `?` makes the column nullable, and `@id @default(...)` decides how each row is identified.',
+          'The @default modifier family: `@default(autoincrement())` for serial numbers, `@default(uuid())` or `@default(cuid())` for distributed keys, and `@default(now())` for automatic creation timestamps.',
           'Reads and writes are type-checked against the same model, so a renamed field cannot silently desync from the database.',
         ],
         steps: [
           {
             stepNumber: 1,
             stepTitle: 'scalar types + `?` declare the columns',
-            codeSnippet: 'model User {\n  id          Int       @id @default(autoincrement())\n  email       String    @unique\n  confirmedAt DateTime?\n}',
+            codeSnippet: 'model User {\n  id          String    @id @default(uuid())\n  email       String    @unique\n  confirmedAt DateTime?\n}',
             explanation: 'Everything without `?` is `NOT NULL`; the type picks the column type — `Int`→INTEGER, `String`→TEXT, `DateTime`→TIMESTAMP.',
           },
           {
@@ -87,21 +88,24 @@ export const Prisma_03_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma03-c1-t2',
-          title: 'Make the timestamp nullable',
-          description: 'A user may not have confirmed their email yet — allow NULL.',
-          instructions: ['Use the `DateTime?` scalar', 'Keep `@default(now())`'],
-          hint: 'A `?` after the scalar type marks the column nullable.',
-          scaffold: '-- Same column set, one nullable timestamp:\nSELECT id, email FROM users WHERE id = 99;',
+          title: 'Model distributed UUID keys and timestamps',
+          description: 'Use a UUID primary key and make the confirmation timestamp nullable.',
+          instructions: [
+            'Change id to `String @id @default(uuid())`',
+            'Use `DateTime? @default(now())` for confirmedAt',
+          ],
+          hint: '`id String @id @default(uuid())` and `confirmedAt DateTime? @default(now())`.',
+          scaffold: '-- Validating UUID and timestamp modifiers:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'Optionality is declared once in the schema and enforced on every insert.',
+          why: 'UUIDs enable collision-resistant distributed primary key generation at insert time.',
           cols: ['id', 'email'],
           rows: 1,
           code0:
             'model User {\n  id          Int      @id @default(autoincrement())\n  email       String   @unique\n  confirmedAt DateTime @default(now())\n}',
           code1:
-            'model User {\n  id          Int       @id @default(autoincrement())\n  email       String    @unique\n  confirmedAt DateTime? @default(now())\n}',
-          need: ['DateTime?'],
-          ban: ['confirmedAt DateTime @default'],
+            'model User {\n  id          String    @id @default(uuid())\n  email       String    @unique\n  confirmedAt DateTime? @default(now())\n}',
+          need: ['@default(uuid())', 'DateTime?'],
+          ban: ['@default(autoincrement())', 'confirmedAt DateTime @default'],
         }),
       ],
     },

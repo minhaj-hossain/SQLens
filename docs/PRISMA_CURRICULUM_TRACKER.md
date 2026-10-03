@@ -1,10 +1,11 @@
 # Prisma Curriculum Redesign — Implementation Tracker
 
 > **Document Status:** Active Execution Tracker  
-> **Version:** 3.0 (Synthesized Architecture Baseline)  
-> **Implementation Plan:** [`docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_IMPLEMENTATION_PLAN.md)  
+> **Version:** 4.0 (Transformation Master Plan Baseline)  
+> **Transformation Master Plan:** [`docs/PRISMA_CURRICULUM_TRANSFORMATION_PLAN.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_TRANSFORMATION_PLAN.md)  
+> **Day 1 Onboarding Plan:** [`docs/PLAN_DAY1_RUN_AND_OBSERVE.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PLAN_DAY1_RUN_AND_OBSERVE.md)  
 > **Review Reference:** [`docs/PRISMA_CURRICULUM_REVIEW.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/PRISMA_CURRICULUM_REVIEW.md)  
-> **Overall Progress:** **`14 / 14 Complete (100%)`**
+> **Overall Progress:** **`14 / 15 Items Complete (93%)`**
 
 ---
 
@@ -12,6 +13,12 @@
 
 | Check | ID | Priority | Topic & Focus | Target File | Grading Type | Status |
 |:---:|---|:---:|---|---|:---:|:---:|
+| [x] | **P0-A** | P0 | Day 1 "Run & Observe" Onboarding Redesign | [`src/content/prisma/modules/prisma-01-why-prisma.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-01-why-prisma.ts) | Executable | ✅ Completed |
+| [x] | **P0-B1** | P0 | Day 2 Project Initialization (`prisma init`) | [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P0-B2** | P0 | Day 3 `@default` Modifier Family Expansion (`uuid`, `cuid`) | [`src/content/prisma/modules/prisma-03-models-constraints.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-03-models-constraints.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P0-B3** | P0 | Day 4 Relational Mental Models & Foreign Key Ownership | [`src/content/prisma/modules/prisma-04-relations.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-04-relations.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P0-C1** | P0 | Day 5 Prototyping Workflow (`prisma db push`) | [`src/content/prisma/modules/prisma-05-migrations-seeding.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-05-migrations-seeding.ts) | Snippet-Lab | ✅ Completed |
+| [x] | **P0-C2** | P0 | Day 5 Code-Level Idempotent Seed Writing | [`src/content/prisma/modules/prisma-05-migrations-seeding.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-05-migrations-seeding.ts) | Snippet-Lab | ✅ Completed |
 | [x] | **P1-A** | P1 | Singleton Pattern Diagnostic Challenge | [`src/content/prisma/modules/prisma-06-client-lifecycle.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-06-client-lifecycle.ts) | Snippet-Lab | ✅ Completed |
 | [x] | **P1-B** | P1 | `select-vs-include` Mental Model Correction | [`src/content/prisma/modules/prisma-07-reading-data.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-07-reading-data.ts) | Theory Update | ✅ Completed |
 | [x] | **P1-C** | P1 | Datasource Config Challenge Redesign | [`src/content/prisma/modules/prisma-02-setup-connection.ts`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/content/prisma/modules/prisma-02-setup-connection.ts) | Snippet-Lab | ✅ Completed |

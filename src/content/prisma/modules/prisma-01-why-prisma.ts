@@ -51,6 +51,7 @@ export const Prisma_01_MODULE: ModuleData = {
           'With a raw driver you write raw query strings and get back `any[]` — rename a column and you find out at runtime.',
           'With Prisma you write `prisma.user.findUnique({ where, select })` and get back a typed `User` object with autocompletion.',
           'Under the hood Prisma still sends parameterized SQL — the SQL Lens shows exactly what it generates.',
+          'Interactive Onboarding: In your first task, run the query directly to observe how Prisma translates TypeScript into SQL and JSON results, then customize it with a single property!',
         ],
         targetQuery: {
           sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
@@ -115,22 +116,25 @@ export const Prisma_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'prisma01-c1-t1',
-          title: 'Rewrite raw SQL as a Prisma read',
-          description: 'Convert a brittle raw SQL string into a type-safe findUnique call.',
+          title: 'First Touch — Run, Observe & Expand Selection',
+          description:
+            'Run your first Prisma query to inspect the generated SQL and returned object, then add email to the selection.',
           instructions: [
-            'Match `where: { id: userId }` to filter the row',
-            'Use `select: { id: true, name: true, email: true }` to limit columns',
+            'Click Run Query to observe how Prisma executes the query and generates clean SQL',
+            'Add `email: true` inside the `select` block to include the email field in the returned object',
           ],
           type: 'guided',
           skillType: 'introduce',
           gradingType: 'executable',
           primaryTable: 'users',
-          initialSql: '-- Prisma reads generate a single-row SELECT — fill in the id filter:\nSELECT id, name, email\nFROM users\nWHERE ;\n',
+          initialSql:
+            '-- Step 1: Run this query to observe the initial 2-column result\n-- Step 2: Add email to the SELECT list to match the final requirement\nSELECT id, name\nFROM users\nWHERE id = 1;\n',
           solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
-          solutionExplanation: 'The Prisma call generates exactly this parameterized SELECT.',
+          solutionExplanation:
+            'Adding email to select instructs Prisma to include the email column in the generated SELECT statement.',
           hints: [
-            { level: 1, text: 'Use the `where` argument to match `id: userId`.' },
-            { level: 2, text: 'Use `select: { id: true, name: true, email: true }`.' },
+            { level: 1, text: 'Click Run first to see the current output: id and name for user 1.' },
+            { level: 2, text: 'Add `email: true,` right below `name: true,` in the `select` block.' },
           ],
           validation: {
             requireExactResult: true,
@@ -138,14 +142,14 @@ export const Prisma_01_MODULE: ModuleData = {
             requiredColumns: ['id', 'name', 'email'],
             expectedRowCount: 1,
           },
-          successMessage: 'Converted! Same SQL underneath, now with types on top.',
+          successMessage: 'First query executed! Notice how adding a field in select instantly updates the generated SQL.',
           prisma: {
             skillType: 'introduce',
             gradingType: 'executable',
             initialCode:
-              "export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    // Complete the query\n  });\n}",
+              'export async function getUserById(userId: number) {\n  // 1. Click "Run Query" to see the generated SQL and returned object!\n  // 2. Then add `email: true` inside `select` to include the user\'s email.\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: {\n      id: true,\n      name: true,\n    },\n  });\n}',
             solutionCode:
-              'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: { id: true, name: true, email: true },\n  });\n}',
+              'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: {\n      id: true,\n      name: true,\n      email: true,\n    },\n  });\n}',
             expectedType: '{ id: number; name: string; email: string } | null',
             validation: {
               targetModel: 'user',
@@ -158,34 +162,37 @@ export const Prisma_01_MODULE: ModuleData = {
         },
         {
           id: 'prisma01-c1-t2',
-          title: 'Fix the wrong field name',
-          description: 'The field is `email`, not `user_mail`. Fix the lookup.',
+          title: 'Catching Schema Errors at Compile Time',
+          description:
+            'A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.',
           instructions: [
-            'Query by the real field: `where: { email }`',
-            'Keep the select to `id` and `email`',
+            'Notice the query is looking up `user_mail` which does not exist in the schema',
+            'Change `where: { user_mail: email }` to use the valid schema field `where: { email }`',
+            'Keep `select` returning `id` and `email`',
           ],
           type: 'independent',
           skillType: 'practice',
           gradingType: 'executable',
           primaryTable: 'users',
-          initialSql: "-- The real column is email — fix the filter:\nSELECT id, email\nFROM users\nWHERE user_mail = 'mina@prisma.io';\n",
+          initialSql:
+            "-- In raw SQL, a typo like user_mail causes a database error.\n-- Fix the filter to use the real column `email`:\nSELECT id, email\nFROM users\nWHERE user_mail = 'mina@prisma.io';\n",
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
-          solutionExplanation: 'Filtering by the real `email` field returns one row.',
-          hints: [{ level: 1, text: 'Replace `user_mail` with `email` in `where`.' }],
+          solutionExplanation: 'Filtering by the real `email` field matches the unique constraint and returns the user.',
+          hints: [{ level: 1, text: 'Replace `user_mail: email` with `email: email` (or shorthand `email`) in `where`.' }],
           validation: {
             requireExactResult: true,
             targetTable: 'users',
             requiredColumns: ['id', 'email'],
             expectedRowCount: 1,
           },
-          successMessage: 'Fixed — the compiler is now your safety net.',
+          successMessage: 'Error caught and fixed! The schema guarantees that you can only query fields that truly exist.',
           prisma: {
             skillType: 'practice',
             gradingType: 'executable',
             initialCode:
-              'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { user_mail: email } as any,\n  });\n}',
+              'export async function getActiveMember(email: string) {\n  // `user_mail` is invalid. Fix the lookup property to use the real schema field `email`:\n  return await prisma.user.findUnique({\n    where: { user_mail: "mina@prisma.io" } as any,\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
             solutionCode:
-              'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+              'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
             expectedType: '{ id: number; email: string } | null',
             validation: {
               targetModel: 'user',
@@ -202,26 +209,27 @@ export const Prisma_01_MODULE: ModuleData = {
   challenge: {
     id: 'prisma01-challenge',
     title: 'Final Challenge — Safe Member Lookup',
-    scenario: 'Given an email, return only id + email for exactly one member.',
+    scenario: 'Given an email, return only id + email for exactly one member to follow the principle of least privilege.',
     databaseLifecycle: 'fresh',
     tasks: [
       {
         id: 'prisma01-hw-1',
         title: 'Lookup by email, minimal fields',
-        description: 'Return id + email for mina@prisma.io with findUnique.',
+        description: 'Return id + email for mina@prisma.io with findUnique, omitting name.',
         instructions: [
-          'Use `prisma.user.findUnique` with `where: { email }`',
-          'Select only `id` and `email`',
+          'Filter by the user email: mina@prisma.io',
+          'Complete the `select` block to project only `id` and `email`',
         ],
         type: 'challenge',
         skillType: 'assess',
         gradingType: 'executable',
         primaryTable: 'users',
         databaseLifecycle: 'fresh',
-        initialSql: "-- Expected shape: one row with id + email — fill in the email filter:\nSELECT id, email\nFROM users\nWHERE ;\n",
+        initialSql:
+          "-- Expected shape: one row with id + email — fill in the email filter:\nSELECT id, email\nFROM users\nWHERE ;\n",
         solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
         solutionExplanation: 'One row, two columns — the minimal safe lookup.',
-        hints: [{ level: 1, text: 'where on email, select id + email.' }],
+        hints: [{ level: 1, text: 'Inside `select`, specify `id: true` and `email: true`.' }],
         validation: {
           requireExactResult: true,
           targetTable: 'users',
@@ -234,9 +242,9 @@ export const Prisma_01_MODULE: ModuleData = {
           skillType: 'assess',
           gradingType: 'executable',
           initialCode:
-            'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    // TODO: where + select\n  });\n}',
+            'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      // Select only id and email\n    },\n  });\n}',
           solutionCode:
-            'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+            'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
           expectedType: '{ id: number; email: string } | null',
           validation: {
             targetModel: 'user',
