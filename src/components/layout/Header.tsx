@@ -47,17 +47,17 @@ export const Header: React.FC<HeaderProps> = ({
   const progressPct = Math.round((completedCount / totalModules) * 100);
 
   return (
-    <header className="sticky top-0 w-full z-50 bg-ink/90 backdrop-blur-md pt-safe border-b border-border-soft">
-      <div className="h-14 px-3 sm:px-6 flex items-center justify-between max-w-5xl mx-auto w-full gap-2 sm:gap-4">
+    <header className={`sticky top-0 w-full z-50 backdrop-blur-md pt-safe border-b transition-colors ${isMinimal ? 'bg-[#060b16]/90 border-[#121d33]' : 'bg-ink/90 border-border-soft'}`}>
+      <div className={`flex items-center justify-between mx-auto w-full ${isMinimal ? 'h-16 px-4 sm:px-6 max-w-[1120px] gap-3' : 'h-14 px-3 sm:px-6 max-w-5xl gap-2 sm:gap-4'}`}>
 
         {/* Left: brand dot + wordmark + current-route label (links home) */}
         <Link
           href={isMinimal ? '/' : meta.basePath}
           className="flex items-center gap-[9px] min-w-0 hover:opacity-90 transition text-left focus:outline-none group"
-          title="Return to Curriculum Homepage"
-          aria-label="Return to Curriculum Homepage"
+          title="Return to Homepage"
+          aria-label="Return to Homepage"
         >
-          <BrandLogo size="sm" />
+          <BrandLogo size="sm" variant={isMinimal ? 'click' : 'sqlens'} />
           {!isMinimal && (
             <span className="hidden sm:inline-block font-body text-xs text-text-faint truncate pl-[9px] border-l border-border ml-[2px]">
               {activeViewTitle}
@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Color theme switcher (graphite / sky) */}
-          <ThemeToggle />
+          <ThemeToggle round={isMinimal} />
 
           {/* Guest reset progress trigger */}
           {!isMinimal && !user && !isAuthPending && (
@@ -159,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setUserMenuOpen((v) => !v)}
                   aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
                   aria-expanded={userMenuOpen}
-                  className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-2 border border-border cursor-pointer focus:outline-none"
+                  className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none ${isMinimal ? 'bg-[#0d1526] border border-[#38bdf8]' : 'bg-surface-2 border border-border'}`}
                 >
                 {/* Rotating conic ring - grayscale (matches border system) */}
                 <motion.span
@@ -277,7 +277,7 @@ export const Header: React.FC<HeaderProps> = ({
               href="/signin"
               title="Sign in"
               aria-label="Sign in"
-              className="flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-lg bg-func text-ink font-bold hover:brightness-110 transition-all duration-150 font-mono text-[11px] sm:text-xs whitespace-nowrap"
+              className={`flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full font-semibold hover:brightness-110 transition-all duration-150 font-mono text-[12px] whitespace-nowrap ${isMinimal ? 'bg-[#0d1526] border border-[#38bdf8] text-[#38bdf8] hover:bg-[#38bdf8]/10' : 'bg-func text-ink rounded-lg text-[11px] sm:text-xs'}`}
             >
               Sign In
             </Link>

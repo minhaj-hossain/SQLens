@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { SqlDiagramSvg, PrismaDiagramSvg } from './TrackDiagrams';
 import { ReturningLearnerCard } from '@/components/tracks/HeroLensInteractivePreview';
+import { ClickFooter } from '@/components/layout/ClickFooter';
 
 export interface ClickHomepageProps {
   className?: string;
@@ -95,6 +96,9 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({ className = '' }) 
           ))}
         </div>
       </section>
+
+      {/* Click Multi-Column Footer */}
+      <ClickFooter />
     </div>
   );
 };

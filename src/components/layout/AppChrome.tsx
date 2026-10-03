@@ -48,7 +48,11 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-base text-on-surface font-body-md antialiased">
+    <div
+      className={`flex min-h-screen flex-col ${
+        isHomepage ? 'bg-[#060b16]' : 'bg-surface-base text-on-surface font-body-md'
+      } antialiased`}
+    >
       <Header
         userState={userState}
         currentModule={pathModule ?? null}
@@ -76,7 +80,9 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
       <AnnouncementBanner />
 
       {/* Main Content Area — header is sticky (in flow), so no top offset needed */}
-      <main className="relative w-full bg-surface-base min-h-screen">{children}</main>
+      <main className={`relative w-full ${isHomepage ? 'bg-[#060b16]' : 'bg-surface-base'} min-h-screen`}>
+        {children}
+      </main>
     </div>
   );
 }

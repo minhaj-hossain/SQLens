@@ -3,19 +3,17 @@ import { legacyNavigationToRoute, LegacySearchParams } from '@/lib/legacy-routes
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-  title: 'SQLens — Choose Your Learning Track',
+  title: 'Click — Learn the data layer by running it',
   description:
-    'Two hands-on data tracks in one visual learning system: 57 Days of SQL, or 14 Days of Prisma ORM. Mental models, guided practice and independent challenges in the browser.',
+    'When concepts finally click. Hands-on tracks. A real engine. All in your browser. Master SQL in 57 Days and Prisma ORM in 14 Days.',
 };
 
 /**
- * `/` — the TRACK SELECTOR (Phase 2).
+ * `/` — Click Homepage & Track Selector.
  *
- * The roadmap that used to live here is now `/sql` (SQL) and `/prisma`
- * (Prisma). This page stays a server component for the same reason it always
- * was one: it must honour legacy `?day=N&stage=…` lesson deep links with a
- * proper redirect before render (see src/lib/legacy-routes.ts, which now
- * targets the SQL track's namespaced URLs).
+ * Renders the modern Click homepage experience with interactive SVG code-to-result
+ * diagrams for SQL and Prisma, returning learner resume card, and multi-column footer.
+ * Also preserves legacy `?day=N&stage=…` lesson deep links with proper redirects.
  */
 export default async function TrackPickerPage({
   searchParams,

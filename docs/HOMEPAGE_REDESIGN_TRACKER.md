@@ -13,9 +13,9 @@
 |---|---|---|---|
 | **Phase 1** | **Brand Identity & Tokens** | Click SVG cursor logo, "Click" wordmark, brand variant support in `BrandLogo.tsx`, `.tile`, `.flink`, `.bg-dot-grid` CSS utilities | ✅ Done |
 | **Phase 2** | **Click Homepage Component** | Hero section, interactive SVG diagrams (SQL query/result & Prisma schema/autocomplete), track cards | ✅ Done |
-| **Phase 3** | **Header & Navigation Integration** | Homepage minimal header with Click logo, theme switcher, user avatar / sign-in pill | ⬜ Not started |
-| **Phase 4** | **Click Footer Component** | Multi-column footer with brand, tracks links, project links, and copyright bar | ⬜ Not started |
-| **Phase 5** | **Page Assembly & Continuity** | Connect `/` route, keep subtle returning learner resume card for returning users | ⬜ Not started |
+| **Phase 3** | **Header & Navigation Integration** | Homepage minimal header with Click logo, theme switcher, user avatar / sign-in pill | ✅ Done |
+| **Phase 4** | **Click Footer Component** | Multi-column footer with brand, tracks links, project links, and copyright bar | ✅ Done |
+| **Phase 5** | **Page Assembly & Continuity** | Connect `/` route, keep subtle returning learner resume card for returning users | ✅ Done |
 | **Phase 6** | **Verification & Test Alignment** | Update `tests/tracks/phase3-homepage.test.tsx`, visual verification, build check | ⬜ Not started |
 
 **Status Key:** ⬜ Not Started · 🔄 In Progress · ✅ Done · ⚠️ Blocked
@@ -55,24 +55,29 @@
 - [x] **T2.6** Create and verify unit tests in `tests/ui/click-homepage.test.tsx` (6 passing tests).
 
 ### Phase 3 — Header & Navigation Integration
-- [ ] **T3.1** In `src/components/layout/Header.tsx`, check `isMinimal` (which is active on `/`):
+- [x] **T3.1** In `src/components/layout/Header.tsx`, check `isMinimal` (which is active on `/`):
   - Render Click logo and wordmark (`BrandLogo variant="click"`).
-  - Include the circular Theme switcher button (`ThemeToggle`).
-  - Include the user avatar button ("M" or user initial) or Sign In button.
-- [ ] **T3.2** Align header width to `max-w-[1120px]` on the homepage to maintain unified margins with hero and track cards.
+  - Include the circular Theme switcher button (`ThemeToggle round={true}`).
+  - Include the user avatar button ("M" or user initial with `border-[#38bdf8]`) or Sign In button (`text-[#38bdf8] border-[#38bdf8]`).
+- [x] **T3.2** Align header width to `max-w-[1120px]` and height to `h-16` on the homepage to maintain unified margins with hero and track cards.
+- [x] **T3.3** Add `round` prop to `ThemeToggle.tsx` with circular palette SVG icon and `#1b2a47` border styling.
+- [x] **T3.4** Write and verify unit tests in `tests/ui/header-minimal.test.tsx` (9 passing tests).
 
 ### Phase 4 — Click Footer Component
-- [ ] **T4.1** Create `src/components/layout/ClickFooter.tsx`:
+- [x] **T4.1** Create `src/components/layout/ClickFooter.tsx`:
   - Border top `1px solid #121d33`.
   - Left column: Click logo + "Click" wordmark + tagline *"When concepts finally click."*.
   - Tracks navigation column: `SQL` (`/sql`), `Prisma` (`/prisma`).
   - Project navigation column: `About` (`#about`), `Feedback` (`#feedback`).
   - Copyright line: `© 2026 Click` with divider.
+  - Mount `<ClickFooter />` directly at the bottom of `ClickHomepage.tsx`.
+  - Create comprehensive tests in `tests/ui/click-footer.test.tsx` (8 passed).
 
 ### Phase 5 — Page Assembly & Continuity
-- [ ] **T5.1** Update `src/app/(app)/page.tsx` and `src/components/tracks/TrackSelector.tsx` to render the `ClickHomepage` experience.
-- [ ] **T5.2** Embed `<ReturningLearnerCard />` directly beneath the hero for returning learners so existing progress continuity is preserved seamlessly.
-- [ ] **T5.3** Mount `ClickFooter` on the homepage layout.
+- [x] **T5.1** Update `src/app/(app)/page.tsx` and `src/components/tracks/TrackSelector.tsx` to render the `ClickHomepage` experience.
+- [x] **T5.2** Embed `<ReturningLearnerCard />` directly beneath the hero for returning learners so existing progress continuity is preserved seamlessly.
+- [x] **T5.3** Mount `ClickFooter` on the homepage layout.
+- [x] **T5.4** Refine `AppChrome.tsx` outer shell and main canvas backgrounds to `#060b16` on `/`.
 
 ### Phase 6 — Verification & Test Alignment
 - [ ] **T6.1** Update `tests/tracks/phase3-homepage.test.tsx` to test the Click homepage content, headlines, SQL & Prisma cards, and SSR behavior.
@@ -88,3 +93,6 @@
 |---|---|---|---|
 | 2026-10-03 | Phase 1 (T1.1–T1.5) | Click brand cursor SVG vector logo, wordmark, variant support in BrandLogo, .tile/.flink/.bg-dot-grid utilities, unit tests | Antigravity |
 | 2026-10-03 | Phase 2 (T2.1–T2.6) | ClickHomepage shell, SqlDiagramSvg, PrismaDiagramSvg, track cards with hover transitions, unit tests | Antigravity |
+| 2026-10-03 | Phase 3 (T3.1–T3.4) | Header 1120px layout, Click brand in minimal mode, round ThemeToggle with palette SVG, Click-styled sign-in, unit tests | Antigravity |
+| 2026-10-03 | Phase 4 (T4.1) | Dedicated multi-column ClickFooter, BrandLogo & tagline, tracks & project navigation columns, copyright bar, unit tests | Antigravity |
+| 2026-10-03 | Phase 5 (T5.1–T5.4) | Page assembly on `/`, delegated TrackSelector, updated metadata, AppChrome midnight canvas continuity | Antigravity |

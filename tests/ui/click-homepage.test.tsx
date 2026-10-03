@@ -37,6 +37,12 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('bg-dot-grid');
     expect(html).toContain('max-w-[1120px]');
   });
+
+  it('renders ClickFooter with brand tagline and copyright', () => {
+    expect(html).toContain('data-testid="click-footer"');
+    expect(html).toContain('When concepts finally click.');
+    expect(html).toContain('© 2026 Click');
+  });
 });
 
 describe('TrackDiagrams SVG components', () => {
