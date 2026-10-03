@@ -663,3 +663,38 @@
 @media (prefers-reduced-motion: reduce) {
   .lens-step-in { animation: none; }
 }
+
+/* ============================================================
+   CLICK HOMEPAGE DESIGN SYSTEM UTILITIES
+   ============================================================ */
+
+/* Interactive card tile: smooth border glow and subtle physical lift */
+.tile {
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tile:hover {
+  border-color: #38bdf8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(56, 189, 248, 0.08);
+}
+
+/* Footer & subtle navigation link hover transition */
+.flink {
+  color: #8a9bbd;
+  transition: color 0.15s ease;
+}
+
+.flink:hover {
+  color: #e8eefb;
+}
+
+/* Blueprint dot-grid surface used behind visual code diagrams */
+.bg-dot-grid {
+  background-color: #0a1222;
+  background-image: radial-gradient(#1b2a47 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
