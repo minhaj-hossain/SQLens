@@ -79,7 +79,7 @@
 | **Phase 1** | Remove homepage resume card (`ReturningLearnerCard`) and unused continuity code | Completed |
 | **Phase 2** | Fix roadmap card locked concept interaction (no redirect, in-place alert/locked UI) | Completed |
 | **Phase 3** | Fix task page refresh behavior (prevent premature locked redirect while auth/progress hydrates) | Completed |
-| **Phase 4** | Remove `/learn/[dayId]` overview page & `ModuleOverview.tsx`, redirect day URLs directly to theory | Pending |
+| **Phase 4** | Remove `/learn/[dayId]` overview page & `ModuleOverview.tsx`, redirect day URLs directly to theory | Completed |
 | **Phase 5** | Clean up all remaining overview redirects (`TheoryView`, `ChallengeView`, `CompleteView`, `use-learning-navigation`) | Pending |
 | **Phase 6** | Verification, regression testing, and test suite alignment | Pending |
 
@@ -114,4 +114,50 @@ off its own route/task.
 table, 7 cases) + a new SSR case in `phase11-day-layout-view.test.tsx` ("holds
 the exact route … until progress is ready"), whose `useLearning` mock now
 supplies `isProgressReady`.
+
+---
+
+## Phase 4 — Implementation Notes (completed)
+
+**Removed:** `src/components/learn/ModuleOverview.tsx` (deleted; no test
+imported it).
+
+**Day entry is now a redirect.** `src/app/(app)/{sql,prisma}/learn/[dayId]/page.tsx`
+are server components that resolve the module via `getTrackModuleById` and call
+`redirect(trackLearnUrl(track, dayId, 'theory', mod.concepts[0].id))` — a 307 to
+the day's first concept. `generateStaticParams` + `generateMetadata` are kept, so
+the day URLs stay prerendered (verified: `day-01.html` carries
+`NEXT_REDIRECT;replace;/sql/learn/day-01/theory/select-and-from;307;`) and keep
+their per-day metadata/canonical. An unknown `dayId` is `notFound()`.
+
+**Locked notice moved into the layout.** New `src/components/learn/LockedDayNotice.tsx`
+(ports the old overview locked view; back link stays track-aware via
+`meta.basePath`). `TrackDayLayoutView` now renders
+`{isLocked ? <LockedDayNotice mod={mod} /> : children}` inside the day chrome and
+**never redirects**.
+
+**Pure seam collapsed.** `resolveDayLayoutState(mod, modules, userState)` →
+`{ isLocked }` only. `isOverview`, `overviewUrl`, `redirectUrl`, and the redirect
+`useEffect` are gone; `usePathname`/`useRouter` dropped from the view.
+
+**SEO.** The day `LearningResource` JSON-LD moved from the (now-redirecting) day
+page to the canonical theory entry — emitted once, on the FIRST concept of each
+day, in both theory page wrappers. `moduleJsonLd` stays in use.
+
+**Tests (`tests/tracks/phase11-day-layout-view.test.tsx`, 25 total):**
+- locked deep link → renders `LockedDayNotice` ("Day 2 is locked" + "Back to
+  Learning Path"), never a redirect, children suppressed;
+- locked day keeps the day chrome (Roadmap + `Day 2 of 57`);
+- `resolveDayLayoutState` rewritten to the 3-arg `{ isLocked }` contract;
+- new redirect-target block: SQL + Prisma day entries redirect to
+  `…/theory/<firstConceptId>`, unknown id is a 404;
+- removal guards: the view contains none of `isOverview`/`overviewUrl`/
+  `redirectUrl`/`usePathname`/`useRouter`/`ModuleOverview` and does own
+  `LockedDayNotice`; `ModuleOverview.tsx` no longer exists.
+
+**Deferred to Phase 5:** the remaining bare `…/learn/${mod.id}` fallbacks in
+`ChallengeView.tsx` and `CompleteView.tsx` (and `use-learning-navigation.ts`).
+They keep working (they now take the day redirect hop) but are still "overview"
+URLs to be cleaned up.
+
 

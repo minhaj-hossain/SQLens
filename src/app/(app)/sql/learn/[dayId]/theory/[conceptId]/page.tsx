@@ -1,10 +1,16 @@
 import type { Metadata } from 'next';
-import { learnPageMetadata } from '@/lib/learn-metadata';
+import { learnPageMetadata, moduleJsonLd } from '@/lib/learn-metadata';
+import { getTrackModuleById } from '@/tracks/registry';
 import TheoryView from '@/components/learn/TheoryView';
 
 /**
  * Server page wrapper (Phase 4 SEO layer) — per-concept metadata; the
  * interactive lesson stays client-side (module data imports directly there).
+ *
+ * Phase 4: the day OVERVIEW page was removed and `/sql/learn/[dayId]` now
+ * redirects to this URL (the day's first concept). The day's
+ * `LearningResource` JSON-LD therefore lives HERE — emitted once, on the FIRST
+ * concept only, so every concept page does not duplicate it.
  */
 export async function generateMetadata({
   params,
@@ -21,5 +27,15 @@ export default async function TheoryPage({
   params: Promise<{ dayId: string; conceptId: string }>;
 }) {
   const { dayId, conceptId } = await params;
-  return <TheoryView dayId={dayId} conceptId={conceptId} />;
+  const isFirstConcept = getTrackModuleById('sql', dayId)?.concepts[0]?.id === conceptId;
+  const jsonLd = isFirstConcept ? moduleJsonLd(dayId) : null;
+
+  return (
+    <>
+      {jsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      )}
+      <TheoryView dayId={dayId} conceptId={conceptId} />
+    </>
+  );
 }

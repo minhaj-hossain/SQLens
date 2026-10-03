@@ -11,8 +11,10 @@
  *    the learner enters a DIFFERENT day (not on concept/task navigation, so
  *    DML/DDL continuity is preserved within a day's flow).
  *  - Renders the breadcrumb bar ("Roadmap" + "Day N of M").
- *  - Enforces lock rules: the OVERVIEW page renders the locked notice; any
- *    deeper stage (theory/practice/challenge/complete) bounces back to it.
+ *  - Enforces lock rules: with the `/learn/[dayId]` overview page GONE
+ *    (Phase 4), a locked day renders the in-place `LockedDayNotice` instead of
+ *    its lesson — the layout NEVER redirects (the bare `/learn/[dayId]` URL
+ *    server-redirects to concept 0 before any client rendering).
  *
  * The `track` prop is authoritative: meta, modules and the id lookup all come
  * from `TRACK_REGISTRY` (Phase 4.1), so the track literal in each delegate is
@@ -20,17 +22,17 @@
  * `tests/tracks/phase11-day-layout-view.test.tsx` keeps the two delegates
  * identical modulo that literal.
  *
- * `resolveDayLayoutState` is the pure seam over the three derived decisions
- * (locked / overview / redirect target). It is exported so the redirect rule
- * is unit-testable per track without a DOM (effects never run under
- * `renderToStaticMarkup`).
+ * `resolveDayLayoutState` is the pure seam over the one derived decision
+ * (locked). It is exported so the lock rule is unit-testable per track without
+ * a DOM (effects never run under `renderToStaticMarkup`).
  */
 import React, { useEffect } from 'react';
-import { useParams, usePathname, useRouter, notFound } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { useTrackConceptId } from '@/components/learn/use-track';
 import { getModuleUnlockStatus } from '@/lib/progress/unlock-calculator';
 import { getTrackDefinition } from '@/tracks/registry';
+import { LockedDayNotice } from '@/components/learn/LockedDayNotice';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -38,35 +40,26 @@ import type { ModuleData } from '@/types/curriculum';
 import type { UserLearningState } from '@/types/progress';
 import type { TrackId } from '@/types/track';
 
-/** The three decisions a day layout derives before it renders anything. */
+/** The decision a day layout derives before it renders anything. */
 export interface TrackDayLayoutState {
-  /** Locked AND no completion record → deeper stages must not render. */
+  /** Locked AND no completion record → the lesson must not render. */
   isLocked: boolean;
-  /** The URL points at the day's overview (the locked notice lives there). */
-  isOverview: boolean;
-  /** Non-null ⇔ a locked deep link must bounce to the day's overview URL. */
-  redirectUrl: string | null;
 }
 
 /**
- * Pure derivation of the lock/overview/redirect decision — extracted from the
- * layout so the per-track redirect target (`/sql/...` vs `/prisma/...`) is
- * testable without a router or a DOM. Mirrors the pre-4.2 inline logic
- * exactly: unlock status from the track's own modules, plus the historical
- * completion-record escape hatch.
+ * Pure derivation of the lock decision — extracted from the layout so the rule
+ * is testable without a router or a DOM (Phase 4 dropped the overview/redirect
+ * target: the layout no longer bounces anywhere). Unlock status comes from the
+ * track's own modules, plus the historical completion-record escape hatch.
  */
 export function resolveDayLayoutState(
   mod: ModuleData,
   modules: ModuleData[],
-  pathname: string,
-  track: TrackId,
   userState: UserLearningState,
 ): TrackDayLayoutState {
   const unlockStatus = getModuleUnlockStatus(mod, modules, userState);
   const isLocked = !unlockStatus.isUnlocked && !userState.completedModules[mod.id];
-  const overviewUrl = `${getTrackDefinition(track).meta.basePath}/learn/${mod.id}`;
-  const isOverview = pathname === overviewUrl;
-  return { isLocked, isOverview, redirectUrl: isLocked && !isOverview ? overviewUrl : null };
+  return { isLocked };
 }
 
 export default function TrackDayLayoutView({
@@ -77,8 +70,6 @@ export default function TrackDayLayoutView({
   children: React.ReactNode;
 }) {
   const { dayId } = useParams<{ dayId: string }>();
-  const pathname = usePathname();
-  const router = useRouter();
   const def = getTrackDefinition(track);
   const mod = def.getModuleById(dayId);
   if (!mod) notFound();
@@ -98,23 +89,12 @@ export default function TrackDayLayoutView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dayId, conceptId]);
 
-  // Locked-day enforcement: the OVERVIEW page renders the locked notice; any
-  // deeper stage (theory/practice/challenge/complete) bounces back to it.
-  const { isLocked, isOverview, redirectUrl } = resolveDayLayoutState(
-    mod,
-    def.modules,
-    pathname,
-    track,
-    userState,
-  );
-  useEffect(() => {
-    // Phase 3: never bounce while progress is still hydrating — on a signed-in
-    // refresh the seeded guest state looks empty and every day past Day 1 would
-    // appear locked. Only run the lock-rejection once progress has settled.
-    if (!isProgressReady) return;
-    if (redirectUrl) router.replace(redirectUrl);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [redirectUrl, isProgressReady]);
+  // Locked-day enforcement (Phase 4): the layout renders the locked notice in
+  // place of the lesson — it never redirects. The bare `/learn/[dayId]` URL is
+  // a server redirect to concept 0, so this only ever fires on a locked DEEP
+  // SUBPATH (theory/practice/challenge/complete) or on a day whose lock state
+  // re-evaluates after hydration.
+  const { isLocked } = resolveDayLayoutState(mod, def.modules, userState);
 
   // P11.2: back lives in-flow (concept footer / editor run-row) via
   // useStepBack, which also owns scroll memory + prefetch. The top bar only
@@ -124,7 +104,6 @@ export default function TrackDayLayoutView({
   // (no redirect, no blank lock). This is what keeps a refreshed task page on
   // that exact route/task instead of bouncing off it mid-hydration.
   if (!isProgressReady) return null;
-  if (isLocked && !isOverview) return null;
 
   return (
     <div className="flex flex-col w-full pb-8 px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 max-w-7xl mx-auto min-w-0 overflow-x-clip">
@@ -146,7 +125,7 @@ export default function TrackDayLayoutView({
         </div>
       </div>
 
-      {children}
+      {isLocked ? <LockedDayNotice mod={mod} /> : children}
     </div>
   );
 }

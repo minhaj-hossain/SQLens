@@ -3,18 +3,18 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * 4.2.1 (first block): the extracted view renders the day chrome for BOTH
  * tracks straight from the registry (`Day 1 of 57` / `Day 1 of 14`), 404s ids
- * the track does not own, renders nothing for a locked deep link, still
- * renders a locked OVERVIEW (the locked notice belongs to the page) and keeps
- * a day with a completion record reachable. `resolveDayLayoutState` — the
- * pure lock/overview/redirect seam — pins the per-track redirect target
- * (`/sql/...` vs `/prisma/...`), which SSR alone can never observe because
- * effects do not run under `renderToStaticMarkup`.
+ * the track does not own, renders the in-place LockedDayNotice for a locked
+ * day (Phase 4: the layout NEVER redirects — the `/learn/[dayId]` overview
+ * page is gone) and keeps a day with a completion record reachable.
+ *
+ * 4.2.3 (third block): the retired `/learn/[dayId]` page is now a server
+ * redirect to the day's FIRST CONCEPT lesson.
  *
  * 4.2.2 (static guard block): the two route layouts are thin delegates that
  * differ only in their `track` literal; the route inventory, the canonical
  * sitemap contract and the legacy redirect table are frozen.
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -36,6 +36,9 @@ const h = vi.hoisted(() => ({
   userState: null as unknown as UserLearningState,
   isProgressReady: true,
   replace: vi.fn(),
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  }),
   resetDatabase: vi.fn(),
   backToRoadmap: vi.fn(),
 }));
@@ -44,6 +47,7 @@ vi.mock('next/navigation', () => ({
   useParams: () => h.params,
   usePathname: () => h.pathname,
   useRouter: () => ({ replace: h.replace, push: vi.fn() }),
+  redirect: (url: string) => h.redirect(url),
   notFound: () => {
     throw new Error('NEXT_NOT_FOUND');
   },
@@ -64,6 +68,8 @@ vi.mock('../../src/components/learn/use-learning-navigation', () => ({
 import TrackDayLayoutView, {
   resolveDayLayoutState,
 } from '../../src/components/learn/TrackDayLayoutView';
+import SqlDayEntry from '../../src/app/(app)/sql/learn/[dayId]/page';
+import PrismaDayEntry from '../../src/app/(app)/prisma/learn/[dayId]/page';
 
 /** Renders the view with the given route mocks; returns static HTML. */
 function render(track: 'sql' | 'prisma', dayId: string, pathname: string): string {
@@ -113,9 +119,12 @@ describe('Phase 4.2 — TrackDayLayoutView renders both tracks from the registry
     );
   });
 
-  it('a locked deep link renders nothing (the effect bounces to the overview)', () => {
+  it('a locked deep link renders the in-place locked notice (never a redirect)', () => {
     const html = render('sql', 'day-02', '/sql/learn/day-02/theory/where-and-intersection');
-    expect(html).toBe('');
+    expect(html).toContain('Day 2 is locked');
+    expect(html).toContain('Back to Learning Path');
+    expect(html).not.toContain('CHILD-CONTENT-MARKER');
+    expect(h.replace).not.toHaveBeenCalled();
   });
 
   it('holds the exact route (no chrome) until progress is ready — even for an unlocked day', () => {
@@ -128,10 +137,12 @@ describe('Phase 4.2 — TrackDayLayoutView renders both tracks from the registry
     expect(h.replace).not.toHaveBeenCalled();
   });
 
-  it('a locked OVERVIEW still renders — the locked notice belongs to the page', () => {
-    const html = render('sql', 'day-02', '/sql/learn/day-02');
+  it('a locked day keeps the day chrome (Roadmap + Day chip) around the notice', () => {
+    const html = render('sql', 'day-02', '/sql/learn/day-02/theory/where-and-intersection');
+    expect(html).toContain('Roadmap');
     expect(html).toContain('Day 2 of 57');
-    expect(html).toContain('CHILD-CONTENT-MARKER');
+    expect(html).toContain('Day 2 is locked');
+    expect(html).toContain('href="/sql"');
   });
 
   it('a completion record keeps a locked day reachable, deep links included', () => {
@@ -147,58 +158,25 @@ describe('Phase 4.2 — TrackDayLayoutView renders both tracks from the registry
   });
 });
 
-describe('Phase 4.2 — resolveDayLayoutState locks, exempts the overview, targets per track', () => {
+describe('Phase 4.2 — resolveDayLayoutState owns the lock rule only', () => {
   const day01 = ALL_MODULES.find((m) => m.id === 'day-01')!;
   const day02 = ALL_MODULES.find((m) => m.id === 'day-02')!;
   const prisma01 = PRISMA_MODULES.find((m) => m.id === 'prisma-01')!;
   const prisma02 = PRISMA_MODULES.find((m) => m.id === 'prisma-02')!;
 
-  it('unlocked day: not locked, not overview, no redirect', () => {
-    const state = resolveDayLayoutState(
-      day01,
-      ALL_MODULES,
-      '/sql/learn/day-01/theory/select-basics',
-      'sql',
-      initialStateForTrack('sql'),
-    );
-    expect(state).toEqual({ isLocked: false, isOverview: false, redirectUrl: null });
+  it('unlocked day: not locked', () => {
+    const state = resolveDayLayoutState(day01, ALL_MODULES, initialStateForTrack('sql'));
+    expect(state).toEqual({ isLocked: false });
   });
 
-  it('locked sql deep link: redirects to the sql overview url', () => {
-    const state = resolveDayLayoutState(
-      day02,
-      ALL_MODULES,
-      '/sql/learn/day-02/theory/where-and-intersection',
-      'sql',
-      initialStateForTrack('sql'),
-    );
-    expect(state).toEqual({ isLocked: true, isOverview: false, redirectUrl: '/sql/learn/day-02' });
+  it('locked sql day: isLocked (no overview/redirect fields exist any more)', () => {
+    const state = resolveDayLayoutState(day02, ALL_MODULES, initialStateForTrack('sql'));
+    expect(state).toEqual({ isLocked: true });
   });
 
-  it('locked prisma deep link: redirects to the PRISMA overview url (per-track basePath)', () => {
-    const state = resolveDayLayoutState(
-      prisma02,
-      PRISMA_MODULES,
-      '/prisma/learn/prisma-02/theory/x',
-      'prisma',
-      initialStateForTrack('prisma'),
-    );
-    expect(state).toEqual({
-      isLocked: true,
-      isOverview: false,
-      redirectUrl: '/prisma/learn/prisma-02',
-    });
-  });
-
-  it('the overview itself never redirects, locked or not', () => {
-    const state = resolveDayLayoutState(
-      day02,
-      ALL_MODULES,
-      '/sql/learn/day-02',
-      'sql',
-      initialStateForTrack('sql'),
-    );
-    expect(state).toEqual({ isLocked: true, isOverview: true, redirectUrl: null });
+  it('locked prisma day: isLocked', () => {
+    const state = resolveDayLayoutState(prisma02, PRISMA_MODULES, initialStateForTrack('prisma'));
+    expect(state).toEqual({ isLocked: true });
   });
 
   it('a completion record unlocks rendering even without a progression record', () => {
@@ -208,35 +186,41 @@ describe('Phase 4.2 — resolveDayLayoutState locks, exempts the overview, targe
         'day-02': { moduleId: 'day-02', day: 2, completedAt: new Date().toISOString() },
       },
     };
-    const state = resolveDayLayoutState(
-      day02,
-      ALL_MODULES,
-      '/sql/learn/day-02/challenge',
-      'sql',
-      userState,
-    );
+    const state = resolveDayLayoutState(day02, ALL_MODULES, userState);
     expect(state.isLocked).toBe(false);
-    expect(state.isOverview).toBe(false);
-    expect(state.redirectUrl).toBeNull();
   });
 
   it('the first module of each track is always unlocked', () => {
-    const sql = resolveDayLayoutState(
-      day01,
-      ALL_MODULES,
-      '/sql/learn/day-01',
-      'sql',
-      initialStateForTrack('sql'),
-    );
-    const prisma = resolveDayLayoutState(
-      prisma01,
-      PRISMA_MODULES,
-      '/prisma/learn/prisma-01',
-      'prisma',
-      initialStateForTrack('prisma'),
-    );
+    const sql = resolveDayLayoutState(day01, ALL_MODULES, initialStateForTrack('sql'));
+    const prisma = resolveDayLayoutState(prisma01, PRISMA_MODULES, initialStateForTrack('prisma'));
     expect(sql.isLocked).toBe(false);
     expect(prisma.isLocked).toBe(false);
+  });
+});
+
+describe('Phase 4 — /learn/[dayId] is a server redirect to the day first concept', () => {
+  it('sql day entry redirects to .../theory/<firstConceptId>', async () => {
+    const day01 = ALL_MODULES.find((m) => m.id === 'day-01')!;
+    const target = `/sql/learn/day-01/theory/${day01.concepts[0].id}`;
+    await expect(SqlDayEntry({ params: Promise.resolve({ dayId: 'day-01' }) })).rejects.toThrow(
+      `NEXT_REDIRECT:${target}`,
+    );
+    expect(h.redirect).toHaveBeenLastCalledWith(target);
+  });
+
+  it('prisma day entry redirects to the PRISMA url (per-track basePath)', async () => {
+    const prisma01 = PRISMA_MODULES.find((m) => m.id === 'prisma-01')!;
+    const target = `/prisma/learn/prisma-01/theory/${prisma01.concepts[0].id}`;
+    await expect(
+      PrismaDayEntry({ params: Promise.resolve({ dayId: 'prisma-01' }) }),
+    ).rejects.toThrow(`NEXT_REDIRECT:${target}`);
+    expect(h.redirect).toHaveBeenLastCalledWith(target);
+  });
+
+  it('an unknown dayId is a 404, never a redirect', async () => {
+    await expect(SqlDayEntry({ params: Promise.resolve({ dayId: 'day-99' }) })).rejects.toThrow(
+      'NEXT_NOT_FOUND',
+    );
   });
 });
 
@@ -323,6 +307,25 @@ describe('Phase 4.2 — both day layouts are thin, parity-checked delegates', ()
     ]) {
       expect(src, `TrackDayLayoutView must own ${marker}`).toContain(marker);
     }
+  });
+
+  it('the view no longer carries any overview/redirect logic (Phase 4 removal)', () => {
+    const src = layoutSource(VIEW);
+    for (const gone of [
+      'isOverview',
+      'overviewUrl',
+      'redirectUrl',
+      'usePathname',
+      'useRouter',
+      'ModuleOverview',
+    ]) {
+      expect(src, `TrackDayLayoutView must not contain ${gone}`).not.toContain(gone);
+    }
+    expect(src).toContain('LockedDayNotice');
+  });
+
+  it('the retired /learn/[dayId] overview component is gone', () => {
+    expect(existsSync(repoFile('src/components/learn/ModuleOverview.tsx'))).toBe(false);
   });
 
   it('the two delegates differ ONLY in the track literal (zero drift, forever)', () => {
