@@ -149,7 +149,7 @@ export const Prisma_13_MODULE: ModuleData = {
           code1:
             "export async function publish(title: string, authorId: number, res: Response) {\n  try {\n    return await prisma.post.create({ data: { title, authorId } });\n  } catch (error) {\n    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {\n      return res.status(409).json({ error: 'Related record not found' });\n    }\n    return res.status(500).json({ error: 'Server error' });\n  }\n}",
           need: ['Prisma.PrismaClientKnownRequestError', "error.code === 'P2003'", 'res.status(409)'],
-          demoVariables: { title: 'Hello Prisma' },
+          demoVariables: { title: 'Hello Prisma', authorId: 1 },
         }),
       ],
     },

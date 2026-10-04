@@ -96,9 +96,29 @@ export function canonicalizeCli(text: string): string {
  * equivalence audit's `snippetsPreserved` guard uses the SAME contract the
  * learner is graded with.
  */
+/**
+ * Canonical view of non-CLI snippet text, applied to BOTH sides of a non-CLI
+ * snippet comparison: keys unquoted, whitespace collapsed, empty braces unified,
+ * and double quotes unified to single quotes.
+ */
+export function canonicalizeNonCliSnippet(text: string): string {
+  return canonicalizeObjectKeys(text)
+    .replace(/\s+/g, ' ')
+    .replace(/\{\s*\}/g, '{}')
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/\[\s+/g, '[')
+    .replace(/\s+\]/g, ']')
+    .replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, "'$1'")
+    .replace(/\b(?:error|e)\.code\b/g, 'err.code')
+    .replace(/\bnext\s*\(\s*(?:error|e)\s*\)/g, 'next(err)')
+    .trim();
+}
+
 export function snippetMatches(code: string, fragment: string): boolean {
   if (isCliFragment(fragment)) return canonicalizeCli(code).includes(canonicalizeCli(fragment));
-  return canonicalizeObjectKeys(code).includes(canonicalizeObjectKeys(fragment));
+  return canonicalizeNonCliSnippet(code).includes(canonicalizeNonCliSnippet(fragment));
 }
 
 // ── Phase 1.2 — quoted object keys & structural normalization ────────────────
@@ -131,8 +151,12 @@ export function fieldKeySrc(field: string): string {
   return `(['"]?)\\b${escaped}\\b\\1`;
 }
 
-/** Extract the model from `prisma.<model>.<method>(...)`. */
+/** Extract the model from `prisma.<model>.<method>(...)`, prioritizing a returned query if present. */
 export function extractPrismaTarget(code: string): { model?: string; method?: string } {
+  const retMatch = /return\s+(?:await\s+)?prisma\s*\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\.\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/.exec(code);
+  if (retMatch) {
+    return { model: retMatch[1].toLowerCase(), method: retMatch[2] };
+  }
   const match = /prisma\s*\.\s*([A-Za-z_][A-Za-z0-9_]*)\s*\.\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/.exec(code);
   if (!match) return {};
   return { model: match[1].toLowerCase(), method: match[2] };

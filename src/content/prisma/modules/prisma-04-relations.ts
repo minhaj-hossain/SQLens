@@ -112,7 +112,7 @@ export const Prisma_04_MODULE: ModuleData = {
           id: 'prisma04-c2-t2',
           title: 'Make the FK unique',
           description: 'Stop a user from owning two profiles.',
-          instructions: ['`userId Int @unique`', '`profile Profile?` on the User side'],
+          instructions: ['Add `@unique` to `userId Int` on the Profile model'],
           hint: 'One extra `@unique` converts 1:N into 1:1.',
           scaffold: '-- The row the profile hangs off:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
@@ -122,8 +122,8 @@ export const Prisma_04_MODULE: ModuleData = {
           code0:
             'model Profile {\n  id     Int  @id @default(autoincrement())\n  user   User @relation(fields: [userId], references: [id])\n  userId Int\n}',
           code1:
-            'model Profile {\n  id     Int  @id @default(autoincrement())\n  user   User @relation(fields: [userId], references: [id])\n  userId Int  @unique\n}',
-          need: ['userId Int  @unique'],
+            'model Profile {\n  id     Int  @id @default(autoincrement())\n  user   User @relation(fields: [userId], references: [id])\n  userId Int @unique\n}',
+          need: ['userId Int @unique'],
         }),
       ],
     },

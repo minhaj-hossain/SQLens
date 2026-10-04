@@ -167,7 +167,7 @@ export const Prisma_01_MODULE: ModuleData = {
             'A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.',
           instructions: [
             'Notice the query is looking up `user_mail` which does not exist in the schema',
-            'Change `where: { user_mail: email }` to use the valid schema field `where: { email }`',
+            'Change `where: { user_mail: "mina@prisma.io" }` to use the valid schema field `where: { email }`',
             'Keep `select` returning `id` and `email`',
           ],
           type: 'independent',
@@ -178,7 +178,7 @@ export const Prisma_01_MODULE: ModuleData = {
             "-- In raw SQL, a typo like user_mail causes a database error.\n-- Fix the filter to use the real column `email`:\nSELECT id, email\nFROM users\nWHERE user_mail = 'mina@prisma.io';\n",
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           solutionExplanation: 'Filtering by the real `email` field matches the unique constraint and returns the user.',
-          hints: [{ level: 1, text: 'Replace `user_mail: email` with `email: email` (or shorthand `email`) in `where`.' }],
+          hints: [{ level: 1, text: 'Replace `user_mail: "mina@prisma.io"` with `email` (or `email: email`) in `where`.' }],
           validation: {
             requireExactResult: true,
             targetTable: 'users',

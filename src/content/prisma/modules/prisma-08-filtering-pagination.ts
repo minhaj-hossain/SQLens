@@ -96,7 +96,7 @@ export const Prisma_08_MODULE: ModuleData = {
           id: 'prisma08-c1-t2',
           title: 'Filter on a set of values',
           description: 'Return Alex and Mina, nobody else.',
-          instructions: ['Filter with `name: { in: ["Alex", "Mina"] }`'],
+          instructions: ['Filter with `name: { in: [\'Alex\', \'Mina\'] }`'],
           hint: '`in` takes an array of allowed values.',
           scaffold: '-- Set filter -- the WHERE is still missing:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: "SELECT id, name FROM users WHERE name IN ('Alex', 'Mina');",
@@ -115,7 +115,7 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Filter across relations (some)',
           description: 'Return users who have authored at least one post containing "Prisma".',
           instructions: [
-            'Filter with `posts: { some: { title: { contains: "Prisma" } } }`',
+            'Filter with `posts: { some: { title: { contains: \'Prisma\' } } }`',
             'Select `id` and `name`',
           ],
           hint: '`some` tests if at least one related record matches the condition.',

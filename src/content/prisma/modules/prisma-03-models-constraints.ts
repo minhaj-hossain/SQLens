@@ -74,7 +74,7 @@ export const Prisma_03_MODULE: ModuleData = {
           id: 'prisma03-c1-t1',
           title: 'Read the typed column set',
           description: 'Return the id, name and email columns of user 1.',
-          instructions: ['findUnique on `where: { id: 1 }`', 'select `id`, `name`, `email`'],
+          instructions: ['findUnique on `where: { id }`', 'select `id`, `name`, `email`'],
           hint: '`where: { id }` plus `select: { id: true, name: true, email: true }`.',
           scaffold:
             '-- The column contract you just declared:\nSELECT id, name, email FROM users WHERE id = 99;',
@@ -171,7 +171,7 @@ export const Prisma_03_MODULE: ModuleData = {
             'model User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n  role  String @default("MEMBER")\n}',
           code1:
             'enum Role {\n  ADMIN\n  MEMBER\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n  role  Role   @default(MEMBER)\n}',
-          need: ['enum Role', 'role  Role'],
+          need: ['enum Role', 'role Role'],
           ban: ['@default("MEMBER")'],
         }),
         prismaSnippetTask({
@@ -190,7 +190,7 @@ export const Prisma_03_MODULE: ModuleData = {
           code1:
             'model User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  email String\n\n  @@unique([name, email])\n  @@index([email])\n}',
           need: ['@@unique([name, email])', '@@index([email])'],
-          ban: ['name  String @unique'],
+          ban: ['name String @unique'],
         }),
       ],
     },
