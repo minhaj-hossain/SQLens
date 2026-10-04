@@ -8,7 +8,7 @@ import {
   ArrowRight,
   ArrowLeft,
 } from "lucide-react";
-import { QueryEditor, QueryEditorHandle } from "./QueryEditor";
+import { MonacoCodeEditor, MonacoCodeEditorHandle } from "./MonacoCodeEditor";
 import type { SqlSourcePosition } from "@/lib/sql-engine/source-position";
 import { PrismaEditorTabs } from "./prisma/PrismaEditorTabs";
 import { PrismaSchemaTab } from "./prisma/PrismaSchemaTab";
@@ -91,8 +91,9 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<PrismaEditorTab>(defaultTab);
-  const editorRef = useRef<QueryEditorHandle>(null);
+  const editorRef = useRef<MonacoCodeEditorHandle>(null);
   const showSchema = Boolean(schemaTab) && tab === 'schema';
+  const language = fileLabel.endsWith('.ts') ? 'typescript' : fileLabel.endsWith('.prisma') ? 'prisma' : 'sql';
 
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
@@ -202,20 +203,19 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           caption={schemaTab!.caption}
         />
       ) : (
-      <QueryEditor
+      <MonacoCodeEditor
         ref={editorRef}
         value={value}
         onChange={onChange}
+        language={language}
         onRun={handleRun}
-        fallbackTable={tableName}
         placeholder={
           placeholder ?? `Type your SQL query here\nSELECT * FROM ${tableName};`
         }
         readOnly={readOnly}
-        textareaId="sql-query-textarea"
+        minHeight="220px"
         error={evaluationState === "wrong" ? (engineError ?? lastError ?? null) : null}
         errorPosition={evaluationState === "wrong" ? (errorPosition ?? null) : null}
-        errorTokenOccurrences={evaluationState === "wrong" ? (errorTokenOccurrences ?? null) : null}
       />
       )}
 

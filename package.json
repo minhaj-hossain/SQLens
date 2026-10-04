@@ -35,6 +35,7 @@
     "audit:all": "npm run verify:curriculum && npx tsx scripts/audit-all-tasks.ts && npm run audit:equivalence && npm run audit:equivalence:tasks && npm run audit:validation-overlap && npm run audit:keyword-case && npm run audit:grading-pipeline && npm run audit:prisma-grading-pipeline && npm run audit:prisma-equivalence && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators && npm run audit:ddl-contracts && npm run audit:visual-coverage"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/postcss": "^4.3.3",
     "better-auth": "^1.7.1",
     "lucide-react": "^0.546.0",

@@ -17,7 +17,7 @@ import { DATABASE_SCHEMAS } from '@/content/database/schema';
 import { INITIAL_TABLES } from '@/content/database/tables';
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from './DataGrid';
-import { QueryEditor, QueryEditorHandle } from './QueryEditor';
+import { MonacoCodeEditor, MonacoCodeEditorHandle } from './MonacoCodeEditor';
 import { PLAYGROUND_DRAFT_KEY, PLAYGROUND_HISTORY_KEY } from '@/lib/progress/storage';
 
 const HISTORY_KEY = PLAYGROUND_HISTORY_KEY;
@@ -204,7 +204,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
 
   const execRef = useRef<SqlExecutor | null>(null);
   const prismaSeededRef = useRef(false);
-  const editorRef = useRef<QueryEditorHandle>(null);
+  const editorRef = useRef<MonacoCodeEditorHandle>(null);
 
   useEffect(() => {
     // Restore a shared query from the URL hash first (#q=<encoded>), then draft.
@@ -559,19 +559,18 @@ export default function Playground({ onClose }: PlaygroundProps) {
                 <Eraser className="w-3 h-3" /> Clear
               </button>
             </div>
-            <QueryEditor
+            <MonacoCodeEditor
               ref={editorRef}
               value={mode === 'prisma' ? prismaCode : sql}
               onChange={mode === 'prisma' ? setPrismaCode : setSql}
+              language={mode === 'prisma' ? 'typescript' : 'sql'}
               onRun={(next) => (mode === 'prisma' ? runPrisma() : run(next))}
               placeholder={
                 mode === 'prisma'
                   ? 'Write Prisma client code here… e.g. await prisma.user.findMany()'
                   : 'Write SQL here… separate multiple statements with ;'
               }
-              textareaId="playground-sql-textarea"
-              minLineCount={8}
-              editorClassName="max-h-[320px] min-h-[220px]"
+              minHeight="240px"
               error={error}
             />
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-surface-2 border-t border-border">

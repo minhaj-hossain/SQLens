@@ -10,6 +10,7 @@
 import React, { useState } from 'react';
 import { Check, Copy, FileCode2, Network } from 'lucide-react';
 import { PrismaErdVisualizer } from './PrismaErdVisualizer';
+import { MonacoCodeEditor } from '../MonacoCodeEditor';
 
 export interface PrismaSchemaTabProps {
   /** The `schema.prisma` source shown (and drawn). */
@@ -92,9 +93,13 @@ export const PrismaSchemaTab: React.FC<PrismaSchemaTabProps> = ({
       )}
 
       {view === 'source' ? (
-        <pre className="px-4 py-3 font-mono text-[12px] leading-[1.75] text-editor-text bg-editor-bg overflow-auto whitespace-pre max-h-[420px]">
-          {source}
-        </pre>
+        <MonacoCodeEditor
+          value={source}
+          onChange={() => {}}
+          readOnly
+          language="prisma"
+          minHeight="360px"
+        />
       ) : (
         <div className="p-3 bg-surface">
           <PrismaErdVisualizer source={source} />

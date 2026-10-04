@@ -64,7 +64,7 @@ interface IndependentChallengeViewProps {
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { formatSql } from '@/lib/format-sql';
 import { DataGrid } from './DataGrid';
-import { QueryEditor, QueryEditorHandle } from './QueryEditor';
+import { MonacoCodeEditor, MonacoCodeEditorHandle } from './MonacoCodeEditor';
 import { SqlLensPanel } from './SqlLensPanel';
 import { PrismaEditorTabs } from './prisma/PrismaEditorTabs';
 import { PrismaSchemaTab } from './prisma/PrismaSchemaTab';
@@ -142,7 +142,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const [copiedColumn, setCopiedColumn] = useState<string | null>(null);
 
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
-  const editorRef = useRef<QueryEditorHandle>(null);
+  const editorRef = useRef<MonacoCodeEditorHandle>(null);
 
   // Phase 5: 1-based submit counter for the CURRENT task session. Telemetry only
   // — a high attempt count alongside value mismatches is the signal that a
@@ -518,25 +518,19 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             caption={schemaTab.caption}
           />
         ) : (
-        <QueryEditor
+        <MonacoCodeEditor
           ref={editorRef}
           value={currentSql}
           onChange={handleTextChange}
+          language={isPrismaSurface ? 'typescript' : 'sql'}
           onRun={(sql) => {
             if (taskPassed) handleNextAction();
             else handleRunQuery(sql);
           }}
-          fallbackTable={currentTask.primaryTable || 'products'}
           placeholder={buildEditorPlaceholder(currentTask)}
-          textareaId="challenge-sql-textarea"
-          minLineCount={5}
-          // Phase 7: on the Prisma track the engine error belongs to the LAST
-          // generated statement (shown step-by-step in the SQL Lens below),
-          // not to a line of the learner's TypeScript — so the SQL-only
-          // gutter marker must stay off.
+          minHeight="200px"
           error={!taskPassed && !isPrismaSurface ? (executionResult?.error ?? null) : null}
           errorPosition={!taskPassed && !isPrismaSurface ? (executionResult?.errorPosition ?? null) : null}
-          errorTokenOccurrences={!taskPassed && !isPrismaSurface ? (executionResult?.errorTokenOccurrences ?? null) : null}
         />
         )}
 
