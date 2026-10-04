@@ -3,18 +3,65 @@
 import React, { useRef, useImperativeHandle, forwardRef, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { OnMount, Monaco } from '@monaco-editor/react';
+import { loader } from '@monaco-editor/react';
 
 import { parsePrismaSchema } from '@/lib/prisma-engine/prisma-schema-parser';
 import { emitMonacoDtsFromAst } from '@/lib/prisma-engine/prisma-dts-emitter';
 
+// Configure Monaco to load from local static assets (same-origin /monaco/vs)
+// This eliminates 3rd party CDN latency, satisfies strict CSP, and enables millisecond load.
+if (typeof window !== 'undefined') {
+  loader.config({
+    paths: {
+      vs: '/monaco/vs',
+    },
+  });
+  // Pre-warm Monaco as early as possible so it is in-memory by first interaction
+  loader.init().catch((err) => {
+    console.warn('[Monaco] Local loader pre-warm error, using fallback:', err);
+  });
+}
+
+function InstantEditorSkeleton({
+  value,
+  minHeight = '180px',
+  placeholder,
+}: {
+  value?: string;
+  minHeight?: string;
+  placeholder?: string;
+}) {
+  const displayCode = value?.trim() ? value : placeholder ?? '';
+  const lines = displayCode ? displayCode.split('\n') : [''];
+
+  return (
+    <div
+      className="flex w-full h-full min-h-[160px] bg-[#0d0d10] text-[#f4f4f5] font-mono text-[13px] leading-[22px] select-none overflow-hidden"
+      style={{ minHeight }}
+      aria-label="Editor loading preview"
+    >
+      <div className="w-[46px] shrink-0 py-3 pr-2.5 text-right text-[#71717a] border-r border-[#18181c] select-none opacity-80">
+        {lines.map((_, i) => (
+          <div key={i} className="leading-[22px]">
+            {i + 1}
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 py-3 px-4 font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre">
+        {lines.map((line, i) => (
+          <div key={i} className="leading-[22px] text-zinc-300">
+            {line || <span className="opacity-0">.</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Dynamic import with ssr: false to prevent Next.js SSR window crash
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full min-h-[160px] bg-editor-bg text-text-faint font-mono text-xs">
-      Loading editor...
-    </div>
-  ),
+  loading: () => <InstantEditorSkeleton minHeight="180px" />,
 });
 
 export interface MonacoCodeEditorHandle {
@@ -225,39 +272,51 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
   ) {
     const editorInstanceRef = useRef<any>(null);
     const monacoRef = useRef<Monaco | null>(null);
+    const fallbackTextareaRef = useRef<HTMLTextAreaElement | null>(null);
     const onRunRef = useRef(onRun);
     onRunRef.current = onRun;
 
     useImperativeHandle(ref, () => ({
       focus: () => {
-        editorInstanceRef.current?.focus();
+        if (editorInstanceRef.current) {
+          editorInstanceRef.current.focus();
+        } else {
+          fallbackTextareaRef.current?.focus();
+        }
       },
       format: () => {
         editorInstanceRef.current?.getAction('editor.action.formatDocument')?.run();
       },
       applySuggestion: (text: string) => {
         const editor = editorInstanceRef.current;
-        if (!editor) return;
-        const selection = editor.getSelection();
-        if (selection) {
-          const op = {
-            range: selection,
-            text: text + ' ',
-            forceMoveMarkers: true,
-          };
-          editor.executeEdits('quick-chip', [op]);
+        if (editor) {
+          const selection = editor.getSelection();
+          if (selection) {
+            const op = {
+              range: selection,
+              text: text + ' ',
+              forceMoveMarkers: true,
+            };
+            editor.executeEdits('quick-chip', [op]);
+          } else {
+            editor.trigger('keyboard', 'type', { text: text + ' ' });
+          }
+          editor.focus();
         } else {
-          editor.trigger('keyboard', 'type', { text: text + ' ' });
+          onChange(value ? `${value} ${text}` : text);
         }
-        editor.focus();
       },
       setValue: (val: string) => {
-        editorInstanceRef.current?.setValue(val);
+        if (editorInstanceRef.current) {
+          editorInstanceRef.current.setValue(val);
+        } else {
+          onChange(val);
+        }
       },
       getValue: () => {
         return editorInstanceRef.current?.getValue() ?? value;
       },
-      textarea: null,
+      textarea: fallbackTextareaRef.current,
     }));
 
     // Re-evaluate TypeScript declarations whenever schemaSource or language changes
@@ -327,6 +386,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
           onChange={(val) => onChange(val ?? '')}
           onMount={handleMount}
           theme="sqlens-dark"
+          loading={<InstantEditorSkeleton value={value} minHeight={minHeight} placeholder={placeholder} />}
           options={{
             readOnly,
             fontSize: 13,

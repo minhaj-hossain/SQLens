@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy-monaco.mjs",
     "dev": "next dev",
+    "postinstall": "node scripts/copy-monaco.mjs",
     "build": "node scripts/build.mjs",
     "start": "next start",
     "clean": "rm -rf dist server.js .next",
@@ -36,6 +38,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "monaco-editor": "^0.55.1",
     "@tailwindcss/postcss": "^4.3.3",
     "better-auth": "^1.7.1",
     "lucide-react": "^0.546.0",
