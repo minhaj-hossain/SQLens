@@ -29,7 +29,7 @@ This plan addresses:
 | **2** | **SQL Lens Visual Hierarchy & Tx** | `src/components/learning/SqlLensPanel.tsx` | 🟢 Complete | 2026-10-04 |
 | **3** | **In-Memory Result Stitching Pipeline** | `src/lib/prisma-engine/prisma-in-memory-stitcher.ts`<br>`src/components/learning/ResultsConsole.tsx` | 🟢 Complete | 2026-10-04 |
 | **4** | **Concept Theory Live Demo Runner** | `src/lib/prisma-engine/prisma-demo-runner.ts`<br>`src/components/learning/ConceptLessonView.tsx` | 🟢 Complete | 2026-10-04 |
-| **5** | **Interactive Theory Stepper Visualizer** | `src/components/learning/prisma/PrismaTheoryBlock.tsx` | ⚪ Not Started | - |
+| **5** | **Interactive Theory Stepper Visualizer** | `src/components/learning/prisma/PrismaTheoryBlock.tsx` | 🟢 Complete | 2026-10-04 |
 | **6** | **Adaptive Schema Tab Activation** | `src/components/learning/SQLEditor.tsx`<br>`src/content/prisma/modules/prisma-04-relations.ts` | ⚪ Not Started | - |
 | **7** | **Quality Gate & Regression Audits** | `tests/tracks/*`<br>`scripts/audit-prisma-grading-pipeline.ts` | ⚪ Not Started | - |
 
@@ -104,11 +104,12 @@ This plan addresses:
 ### Phase 5: Interactive Stepped Stepper for Theory
 *Problem:* `PrismaTheorySteps` in `PrismaTheoryBlock.tsx` renders static code fences and text paragraphs. Learners read about query steps instead of experiencing the step-by-step pipeline.
 
-- [ ] **5.1** Refactor `src/components/learning/prisma/PrismaTheoryBlock.tsx`:
+- [x] **5.1** Refactor `src/components/learning/prisma/PrismaTheoryBlock.tsx`:
   - Maintain active step state (`activeStepIndex`).
   - Render an interactive step timeline: `[1. Prisma Call] ──► [2. Query 1 (Parent)] ──► [3. Query 2 (Relation)] ──► [4. Hydrated JSON]`.
   - Add step playback controls (Next / Previous / Direct Click).
   - Highlight the corresponding code segment, parameter bindings, and generated SQL per step.
+  - Automated test suite in `tests/tracks/phase17-prisma-theory-stepper.test.tsx`.
 
 ---
 
