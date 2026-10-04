@@ -345,7 +345,7 @@ export const Day_44_MODULE: ModuleData = {
           ],
           validation: {
             requireProcedure: true,
-            whereContainsTerms: ['DROP PROCEDURE'],
+            requireDropObject: 'PROCEDURE',
           },
           successMessage: 'Procedure created, executed, and cleanly removed!',
           databaseLifecycle: 'fresh',

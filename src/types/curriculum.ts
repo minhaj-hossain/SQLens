@@ -83,6 +83,14 @@ export interface ValidationRule {
    * (Workstream D — Day 29 C3).
    */
   requireIfExists?: boolean;
+  /** Require `WITH CHECK OPTION` in a CREATE VIEW statement. */
+  requireWithCheckOption?: boolean;
+  /** Require `CREATE OR REPLACE` syntax for views, functions, or procedures. */
+  requireOrReplace?: boolean;
+  /** Require dropping an object (e.g. 'FUNCTION' | 'PROCEDURE' | 'TRIGGER' | 'VIEW' | 'TABLE'). */
+  requireDropObject?: 'FUNCTION' | 'PROCEDURE' | 'TRIGGER' | 'VIEW' | 'TABLE';
+  /** Require an UPDATE statement within the query/script. */
+  requireUpdate?: boolean;
   /**
    * Deliberate-failure lab: the task REQUIRES the query to error (e.g. a
    * constraint violation mid-transaction). Passes when the engine rejects it.

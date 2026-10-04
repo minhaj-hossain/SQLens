@@ -336,7 +336,7 @@ export const Day_46_MODULE: ModuleData = {
           ],
           validation: {
             requireTrigger: true,
-            whereContainsTerms: ['DROP TRIGGER'],
+            requireDropObject: 'TRIGGER',
           },
           successMessage: 'Trigger created and removed cleanly!',
           databaseLifecycle: 'fresh',

@@ -339,7 +339,7 @@ export const Day_43_MODULE: ModuleData = {
           ],
           validation: {
             requireCustomFunction: true,
-            whereContainsTerms: ['DROP FUNCTION'],
+            requireDropObject: 'FUNCTION',
           },
           successMessage: 'You created, verified, and cleaned up a custom function!',
           databaseLifecycle: 'fresh',

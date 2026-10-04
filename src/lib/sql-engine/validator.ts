@@ -270,20 +270,103 @@ function sameValueMultiset(a: string[], b: string[]): boolean {
  * unordered comparisons and never reports a row as "extra" merely because the
  * learner's ORDER BY differs.
  */
-function describeRowDifference(gotRows: any[], expRows: any[]): string {
-  const keyOf = (r: any) => Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
-  const display = (r: any) =>
-    '(' + Object.values(r || {}).map((v) => (v === null || v === undefined ? 'NULL' : JSON.stringify(v))).join(', ') + ')';
+/**
+ * Generates all permutations of indices [0, 1, ..., n - 1].
+ * For n <= 6 (covers curriculum queries).
+ */
+function getColumnPermutations(n: number): number[][] {
+  if (n <= 1) return [[0]];
+  if (n === 2) return [[0, 1], [1, 0]];
+  const res: number[][] = [];
+  const curr: number[] = [];
+  const used = new Set<number>();
+  const backtrack = () => {
+    if (curr.length === n) {
+      res.push([...curr]);
+      return;
+    }
+    for (let i = 0; i < n; i++) {
+      if (!used.has(i)) {
+        used.add(i);
+        curr.push(i);
+        backtrack();
+        curr.pop();
+        used.delete(i);
+      }
+    }
+  };
+  backtrack();
+  return res;
+}
+
+function rowKeyForMapping(row: any, colNames: string[], mapping: number[]): string {
+  return mapping
+    .map((cIdx) => serializeValue(row?.[colNames[cIdx]]))
+    .join(String.fromCharCode(1));
+}
+
+function expectedRowKey(row: any, expCols: string[]): string {
+  return expCols.map((c) => serializeValue(row?.[c])).join(String.fromCharCode(1));
+}
+
+function describeRowDifference(
+  gotRows: any[],
+  expRows: any[],
+  gotCols?: string[],
+  expCols?: string[],
+  mapping?: number[]
+): string {
+  const hasCols = !!(gotCols && expCols && mapping && gotCols.length === expCols.length);
+  const keyOfGot = (r: any) =>
+    hasCols
+      ? rowKeyForMapping(r, gotCols!, mapping!)
+      : Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
+  const keyOfExp = (r: any) =>
+    hasCols
+      ? expectedRowKey(r, expCols!)
+      : Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
+
+  const displayGot = (r: any) =>
+    hasCols
+      ? '(' +
+        mapping!
+          .map((idx) => {
+            const v = r?.[gotCols![idx]];
+            return v === null || v === undefined ? 'NULL' : JSON.stringify(v);
+          })
+          .join(', ') +
+        ')'
+      : '(' +
+        Object.values(r || {})
+          .map((v) => (v === null || v === undefined ? 'NULL' : JSON.stringify(v)))
+          .join(', ') +
+        ')';
+
+  const displayExp = (r: any) =>
+    hasCols
+      ? '(' +
+        expCols!
+          .map((c) => {
+            const v = r?.[c];
+            return v === null || v === undefined ? 'NULL' : JSON.stringify(v);
+          })
+          .join(', ') +
+        ')'
+      : '(' +
+        Object.values(r || {})
+          .map((v) => (v === null || v === undefined ? 'NULL' : JSON.stringify(v)))
+          .join(', ') +
+        ')';
 
   const used = new Set<number>();
   for (let i = 0; i < gotRows.length; i++) {
-    const gk = keyOf(gotRows[i]);
-    const match = expRows.findIndex((r, idx) => !used.has(idx) && keyOf(r) === gk);
+    const gk = keyOfGot(gotRows[i]);
+    const match = expRows.findIndex((r, idx) => !used.has(idx) && keyOfExp(r) === gk);
     if (match === -1) {
       const spare = expRows.findIndex((_r, idx) => !used.has(idx));
       return spare === -1
-        ? `Row ${i + 1} ${display(gotRows[i])} is not part of the expected result.`
-        : `Row ${i + 1} returned ${display(gotRows[i])} but the expected result has ${display(expRows[spare])}.`;
+        ? `Row ${i + 1} ${displayGot(gotRows[i])} is not part of the expected result.`
+        : `Row ${i + 1} returned ${displayGot(gotRows[i])} but the expected result has ${displayExp(expRows[spare])}.`;
     }
     used.add(match);
   }
@@ -291,7 +374,7 @@ function describeRowDifference(gotRows: any[], expRows: any[]): string {
   const missing = expRows.findIndex((_r, idx) => !used.has(idx));
   return missing === -1
     ? ''
-    : `The expected result also contains ${display(expRows[missing])}, which your query did not return.`;
+    : `The expected result also contains ${displayExp(expRows[missing])}, which your query did not return.`;
 }
 
 /**
@@ -757,6 +840,22 @@ export function validateTaskSolution(
     );
   }
 
+  if (rule.requireWithCheckOption && !/\bWITH\s+CHECK\s+OPTION\b/i.test(structural)) {
+    failConstruct(`This view definition must include WITH CHECK OPTION at the end to prevent invalid row modifications.`);
+  }
+
+  if (rule.requireOrReplace && !/\bOR\s+REPLACE\b/i.test(structural)) {
+    failConstruct(`This statement must use CREATE OR REPLACE to update the existing definition.`);
+  }
+
+  if (rule.requireDropObject && !new RegExp(`\\bDROP\\s+${rule.requireDropObject}\\b`, 'i').test(structural)) {
+    failConstruct(`Remember to clean up by dropping the ${rule.requireDropObject.toLowerCase()} (e.g. DROP ${rule.requireDropObject} ...).`);
+  }
+
+  if (rule.requireUpdate && !/\bUPDATE\b/i.test(structural)) {
+    failConstruct(`This task requires executing an UPDATE statement to modify the data.`);
+  }
+
   // 8. Check LIMIT (S2-5: the feature set sees CTE / set-op / nested LIMITs)
   if (rule.requireLimit !== undefined) {
     const requiredLimit =
@@ -860,24 +959,77 @@ export function validateTaskSolution(
   let datasetMismatch: string | null = null;
   const datasetGraded = !!(rule.requireExactResult && expected && expected.success && !result.error);
   if (datasetGraded) {
-    const gotCols = result.columns.map(c => c.toLowerCase());
-    const expCols = expected!.columns.map(c => c.toLowerCase());
+    const gotCols = result.columns;
+    const expCols = expected!.columns;
     if (gotCols.length !== expCols.length) {
-      datasetMismatch = `Your query returned ${gotCols.length} column(s), but the expected result has ${expCols.length}. Check your SELECT list.`;
+      const expList = expCols.join(', ');
+      const gotList = gotCols.join(', ');
+      datasetMismatch = `Your query returned ${gotCols.length} column(s) [${gotList}], but the expected result has ${expCols.length} [${expList}]. Explicitly specify only the requested columns in your SELECT clause.`;
     } else {
-      const rowKey = (r: any) => Object.values(r || {}).map(serializeValue).sort().join(String.fromCharCode(1));
-      const gotKeys = (result.rows || []).map(rowKey);
-      const expKeys = (expected!.rows || []).map(rowKey);
       const ordered = !!(rule.requireOrderBy && rule.requireOrderBy.length > 0);
-      const detail = describeRowDifference(result.rows || [], expected!.rows || []);
-      const suffix = detail ? ` ${detail}` : '';
-      if (ordered) {
-        if (gotKeys.length !== expKeys.length || gotKeys.some((k, i) => k !== expKeys[i])) {
-          datasetMismatch =
-            `The rows you returned do not match the expected result set (values or sort order).${suffix}`;
+      const expKeys = (expected!.rows || []).map((r) => expectedRowKey(r, expCols));
+
+      // Candidate mappings: test name-aligned mapping first if applicable, then identity, then permutations
+      const candidateMappings: number[][] = [];
+      const colCount = gotCols.length;
+
+      // 1. Name-based mapping (case-insensitive)
+      const nameMapping = expCols.map((ec) =>
+        gotCols.findIndex((gc) => gc.toLowerCase() === ec.toLowerCase())
+      );
+      const hasUniqueNameMapping =
+        nameMapping.every((idx) => idx !== -1) &&
+        new Set(nameMapping).size === colCount;
+
+      const identityMapping = Array.from({ length: colCount }, (_, i) => i);
+
+      if (hasUniqueNameMapping) {
+        // When column names or aliases match uniquely, bind columns by name.
+        candidateMappings.push(nameMapping);
+      } else {
+        // Names do not uniquely match (e.g. unaliased expressions or different aliases):
+        // Try identity first, then table-consistent permutations
+        candidateMappings.push(identityMapping);
+        if (colCount <= 6) {
+          for (const p of getColumnPermutations(colCount)) {
+            if (!candidateMappings.some((m) => m.every((v, i) => v === p[i]))) {
+              candidateMappings.push(p);
+            }
+          }
         }
-      } else if (!sameValueMultiset(gotKeys, expKeys)) {
-        datasetMismatch = `The returned data does not match the expected result set.${suffix}`;
+      }
+
+      // Find the first mapping under which the entire table matches
+      let matchedMapping: number[] | null = null;
+      for (const m of candidateMappings) {
+        const gotKeys = (result.rows || []).map((r) => rowKeyForMapping(r, gotCols, m));
+        if (ordered) {
+          if (gotKeys.length === expKeys.length && gotKeys.every((k, i) => k === expKeys[i])) {
+            matchedMapping = m;
+            break;
+          }
+        } else if (sameValueMultiset(gotKeys, expKeys)) {
+          matchedMapping = m;
+          break;
+        }
+      }
+
+      if (!matchedMapping) {
+        // Use best representative mapping (name-based or identity) for the diff description
+        const repMapping = hasUniqueNameMapping ? nameMapping : identityMapping;
+        const detail = describeRowDifference(
+          result.rows || [],
+          expected!.rows || [],
+          gotCols,
+          expCols,
+          repMapping
+        );
+        const suffix = detail ? ` ${detail}` : '';
+        if (ordered) {
+          datasetMismatch = `The rows you returned do not match the expected result set (values or sort order).${suffix}`;
+        } else {
+          datasetMismatch = `The returned data does not match the expected result set.${suffix}`;
+        }
       }
     }
   }
