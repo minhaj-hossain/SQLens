@@ -67,6 +67,7 @@ export const Prisma_04_MODULE: ModuleData = {
           why: 'The many-side owns the FK column — that is what makes 1:N possible.',
           cols: ['id', 'name'],
           rows: 1,
+          activeTab: 'schema',
           code0:
             'model Post {\n  id     Int  @id @default(autoincrement())\n  title  String\n  author User\n}',
           code1:
@@ -119,6 +120,9 @@ export const Prisma_04_MODULE: ModuleData = {
           why: 'A unique FK is the whole difference between 1:N and 1:1.',
           cols: ['id', 'email'],
           rows: 1,
+          activeTab: 'schema',
+          schemaSource:
+            'model User {\n  id      Int      @id @default(autoincrement())\n  email   String   @unique\n  profile Profile?\n}\n\nmodel Profile {\n  id     Int    @id @default(autoincrement())\n  bio    String?\n  user   User   @relation(fields: [userId], references: [id])\n  userId Int    @unique\n}',
           code0:
             'model Profile {\n  id     Int  @id @default(autoincrement())\n  user   User @relation(fields: [userId], references: [id])\n  userId Int\n}',
           code1:
@@ -152,6 +156,9 @@ export const Prisma_04_MODULE: ModuleData = {
           why: 'Both sides list the other, so Prisma generates the hidden join table.',
           cols: ['id', 'name'],
           rows: 1,
+          activeTab: 'schema',
+          schemaSource:
+            'model Post {\n  id         Int        @id @default(autoincrement())\n  title      String\n  categories Category[]\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post[]\n}',
           code0:
             'model Post {\n  id       Int      @id @default(autoincrement())\n  title    String\n  category Category\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post\n}',
           code1:
@@ -169,6 +176,9 @@ export const Prisma_04_MODULE: ModuleData = {
           why: 'Owning the join model lets the join row grow real columns later.',
           cols: ['id', 'name'],
           rows: 1,
+          activeTab: 'schema',
+          schemaSource:
+            'model Post {\n  id         Int            @id @default(autoincrement())\n  title      String\n  categories PostCategory[]\n}\n\nmodel Category {\n  id    Int            @id @default(autoincrement())\n  name  String\n  posts PostCategory[]\n}\n\nmodel PostCategory {\n  postId     Int\n  categoryId Int\n  post       Post     @relation(fields: [postId], references: [id])\n  category   Category @relation(fields: [categoryId], references: [id])\n\n  @@id([postId, categoryId])\n}',
           code0:
             'model Post {\n  id         Int            @id @default(autoincrement())\n  categories PostCategory[]\n}\n\nmodel Category {\n  id    Int            @id @default(autoincrement())\n  posts PostCategory[]\n}',
           code1:

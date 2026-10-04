@@ -33,7 +33,9 @@ import {
   ArrowRight,
   ChevronDown,
   X,
+  Network,
 } from 'lucide-react';
+import { buildErdDiagramFromSource } from '../../lib/prisma-engine/prisma-erd';
 
 interface IndependentChallengeViewProps {
   challenge: ModuleChallenge;
@@ -120,7 +122,33 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   // opens a task directly on it. Tab state resets on task switch below.
   const schemaTab = editorSchemaTab(currentTask);
   const [editorTab, setEditorTab] = useState<PrismaEditorTab>(() => defaultEditorTab(currentTask));
+  const [schemaView, setSchemaView] = useState<'source' | 'diagram'>('source');
   const showSchema = Boolean(schemaTab) && editorTab === 'schema';
+
+  // Phase 6: compute multi-model schema relations for persistent indicator pill
+  const schemaStats = useMemo(() => {
+    if (!schemaTab?.source) return null;
+    try {
+      const diagram = buildErdDiagramFromSource(schemaTab.source);
+      if (diagram.models.length < 2) return null;
+      const relationPairs = new Set<string>();
+      for (const rel of diagram.relations) {
+        const pair = [rel.from.toLowerCase(), rel.to.toLowerCase()].sort().join('<->');
+        relationPairs.add(pair);
+      }
+      const modelCount = diagram.models.length;
+      const relationCount = relationPairs.size;
+      const label = `Schema: ${modelCount} models, ${relationCount} relation${relationCount === 1 ? '' : 's'} defined ↗`;
+      return { modelCount, relationCount, label };
+    } catch {
+      return null;
+    }
+  }, [schemaTab?.source]);
+
+  const handleOpenErd = () => {
+    setEditorTab('schema');
+    setSchemaView('diagram');
+  };
 
   // Progressive Hint States
   const [revealedHintLevel, setRevealedHintLevel] = useState<number>(0);
@@ -166,6 +194,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     // Phase 9: reset the editor tab on task switch so a schema-first task
     // opens on the schema (not on the previous task's leftover code tab).
     setEditorTab(defaultEditorTab(currentTask));
+    setSchemaView('source');
     setTaskPassed(isDone);
     setValidationFeedback(null);
     setRevealedHintLevel(0);
@@ -454,6 +483,18 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 {isPrismaSurface ? 'TYPESCRIPT' : 'SQL'}
               </span>
             )}
+            {schemaStats && (
+              <button
+                id="challenge-erd-relation-pill"
+                type="button"
+                onClick={handleOpenErd}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-mono text-cyan-300 hover:text-cyan-200 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-700/50 hover:border-cyan-600 transition cursor-pointer shadow-[0_0_8px_rgba(56,189,248,0.1)] shrink-0"
+                title="Open live interactive ERD"
+              >
+                <Network className="w-3 h-3 text-cyan-400" />
+                <span>{schemaStats.label}</span>
+              </button>
+            )}
             {chrome.expectedType && (
               <span
                 className="hidden sm:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[240px]"
@@ -516,6 +557,8 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             source={schemaTab.source}
             label={schemaTab.label}
             caption={schemaTab.caption}
+            activeView={schemaView}
+            onViewChange={setSchemaView}
           />
         ) : (
         <MonacoCodeEditor

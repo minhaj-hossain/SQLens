@@ -167,6 +167,8 @@ export const Prisma_03_MODULE: ModuleData = {
           why: 'A closed enum makes an invalid role impossible to insert.',
           cols: ['id', 'email'],
           rows: 1,
+          schemaSource:
+            'enum Role {\n  ADMIN\n  MEMBER\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n  role  Role   @default(MEMBER)\n}',
           code0:
             'model User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n  role  String @default("MEMBER")\n}',
           code1:
@@ -185,6 +187,8 @@ export const Prisma_03_MODULE: ModuleData = {
           why: 'The composite key blocks the duplicate, the index makes the lookup cheap.',
           cols: ['id', 'name'],
           rows: 1,
+          schemaSource:
+            'model User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  email String\n\n  @@unique([name, email])\n  @@index([email])\n}',
           code0:
             'model User {\n  id    Int    @id @default(autoincrement())\n  name  String @unique\n  email String @unique\n}',
           code1:

@@ -94,6 +94,10 @@ export interface PrismaTaskExtras {
   skillType?: SkillType;
   /** Phase 3 Quality Rubric: Strategy C grading channel ('executable' | 'snippet-lab'). */
   gradingType?: GradingType;
+  /** Phase 9/Phase 6: which editor tab this task OPENS on (`editor` or `schema`). */
+  activeTab?: 'editor' | 'schema';
+  /** Phase 9/Phase 6: custom schema.prisma source for multi-model or custom tasks. */
+  schemaSource?: string;
 }
 
 /** Rules shared by both factories' Prisma side (needs `code1` to infer the method). */
@@ -201,6 +205,8 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
       initialCode: t.code0,
       solutionCode: t.code1,
       expectedType: t.rtype,
+      ...(t.activeTab ? { activeTab: t.activeTab } : {}),
+      ...(t.schemaSource ? { schemaSource: t.schemaSource } : {}),
       ...(t.demoVariables ? { demoVariables: t.demoVariables } : {}),
       validation: {
         ...prismaRules(t, selectFields),
@@ -278,6 +284,8 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
       initialCode: t.code0,
       solutionCode: t.code1,
       expectedType: t.rtype ?? 'string',
+      ...(t.activeTab ? { activeTab: t.activeTab } : {}),
+      ...(t.schemaSource ? { schemaSource: t.schemaSource } : {}),
       ...(t.demoVariables ? { demoVariables: t.demoVariables } : {}),
       validation: {
         requiredCodeSnippets: t.need,

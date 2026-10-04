@@ -20,6 +20,10 @@ export interface PrismaSchemaTabProps {
   /** One line saying WHICH schema this is (task-authored vs seed universe). */
   caption?: string;
   className?: string;
+  /** Controlled active view ('source' or 'diagram' / ERD). */
+  activeView?: 'source' | 'diagram';
+  /** Callback when user changes the view. */
+  onViewChange?: (view: 'source' | 'diagram') => void;
 }
 
 export const PrismaSchemaTab: React.FC<PrismaSchemaTabProps> = ({
@@ -27,8 +31,17 @@ export const PrismaSchemaTab: React.FC<PrismaSchemaTabProps> = ({
   label = 'schema.prisma',
   caption,
   className = '',
+  activeView,
+  onViewChange,
 }) => {
-  const [view, setView] = useState<'source' | 'diagram'>('source');
+  const [internalView, setInternalView] = useState<'source' | 'diagram'>(activeView ?? 'source');
+  const view = activeView ?? internalView;
+
+  const handleViewChange = (nextView: 'source' | 'diagram') => {
+    setInternalView(nextView);
+    onViewChange?.(nextView);
+  };
+
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -57,7 +70,7 @@ export const PrismaSchemaTab: React.FC<PrismaSchemaTabProps> = ({
           <div className="flex items-center rounded-lg border border-border overflow-hidden">
             <button
               type="button"
-              onClick={() => setView('source')}
+              onClick={() => handleViewChange('source')}
               className={`px-2.5 py-1 text-[10.5px] font-mono transition cursor-pointer ${
                 view === 'source' ? 'bg-surface-3 text-text' : 'text-text-dim hover:text-text'
               }`}
@@ -66,7 +79,7 @@ export const PrismaSchemaTab: React.FC<PrismaSchemaTabProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setView('diagram')}
+              onClick={() => handleViewChange('diagram')}
               className={`inline-flex items-center gap-1 px-2.5 py-1 text-[10.5px] font-mono transition cursor-pointer ${
                 view === 'diagram' ? 'bg-surface-3 text-text' : 'text-text-dim hover:text-text'
               }`}

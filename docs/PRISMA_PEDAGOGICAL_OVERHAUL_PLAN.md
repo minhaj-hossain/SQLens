@@ -30,7 +30,7 @@ This plan addresses:
 | **3** | **In-Memory Result Stitching Pipeline** | `src/lib/prisma-engine/prisma-in-memory-stitcher.ts`<br>`src/components/learning/ResultsConsole.tsx` | 🟢 Complete | 2026-10-04 |
 | **4** | **Concept Theory Live Demo Runner** | `src/lib/prisma-engine/prisma-demo-runner.ts`<br>`src/components/learning/ConceptLessonView.tsx` | 🟢 Complete | 2026-10-04 |
 | **5** | **Interactive Theory Stepper Visualizer** | `src/components/learning/prisma/PrismaTheoryBlock.tsx` | 🟢 Complete | 2026-10-04 |
-| **6** | **Adaptive Schema Tab Activation** | `src/components/learning/SQLEditor.tsx`<br>`src/content/prisma/modules/prisma-04-relations.ts` | ⚪ Not Started | - |
+| **6** | **Adaptive Schema Tab Activation** | `src/components/learning/SQLEditor.tsx`<br>`src/content/prisma/modules/prisma-04-relations.ts` | 🟢 Complete | 2026-10-04 |
 | **7** | **Quality Gate & Regression Audits** | `tests/tracks/*`<br>`scripts/audit-prisma-grading-pipeline.ts` | ⚪ Not Started | - |
 
 ---
@@ -116,9 +116,9 @@ This plan addresses:
 ### Phase 6: Adaptive Schema Tab Activation
 *Problem:* The ERD and schema source are buried inside the `SCHEMA` tab of the editor. Learners frequently miss the ERD when working on relation models in Days 3 and 4.
 
-- [ ] **6.1** Update `src/content/prisma/modules/prisma-03-models-constraints.ts` and `prisma-04-relations.ts`:
+- [x] **6.1** Update `src/content/prisma/modules/prisma-03-models-constraints.ts` and `prisma-04-relations.ts`:
   - Configure `activeTab: 'schema'` by default on relation-declaration tasks.
-- [ ] **6.2** Update `src/components/learning/SQLEditor.tsx`:
+- [x] **6.2** Update `src/components/learning/SQLEditor.tsx`:
   - Add a persistent relation indicator pill on tasks with multi-model schemas (`Schema: 2 models, 1 relation defined ↗`) that switches to the ERD view on click.
 
 ---
