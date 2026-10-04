@@ -126,6 +126,25 @@ renders it, and no earlier rule can see it. It MUST therefore satisfy all four:
   on a bare executor makes its own reference solution ERROR and reports a
   false "dead code" finding.
 
+### Rule 8 — Prompt-to-Solution Alignment Contract
+A task's rendered prompt (instructions, description, initialSql) must explicitly define
+all projections, sorts, and aliases demanded by its reference solution and validator.
+A learner must never be penalized for omitting an unstated expectation.
+
+1. **No Ghost Projections** — If a task requires specific projected columns (outside
+   `SELECT *` wildcards or `EXPLAIN` query plans), those column names must appear
+   in the instructions, description, or initialSql.
+2. **Explicit Sorts** — If `requireOrderBy: true` is set, the prompt must explicitly
+   instruct the sort column and direction (e.g. `ORDER BY student_count DESC`).
+3. **Explicit Aliases** — Any alias listed in `requiredAliases` must be explicitly
+   named in backticks in the prompt instructions.
+4. **No Construct Hijacking** — DDL and procedural constructs (`WITH CHECK OPTION`,
+   `OR REPLACE`, `DROP PROCEDURE`, `DROP TRIGGER`, `UPDATE`) must be validated using
+   native validation flags (`requireWithCheckOption`, `requireOrReplace`, `requireDropObject`,
+   `requireUpdate`), preserving `whereContainsTerms` solely for WHERE filter clauses.
+
+- Enforcement: `npm run audit:sql-prompt-contract`.
+
 ## Task-author checklist
 
 1. Single read-only query? → `requireExactResult: true`.
@@ -138,7 +157,8 @@ renders it, and no earlier rule can see it. It MUST therefore satisfy all four:
    pass from seed every time.
 6. Writing a `customValidator`? → give every failing path a `message`, and key
    only off values the rendered prompt shows (Rule 7).
-7. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators` before pushing. All four must be green.
+7. Align prompt and solution? → explicitly state required columns, sorts, and aliases in prompt (Rule 8).
+8. Run `npm run audit:grading-pipeline && npm run audit:grading-policy && npm run audit:taught-before-tested && npm run audit:custom-validators && npm run audit:sql-prompt-contract` before pushing. All must be green.
 
 ## Grading integrity vs. cloud progress (Milestone 4, S-2)
 

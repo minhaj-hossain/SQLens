@@ -54,17 +54,17 @@
 ---
 
 ### Phase 3: Automated Quality Gate & Policy Update
-- [ ] **Task 3.1: Create `scripts/audit-sql-prompt-contract.ts`**
-  - Checks every task in the curriculum for prompt-to-solution contract adherence:
+- [x] **Task 3.1: Create `scripts/audit-sql-prompt-contract.ts`**
+  - Checks all 424 tasks in the curriculum for prompt-to-solution contract adherence:
     - Explicit projection columns
     - Explicit sort requirements
     - Explicit alias references
     - Prohibits DDL hijacking in `whereContainsTerms`
-- [ ] **Task 3.2: Wire into `package.json` and CI Chain**
-  - Add script `audit:sql-prompt-contract`
-  - Include in `npm run audit:all`
-- [ ] **Task 3.3: Update `docs/GRADING_POLICY.md`**
-  - Codify Rule 8 (Prompt-to-Solution Alignment Contract).
+- [x] **Task 3.2: Wire into `package.json` and CI Chain**
+  - Added script `audit:sql-prompt-contract`
+  - Included in `npm run audit:all`
+- [x] **Task 3.3: Update `docs/GRADING_POLICY.md`**
+  - Codified Rule 8 (Prompt-to-Solution Alignment Contract).
 - **Commit Checkpoint 3**: `feat(audit): add sql prompt contract gate and update grading policy`
 
 ---
