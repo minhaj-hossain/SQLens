@@ -10,9 +10,9 @@
 | :--- | :--- | :--- | :--- |
 | **Phase 0** | **Docs Archiving & Audit Baseline** | 🟢 Complete | `chore(docs): archive completed plans and trackers` |
 | **Phase 1** | **Validator Engine Hardening & Bug Fixes** | 🟢 Complete | `feat(sql-validator): harden validator rules, fix DDL feedback and rowKey collision` |
-| **Phase 2** | **Curriculum Prompt & Solution Alignment** | ⚪ Not Started | `fix(sql-content): align task prompts with solutions and eliminate ghost requirements` |
-| **Phase 3** | **Automated Quality Gate & Policy Update** | ⚪ Not Started | `feat(audit): add sql prompt contract gate and update grading policy` |
-| **Phase 4** | **Full Verification & CI Sign-Off** | ⚪ Not Started | `chore: complete sql validator and curriculum overhaul audit` |
+| **Phase 2** | **Curriculum Prompt & Solution Alignment** | 🟢 Complete | `fix(sql-content): align task prompts with solutions and eliminate ghost requirements` |
+| **Phase 3** | **Automated Quality Gate & Policy Update** | 🟢 Complete | `feat(audit): add sql prompt contract gate and update grading policy` |
+| **Phase 4** | **Full Verification & CI Sign-Off** | 🟢 Complete | `chore: complete sql validator and curriculum overhaul audit` |
 
 ---
 
