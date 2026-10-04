@@ -12,6 +12,7 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { runAndGradeSubmission } from '../../src/lib/sql-engine/submit-pipeline';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
 import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { deriveEvaluationState } from '../../src/lib/evaluation-state';
 import {
   editorStarterCode,
   editorSurface,
@@ -161,8 +162,39 @@ describe('Phase 7 — submitForTask routing', () => {
     // P1.2: the CLI lab renders simulated terminal output instead of the
     // authored reference rows.
     expect(out.displayMode).toBe('terminal');
-    expect(out.terminalOutput).toContain('$ npx prisma generate');
+    // `prisma02-c1-t1` bootstraps a project, so the simulated run is
+    // `npx prisma init …` — the old `npx prisma generate` expectation belonged
+    // to the sibling lab and failed on a perfectly correct pipeline.
+    expect(out.terminalOutput).toContain('$ npx prisma init --datasource-provider postgresql');
     expect(out.result).toBeUndefined();
+  });
+
+  it('a passed snippet lab maps to the "correct" UI state — Next must be reachable', () => {
+    // Day 2 · Concept 1 · Task 1 dead-end regression: a snippet lab passes with
+    // `result: undefined`, and the view used to derive 'idle' from the missing
+    // run result — hiding the Next button behind an unreachable state.
+    const task = prismaTaskById('prisma02-c1-t1');
+    const ex = new SqlExecutor();
+    const out = submitForTask({
+      task,
+      code: task.prisma!.solutionCode,
+      hooks: fullHooks(ex),
+      surface: 'lesson',
+      record: false,
+    });
+    // Pipeline contract: static labs pass without executing anything.
+    expect(out.passed).toBe(true);
+    expect(out.result).toBeUndefined();
+    expect(out.displayMode).toBe('terminal');
+    // …so the view's derivation must trust the VERDICT, not the payload.
+    // (On a pass the view sets the success message → hasFeedback is true.)
+    expect(
+      deriveEvaluationState({
+        taskPassed: out.passed,
+        hasResult: out.result !== undefined,
+        hasFeedback: true,
+      }),
+    ).toBe('correct');
   });
 
   it('refuses to pass a Prisma task that declares reasoning questions', () => {

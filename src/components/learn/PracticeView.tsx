@@ -104,10 +104,6 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
           nav.completeConcept(mod.id, concept.id);
         }
       }}
-      canGoForward={
-        taskIndex < concept.tasks.length - 1 ||
-        Boolean(userState.taskAttempts?.[task.id]?.completed)
-      }
     />
   );
 }

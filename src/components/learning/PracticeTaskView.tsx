@@ -27,6 +27,7 @@ import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
 import { PrismaTypeInspector } from './prisma/PrismaTypeInspector';
 import { buildEditorPlaceholder } from '../../lib/task-scaffold';
+import { deriveEvaluationState } from '../../lib/evaluation-state';
 
 interface PracticeTaskViewProps {
   task: PracticeTask;
@@ -56,7 +57,6 @@ interface PracticeTaskViewProps {
   /** P11.2: step-chain Back (task N -> task N-1 -> lesson -> prev-concept task). */
   onBack?: () => void;
   backLabel?: string;
-  canGoForward?: boolean;
 }
 
 export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
@@ -77,7 +77,6 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   onNextTask,
   onBack,
   backLabel,
-  canGoForward = false,
 }) => {
   // Phase 7: the editor's starter + chrome come from the track (Prisma tasks
   // edit TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
@@ -255,12 +254,14 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   const txnStatus = executionResult?.txnStatus ?? 'none';
   const uncommitted = executionResult?.uncommittedChanges ?? 0;
 
-  const evaluationState =
-    executionResult === null
-      ? 'idle'
-      : taskPassed
-      ? 'correct'
-      : 'wrong';
+  // Verdict-first (see `deriveEvaluationState`): snippet labs return no run
+  // result, and keying this state off the result payload left a PASSED lab
+  // with no Next button and a FAILED lab with no error banner.
+  const evaluationState = deriveEvaluationState({
+    taskPassed,
+    hasResult: executionResult !== null,
+    hasFeedback: validationMessage !== null,
+  });
 
   return (
     <motion.div
