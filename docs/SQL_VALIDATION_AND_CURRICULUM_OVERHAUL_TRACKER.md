@@ -39,16 +39,16 @@
 ---
 
 ### Phase 2: Curriculum Prompt & Solution Alignment
-- [ ] **Task 2.1: Fix Identified Ghost Projections**
+- [x] **Task 2.1: Fix Identified Ghost Projections**
   - `sec-c1-t2` (Day 32): add explicit SELECT column instruction (`customer_id, name, email`).
   - `case-order-t1` (Day 10): explicitly instruct selecting `name, price, price_tier`.
   - `sec-c2-t2` (Day 32): explicitly specify columns `customer_id, name`.
-- [ ] **Task 2.2: Fix Unprompted Required Sorts**
+- [x] **Task 2.2: Fix Unprompted Required Sorts**
   - `norm-c3-t2` (Day 30): update prompt instruction to explicitly state "Sort by student_count descending".
-- [ ] **Task 2.3: Hidden Tie-Breakers Audit & Remediation**
-  - Ensure any task requiring `ORDER BY` with `LIMIT` either has unique sort keys or explicitly instructs secondary sort columns for deterministic results.
-- [ ] **Task 2.4: Explicit Alias Audit**
-  - Ensure every task with `requiredAliases` states the exact required alias in backticks in the instructions.
+- [x] **Task 2.3: Hidden Tie-Breakers Audit & Remediation**
+  - Verified: all tasks with ORDER BY and LIMIT have deterministic tie-breakers matching instruction prompts.
+- [x] **Task 2.4: Explicit Alias Audit**
+  - Verified: all required aliases are explicitly mentioned in prompt instructions in backticks.
 - **Commit Checkpoint 2**: `fix(sql-content): align task prompts with solutions and eliminate ghost requirements`
 
 ---

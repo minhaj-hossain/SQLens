@@ -307,8 +307,9 @@ export const Day_30_MODULE: ModuleData = {
           title: 'Task 2 (Independent): Atomic rows make counting natural',
           description: 'From students, list each department with COUNT(*) AS student_count, GROUP BY department, ORDER BY student_count DESC so the largest department shows first.',
           instructions: [
-            'Write a GROUP BY query that counts students per department.',
-            'Sort so the largest department shows first. Try to picture doing this if departments lived in one comma-separated cell.',
+            'Select `department` and `COUNT(*) AS student_count` from `students`.',
+            'Group the query by `department`.',
+            'Sort by `student_count DESC` so the largest department shows first.',
           ],
           type: 'independent',
           primaryTable: 'students',

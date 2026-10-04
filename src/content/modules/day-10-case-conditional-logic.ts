@@ -414,7 +414,7 @@ export const Day_10_MODULE: ModuleData = {
           description: 'QC reported that cheap products show as \'Standard\'. First predict the bug\'s reach, then fix the branch order.',
           instructions: [
             'Run the broken query from the theory (it is pre-loaded in the editor) and confirm products under $25 show Standard.',
-            'Rewrite it correctly: WHEN `price < 25` first, THEN `price < 100`, ELSE `\'Premium\'` — aliased AS `price_tier`. Verify Budget reappears.',
+            'Select `name`, `price`, and rewrite the CASE expression: WHEN `price < 25` first, THEN `price < 100`, ELSE `\'Premium\'` — aliased AS `price_tier`. Verify Budget reappears.',
           ],
           type: 'guided',
           primaryTable: 'products',

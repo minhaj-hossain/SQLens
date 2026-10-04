@@ -162,6 +162,7 @@ export const Day_32_MODULE: ModuleData = {
           title: "Task 2 (Independent): Run the attack - `' OR '1'='1`",
           description: "Now concatenate the attacker's payload instead of the honest name and run the result. Watch the WHERE clause collapse.",
           instructions: [
+            "Select `customer_id`, `name`, `email` from `customers`.",
             "The user typed this into the search box: `\" OR '1'='1` (a quote, then OR, then an always-true comparison).",
             'Concatenated into the query, the filter becomes: `WHERE name = \'\' OR \'1\'=\'1\'`.',
             "Run it and count the rows that come back - it should be every customer.",
@@ -343,6 +344,7 @@ export const Day_32_MODULE: ModuleData = {
           title: 'Task 2 (Independent): Feed the payload to the bound-string version',
           description: "Same attack, parameterized: the payload is bound as the *value* of name. Predict the row count before you run it.",
           instructions: [
+            "Select `customer_id`, `name` from `customers`.",
             "The template is `WHERE name = ?` and the driver binds the raw payload text as the value.",
             'The executed SQL compares every name against the literal payload string: `WHERE name = \'\' OR \'1\'=\'1\'` is NOT what runs - instead the whole payload is ONE literal.',
             "Model it as an honest search for a name no customer has: `WHERE name = 'no such customer'` - and confirm it returns 0 rows.",
