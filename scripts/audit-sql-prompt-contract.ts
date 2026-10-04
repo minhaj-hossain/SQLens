@@ -20,7 +20,7 @@
  * Run: npx tsx scripts/audit-sql-prompt-contract.ts
  */
 import { ALL_MODULES } from '../src/content/curriculum-index';
-import { PracticeTask, ChallengeTask } from '../src/types/curriculum';
+import { PracticeTask } from '../src/types/curriculum';
 
 interface Finding {
   day: number;
@@ -45,7 +45,7 @@ const FORBIDDEN_WHERE_TERMS = [
 const findings: Finding[] = [];
 let totalTasksChecked = 0;
 
-function auditTask(day: number, moduleId: string, task: PracticeTask | ChallengeTask) {
+function auditTask(day: number, moduleId: string, task: PracticeTask) {
   totalTasksChecked++;
   const val = task.validation || {};
   const renderedPrompt = [
@@ -77,9 +77,14 @@ function auditTask(day: number, moduleId: string, task: PracticeTask | Challenge
   }
 
   // Check 2: Explicit Alias Contract
-  if (val.requiredAliases && Array.isArray(val.requiredAliases)) {
-    for (const alias of val.requiredAliases) {
-      if (!renderedPrompt.includes(alias.toLowerCase())) {
+  if (val.requiredAliases) {
+    const aliases: string[] = Array.isArray(val.requiredAliases)
+      ? val.requiredAliases
+      : typeof val.requiredAliases === 'object'
+      ? Object.values(val.requiredAliases)
+      : [];
+    for (const alias of aliases) {
+      if (typeof alias === 'string' && !renderedPrompt.includes(alias.toLowerCase())) {
         findings.push({
           day,
           moduleId,
@@ -114,7 +119,10 @@ function auditTask(day: number, moduleId: string, task: PracticeTask | Challenge
   }
 
   // Check 4: Explicit Sort Contract
-  if (val.requireOrderBy === true) {
+  if (
+    (Array.isArray(val.requireOrderBy) && val.requireOrderBy.length > 0) ||
+    Boolean(val.requireOrderBy)
+  ) {
     const hasSortInstruction =
       renderedPrompt.includes('sort') ||
       renderedPrompt.includes('order') ||
@@ -134,7 +142,7 @@ function auditTask(day: number, moduleId: string, task: PracticeTask | Challenge
         moduleId,
         taskId: task.id,
         kind: 'ghost-sort',
-        detail: `requireOrderBy is true but prompt contains no sort/order instruction keywords.`,
+        detail: `requireOrderBy is configured but prompt contains no sort/order instruction keywords.`,
       });
     }
   }
