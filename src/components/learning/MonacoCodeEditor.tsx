@@ -9,51 +9,55 @@ import { parsePrismaSchema } from '@/lib/prisma-engine/prisma-schema-parser';
 import { emitMonacoDtsFromAst } from '@/lib/prisma-engine/prisma-dts-emitter';
 
 // Configure Monaco to load from local static assets (same-origin /monaco/vs)
-// This eliminates 3rd party CDN latency, satisfies strict CSP, and enables millisecond load.
+// Safe loader configuration without top-level loader.init execution
 if (typeof window !== 'undefined') {
   loader.config({
     paths: {
       vs: '/monaco/vs',
     },
   });
-  // Pre-warm Monaco as early as possible so it is in-memory by first interaction
-  loader.init().catch((err) => {
-    console.warn('[Monaco] Local loader pre-warm error, using fallback:', err);
-  });
 }
 
-function InstantEditorSkeleton({
+function InteractiveEditorFallback({
   value,
+  onChange,
   minHeight = '180px',
   placeholder,
+  readOnly,
+  textareaRef,
 }: {
   value?: string;
+  onChange?: (val: string) => void;
   minHeight?: string;
   placeholder?: string;
+  readOnly?: boolean;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 }) {
-  const displayCode = value?.trim() ? value : placeholder ?? '';
+  const displayCode = value ?? placeholder ?? '';
   const lines = displayCode ? displayCode.split('\n') : [''];
 
   return (
     <div
-      className="flex w-full h-full min-h-[160px] bg-[#0d0d10] text-[#f4f4f5] font-mono text-[13px] leading-[22px] select-none overflow-hidden"
+      className="flex w-full h-full min-h-[160px] bg-[#0d0d12] text-[#f4f4f5] font-mono text-[13px] leading-[22px] overflow-hidden relative cursor-text select-text"
       style={{ minHeight }}
       aria-label="Editor loading preview"
     >
-      <div className="w-[46px] shrink-0 py-3 pr-2.5 text-right text-[#71717a] border-r border-[#18181c] select-none opacity-80">
+      <div className="w-[46px] shrink-0 py-3 pr-2.5 text-right text-[#52525b] border-r border-[#18181c] select-none opacity-80 pointer-events-none">
         {lines.map((_, i) => (
           <div key={i} className="leading-[22px]">
             {i + 1}
           </div>
         ))}
       </div>
-      <div className="flex-1 py-3 px-4 font-mono text-[13px] leading-[22px] overflow-hidden whitespace-pre">
-        {lines.map((line, i) => (
-          <div key={i} className="leading-[22px] text-zinc-300">
-            {line || <span className="opacity-0">.</span>}
-          </div>
-        ))}
-      </div>
+      <textarea
+        ref={textareaRef}
+        value={value ?? ''}
+        onChange={(e) => onChange?.(e.target.value)}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        spellCheck={false}
+        className="flex-1 py-3 px-4 font-mono text-[13px] leading-[22px] bg-transparent text-[#f4f4f5] resize-none outline-none border-none whitespace-pre overflow-auto focus:ring-0 selection:bg-[#f4c43033]"
+      />
     </div>
   );
 }
@@ -61,7 +65,7 @@ function InstantEditorSkeleton({
 // Dynamic import with ssr: false to prevent Next.js SSR window crash
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
-  loading: () => <InstantEditorSkeleton minHeight="180px" />,
+  loading: () => <InteractiveEditorFallback minHeight="180px" />,
 });
 
 export interface MonacoCodeEditorHandle {
@@ -190,29 +194,60 @@ function setupMonaco(monaco: Monaco) {
   if (monacoGlobalConfigured) return;
   monacoGlobalConfigured = true;
 
-  // 1. Setup Theme
+  // 1. Setup Theme: High-contrast Dark with vibrant, distinctive syntax tokens
   monaco.editor.defineTheme('sqlens-dark', {
     base: 'vs-dark',
     inherit: true,
     rules: [
-      { token: 'keyword', foreground: 'f4f4f5', fontStyle: 'bold' },
-      { token: 'type', foreground: 'f4c430' },
-      { token: 'identifier', foreground: 'a1a1aa' },
-      { token: 'string', foreground: 'f4c430' },
-      { token: 'number', foreground: 'a1a1aa' },
-      { token: 'comment', foreground: '71717a', fontStyle: 'italic' },
-      { token: 'annotation', foreground: 'f4c430' },
-      { token: 'delimiter', foreground: '71717a' },
+      // Control flow & language keywords (await, return, const, let, function, async, export, import)
+      { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' },
+      { token: 'keyword.control', foreground: 'c084fc', fontStyle: 'bold' },
+      { token: 'keyword.operator', foreground: 'fb923c' },
+
+      // Types & Classes (User, Post, PrismaClient, String, Int, Boolean, DateTime)
+      { token: 'type', foreground: '38bdf8', fontStyle: 'bold' },
+      { token: 'type.identifier', foreground: '38bdf8', fontStyle: 'bold' },
+
+      // Functions & Methods (findMany, findUnique, create, update, delete, count)
+      { token: 'function', foreground: '60a5fa' },
+      { token: 'member', foreground: '7dd3fc' }, // Object property keys & clauses (where, select, include, data, orderBy)
+      { token: 'attribute.name', foreground: '7dd3fc' },
+
+      // Prisma Schema annotations (@id, @unique, @default, @relation, @@id, @@index)
+      { token: 'annotation', foreground: 'f4c430', fontStyle: 'bold' },
+      { token: 'annotation.block', foreground: 'fbbf24', fontStyle: 'bold' },
+
+      // Literals
+      { token: 'string', foreground: '4ade80' },
+      { token: 'string.escape', foreground: '86efac' },
+      { token: 'number', foreground: 'facc15' },
+      { token: 'number.float', foreground: 'facc15' },
+
+      // Comments & Docs
+      { token: 'comment', foreground: '64748b', fontStyle: 'italic' },
+      { token: 'comment.doc', foreground: '94a3b8', fontStyle: 'italic' },
+
+      // Delimiters & Operators
+      { token: 'delimiter', foreground: '94a3b8' },
+      { token: 'delimiter.bracket', foreground: '94a3b8' },
+      { token: 'operator', foreground: 'fb923c' },
+      { token: 'operator.optional', foreground: 'fb923c', fontStyle: 'bold' },
+      { token: 'operator.list', foreground: 'fb923c', fontStyle: 'bold' },
+
+      // Identifiers & standard variables
+      { token: 'identifier', foreground: 'f1f5f9' },
     ],
     colors: {
-      'editor.background': '#0d0d10',
-      'editor.foreground': '#f4f4f5',
+      'editor.background': '#0d0d12',
+      'editor.foreground': '#f1f5f9',
       'editorCursor.foreground': '#f4c430',
-      'editor.lineHighlightBackground': '#18181c50',
-      'editorLineNumber.foreground': '#71717a',
+      'editor.lineHighlightBackground': '#18181f60',
+      'editorLineNumber.foreground': '#52525b',
       'editorLineNumber.activeForeground': '#f4c430',
-      'editor.selectionBackground': '#f4c4302e',
-      'editor.inactiveSelectionBackground': '#f4c4301a',
+      'editor.selectionBackground': '#f4c43026',
+      'editor.inactiveSelectionBackground': '#f4c43014',
+      'editorBracketMatch.background': '#f4c43020',
+      'editorBracketMatch.border': '#f4c43060',
     },
   });
 
@@ -227,26 +262,96 @@ function setupMonaco(monaco: Monaco) {
     esModuleInterop: true,
     allowJs: true,
   });
+  ts.setDiagnosticsOptions({
+    noSemanticValidation: false,
+    noSyntaxValidation: false,
+  });
 
-  // 3. Register Prisma Language
+  // 3. Register Prisma Language with comprehensive Monarch tokenizer
   monaco.languages.register({ id: 'prisma' });
   monaco.languages.setMonarchTokensProvider('prisma', {
-    keywords: ['model', 'enum', 'datasource', 'generator', 'type'],
-    typeKeywords: ['String', 'Boolean', 'Int', 'BigInt', 'Float', 'Decimal', 'DateTime', 'Json', 'Bytes', 'Unsupported'],
+    keywords: [
+      'model',
+      'enum',
+      'datasource',
+      'generator',
+      'type',
+      'view',
+    ],
+    typeKeywords: [
+      'String',
+      'Boolean',
+      'Int',
+      'BigInt',
+      'Float',
+      'Decimal',
+      'DateTime',
+      'Json',
+      'Bytes',
+      'Unsupported',
+    ],
+    builtins: [
+      'autoincrement',
+      'now',
+      'cuid',
+      'uuid',
+      'dbgenerated',
+      'auto',
+      'sequence',
+      'env',
+    ],
+    configKeys: [
+      'provider',
+      'url',
+      'directUrl',
+      'output',
+      'previewFeatures',
+      'engineType',
+      'binaryTargets',
+      'fields',
+      'references',
+      'onDelete',
+      'onUpdate',
+      'map',
+      'name',
+    ],
     tokenizer: {
       root: [
+        // Comments & Documentation
+        [/\/\/\/.*$/, 'comment.doc'],
         [/\/\/.*$/, 'comment'],
-        [/@@?[a-zA-Z_]\w*/, 'annotation'],
+
+        // Block annotations (@@id, @@unique, @@index, @@map)
+        [/@@[a-zA-Z_]\w*/, 'annotation.block'],
+
+        // Field annotations (@id, @unique, @default, @relation, @updatedAt, @map)
+        [/@[a-zA-Z_]\w*/, 'annotation'],
+
+        // Identifiers and keywords
         [/[a-zA-Z_]\w*/, {
           cases: {
             '@keywords': 'keyword',
             '@typeKeywords': 'type',
+            '@builtins': 'function',
+            '@configKeys': 'member',
             '@default': 'identifier',
           },
         }],
-        [/"[^"]*"/, 'string'],
+
+        // Strings
+        [/"([^"\\]|\\.)*"/, 'string'],
+
+        // Numbers
+        [/\b\d+(\.\d+)?\b/, 'number'],
+
+        // Field modifiers & operators
+        [/[?]/, 'operator.optional'],
+        [/\[\]/, 'operator.list'],
+        [/[=:]/, 'operator'],
+
+        // Brackets & delimiters
         [/[{}()\[\]]/, '@brackets'],
-        [/\d+/, 'number'],
+        [/[,.]/, 'delimiter'],
       ],
     },
   });
@@ -378,6 +483,13 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       <div
         className={`w-full relative overflow-hidden rounded-b-xl border-t border-border-soft ${className}`}
         style={{ minHeight, height }}
+        onClick={() => {
+          if (editorInstanceRef.current) {
+            editorInstanceRef.current.focus();
+          } else {
+            fallbackTextareaRef.current?.focus();
+          }
+        }}
       >
         <MonacoEditor
           height="100%"
@@ -386,7 +498,16 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
           onChange={(val) => onChange(val ?? '')}
           onMount={handleMount}
           theme="sqlens-dark"
-          loading={<InstantEditorSkeleton value={value} minHeight={minHeight} placeholder={placeholder} />}
+          loading={
+            <InteractiveEditorFallback
+              value={value}
+              onChange={onChange}
+              minHeight={minHeight}
+              placeholder={placeholder}
+              readOnly={readOnly}
+              textareaRef={fallbackTextareaRef}
+            />
+          }
           options={{
             readOnly,
             fontSize: 13,
