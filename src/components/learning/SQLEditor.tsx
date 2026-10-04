@@ -139,14 +139,6 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
               Active: {tableName}
             </span>
           )}
-          {!showSchema && expectedType && (
-            <span
-              className="hidden md:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[220px]"
-              title={`Expected type: ${expectedType}`}
-            >
-              Type: {expectedType}
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-2">

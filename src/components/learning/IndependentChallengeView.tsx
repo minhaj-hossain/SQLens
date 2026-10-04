@@ -458,15 +458,6 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
                 {isPrismaSurface ? 'TYPESCRIPT' : 'SQL'}
               </span>
             )}
-
-            {chrome.expectedType && (
-              <span
-                className="hidden sm:inline-block text-[10px] font-mono text-func px-2 py-0.5 rounded bg-surface border border-border truncate max-w-[240px]"
-                title={`Expected type: ${chrome.expectedType}`}
-              >
-                Type: {chrome.expectedType}
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
