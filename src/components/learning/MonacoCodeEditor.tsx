@@ -4,6 +4,9 @@ import React, { useRef, useImperativeHandle, forwardRef, useEffect, useState } f
 import dynamic from 'next/dynamic';
 import type { OnMount, Monaco } from '@monaco-editor/react';
 
+import { parsePrismaSchema } from '@/lib/prisma-engine/prisma-schema-parser';
+import { emitMonacoDtsFromAst } from '@/lib/prisma-engine/prisma-dts-emitter';
+
 // Dynamic import with ssr: false to prevent Next.js SSR window crash
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -35,9 +38,10 @@ export interface MonacoCodeEditorProps {
   className?: string;
   error?: string | null;
   errorPosition?: { line?: number; column?: number; length?: number } | null;
+  schemaSource?: string;
 }
 
-const PRISMA_DECLARATIONS = `
+const DEFAULT_PRISMA_DECLARATIONS = `
 export namespace Prisma {
   export class PrismaClientKnownRequestError extends Error {
     code: string;
@@ -100,13 +104,44 @@ export interface PrismaClient {
 
 export declare const prisma: PrismaClient;
 export declare const Prisma: typeof Prisma;
+declare global {
+  const prisma: PrismaClient;
+  const Prisma: typeof Prisma;
+}
 `;
 
-let monacoConfigured = false;
+let monacoGlobalConfigured = false;
+let currentExtraLib: { dispose: () => void } | null = null;
+let currentSchemaSignature = '';
+
+export function updateMonacoPrismaTypes(monaco: Monaco, schemaSource?: string) {
+  const ts = monaco.languages.typescript.typescriptDefaults;
+  const signature = schemaSource?.trim() || 'default';
+
+  if (currentSchemaSignature === signature && currentExtraLib) {
+    return;
+  }
+
+  if (currentExtraLib) {
+    currentExtraLib.dispose();
+    currentExtraLib = null;
+  }
+
+  try {
+    const dts = schemaSource?.trim()
+      ? emitMonacoDtsFromAst(parsePrismaSchema(schemaSource))
+      : DEFAULT_PRISMA_DECLARATIONS;
+    currentExtraLib = ts.addExtraLib(dts, 'file:///node_modules/@prisma/client/index.d.ts');
+    currentSchemaSignature = signature;
+  } catch {
+    currentExtraLib = ts.addExtraLib(DEFAULT_PRISMA_DECLARATIONS, 'file:///node_modules/@prisma/client/index.d.ts');
+    currentSchemaSignature = 'fallback';
+  }
+}
 
 function setupMonaco(monaco: Monaco) {
-  if (monacoConfigured) return;
-  monacoConfigured = true;
+  if (monacoGlobalConfigured) return;
+  monacoGlobalConfigured = true;
 
   // 1. Setup Theme
   monaco.editor.defineTheme('sqlens-dark', {
@@ -146,8 +181,6 @@ function setupMonaco(monaco: Monaco) {
     allowJs: true,
   });
 
-  ts.addExtraLib(PRISMA_DECLARATIONS, 'file:///node_modules/@prisma/client/index.d.ts');
-
   // 3. Register Prisma Language
   monaco.languages.register({ id: 'prisma' });
   monaco.languages.setMonarchTokensProvider('prisma', {
@@ -186,6 +219,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       className = '',
       error,
       errorPosition,
+      schemaSource,
     },
     ref,
   ) {
@@ -226,6 +260,14 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       textarea: null,
     }));
 
+    // Re-evaluate TypeScript declarations whenever schemaSource or language changes
+    useEffect(() => {
+      const monaco = monacoRef.current;
+      if (monaco && language === 'typescript') {
+        updateMonacoPrismaTypes(monaco, schemaSource);
+      }
+    }, [schemaSource, language]);
+
     // Update error markers whenever error or errorPosition changes
     useEffect(() => {
       const editor = editorInstanceRef.current;
@@ -259,6 +301,9 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       editorInstanceRef.current = editor;
       monacoRef.current = monaco;
       setupMonaco(monaco);
+      if (language === 'typescript') {
+        updateMonacoPrismaTypes(monaco, schemaSource);
+      }
       monaco.editor.setTheme('sqlens-dark');
 
       // Command + Enter / Ctrl + Enter to run

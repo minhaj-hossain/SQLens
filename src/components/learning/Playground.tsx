@@ -564,6 +564,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
               value={mode === 'prisma' ? prismaCode : sql}
               onChange={mode === 'prisma' ? setPrismaCode : setSql}
               language={mode === 'prisma' ? 'typescript' : 'sql'}
+              schemaSource={mode === 'prisma' ? prismaPlaygroundSchemaSource() : undefined}
               onRun={(next) => (mode === 'prisma' ? runPrisma() : run(next))}
               placeholder={
                 mode === 'prisma'

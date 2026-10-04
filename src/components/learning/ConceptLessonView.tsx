@@ -23,6 +23,10 @@ import { ExplanationEvalContent, StepExplanation } from './TruthEval';
 import Icon from '@/components/ui/Icon';
 import { ConceptMentalModel, shouldSuppressTopIntroTable } from './mental-models/ConceptMentalModel';
 import { PrismaTheoryHero, PrismaTheorySteps } from './prisma/PrismaTheoryBlock';
+import { SqlLensPanel } from './SqlLensPanel';
+import { JsonViewer } from './JsonViewer';
+import { executePrismaDemo, type PrismaDemoRunResult } from '../../lib/prisma-engine/prisma-demo-runner';
+import { RotateCcw } from 'lucide-react';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
 
@@ -373,6 +377,52 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
   });
   const [demoError, setDemoError] = useState<string | null>(null);
 
+  // Phase 4: Interactive Prisma demo for concept theory pages
+  const isPrismaConcept = Boolean(concept.theory.prisma);
+  const initialPrismaDemo =
+    concept.theory.prisma?.liveDemoCode ??
+    (concept.theory.prisma?.targetHero?.language === 'typescript'
+      ? concept.theory.prisma?.targetHero?.code
+      : '');
+  const [prismaDemoCode, setPrismaDemoCode] = useState<string>(initialPrismaDemo);
+  const [prismaDemoResult, setPrismaDemoResult] = useState<PrismaDemoRunResult | null>(() => {
+    if (onExecuteSql && initialPrismaDemo) {
+      try {
+        return executePrismaDemo({
+          code: initialPrismaDemo,
+          executor: { executeQuery: onExecuteSql },
+          schemaSource: concept.theory.prisma?.schemaSource,
+        });
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [prismaDemoRunning, setPrismaDemoRunning] = useState(false);
+
+  const handleRunPrismaDemo = (codeToRun?: string) => {
+    const code = codeToRun ?? prismaDemoCode;
+    if (!onExecuteSql || !code.trim()) return;
+    setPrismaDemoRunning(true);
+    try {
+      const res = executePrismaDemo({
+        code,
+        executor: { executeQuery: onExecuteSql },
+        schemaSource: concept.theory.prisma?.schemaSource,
+      });
+      setPrismaDemoResult(res);
+    } catch (err: any) {
+      setPrismaDemoResult({
+        ok: false,
+        reason: err.message || 'Error executing Prisma code',
+        steps: [],
+      });
+    } finally {
+      setPrismaDemoRunning(false);
+    }
+  };
+
   const handleCopy = (text: string, idx: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(idx);
@@ -579,7 +629,86 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           </>
         )}
         {/* ---------- live demo ---------- */}
-        {onExecuteSql && (theory.liveDemoSql || theory.exampleQuery) && (
+        {onExecuteSql && isPrismaConcept && initialPrismaDemo ? (
+          <>
+            <SectionLabel>Interactive Prisma Demo</SectionLabel>
+            <div className="rounded-xl border border-border bg-editor-bg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-soft">
+                <span className="font-mono text-[11px] text-text-faint uppercase tracking-[0.05em] flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-func animate-pulse" />
+                  TypeScript Client Execution
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setPrismaDemoCode(initialPrismaDemo);
+                      handleRunPrismaDemo(initialPrismaDemo);
+                    }}
+                    title="Reset to initial code"
+                    className="p-1 rounded text-text-faint hover:text-text-dim hover:bg-surface-2 transition cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleRunPrismaDemo()}
+                    disabled={prismaDemoRunning}
+                    className="inline-flex items-center gap-1.5 bg-func text-ink font-semibold text-xs px-3 py-1.5 rounded-lg hover:brightness-110 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Icon name="play_arrow" className="text-[14px]" /> Run Code
+                  </button>
+                </div>
+              </div>
+
+              {/* Code editor / textarea */}
+              <div className="mx-4 mt-3">
+                <div className="relative bg-surface border border-border-soft rounded-lg overflow-hidden">
+                  <textarea
+                    value={prismaDemoCode}
+                    onChange={(e) => setPrismaDemoCode(e.target.value)}
+                    rows={Math.min(10, Math.max(3, prismaDemoCode.split('\n').length))}
+                    className="w-full bg-transparent outline-none text-editor-text font-mono text-[12.5px] p-3 leading-relaxed resize-y"
+                    placeholder="Enter Prisma client code..."
+                    spellCheck={false}
+                  />
+                </div>
+              </div>
+
+              {(theory.liveDemoNotes || theory.prisma?.targetHero?.explanation) && (
+                <p className="mx-4 mt-2 text-[11.5px] leading-relaxed text-text-dim font-sans">
+                  <b className="text-text font-semibold">How it works:</b>{' '}
+                  {theory.liveDemoNotes || theory.prisma?.targetHero?.explanation}
+                </p>
+              )}
+
+              {/* Error banner if translation failed or engine errored */}
+              {prismaDemoResult && !prismaDemoResult.ok && prismaDemoResult.reason && (
+                <div className="mx-4 mt-3 rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-xs text-error font-mono">
+                  {prismaDemoResult.reason}
+                </div>
+              )}
+
+              {/* Generated SQL via SqlLensPanel */}
+              {prismaDemoResult && prismaDemoResult.steps.length > 0 && (
+                <div className="mx-4 mt-4">
+                  <SqlLensPanel
+                    lens={{
+                      steps: prismaDemoResult.steps,
+                      method: prismaDemoResult.method,
+                      rowEffect: prismaDemoResult.rowEffect,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Hydrated In-Memory JSON via JsonViewer */}
+              {prismaDemoResult && prismaDemoResult.stitchedJson !== undefined && (
+                <div className="mx-4 my-4">
+                  <JsonViewer data={prismaDemoResult.stitchedJson} />
+                </div>
+              )}
+            </div>
+          </>
+        ) : onExecuteSql && (theory.liveDemoSql || theory.exampleQuery) ? (
           <>
             <SectionLabel>Interactive live demo</SectionLabel>
             <div className="rounded-xl border border-border bg-editor-bg overflow-hidden">
@@ -654,7 +783,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
               )}
             </div>
           </>
-        )}
+        ) : null}
         {/* ---------- MCQ ---------- */}
         {theory.mcqs && theory.mcqs.length > 0 && (
           <>

@@ -51,8 +51,14 @@ function isRelationStep(step: PrismaExecutionStep): boolean {
  * idle state, never a blank box.
  */
 export const SqlLensPanel: React.FC<SqlLensPanelProps> = ({ lens, className = '' }) => {
-  const { steps, note } = lens;
+  const { steps, note, method, rowEffect } = lens;
   const statements = steps.length;
+  const hasRelation = steps.some(isRelationStep);
+  const isTx =
+    method === '$transaction' ||
+    steps.some(
+      (s) => s.label.toLowerCase().includes('tx') || s.label.toLowerCase().includes('transaction'),
+    );
 
   return (
     <div
@@ -71,11 +77,33 @@ export const SqlLensPanel: React.FC<SqlLensPanelProps> = ({ lens, className = ''
               {statements} statement{statements === 1 ? '' : 's'}
             </span>
           )}
+          {isTx && (
+            <span className="px-1.5 sm:px-2 py-0.5 rounded bg-func/15 text-func text-[9.5px] sm:text-[10px] font-mono border border-func/30 shrink-0 font-medium">
+              {rowEffect === 'sum' ? '$transaction (batch)' : '$transaction (interactive)'}
+            </span>
+          )}
         </div>
         <span className="text-[10px] font-mono text-text-faint hidden sm:inline">
           what Prisma sends after your code runs
         </span>
       </div>
+
+      {/* Transaction semantics notice when relevant */}
+      {isTx && statements > 0 && (
+        <div className="mx-3 sm:mx-4 mb-2.5 px-3 py-1.5 rounded-lg border border-func/30 bg-func/10 flex items-center justify-between gap-2 text-[10.5px] font-mono">
+          <div className="flex items-center gap-1.5 text-func font-medium min-w-0">
+            <Sparkles className="w-3 h-3 shrink-0" />
+            <span className="truncate">
+              {rowEffect === 'sum'
+                ? 'Batch Transaction ($transaction([...])): resolves to array of statement results'
+                : 'Interactive Transaction ($transaction(async tx => ...)): resolves to callback return value'}
+            </span>
+          </div>
+          <span className="text-[9.5px] text-text-faint hidden md:inline shrink-0">
+            atomic execution
+          </span>
+        </div>
+      )}
 
       {/* Empty-but-honest state: idle, snippet lab, or nothing translatable */}
       {statements === 0 && (
@@ -92,25 +120,38 @@ export const SqlLensPanel: React.FC<SqlLensPanelProps> = ({ lens, className = ''
         <div className="px-3 sm:px-4 pb-3 space-y-2">
           {steps.map((step, idx) => {
             const verdict = stepResultLabel(step);
+            const isRel = isRelationStep(step);
             return (
               <div
                 key={`${idx}-${step.label}`}
-                className="rounded-lg border border-border bg-surface overflow-hidden"
+                className={`rounded-lg border overflow-hidden transition-all shadow-sm ${
+                  isRel
+                    ? 'ml-3 sm:ml-6 border-border-soft border-l-[3px] border-l-func bg-surface/80'
+                    : 'border-border bg-surface'
+                }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-3 py-1.5 bg-surface-2 border-b border-border-soft">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-mono text-[10px] text-text-faint shrink-0">
-                      {statements > 1 ? `#${idx + 1}` : '1'}
+                    <span
+                      className={`font-mono text-[10px] shrink-0 ${
+                        isRel ? 'text-func font-semibold' : 'text-text-faint'
+                      }`}
+                    >
+                      {isRel ? `↳ #${idx + 1}` : statements > 1 ? `#${idx + 1}` : '1'}
                     </span>
                     <span className="font-mono text-[10.5px] text-text-dim uppercase tracking-wide truncate">
-                      {step.label}
+                      {isRel
+                        ? `Relation Sub-query: ${step.label}`
+                        : hasRelation && statements > 1
+                          ? `Main Record Query (${step.label})`
+                          : step.label}
                     </span>
-                    {isRelationStep(step) && (
+                    {isRel && (
                       <span
-                        className="px-1.5 py-0.5 rounded bg-surface-3 text-func text-[9.5px] font-mono border border-border shrink-0"
-                        title="A follow-up query (include / nested write), not the call's own result"
+                        className="px-1.5 py-0.5 rounded bg-func/15 text-func text-[9px] font-mono border border-func/30 shrink-0"
+                        title="Follow-up query to hydrate related records in memory"
                       >
-                        relation
+                        in-memory relation hydration
                       </span>
                     )}
                   </div>
@@ -137,3 +178,5 @@ export const SqlLensPanel: React.FC<SqlLensPanelProps> = ({ lens, className = ''
     </div>
   );
 };
+
+export default SqlLensPanel;

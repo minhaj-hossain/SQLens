@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QueryExecutionResult } from '../../types/database';
-import { CheckCircle2, AlertCircle, Terminal, HelpCircle, Sparkles } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Terminal, HelpCircle, Sparkles, Braces, Table } from 'lucide-react';
 import { explainQuery } from '../../lib/sql-explain';
 import { formatExecutionTime } from '../../lib/format-execution-time';
 import type { ConsoleDisplayMode, SqlLensState } from '../../lib/track-submit';
 import { DataGrid } from './DataGrid';
 import { SqlLensPanel } from './SqlLensPanel';
 import { TerminalOutput } from './TerminalOutput';
+import { JsonViewer } from './JsonViewer';
 
 interface ResultsConsoleProps {
   result: QueryExecutionResult | null;
@@ -27,6 +28,8 @@ interface ResultsConsoleProps {
   displayMode?: ConsoleDisplayMode;
   /** P1.2 — simulated terminal text rendered when `displayMode === 'terminal'`. */
   terminalOutput?: string;
+  /** Phase 3: in-memory hydrated object graph for Prisma tasks. */
+  stitchedJson?: unknown;
   className?: string;
 }
 
@@ -38,9 +41,21 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
   sqlLens = null,
   displayMode,
   terminalOutput,
+  stitchedJson,
   className = '',
 }) => {
-  const [activeTab, setActiveTab] = useState<'results' | 'explain'>('results');
+  const effectiveJson = stitchedJson ?? sqlLens?.stitchedJson;
+  const isPrisma = Boolean(sqlLens);
+  const hasStitchedJson = effectiveJson !== undefined;
+
+  const [activeTab, setActiveTab] = useState<'results' | 'json' | 'explain'>('results');
+
+  // When a Prisma task produces an in-memory object, switch to the JSON view automatically
+  useEffect(() => {
+    if (hasStitchedJson) {
+      setActiveTab('json');
+    }
+  }, [hasStitchedJson, effectiveJson]);
 
   const totalRows = result?.rows.length || 0;
   // Honest timing (tracker item 11): real value only — never a fabricated
@@ -86,23 +101,38 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
 
         {/* Segmented View Switch (design `.segmented` / `.seg`) */}
         <div className="flex items-center bg-surface-2 p-0.5 rounded-lg border border-border text-xs">
+          {isPrisma && hasStitchedJson && (
+            <button
+              id="tab-result-json-btn"
+              onClick={() => setActiveTab('json')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
+                activeTab === 'json'
+                  ? 'bg-surface-3 text-text font-semibold shadow-sm'
+                  : 'text-text-faint hover:text-text-dim'
+              }`}
+            >
+              <Braces className="w-3 h-3 text-func" />
+              <span>In-Memory Object</span>
+            </button>
+          )}
           <button
             id="tab-result-table-btn"
             onClick={() => setActiveTab('results')}
-            className={`px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
               activeTab === 'results'
-                ? 'bg-surface-3 text-text font-semibold'
+                ? 'bg-surface-3 text-text font-semibold shadow-sm'
                 : 'text-text-faint hover:text-text-dim'
             }`}
           >
-            Output Grid
+            {isPrisma && <Table className="w-3 h-3 text-text-dim" />}
+            <span>{isPrisma ? 'SQLite Rows' : 'Output Grid'}</span>
           </button>
           <button
             id="tab-explain-query-btn"
             onClick={() => setActiveTab('explain')}
             className={`flex items-center gap-1 px-3 py-1 rounded-md text-[11px] font-mono font-medium transition cursor-pointer ${
               activeTab === 'explain'
-                ? 'bg-surface-3 text-text font-semibold'
+                ? 'bg-surface-3 text-text font-semibold shadow-sm'
                 : 'text-text-faint hover:text-text-dim'
             }`}
           >
@@ -157,6 +187,10 @@ export const ResultsConsole: React.FC<ResultsConsoleProps> = ({
               <div className="text-[11px] text-text-dim">
                 Tip: In real database engines (PostgreSQL, MySQL), the <code className="text-keyword">EXPLAIN</code> keyword shows the query execution plan and table scans.
               </div>
+            </div>
+          ) : activeTab === 'json' && hasStitchedJson ? (
+            <div className="p-3 sm:p-4">
+              <JsonViewer data={effectiveJson} />
             </div>
           ) : displayMode === 'terminal' && terminalOutput ? (
             /* P1.2 — snippet lab: simulated CLI output instead of reference rows */

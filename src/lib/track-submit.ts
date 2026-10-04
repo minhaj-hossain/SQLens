@@ -51,6 +51,12 @@ export interface SqlLensState {
   steps: PrismaExecutionStep[];
   /** Honest line for the lens body when there is nothing to show. */
   note?: string;
+  /** Prisma call method ('findUnique', '$transaction', etc.) */
+  method?: string;
+  /** Multi-statement row effect for $transaction ('sum' | 'last') */
+  rowEffect?: 'sum' | 'last';
+  /** In-memory hydrated JavaScript/JSON object graph returned by Prisma Client. */
+  stitchedJson?: unknown;
 }
 
 /**
@@ -92,6 +98,8 @@ export interface TrackSubmitOutcome {
   displayMode?: ConsoleDisplayMode;
   /** P1.2 — simulated terminal text when `displayMode === 'terminal'`. */
   terminalOutput?: string;
+  /** In-memory hydrated JavaScript/JSON object graph returned by Prisma Client. */
+  stitchedJson?: unknown;
 }
 
 /**
@@ -160,12 +168,20 @@ export function submitForTask(options: TrackSubmitOptions): TrackSubmitOutcome {
     displayMode: outcome.displayMode,
     terminalOutput: outcome.terminalOutput,
     lens: submitLensState(outcome),
+    stitchedJson: outcome.stitchedJson,
   };
 }
 
 /** Lens state for a finished graded submit (steps, or the honest reason). */
 function submitLensState(outcome: PrismaSubmitOutcome): SqlLensState {
-  if (outcome.steps.length > 0) return { steps: outcome.steps };
+  if (outcome.steps.length > 0) {
+    return {
+      steps: outcome.steps,
+      method: outcome.method,
+      rowEffect: outcome.rowEffect,
+      stitchedJson: outcome.stitchedJson,
+    };
+  }
   return {
     steps: [],
     note: outcome.readThrough ? READ_THROUGH_NOTE : outcome.feedback,
@@ -199,7 +215,12 @@ export function previewPrismaTask(
   return {
     lens:
       preview.steps.length > 0
-        ? { steps: preview.steps }
+        ? {
+            steps: preview.steps,
+            method: preview.method,
+            rowEffect: preview.rowEffect,
+            stitchedJson: preview.stitchedJson,
+          }
         : {
             steps: [],
             note:

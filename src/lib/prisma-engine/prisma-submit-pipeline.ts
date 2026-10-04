@@ -56,6 +56,7 @@ import {
 } from './prisma-sql-generator';
 import { runPrismaPlan, type PrismaExecutionStep } from './prisma-proxy-executor';
 import { parsePrismaSchema, type PrismaSchema } from './prisma-schema-parser';
+import { stitchPrismaExecution } from './prisma-in-memory-stitcher';
 import { gradePrismaCode, gradePrismaExecution } from './prisma-execution';
 import { PRISMA_CLI_RUNNER_SRC, validatePrismaCode } from './prisma-validator';
 import { gradeFinalState } from '../sql-engine/state-verification';
@@ -291,6 +292,12 @@ export interface PrismaSubmitResult {
   stateOk?: boolean;
   /** Columns whose VALUES differed on a same-size row mismatch (state layer). */
   diffColumns?: string[];
+  /** Execution method translated ('findUnique', '$transaction', etc.). */
+  method?: string;
+  /** Multi-statement counting mode for $transaction ('sum' | 'last'). */
+  rowEffect?: 'sum' | 'last';
+  /** In-memory hydrated JavaScript/JSON object graph returned by Prisma Client. */
+  stitchedJson?: unknown;
 }
 
 export interface PrismaSubmitOutcome extends PrismaSubmitResult {
@@ -458,8 +465,27 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   const { task, code, hooks, surface, attempt = 1, record = true } = options;
   const { execute, getDatabaseState, resetDatabase } = hooks;
   const rule = task.prisma?.validation as PrismaValidationRule | undefined;
+  let gen: GenerateResult | undefined;
   const done = (outcome: PrismaSubmitResult): PrismaSubmitOutcome =>
-    emit(task, outcome, { surface, attempt, record });
+    emit(
+      task,
+      {
+        ...outcome,
+        method: outcome.method ?? gen?.method,
+        rowEffect: outcome.rowEffect ?? gen?.rowEffect,
+        stitchedJson:
+          outcome.stitchedJson ??
+          (outcome.steps.length > 0
+            ? stitchPrismaExecution({
+                steps: outcome.steps,
+                schema,
+                method: outcome.method ?? gen?.method,
+                rowEffect: outcome.rowEffect ?? gen?.rowEffect,
+              })
+            : undefined),
+      },
+      { surface, attempt, record },
+    );
 
   if (!rule) {
     return done({
@@ -483,8 +509,9 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   // generate runnable SQL still fails its structural rules untouched).
   const schema = schemaForTask(task);
   const seed = taskSeedContext(task);
-  const gen = generatePrismaSql(code, { schema, seed });
-  if (!gen.ok) {
+  const generated = generatePrismaSql(code, { schema, seed });
+  gen = generated;
+  if (!generated.ok) {
     // P1.2 — how this snippet lab should render (CLI terminal / schema notice,
     // else the read-through dataset contract). Purely presentational: the
     // grading below is unchanged.
@@ -706,6 +733,12 @@ export interface PrismaPreviewOutcome {
   steps: PrismaExecutionStep[];
   /** Engine result of the last executed statement (undefined when none ran). */
   result?: QueryExecutionResult;
+  /** Execution method translated ('findUnique', '$transaction', etc.). */
+  method?: string;
+  /** Multi-statement counting mode for $transaction ('sum' | 'last'). */
+  rowEffect?: 'sum' | 'last';
+  /** In-memory hydrated JavaScript/JSON object graph returned by Prisma Client. */
+  stitchedJson?: unknown;
 }
 
 export function previewPrismaSubmission(options: PrismaPreviewOptions): PrismaPreviewOutcome {
@@ -723,9 +756,18 @@ export function previewPrismaSubmission(options: PrismaPreviewOptions): PrismaPr
   if (!gen.ok) return { ok: false, reason: gen.reason, steps: [] };
 
   const run = runPrismaPlan(gen, { executeQuery: execute }, { schema, seed });
+  const stitchedJson = stitchPrismaExecution({
+    steps: run.steps,
+    schema,
+    method: gen.method,
+    rowEffect: gen.rowEffect,
+  });
   return {
     ok: true,
     steps: run.steps,
     result: run.steps.length > 0 ? run.steps[run.steps.length - 1].result : undefined,
+    method: gen.method,
+    rowEffect: gen.rowEffect,
+    stitchedJson,
   };
 }

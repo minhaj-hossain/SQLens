@@ -209,6 +209,7 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
         onChange={onChange}
         language={language}
         onRun={handleRun}
+        schemaSource={schemaTab?.source}
         placeholder={
           placeholder ?? `Type your SQL query here\nSELECT * FROM ${tableName};`
         }
