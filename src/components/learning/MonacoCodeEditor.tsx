@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useRef, useImperativeHandle, forwardRef, useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import Editor, { loader } from '@monaco-editor/react';
 import type { OnMount, Monaco } from '@monaco-editor/react';
-import { loader } from '@monaco-editor/react';
 
 import { parsePrismaSchema } from '@/lib/prisma-engine/prisma-schema-parser';
 import { emitMonacoDtsFromAst } from '@/lib/prisma-engine/prisma-dts-emitter';
@@ -62,11 +61,7 @@ function InteractiveEditorFallback({
   );
 }
 
-// Dynamic import with ssr: false to prevent Next.js SSR window crash
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
-  ssr: false,
-  loading: () => <InteractiveEditorFallback minHeight="180px" />,
-});
+
 
 export interface MonacoCodeEditorHandle {
   focus: () => void;
@@ -357,6 +352,87 @@ function setupMonaco(monaco: Monaco) {
   });
 }
 
+let monacoLoadPromise: Promise<Monaco> | null = null;
+
+function loadMonacoInstance(): Promise<Monaco> {
+  if (typeof window === 'undefined') {
+    return new Promise(() => {});
+  }
+  if ((window as any).monaco && (window as any).monaco.editor) {
+    return Promise.resolve((window as any).monaco);
+  }
+  if (monacoLoadPromise) {
+    return monacoLoadPromise;
+  }
+
+  monacoLoadPromise = new Promise<Monaco>((resolve, reject) => {
+    const existingScript = document.querySelector('script[src*="loader.js"]');
+    const onScriptLoaded = () => {
+      try {
+        const req = (window as any).require;
+        if (!req) {
+          reject(new Error('window.require not found after loader.js'));
+          return;
+        }
+        req.config({
+          paths: {
+            vs: '/monaco/vs',
+          },
+        });
+        req(['vs/editor/editor.main'], (monacoInstance: Monaco) => {
+          const m = (window as any).monaco || monacoInstance;
+          loader.config({ monaco: m });
+          setupMonaco(m);
+          resolve(m);
+        }, (err: any) => {
+          console.warn('[Monaco] Local AMD load failed, trying CDN fallback:', err);
+          req.config({
+            paths: {
+              vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs',
+            },
+          });
+          req(['vs/editor/editor.main'], (monacoFallback: Monaco) => {
+            const m = (window as any).monaco || monacoFallback;
+            loader.config({ monaco: m });
+            setupMonaco(m);
+            resolve(m);
+          }, reject);
+        });
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    if ((window as any).require) {
+      onScriptLoaded();
+      return;
+    }
+
+    if (existingScript) {
+      existingScript.addEventListener('load', onScriptLoaded);
+      existingScript.addEventListener('error', reject);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = '/monaco/vs/loader.js';
+    script.async = true;
+    script.onload = onScriptLoaded;
+    script.onerror = () => {
+      console.warn('[Monaco] /monaco/vs/loader.js failed to load, falling back to CDN script');
+      const cdnScript = document.createElement('script');
+      cdnScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs/loader.js';
+      cdnScript.async = true;
+      cdnScript.onload = onScriptLoaded;
+      cdnScript.onerror = reject;
+      document.body.appendChild(cdnScript);
+    };
+    document.body.appendChild(script);
+  });
+
+  return monacoLoadPromise;
+}
+
 export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEditorProps>(
   function MonacoCodeEditor(
     {
@@ -366,8 +442,8 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       onRun,
       readOnly = false,
       placeholder,
-      minHeight = '180px',
-      height = '100%',
+      minHeight = '220px',
+      height = '260px',
       className = '',
       error,
       errorPosition,
@@ -479,10 +555,44 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       });
     };
 
+    const [monacoReady, setMonacoReady] = useState(false);
+
+    useEffect(() => {
+      let isMounted = true;
+      loadMonacoInstance()
+        .then(() => {
+          if (isMounted) setMonacoReady(true);
+        })
+        .catch((err) => console.error('[Monaco] Load error:', err));
+      return () => {
+        isMounted = false;
+      };
+    }, []);
+
+    const effectiveHeight = height && height !== '100%' ? height : minHeight || '260px';
+
+    if (!monacoReady) {
+      return (
+        <div
+          className={`w-full relative overflow-hidden rounded-b-xl border-t border-border-soft ${className}`}
+          style={{ minHeight: effectiveHeight, height: effectiveHeight }}
+        >
+          <InteractiveEditorFallback
+            value={value}
+            onChange={onChange}
+            minHeight={effectiveHeight}
+            placeholder={placeholder}
+            readOnly={readOnly}
+            textareaRef={fallbackTextareaRef}
+          />
+        </div>
+      );
+    }
+
     return (
       <div
         className={`w-full relative overflow-hidden rounded-b-xl border-t border-border-soft ${className}`}
-        style={{ minHeight, height }}
+        style={{ minHeight: effectiveHeight, height: effectiveHeight }}
         onClick={() => {
           if (editorInstanceRef.current) {
             editorInstanceRef.current.focus();
@@ -491,23 +601,13 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
           }
         }}
       >
-        <MonacoEditor
-          height="100%"
+        <Editor
+          height={effectiveHeight}
           language={language}
           value={value}
           onChange={(val) => onChange(val ?? '')}
           onMount={handleMount}
           theme="sqlens-dark"
-          loading={
-            <InteractiveEditorFallback
-              value={value}
-              onChange={onChange}
-              minHeight={minHeight}
-              placeholder={placeholder}
-              readOnly={readOnly}
-              textareaRef={fallbackTextareaRef}
-            />
-          }
           options={{
             readOnly,
             fontSize: 13,
