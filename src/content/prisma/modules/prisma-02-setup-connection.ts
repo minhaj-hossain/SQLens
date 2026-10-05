@@ -70,6 +70,25 @@ export const Prisma_02_MODULE: ModuleData = {
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'generate vs migrate dev (The Dual Pipeline)',
+              description:
+                '`prisma generate` compiles TypeScript types and query builders into application code (`node_modules/@prisma/client`). `prisma migrate dev` applies SQL schema migrations to the live database.',
+              badge: 'CLI',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Re-run generate after every schema edit',
+              description:
+                'Because Prisma Client is a generated build artifact, your TypeScript autocomplete only updates after running `npx prisma generate`.',
+              badge: 'Workflow',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaSnippetTask({
@@ -151,6 +170,25 @@ export const Prisma_02_MODULE: ModuleData = {
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: '@map (field) vs @@map (model)',
+              description:
+                'Use `@map("column_name")` on a specific field to map it to a legacy database column. Use `@@map("table_name")` at the bottom of the model to map the entire table name.',
+              badge: 'Mapping',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Connection String URL Anatomy',
+              description:
+                '`postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public` defines the full connection topology. Store this in `.env` and load via `env("DATABASE_URL")`.',
+              badge: 'Config',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaSnippetTask({

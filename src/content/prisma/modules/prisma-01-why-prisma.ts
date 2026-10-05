@@ -93,6 +93,36 @@ export const Prisma_01_MODULE: ModuleData = {
           },
           liveDemoCode:
             'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: { id: true, name: true, email: true },\n  });\n}',
+          littleDetails: {
+            title: 'Syntax Rules & Conventions',
+            rules: [
+              {
+                ruleNumber: 1,
+                title: 'Prisma Client is 100% Parameterized',
+                description:
+                  'Prisma never concatenates strings directly into SQL queries. Passing `where: { id: 1 }` automatically uses parameterized placeholders, eliminating SQL injection hazards by default.',
+                badge: 'Security',
+              },
+              {
+                ruleNumber: 2,
+                title: 'Dynamic Type Inference',
+                description:
+                  'The return type of a Prisma query is not generic `any[]`. It is an exact TypeScript type dynamically constructed from your `select` or `include` arguments.',
+                badge: 'TypeScript',
+              },
+            ],
+          },
+          sqlBridge: {
+            title: 'From SQL to Prisma',
+            mappings: [
+              {
+                sql: 'SELECT id, name, email FROM users WHERE id = 1',
+                prisma:
+                  'prisma.user.findUnique({ where: { id: 1 }, select: { id: true, name: true, email: true } })',
+                note: 'Type-safe read: where maps to WHERE, select maps to column projection',
+              },
+            ],
+          },
         },
         mcqs: [
           {

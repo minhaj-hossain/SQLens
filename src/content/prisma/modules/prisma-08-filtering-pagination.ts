@@ -49,31 +49,93 @@ export const Prisma_08_MODULE: ModuleData = {
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'the filter object describes the predicate',
+            stepTitle: 'The filter object describes the predicate',
             codeSnippet: "where: { email: { contains: 'prisma.io' } }",
             explanation: 'A typed object — `contains` says "substring"; the engine decides how to express it.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'the engine picks the operator and binds the value',
+            stepTitle: 'The engine picks the operator and binds the value',
             codeSnippet: 'contains → LIKE\nin → IN\nnot → <>',
             explanation: 'The value becomes a bound parameter — `%prisma.io%` is data, never SQL text.',
           },
           {
             stepNumber: 3,
-            stepTitle: 'the emitted read is a plain parameterized SELECT',
+            stepTitle: 'The emitted read is a plain parameterized SELECT',
             codeSnippet: "SELECT id, name\nFROM users\nWHERE email LIKE '%prisma.io';",
             explanation: 'One predictable statement — the Lens shows it after every run.',
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
           {
             stepNumber: 4,
-            stepTitle: 'the result is typed from `select`',
+            stepTitle: 'The result is typed from `select`',
             codeSnippet: '{ id: number; name: string }[]',
             explanation: 'Only the selected fields appear — and the compiler knows exactly which.',
             visualData: { type: 'type_preview', title: 'Inferred type', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Filtering Rules & Hazards',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'CRITICAL HAZARD: undefined strips the WHERE clause',
+              description: 'In Prisma, `{ where: { email: undefined } }` completely omits the WHERE clause! If an optional query param (`req.query.email`) is undefined, `findFirst` will return the first row in the entire table instead of null. Always guard optional inputs before querying: `if (!email) return null;`.',
+              badge: 'Hazard',
+            },
+            {
+              ruleNumber: 2,
+              title: 'null compiles to WHERE column IS NULL',
+              description: 'Unlike `undefined`, passing `null` explicitly compiles to SQL `IS NULL`. Use `null` when checking for nullable columns that contain no value.',
+              badge: 'SQL Null',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Relational filter quantifiers',
+              description: 'Use `some` when at least one child record matches (SQL `EXISTS`), `every` when all child records match (SQL `NOT EXISTS (NOT condition)`), and `none` when zero child records match.',
+              badge: 'Relations',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Filter Operators to SQL Conditions',
+          mappings: [
+            {
+              prisma: "email: { contains: 'prisma.io' }",
+              sql: "WHERE email LIKE '%prisma.io%'",
+              note: 'Emits a parameterized LIKE pattern match. Add mode: "insensitive" for case-insensitive Postgres searches.',
+            },
+            {
+              prisma: "name: { in: ['Alex', 'Mina'] }",
+              sql: "WHERE name IN ('Alex', 'Mina')",
+              note: 'Replaces multiple OR conditions with a clean, parameterized SQL IN clause.',
+            },
+            {
+              prisma: "posts: { some: { title: { contains: 'Prisma' } } }",
+              sql: 'WHERE EXISTS (SELECT 1 FROM posts WHERE ...)',
+              note: 'Evaluates parent rows based on conditions matched in child relations.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Could the search argument be undefined (e.g. from an optional query param)?',
+              answer: 'Guard it! In Prisma, `{ where: { field: undefined } }` strips the WHERE clause completely.',
+            },
+            {
+              questionNumber: 2,
+              question: 'Am I filtering based on properties of a child relation (e.g. users with active posts)?',
+              answer: 'Use relational filters: `some` (at least 1 child matches), `every` (all match), or `none` (zero match).',
+            },
+            {
+              questionNumber: 3,
+              question: 'Do I need multiple conditions combined together?',
+              answer: 'Prisma fields inside `where` are combined with AND by default. For OR logic, use `OR: [ { ... }, { ... } ]`.',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaReadTask({
@@ -177,31 +239,88 @@ export const Prisma_08_MODULE: ModuleData = {
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'offset paging counts rows',
+            stepTitle: 'Offset paging counts rows',
             codeSnippet: "await prisma.user.findMany({\n  orderBy: { id: 'asc' },\n  skip: 1,\n  take: 1,\n});",
             explanation: 'Sort, then skip M and take N — simple, but the database still walks everything before the page.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'cursor paging points at a row and skips it',
+            stepTitle: 'Cursor paging points at a row and skips it',
             codeSnippet: "await prisma.user.findMany({\n  cursor: { id: 1 },\n  skip: 1,\n  take: 2,\n  orderBy: { id: 'asc' },\n});",
             explanation: '`cursor` anchors to a key; `skip: 1` skips the cursor item itself so page turns do not duplicate the last item.',
           },
           {
             stepNumber: 3,
-            stepTitle: 'the offset page becomes LIMIT/OFFSET',
+            stepTitle: 'The offset page becomes LIMIT/OFFSET',
             codeSnippet: 'SELECT id, name\nFROM users\nORDER BY id ASC\nLIMIT 1 OFFSET 1;',
             explanation: 'ORDER BY plus LIMIT/OFFSET — the exact shape `skip`/`take` compiles to.',
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
           {
             stepNumber: 4,
-            stepTitle: 'the cursor page becomes a keyed WHERE',
+            stepTitle: 'The cursor page becomes a keyed WHERE',
             codeSnippet: 'SELECT id, name\nFROM users\nWHERE id > 1\nORDER BY id ASC\nLIMIT 2;',
             explanation: 'A `WHERE id > 1` on the cursor key plus a `LIMIT 2` — `skip: 1` transforms the inclusive cursor into an exclusive page turn.',
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Pagination Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Prisma cursor is inclusive by default: always add skip: 1',
+              description: 'Prisma\'s `cursor` argument anchors to the specified row and includes it in the results (`WHERE id >= cursor`). When requesting the next page after item 42, you must specify `skip: 1` alongside `cursor: { id: 42 }` so item 42 is not duplicated.',
+              badge: 'Critical Rule',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Pagination without orderBy is non-deterministic',
+              description: 'SQL databases return rows in arbitrary order without an explicit `ORDER BY`. Always provide `orderBy: { id: "asc" }` so page boundaries remain stable across page turns.',
+              badge: 'Deterministic',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Cursor fields must be marked @id or @unique',
+              description: 'You cannot use arbitrary non-unique columns for `cursor`. The cursor anchor requires a unique, indexed identifier so the database can seek directly to that row in O(1) time.',
+              badge: 'Index Seek',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Pagination to SQL Queries',
+          mappings: [
+            {
+              prisma: 'skip: 10, take: 10',
+              sql: 'LIMIT 10 OFFSET 10',
+              note: 'Offset pagination: simple for small pages, but reads and discards all preceding rows.',
+            },
+            {
+              prisma: 'cursor: { id: 42 }, skip: 1, take: 10',
+              sql: 'WHERE id > 42 ORDER BY id ASC LIMIT 10',
+              note: 'Cursor pagination: seeks directly to the index key without scanning prior records.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Is this an administrative table with direct page-number buttons ("Go to page 5")?',
+              answer: 'Use offset pagination (`skip: (page - 1) * pageSize, take: pageSize`).',
+            },
+            {
+              questionNumber: 2,
+              question: 'Is this an infinite-scroll mobile feed or a high-volume dataset (>10,000 rows)?',
+              answer: 'Use cursor pagination (`cursor: { id: lastSeenId }, skip: 1, take: pageSize`).',
+            },
+            {
+              questionNumber: 3,
+              question: 'Could new rows be inserted while the user is browsing pages?',
+              answer: 'Use cursor pagination. Offset pagination causes rows to shift, resulting in duplicate items across pages.',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaReadTask({
@@ -268,31 +387,83 @@ export const Prisma_08_MODULE: ModuleData = {
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'the call names the grouping column',
+            stepTitle: 'The call names the grouping column',
             codeSnippet: "await prisma.user.groupBy({\n  by: ['name'],\n  _count: true,\n});",
             explanation: '`by` is the GROUP BY column; `_count: true` asks for the size of each group.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'the engine emits GROUP BY + COUNT',
+            stepTitle: 'The engine emits GROUP BY + COUNT',
             codeSnippet: 'SELECT name, COUNT(*) AS total\nFROM users\nGROUP BY name;',
             explanation: 'One query, one aggregate — the database does the counting, not your code.',
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
           {
             stepNumber: 3,
-            stepTitle: 'the result has one row per group',
+            stepTitle: 'The result has one row per group',
             codeSnippet: 'Alex  1\nMina  1\nRafi  1',
             explanation: 'Three distinct names in the seed → three groups. A bigger table would show multi-row groups.',
           },
           {
             stepNumber: 4,
-            stepTitle: 'the type is a group shape, not a model',
+            stepTitle: 'The type is a group shape, not a model',
             codeSnippet: '{ name: string; _count: { name: number } }[]',
             explanation: 'The inferred type follows `by` plus the requested aggregation — never the `User` model.',
             visualData: { type: 'type_preview', title: 'Inferred type', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Aggregation Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Return type is group-shaped, not a model',
+              description: '`prisma.user.groupBy({ by: ["name"], _count: true })` does not return `User[]`. It returns `{ name: string; _count: { name: number } }[]`. The return shape strictly reflects the grouping columns and aggregations.',
+              badge: 'Group Shape',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Sorting directly on aggregates',
+              description: 'You can sort groups by the calculated aggregate using `orderBy: { _count: { name: "desc" } }`. This compiles directly to SQL `ORDER BY COUNT(name) DESC`.',
+              badge: 'Sorting',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Filtering groups with having',
+              description: 'To filter groups after aggregation (e.g. only show groups with more than 5 users), use `having: { _count: { id: { gt: 5 } } }` (equivalent to SQL `HAVING COUNT(id) > 5`).',
+              badge: 'Having',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Aggregation to SQL Statements',
+          mappings: [
+            {
+              prisma: "prisma.user.groupBy({ by: ['name'], _count: true })",
+              sql: 'SELECT name, COUNT(*) AS total FROM users GROUP BY name;',
+              note: 'Groups rows by distinct column values and counts items in each bucket in a single query.',
+            },
+            {
+              prisma: "orderBy: { _count: { name: 'desc' } }",
+              sql: 'ORDER BY COUNT(name) DESC',
+              note: 'Orders groups by the computed aggregate size directly in the database engine.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Do I want summary statistics across the entire table (e.g. total users, average order value)?',
+              answer: 'Use `prisma.model.aggregate({ _count: true, _avg: { amount: true } })` or `prisma.model.count()`.',
+            },
+            {
+              questionNumber: 2,
+              question: 'Do I want statistics broken down by category, author, status, or date?',
+              answer: 'Use `prisma.model.groupBy({ by: [\'category\'], _count: true })`.',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaSnippetTask({

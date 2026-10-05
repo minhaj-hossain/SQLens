@@ -35,6 +35,63 @@ export const Prisma_12_MODULE: ModuleData = {
         heroLang: 'typescript',
         heroWhy: 'One INSERT for the user, one for the post — inside a single transaction.',
         mentalModel: '**Follow the relation, not the code path.** A nested write is one call that walks the relation graph: `create` inserts a new child, `connect` attaches an existing row by key, `connectOrCreate` checks-then-decides. Every nested step runs inside ONE transaction — the whole graph lands, or none of it does.',
+        littleDetails: {
+          title: 'Nested Write Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'connect attaches existing records by unique key',
+              description: 'The `connect` block accepts only unique identifiers (`@id` or `@unique`). If the target row does not exist, Prisma throws error code P2025.',
+              badge: 'Lookup Contract',
+            },
+            {
+              ruleNumber: 2,
+              title: 'connectOrCreate eliminates check-then-insert races',
+              description: 'Combines a unique `where` lookup with an insert fallback (`create`). Prisma handles concurrency safely so parallel requests cannot create duplicates.',
+              badge: 'Idempotency',
+            },
+            {
+              ruleNumber: 3,
+              title: 'All nested writes execute in an implicit transaction',
+              description: 'Whether inserting 1 child or 20 related entities across 4 models, Prisma wraps the entire operation in a single database transaction. If any write fails, all roll back.',
+              badge: 'Atomicity',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Nested Write vs Relational SQL',
+          mappings: [
+            {
+              prisma: 'posts: { create: [{ title: "First Post" }] }',
+              sql: 'INSERT INTO posts (title, author_id) VALUES ($1, $2);',
+              note: 'Child INSERT uses generated parent ID in the same transaction',
+            },
+            {
+              prisma: 'categories: { connect: { id: 5 } }',
+              sql: 'INSERT INTO _CategoryToPost (A, B) VALUES ($1, $2);',
+              note: 'Links existing row in join table or updates foreign key',
+            },
+            {
+              prisma: 'categories: { connectOrCreate: { where: { id: 5 }, create: { name: "Tech" } } }',
+              sql: 'INSERT INTO categories (name) VALUES ($1) ON CONFLICT (id) DO NOTHING;',
+              note: 'Ensures relation target exists before linking',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'When should I use create vs connect in a nested relation write?',
+              answer: 'Use `create` when the related row is brand new and belongs to this write. Use `connect` when linking to an existing record that already has a primary key.',
+            },
+            {
+              questionNumber: 2,
+              question: 'What happens if a nested child creation fails (e.g. invalid column value)?',
+              answer: 'Prisma aborts the entire transaction: the parent record is NOT saved, and the database remains in its pre-query state.',
+            },
+          ],
+        },
         explanation: [
           'Nested writes follow the relation: `create` inserts a child row, `connect` attaches an existing one, `connectOrCreate` does whichever applies.',
           'The parent and its children are written atomically — you never see a half-built graph.',
@@ -127,6 +184,58 @@ export const Prisma_12_MODULE: ModuleData = {
         heroLang: 'typescript',
         heroWhy: 'If the second UPDATE fails the first is rolled back — both or neither.',
         mentalModel: '**One transaction, two shapes.** The array form runs a fixed list of queries atomically; the interactive form runs your callback inside one transaction — read, decide, write, with every call on `tx`. Both make the same promise: all of it lands, or none of it does.',
+        littleDetails: {
+          title: 'Transaction Rules & Safety Checks',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Array form takes unawaited Prisma promises',
+              description: 'In `prisma.$transaction([op1, op2])`, do not put `await` before individual operations inside the array. Passing promises allows Prisma to bundle and execute them in one database transaction.',
+              badge: 'Array Syntax',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Always use the tx parameter inside interactive callbacks',
+              description: 'Inside `prisma.$transaction(async (tx) => { ... })`, calling `prisma.user.*` executes outside the transaction on a separate connection pool slot. Only calls on `tx` participate in the transaction.',
+              badge: 'Critical Invariant',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Unhandled errors trigger automatic rollback',
+              description: 'If any promise rejects or an error is thrown inside the callback, Prisma issues a ROLLBACK to the database engine before rejecting the outer transaction promise.',
+              badge: 'Rollback Guarantee',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Transactions vs SQL ACID Blocks',
+          mappings: [
+            {
+              prisma: 'await prisma.$transaction([p1, p2])',
+              sql: 'BEGIN;\nUPDATE ...;\nUPDATE ...;\nCOMMIT;',
+              note: 'Sequential execution in a single transaction block',
+            },
+            {
+              prisma: 'await prisma.$transaction(async (tx) => { const u = await tx.user...; await tx.order...; })',
+              sql: 'BEGIN;\nSELECT ...;\n-- application decision logic\nINSERT ...;\nCOMMIT;',
+              note: 'Interactive multi-turn transaction with runtime branch evaluation',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'When should I choose the array form over the interactive form?',
+              answer: 'Use the array form `$transaction([...])` when the operations are independent writes known ahead of time. Use the interactive form when later operations require the return values of earlier queries.',
+            },
+            {
+              questionNumber: 2,
+              question: 'What is the danger of running slow code (like external HTTP calls or hashing) inside an interactive transaction?',
+              answer: 'Interactive transactions hold open a database connection and lock tables/rows. If the callback takes longer than the configured transaction timeout (default 5000ms), Prisma automatically rolls back and terminates the transaction.',
+            },
+          ],
+        },
         explanation: [
           'The array form `$transaction([...])` is for a fixed list of writes you already know.',
           'The interactive form `$transaction(async (tx) => …)` is for logic between steps — and every statement must use `tx`, never `prisma`.',

@@ -22,7 +22,13 @@ import { InlineContent } from './InlineContent';
 import { ExplanationEvalContent, StepExplanation } from './TruthEval';
 import Icon from '@/components/ui/Icon';
 import { ConceptMentalModel, shouldSuppressTopIntroTable } from './mental-models/ConceptMentalModel';
-import { PrismaTheoryHero, PrismaTheorySteps } from './prisma/PrismaTheoryBlock';
+import {
+  PrismaTheoryHero,
+  PrismaTheorySteps,
+  PrismaLittleDetailsCard,
+  PrismaMentalModelCard,
+  SqlPrismaBridgeCard,
+} from './prisma/PrismaTheoryBlock';
 import { SqlLensPanel } from './SqlLensPanel';
 import { JsonViewer } from './JsonViewer';
 import { executePrismaDemo, type PrismaDemoRunResult } from '../../lib/prisma-engine/prisma-demo-runner';
@@ -574,6 +580,21 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
         )}
         {/* P2.1 — Prisma mental model + genuine steps (call → SQL → types) */}
         <PrismaTheorySteps theory={theory} />
+
+        {/* Phase 1: Beginner Micro-details & Syntax Rules */}
+        {theory.prisma?.littleDetails && (
+          <PrismaLittleDetailsCard details={theory.prisma.littleDetails} />
+        )}
+
+        {/* Phase 1: "How to think through this" Decision Checklist */}
+        {theory.prisma?.howToThink && (
+          <PrismaMentalModelCard howToThink={theory.prisma.howToThink} />
+        )}
+
+        {/* Phase 1: Side-by-side SQL to Prisma Comparison Bridge */}
+        {theory.prisma?.sqlBridge && (
+          <SqlPrismaBridgeCard bridge={theory.prisma.sqlBridge} />
+        )}
 
         {/* ---------- steps ---------- */}
         {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (

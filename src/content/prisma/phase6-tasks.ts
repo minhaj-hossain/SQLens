@@ -1,7 +1,10 @@
 import type { PracticeTask } from '../../types/curriculum';
 import type {
   GradingType,
+  PrismaHowToThink,
+  PrismaLittleDetails,
   PrismaMethod,
+  PrismaSqlBridge,
   PrismaStepBreakdown,
   PrismaTargetHero,
   PrismaValidationRule,
@@ -314,6 +317,9 @@ function basePrismaTheory(t: {
   hero: PrismaTargetHero;
   mentalModel?: string;
   steps?: PrismaStepBreakdown[];
+  littleDetails?: PrismaLittleDetails;
+  sqlBridge?: PrismaSqlBridge;
+  howToThink?: PrismaHowToThink;
 }) {
   return {
     summary: t.summary,
@@ -329,6 +335,9 @@ function basePrismaTheory(t: {
       targetHero: t.hero,
       ...(t.mentalModel ? { mentalModel: t.mentalModel } : {}),
       ...(t.steps && t.steps.length > 0 ? { stepBreakdowns: t.steps } : {}),
+      ...(t.littleDetails ? { littleDetails: t.littleDetails } : {}),
+      ...(t.sqlBridge ? { sqlBridge: t.sqlBridge } : {}),
+      ...(t.howToThink ? { howToThink: t.howToThink } : {}),
     },
   };
 }
@@ -355,9 +364,9 @@ export function prismaTheory(
 }
 
 /**
- * P2.1 — rich theory builder: a bespoke mental model plus ≥3 genuine steps
- * (client call → Query-Engine translation → inferred result type). Steps live
- * on the `prisma` block and render via `PrismaTheoryBlock` on the lesson.
+ * P2.1 — rich theory builder: a bespoke mental model plus genuine steps
+ * (client call → Query-Engine translation → inferred result type), beginner
+ * micro-rules, SQL-to-Prisma comparison, and decision checklists.
  */
 export function richPrismaTheory(t: {
   summary: string;
@@ -370,6 +379,9 @@ export function richPrismaTheory(t: {
   /** Concept-specific explanation lines; falls back to the two generic ones. */
   explanation?: string[];
   steps: PrismaStepBreakdown[];
+  littleDetails?: PrismaLittleDetails;
+  sqlBridge?: PrismaSqlBridge;
+  howToThink?: PrismaHowToThink;
 }) {
   return basePrismaTheory({
     summary: t.summary,
@@ -382,5 +394,8 @@ export function richPrismaTheory(t: {
     hero: { code: t.heroCode, language: t.heroLang, explanation: t.heroWhy },
     mentalModel: t.mentalModel,
     steps: t.steps,
+    littleDetails: t.littleDetails,
+    sqlBridge: t.sqlBridge,
+    howToThink: t.howToThink,
   });
 }

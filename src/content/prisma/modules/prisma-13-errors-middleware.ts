@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 13 — Prisma Error Classification. */
 export const Prisma_13_MODULE: ModuleData = {
@@ -27,14 +27,111 @@ export const Prisma_13_MODULE: ModuleData = {
       order: 1,
       title: 'Prisma Error Classification',
       shortDescription: 'The `code` field is the contract — P2002, P2025, and friends.',
-      theory: prismaTheory(
-        'Prisma throws typed errors: `PrismaClientKnownRequestError` carries a `code` such as `P2002` (unique constraint) or `P2025` (record not found). You cannot branch on the message, but you can always branch on the code.',
-        'Branch on `error.code`, never on the error message.',
-        "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
-        "try {\n  await prisma.user.create({ data: { name, email } });\n} catch (error) {\n  if (error instanceof Prisma.PrismaClientKnownRequestError) {\n    if (error.code === 'P2002') throw new ConflictError('Email already registered');\n    if (error.code === 'P2025') throw new NotFoundError('User not found');\n  }\n  throw error;\n}",
-        'typescript',
-        'Two codes cover the vast majority of real API failures.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Prisma throws typed exception classes: `PrismaClientKnownRequestError` carries a machine-readable `code` such as `P2002` (unique constraint violation) or `P2025` (record not found). Never parse string error messages; always branch on `error.code` inside an `instanceof` check to map to HTTP status codes.',
+        takeaway:
+          'Branch on `error.code`, never on error messages: P2002 -> 409, P2025 -> 404.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+        heroCode:
+          "try {\n  await prisma.user.create({ data: { name, email } });\n} catch (error) {\n  if (error instanceof Prisma.PrismaClientKnownRequestError) {\n    if (error.code === 'P2002') throw new ConflictError('Email already registered');\n    if (error.code === 'P2025') throw new NotFoundError('User not found');\n  }\n  throw error;\n}",
+        heroLang: 'typescript',
+        heroWhy: 'Two codes cover the vast majority of real API failures without string parsing.',
+        mentalModel:
+          '**Typed Error Contracts.** Database drivers emit raw error codes (e.g. Postgres 23505). Prisma standardizes these into typed `P-codes` attached to `PrismaClientKnownRequestError`. Instead of brittle regex checks against error strings, your API boundary checks `error.code` with full TypeScript exhaustiveness.',
+        littleDetails: {
+          title: 'Error Handling Rules & Code Contracts',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Always guard with instanceof PrismaClientKnownRequestError',
+              description: 'Prisma throws distinct error classes: `PrismaClientKnownRequestError` for query errors, `PrismaClientValidationError` for invalid query arguments, and `PrismaClientInitializationError` for connection failures. Never access `error.code` without checking `instanceof`.',
+              badge: 'Type Guard',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Never branch on error.message strings',
+              description: 'Error messages change between database connectors (Postgres vs MySQL vs SQLite) and Prisma minor releases. The `code` property (`P2002`, `P2025`) is an immutable, guaranteed API contract.',
+              badge: 'Stability',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Inspect error.meta to identify the offending field',
+              description: 'For `P2002`, `error.meta?.target` is an array containing the names of the conflicting columns (e.g. `["email"]`), allowing you to return targeted form validation messages.',
+              badge: 'Field Metadata',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma P-Codes vs SQL Error Codes',
+          mappings: [
+            {
+              prisma: "error.code === 'P2002'",
+              sql: 'SQLSTATE 23505 (unique_violation)',
+              note: 'Unique constraint breached; map to HTTP 409 Conflict',
+            },
+            {
+              prisma: "error.code === 'P2025'",
+              sql: '0 rows returned/affected on required mutation',
+              note: 'Record to update/delete not found; map to HTTP 404',
+            },
+            {
+              prisma: "error.code === 'P2003'",
+              sql: 'SQLSTATE 23503 (foreign_key_violation)',
+              note: 'Referenced foreign key missing; map to HTTP 409/400',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Why does PrismaClientValidationError not have an error.code?',
+              answer: 'ValidationError is thrown at the client library layer before hitting the database engine (e.g. invalid arguments or missing required fields). KnownRequestErrors come from database execution and possess P-codes.',
+            },
+            {
+              questionNumber: 2,
+              question: 'What should my catch block do with errors that do not match known codes?',
+              answer: 'Always re-throw unhandled errors at the end of the condition chain. If an error is not a known client mistake (4xx), it must bubble up to the global 500 handler as a genuine server exception.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Type Guard Verification',
+            codeSnippet: 'if (error instanceof Prisma.PrismaClientKnownRequestError) { /* ... */ }',
+            explanation:
+              'Guarding with the known error class safely narrows TypeScript types and exposes the typed `code` and `meta` properties.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Known Request Error Type',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Catch Unique Conflict (P2002)',
+            codeSnippet: "INSERT INTO users (email) VALUES ('rafi@prisma.io');\n-- Throws P2002 unique key violation",
+            explanation:
+              'Triggered when an INSERT or UPDATE violates a unique index (such as a duplicate email).',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Unique Key Violation Query',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Catch Missing Target (P2025)',
+            codeSnippet: "UPDATE users SET name = 'New' WHERE id = 9999;\n-- Throws P2025 record not found",
+            explanation:
+              'Triggered when `update`, `delete`, or `findUniqueOrThrow` encounters 0 matching rows.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Record Not Found Query',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma13-c1-t1',
@@ -106,14 +203,106 @@ export const Prisma_13_MODULE: ModuleData = {
       order: 2,
       title: 'In-Route Error Trapping — P2025 & P2003',
       shortDescription: 'Add the missing branches: `P2025` is not found, `P2003` is a broken foreign key.',
-      theory: prismaTheory(
-        'The `code` field covers more than uniqueness violations. `P2025` fires when `update`, `delete`, or `findUniqueOrThrow` finds no matching row. `P2003` fires when a write violates a foreign-key constraint — the referenced record does not exist. Both are predictable failures that deserve precise HTTP status codes, not generic 500s.',
-        'P2025 = record missing (404); P2003 = broken FK (409).',
-        "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-        "try {\n  await prisma.user.update({ where: { id }, data: { name } });\n} catch (error) {\n  if (error instanceof Prisma.PrismaClientKnownRequestError) {\n    if (error.code === 'P2002') return res.status(409).json({ error: 'Conflict' });\n    if (error.code === 'P2025') return res.status(404).json({ error: 'Not found' });\n    if (error.code === 'P2003') return res.status(409).json({ error: 'Related record missing' });\n  }\n  throw error;\n}",
-        'typescript',
-        'Three codes handle the vast majority of API failures.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Prisma error codes provide granular distinction beyond simple existence. `P2025` fires when `update`, `delete`, or `findUniqueOrThrow` encounters zero matching records (mapping to HTTP 404). `P2003` fires when a write violates a foreign key constraint by pointing to a non-existent parent row (mapping to HTTP 409 or 400). Both are deterministic client errors deserving clear status codes.',
+        takeaway:
+          'P2025 = missing record (404); P2003 = foreign key violation (409).',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
+        heroCode:
+          "try {\n  await prisma.user.update({ where: { id }, data: { name } });\n} catch (error) {\n  if (error instanceof Prisma.PrismaClientKnownRequestError) {\n    if (error.code === 'P2002') return res.status(409).json({ error: 'Conflict' });\n    if (error.code === 'P2025') return res.status(404).json({ error: 'Not found' });\n    if (error.code === 'P2003') return res.status(409).json({ error: 'Related record missing' });\n  }\n  throw error;\n}",
+        heroLang: 'typescript',
+        heroWhy: 'Three codes handle the vast majority of domain API write failures.',
+        mentalModel:
+          '**Routing Perimeter Defenses.** When mutations fail, the error must be translated into standard HTTP semantics at the route handler boundary. If a user deletes an already-deleted resource, returning 404 communicates accurate resource state. If an article refers to a missing category ID, 409/400 communicates referential rejection without crashing the node process.',
+        littleDetails: {
+          title: 'Foreign Key & Missing Record Invariants',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'P2025 occurs on single-record mutations',
+              description: 'Methods expecting an existing record (`update`, `delete`, `findFirstOrThrow`, `findUniqueOrThrow`) throw `P2025` when zero rows match the `where` condition.',
+              badge: 'Existence Check',
+            },
+            {
+              ruleNumber: 2,
+              title: 'P2003 identifies broken foreign keys',
+              description: 'Inserting or updating a child record with a foreign key scalar that does not exist in the referenced parent table produces `P2003`. Check `error.meta?.field_name` to know which relation broke.',
+              badge: 'Referential Integrity',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Bulk deleteMany and updateMany never throw P2025',
+              description: 'Bulk operations return `{ count: 0 }` if no rows match the filter. Only targeted unique operations throw `P2025`.',
+              badge: 'Method Difference',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma In-Route Errors vs Database Failures',
+          mappings: [
+            {
+              prisma: "error.code === 'P2025'",
+              sql: 'DELETE FROM users WHERE id = 999; -- 0 rows affected',
+              note: 'Target record does not exist -> 404 Not Found',
+            },
+            {
+              prisma: "error.code === 'P2003'",
+              sql: 'INSERT INTO posts (author_id) VALUES (999); -- FK violates users(id)',
+              note: 'Parent row missing -> 409 Conflict',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Why should P2003 return 409 rather than 500?',
+              answer: 'A foreign key violation is caused by client input (providing an ID of an entity that does not exist or has been deleted). Returning 500 falsely suggests an internal server crash.',
+            },
+            {
+              questionNumber: 2,
+              question: 'How do I know which relation failed when P2003 is thrown?',
+              answer: 'Read `error.meta?.field_name`. Prisma populates this property with the name of the foreign key constraint that rejected the write.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Delete / Update Target Missing (P2025)',
+            codeSnippet: 'DELETE FROM users WHERE id = 9999;\n-- Zero rows affected raises P2025',
+            explanation:
+              'When `delete` or `update` cannot locate the record specified by the unique key, trap `P2025` and inform the client the resource does not exist.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Zero Rows Target Delete Query',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Referential Foreign Key Failure (P2003)',
+            codeSnippet: 'INSERT INTO posts (title, author_id) VALUES (\'Hello\', 9999);\n-- Violates foreign key constraint users(id)',
+            explanation:
+              'When linking a child to a non-existent parent primary key, trap `P2003` to report invalid relational references.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Foreign Key Violation Query',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Fallback to 500 for Unexpected Failures',
+            codeSnippet: 'catch (error) {\n  return res.status(500).json({ error: "Internal server error" });\n}',
+            explanation:
+              'Any error code not explicitly handled as a predictable client error is treated as an internal server failure.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Error Response Payload',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma13-c2-t1',
@@ -174,6 +363,58 @@ export const Prisma_13_MODULE: ModuleData = {
         heroWhy: 'Every `user` query now flows through one interception point — typed, not stringly.',
         mentalModel:
           '**Intercept once, not at every call site.** `query` hooks receive `{ args, query }` and return the result, so logging, soft-delete filters and tenant scoping live in ONE place. The deprecated `$use` middleware did the same job with `any` everywhere — `$extends` keeps the types.',
+        littleDetails: {
+          title: 'Client Extension Rules & Immutability',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: '$extends produces a new client instance',
+              description: 'Calling `prisma.$extends()` does not mutate the original `prisma` client. It returns a newly extended client instance (`xprisma`) that carries the additional hooks and typed signatures.',
+              badge: 'Immutability',
+            },
+            {
+              ruleNumber: 2,
+              title: 'query hooks must await and return query(args)',
+              description: 'In a query extension, calling `await query(args)` executes the underlying database operation. If you do not return the result of `query(args)`, caller queries resolve to undefined.',
+              badge: 'Query Invocation',
+            },
+            {
+              ruleNumber: 3,
+              title: 'result hooks require needs declarations',
+              description: 'When defining a virtual computed property in `result`, the `needs` object declares which physical database columns must be loaded for the computation to run.',
+              badge: 'Computed Fields',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Client Extensions vs Database Middleware',
+          mappings: [
+            {
+              prisma: 'prisma.$extends({ query: { user: { $allOperations } } })',
+              sql: '-- Engine query interception before database dispatch',
+              note: 'Applies query logging, multi-tenancy, or soft-delete filtering',
+            },
+            {
+              prisma: 'result: { user: { fullName: { needs: { firstName: true, lastName: true }, compute(u) { ... } } } }',
+              sql: 'SELECT first_name, last_name FROM users;',
+              note: 'Computes virtual properties in memory without schema DDL changes',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Why did Prisma deprecate $use middleware in favor of $extends?',
+              answer: '`$use` erased TypeScript types and typed query inputs as `any`. `$extends` is completely type-safe: extensions infer custom method inputs, returned shapes, and computed fields throughout your application.',
+            },
+            {
+              questionNumber: 2,
+              question: 'Where should an extended Prisma client live in a project?',
+              answer: 'Initialize and extend your client once in a centralized database module (e.g. `src/lib/db.ts`), and export the extended client instance for import across routes and services.',
+            },
+          ],
+        },
         explanation: [
           'Architectural Transition: Concepts 1 & 2 address perimeter HTTP errors; $extends operates internally at the client execution engine.',
           '`query` hooks wrap execution (args in, result out); `model` hooks add methods; `result` hooks add computed fields.',

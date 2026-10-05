@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 10 — update(), updateMany() & upsert(). */
 export const Prisma_10_MODULE: ModuleData = {
@@ -27,14 +27,116 @@ export const Prisma_10_MODULE: ModuleData = {
       order: 1,
       title: 'Updating Rows — update() & updateMany()',
       shortDescription: 'One row by unique key, or every row the filter matches.',
-      theory: prismaTheory(
-        '`update()` needs a unique `where` and returns the changed row. `updateMany()` takes any filter and returns a count. For concurrency-safe arithmetic without race conditions, pass `{ increment: n }` in `data`.',
-        'update = unique key; updateMany = filter; atomic math avoids race conditions.',
-        'SELECT id, name\nFROM users\nWHERE id = 1;',
-        'await prisma.user.update({\n  where: { id: 1 },\n  data: { id: { increment: 1 } },\n  select: { id: true },\n});',
-        'typescript',
-        'Atomic increment rewrites to `id = id + 1` in SQL, keeping writes concurrency-safe.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          '`update()` requires a unique selector (`where`) and returns the mutated row. `updateMany()` accepts any filter, updates all matching rows, and returns a `{ count: number }`. For concurrency-safe math without race conditions, pass atomic operators like `{ increment: n }` in `data`.',
+        takeaway:
+          'update requires a unique key; updateMany updates behind a filter; atomic math prevents lost-update race conditions.',
+        sql: "UPDATE users\nSET name = 'Alexandra'\nWHERE id = 1\nRETURNING id, name;",
+        heroCode:
+          'const user = await prisma.user.update({\n  where: { id: 1 },\n  data: { id: { increment: 1 } },\n  select: { id: true },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Atomic increment rewrites to `id = id + 1` in SQL, keeping writes concurrency-safe.',
+        mentalModel:
+          '**Targeted Row Mutation vs Batch Transformations.** When updating an individual entity, `prisma.user.update()` targets an exact unique identifier and returns the updated model. When running bulk operations, `updateMany()` touches zero, one, or thousands of rows in a single UPDATE query without throwing if none match. Concurrency conflicts on counters are avoided by delegating math to the database engine via atomic operators.',
+        littleDetails: {
+          title: 'Update Rules & Atomic Safety',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'update requires a unique selector',
+              description: 'The `where` clause of `update()` only accepts fields marked `@id` or `@unique`. Attempting to filter on non-unique fields causes a TypeScript compile error (`UserWhereUniqueInput`).',
+              badge: 'Type Safety',
+            },
+            {
+              ruleNumber: 2,
+              title: 'updateMany returns count only and lacks nested writes',
+              description: '`updateMany()` executes a single batch UPDATE and returns `{ count: number }`. Because it modifies an arbitrary row set, it cannot return hydrated records or execute nested relation mutations.',
+              badge: 'Return Type',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Use atomic operators to eliminate lost updates',
+              description: 'Instead of reading a counter into Node.js memory, adding 1, and saving it back (which suffers from race conditions), pass `{ increment: 1 }`. Prisma translates this directly to `SET count = count + 1` in SQL.',
+              badge: 'Concurrency',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Mutation vs SQL Equivalent',
+          mappings: [
+            {
+              prisma: 'prisma.user.update({ where: { id: 1 }, data: { name: "Alex" } })',
+              sql: "UPDATE users SET name = 'Alex' WHERE id = 1 RETURNING *;",
+              note: 'Targets unique row; throws P2025 if missing',
+            },
+            {
+              prisma: 'prisma.user.updateMany({ where: { role: "GUEST" }, data: { active: false } })',
+              sql: "UPDATE users SET active = false WHERE role = 'GUEST';",
+              note: 'Returns affected row count',
+            },
+            {
+              prisma: 'data: { views: { increment: 1 } }',
+              sql: 'SET views = views + 1',
+              note: 'Atomic in-database arithmetic',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Do I have a unique key and need the updated record back?',
+              answer: 'Use `prisma.user.update()`. If the record does not exist, it safely throws P2025 (Record to update not found).',
+            },
+            {
+              questionNumber: 2,
+              question: 'Do I need to update 0, 1, or many rows based on criteria without throwing if zero match?',
+              answer: 'Use `prisma.user.updateMany()`. It returns `{ count: number }` indicating how many rows matched and were altered.',
+            },
+            {
+              questionNumber: 3,
+              question: 'Am I modifying a counter, inventory balance, or metric under concurrent traffic?',
+              answer: 'Pass `{ increment: n }` or `{ decrement: n }` in `data` to let the database calculate the new value atomically.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Targeted Single-Row Mutation',
+            codeSnippet: "UPDATE users\nSET name = 'Alexandra'\nWHERE id = 1\nRETURNING id, name;",
+            explanation:
+              'A single-row update requires targeting a primary key or unique index. The return value is the fully updated record shaped by your `select` projection.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Targeted Update',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Batch Update with Filter',
+            codeSnippet: "UPDATE users\nSET name = 'Alexandra'\nWHERE name = 'Alex';",
+            explanation:
+              'Batch updates do not throw if no rows match — they simply return `{ count: 0 }`. Always verify the filter logic first before running bulk mutations.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Batch Update Query',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Atomic Arithmetic Execution',
+            codeSnippet: 'UPDATE users\nSET login_count = login_count + 1\nWHERE id = 1\nRETURNING id;',
+            explanation:
+              'Delegating arithmetic to the SQL engine prevents read-modify-write race conditions where concurrent requests overwrite each other.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Atomic Arithmetic Update',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma10-c1-t1',
@@ -113,14 +215,106 @@ export const Prisma_10_MODULE: ModuleData = {
       order: 2,
       title: 'Idempotent Writes with upsert()',
       shortDescription: 'One statement that inserts or updates, depending on what it finds.',
-      theory: prismaTheory(
-        '`upsert()` looks up a unique key and then either runs `update` or `create`. Because both branches live in one statement, a retried request cannot produce a duplicate — which is what makes webhooks and seeders safe.',
-        'upsert = unique key + update branch + create branch.',
-        "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-        'await prisma.user.upsert({\n  where: { email },\n  update: {},\n  create: { name, email },\n});',
-        'typescript',
-        '`update: {}` is the trick for "create if missing, otherwise leave it alone".',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          '`upsert()` checks for an existing record by a unique key: if found, it executes `update`; if missing, it executes `create`. Because both operations are defined atomically in a single statement, replaying webhooks or seeding scripts is completely idempotent and immune to duplicate key conflicts.',
+        takeaway:
+          'upsert = unique key + update branch + create branch; safe for replays and webhook ingestion.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
+        heroCode:
+          'const user = await prisma.user.upsert({\n  where: { email },\n  update: {},\n  create: { name, email },\n});',
+        heroLang: 'typescript',
+        heroWhy: '`update: {}` is the idiom for "create if missing, otherwise leave untouched".',
+        mentalModel:
+          '**Conditional Convergence.** In distributed systems and asynchronous event processing (e.g. Stripe webhooks), requests may arrive multiple times or out of order. `upsert()` guarantees that regardless of whether the record already exists, the database converges to the desired state in a single query without race conditions.',
+        littleDetails: {
+          title: 'Upsert Rules & Idempotency',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'where requires a unique key',
+              description: 'Just like `update()`, `upsert()` requires a unique identifier (primary key `@id` or `@unique` column/composite). The database needs this to evaluate `ON CONFLICT`.',
+              badge: 'Constraint',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Empty update: {} yields insert-or-ignore',
+              description: 'Passing `update: {}` creates the record if absent, but leaves existing data untouched if already present. This corresponds to `ON CONFLICT DO NOTHING`.',
+              badge: 'Pattern',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Required fields must be satisfied in create',
+              description: 'The `create` branch must supply all non-optional, non-default fields for the model, even if the `update` branch only modifies a single field.',
+              badge: 'Validation',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Upsert vs SQL ON CONFLICT',
+          mappings: [
+            {
+              prisma: 'prisma.user.upsert({ where: { email }, update: { name }, create: { name, email } })',
+              sql: 'INSERT INTO users (name, email) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name RETURNING *;',
+              note: 'Atomic insert or update in one round trip',
+            },
+            {
+              prisma: 'prisma.user.upsert({ where: { email }, update: {}, create: { name, email } })',
+              sql: 'INSERT INTO users (name, email) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING RETURNING *;',
+              note: 'Insert-or-ignore idempotency',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Why not run findUnique() first, followed by create() or update() in application code?',
+              answer: 'A read-then-write approach creates a concurrency race condition: two parallel requests can both see null and both attempt INSERT, causing a P2002 unique constraint violation. Upsert executes atomically in the database.',
+            },
+            {
+              questionNumber: 2,
+              question: 'When should I use update: {} with nothing inside?',
+              answer: 'When your goal is "ensure this entity exists in the table" without overriding any subsequent edits made to the record.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Define the Unique Identifier',
+            codeSnippet: 'where: { email: "mina@prisma.io" }',
+            explanation:
+              'The where criteria must pinpoint at most one row. This maps directly to the conflict target of the underlying database.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Unique Key Selector',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Define the Insert Fallback',
+            codeSnippet: "INSERT INTO users (name, email)\nVALUES ('Mina', 'mina@prisma.io')\nON CONFLICT (email) DO NOTHING;",
+            explanation:
+              'If the lookup fails, Prisma executes an INSERT with this data. All required non-default fields must be present.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Insert Branch Query',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Define the Conflict Mutation',
+            codeSnippet: "INSERT INTO users (name, email)\nVALUES ('Mina', 'mina@prisma.io')\nON CONFLICT (email) DO UPDATE SET name = 'Mina'\nRETURNING id, email;",
+            explanation:
+              'If a record with matching unique criteria already exists, Prisma executes an UPDATE with this data instead of failing.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Conflict Update Branch Query',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma10-c2-t1',

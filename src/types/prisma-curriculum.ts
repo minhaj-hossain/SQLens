@@ -128,11 +128,59 @@ export interface PrismaStepBreakdown {
   stepTitle: string;
   codeSnippet: string;
   explanation: string;
+  /** Plain-English conversational sentence translation of this code step. */
+  sentenceReading?: string;
+  /** Explicit indicator: this step defines a physical database column. */
+  isPhysicalColumn?: boolean;
+  /** Explicit indicator: this step defines a virtual in-memory relation handle. */
+  isVirtualRelation?: boolean;
   visualData?: {
     type: 'sql_lens' | 'type_preview' | 'table_diff' | 'erd_highlight';
     title: string;
-    details: unknown;
+    details?: unknown;
   };
+}
+
+export interface PrismaLittleDetailRule {
+  ruleNumber: number;
+  title: string;
+  description: string;
+  codeSnippet?: string;
+  badge?: string;
+}
+
+export interface PrismaLittleDetails {
+  title?: string;
+  rules: PrismaLittleDetailRule[];
+}
+
+export interface PrismaSqlBridgeMapping {
+  sql: string;
+  prisma: string;
+  note?: string;
+  isVirtual?: boolean;
+}
+
+export interface PrismaSqlBridge {
+  title?: string;
+  description?: string;
+  mappings: PrismaSqlBridgeMapping[];
+}
+
+export interface PrismaHowToThinkQuestion {
+  questionNumber: number;
+  question: string;
+  answer: string;
+  template?: string;
+}
+
+export interface PrismaHowToThink {
+  bidirectionalCheck?: {
+    forward: string;
+    reverse: string;
+  };
+  decisionQuestions?: PrismaHowToThinkQuestion[];
+  toolingTip?: string;
 }
 
 /** Prisma side of concept theory (SQL fields stay populated for reuse). */
@@ -156,4 +204,10 @@ export interface PrismaTheoryContent {
    * seed universe's schema is drawn (the one every probe executes against).
    */
   schemaSource?: string;
+  /** Beginner micro-details, syntax rules and conventions. */
+  littleDetails?: PrismaLittleDetails;
+  /** Side-by-side SQL to Prisma comparative token mappings. */
+  sqlBridge?: PrismaSqlBridge;
+  /** "How to think through this" bidirectional test and decision checklist. */
+  howToThink?: PrismaHowToThink;
 }

@@ -81,6 +81,68 @@ export const Prisma_06_MODULE: ModuleData = {
             },
           },
         ],
+        littleDetails: {
+          title: 'PrismaClient Singleton Rules & Gotchas',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Why `as unknown as { prisma?: PrismaClient }`?',
+              description: 'In TypeScript, `globalThis` has strict typings that disallow assigning arbitrary unknown properties without global declaration files. Casting through `unknown` is the clean, standard pattern to stash a singleton on the Node.js global object.',
+              badge: 'TypeScript',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Only cache on globalThis during development',
+              description: 'In production, your Node server or container runs a single long-lived process without file watchers. Wrapping the assignment in `if (process.env.NODE_ENV !== "production")` ensures we only use the global cache when Hot Module Replacement (HMR) is actively reloading modules.',
+              badge: 'Environment',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Serverless PgBouncer connection tuning',
+              description: 'In serverless functions (AWS Lambda, Vercel), each cold start spins up a separate instance. Always append `?pgbouncer=true&connection_limit=1` to your connection URL. The `pgbouncer=true` flag tells Prisma to disable prepared statements, and `connection_limit=1` prevents each Lambda from monopolizing multiple database sockets.',
+              badge: 'Serverless',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'PrismaClient to Database Sockets',
+          mappings: [
+            {
+              prisma: 'new PrismaClient()',
+              sql: 'Physical TCP connection pool (pg_stat_activity)',
+              note: 'Allocates an internal pool of active TCP sockets to the database. Running multiple instances exhausts Postgres max_connections.',
+            },
+            {
+              prisma: 'globalThis.prisma ?? new PrismaClient()',
+              sql: 'Reused socket pool across dev reloads',
+              note: 'Preserves the existing socket pool across file saves in Next.js / Vite development servers.',
+            },
+            {
+              prisma: '?pgbouncer=true&connection_limit=1',
+              sql: 'Transaction pooling mode (no prepared statements)',
+              note: 'Optimizes Postgres connection pooling through PgBouncer/Supabase for ephemeral serverless lambdas.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Are you running a local development server with hot-reloading (Next.js, Vite)?',
+              answer: 'Attach `prisma` to `globalThis` in development so file saves do not spawn duplicate connection pools.',
+            },
+            {
+              questionNumber: 2,
+              question: 'Are you deploying to ephemeral serverless lambdas (Vercel, AWS Lambda)?',
+              answer: 'Use a connection pooler like PgBouncer or Supabase Pooler with `?pgbouncer=true&connection_limit=1`, or use Prisma Accelerate / Driver Adapters over HTTP.',
+            },
+            {
+              questionNumber: 3,
+              question: 'Are you deploying a traditional long-running Node container (Docker, Express, NestJS)?',
+              answer: 'Instantiate a single module-scoped client. The default pool size (`num_physical_cpus * 2 + 1`) efficiently handles concurrent async requests.',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaSnippetTask({
@@ -123,14 +185,95 @@ export const Prisma_06_MODULE: ModuleData = {
       order: 2,
       title: 'Query Logging & Graceful Shutdown',
       shortDescription: '`log: [...]` shows the generated SQL; `$disconnect` releases the pool.',
-      theory: prismaTheory(
-        'The SQL Lens is authored — the log config is how you see it live. `log: [\'query\']` prints every statement Prisma sends, and `$disconnect()` closes the pool so a script can exit.',
-        'Turn on query logging to see real SQL; disconnect before exit.',
-        "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
-        "const prisma = new PrismaClient({ log: ['query', 'warn', 'error'] });\n\nprocess.on('beforeExit', async () => {\n  await prisma.$disconnect();\n});",
-        'typescript',
-        'The log array is your only window into the SQL Prisma actually sends.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Prisma executes queries silently by default. Configuring `log: [\'query\', \'warn\', \'error\']` reveals every raw SQL statement, parameter binding, and execution duration sent over the wire. In CLI scripts, seed runners, and integration tests, calling `await prisma.$disconnect()` is mandatory to release the connection pool and allow the Node.js event loop to terminate gracefully.',
+        takeaway:
+          'Turn on query logging to see real SQL; disconnect before exit.',
+        sql: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+        heroCode:
+          "const prisma = new PrismaClient({ log: ['query', 'warn', 'error'] });\n\nprocess.on('beforeExit', async () => {\n  await prisma.$disconnect();\n});",
+        heroLang: 'typescript',
+        heroWhy: 'The log array is your only window into the SQL Prisma actually sends.',
+        mentalModel:
+          '**Observability & Teardown Lifecycle.** Prisma communicates with the database through its internal query engine. By enabling `query` logging, you inspect the exact parameterized SQL and execution timing for every ORM call. When a CLI process finishes, active open sockets in Prisma\'s connection pool keep the Node.js event loop alive. Attaching `prisma.$disconnect()` to the `beforeExit` signal drains and closes these sockets so the process can exit cleanly.',
+        littleDetails: {
+          title: 'Logging & Teardown Rules',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Never call $disconnect() inside web request handlers',
+              description: 'Calling `$disconnect()` inside an Express route, Next.js Server Action, or Fastify handler tears down the shared pool for all incoming user requests! Only call `$disconnect()` in batch scripts, tests, or process termination hooks.',
+              badge: 'Architecture',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Log levels and structured events',
+              description: 'Passing `log: [\'query\']` prints directly to `stdout`. If you need structured logging (e.g. JSON in Datadog or Winston), configure `{ emit: \'event\', level: \'query\' }` and register a listener with `prisma.$on(\'query\', (e) => console.log(e.query, e.params, e.duration))`.',
+              badge: 'Telemetry',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Lazy connection initialization',
+              description: 'You rarely need to call `prisma.$connect()` explicitly. Prisma connects lazily upon the very first database query.',
+              badge: 'Performance',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Lifecycle Methods to Connection States',
+          mappings: [
+            {
+              prisma: "new PrismaClient({ log: ['query'] })",
+              sql: 'Live query telemetry (emits SQL statement to console)',
+              note: 'Exposes the underlying parameterized SQL queries generated by the Prisma query engine.',
+            },
+            {
+              prisma: 'await prisma.$disconnect()',
+              sql: 'TCP FIN / connection pool teardown',
+              note: 'Closes physical socket connections, allowing the Node process to terminate.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Is this a persistent web application server (Express, Fastify, Next.js)?',
+              answer: 'Do NOT call `$disconnect()`. The connection pool must remain open to serve subsequent requests with zero cold connection overhead.',
+            },
+            {
+              questionNumber: 2,
+              question: 'Is this a one-shot CLI script, database seed, or Jest/Vitest test runner?',
+              answer: 'Always call `await prisma.$disconnect()` in a `finally` block or `beforeExit` listener so the script exits without hanging.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Configure query logging in client options',
+            codeSnippet: "const prisma = new PrismaClient({\n  log: ['query', 'warn', 'error'],\n});",
+            explanation: 'The log array tells Prisma which telemetry events to capture from the underlying query engine.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Query execution emits real-time parameterized SQL',
+            codeSnippet: "SELECT id, email\nFROM users\nWHERE email = 'rafi@prisma.io';",
+            explanation: 'Prisma prints the exact compiled SQL statement along with parameter values and duration in milliseconds.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Emitted Telemetry Statement',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Graceful shutdown releases socket pool',
+            codeSnippet: "process.on('beforeExit', async () => {\n  await prisma.$disconnect();\n});",
+            explanation: 'Calling $disconnect() returns all leased sockets and drains the pool before the Node.js process terminates.',
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma06-c2-t1',

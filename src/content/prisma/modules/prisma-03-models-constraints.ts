@@ -68,6 +68,58 @@ export const Prisma_03_MODULE: ModuleData = {
             visualData: { type: 'type_preview', title: 'Inferred type', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'The ? goes on the type, not the field name',
+              description:
+                'In TypeScript you write `bio?: string`. In Prisma Schema, the `?` goes directly on the scalar type: `bio String?`. Writing `bio? String` is a syntax error.',
+              codeSnippet: '// Correct:\nbio String?\n\n// Error:\nbio? String',
+              badge: 'Syntax',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Generator functions require parentheses',
+              description:
+                '@default(autoincrement()) and @default(now()) are function calls evaluated by the database engine at insert time.',
+              badge: 'Modifier',
+            },
+            {
+              ruleNumber: 3,
+              title: 'UUIDs vs Serial Auto-increment',
+              description:
+                'Use @default(autoincrement()) for sequential numeric IDs (Int). Use @default(uuid()) or @default(cuid()) for collision-resistant distributed keys (String).',
+              badge: 'Primary Key',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL to Prisma',
+          mappings: [
+            {
+              sql: 'id SERIAL PRIMARY KEY',
+              prisma: 'id Int @id @default(autoincrement())',
+              note: 'Auto-incrementing integer primary key',
+            },
+            {
+              sql: 'name VARCHAR(255) NOT NULL',
+              prisma: 'name String',
+              note: 'Required text column (no ? modifier)',
+            },
+            {
+              sql: 'bio TEXT',
+              prisma: 'bio String?',
+              note: 'Nullable column (stores NULL when omitted)',
+            },
+            {
+              sql: 'created_at TIMESTAMP DEFAULT NOW()',
+              prisma: 'createdAt DateTime @default(now())',
+              note: 'Automatic timestamp generated at insertion',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaReadTask({
@@ -154,6 +206,46 @@ export const Prisma_03_MODULE: ModuleData = {
             visualData: { type: 'type_preview', title: 'Inferred type', details: null },
           },
         ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'No quotes and no commas in Enums',
+              description:
+                'Inside an `enum`, values are listed without quotes or commas. Writing `ADMIN, MEMBER` or `"ADMIN"` triggers schema syntax errors.',
+              codeSnippet: '// Correct:\nenum Role {\n  ADMIN\n  MEMBER\n}',
+              badge: 'Enum',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Single @ vs Double @@ Scope Rule',
+              description:
+                'A single `@` modifies a single field (like `@unique` or `@id`). A double `@@` modifies the whole model across multiple fields (like `@@unique([tenantId, email])` or `@@index([createdAt])`).',
+              badge: 'Scope',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL to Prisma',
+          mappings: [
+            {
+              sql: "CREATE TYPE role_enum AS ENUM ('ADMIN', 'MEMBER')",
+              prisma: 'enum Role { ADMIN MEMBER }',
+              note: 'Database-level enumerated type',
+            },
+            {
+              sql: 'UNIQUE (name, email)',
+              prisma: '@@unique([name, email])',
+              note: 'Composite uniqueness across multiple columns',
+            },
+            {
+              sql: 'CREATE INDEX ON users (email)',
+              prisma: '@@index([email])',
+              note: 'Index on specific lookup columns',
+            },
+          ],
+        },
       }),
       tasks: [
         prismaSnippetTask({

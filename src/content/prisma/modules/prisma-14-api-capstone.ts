@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 14 — Prisma Capstone & Synthesis. */
 export const Prisma_14_MODULE: ModuleData = {
@@ -30,14 +30,111 @@ export const Prisma_14_MODULE: ModuleData = {
       order: 1,
       title: 'The Prisma Query Toolbox — Full Survey',
       shortDescription: 'Five query families, one mental model map.',
-      theory: prismaTheory(
-        'You now have five query families at hand. **Reads:** `findUnique / findFirst / findMany / findUniqueOrThrow`. **Writes:** `create / update / delete / upsert / createMany / updateMany / deleteMany`. **Nested writes:** `create`, `connect`, `connectOrCreate` inside a relation field. **Transactions:** `$transaction([...])` for a fixed batch; `$transaction(async tx => ...)` for interactive logic. **Raw SQL:** `$queryRaw` tagged template when the builder cannot express the query. Every write returns the row shaped by `select`; every error is a typed code.',
-        'Five families. All compose. All return typed results.',
-        'SELECT id, email\nFROM users\nORDER BY id ASC;',
-        '// Read     prisma.user.findMany(...)\n// Write    prisma.user.create({ data, select })\n// Nested   prisma.user.create({ data: { posts: { create } } })\n// Tx       prisma.$transaction([...])\n// Raw      prisma.$queryRaw`SELECT ...`',
-        'typescript',
-        'Knowing which family fits the problem is the whole skill.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Prisma provides five unified query families. **Reads:** `findUnique`, `findFirst`, `findMany`, and `findUniqueOrThrow`. **Writes:** `create`, `update`, `delete`, `upsert`, and their `Many` batch counterparts. **Nested Writes:** `create`, `connect`, and `connectOrCreate` across relation graphs. **Transactions:** `$transaction([...])` for sequential batches and `$transaction(async (tx) => ...)` for interactive logic. **Raw SQL:** `$queryRaw` and `$executeRaw` parameterized escape hatches.',
+        takeaway:
+          'Five query families: reads, writes, nested relations, transactions, and raw escape hatches.',
+        sql: "SELECT id, email\nFROM users\nORDER BY id ASC;",
+        heroCode:
+          '// Read     prisma.user.findMany(...)\n// Write    prisma.user.create({ data, select })\n// Nested   prisma.user.create({ data: { posts: { create } } })\n// Tx       prisma.$transaction([...])\n// Raw      prisma.$queryRaw`SELECT ...`',
+        heroLang: 'typescript',
+        heroWhy: 'Knowing which query family fits the requirement is the fundamental architectural skill.',
+        mentalModel:
+          '**The Complete Database Interface.** Modern applications navigate between high-level ORM type safety and raw relational performance. By selecting the optimal query family—leveraging `findUniqueOrThrow` for clean route handlers, nested writes for entity graphs, and interactive transactions for multi-step integrity—you eliminate boilerplate while preserving strict invariants.',
+        littleDetails: {
+          title: 'Query Toolbox Rules & Method Invariants',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'findUniqueOrThrow replaces verbose null checks',
+              description: 'When looking up an entity that is required to exist (e.g. an authenticated user or active resource), use `findUniqueOrThrow()`. It automatically throws `P2025` on missing records, pairing cleanly with central error catch blocks.',
+              badge: 'Clean Code',
+            },
+            {
+              ruleNumber: 2,
+              title: 'select and include are mutually exclusive at root',
+              description: 'You cannot specify both `select` and `include` at the top level of the same query. To fetch related models alongside scalar fields, nest relation selection inside `select: { id: true, posts: { select: { title: true } } }`.',
+              badge: 'Query Structure',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Batch operations trade row returns for throughput',
+              description: '`createMany`, `updateMany`, and `deleteMany` return `{ count: number }` rather than individual model instances. Use single-row methods when the caller needs generated IDs or mutated values.',
+              badge: 'Throughput Trade-off',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Query Families vs Relational Statements',
+          mappings: [
+            {
+              prisma: 'prisma.user.findUniqueOrThrow({ where: { id: 1 } })',
+              sql: 'SELECT * FROM users WHERE id = 1; -- (asserts 1 row returned)',
+              note: 'Reads entity; throws P2025 if missing',
+            },
+            {
+              prisma: 'prisma.user.updateMany({ where: { role: "GUEST" }, data: { active: false } })',
+              sql: 'UPDATE users SET active = false WHERE role = $1;',
+              note: 'Bulk update returning affected row count',
+            },
+            {
+              prisma: 'posts: { create: [{ title: "Hello" }] }',
+              sql: 'INSERT INTO posts (title, author_id) VALUES ($1, $2);',
+              note: 'Implicit transactional nested write',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'When should I reach for findUnique vs findUniqueOrThrow?',
+              answer: 'Use `findUnique` when absence is a regular business branch (e.g. checking whether an email is available during signup). Use `findUniqueOrThrow` when the record must exist (e.g. fetching a profile from a validated session ID).',
+            },
+            {
+              questionNumber: 2,
+              question: 'How do I paginate large result sets without memory spikes?',
+              answer: 'Always pair `take` with `orderBy`. For infinite scrolling or high-scale feeds, use cursor-based pagination (`cursor: { id }`) rather than high offset numbers.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Read Family & Assertion Methods',
+            codeSnippet: 'const user = await prisma.user.findUniqueOrThrow({ where: { id } });',
+            explanation:
+              'Lookup that throws a typed P2025 error on miss, eliminating redundant if-null guards in application code.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Asserted User Entity',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Write Family & Single vs Batch Semantics',
+            codeSnippet: "UPDATE users\nSET name = 'Mina'\nWHERE id = 1\nRETURNING id, name;",
+            explanation:
+              'Single mutations return the full entity and support nested relation writes; batch mutations return row counts and maximize performance.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Single Entity Update Query',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Transactions & Escape Hatches',
+            codeSnippet: 'SELECT id, email\nFROM users\nORDER BY id ASC;',
+            explanation:
+              'Wrap multi-turn operations in `$transaction` and reach for `$queryRaw` when complex analytics require custom database features.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Deterministic Query Execution',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma14-c1-t1',
@@ -85,14 +182,106 @@ export const Prisma_14_MODULE: ModuleData = {
       order: 2,
       title: 'Capstone Patterns — Integration Exercises',
       shortDescription: 'Reads + writes + error trapping, working together.',
-      theory: prismaTheory(
-        'Four principles tie the whole curriculum together. **Reads always project:** use `select` to return only the columns the caller needs. **Writes always handle errors:** catch `PrismaClientKnownRequestError` and branch on the code. **Multi-step writes always use `$transaction`:** isolation guarantees the whole graph or nothing lands. **Deletions have two layers:** schema-level `onDelete` enforced by the engine, and application-level `deletedAt` tombstones preserving audit trails.',
-        'Project. Trap. Transact. Distinguish deletion strategies.',
-        'SELECT id, email\nFROM users\nORDER BY id ASC;',
-        'const users = await prisma.user.findMany({\n  where: { deletedAt: null },\n  orderBy: { id: \'asc\' },\n  select: { id: true, email: true },\n  take: 10,\n});',
-        'typescript',
-        'Every clause has a reason: `where` scopes, `orderBy` determinises, `select` projects, `take` pages.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Production Prisma APIs combine four foundational pillars. **Deterministic Projections:** always specify `select` to prevent over-fetching and pair `take` with `orderBy`. **Transactional Integrity:** wrap multi-model workflows in `$transaction` to prevent partial state corruption. **Perimeter Conflict Trapping:** trap `P2002` and `P2025` into HTTP 409 and 404. **Dual-Layer Deletion:** declare `onDelete` cascades at schema level and use `deletedAt` tombstones for application-layer audit trails.',
+        takeaway:
+          'Project with select, order for determinism, transact multi-step writes, and trap error codes.',
+        sql: "SELECT id, email\nFROM users\nORDER BY id ASC;",
+        heroCode:
+          'const users = await prisma.user.findMany({\n  where: { deletedAt: null },\n  orderBy: { id: \'asc\' },\n  select: { id: true, email: true },\n  take: 10,\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Every clause has a distinct role: `where` scopes, `orderBy` determinises, `select` projects, `take` pages.',
+        mentalModel:
+          '**Architectural Synthesis.** A robust database layer does not treat queries in isolation. A paginated endpoint filters soft-deleted rows, sorts deterministically by primary key, limits result windows, and selects only public fields. Multi-step mutations execute inside transactional perimeters where conflict codes are transformed into clean HTTP status codes.',
+        littleDetails: {
+          title: 'Production API Patterns & Invariants',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Pagination requires deterministic ordering',
+              description: 'Never call `take` or `skip` without an explicit `orderBy`. Relational databases do not guarantee row order without an explicit `ORDER BY` clause.',
+              badge: 'Pagination Invariant',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Inline error trapping inside controllers',
+              description: 'Trap `PrismaClientKnownRequestError` immediately around writes. Map `P2002` to 409 Conflict with field-specific feedback, and pass unexpected errors down to global error middleware.',
+              badge: 'Defensive Coding',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Validate before writing with Zod',
+              description: 'Catch missing or malformed fields at the request boundary using Zod schemas before calling Prisma, keeping database logs clean of preventable validation errors.',
+              badge: 'Validation Boundary',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma API Query vs SQL Equivalent',
+          mappings: [
+            {
+              prisma: "prisma.user.findMany({ where: { deletedAt: null }, orderBy: { id: 'asc' }, take: 10, select: { id: true, email: true } })",
+              sql: "SELECT id, email FROM users WHERE deleted_at IS NULL ORDER BY id ASC LIMIT 10;",
+              note: 'Deterministic, paginated, filtered projection',
+            },
+            {
+              prisma: "await prisma.$transaction(async (tx) => { ... })",
+              sql: "BEGIN; ... COMMIT; (or ROLLBACK on failure)",
+              note: 'Atomic execution boundary',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'What is the complete checklist for a production read endpoint?',
+              answer: '1. Filter soft-deleted rows (`where: { deletedAt: null }`). 2. Deterministic sort (`orderBy: { id: "asc" }`). 3. Pagination ceiling (`take: N`). 4. Explicit projection (`select: { ... }`) omitting sensitive columns.',
+            },
+            {
+              questionNumber: 2,
+              question: 'How do transactions interact with error trapping?',
+              answer: 'If an error occurs inside `$transaction(async (tx) => ...)`, let it throw so Prisma can ROLLBACK the transaction. Catch the error OUTSIDE the transaction call to map it to an HTTP response.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Deterministic Paginated Projection',
+            codeSnippet: 'SELECT id, email FROM users ORDER BY id ASC LIMIT 2;',
+            explanation:
+              'Guarantees predictable pagination, prevents sensitive column leakage, and excludes soft-deleted rows in a single indexed query.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Paginated Projection Query',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Atomic Multi-Step Writes',
+            codeSnippet: 'BEGIN;\n-- User INSERT\n-- Post INSERT\nCOMMIT;',
+            explanation:
+              'Ensures that related entities are committed together, rolling back everything if any intermediate write fails.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Atomic Transaction Block',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Defensive Conflict Translation',
+            codeSnippet: 'if (err.code === "P2002") return res.status(409).json({ error: "Conflict" });',
+            explanation:
+              'Prevents application crashes and exposes clear API feedback when duplicate unique constraints are encountered.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Conflict Error Response',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma14-c2-t1',
@@ -151,6 +340,58 @@ export const Prisma_14_MODULE: ModuleData = {
         heroLang: 'typescript',
         heroWhy: 'The tagged template binds the interpolated value as a parameter — never concatenated into the SQL.',
         mentalModel: '**Escape hatch, seatbelt on.** `$queryRaw` hands you raw SQL, but the tagged template still binds every interpolated value as a parameter. Concatenating values into the string is the one thing you must never do; `Prisma.sql` composes fragments while keeping them bound.',
+        littleDetails: {
+          title: 'Raw SQL Rules & Injection Prevention',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Always use tagged template literals',
+              description: 'Always invoke `prisma.$queryRaw` using backticks as a tagged template: `prisma.$queryRaw\`SELECT * FROM users WHERE email = ${email}\``. Prisma converts variables into parameterized placeholders ($1, $2), making SQL injection impossible.',
+              badge: 'Security',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Avoid $queryRawUnsafe with concatenated strings',
+              description: '`$queryRawUnsafe` accepts plain strings and bypasses parameterization. Using string concatenation (`+` or untagged template strings) introduces critical SQL injection vulnerabilities.',
+              badge: 'Anti-Pattern',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Compose dynamic clauses with Prisma.sql',
+              description: 'To conditionally add WHERE or ORDER BY fragments, build them with the `Prisma.sql` helper. Composed fragments retain parameter binding across interpolation.',
+              badge: 'Composition',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Raw SQL vs Database Prepared Statements',
+          mappings: [
+            {
+              prisma: 'prisma.$queryRaw`SELECT * FROM users WHERE id = ${id}`',
+              sql: 'PREPARE stmt(int) AS SELECT * FROM users WHERE id = $1; EXECUTE stmt(1);',
+              note: 'Values bound safely as parameterized inputs',
+            },
+            {
+              prisma: 'prisma.$executeRaw`DELETE FROM users WHERE id = ${id}`',
+              sql: 'DELETE FROM users WHERE id = $1;',
+              note: 'Executes raw write and returns affected row count',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'When should I drop down to $queryRaw?',
+              answer: 'Only when Prisma Query Builder cannot express the query: e.g. recursive CTEs, vendor-specific full-text search operators, window functions with custom frames, or specialized database performance hints.',
+            },
+            {
+              questionNumber: 2,
+              question: 'How do I type the returned records of $queryRaw?',
+              answer: 'Pass a type argument: `await prisma.$queryRaw<UserDTO[]>\`SELECT id, email FROM users\``. Because raw SQL bypasses schema typing, verify that the SELECT columns match the TypeScript interface.',
+            },
+          ],
+        },
         explanation: [
           'Reach for `$queryRaw` only when the query builder cannot express the query — a database-specific function, a complex report, an index hint.',
           '`$executeRaw` returns the affected-row count instead of rows, for writes.',

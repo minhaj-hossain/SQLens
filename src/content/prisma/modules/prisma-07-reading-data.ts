@@ -27,14 +27,109 @@ export const Prisma_07_MODULE: ModuleData = {
       order: 1,
       title: 'findUnique, findUniqueOrThrow, findFirst & findMany',
       shortDescription: 'One row by unique key, one row by filter, or many rows.',
-      theory: prismaTheory(
-        'Prisma provides targeted read methods: `findUnique` (one row, unique selector only, may be null), `findFirst` (one row by any criteria, may be null), and `findMany` (an array, never null). Crucially, `findUnique` and `findUniqueOrThrow` only accept `where` selectors marked `@id` or `@unique` in your schema—enforced at compile time by TypeScript. When absence is exceptional, `findUniqueOrThrow` avoids boilerplate null checks by throwing NotFoundError (P2025) automatically.',
-        'findUnique requires an @id/@unique key; findUniqueOrThrow eliminates null checks; findFirst takes any filter; findMany returns an array.',
-        'SELECT id, name\nFROM users\nWHERE id = 1;',
-        'const byId = await prisma.user.findUnique({ where: { id: 1 } });\nconst guaranteed = await prisma.user.findUniqueOrThrow({ where: { id: 1 } });\nconst first = await prisma.user.findFirst({ where: { name: \'Alex\' } });\nconst all = await prisma.user.findMany();',
-        'typescript',
-        'Targeted read methods compile to optimal SQL while TypeScript enforces selector uniqueness.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Prisma provides targeted read methods: `findUnique` (one row, unique selector only, returns `T | null`), `findUniqueOrThrow` (one row by unique selector, returns `T` or throws P2025 NotFoundError), `findFirst` (one row by any criteria, returns `T | null`), and `findMany` (an array, never null). Crucially, `findUnique` and `findUniqueOrThrow` only accept `where` selectors marked `@id` or `@unique` in your schema—enforced at compile time by TypeScript.',
+        takeaway:
+          'findUnique requires an @id/@unique key; findUniqueOrThrow eliminates null checks; findFirst takes any filter; findMany returns an array.',
+        sql: 'SELECT id, name\nFROM users\nWHERE id = 1;',
+        heroCode:
+          "const byId = await prisma.user.findUnique({ where: { id: 1 } });\nconst guaranteed = await prisma.user.findUniqueOrThrow({ where: { id: 1 } });\nconst first = await prisma.user.findFirst({ where: { name: 'Alex' } });\nconst all = await prisma.user.findMany();",
+        heroLang: 'typescript',
+        heroWhy: 'Targeted read methods compile to optimal SQL while TypeScript enforces selector uniqueness.',
+        mentalModel:
+          '**Uniqueness & Nullability Contract Matrix.** When reading a single row, the compiler checks your intent: if querying by a unique index (`@id` or `@unique`), use `findUnique` so the database performs an indexed point lookup. If the row must exist (e.g. user editing their own profile), `findUniqueOrThrow` unwraps the type to `T` directly and throws P2025 on absence. For arbitrary non-unique searches, use `findFirst`. For collections, `findMany` returns `T[]` (empty list `[]` when no rows match, never `null`).',
+        littleDetails: {
+          title: 'Read Method Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Compile-time uniqueness enforcement',
+              description: '`findUnique` and `findUniqueOrThrow` will fail TypeScript compilation if you pass a non-unique field into `where` (e.g. `{ where: { name: "Alex" } }` will produce a type error unless `name` has `@unique` in schema.prisma). Use `findFirst` for non-unique search criteria.',
+              badge: 'Type Safety',
+            },
+            {
+              ruleNumber: 2,
+              title: 'findUniqueOrThrow eliminates defensive null checks',
+              description: 'In API route handlers, instead of writing `const user = await prisma.user.findUnique(...); if (!user) throw new NotFoundException();`, calling `findUniqueOrThrow` automatically rejects with a `PrismaClientKnownRequestError` (code P2025) and returns a non-nullable type.',
+              badge: 'Productivity',
+            },
+            {
+              ruleNumber: 3,
+              title: 'findMany returns [] and is never null',
+              description: 'When `findMany` matches 0 records, it returns an empty array `[]`. Never write `if (users === null)`—always check `if (users.length === 0)`.',
+              badge: 'Null Safety',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Read Methods to SQL Queries',
+          mappings: [
+            {
+              prisma: 'prisma.user.findUnique({ where: { id: 1 } })',
+              sql: 'SELECT ... FROM users WHERE id = 1 LIMIT 1',
+              note: 'Point lookup using primary key or unique index, compiled with a LIMIT 1 guard.',
+            },
+            {
+              prisma: 'prisma.user.findFirst({ where: { name: "Alex" } })',
+              sql: 'SELECT ... FROM users WHERE name = \'Alex\' LIMIT 1',
+              note: 'Searches by arbitrary non-unique criteria and returns the first row encountered.',
+            },
+            {
+              prisma: 'prisma.user.findMany({ where: { active: true } })',
+              sql: 'SELECT ... FROM users WHERE active = true',
+              note: 'Fetches all rows matching the filter predicate into an array.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Am I looking for a single row using its primary key or an @unique field?',
+              answer: 'Use `findUnique` (if absence is normal) or `findUniqueOrThrow` (if absence is an error).',
+            },
+            {
+              questionNumber: 2,
+              question: 'Am I searching for a single record using non-unique criteria (e.g. status, category, date)?',
+              answer: 'Use `findFirst`. TypeScript will not allow `findUnique` on non-unique fields.',
+            },
+            {
+              questionNumber: 3,
+              question: 'Do I expect zero, one, or multiple records?',
+              answer: 'Use `findMany`. It always returns an array `T[]` and never returns null.',
+            },
+          ],
+        },
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Select unique key in where argument',
+            codeSnippet: 'await prisma.user.findUnique({\n  where: { id: 1 },\n});',
+            explanation: 'TypeScript verifies that id is marked @id or @unique in schema.prisma before allowing compilation.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Query engine emits parameterized single-row lookup',
+            codeSnippet: 'SELECT id, name\nFROM users\nWHERE id = 1;',
+            explanation: 'The query engine generates a fast indexed lookup targeting exactly one row.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Targeted Point Lookup',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Compiler infers nullable or unwrapped return type',
+            codeSnippet: 'type Result = { id: number; name: string } | null;\n// or { id: number; name: string } with findUniqueOrThrow',
+            explanation: 'TypeScript forces you to handle null checks unless findUniqueOrThrow is used.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Inferred Return Type',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma07-c1-t1',
@@ -112,6 +207,63 @@ export const Prisma_07_MODULE: ModuleData = {
         heroWhy: 'Prisma.UserGetPayload infers exact relational types, eliminating manual interface drift.',
         mentalModel:
           '**Projection vs Relation Attachment.** `select` restricts scalar columns to a lean subset (`SELECT id, email`). `include` retrieves all base columns and issues relation queries (`SELECT * FROM users` + `SELECT * FROM posts WHERE authorId IN (...)`). Use `Prisma.UserGetPayload<T>` to derive strong TypeScript types matching exact query selections.',
+        littleDetails: {
+          title: 'Data Shaping Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'select and include are mutually exclusive at the root level',
+              description: 'You cannot pass both `{ select: { name: true }, include: { posts: true } }` in the same query. TypeScript will reject this with a compile error. To fetch specific scalars AND relations, nest the relation selection inside `select: { name: true, posts: { select: { title: true } } }`.',
+              badge: 'Syntax Rule',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Derive relational types with Prisma.UserGetPayload',
+              description: 'The base `User` type generated by Prisma only includes scalar fields. When you query with `include` or `select`, extract the exact TypeScript return type using `type UserWithPosts = Prisma.UserGetPayload<{ include: { posts: true } }>` to prevent interface drift across your codebase.',
+              badge: 'Typing',
+            },
+            {
+              ruleNumber: 3,
+              title: 'Prisma prevents N+1 query traps',
+              description: 'When using `include: { posts: true }`, Prisma does not execute one query per row. It executes 1 query for the parent rows and 1 batch query for all related posts (`WHERE authorId IN (...)`), combining them in memory.',
+              badge: 'Performance',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'Prisma Selection to SQL Queries',
+          mappings: [
+            {
+              prisma: 'select: { id: true, email: true }',
+              sql: 'SELECT id, email FROM users',
+              note: 'Projects only the requested columns, keeping unwanted fields off the network.',
+            },
+            {
+              prisma: 'include: { posts: true }',
+              sql: 'SELECT * FROM users; SELECT * FROM posts WHERE authorId IN (...);',
+              note: 'Eagerly loads related models via secondary batch queries without N+1 overhead.',
+            },
+          ],
+        },
+        howToThink: {
+          decisionQuestions: [
+            {
+              questionNumber: 1,
+              question: 'Do I only need 1 or 2 specific columns for a compact UI widget or dropdown?',
+              answer: 'Use `select`. Unselected columns are excluded from the SQL SELECT statement.',
+            },
+            {
+              questionNumber: 2,
+              question: 'Do I need the complete model plus its related entities?',
+              answer: 'Use `include: { relation: true }`. All base scalar columns are preserved.',
+            },
+            {
+              questionNumber: 3,
+              question: 'Do I need specific columns from the parent AND specific columns from the child relation?',
+              answer: 'Use nested `select`: `select: { id: true, posts: { select: { title: true } } }`.',
+            },
+          ],
+        },
         explanation: [
           'Root-level `select` and `include` cannot be mixed — choose either a custom projection or full-model relation inclusion.',
           'To prune fields on joined relations, nest `select` inside relation properties.',
