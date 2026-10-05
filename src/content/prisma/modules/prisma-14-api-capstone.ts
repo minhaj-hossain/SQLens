@@ -233,31 +233,38 @@ export const Prisma_14_MODULE: ModuleData = {
     databaseLifecycle: 'fresh',
     tasks: [
       {
-        ...prismaReadTask({
+        ...prismaSnippetTask({
           id: 'prisma14-hw-1',
-          title: 'Member Directory — Deterministic Public Roster',
+          title: 'Member Directory — Multi-Model Paginated Service Synthesis',
           description:
-            'Implement a privacy-compliant member directory endpoint. Return the first 2 registered users ordered by ID ascending. Protect personal identifying details: only id and email may leave the database.',
+            'Implement an enterprise member directory query synthesizing soft-delete filtering, deterministic pagination, and selective relational projection. Retrieve the first 2 active members (where deletedAt is null) ordered by ID ascending, projecting id, email, and related post titles while omitting sensitive columns.',
           instructions: [
-            'Retrieve the first 2 users ordered by `id` ascending',
-            'Project `id` and `email` only — never include `name`',
+            'Filter active members using `where: { deletedAt: null }`',
+            'Order deterministically with `orderBy: { id: \'asc\' }` and limit to 2 using `take: 2`',
+            'Project `id` and `email` on the parent model',
+            'Nest `posts: { select: { title: true } }` to include post titles without over-fetching',
           ],
-          hint: 'Use projection to omit sensitive columns and offset/ordering modifiers to enforce determinism.',
+          hint: 'Combine `where: { deletedAt: null }`, `orderBy: { id: \'asc\' }`, `take: 2`, and nested `posts: { select: { title: true } }` inside `select`.',
           scaffold:
-            '-- Directory contract (initial probe):\nSELECT id, email FROM users WHERE id = 99;',
+            '-- Directory synthesis (first two active members):\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users ORDER BY id ASC LIMIT 2;',
           why:
-            'Projection discipline prevents column leaks while deterministic ordering guarantees consistent pagination.',
+            'Combining soft-delete filtering, deterministic ordering, windowed pagination, and selective relation projection satisfies enterprise privacy, performance, and integrity contracts simultaneously.',
           cols: ['id', 'email'],
-          noCols: ['name'],
-          orderBy: [{ field: 'id', direction: 'asc' }],
-          pagination: { take: 2 },
           rows: 2,
           code0:
-            'export async function getDirectoryPage() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true, name: true },\n  });\n}',
+            'export async function getDirectoryPage() {\n  // BUG: Leaks soft-deleted users, over-fetches sensitive columns, and misses relation data\n  return await prisma.user.findMany({\n    select: { id: true, email: true, name: true },\n  });\n}',
           code1:
-            'export async function getDirectoryPage() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true },\n    orderBy: { id: \'asc\' },\n    take: 2,\n  });\n}',
-          rtype: '{ id: number; email: string }[]',
+            'export async function getDirectoryPage() {\n  return await prisma.user.findMany({\n    where: { deletedAt: null },\n    orderBy: { id: \'asc\' },\n    take: 2,\n    select: {\n      id: true,\n      email: true,\n      posts: { select: { title: true } },\n    },\n  });\n}',
+          need: [
+            'where: { deletedAt: null }',
+            "orderBy: { id: 'asc' }",
+            'take: 2',
+            'posts: {',
+            'select: { title: true }',
+          ],
+          ban: ['name: true'],
+          rtype: '{ id: number; email: string; posts: { title: string }[] }[]',
         }),
         type: 'challenge',
       },

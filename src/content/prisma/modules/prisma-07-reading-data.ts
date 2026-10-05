@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 7 — Reading Data + `select` vs `include`. */
 export const Prisma_07_MODULE: ModuleData = {
@@ -100,14 +100,60 @@ export const Prisma_07_MODULE: ModuleData = {
       order: 2,
       title: 'Data Shaping (`select`) vs Relation Loading (`include`)',
       shortDescription: '`select` defines returned shape; `include` attaches relations to base shape.',
-      theory: prismaTheory(
-        '`select` is a projection: you explicitly define the exact shape of the returned object by choosing which fields to retrieve. `include` is relation attachment: it preserves all scalar columns of the model and appends the requested relation. Combining both at the root level is ambiguous because `select` declares an exclusive field set while `include` implies a full base model. To shape both the parent model and related records without over-fetching, nest a `select` inside the relation field.',
-        '`select` projects specific fields; `include` appends relations. Use nested `select` to shape parent and relation fields together.',
-        'SELECT id, email\nFROM users\nWHERE id = 3;',
-        'const leanWithPosts = await prisma.user.findUnique({\n  where: { id: 3 },\n  select: {\n    id: true,\n    email: true,\n    posts: { select: { title: true } },\n  },\n});',
-        'typescript',
-        'Nested select shapes related records while preventing over-fetching on both models.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          '`select` is a projection: you explicitly define the exact shape of the returned object by choosing which fields to retrieve. `include` is relation attachment: it preserves all scalar columns of the model and appends the requested relation. Combining both at the root level is rejected by TypeScript because `select` declares an exclusive field set while `include` implies a full base model. To shape both the parent model and related records without over-fetching, nest a `select` inside the relation field.\n\n**TypeScript Payload Typing:** Generated model interfaces (e.g. `User`) represent base scalar tables only—never joined relations. To type service helpers and components that consume relation-loaded models without compile errors, derive the exact payload type using `Prisma.UserGetPayload<{ include: { posts: true } }>` or `{ select: ... }`.',
+        takeaway:
+          '`select` projects specific fields; `include` appends relations. Derive payload types with `Prisma.UserGetPayload<{ include: ... }>` for end-to-end type safety.',
+        sql: 'SELECT id, email\nFROM users\nWHERE id = 3;',
+        heroCode:
+          "import { Prisma } from '@prisma/client';\n\ntype UserWithPosts = Prisma.UserGetPayload<{\n  include: { posts: true };\n}>;\n\nexport function renderFeed(user: UserWithPosts) {\n  console.log(`${user.email} authored ${user.posts.length} posts`);\n}",
+        heroLang: 'typescript',
+        heroWhy: 'Prisma.UserGetPayload infers exact relational types, eliminating manual interface drift.',
+        mentalModel:
+          '**Projection vs Relation Attachment.** `select` restricts scalar columns to a lean subset (`SELECT id, email`). `include` retrieves all base columns and issues relation queries (`SELECT * FROM users` + `SELECT * FROM posts WHERE authorId IN (...)`). Use `Prisma.UserGetPayload<T>` to derive strong TypeScript types matching exact query selections.',
+        explanation: [
+          'Root-level `select` and `include` cannot be mixed — choose either a custom projection or full-model relation inclusion.',
+          'To prune fields on joined relations, nest `select` inside relation properties.',
+          'Always use `Prisma.ModelGetPayload<{ include: ... }>` instead of writing manual TypeScript interfaces for relation queries.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Scalar projection with `select`',
+            codeSnippet: 'SELECT id, email\nFROM users\nWHERE id = 3;',
+            explanation:
+              'Specifying `select: { id: true, email: true }` compiles directly to a narrow SQL SELECT query, keeping unneeded columns off the network.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Generated SQL Projection',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Relation query generation with `include`',
+            codeSnippet: 'SELECT id, title, content, "authorId"\nFROM posts\nWHERE "authorId" = 3;',
+            explanation:
+              'Specifying `include: { posts: true }` retains base user scalars and issues a parameterized relation query for related posts.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Related Posts Query',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'TypeScript payload extraction with `Prisma.UserGetPayload`',
+            codeSnippet:
+              'type UserWithPosts = Prisma.UserGetPayload<{\n  include: { posts: true };\n}>;\n// Inferred: User & { posts: Post[] }',
+            explanation:
+              'Deriving payload types prevents type drift across API handlers and React component props without manual interface duplication.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Inferred Relational Payload',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaReadTask({
           id: 'prisma07-c2-t1',
@@ -175,25 +221,29 @@ export const Prisma_07_MODULE: ModuleData = {
     databaseLifecycle: 'fresh',
     tasks: [
       {
-        ...prismaReadTask({
+        ...prismaSnippetTask({
           id: 'prisma07-hw-1',
-          title: 'Profile page payload',
-          description: 'Load rafi@prisma.io with their posts, but never leak `name`.',
-          instructions: ['findUnique on `where: { email }`', '`include` the posts relation'],
-          hint: 'Unique lookup plus `include` — no `select` at the top level.',
-          scaffold: '-- Parent row of the profile read:\nSELECT id, email FROM users WHERE id = 99;',
+          title: 'Fine-Grained Profile Payload — Selective Relation Projection',
+          description:
+            'Load user rafi@prisma.io projecting only `id` and `email`, while nesting a selective projection on `posts` to retrieve only their `title`. Prevent over-fetching on both parent and related models.',
+          instructions: [
+            'findUnique on `where: { email }`',
+            'Select `id: true` and `email: true`',
+            'Nest `posts: { select: { title: true } }` inside your outer `select`',
+          ],
+          hint: 'Use `select` instead of `include`. Inside `select`, nest `posts: { select: { title: true } }`.',
+          scaffold: '-- Lean parent row:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
-          why: 'The profile read is a unique lookup plus exactly one relation query.',
+          why: 'Nested select avoids over-fetching on both parent and related models, omitting sensitive scalars and relation IDs.',
           cols: ['id', 'email'],
-          select: [],
-          includes: ['posts'],
-          noCols: ['name'],
           rows: 1,
           code0:
-            'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
-          code1:
             'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    include: { posts: true },\n  });\n}',
-          rtype: 'User & { posts: Post[] } | null',
+          code1:
+            'export async function profile(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      id: true,\n      email: true,\n      posts: { select: { title: true } },\n    },\n  });\n}',
+          need: ['where: { email }', 'posts: {', 'select: { title: true }'],
+          ban: ['include:'],
+          rtype: '{ id: number; email: string; posts: { title: string }[] } | null',
         }),
         type: 'challenge',
       },

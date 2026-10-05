@@ -161,20 +161,32 @@ export const Prisma_09_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma09-hw-1',
-          title: 'Validated insert',
-          description: 'Only parsed data may be inserted, and only id + email may come back.',
-          instructions: ['Parse with `safeParse`', 'Insert `parsed.data` with `create`'],
-          hint: 'Validate first, then `prisma.user.create({ data: parsed.data })`.',
-          scaffold: '-- The row only a valid payload can create:\nSELECT id, email FROM users WHERE id = 99;',
+          title: 'Nested Schema Validation — User with Initial Post',
+          description:
+            'Validate an incoming registration payload containing user info and an initial post (`RegisterPayloadSchema.safeParse(req.body)`). Reject invalid payloads with HTTP 400. On success, persist the user and child post using a nested relational create, returning only id and email.',
+          instructions: [
+            'Validate `req.body` using `RegisterPayloadSchema.safeParse(req.body)`',
+            'If validation fails (`!parsed.success`), respond with status 400 and validation errors',
+            'Persist user with nested `posts: { create: { title: parsed.data.title } }` and project `select: { id: true, email: true }`',
+          ],
+          hint: 'Validate first with safeParse, then write `data: { email: parsed.data.email, name: parsed.data.name, posts: { create: { title: parsed.data.title } } }`.',
+          scaffold: '-- The row only a valid nested payload can create:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
-          why: 'The pipeline is: schema, parse, insert — in that order.',
+          why: 'Validating nested payloads before writing guarantees that both parent and child relations satisfy schema constraints atomically.',
           cols: ['id', 'email'],
           rows: 1,
           code0:
-            'export async function register(req: Request, res: Response) {\n  const user = await prisma.user.create({ data: req.body });\n  return res.status(201).json(user);\n}',
+            'export async function registerWithPost(req: Request, res: Response) {\n  // BUG: Inserting unvalidated body with unhandled nested post structure\n  const user = await prisma.user.create({ data: req.body });\n  return res.status(201).json(user);\n}',
           code1:
-            'export async function register(req: Request, res: Response) {\n  const parsed = CreateUserSchema.safeParse(req.body);\n  if (!parsed.success) {\n    return res.status(400).json({ errors: parsed.error.issues });\n  }\n\n  const user = await prisma.user.create({\n    data: parsed.data,\n    select: { id: true, email: true },\n  });\n  return res.status(201).json(user);\n}',
-          need: ['CreateUserSchema.safeParse(', 'prisma.user.create(', 'select: { id: true, email: true }'],
+            'export async function registerWithPost(req: Request, res: Response) {\n  const parsed = RegisterPayloadSchema.safeParse(req.body);\n  if (!parsed.success) {\n    return res.status(400).json({ errors: parsed.error.issues });\n  }\n\n  const user = await prisma.user.create({\n    data: {\n      email: parsed.data.email,\n      name: parsed.data.name,\n      posts: {\n        create: { title: parsed.data.title },\n      },\n    },\n    select: { id: true, email: true },\n  });\n  return res.status(201).json(user);\n}',
+          need: [
+            'RegisterPayloadSchema.safeParse(',
+            'if (!parsed.success)',
+            'posts: {',
+            'create: { title: parsed.data.title }',
+            'select: { id: true, email: true }',
+          ],
+          demoVariables: { name: 'Mina', email: 'mina@prisma.io', title: 'Hello Prisma' },
         }),
         type: 'challenge',
       },

@@ -44,6 +44,7 @@ export const Prisma_08_MODULE: ModuleData = {
           'Each operator has one SQL equivalent, chosen by the engine — you never hand-write the WHERE.',
           'Relational filters (`some`, `every`, `none`) let you query parent records by conditions on their child relations.',
           'Because filters are objects, they can be composed, narrowed and unit-tested before they reach the database.',
+          'CRITICAL HAZARD: Passing `undefined` to a filter field causes Prisma to ignore the condition completely (e.g. `{ email: undefined }` emits NO WHERE clause, returning all rows or leaking the first row in `findFirst`), whereas `null` explicitly compiles to `WHERE email IS NULL`.',
         ],
         steps: [
           {
@@ -131,6 +132,28 @@ export const Prisma_08_MODULE: ModuleData = {
           need: ['posts: {', 'some: {', "contains: 'Prisma'"],
           rtype: '{ id: number; name: string }[]',
         }),
+        prismaSnippetTask({
+          id: 'prisma08-c1-t4',
+          title: 'Diagnostic Repair — The undefined vs null Filter Hazard',
+          description:
+            'Passing undefined to a Prisma filter causes Prisma to ignore the WHERE condition completely, returning unexpected rows or risking data leaks. Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst or findUnique.',
+          instructions: [
+            'Check `if (email === undefined)` and return `null` immediately',
+            'Only query `prisma.user.findFirst` when `email` is defined',
+          ],
+          hint: '`undefined` strips the filter from the generated SQL; check for `if (email === undefined) return null;`.',
+          scaffold: '-- Safe single-user read:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
+          why: 'In Prisma, { where: { email: undefined } } strips the WHERE clause and matches the first row in the table instead of zero rows.',
+          cols: ['id', 'email'],
+          rows: 1,
+          code0:
+            'export async function findUserByEmail(email: string | undefined) {\n  // VULNERABILITY: If email is undefined, Prisma ignores the filter and returns the first row!\n  return await prisma.user.findFirst({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+          code1:
+            'export async function findUserByEmail(email: string | undefined) {\n  if (email === undefined) {\n    return null;\n  }\n  return await prisma.user.findFirst({\n    where: { email },\n    select: { id: true, email: true },\n  });\n}',
+          need: ['if (email === undefined)', 'return null', 'where: { email }'],
+          rtype: '{ id: number; email: string } | null',
+        }),
       ],
     },
     {
@@ -149,6 +172,7 @@ export const Prisma_08_MODULE: ModuleData = {
         explanation: [
           'Offset paging compiles to `LIMIT` + `OFFSET`; cursor paging compiles to a `WHERE` on the key plus a `LIMIT`.',
           'Every paginated read needs an ORDER BY, or "page 2" has no defined boundaries.',
+          'IMPORTANT: Prisma cursor pagination is inclusive by default. Without `skip: 1`, page turns re-include the cursor item itself.',
         ],
         steps: [
           {
@@ -159,9 +183,9 @@ export const Prisma_08_MODULE: ModuleData = {
           },
           {
             stepNumber: 2,
-            stepTitle: 'cursor paging points at a row',
-            codeSnippet: "await prisma.user.findMany({\n  cursor: { id: 1 },\n  take: 2,\n  orderBy: { id: 'asc' },\n});",
-            explanation: 'The cursor is a unique key, not a count — inserts before the cursor do not shift the page.',
+            stepTitle: 'cursor paging points at a row and skips it',
+            codeSnippet: "await prisma.user.findMany({\n  cursor: { id: 1 },\n  skip: 1,\n  take: 2,\n  orderBy: { id: 'asc' },\n});",
+            explanation: '`cursor` anchors to a key; `skip: 1` skips the cursor item itself so page turns do not duplicate the last item.',
           },
           {
             stepNumber: 3,
@@ -174,7 +198,7 @@ export const Prisma_08_MODULE: ModuleData = {
             stepNumber: 4,
             stepTitle: 'the cursor page becomes a keyed WHERE',
             codeSnippet: 'SELECT id, name\nFROM users\nWHERE id > 1\nORDER BY id ASC\nLIMIT 2;',
-            explanation: 'A `WHERE` on the cursor key plus a `LIMIT` — no offset to count, so it stays stable as the table grows.',
+            explanation: 'A `WHERE id > 1` on the cursor key plus a `LIMIT 2` — `skip: 1` transforms the inclusive cursor into an exclusive page turn.',
             visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
           },
         ],
@@ -201,20 +225,24 @@ export const Prisma_08_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma08-c2-t2',
-          title: 'Cursor paging',
-          description: 'Return the two rows after the user with id 1.',
-          instructions: ['Use `cursor: { id: 1 }`', '`take: 2` with `orderBy: { id: "asc" }`'],
-          hint: 'A cursor is a unique key, not an offset.',
+          title: 'Cursor paging with skip: 1',
+          description: 'Return the two rows after the user with id 1 without duplicating the cursor item.',
+          instructions: [
+            'Use `cursor: { id }` to anchor to the pivot row',
+            'Add `skip: 1` so the cursor item itself is not repeated',
+            '`take: 2` with `orderBy: { id: "asc" }`',
+          ],
+          hint: 'Prisma cursor is inclusive by default. Add `skip: 1` next to `cursor` to fetch subsequent rows.',
           scaffold: '-- Cursor page:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name FROM users WHERE id > 1 ORDER BY id ASC LIMIT 2;',
-          why: 'The cursor compiles to a WHERE on the key plus a LIMIT.',
+          why: 'The cursor compiles to a WHERE on the key plus a LIMIT, and skip: 1 prevents duplicating the cursor item.',
           cols: ['id', 'name'],
           rows: 2,
           code0:
-            'export async function afterRow(id: number) {\n  return await prisma.user.findMany({\n    orderBy: { id: \'asc\' },\n    skip: 2,\n    take: 2,\n    select: { id: true, name: true },\n  });\n}',
-          code1:
             'export async function afterRow(id: number) {\n  return await prisma.user.findMany({\n    cursor: { id },\n    take: 2,\n    orderBy: { id: \'asc\' },\n    select: { id: true, name: true },\n  });\n}',
-          need: ['cursor: { id }', 'take: 2'],
+          code1:
+            'export async function afterRow(id: number) {\n  return await prisma.user.findMany({\n    cursor: { id },\n    skip: 1,\n    take: 2,\n    orderBy: { id: \'asc\' },\n    select: { id: true, name: true },\n  });\n}',
+          need: ['cursor: { id }', 'skip: 1', 'take: 2'],
           rtype: '{ id: number; name: string }[]',
         }),
       ],

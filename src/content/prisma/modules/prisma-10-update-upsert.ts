@@ -79,12 +79,18 @@ export const Prisma_10_MODULE: ModuleData = {
         prismaReadTask({
           id: 'prisma10-c1-t3',
           title: 'Atomic numeric increment',
-          description: 'Increment a numeric field atomically without read-modify-write race conditions.',
-          instructions: ['Use `prisma.user.update`', '`where: { id: 1 }`', 'Increment `id` by 1 using `{ increment: 1 }`', 'Select `id`'],
-          hint: '`data: { id: { increment: 1 } }` avoids concurrent write collisions.',
+          description:
+            'Increment a numeric field atomically without read-modify-write race conditions. (Note: in production, apply this to domain counters like viewCount rather than surrogate primary keys).',
+          instructions: [
+            'Use `prisma.user.update`',
+            '`where: { id: 1 }`',
+            'Increment `id` by 1 using `{ increment: 1 }`',
+            'Select `id`',
+          ],
+          hint: '`data: { id: { increment: 1 } }` avoids concurrent write collisions. In production, use this on metrics/counters rather than primary keys.',
           scaffold: '-- The row before the atomic increment:\nSELECT id FROM users WHERE id = 99;',
           solutionSql: 'SELECT id FROM users WHERE id = 1;',
-          why: 'Atomic increment rewrites to id = id + 1 in SQL so concurrent updates cannot collide.',
+          why: 'Atomic increment rewrites to id = id + 1 in SQL so concurrent updates cannot collide. In production schemas, apply this pattern to business counters (views, inventory, balances) rather than surrogate primary keys.',
           cols: ['id'],
           select: ['id'],
           method: 'update',

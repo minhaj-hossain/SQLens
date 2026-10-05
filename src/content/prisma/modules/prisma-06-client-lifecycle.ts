@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaSnippetTask, prismaTheory } from '../phase6-tasks';
+import { prismaSnippetTask, prismaTheory, richPrismaTheory } from '../phase6-tasks';
 
 /** Prisma Day 6 — PrismaClient Lifecycle & Connections. */
 export const Prisma_06_MODULE: ModuleData = {
@@ -27,14 +27,61 @@ export const Prisma_06_MODULE: ModuleData = {
       order: 1,
       title: 'The Global PrismaClient Singleton',
       shortDescription: 'One client per process — cached across hot reloads.',
-      theory: prismaTheory(
-        'Every PrismaClient owns a connection pool. A dev server that reloads on save would build a new pool per reload until the database refuses connections, so the client is cached on `globalThis` outside production.',
-        'One client per process: `globalThis.prisma ?? new PrismaClient()`.',
-        'SELECT id, name\nFROM users\nWHERE id = 1;',
-        'const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };\n\nexport const prisma = globalForPrisma.prisma ?? new PrismaClient();\n\nif (process.env.NODE_ENV !== \'production\') globalForPrisma.prisma = prisma;',
-        'typescript',
-        'The cache survives a hot reload because `globalThis` is not module-scoped.',
-      ),
+      theory: richPrismaTheory({
+        summary:
+          'Every PrismaClient owns an internal database connection pool. A development server that reloads on file save (Next.js, Vite, Fastify) builds a new pool per reload until the database rejects new connections. Caching the client on `globalThis` outside production reuses a single connection pool across hot reloads.\n\n**Serverless & Edge Architectures:** In ephemeral serverless environments (Next.js, Vercel, AWS Lambda), hundreds of concurrent function instances can easily overwhelm database connection limits. Production deployments solve this using: (1) External connection poolers like PgBouncer with `?pgbouncer=true&connection_limit=1` to disable prepared statement caching and limit per-lambda connections, or (2) Driver Adapters (`@prisma/adapter-pg`, `@prisma/adapter-neon`) and Prisma Accelerate that route queries over HTTP/WebSockets rather than persistent TCP sockets.',
+        takeaway:
+          'One client per process in dev (globalThis.prisma); use connection_limit=1 with PgBouncer or Driver Adapters in serverless.',
+        sql: 'SELECT id, name\nFROM users\nWHERE id = 1;',
+        heroCode:
+          'const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };\nexport const prisma = globalForPrisma.prisma ?? new PrismaClient();\nif (process.env.NODE_ENV !== \'production\') globalForPrisma.prisma = prisma;',
+        heroLang: 'typescript',
+        heroWhy: 'PgBouncer parameters and globalThis caching prevent connection pool exhaustion.',
+        mentalModel:
+          '**One pool per runtime process.** A PrismaClient manages physical TCP sockets in an internal pool. In dev, module reloads instantiate multiple clients unless pinned to `globalThis`. In serverless, concurrency scales horizontally, requiring PgBouncer (?pgbouncer=true&connection_limit=1) or Driver Adapters to prevent socket exhaustion.',
+        explanation: [
+          'Every `new PrismaClient()` opens a dedicated pool of database connections.',
+          'Hot reloading without caching re-executes module code, leaking previous pools.',
+          'In serverless lambdas, limit connections with PgBouncer or route via HTTP Driver Adapters.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'PrismaClient Connection Pool Lifecycle',
+            codeSnippet:
+              'type PrismaClientLifecycle = {\n  $connect(): Promise<void>;\n  $disconnect(): Promise<void>;\n  // Manages internal pool of TCP socket connections\n};',
+            explanation:
+              'Instantiating `new PrismaClient()` initializes connection pool state. Multiple instances consume database connection slots rapidly.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Client Connection Pool State',
+            },
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Global Cache for Hot Module Reloading',
+            codeSnippet: 'SELECT id, name\nFROM users\nWHERE id = 1;',
+            explanation:
+              '`globalThis.prisma` ensures every hot-reloaded route handler or server component reuses the same connection pool socket rather than exhausting the database.',
+            visualData: {
+              type: 'sql_lens',
+              title: 'Pooled Query Execution',
+            },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Serverless Scaling with PgBouncer & Driver Adapters',
+            codeSnippet:
+              'type ServerlessDbConfig = {\n  url: "postgres://user:pass@pooler:6543/db?pgbouncer=true&connection_limit=1";\n  adapter?: "@prisma/adapter-pg" | "@prisma/adapter-neon";\n};',
+            explanation:
+              'Serverless lambdas scale out horizontally. `pgbouncer=true` disables prepared statements, `connection_limit=1` caps pool size per lambda, and driver adapters route queries over HTTP/WebSockets.',
+            visualData: {
+              type: 'type_preview',
+              title: 'Serverless Pool Architecture',
+            },
+          },
+        ],
+      }),
       tasks: [
         prismaSnippetTask({
           id: 'prisma06-c1-t1',
@@ -127,25 +174,27 @@ export const Prisma_06_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma06-hw-1',
-          title: 'Production Gateway Singleton Pattern',
+          title: 'Production Gateway — Connection Pool Configuration',
           description:
-            'Implement the standard development singleton pattern to prevent connection pool exhaustion caused by hot-module reloading.',
+            'In high-concurrency environments or containerized microservices, tune the database connection pool using connection parameters (`connection_limit=5` and `pool_timeout=10`) and attach structured query logging.',
           instructions: [
-            'Check if `globalThis.prisma` already exists; if not, instantiate `new PrismaClient()`',
-            'In non-production environments (`process.env.NODE_ENV !== \'production\'`), assign the instance to `globalThis.prisma`',
+            'Configure `connection_limit` and `pool_timeout` parameters on the database URL',
+            'Pass the configured URL via `datasources: { db: { url: ... } }` in the PrismaClient constructor',
+            'Enable query and error logging with `log: [\'query\', \'error\']`',
           ],
-          hint: 'Assign `globalForPrisma.prisma || new PrismaClient()` and cache when `process.env.NODE_ENV !== \'production\'`.',
-          scaffold: '-- Database gateway singleton verification:\nSELECT id, name FROM users WHERE id = 99;',
+          hint: 'Set `url.searchParams.set(\'connection_limit\', \'5\')` and pass `datasources: { db: { url: url.toString() } }` to `new PrismaClient()`.',
+          scaffold: '-- Database gateway pooled client verification:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
-          why: 'Preserving the client instance on globalThis prevents opening hundreds of duplicate database connections during development.',
+          why: 'Tuning connection_limit and pool_timeout prevents connection pool starvation while logging monitors client health.',
           cols: ['id', 'name'],
           rows: 1,
           code0:
-            "import { PrismaClient } from '@prisma/prisma-client';\n\n// TODO: Prevent multiple PrismaClient instances across hot reloads\nexport const prisma = new PrismaClient();",
+            "import { PrismaClient } from '@prisma/client';\n\nexport function createPooledClient(databaseUrl: string) {\n  // BUG: Default unpooled client risks pool starvation under load\n  return new PrismaClient();\n}",
           code1:
-            "import { PrismaClient } from '@prisma/prisma-client';\n\nconst globalForPrisma = globalThis as unknown as { prisma: PrismaClient };\n\nexport const prisma = globalForPrisma.prisma || new PrismaClient();\n\nif (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;",
-          need: ['globalThis', 'new PrismaClient()', "process.env.NODE_ENV !== 'production'"],
+            "import { PrismaClient } from '@prisma/client';\n\nexport function createPooledClient(databaseUrl: string) {\n  const url = new URL(databaseUrl);\n  url.searchParams.set('connection_limit', '5');\n  url.searchParams.set('pool_timeout', '10');\n\n  return new PrismaClient({\n    datasources: {\n      db: { url: url.toString() },\n    },\n    log: ['query', 'error'],\n  });\n}",
+          need: ['new PrismaClient({', 'datasources:', 'url:', 'connection_limit', 'pool_timeout'],
           ban: ['findMany', 'orderBy'],
+          rtype: 'PrismaClient',
         }),
         type: 'challenge',
       },

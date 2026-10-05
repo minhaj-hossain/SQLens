@@ -13,6 +13,7 @@ import type { SqlSourcePosition } from "@/lib/sql-engine/source-position";
 import { PrismaEditorTabs } from "./prisma/PrismaEditorTabs";
 import { PrismaSchemaTab } from "./prisma/PrismaSchemaTab";
 import type { PrismaEditorTab } from "@/lib/track-submit";
+import { buildErdDiagramFromSource } from "@/lib/prisma-engine/prisma-erd";
 
 interface SQLEditorProps {
   value: string;
@@ -96,6 +97,23 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
   const showSchema = Boolean(schemaTab) && tab === 'schema';
   const language = fileLabel.endsWith('.ts') ? 'typescript' : fileLabel.endsWith('.prisma') ? 'prisma' : 'sql';
 
+  const erdSummary = React.useMemo(() => {
+    if (!schemaTab?.source) return null;
+    try {
+      const diagram = buildErdDiagramFromSource(schemaTab.source);
+      if (diagram.models.length < 2) return null;
+      const uniqueRelations = new Set(
+        diagram.relations.map((r) => [r.from, r.to].sort().join(':')),
+      );
+      const relCount = uniqueRelations.size;
+      return {
+        label: `Schema: ${diagram.models.length} models, ${relCount} relation${relCount === 1 ? '' : 's'} defined ↗`,
+      };
+    } catch {
+      return null;
+    }
+  }, [schemaTab?.source]);
+
   // Sync tab state when switching tasks with different defaultTab values
   useEffect(() => {
     setTab(defaultTab);
@@ -138,6 +156,20 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
             <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border">
               Active: {tableName}
             </span>
+          )}
+          {erdSummary && (
+            <button
+              id="erd-relation-pill"
+              type="button"
+              onClick={() => {
+                setTab('schema');
+                setSchemaView('diagram');
+              }}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono text-func bg-func/10 border border-func/30 hover:bg-func/20 transition cursor-pointer"
+              title="Open ERD diagram"
+            >
+              {erdSummary.label}
+            </button>
           )}
         </div>
 
