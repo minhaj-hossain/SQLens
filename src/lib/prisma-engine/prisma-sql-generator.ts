@@ -87,7 +87,7 @@ export interface GenerateOptions {
  * translator cannot see; these seed-row values make the SQL Lens honest and
  * let the generated SQL actually run against the 3 seeded users.
  *
- * Mirrors the test SEED in `tests/tracks/phase4-prisma-execution.test.ts` —
+ * Mirrors the test SEED in `tests/tracks/prisma-execution-engine.test.ts` —
  * keep both in sync.
  */
 export const PRISMA_DEMO_VARIABLES: Record<string, unknown> = {

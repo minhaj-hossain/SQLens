@@ -16,7 +16,7 @@
  *
  * The helpers below keep the track-aware DECISIONS out of the components
  * (starter code, solution reveal, lens state, editor chrome): pure functions,
- * unit-tested in `tests/tracks/phase7-prisma-ui-wiring.test.ts`.
+ * unit-tested in `tests/tracks/prisma-ui-wiring.test.ts`.
  */
 import type { PracticeTask } from '../types/curriculum';
 import type { QueryExecutionResult } from '../types/database';

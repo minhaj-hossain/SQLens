@@ -7,7 +7,7 @@
  * `src/types/curriculum.ts` are NOT modified here — Prisma fields are attached
  * as OPTIONAL extensions there.
  *
- * Source: PRISMA_LEARNING_PLATFORM_SPECIFICATION.md §4, adapted to SQL
+ * Source: docs/archive/specs-and-curriculum/PRISMA_LEARNING_PLATFORM_SPECIFICATION.md §4, adapted to SQL
  * practices (target hero before steps, ≥2 tasks per concept, final challenge).
  */
 

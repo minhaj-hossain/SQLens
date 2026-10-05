@@ -141,7 +141,7 @@ export function assertTrackRegistry(): string[] {
  * claims it, defaulting to `'sql'`.
  *
  * Historical semantics preserved exactly (asserted in
- * `tests/tracks/phase10-registry.test.ts`): `prisma-NN` → prisma, everything
+ * `tests/tracks/track-registry.test.ts`): `prisma-NN` → prisma, everything
  * else (legacy ids, junk) → sql. Classifying from the registry means a future
  * track only declares its pattern in `TRACK_REGISTRY` — no third branch here.
  */

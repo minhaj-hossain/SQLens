@@ -6,7 +6,7 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution, isReadOnlySelect } from '../../src/lib/sql-engine/validator';
 import { validatePrismaCode } from '../../src/lib/prisma-engine/prisma-validator';
 import { isExecutablePrismaTask } from '../../src/lib/prisma-engine/prisma-submit-pipeline';
-import { PRISMA_SEED_TABLES, PRISMA_SEED_USERS_SQL } from './phase1-foundation.test';
+import { PRISMA_SEED_TABLES, PRISMA_SEED_USERS_SQL } from './track-foundation.test';
 import type { PracticeTask } from '../../src/types/curriculum';
 
 /**

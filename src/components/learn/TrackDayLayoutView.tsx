@@ -19,7 +19,7 @@
  * The `track` prop is authoritative: meta, modules and the id lookup all come
  * from `TRACK_REGISTRY` (Phase 4.1), so the track literal in each delegate is
  * the only track-specific byte — the static guard in
- * `tests/tracks/phase11-day-layout-view.test.tsx` keeps the two delegates
+ * `tests/tracks/track-day-layout-view.test.tsx` keeps the two delegates
  * identical modulo that literal.
  *
  * `resolveDayLayoutState` is the pure seam over the one derived decision

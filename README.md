@@ -602,7 +602,7 @@ Adding a custom domain? Point `BETTER_AUTH_URL` (plus canonical/sitemap defaults
 ## ✓ Quality & Testing
 
 ```text
-$ npm test            # Vitest: 804 tests across 71 suites (engine, tracks/phases 1-11,
+$ npm test            # Vitest: 804+ tests across test suites (engine, track suites,
                       # grading + telemetry, windows, set-ops, transactions, EXPLAIN,
                       # DDL constraints, state-verification, ui, content, module order)
   ✓ 804 passed, 0 failed

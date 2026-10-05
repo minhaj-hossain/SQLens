@@ -193,7 +193,7 @@ export function isStateGradedPrismaTask(task: PracticeTask): boolean {
  * `data: { name: 'Alexandra' }` against a reference that renders `SET name =
  * NULL`), so those tasks skip the state layer until the reference demo
  * bindings are fixed — a temporary carve-out explicitly asserted in
- * `tests/tracks/phase12-prisma-state-parity.test.ts`.
+ * `tests/tracks/prisma-state-parity.test.ts`.
  */
 function referenceStateSql(
   gen: GenerateResult,
