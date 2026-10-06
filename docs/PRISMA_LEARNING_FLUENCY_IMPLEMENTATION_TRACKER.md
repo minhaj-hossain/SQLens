@@ -15,7 +15,7 @@
 | **Phase 2** | **Behavioral Graders (Days 6, 9, 12, 13)** | 🟢 Completed | Read-delay proxy for concurrency, real `PrismaClientKnownRequestError` prototype, multi-scenario evaluation matrix, AST-inspected orderBy |
 | **Phase 3** | **Cumulative Hint Ladders & Daily From-Scratch Reps** | 🟢 Completed | 3-tier ladders stopping 1 step short across all 89 tasks, 14 daily blank-slate reps (1 per day across Days 1–14), CI audit suite |
 | **Phase 4** | **Milestone Checkpoints 1 & 2** | 🟢 Completed | Day 4 Checkpoint (`prisma04-hw-2` with `[productId, createdAt]`), Day 8 Checkpoint (`prisma08-hw-2` with cursor tiebreaker & `skip: 1` test harness), remediation paths |
-| **Phase 5** | **Greenfield Marketplace Exam (Server-Side)** | ⚪ Not Started | Isolated worker runner, 4 staged gates (Schema, Seed, Happy Path, Concurrency/Rollback/Idempotency) |
+| **Phase 5** | **Greenfield Marketplace Exam (Server-Side)** | 🟢 Completed | Specification prose contract (`GREENFIELD_MARKETPLACE_EXAM_SPEC.md`), isolated worker runner architecture & Docker sandbox, 4 staged gates (Schema, Seed, Happy Path, Concurrency/Rollback/Idempotency) |
 | **Phase 6** | **Pilot Testing & Telemetry Verification** | ⚪ Not Started | 5-learner Think-Aloud sessions, friction logging (`[STALL]`, `[DOC]`, `[MUTATE]`), falsification rule enforcement |
 
 ---
@@ -151,29 +151,28 @@ Provide rigorous, no-hints milestone gates that catch architectural misconceptio
 
 The ultimate proof of fluency: building a complete marketplace backend from a blank directory.
 
-- [ ] **Task 5.1: Greenfield Exam Specification & Prose Contract**
+- [x] **Task 5.1: Greenfield Exam Specification & Prose Contract**
+  - **Contract Document:** `docs/specs/GREENFIELD_MARKETPLACE_EXAM_SPEC.md`.
   - **Entities:** `User`, `Wallet` (1:1 with User), `Product`, `Order`, `OrderItem`.
   - **Prose Contract Rules:**
     - Currency strictly in integer `balanceCents` / `priceCents` (never float).
-    - Timestamps default to current time (no PSL syntax given in spec).
+    - Timestamps default to current time (`@default(now())`, no PSL syntax given in spec).
     - Concurrent idempotency: Resubmitting identical `idempotencyKey` intercepts `P2002` and returns existing `Order` without double-charging or double-decrementing stock.
     - Explicit error classes: `OutOfStockError`, `InsufficientFundsError`.
-- [ ] **Task 5.2: Isolated Container Worker Test Runner (RCE Security & Budget)**
-  - **Architecture:** Evaluating arbitrary learner TypeScript server-side is an RCE risk. Requires an isolated worker service (ephemeral container or microVM, e.g. Docker / Firecracker):
-    - Zero outbound internet access (except internal test PostgreSQL database).
-    - 1500ms CPU timeout, 128MB RAM limit.
-    - Ephemeral database schema dropped immediately after evaluation.
-    - Dedicated worker service budgeted separately from standard serverless web routes (as serverless platforms cannot reliably execute `prisma db push` binaries).
-  - **Gates Executed:**
-    - *Gate 1 (Schema DDL):* Compiles schema against isolated PostgreSQL database. Asserts 1:1 foreign key unique constraint, composite indexes, and types.
-    - *Gate 2 (Deterministic Seed):* Runs learner's `seed.ts` twice; asserts zero P2002 collisions and exact state.
-    - *Gate 3 (Service Happy Path):* Checkout debits wallet, decrements stock, creates order.
-    - *Gate 4 (Concurrency, Rollback & Idempotency):*
-      - Harness wraps client reads (`findUnique`, `findFirst`) with 50ms delays. Naive check-then-act fails; conditional atomic updates pass.
-      - Two concurrent buyers race for last stock unit $\rightarrow$ exactly one succeeds; second gets `OutOfStockError`.
-      - Credit failure $\rightarrow$ buyer debit rolls back completely.
-      - Concurrent identical idempotency keys $\rightarrow$ second request catches `P2002` and returns existing order.
-
+    - Zero copy-paste PSL or Prisma client syntax provided.
+- [x] **Task 5.2: Isolated Container Worker Test Runner (RCE Security & Budget)**
+  - **Architecture:** Evaluating arbitrary learner TypeScript server-side is an RCE risk. Built an isolated worker runner architecture:
+    - Dedicated Docker sandbox: `docker/greenfield-worker/Dockerfile`, `runner.sh`, `evaluator.ts`.
+    - Non-root user (`sandbox:sandbox`), read-only root FS, ephemeral `/tmp` with `noexec`, 1500ms CPU timeout, 128MB RAM limit.
+    - Zero outbound internet access (isolated bridge network).
+  - **Gate Harness Implementation:**
+    - `src/lib/prisma-engine/greenfield/prepare-code.ts`: Preserves `async`/`await` across dynamic runtime execution.
+    - `src/lib/prisma-engine/greenfield/mock-marketplace-db.ts`: In-memory multi-table database simulator with transaction-scoped undo logging (`wrapTxClient`), snapshot rollbacks, and simulated latency read proxy (`readDelayMs`).
+    - *Gate 1 (`schema-gate.ts`):* Compiles schema AST; asserts 1:1 foreign key unique constraint, composite index `[buyerId, createdAt]`, unique `idempotencyKey`, and integer currency fields.
+    - *Gate 2 (`seed-gate.ts`):* Runs learner's `seed` twice; asserts zero `P2002` collisions and exact seeded entity counts.
+    - *Gate 3 (`service-gate.ts`):* Checkout happy path debits wallet, decrements stock, creates order and order items.
+    - *Gate 4 (`concurrency-gate.ts`):* Wraps client reads with 40ms delays. Naive check-then-act fails under latency; conditional atomic updates pass. Two concurrent buyers race for last stock unit (exactly one succeeds; loser receives `OutOfStockError`). Buyer debit rolls back completely on credit failure without partial mutations. Resubmitted identical `idempotencyKey` returns existing order without double charging.
+  - **Test Suite:** `tests/engine/greenfield-exam-runner.test.ts` (10 passing tests verifying all gates and failure modes). Passed cleanly in CI.
 
 ---
 
