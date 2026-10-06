@@ -140,7 +140,7 @@ export const Prisma_10_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma10-c1-t1',
-          title: 'Rename one user',
+          title: 'A member changed their name: Can you update exactly one record?',
           description: 'Change user 1\'s name and return id + name only.',
           instructions: ['Use `prisma.user.update`', '`where: { id: 1 }`', 'Select `id` and `name`'],
           hintLadder: [
@@ -165,7 +165,7 @@ export const Prisma_10_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma10-c1-t2',
-          title: 'Batch edit behind a filter',
+          title: 'Multiple records match a filter: Can you update them all in a single query?',
           description: 'Update every user called Alex — prove the filter first.',
           instructions: ['Use `prisma.user.updateMany`', 'Filter with `where: { name: "Alex" }`'],
           hintLadder: [
@@ -188,7 +188,7 @@ export const Prisma_10_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma10-c1-t3',
-          title: 'Atomic numeric increment on a domain counter',
+          title: 'Two requests update the same counter: Can you increment it without losing a change?',
           description:
             'Increment a domain counter atomically in the database without read-modify-write race conditions. Never apply numeric increments to surrogate primary keys; use them on metrics, view counters, or inventory balances.',
           instructions: [
@@ -330,7 +330,7 @@ export const Prisma_10_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma10-c2-t1',
-          title: 'Insert-or-leave',
+          title: 'Insert a user if the email is new: Otherwise leave the existing record alone',
           description: 'Create the user only if that email is free.',
           instructions: ['Use `prisma.user.upsert`', '`where: { email }`', 'Select `id` and `email`'],
           hintLadder: [
@@ -353,7 +353,7 @@ export const Prisma_10_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma10-c2-t2',
-          title: 'Give the update branch a body',
+          title: 'The user already exists: Can you make upsert() update their profile instead?',
           description: 'The upsert currently has no update branch, so it is not idempotent.',
           instructions: ['Add `update: { name }`', 'Keep the unique `where` on email'],
           hintLadder: [
@@ -386,7 +386,7 @@ export const Prisma_10_MODULE: ModuleData = {
       {
         ...prismaReadTask({
           id: 'prisma10-hw-1',
-          title: 'Replayable write',
+          title: 'An event webhook may be replayed: Can you make the write completely idempotent?',
           description: 'Upsert by email and return id + email only.',
           instructions: ['Use `prisma.user.upsert`', 'Select `id` and `email`'],
           hintLadder: [
@@ -416,7 +416,7 @@ export const Prisma_10_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma10-hw-2',
-          title: 'Diagnostic Repair — Non-Unique Selector Rejection',
+          title: 'Prisma rejects your update selector: Can you fix the non unique lookup?',
           description:
             'The following sync utility fails to compile with a TypeScript/Prisma error: "Property \'name\' does not exist in type \'UserWhereUniqueInput\'". Diagnose why Prisma rejects the selector and repair the query to use a valid unique criteria.',
           instructions: [

@@ -135,7 +135,7 @@ export const Prisma_13_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma13-c1-t1',
-          title: 'Catch the unique violation',
+          title: 'Someone registered with an existing email: Can you handle P2002 correctly?',
           description: 'A duplicate email must become a 409, not a 500.',
           instructions: ['Check `instanceof Prisma.PrismaClientKnownRequestError`', "Branch on `code === 'P2002'`"],
           hint: '`P2002` is the unique-constraint code.',
@@ -159,7 +159,7 @@ export const Prisma_13_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma13-c1-t2',
-          title: 'Map a missing record',
+          title: 'The requested member does not exist: Can you turn P2025 into the right API response?',
           description: 'Updating a row that does not exist should return 404.',
           instructions: ["Branch on `code === 'P2025'`", 'Respond with `res.status(404)`'],
           hint: '`P2025` means the operation found nothing to act on.',
@@ -183,7 +183,7 @@ export const Prisma_13_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma13-c1-t3',
-          title: 'Catch client validation errors',
+          title: 'The query itself is invalid: Can you recognize and handle a Prisma validation error?',
           description:
             'When invalid field types or missing required fields bypass application validation, Prisma raises PrismaClientValidationError before querying the database. Catch it and respond with HTTP 400 Bad Request.',
           instructions: [
@@ -321,7 +321,7 @@ export const Prisma_13_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma13-c2-t1',
-          title: 'Trap missing record on delete',
+          title: 'A delete request targets a missing record: Can you return a clean 404?',
           description:
             'Deleting a record that does not exist throws P2025. Trap it and respond with HTTP 404 instead of letting it crash as a 500.',
           instructions: [
@@ -348,7 +348,7 @@ export const Prisma_13_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma13-c2-t2',
-          title: 'Trap the foreign-key violation',
+          title: 'A foreign key blocks the operation: Can you catch P2003 and return a useful response?',
           description: 'Creating a post with a non-existent `authorId` throws P2003. Map it to 409.',
           instructions: ["Branch on `error.code === 'P2003'`", "Respond 409 with `{ error: 'Related record not found' }`"],
           hint: '`P2003` = a referenced record does not exist in the parent table.',
@@ -485,7 +485,7 @@ export const Prisma_13_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma13-c3-t1',
-          title: 'Add an audit hook',
+          title: 'Every important database action needs an audit trail: Can $extends automate it?',
           description: 'Wrap every user query with a timing hook — and drop the deprecated `$use`.',
           instructions: ['Extend with `$extends`', 'Add a `query` hook using `$allOperations`'],
           hint: 'Extend with a query hook keyed on the model, and call the injected query(args).',
@@ -509,7 +509,7 @@ export const Prisma_13_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma13-c3-t2',
-          title: 'Computed fields via result extensions',
+          title: 'The API needs an unstored value: Can you add it with a result extension?',
           description:
             'Add a virtual computed field `displayName` to the `user` model using `$extends({ result: { user: { ... } } })`. Declare its dependencies with `needs: { name: true, email: true }` and compute the fallback value `user.name ?? user.email`.',
           instructions: [
@@ -547,7 +547,7 @@ export const Prisma_13_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma13-hw-1',
-          title: 'Complete the mapping — P2002, P2025 & P2003',
+          title: 'Your API has three different database failures: Can you map P2002, P2025, and P2003 correctly?',
           description:
             'P2002 → 409 Conflict, P2025 → 404 Not Found, P2003 → 409 Foreign Key Failure. Everything else forwards to next(err) without leaking internal database exceptions.',
           instructions: [
@@ -585,7 +585,7 @@ export const Prisma_13_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma13-hw-2',
-          title: 'Diagnostic Repair — Multi-Error Class Discrimination',
+          title: 'Several Prisma errors are being treated the same: Can you classify each one correctly?',
           description:
             'The following error middleware crashes at runtime with "Cannot read properties of undefined (reading \'code\')" whenever a non-Prisma error or query validation error reaches it. Diagnose the bug and add type guards to discriminate between database constraint errors (KnownRequestError with P2003) and query structural errors (PrismaClientValidationError returning 400).',
           instructions: [

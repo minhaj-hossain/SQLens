@@ -138,7 +138,7 @@ export const Prisma_05_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma05-c1-t1',
-          title: 'Author the first migration',
+          title: 'Transition from prototyping to versioned history: Can you create your first migration?',
           description: 'Create a named migration from the current schema, transitioning from rapid prototyping to versioned migrations.',
           instructions: [
             'Transition from rapid prototyping to versioned migrations',
@@ -161,7 +161,7 @@ export const Prisma_05_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma05-c1-t2',
-          title: 'Promote migrations to production',
+          title: 'A production server has pending migrations: Can you safely apply them?',
           description: 'Apply committed migrations to production without authoring new ones.',
           instructions: ['Use `migrate deploy`', 'Never author migrations in production'],
           hintLadder: [
@@ -274,7 +274,7 @@ export const Prisma_05_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma05-c2-t1',
-          title: 'Write a clean baseline seed script',
+          title: 'The development database is empty: Can you create a repeatable seed script?',
           description: 'Ensure baseline seeding clears stale records and inserts initial users without colliding on existing data.',
           instructions: [
             'Clear existing rows using `await prisma.user.deleteMany()`',
@@ -299,7 +299,7 @@ export const Prisma_05_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma05-c2-t2',
-          title: 'Register the seed script in package.json',
+          title: 'Prisma needs a seed entry point: Can you wire up the seed command in package.json?',
           description: 'Tell the Prisma CLI which command seeds a fresh database.',
           instructions: ['Add a `prisma` block to package.json', 'Point `seed` at tsx prisma/seed.ts'],
           hintLadder: [
@@ -330,7 +330,7 @@ export const Prisma_05_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma05-hw-1',
-          title: 'Deterministic Database Reset & Seed',
+          title: 'Reset the development database and recreate the exact same dataset every time',
           description: 'Reset a development database, re-apply all migrations, and run seeding in one step.',
           instructions: ['Use `npx prisma migrate reset`', 'Add `--force` to skip interactive confirmation'],
           hintLadder: [

@@ -124,7 +124,7 @@ export const Prisma_03_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma03-c1-t1',
-          title: 'Read the typed column set',
+          title: 'The table has mixed data types: Can you query and type check every column?',
           description: 'Return the id, name and email columns of user 1.',
           instructions: ['findUnique on `where: { id }`', 'select `id`, `name`, `email`'],
           hintLadder: [
@@ -144,7 +144,7 @@ export const Prisma_03_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma03-c1-t2',
-          title: 'Model distributed UUID keys and timestamps',
+          title: 'The system needs UUIDs and automatic timestamps: Can you model both?',
           description: 'Use a UUID primary key and make the confirmation timestamp nullable.',
           instructions: [
             'Change id to `String @id @default(uuid())`',
@@ -258,7 +258,7 @@ export const Prisma_03_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma03-c2-t1',
-          title: 'Declare the role enum',
+          title: 'Users can only be ADMIN or MEMBER: Can you enforce it with an enum?',
           description: 'Replace the free-text role with a closed set of two values.',
           instructions: ['`enum Role { ADMIN, MEMBER }`', 'Type the column as `Role`'],
           hintLadder: [
@@ -282,7 +282,7 @@ export const Prisma_03_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma03-c2-t2',
-          title: 'Composite unique key + index',
+          title: 'Duplicate accounts are slipping through: Can you enforce a composite unique key and index?',
           description: 'Two people may share a name, but never a name AND an email.',
           instructions: ['`@@unique([name, email])`', '`@@index([email])` for lookups'],
           hintLadder: [
@@ -316,7 +316,7 @@ export const Prisma_03_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma03-hw-1',
-          title: 'Full table blueprint',
+          title: 'Design the complete User model from the database requirements',
           description: 'Auto-increment key, unique email, and indexed optional name.',
           instructions: [
             '`@id @default(autoincrement())`',

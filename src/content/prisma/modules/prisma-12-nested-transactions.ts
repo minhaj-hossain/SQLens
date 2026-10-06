@@ -127,7 +127,7 @@ export const Prisma_12_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma12-c1-t1',
-          title: 'Create the parent and the child',
+          title: 'Create a user and their first post in a single Prisma operation',
           description: 'Register a user and their first post in one call.',
           instructions: ['Nest `posts: { create: [...] }` inside `data`'],
           hint: '`data: { name, email, posts: { create: [{ title }] } }`.',
@@ -153,7 +153,7 @@ export const Prisma_12_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma12-c1-t2',
-          title: 'Attach an existing row, or create it',
+          title: 'Connect a post to an existing category: Or create it if it does not exist',
           description: 'The category may already exist — you only have its key.',
           instructions: ['Use `connectOrCreate`', 'Match existing rows with `where: { id: categoryId }`'],
           hint: '`connectOrCreate: { where, create }`.',
@@ -288,7 +288,7 @@ export const Prisma_12_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma12-c2-t1',
-          title: 'Make a two-step write atomic',
+          title: 'Two database writes must succeed together: Can you make them atomic?',
           description: 'Both updates must land, or neither should.',
           instructions: ['Wrap the calls in `$transaction([...])`'],
           hint: 'Array form: `await prisma.$transaction([…])`.',
@@ -311,7 +311,7 @@ export const Prisma_12_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma12-c2-t2',
-          title: 'Decide inside the transaction',
+          title: 'The next database step depends on the previous result: Can you decide inside a transaction?',
           description: 'Read one value, then write another — in the same transaction.',
           instructions: ['Use the interactive form', 'Only ever call `tx.user.*` inside it'],
           hint: '`await prisma.$transaction(async (tx) => { … })`.',
@@ -337,7 +337,7 @@ export const Prisma_12_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma12-c2-t3',
-          title: 'Atomic rollback under failure',
+          title: 'The second operation fails: Can you prove the first operation was rolled back?',
           description:
             'When an error is thrown inside an interactive transaction, every write in that transaction is rolled back, leaving database state completely untouched.',
           instructions: [
@@ -378,7 +378,7 @@ export const Prisma_12_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma12-hw-1',
-          title: 'Atomic checkout',
+          title: 'Build a checkout that never leaves a half completed order',
           description: 'Both writes belong to the same transaction, and only `tx` may be used.',
           instructions: ['Use the interactive `$transaction`', 'Call `tx.user.update` and `tx.user.create`'],
           hint: 'Everything inside the callback must use `tx`, never `prisma`.',

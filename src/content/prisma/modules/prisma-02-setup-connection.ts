@@ -93,7 +93,7 @@ export const Prisma_02_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c1-t1',
-          title: 'Stage 1: Resolve Client Type Desynchronization',
+          title: 'Your Prisma types are outdated: Can you bring the client back in sync?',
           description:
             'You added `bio String?` to `schema.prisma`. In your application code, TypeScript raises: `Property \'bio\' does not exist on type \'User\'`. Provide the CLI command that compiles the updated models into `node_modules/@prisma/client` to resolve the compile-time type desync.',
           instructions: [
@@ -118,7 +118,7 @@ export const Prisma_02_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma02-c1-t2',
-          title: 'Stage 2: Resolve Database Schema Desynchronization',
+          title: 'Your database and Prisma schema disagree: Can you fix the mismatch?',
           description:
             'After running `prisma generate`, TypeScript autocomplete recognizes `user.bio`. However, executing the application query crashes at runtime with: `column "bio" does not exist in table "User"`. Provide the CLI command that detects the schema difference, creates an SQL migration, and applies the physical column to your database.',
           instructions: [
@@ -210,7 +210,7 @@ export const Prisma_02_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c2-t1',
-          title: 'Wire the datasource',
+          title: 'The database URL is hardcoded: Can you move it into the environment?',
           description: 'Point schema.prisma at PostgreSQL via the environment.',
           instructions: ['Set datasource provider to "postgresql"', 'Set url to read env("DATABASE_URL")'],
           hintLadder: [
@@ -230,7 +230,7 @@ export const Prisma_02_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma02-c2-t2',
-          title: 'Map a legacy table',
+          title: 'The legacy database uses tbl_customers: Can you map it to Customer in Prisma?',
           description: 'Keep model Customer while the table stays tbl_customers.',
           instructions: [
             'Add `@map("cust_email")` to the email field to map the column',
@@ -262,7 +262,7 @@ export const Prisma_02_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma02-hw-1',
-          title: 'Configure Enterprise Datasource & Environment Wire',
+          title: 'Connect Prisma to an existing enterprise database without changing its naming conventions',
           description:
             'Complete the schema configuration by declaring an env-sourced PostgreSQL datasource and mapping the User model to legacy tbl_users.',
           instructions: [

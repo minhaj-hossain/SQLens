@@ -183,7 +183,7 @@ export const Prisma_04_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma04-c1-t1',
-          title: 'Own the foreign key',
+          title: 'Every post needs an author: Where should the authorId foreign key live?',
           description: 'The Post model must store the FK column it is keyed by.',
           instructions: [
             'Declare `authorId Int` on the Post model',
@@ -209,7 +209,7 @@ export const Prisma_04_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma04-c1-t2',
-          title: 'Load an author with their posts',
+          title: 'The profile page needs the user and all their posts: Can you load both?',
           description: 'One parent row, one extra query for the related rows.',
           instructions: ['findUnique on `where: { id }`', 'Load the relation with `include`'],
           hintLadder: [
@@ -336,7 +336,7 @@ export const Prisma_04_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma04-c2-t1',
-          title: 'Read a user with their profile',
+          title: 'The dashboard needs profile details: Can you load the profile with the user?',
           description: 'An optional relation loads as one nested object, not a list.',
           instructions: ['findUnique on `where: { id }`', 'Load the relation with `include`'],
           hintLadder: [
@@ -359,7 +359,7 @@ export const Prisma_04_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma04-c2-t2',
-          title: 'Make the FK unique',
+          title: 'A user is getting multiple profiles: Can you make the relationship truly one to one?',
           description: 'Stop a user from owning two profiles.',
           instructions: ['Add `@unique` to `userId Int` on the Profile model'],
           hintLadder: [
@@ -476,7 +476,7 @@ export const Prisma_04_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma04-c3-t1',
-          title: 'Implicit join table',
+          title: 'Posts can have multiple categories: Can you model many to many without a join table?',
           description: 'Posts and categories relate many-to-many without a join model.',
           instructions: ['`categories Category[]` on Post', '`posts Post[]` on Category'],
           hintLadder: [
@@ -500,7 +500,7 @@ export const Prisma_04_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma04-c3-t2',
-          title: 'Explicit join model',
+          title: 'The relationship now needs extra data: Can you replace the implicit relation with a join model?',
           description: 'Take ownership of the join table with a composite primary key.',
           instructions: ['Declare `model PostCategory`', 'Key it with `@@id([postId, categoryId])`'],
           hintLadder: [
@@ -534,7 +534,7 @@ export const Prisma_04_MODULE: ModuleData = {
       {
         ...prismaReadTask({
           id: 'prisma04-hw-1',
-          title: 'Member feed loader',
+          title: 'Build a member feed that pulls together users and their related posts',
           description: 'Return id + email for rafi@prisma.io and include their posts.',
           instructions: ['findUnique on `where: { email }`', 'Load `posts` with `include`'],
           hintLadder: [
@@ -562,7 +562,7 @@ export const Prisma_04_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma04-hw-2',
-          title: 'Milestone 1 Checkpoint — Catalog & Review Data Modeling',
+          title: 'Milestone 1 Checkpoint: Architect a complete e commerce catalog with relations and indexes',
           description:
             'Design the complete e-commerce catalog schema: enums, 1:1, 1:N, M:N relations, and composite indexing.',
           instructions: [

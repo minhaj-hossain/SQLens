@@ -123,7 +123,7 @@ export const Prisma_09_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma09-c1-t1',
-          title: 'Insert one row and shape the response',
+          title: 'A new member just signed up: Can you create the record and return a safe response?',
           description: 'Register a user and return id + email only.',
           instructions: ['Use `prisma.user.create`', 'Select `id` and `email`'],
           hintLadder: [
@@ -149,7 +149,7 @@ export const Prisma_09_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma09-c1-t2',
-          title: 'Batch insert',
+          title: 'You received 100 members at once: Can you insert them efficiently with createMany()?',
           description: 'Write all three users in a single round trip.',
           instructions: ['Use `prisma.user.createMany`', 'Return only the id column'],
           hintLadder: [
@@ -269,7 +269,7 @@ export const Prisma_09_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma09-c2-t1',
-          title: 'Write the payload schema',
+          title: 'The registration endpoint needs input rules: Can you define them with Zod?',
           description: 'Name is required, email must be a real address.',
           instructions: ['Build `CreateUserSchema` with `z.object`', 'Validate `email` with `z.string().email()`'],
           hintLadder: [
@@ -289,7 +289,7 @@ export const Prisma_09_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma09-c2-t2',
-          title: 'Fail before the database',
+          title: 'Bad input is reaching Prisma: Can you reject it before touching the database?',
           description: 'Turn an invalid payload into a 400 instead of a P2002 crash.',
           instructions: ['Use `safeParse`', 'Return 400 when validation fails'],
           hintLadder: [
@@ -310,7 +310,7 @@ export const Prisma_09_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma09-c2-t3',
-          title: 'Non-Throwing Validation with safeParse',
+          title: 'Prevent unhandled validation exceptions: Can you handle invalid input with safeParse()?',
           description:
             'Validate incoming untrusted input using `UserCreateInput.safeParse()`. If validation fails, return structured errors instead of throwing unhandled exceptions.',
           instructions: [
@@ -347,7 +347,7 @@ export const Prisma_09_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma09-hw-1',
-          title: 'Nested Schema Validation — User with Initial Post',
+          title: 'Build a safe registration flow that validates a user and their first post before creating either',
           description:
             'Validate an incoming registration payload containing user info and an initial post (`RegisterPayloadSchema.safeParse(req.body)`). Reject invalid payloads with HTTP 400. On success, persist the user and child post using a nested relational create, returning only id and email.',
           instructions: [

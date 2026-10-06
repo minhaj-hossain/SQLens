@@ -147,7 +147,7 @@ export const Prisma_06_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma06-c1-t1',
-          title: 'Stop creating a client per reload',
+          title: 'Every hot reload creates another database connection: Can you stop it?',
           description: 'The current module builds a brand-new client on every reload.',
           instructions: ['Read the cached client from `globalThis`', 'Fall back to `new PrismaClient()`'],
           hintLadder: [
@@ -167,7 +167,7 @@ export const Prisma_06_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma06-c1-t2',
-          title: 'Cache it in development only',
+          title: 'Your development server keeps recreating Prisma Client: Can you cache one safely?',
           description: 'Production must keep a single module-scoped instance.',
           instructions: ['Write the client back to `globalThis`', 'Guard with `NODE_ENV`'],
           hintLadder: [
@@ -285,7 +285,7 @@ export const Prisma_06_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma06-c2-t1',
-          title: 'Log every query',
+          title: 'A query is behaving unexpectedly: Can you see the SQL Prisma actually sends?',
           description: 'Print the SQL Prisma sends and keep warnings visible.',
           instructions: ["Add `log: ['query', 'warn', 'error']`"],
           hintLadder: [
@@ -304,7 +304,7 @@ export const Prisma_06_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma06-c2-t2',
-          title: 'Disconnect before exit',
+          title: 'Your worker is shutting down: Can you close the Prisma connection cleanly?',
           description: 'A script that never disconnects hangs with open connections.',
           instructions: ['Listen for `beforeExit`', 'Call `$disconnect()`'],
           hintLadder: [
@@ -333,7 +333,7 @@ export const Prisma_06_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma06-hw-1',
-          title: 'Production Gateway — Connection Pool Configuration',
+          title: 'Build a production ready Prisma database gateway with safe connection handling',
           description:
             'In high-concurrency environments or containerized microservices, tune the database connection pool using connection parameters (`connection_limit=5` and `pool_timeout=10`) and attach structured query logging.',
           instructions: [

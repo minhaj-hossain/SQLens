@@ -133,7 +133,7 @@ export const Prisma_07_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma07-c1-t1',
-          title: 'One row by its unique key',
+          title: 'You have a member ID: Can you retrieve exactly that member?',
           description: 'Return id + name for user 1 without scanning the table.',
           instructions: ['Use `findUnique`', 'Select `id` and `name` only'],
           hintLadder: [
@@ -155,7 +155,7 @@ export const Prisma_07_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma07-c1-t2',
-          title: 'One row by a non-unique filter',
+          title: 'Multiple members share the same name: Can you find the first matching record safely?',
           description: 'Find the first user called Alex.',
           instructions: ['Use `findFirst`', 'Filter on `where: { name: "Alex" }`'],
           hintLadder: [
@@ -176,7 +176,7 @@ export const Prisma_07_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma07-c1-t3',
-          title: 'Guaranteed lookup with findUniqueOrThrow',
+          title: 'A missing member should be an error: Can you make Prisma throw instead of returning null?',
           description:
             'Retrieve User 1 by unique id without returning a nullable type. Use findUniqueOrThrow so the compiler guarantees the record exists or throws an exception if missing.',
           instructions: [
@@ -321,7 +321,7 @@ export const Prisma_07_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma07-c2-t1',
-          title: 'Trim the payload',
+          title: 'The API is returning unnecessary fields: Can you trim the response with select?',
           description: 'The login screen needs id + email and nothing else.',
           instructions: ['Use `select` with `id` and `email`'],
           hintLadder: [
@@ -343,7 +343,7 @@ export const Prisma_07_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma07-c2-t2',
-          title: 'Load the relation instead',
+          title: 'The profile also needs the user posts: Can you load the relation with include?',
           description: 'This screen needs the whole user plus their posts.',
           instructions: ['Use `include` for `posts`', 'Keep every scalar column'],
           hintLadder: [
@@ -366,7 +366,7 @@ export const Prisma_07_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma07-c2-t3',
-          title: 'Fine-grained nested relation projection',
+          title: 'The response contains too much nested data: Can you select only the required relation fields?',
           description: 'Fetch user posts while restricting columns on both the parent and child models.',
           instructions: ['Use `select` with `id: true`', 'Nest `select: { title: true }` under `posts`'],
           hintLadder: [
@@ -399,7 +399,7 @@ export const Prisma_07_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma07-hw-1',
-          title: 'Fine-Grained Profile Payload — Selective Relation Projection',
+          title: 'Build a lean profile response with exactly the fields the frontend needs',
           description:
             'Load user rafi@prisma.io projecting only `id` and `email`, while nesting a selective projection on `posts` to retrieve only their `title`. Prevent over-fetching on both parent and related models.',
           instructions: [

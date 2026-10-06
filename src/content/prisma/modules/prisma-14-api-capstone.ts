@@ -138,7 +138,7 @@ export const Prisma_14_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma14-c1-t1',
-          title: 'Lookup that throws instead of returning null',
+          title: 'The member must exist: Can you choose a query that throws when it does not?',
           description: 'Fetch user by id. If missing, throw a typed P2025 error instead of returning null.',
           instructions: ['Use `prisma.user.findUniqueOrThrow`', 'Select `id` and `email`'],
           hint: '`findUniqueOrThrow` raises `P2025` on a miss — no null check needed.',
@@ -162,7 +162,7 @@ export const Prisma_14_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma14-c1-t2',
-          title: 'Soft-delete then filter',
+          title: 'Soft deleted members keep appearing: Can you build the correct read filter?',
           description: 'Mark an account as deleted with `deletedAt`, then list only live accounts.',
           instructions: [
             'Use `prisma.user.update` to set `deletedAt: new Date()`',
@@ -295,7 +295,7 @@ export const Prisma_14_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma14-c2-t1',
-          title: 'Deterministic paginated roster',
+          title: 'Build a member list that stays stable while users move between pages',
           description: 'Return the first 2 live users ordered by id, projecting id + email only.',
           instructions: ['`orderBy: { id: "asc" }`', '`take: 2`', 'Select `id` and `email` only'],
           hint: 'ORDER BY + LIMIT is the combination that makes pagination reproducible.',
@@ -320,7 +320,7 @@ export const Prisma_14_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma14-c2-t2',
-          title: 'Atomic write with inline conflict trapping',
+          title: 'A write can fail halfway through: Can you make it atomic and handle conflicts safely?',
           description: 'Register a user in a transaction. If the email already exists, catch P2002 and respond 409.',
           instructions: [
             'Wrap the `create` in `prisma.$transaction(async (tx) => ...)`',
@@ -448,7 +448,7 @@ export const Prisma_14_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma14-c3-t1',
-          title: 'One raw read',
+          title: 'Prisma does not have the query you need: Can you safely run the SQL yourself?',
           description: 'Fetch a user with a tagged-template query — no string concatenation.',
           instructions: ['Use `prisma.$queryRaw` with a template literal', 'Bind the email as an interpolated parameter'],
           hint: 'Write the SQL inside a $queryRaw tagged template; the value stays a bound parameter.',
@@ -472,7 +472,7 @@ export const Prisma_14_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma14-c3-t2',
-          title: 'Compose with Prisma.sql',
+          title: 'The raw query needs dynamic values: Can you build it safely with Prisma.sql?',
           description: 'Build a reusable WHERE fragment and stitch it into the query.',
           instructions: ['Use `Prisma.sql` for the fragment', 'Interpolate it into `$queryRaw`'],
           hint: 'Prisma.sql returns a composable fragment; embed it in the tagged template.',
@@ -506,7 +506,7 @@ export const Prisma_14_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma14-hw-1',
-          title: 'Member Directory — Multi-Model Paginated Service Synthesis',
+          title: 'Build a paginated member directory that combines multiple related models',
           description:
             'Implement an enterprise member directory query synthesizing soft-delete filtering, deterministic pagination, and selective relational projection. Retrieve the first 2 active members (where deletedAt is null) ordered by ID ascending, projecting id, email, and related post titles while omitting sensitive columns.',
           instructions: [
@@ -548,7 +548,7 @@ export const Prisma_14_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma14-hw-2',
-          title: 'Onboarding Pipeline — Atomic Registration & Initial Post',
+          title: 'Build an atomic onboarding flow that creates a member and their first post',
           description:
             'When a new user registers, create their account and publish an initial onboarding post. Both writes must execute atomically in an all-or-nothing transaction so a failure in post creation never leaves an orphaned user.',
           instructions: [
@@ -581,7 +581,7 @@ export const Prisma_14_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma14-hw-3',
-          title: 'Member Service Route — Validation & Conflict Mapping',
+          title: 'Harden the member API with validation, conflict handling, and clean error responses',
           description:
             'Construct an Express route controller for member creation. Validate the payload using Zod. If the database rejects the write due to a unique constraint violation, translate that error into an HTTP 409 Conflict response. Forward unknown errors to the global error middleware.',
           instructions: [

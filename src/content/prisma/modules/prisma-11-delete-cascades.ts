@@ -141,7 +141,7 @@ export const Prisma_11_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma11-c1-t1',
-          title: 'Cascade the children',
+          title: 'A user is deleted: Can Prisma automatically remove their posts too?',
           description: 'Deleting a user must not leave orphaned posts behind.',
           instructions: ['Add `onDelete: Cascade` to the relation'],
           hint: '`@relation(fields: […], references: […], onDelete: Cascade)`.',
@@ -163,7 +163,7 @@ export const Prisma_11_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma11-c1-t0',
-          title: 'Delete one row by its unique key',
+          title: 'A member requested deletion: Can you remove exactly their record?',
           description: 'Remove a single user — the selector must be unique or Prisma refuses to compile.',
           instructions: ['Use `prisma.user.delete`', '`where: { id: 1 }`', 'Select `id` and `email`'],
           hint: '`delete()` works exactly like `findUnique` and `update` — it demands a unique `where`.',
@@ -187,7 +187,7 @@ export const Prisma_11_MODULE: ModuleData = {
         }),
         prismaReadTask({
           id: 'prisma11-c1-t2',
-          title: 'Read the filter before a bulk delete',
+          title: 'Before deleting hundreds of records: Can you verify exactly what will be removed?',
           description: 'Delete every spam account — first prove which rows match.',
           instructions: ['Use `prisma.user.deleteMany`', 'Filter with `email: { contains: "spam" }`'],
           hint: 'The lens is the WHERE of the delete: how many rows would go?',
@@ -319,7 +319,7 @@ export const Prisma_11_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma11-c2-t1',
-          title: 'Add the tombstone column',
+          title: 'The business wants recovery after deletion: Can you add a soft delete timestamp?',
           description: 'Keep the row, mark the deletion.',
           instructions: ['Add `deletedAt DateTime?`', 'Filter live rows with `deletedAt: null`'],
           hint: 'A nullable timestamp is the whole mechanism.',
@@ -341,7 +341,7 @@ export const Prisma_11_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma11-c2-t2',
-          title: 'Read only live rows',
+          title: 'Deleted accounts keep appearing: Can you hide them from normal queries?',
           description: 'Return id + email for every user that is not soft-deleted.',
           instructions: ['filter with `where: { deletedAt: null }`', 'select `id` and `email`'],
           hint: 'Every read in the app gets this `where`.',
@@ -374,7 +374,7 @@ export const Prisma_11_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma11-hw-1',
-          title: 'Tombstone, do not drop',
+          title: 'A user requests account deletion: Deactivate the account without destroying its database record',
           description: 'Mark the account deleted and let children cascade when it is finally purged.',
           instructions: ['Cascade deletes at the schema level', 'Hide the account with `deletedAt: null`'],
           hint: 'Two mechanisms: `onDelete: Cascade` for purge, `deletedAt` for the grace period.',

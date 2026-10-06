@@ -146,7 +146,7 @@ export const Prisma_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'prisma01-c1-t1',
-          title: 'First Touch — Run, Observe & Expand Selection',
+          title: 'Your API needs more user info: Can you expand the query to include email?',
           description:
             'Run your first Prisma query to inspect the generated SQL and returned object, then add email to the selection.',
           instructions: [
@@ -193,7 +193,7 @@ export const Prisma_01_MODULE: ModuleData = {
         },
         {
           id: 'prisma01-c1-t2',
-          title: 'Catching Schema Errors at Compile Time',
+          title: 'You misspelled a field: Can Prisma catch the mistake before the query runs?',
           description:
             'A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.',
           instructions: [
@@ -249,7 +249,7 @@ export const Prisma_01_MODULE: ModuleData = {
     tasks: [
       {
         id: 'prisma01-hw-1',
-        title: 'Lookup by email, minimal fields',
+        title: 'Build a safe member lookup using email and return only the required fields',
         description: 'Return id + email for mina@prisma.io with findUnique, omitting name.',
         instructions: [
           'Filter by the user email: mina@prisma.io',

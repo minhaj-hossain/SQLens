@@ -140,7 +140,7 @@ export const Prisma_08_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma08-c1-t1',
-          title: 'Substring filter',
+          title: 'Find every member whose email domain matches the search pattern',
           description: 'Return every user whose email contains prisma.io.',
           instructions: ['Filter with `email: { contains: "prisma.io" }`', 'Select `id` and `name`'],
           hintLadder: [
@@ -161,7 +161,7 @@ export const Prisma_08_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma08-c1-t2',
-          title: 'Filter on a set of values',
+          title: 'Filter members by a list of allowed names using the in operator',
           description: 'Return Alex and Mina, nobody else.',
           instructions: ['Filter with `name: { in: [\'Alex\', \'Mina\'] }`'],
           hintLadder: [
@@ -183,7 +183,7 @@ export const Prisma_08_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma08-c1-t3',
-          title: 'Filter across relations (some)',
+          title: 'Find users who have at least one matching post',
           description: 'Return users who have authored at least one post containing "Prisma".',
           instructions: [
             'Filter with `posts: { some: { title: { contains: \'Prisma\' } } }`',
@@ -208,7 +208,7 @@ export const Prisma_08_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma08-c1-t4',
-          title: 'Diagnostic Repair — The undefined vs null Filter Hazard',
+          title: 'A missing search value is returning every record: Can you fix the undefined filter bug?',
           description:
             'Passing undefined to an optional filter in findFirst, findMany, or updateMany causes Prisma to silently drop the WHERE condition completely, returning unexpected rows or leaking data (while findUnique throws a validation error). Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst.',
           instructions: [
@@ -341,7 +341,7 @@ export const Prisma_08_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma08-c2-t1',
-          title: 'Page two, one row per page',
+          title: 'The UI asks for page 2: Can you fetch exactly the right records with skip and take?',
           description: 'Return the second user when sorted by id.',
           instructions: ['`orderBy: { id: "asc" }`', '`skip: 1` with `take: 1`'],
           hintLadder: [
@@ -364,7 +364,7 @@ export const Prisma_08_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma08-c2-t2',
-          title: 'Cursor paging with skip: 1',
+          title: 'The feed is getting large: Can you replace offset paging with cursor pagination?',
           description: 'Return the two rows after the user with id 1 without duplicating the cursor item.',
           instructions: [
             'Use `cursor: { id }` to anchor to the pivot row',
@@ -492,7 +492,7 @@ export const Prisma_08_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma08-c3-t1',
-          title: 'Group and count',
+          title: 'Group members by name and count the occurrences in each group',
           description: 'Return one row per distinct name, with the number of rows in each group.',
           instructions: ['Call `prisma.user.groupBy`', "Group with `by: ['name']`", 'Ask for `_count: true`'],
           hintLadder: [
@@ -514,7 +514,7 @@ export const Prisma_08_MODULE: ModuleData = {
         }),
         prismaSnippetTask({
           id: 'prisma08-c3-t2',
-          title: 'Order the groups by size',
+          title: 'The groups are unordered: Can you rank them by their record count?',
           description: 'Return the same groups, biggest first.',
           instructions: ["Keep `by: ['name']` and `_count: true`", "Order with `orderBy: { _count: { name: 'desc' } }`"],
           hintLadder: [
@@ -546,7 +546,7 @@ export const Prisma_08_MODULE: ModuleData = {
       {
         ...prismaReadTask({
           id: 'prisma08-hw-1',
-          title: 'Newest two members',
+          title: 'The dashboard needs the two newest members: Can you return exactly those two?',
           description: 'Return id + email, sorted by id descending, limited to two rows.',
           instructions: ['`orderBy: { id: "desc" }`', '`take: 2`', 'Select `id` + `email` only'],
           hintLadder: [
@@ -574,7 +574,7 @@ export const Prisma_08_MODULE: ModuleData = {
       {
         ...prismaSnippetTask({
           id: 'prisma08-hw-2',
-          title: 'Milestone 2 Checkpoint — Deterministic Category Product Feed',
+          title: 'Milestone 2 Checkpoint: Build a production feed with category filtering and cursor pagination',
           description:
             'Implement a production feed query with M:N relational filtering, cursor pagination with skip: 1, and a secondary tiebreaker.',
           instructions: [
