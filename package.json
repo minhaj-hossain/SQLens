@@ -26,6 +26,7 @@
     "audit:prisma-grading-pipeline": "tsx scripts/audit-prisma-grading-pipeline.ts",
     "audit:prisma-equivalence": "tsx scripts/audit-prisma-equivalence.ts",
     "audit:prisma-hints": "tsx scripts/audit-prisma-hints-fluency.ts",
+    "audit:prisma-pilot": "tsx scripts/audit-prisma-pilot-baseline.ts",
     "audit:task-rubric": "tsx scripts/audit-task-rubric.ts",
     "audit:outcomes": "tsx scripts/audit-outcomes.ts",
     "audit:assess": "tsx scripts/audit-assess-coverage.ts",
