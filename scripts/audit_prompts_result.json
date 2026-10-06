@@ -1,0 +1,1391 @@
+[
+  {
+    "day": 1,
+    "dayTitle": "Day 1 — Why Prisma?",
+    "taskId": "prisma01-c1-t1",
+    "title": "First Touch — Run, Observe & Expand Selection",
+    "description": "Run your first Prisma query to inspect the generated SQL and returned object, then add email to the selection.",
+    "displayedStatement": "Run your first Prisma query to inspect the generated SQL and returned object, then add email to the selection.",
+    "instructions": [
+      "Click Run Query to observe how Prisma executes the query and generates clean SQL",
+      "Add `email: true` inside the `select` block to include the email field in the returned object"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 1,
+    "dayTitle": "Day 1 — Why Prisma?",
+    "taskId": "prisma01-c1-t2",
+    "title": "Catching Schema Errors at Compile Time",
+    "description": "A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.",
+    "displayedStatement": "A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.",
+    "instructions": [
+      "Notice the query is looking up `user_mail` which does not exist in the schema",
+      "Change `where: { user_mail: \"mina@prisma.io\" }` to use the valid schema field `where: { email }`",
+      "Keep `select` returning `id` and `email`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Catching Schema Errors at Compile Time."
+  },
+  {
+    "day": 1,
+    "dayTitle": "Day 1 — Why Prisma?",
+    "taskId": "prisma01-hw-1",
+    "title": "Lookup by email, minimal fields",
+    "description": "Return id + email for mina@prisma.io with findUnique, omitting name.",
+    "displayedStatement": "Return id + email for mina@prisma.io with findUnique, omitting name.",
+    "instructions": [
+      "Filter by the user email: mina@prisma.io",
+      "Complete the `select` block to project only `id` and `email`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 2,
+    "dayTitle": "Day 2 — Setup & Connection",
+    "taskId": "prisma02-c1-t1",
+    "title": "Stage 1: Resolve Client Type Desynchronization",
+    "description": "You added bio String? to schema.prisma. In your application code, TypeScript raises: Property 'bio' does not exist on type 'User'. Provide the CLI command that compiles the updated models into node_modules/@prisma/client to resolve the compile-time type desync.",
+    "displayedStatement": "You added bio String? to schema.prisma. In your application code, TypeScript raises: Property 'bio' does not exist on type 'User'. Provide the CLI command that compiles the updated models into node_modules/@prisma/client to resolve the compile-time type desync.",
+    "instructions": [
+      "Identify the CLI command that compiles TypeScript types into node_modules/@prisma/client",
+      "Return `\"npx prisma generate\"`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"You added bio String? to schema.prisma. In your application code, TypeScript raises: Property 'bio' does not exist on type 'User'. Provide the CLI command that compiles the updated models into node_modules/@prisma/client to resolve the compile-time type desync.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Stage 1: Resolve Client Type Desynchronization."
+  },
+  {
+    "day": 2,
+    "dayTitle": "Day 2 — Setup & Connection",
+    "taskId": "prisma02-c1-t2",
+    "title": "Stage 2: Resolve Database Schema Desynchronization",
+    "description": "After running prisma generate, TypeScript autocomplete recognizes user.bio. However, executing the application query crashes at runtime with: column \"bio\" does not exist in table \"User\". Provide the CLI command that detects the schema difference, creates an SQL migration, and applies the physical column to your database.",
+    "displayedStatement": "After running prisma generate, TypeScript autocomplete recognizes user.bio. However, executing the application query crashes at runtime with: column \"bio\" does not exist in table \"User\". Provide the CLI command that detects the schema difference, creates an SQL migration, and applies the physical column to your database.",
+    "instructions": [
+      "Identify the command that generates versioned SQL and alters the physical database table",
+      "Return `\"npx prisma migrate dev\"`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"After running prisma generate, TypeScript autocomplete recognizes user.bio. However, executing the application query crashes at runtime with: column \"bio\" does not exist in table \"User\". Provide the CLI command that detects the schema difference, creates an SQL migration, and applies the physical column to your database.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Stage 2: Resolve Database Schema Desynchronization."
+  },
+  {
+    "day": 2,
+    "dayTitle": "Day 2 — Setup & Connection",
+    "taskId": "prisma02-c2-t1",
+    "title": "Wire the datasource",
+    "description": "Point schema.prisma at PostgreSQL via the environment.",
+    "displayedStatement": "Point schema.prisma at PostgreSQL via the environment.",
+    "instructions": [
+      "Set datasource provider to \"postgresql\"",
+      "Set url to read env(\"DATABASE_URL\")"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Point schema.prisma at PostgreSQL via the environment.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Wire the datasource."
+  },
+  {
+    "day": 2,
+    "dayTitle": "Day 2 — Setup & Connection",
+    "taskId": "prisma02-c2-t2",
+    "title": "Map a legacy table",
+    "description": "Keep model Customer while the table stays tbl_customers.",
+    "displayedStatement": "Keep model Customer while the table stays tbl_customers.",
+    "instructions": [
+      "Add `@map(\"cust_email\")` to the email field to map the column",
+      "Add `@@map(\"tbl_customers\")` to the model to map the table name"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Keep model Customer while the table stays tbl_customers.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Map a legacy table."
+  },
+  {
+    "day": 2,
+    "dayTitle": "Day 2 — Setup & Connection",
+    "taskId": "prisma02-hw-1",
+    "title": "Configure Enterprise Datasource & Environment Wire",
+    "description": "Complete the schema configuration by declaring an env-sourced PostgreSQL datasource and mapping the User model to legacy tbl_users.",
+    "displayedStatement": "Complete the schema configuration by declaring an env-sourced PostgreSQL datasource and mapping the User model to legacy tbl_users.",
+    "instructions": [
+      "Set datasource provider to \"postgresql\"",
+      "Source the database connection url from env(\"DATABASE_URL\")",
+      "Map the User model to table \"tbl_users\" using @@map"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Complete the schema configuration by declaring an env-sourced PostgreSQL datasource and mapping the User model to legacy tbl_users.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Configure Enterprise Datasource & Environment Wire."
+  },
+  {
+    "day": 3,
+    "dayTitle": "Day 3 — Models, Fields, Enums & Constraints",
+    "taskId": "prisma03-c1-t1",
+    "title": "Read the typed column set",
+    "description": "Return the id, name and email columns of user 1.",
+    "displayedStatement": "Return the id, name and email columns of user 1.",
+    "instructions": [
+      "findUnique on `where: { id }`",
+      "select `id`, `name`, `email`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 3,
+    "dayTitle": "Day 3 — Models, Fields, Enums & Constraints",
+    "taskId": "prisma03-c1-t2",
+    "title": "Model distributed UUID keys and timestamps",
+    "description": "Use a UUID primary key and make the confirmation timestamp nullable.",
+    "displayedStatement": "Use a UUID primary key and make the confirmation timestamp nullable.",
+    "instructions": [
+      "Change id to `String @id @default(uuid())`",
+      "Use `DateTime? @default(now())` for confirmedAt"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Use a UUID primary key and make the confirmation timestamp nullable.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Model distributed UUID keys and timestamps."
+  },
+  {
+    "day": 3,
+    "dayTitle": "Day 3 — Models, Fields, Enums & Constraints",
+    "taskId": "prisma03-c2-t1",
+    "title": "Declare the role enum",
+    "description": "Replace the free-text role with a closed set of two values.",
+    "displayedStatement": "Replace the free-text role with a closed set of two values.",
+    "instructions": [
+      "`enum Role { ADMIN, MEMBER }`",
+      "Type the column as `Role`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Replace the free-text role with a closed set of two values.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Declare the role enum."
+  },
+  {
+    "day": 3,
+    "dayTitle": "Day 3 — Models, Fields, Enums & Constraints",
+    "taskId": "prisma03-c2-t2",
+    "title": "Composite unique key + index",
+    "description": "Two people may share a name, but never a name AND an email.",
+    "displayedStatement": "Two people may share a name, but never a name AND an email.",
+    "instructions": [
+      "`@@unique([name, email])`",
+      "`@@index([email])` for lookups"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Two people may share a name, but never a name AND an email.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Composite unique key + index."
+  },
+  {
+    "day": 3,
+    "dayTitle": "Day 3 — Models, Fields, Enums & Constraints",
+    "taskId": "prisma03-hw-1",
+    "title": "Full table blueprint",
+    "description": "Auto-increment key, unique email, and indexed optional name.",
+    "displayedStatement": "Auto-increment key, unique email, and indexed optional name.",
+    "instructions": [
+      "`@id @default(autoincrement())`",
+      "email must be `@unique`",
+      "name must be optional (`String?`) and indexed with `@@index([name])`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Auto-increment key, unique email, and indexed optional name.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Full table blueprint."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-c1-t1",
+    "title": "Own the foreign key",
+    "description": "The Post model must store the FK column it is keyed by.",
+    "displayedStatement": "The Post model must store the FK column it is keyed by.",
+    "instructions": [
+      "Declare `authorId Int` on the Post model",
+      "Add `@relation(fields: [authorId], references: [id])` to `author User`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The Post model must store the FK column it is keyed by.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Own the foreign key."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-c1-t2",
+    "title": "Load an author with their posts",
+    "description": "One parent row, one extra query for the related rows.",
+    "displayedStatement": "One parent row, one extra query for the related rows.",
+    "instructions": [
+      "findUnique on `where: { id }`",
+      "Load the relation with `include`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"One parent row, one extra query for the related rows.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Load an author with their posts."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-c2-t1",
+    "title": "Read a user with their profile",
+    "description": "An optional relation loads as one nested object, not a list.",
+    "displayedStatement": "An optional relation loads as one nested object, not a list.",
+    "instructions": [
+      "findUnique on `where: { id }`",
+      "Load the relation with `include`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"An optional relation loads as one nested object, not a list.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Read a user with their profile."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-c2-t2",
+    "title": "Make the FK unique",
+    "description": "Stop a user from owning two profiles.",
+    "displayedStatement": "Stop a user from owning two profiles.",
+    "instructions": [
+      "Add `@unique` to `userId Int` on the Profile model"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Stop a user from owning two profiles.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Make the FK unique."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-c3-t1",
+    "title": "Implicit join table",
+    "description": "Posts and categories relate many-to-many without a join model.",
+    "displayedStatement": "Posts and categories relate many-to-many without a join model.",
+    "instructions": [
+      "`categories Category[]` on Post",
+      "`posts Post[]` on Category"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Posts and categories relate many-to-many without a join model.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Implicit join table."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-c3-t2",
+    "title": "Explicit join model",
+    "description": "Take ownership of the join table with a composite primary key.",
+    "displayedStatement": "Take ownership of the join table with a composite primary key.",
+    "instructions": [
+      "Declare `model PostCategory`",
+      "Key it with `@@id([postId, categoryId])`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Take ownership of the join table with a composite primary key.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Explicit join model."
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-hw-1",
+    "title": "Member feed loader",
+    "description": "Return id + email for rafi@prisma.io and include their posts.",
+    "displayedStatement": "Return id + email for rafi@prisma.io and include their posts.",
+    "instructions": [
+      "findUnique on `where: { email }`",
+      "Load `posts` with `include`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 4,
+    "dayTitle": "Day 4 — Relations (1:N, 1:1, M:N)",
+    "taskId": "prisma04-hw-2",
+    "title": "Milestone 1 Checkpoint — Catalog & Review Data Modeling",
+    "description": "Design the complete e-commerce catalog schema: enums, 1:1, 1:N, M:N relations, and composite indexing.",
+    "displayedStatement": "Design the complete e-commerce catalog schema: enums, 1:1, 1:N, M:N relations, and composite indexing.",
+    "instructions": [
+      "Define `enum ProductStatus` with `DRAFT`, `PUBLISHED`, and `ARCHIVED`",
+      "Define `model Product` with 1:1 `detail`, 1:N `reviews`, and M:N `categories`",
+      "Define `model ProductDetail` with strictly unique foreign key `productId Int @unique`",
+      "Define `model Review` with `rating Int` and composite index `@@index([productId, createdAt])`",
+      "Define `model Category` with `products Category[]` inverse relation",
+      "Note: Rating 1–5 range validation belongs in application Zod schemas, as Prisma PSL has no CHECK constraint"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Design the complete e-commerce catalog schema: enums, 1:1, 1:N, M:N relations, and composite indexing.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Milestone 1 Checkpoint — Catalog & Review Data Modeling."
+  },
+  {
+    "day": 5,
+    "dayTitle": "Day 5 — Migrations + Seeding",
+    "taskId": "prisma05-c1-t1",
+    "title": "Author the first migration",
+    "description": "Create a named migration from the current schema, transitioning from rapid prototyping to versioned migrations.",
+    "displayedStatement": "Create a named migration from the current schema, transitioning from rapid prototyping to versioned migrations.",
+    "instructions": [
+      "Transition from rapid prototyping to versioned migrations",
+      "Use `npx prisma migrate dev` with `--name init_users`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 5,
+    "dayTitle": "Day 5 — Migrations + Seeding",
+    "taskId": "prisma05-c1-t2",
+    "title": "Promote migrations to production",
+    "description": "Apply committed migrations to production without authoring new ones.",
+    "displayedStatement": "Apply committed migrations to production without authoring new ones.",
+    "instructions": [
+      "Use `migrate deploy`",
+      "Never author migrations in production"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Apply committed migrations to production without authoring new ones.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Promote migrations to production."
+  },
+  {
+    "day": 5,
+    "dayTitle": "Day 5 — Migrations + Seeding",
+    "taskId": "prisma05-c2-t1",
+    "title": "Write a clean baseline seed script",
+    "description": "Ensure baseline seeding clears stale records and inserts initial users without colliding on existing data.",
+    "displayedStatement": "Ensure baseline seeding clears stale records and inserts initial users without colliding on existing data.",
+    "instructions": [
+      "Clear existing rows using `await prisma.user.deleteMany()`",
+      "Insert the baseline user with `await prisma.user.create`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Ensure baseline seeding clears stale records and inserts initial users without colliding on existing data.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Write a clean baseline seed script."
+  },
+  {
+    "day": 5,
+    "dayTitle": "Day 5 — Migrations + Seeding",
+    "taskId": "prisma05-c2-t2",
+    "title": "Register the seed script in package.json",
+    "description": "Tell the Prisma CLI which command seeds a fresh database.",
+    "displayedStatement": "Tell the Prisma CLI which command seeds a fresh database.",
+    "instructions": [
+      "Add a `prisma` block to package.json",
+      "Point `seed` at tsx prisma/seed.ts"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Tell the Prisma CLI which command seeds a fresh database.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Register the seed script in package.json."
+  },
+  {
+    "day": 5,
+    "dayTitle": "Day 5 — Migrations + Seeding",
+    "taskId": "prisma05-hw-1",
+    "title": "Deterministic Database Reset & Seed",
+    "description": "Reset a development database, re-apply all migrations, and run seeding in one step.",
+    "displayedStatement": "Reset a development database, re-apply all migrations, and run seeding in one step.",
+    "instructions": [
+      "Use `npx prisma migrate reset`",
+      "Add `--force` to skip interactive confirmation"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Reset a development database, re-apply all migrations, and run seeding in one step.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Deterministic Database Reset & Seed."
+  },
+  {
+    "day": 6,
+    "dayTitle": "Day 6 — PrismaClient Lifecycle & Connections",
+    "taskId": "prisma06-c1-t1",
+    "title": "Stop creating a client per reload",
+    "description": "The current module builds a brand-new client on every reload.",
+    "displayedStatement": "The current module builds a brand-new client on every reload.",
+    "instructions": [
+      "Read the cached client from `globalThis`",
+      "Fall back to `new PrismaClient()`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The current module builds a brand-new client on every reload.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Stop creating a client per reload."
+  },
+  {
+    "day": 6,
+    "dayTitle": "Day 6 — PrismaClient Lifecycle & Connections",
+    "taskId": "prisma06-c1-t2",
+    "title": "Cache it in development only",
+    "description": "Production must keep a single module-scoped instance.",
+    "displayedStatement": "Production must keep a single module-scoped instance.",
+    "instructions": [
+      "Write the client back to `globalThis`",
+      "Guard with `NODE_ENV`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Production must keep a single module-scoped instance.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Cache it in development only."
+  },
+  {
+    "day": 6,
+    "dayTitle": "Day 6 — PrismaClient Lifecycle & Connections",
+    "taskId": "prisma06-c2-t1",
+    "title": "Log every query",
+    "description": "Print the SQL Prisma sends and keep warnings visible.",
+    "displayedStatement": "Print the SQL Prisma sends and keep warnings visible.",
+    "instructions": [
+      "Add `log: ['query', 'warn', 'error']`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Print the SQL Prisma sends and keep warnings visible.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Log every query."
+  },
+  {
+    "day": 6,
+    "dayTitle": "Day 6 — PrismaClient Lifecycle & Connections",
+    "taskId": "prisma06-c2-t2",
+    "title": "Disconnect before exit",
+    "description": "A script that never disconnects hangs with open connections.",
+    "displayedStatement": "A script that never disconnects hangs with open connections.",
+    "instructions": [
+      "Listen for `beforeExit`",
+      "Call `$disconnect()`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"A script that never disconnects hangs with open connections.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Disconnect before exit."
+  },
+  {
+    "day": 6,
+    "dayTitle": "Day 6 — PrismaClient Lifecycle & Connections",
+    "taskId": "prisma06-hw-1",
+    "title": "Production Gateway — Connection Pool Configuration",
+    "description": "In high-concurrency environments or containerized microservices, tune the database connection pool using connection parameters (connection_limit=5 and pool_timeout=10) and attach structured query logging.",
+    "displayedStatement": "In high-concurrency environments or containerized microservices, tune the database connection pool using connection parameters (connection_limit=5 and pool_timeout=10) and attach structured query logging.",
+    "instructions": [
+      "Configure `connection_limit` and `pool_timeout` parameters on the database URL",
+      "Pass the configured URL via `datasources: { db: { url: ... } }` in the PrismaClient constructor",
+      "Enable query and error logging with `log: ['query', 'error']`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"In high-concurrency environments or containerized microservices, tune the database connection pool using connection parameters (connection_limit=5 and pool_timeout=10) and attach structured query logging.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Production Gateway — Connection Pool Configuration."
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-c1-t1",
+    "title": "One row by its unique key",
+    "description": "Return id + name for user 1 without scanning the table.",
+    "displayedStatement": "Return id + name for user 1 without scanning the table.",
+    "instructions": [
+      "Use `findUnique`",
+      "Select `id` and `name` only"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-c1-t2",
+    "title": "One row by a non-unique filter",
+    "description": "Find the first user called Alex.",
+    "displayedStatement": "Find the first user called Alex.",
+    "instructions": [
+      "Use `findFirst`",
+      "Filter on `where: { name: \"Alex\" }`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-c1-t3",
+    "title": "Guaranteed lookup with findUniqueOrThrow",
+    "description": "Retrieve User 1 by unique id without returning a nullable type. Use findUniqueOrThrow so the compiler guarantees the record exists or throws an exception if missing.",
+    "displayedStatement": "Retrieve User 1 by unique id without returning a nullable type. Use findUniqueOrThrow so the compiler guarantees the record exists or throws an exception if missing.",
+    "instructions": [
+      "Use `prisma.user.findUniqueOrThrow` with `where: { id }`",
+      "Select `id` and `name`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-c2-t1",
+    "title": "Trim the payload",
+    "description": "The login screen needs id + email and nothing else.",
+    "displayedStatement": "The login screen needs id + email and nothing else.",
+    "instructions": [
+      "Use `select` with `id` and `email`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The login screen needs id + email and nothing else.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Trim the payload."
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-c2-t2",
+    "title": "Load the relation instead",
+    "description": "This screen needs the whole user plus their posts.",
+    "displayedStatement": "This screen needs the whole user plus their posts.",
+    "instructions": [
+      "Use `include` for `posts`",
+      "Keep every scalar column"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"This screen needs the whole user plus their posts.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Load the relation instead."
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-c2-t3",
+    "title": "Fine-grained nested relation projection",
+    "description": "Fetch user posts while restricting columns on both the parent and child models.",
+    "displayedStatement": "Fetch user posts while restricting columns on both the parent and child models.",
+    "instructions": [
+      "Use `select` with `id: true`",
+      "Nest `select: { title: true }` under `posts`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 7,
+    "dayTitle": "Day 7 — Reading Data + select vs include",
+    "taskId": "prisma07-hw-1",
+    "title": "Fine-Grained Profile Payload — Selective Relation Projection",
+    "description": "Load user rafi@prisma.io projecting only id and email, while nesting a selective projection on posts to retrieve only their title. Prevent over-fetching on both parent and related models.",
+    "displayedStatement": "Load user rafi@prisma.io projecting only id and email, while nesting a selective projection on posts to retrieve only their title. Prevent over-fetching on both parent and related models.",
+    "instructions": [
+      "findUnique on `where: { email }`",
+      "Select `id: true` and `email: true`",
+      "Nest `posts: { select: { title: true } }` inside your outer `select`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c1-t1",
+    "title": "Substring filter",
+    "description": "Return every user whose email contains prisma.io.",
+    "displayedStatement": "Return every user whose email contains prisma.io.",
+    "instructions": [
+      "Filter with `email: { contains: \"prisma.io\" }`",
+      "Select `id` and `name`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c1-t2",
+    "title": "Filter on a set of values",
+    "description": "Return Alex and Mina, nobody else.",
+    "displayedStatement": "Return Alex and Mina, nobody else.",
+    "instructions": [
+      "Filter with `name: { in: ['Alex', 'Mina'] }`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c1-t3",
+    "title": "Filter across relations (some)",
+    "description": "Return users who have authored at least one post containing \"Prisma\".",
+    "displayedStatement": "Return users who have authored at least one post containing \"Prisma\".",
+    "instructions": [
+      "Filter with `posts: { some: { title: { contains: 'Prisma' } } }`",
+      "Select `id` and `name`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c1-t4",
+    "title": "Diagnostic Repair — The undefined vs null Filter Hazard",
+    "description": "Passing undefined to an optional filter in findFirst, findMany, or updateMany causes Prisma to silently drop the WHERE condition completely, returning unexpected rows or leaking data (while findUnique throws a validation error). Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst.",
+    "displayedStatement": "Passing undefined to an optional filter in findFirst, findMany, or updateMany causes Prisma to silently drop the WHERE condition completely, returning unexpected rows or leaking data (while findUnique throws a validation error). Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst.",
+    "instructions": [
+      "Check `if (email === undefined)` and return `null` immediately",
+      "Only query `prisma.user.findFirst` when `email` is defined"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Passing undefined to an optional filter in findFirst, findMany, or updateMany causes Prisma to silently drop the WHERE condition completely, returning unexpected rows or leaking data (while findUnique throws a validation error). Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Diagnostic Repair — The undefined vs null Filter Hazard."
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c2-t1",
+    "title": "Page two, one row per page",
+    "description": "Return the second user when sorted by id.",
+    "displayedStatement": "Return the second user when sorted by id.",
+    "instructions": [
+      "`orderBy: { id: \"asc\" }`",
+      "`skip: 1` with `take: 1`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c2-t2",
+    "title": "Cursor paging with skip: 1",
+    "description": "Return the two rows after the user with id 1 without duplicating the cursor item.",
+    "displayedStatement": "Return the two rows after the user with id 1 without duplicating the cursor item.",
+    "instructions": [
+      "Use `cursor: { id }` to anchor to the pivot row",
+      "Add `skip: 1` so the cursor item itself is not repeated",
+      "`take: 2` with `orderBy: { id: \"asc\" }`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c3-t1",
+    "title": "Group and count",
+    "description": "Return one row per distinct name, with the number of rows in each group.",
+    "displayedStatement": "Return one row per distinct name, with the number of rows in each group.",
+    "instructions": [
+      "Call `prisma.user.groupBy`",
+      "Group with `by: ['name']`",
+      "Ask for `_count: true`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-c3-t2",
+    "title": "Order the groups by size",
+    "description": "Return the same groups, biggest first.",
+    "displayedStatement": "Return the same groups, biggest first.",
+    "instructions": [
+      "Keep `by: ['name']` and `_count: true`",
+      "Order with `orderBy: { _count: { name: 'desc' } }`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-hw-1",
+    "title": "Newest two members",
+    "description": "Return id + email, sorted by id descending, limited to two rows.",
+    "displayedStatement": "Return id + email, sorted by id descending, limited to two rows.",
+    "instructions": [
+      "`orderBy: { id: \"desc\" }`",
+      "`take: 2`",
+      "Select `id` + `email` only"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 8,
+    "dayTitle": "Day 8 — Filtering, Sorting & Pagination",
+    "taskId": "prisma08-hw-2",
+    "title": "Milestone 2 Checkpoint — Deterministic Category Product Feed",
+    "description": "Implement a production feed query with M:N relational filtering, cursor pagination with skip: 1, and a secondary tiebreaker.",
+    "displayedStatement": "Implement a production feed query with M:N relational filtering, cursor pagination with skip: 1, and a secondary tiebreaker.",
+    "instructions": [
+      "Filter products matching `categoryId` via `categories: { some: { id: categoryId } }`",
+      "Apply `take` limit to bound page size",
+      "When cursor is provided, set `cursor: { id: cursor.id }` and `skip: 1`",
+      "Enforce deterministic ordering with unique tiebreaker: `orderBy: [{ createdAt: \"desc\" }, { id: \"desc\" }]`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 9,
+    "dayTitle": "Day 9 — create() + Zod Validation",
+    "taskId": "prisma09-c1-t1",
+    "title": "Insert one row and shape the response",
+    "description": "Register a user and return id + email only.",
+    "displayedStatement": "Register a user and return id + email only.",
+    "instructions": [
+      "Use `prisma.user.create`",
+      "Select `id` and `email`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Register a user and return id + email only.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Insert one row and shape the response."
+  },
+  {
+    "day": 9,
+    "dayTitle": "Day 9 — create() + Zod Validation",
+    "taskId": "prisma09-c1-t2",
+    "title": "Batch insert",
+    "description": "Write all three users in a single round trip.",
+    "displayedStatement": "Write all three users in a single round trip.",
+    "instructions": [
+      "Use `prisma.user.createMany`",
+      "Return only the id column"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 9,
+    "dayTitle": "Day 9 — create() + Zod Validation",
+    "taskId": "prisma09-c2-t1",
+    "title": "Write the payload schema",
+    "description": "Name is required, email must be a real address.",
+    "displayedStatement": "Name is required, email must be a real address.",
+    "instructions": [
+      "Build `CreateUserSchema` with `z.object`",
+      "Validate `email` with `z.string().email()`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Name is required, email must be a real address.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Write the payload schema."
+  },
+  {
+    "day": 9,
+    "dayTitle": "Day 9 — create() + Zod Validation",
+    "taskId": "prisma09-c2-t2",
+    "title": "Fail before the database",
+    "description": "Turn an invalid payload into a 400 instead of a P2002 crash.",
+    "displayedStatement": "Turn an invalid payload into a 400 instead of a P2002 crash.",
+    "instructions": [
+      "Use `safeParse`",
+      "Return 400 when validation fails"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Turn an invalid payload into a 400 instead of a P2002 crash.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Fail before the database."
+  },
+  {
+    "day": 9,
+    "dayTitle": "Day 9 — create() + Zod Validation",
+    "taskId": "prisma09-c2-t3",
+    "title": "Non-Throwing Validation with safeParse",
+    "description": "Validate incoming untrusted input using UserCreateInput.safeParse(). If validation fails, return structured errors instead of throwing unhandled exceptions.",
+    "displayedStatement": "Validate incoming untrusted input using UserCreateInput.safeParse(). If validation fails, return structured errors instead of throwing unhandled exceptions.",
+    "instructions": [
+      "Parse untrusted data using `UserCreateInput.safeParse(data)`",
+      "If validation fails (`!result.success`), return `{ ok: false, errors: result.error.flatten() }`",
+      "If validation succeeds, return `{ ok: true, data: result.data }`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Validate incoming untrusted input using UserCreateInput.safeParse(). If validation fails, return structured errors instead of throwing unhandled exceptions.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Non-Throwing Validation with safeParse."
+  },
+  {
+    "day": 9,
+    "dayTitle": "Day 9 — create() + Zod Validation",
+    "taskId": "prisma09-hw-1",
+    "title": "Nested Schema Validation — User with Initial Post",
+    "description": "Validate an incoming registration payload containing user info and an initial post (RegisterPayloadSchema.safeParse(req.body)). Reject invalid payloads with HTTP 400. On success, persist the user and child post using a nested relational create, returning only id and email.",
+    "displayedStatement": "Validate an incoming registration payload containing user info and an initial post (RegisterPayloadSchema.safeParse(req.body)). Reject invalid payloads with HTTP 400. On success, persist the user and child post using a nested relational create, returning only id and email.",
+    "instructions": [
+      "Validate `req.body` using `RegisterPayloadSchema.safeParse(req.body)`",
+      "If validation fails (`!parsed.success`), respond with status 400 and validation errors",
+      "Persist user with nested `posts: { create: { title: parsed.data.title } }` and project `select: { id: true, email: true }`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Validate an incoming registration payload containing user info and an initial post (RegisterPayloadSchema.safeParse(req.body)). Reject invalid payloads with HTTP 400. On success, persist the user and child post using a nested relational create, returning only id and email.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Nested Schema Validation — User with Initial Post."
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-c1-t1",
+    "title": "Rename one user",
+    "description": "Change user 1's name and return id + name only.",
+    "displayedStatement": "Change user 1's name and return id + name only.",
+    "instructions": [
+      "Use `prisma.user.update`",
+      "`where: { id: 1 }`",
+      "Select `id` and `name`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Change user 1's name and return id + name only.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Rename one user."
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-c1-t2",
+    "title": "Batch edit behind a filter",
+    "description": "Update every user called Alex — prove the filter first.",
+    "displayedStatement": "Update every user called Alex — prove the filter first.",
+    "instructions": [
+      "Use `prisma.user.updateMany`",
+      "Filter with `where: { name: \"Alex\" }`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-c1-t3",
+    "title": "Atomic numeric increment on a domain counter",
+    "description": "Increment a domain counter atomically in the database without read-modify-write race conditions. Never apply numeric increments to surrogate primary keys; use them on metrics, view counters, or inventory balances.",
+    "displayedStatement": "Increment a domain counter atomically in the database without read-modify-write race conditions. Never apply numeric increments to surrogate primary keys; use them on metrics, view counters, or inventory balances.",
+    "instructions": [
+      "Use `prisma.user.update`",
+      "`where: { id: 1 }`",
+      "Increment `loginCount` by 1 using `{ increment: 1 }`",
+      "Select `id` and `loginCount`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Increment a domain counter atomically in the database without read-modify-write race conditions. Never apply numeric increments to surrogate primary keys; use them on metrics, view counters, or inventory balances.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Atomic numeric increment on a domain counter."
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-c2-t1",
+    "title": "Insert-or-leave",
+    "description": "Create the user only if that email is free.",
+    "displayedStatement": "Create the user only if that email is free.",
+    "instructions": [
+      "Use `prisma.user.upsert`",
+      "`where: { email }`",
+      "Select `id` and `email`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-c2-t2",
+    "title": "Give the update branch a body",
+    "description": "The upsert currently has no update branch, so it is not idempotent.",
+    "displayedStatement": "The upsert currently has no update branch, so it is not idempotent.",
+    "instructions": [
+      "Add `update: { name }`",
+      "Keep the unique `where` on email"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The upsert currently has no update branch, so it is not idempotent.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Give the update branch a body."
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-hw-1",
+    "title": "Replayable write",
+    "description": "Upsert by email and return id + email only.",
+    "displayedStatement": "Upsert by email and return id + email only.",
+    "instructions": [
+      "Use `prisma.user.upsert`",
+      "Select `id` and `email`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 10,
+    "dayTitle": "Day 10 — update(), updateMany() & upsert()",
+    "taskId": "prisma10-hw-2",
+    "title": "Diagnostic Repair — Non-Unique Selector Rejection",
+    "description": "The following sync utility fails to compile with a TypeScript/Prisma error: \"Property 'name' does not exist in type 'UserWhereUniqueInput'\". Diagnose why Prisma rejects the selector and repair the query to use a valid unique criteria.",
+    "displayedStatement": "The following sync utility fails to compile with a TypeScript/Prisma error: \"Property 'name' does not exist in type 'UserWhereUniqueInput'\". Diagnose why Prisma rejects the selector and repair the query to use a valid unique criteria.",
+    "instructions": [
+      "Diagnose why `where: { name }` is rejected by the compiler",
+      "Repair the selector to target the unique `email` field"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The following sync utility fails to compile with a TypeScript/Prisma error: \"Property 'name' does not exist in type 'UserWhereUniqueInput'\". Diagnose why Prisma rejects the selector and repair the query to use a valid unique criteria.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Diagnostic Repair — Non-Unique Selector Rejection."
+  },
+  {
+    "day": 11,
+    "dayTitle": "Day 11 — Delete & Referential Actions",
+    "taskId": "prisma11-c1-t1",
+    "title": "Cascade the children",
+    "description": "Deleting a user must not leave orphaned posts behind.",
+    "displayedStatement": "Deleting a user must not leave orphaned posts behind.",
+    "instructions": [
+      "Add `onDelete: Cascade` to the relation"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Deleting a user must not leave orphaned posts behind.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Cascade the children."
+  },
+  {
+    "day": 11,
+    "dayTitle": "Day 11 — Delete & Referential Actions",
+    "taskId": "prisma11-c1-t0",
+    "title": "Delete one row by its unique key",
+    "description": "Remove a single user — the selector must be unique or Prisma refuses to compile.",
+    "displayedStatement": "Remove a single user — the selector must be unique or Prisma refuses to compile.",
+    "instructions": [
+      "Use `prisma.user.delete`",
+      "`where: { id: 1 }`",
+      "Select `id` and `email`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Remove a single user — the selector must be unique or Prisma refuses to compile.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Delete one row by its unique key."
+  },
+  {
+    "day": 11,
+    "dayTitle": "Day 11 — Delete & Referential Actions",
+    "taskId": "prisma11-c1-t2",
+    "title": "Read the filter before a bulk delete",
+    "description": "Delete every spam account — first prove which rows match.",
+    "displayedStatement": "Delete every spam account — first prove which rows match.",
+    "instructions": [
+      "Use `prisma.user.deleteMany`",
+      "Filter with `email: { contains: \"spam\" }`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 11,
+    "dayTitle": "Day 11 — Delete & Referential Actions",
+    "taskId": "prisma11-c2-t1",
+    "title": "Add the tombstone column",
+    "description": "Keep the row, mark the deletion.",
+    "displayedStatement": "Keep the row, mark the deletion.",
+    "instructions": [
+      "Add `deletedAt DateTime?`",
+      "Filter live rows with `deletedAt: null`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Keep the row, mark the deletion.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Add the tombstone column."
+  },
+  {
+    "day": 11,
+    "dayTitle": "Day 11 — Delete & Referential Actions",
+    "taskId": "prisma11-c2-t2",
+    "title": "Read only live rows",
+    "description": "Return id + email for every user that is not soft-deleted.",
+    "displayedStatement": "Return id + email for every user that is not soft-deleted.",
+    "instructions": [
+      "filter with `where: { deletedAt: null }`",
+      "select `id` and `email`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 11,
+    "dayTitle": "Day 11 — Delete & Referential Actions",
+    "taskId": "prisma11-hw-1",
+    "title": "Tombstone, do not drop",
+    "description": "Mark the account deleted and let children cascade when it is finally purged.",
+    "displayedStatement": "Mark the account deleted and let children cascade when it is finally purged.",
+    "instructions": [
+      "Cascade deletes at the schema level",
+      "Hide the account with `deletedAt: null`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Mark the account deleted and let children cascade when it is finally purged.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Tombstone, do not drop."
+  },
+  {
+    "day": 12,
+    "dayTitle": "Day 12 — Nested Writes & Transactions",
+    "taskId": "prisma12-c1-t1",
+    "title": "Create the parent and the child",
+    "description": "Register a user and their first post in one call.",
+    "displayedStatement": "Register a user and their first post in one call.",
+    "instructions": [
+      "Nest `posts: { create: [...] }` inside `data`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Register a user and their first post in one call.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Create the parent and the child."
+  },
+  {
+    "day": 12,
+    "dayTitle": "Day 12 — Nested Writes & Transactions",
+    "taskId": "prisma12-c1-t2",
+    "title": "Attach an existing row, or create it",
+    "description": "The category may already exist — you only have its key.",
+    "displayedStatement": "The category may already exist — you only have its key.",
+    "instructions": [
+      "Use `connectOrCreate`",
+      "Match existing rows with `where: { id: categoryId }`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The category may already exist — you only have its key.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Attach an existing row, or create it."
+  },
+  {
+    "day": 12,
+    "dayTitle": "Day 12 — Nested Writes & Transactions",
+    "taskId": "prisma12-c2-t1",
+    "title": "Make a two-step write atomic",
+    "description": "Both updates must land, or neither should.",
+    "displayedStatement": "Both updates must land, or neither should.",
+    "instructions": [
+      "Wrap the calls in `$transaction([...])`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Both updates must land, or neither should.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Make a two-step write atomic."
+  },
+  {
+    "day": 12,
+    "dayTitle": "Day 12 — Nested Writes & Transactions",
+    "taskId": "prisma12-c2-t2",
+    "title": "Decide inside the transaction",
+    "description": "Read one value, then write another — in the same transaction.",
+    "displayedStatement": "Read one value, then write another — in the same transaction.",
+    "instructions": [
+      "Use the interactive form",
+      "Only ever call `tx.user.*` inside it"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Read one value, then write another — in the same transaction.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Decide inside the transaction."
+  },
+  {
+    "day": 12,
+    "dayTitle": "Day 12 — Nested Writes & Transactions",
+    "taskId": "prisma12-c2-t3",
+    "title": "Atomic rollback under failure",
+    "description": "When an error is thrown inside an interactive transaction, every write in that transaction is rolled back, leaving database state completely untouched.",
+    "displayedStatement": "When an error is thrown inside an interactive transaction, every write in that transaction is rolled back, leaving database state completely untouched.",
+    "instructions": [
+      "Use interactive `$transaction(async (tx) => { ... })`",
+      "Perform the write using `tx.user.update`",
+      "Throw an error to trigger automatic rollback and catch it outside"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"When an error is thrown inside an interactive transaction, every write in that transaction is rolled back, leaving database state completely untouched.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Atomic rollback under failure."
+  },
+  {
+    "day": 12,
+    "dayTitle": "Day 12 — Nested Writes & Transactions",
+    "taskId": "prisma12-hw-1",
+    "title": "Atomic checkout",
+    "description": "Both writes belong to the same transaction, and only tx may be used.",
+    "displayedStatement": "Both writes belong to the same transaction, and only tx may be used.",
+    "instructions": [
+      "Use the interactive `$transaction`",
+      "Call `tx.user.update` and `tx.user.create`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Both writes belong to the same transaction, and only tx may be used.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Atomic checkout."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c1-t1",
+    "title": "Catch the unique violation",
+    "description": "A duplicate email must become a 409, not a 500.",
+    "displayedStatement": "A duplicate email must become a 409, not a 500.",
+    "instructions": [
+      "Check `instanceof Prisma.PrismaClientKnownRequestError`",
+      "Branch on `code === 'P2002'`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"A duplicate email must become a 409, not a 500.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Catch the unique violation."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c1-t2",
+    "title": "Map a missing record",
+    "description": "Updating a row that does not exist should return 404.",
+    "displayedStatement": "Updating a row that does not exist should return 404.",
+    "instructions": [
+      "Branch on `code === 'P2025'`",
+      "Respond with `res.status(404)`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Updating a row that does not exist should return 404.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Map a missing record."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c1-t3",
+    "title": "Catch client validation errors",
+    "description": "When invalid field types or missing required fields bypass application validation, Prisma raises PrismaClientValidationError before querying the database. Catch it and respond with HTTP 400 Bad Request.",
+    "displayedStatement": "When invalid field types or missing required fields bypass application validation, Prisma raises PrismaClientValidationError before querying the database. Catch it and respond with HTTP 400 Bad Request.",
+    "instructions": [
+      "Check for `error instanceof Prisma.PrismaClientValidationError`",
+      "Respond with status 400 Bad Request"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"When invalid field types or missing required fields bypass application validation, Prisma raises PrismaClientValidationError before querying the database. Catch it and respond with HTTP 400 Bad Request.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Catch client validation errors."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c2-t1",
+    "title": "Trap missing record on delete",
+    "description": "Deleting a record that does not exist throws P2025. Trap it and respond with HTTP 404 instead of letting it crash as a 500.",
+    "displayedStatement": "Deleting a record that does not exist throws P2025. Trap it and respond with HTTP 404 instead of letting it crash as a 500.",
+    "instructions": [
+      "Check for `error instanceof Prisma.PrismaClientKnownRequestError`",
+      "Branch on `error.code === 'P2025'`",
+      "Respond with `res.status(404)`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Deleting a record that does not exist throws P2025. Trap it and respond with HTTP 404 instead of letting it crash as a 500.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Trap missing record on delete."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c2-t2",
+    "title": "Trap the foreign-key violation",
+    "description": "Creating a post with a non-existent authorId throws P2003. Map it to 409.",
+    "displayedStatement": "Creating a post with a non-existent authorId throws P2003. Map it to 409.",
+    "instructions": [
+      "Branch on `error.code === 'P2003'`",
+      "Respond 409 with `{ error: 'Related record not found' }`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Creating a post with a non-existent authorId throws P2003. Map it to 409.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Trap the foreign-key violation."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c3-t1",
+    "title": "Add an audit hook",
+    "description": "Wrap every user query with a timing hook — and drop the deprecated $use.",
+    "displayedStatement": "Wrap every user query with a timing hook — and drop the deprecated $use.",
+    "instructions": [
+      "Extend with `$extends`",
+      "Add a `query` hook using `$allOperations`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Wrap every user query with a timing hook — and drop the deprecated $use.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Add an audit hook."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-c3-t2",
+    "title": "Computed fields via result extensions",
+    "description": "Add a virtual computed field displayName to the user model using $extends({ result: { user: { ... } } }). Declare its dependencies with needs: { name: true, email: true } and compute the fallback value user.name ?? user.email.",
+    "displayedStatement": "Add a virtual computed field displayName to the user model using $extends({ result: { user: { ... } } }). Declare its dependencies with needs: { name: true, email: true } and compute the fallback value user.name ?? user.email.",
+    "instructions": [
+      "Extend the client with `prisma.$extends`",
+      "Add a `result` extension for the `user` model",
+      "Define `displayName` with `needs: { name: true, email: true }` and `compute(user)`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-hw-1",
+    "title": "Complete the mapping — P2002, P2025 & P2003",
+    "description": "P2002 → 409 Conflict, P2025 → 404 Not Found, P2003 → 409 Foreign Key Failure. Everything else forwards to next(err) without leaking internal database exceptions.",
+    "displayedStatement": "P2002 → 409 Conflict, P2025 → 404 Not Found, P2003 → 409 Foreign Key Failure. Everything else forwards to next(err) without leaking internal database exceptions.",
+    "instructions": [
+      "Handle `'P2002'` (409) and `'P2025'` (404)",
+      "Handle `'P2003'` (409) for foreign-key constraint failures",
+      "Forward unhandled errors via `next(err)`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"P2002 → 409 Conflict, P2025 → 404 Not Found, P2003 → 409 Foreign Key Failure. Everything else forwards to next(err) without leaking internal database exceptions.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Complete the mapping — P2002, P2025 & P2003."
+  },
+  {
+    "day": 13,
+    "dayTitle": "Day 13 — Prisma Error Classification",
+    "taskId": "prisma13-hw-2",
+    "title": "Diagnostic Repair — Multi-Error Class Discrimination",
+    "description": "The following error middleware crashes at runtime with \"Cannot read properties of undefined (reading 'code')\" whenever a non-Prisma error or query validation error reaches it. Diagnose the bug and add type guards to discriminate between database constraint errors (KnownRequestError with P2003) and query structural errors (PrismaClientValidationError returning 400).",
+    "displayedStatement": "The following error middleware crashes at runtime with \"Cannot read properties of undefined (reading 'code')\" whenever a non-Prisma error or query validation error reaches it. Diagnose the bug and add type guards to discriminate between database constraint errors (KnownRequestError with P2003) and query structural errors (PrismaClientValidationError returning 400).",
+    "instructions": [
+      "Add `err instanceof Prisma.PrismaClientKnownRequestError` guard before checking `err.code === 'P2003'`",
+      "Add `err instanceof Prisma.PrismaClientValidationError` guard and respond with status 400",
+      "Forward unmatched errors via `next(err)`",
+      "Eliminate unsafe `(err as any)` type casts"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"The following error middleware crashes at runtime with \"Cannot read properties of undefined (reading 'code')\" whenever a non-Prisma error or query validation error reaches it. Diagnose the bug and add type guards to discriminate between database constraint errors (KnownRequestError with P2003) and query structural errors (PrismaClientValidationError returning 400).\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Diagnostic Repair — Multi-Error Class Discrimination."
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-c1-t1",
+    "title": "Lookup that throws instead of returning null",
+    "description": "Fetch user by id. If missing, throw a typed P2025 error instead of returning null.",
+    "displayedStatement": "Fetch user by id. If missing, throw a typed P2025 error instead of returning null.",
+    "instructions": [
+      "Use `prisma.user.findUniqueOrThrow`",
+      "Select `id` and `email`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-c1-t2",
+    "title": "Soft-delete then filter",
+    "description": "Mark an account as deleted with deletedAt, then list only live accounts.",
+    "displayedStatement": "Mark an account as deleted with deletedAt, then list only live accounts.",
+    "instructions": [
+      "Use `prisma.user.update` to set `deletedAt: new Date()`",
+      "Use `prisma.user.findMany` with `where: { deletedAt: null }` to list live accounts"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Mark an account as deleted with deletedAt, then list only live accounts.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Soft-delete then filter."
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-c2-t1",
+    "title": "Deterministic paginated roster",
+    "description": "Return the first 2 live users ordered by id, projecting id + email only.",
+    "displayedStatement": "Return the first 2 live users ordered by id, projecting id + email only.",
+    "instructions": [
+      "`orderBy: { id: \"asc\" }`",
+      "`take: 2`",
+      "Select `id` and `email` only"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-c2-t2",
+    "title": "Atomic write with inline conflict trapping",
+    "description": "Register a user in a transaction. If the email already exists, catch P2002 and respond 409.",
+    "displayedStatement": "Register a user in a transaction. If the email already exists, catch P2002 and respond 409.",
+    "instructions": [
+      "Wrap the `create` in `prisma.$transaction(async (tx) => ...)`",
+      "Catch `PrismaClientKnownRequestError` with `code === 'P2002'` and return 409"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Register a user in a transaction. If the email already exists, catch P2002 and respond 409.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Atomic write with inline conflict trapping."
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-c3-t1",
+    "title": "One raw read",
+    "description": "Fetch a user with a tagged-template query — no string concatenation.",
+    "displayedStatement": "Fetch a user with a tagged-template query — no string concatenation.",
+    "instructions": [
+      "Use `prisma.$queryRaw` with a template literal",
+      "Bind the email as an interpolated parameter"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-c3-t2",
+    "title": "Compose with Prisma.sql",
+    "description": "Build a reusable WHERE fragment and stitch it into the query.",
+    "displayedStatement": "Build a reusable WHERE fragment and stitch it into the query.",
+    "instructions": [
+      "Use `Prisma.sql` for the fragment",
+      "Interpolate it into `$queryRaw`"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-hw-1",
+    "title": "Member Directory — Multi-Model Paginated Service Synthesis",
+    "description": "Implement an enterprise member directory query synthesizing soft-delete filtering, deterministic pagination, and selective relational projection. Retrieve the first 2 active members (where deletedAt is null) ordered by ID ascending, projecting id, email, and related post titles while omitting sensitive columns.",
+    "displayedStatement": "Implement an enterprise member directory query synthesizing soft-delete filtering, deterministic pagination, and selective relational projection. Retrieve the first 2 active members (where deletedAt is null) ordered by ID ascending, projecting id, email, and related post titles while omitting sensitive columns.",
+    "instructions": [
+      "Filter active members using `where: { deletedAt: null }`",
+      "Order deterministically with `orderBy: { id: 'asc' }` and limit to 2 using `take: 2`",
+      "Project `id` and `email` on the parent model",
+      "Nest `posts: { select: { title: true } }` to include post titles without over-fetching"
+    ],
+    "isAbstractOrCryptic": false,
+    "critique": "",
+    "suggestedClearQuestion": ""
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-hw-2",
+    "title": "Onboarding Pipeline — Atomic Registration & Initial Post",
+    "description": "When a new user registers, create their account and publish an initial onboarding post. Both writes must execute atomically in an all-or-nothing transaction so a failure in post creation never leaves an orphaned user.",
+    "displayedStatement": "When a new user registers, create their account and publish an initial onboarding post. Both writes must execute atomically in an all-or-nothing transaction so a failure in post creation never leaves an orphaned user.",
+    "instructions": [
+      "Wrap both write operations in an interactive transaction callback",
+      "Create the user and the initial post using the transaction client `tx`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"When a new user registers, create their account and publish an initial onboarding post. Both writes must execute atomically in an all-or-nothing transaction so a failure in post creation never leaves an orphaned user.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Onboarding Pipeline — Atomic Registration & Initial Post."
+  },
+  {
+    "day": 14,
+    "dayTitle": "Day 14 — Prisma Capstone & Synthesis",
+    "taskId": "prisma14-hw-3",
+    "title": "Member Service Route — Validation & Conflict Mapping",
+    "description": "Construct an Express route controller for member creation. Validate the payload using Zod. If the database rejects the write due to a unique constraint violation, translate that error into an HTTP 409 Conflict response. Forward unknown errors to the global error middleware.",
+    "displayedStatement": "Construct an Express route controller for member creation. Validate the payload using Zod. If the database rejects the write due to a unique constraint violation, translate that error into an HTTP 409 Conflict response. Forward unknown errors to the global error middleware.",
+    "instructions": [
+      "Validate `req.body` using `MemberSchema.safeParse`",
+      "Handle `Prisma.PrismaClientKnownRequestError` with code `P2002` and respond with status 409",
+      "Pass unhandled errors down the pipeline with `next(err)`"
+    ],
+    "isAbstractOrCryptic": true,
+    "critique": "The displayed statement \"Construct an Express route controller for member creation. Validate the payload using Zod. If the database rejects the write due to a unique constraint violation, translate that error into an HTTP 409 Conflict response. Forward unknown errors to the global error middleware.\" is a passive observation or abstract theory note rather than an explicit, actionable task prompt.",
+    "suggestedClearQuestion": "Member Service Route — Validation & Conflict Mapping."
+  }
+]
