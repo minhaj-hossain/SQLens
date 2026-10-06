@@ -25,12 +25,12 @@ export const PrismaEditorTabs: React.FC<PrismaEditorTabsProps> = ({
   className = '',
 }) => {
   const base =
-    'inline-flex items-center gap-1 px-2.5 py-1 font-mono text-[10.5px] transition cursor-pointer rounded-md';
+    'inline-flex items-center gap-1 px-2.5 py-1 font-mono text-[10.5px] transition cursor-pointer rounded-md whitespace-nowrap shrink-0';
   return (
     <div
       role="tablist"
       aria-label="Prisma editor tabs"
-      className={`flex items-center gap-1 ${className}`}
+      className={`flex items-center gap-1 shrink-0 ${className}`}
     >
       <button
         type="button"

@@ -7,6 +7,7 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
+  Network,
 } from "lucide-react";
 import { MonacoCodeEditor, MonacoCodeEditorHandle } from "./MonacoCodeEditor";
 import type { SqlSourcePosition } from "@/lib/sql-engine/source-position";
@@ -108,6 +109,8 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       const relCount = uniqueRelations.size;
       return {
         label: `Schema: ${diagram.models.length} models, ${relCount} relation${relCount === 1 ? '' : 's'} defined ↗`,
+        shortLabel: `${diagram.models.length} models · ${relCount} rel ↗`,
+        compactLabel: `${diagram.models.length}m · ${relCount}r ↗`,
       };
     } catch {
       return null;
@@ -140,20 +143,20 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
       id="sql-editor-container"
       className="flex flex-col bg-editor-bg rounded-xl border border-border text-editor-text relative"
     >
-      <div className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-border-soft select-none rounded-t-xl">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 mr-2">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-surface border-b border-border-soft select-none rounded-t-xl gap-2 min-h-[42px] min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink overflow-hidden">
+          <div className="hidden xs:flex items-center gap-1.5 mr-1 shrink-0">
             <span className="w-2.5 h-2.5 rounded-full bg-text-faint/60 inline-block"></span>
             <span className="w-2.5 h-2.5 rounded-full bg-border inline-block"></span>
             <span className="w-2.5 h-2.5 rounded-full bg-surface-3 inline-block"></span>
           </div>
-          <span className="text-[11px] font-mono text-text font-semibold tracking-wide">
+          <span className="text-[11px] font-mono text-text font-semibold tracking-wide shrink-0">
             {showSchema ? schemaTab!.label : fileLabel}
           </span>
           {schemaTab ? (
             <PrismaEditorTabs active={tab} onChange={setTab} className="ml-1" />
           ) : (
-            <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border">
+            <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border shrink-0">
               Active: {tableName}
             </span>
           )}
@@ -165,15 +168,18 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
                 setTab('schema');
                 setSchemaView('diagram');
               }}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono text-func bg-func/10 border border-func/30 hover:bg-func/20 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono text-func bg-func/10 border border-func/30 hover:bg-func/20 transition cursor-pointer whitespace-nowrap shrink-0 leading-none h-6"
               title="Open ERD diagram"
             >
-              {erdSummary.label}
+              <Network className="w-3 h-3 text-func shrink-0 hidden sm:inline" />
+              <span className="hidden xl:inline">{erdSummary.label}</span>
+              <span className="hidden sm:inline xl:hidden">{erdSummary.shortLabel}</span>
+              <span className="inline sm:hidden">{erdSummary.compactLabel}</span>
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* The code actions belong to the code tab: the schema tab has its own
               copy button, and formatting/copying a read-only schema from here
               would silently act on the hidden TypeScript. */}
