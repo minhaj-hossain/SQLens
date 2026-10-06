@@ -106,7 +106,7 @@ export const Day_25_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day19-c1-t1',
-          title: 'Task 1 (Guided): Insert a New Product',
+          title: 'A new product just arrived: Can you add it to the catalog?',
           description: 'Add a new product record to the catalog with appropriate product attributes.',
           instructions: [
             'Write an `INSERT INTO products` statement specifying the column list: `name`, `supplier_id`, `category_id`, `price`, `quantity_in_stock`, and `reorder_level`.',
@@ -128,7 +128,7 @@ export const Day_25_MODULE: ModuleData = {
         },
         {
           id: 'day19-c1-t2',
-          title: 'Task 2 (Independent): Insert a New Customer',
+          title: 'A new customer signed up: Can you insert their record safely?',
           description: 'Register a new customer profile in the customers table.',
           instructions: [
             'Write an `INSERT INTO customers` statement specifying the columns: `name`, `email`, `city`, and `signup_date`.',
@@ -225,7 +225,7 @@ export const Day_25_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day19-c2a-t1',
-          title: 'Task 1: Targeted Price Increase',
+          title: 'Increase the price of the target product without changing anything else',
           description: 'Safely update the price of product_id 1 by 10% (price = price * 1.10).',
           instructions: [
             'Update `products`.',
@@ -249,7 +249,7 @@ export const Day_25_MODULE: ModuleData = {
         },
         {
           id: 'day19-c2a-t2',
-          title: 'Task 2: Restock Category 1 Products',
+          title: 'Category 1 needs a restock: Can you update only those products?',
           description: 'Increase quantity_in_stock by 20 for all products belonging to category_id 1 (Electronics).',
           instructions: [
             'Update `products`.',
@@ -347,7 +347,7 @@ export const Day_25_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day19-c2b-t1',
-          title: 'Task 1: Delete Disposable Test Order',
+          title: 'Remove the test order without touching real orders',
           description: 'Delete the test order with order_id 18 from the orders table.',
           instructions: [
             'Delete from `orders`.',
@@ -370,7 +370,7 @@ export const Day_25_MODULE: ModuleData = {
         },
         {
           id: 'day19-c2b-t2',
-          title: 'Task 2: Guard an Unbounded Delete',
+          title: 'Guard against catastrophic data loss: Make this unbounded DELETE safe',
           description: 'A junior script has a dangerous query: `DELETE FROM products;`. Fix it so it only removes obsolete products that are completely out of stock (`quantity_in_stock = 0`).',
           instructions: [
             'Delete from `products`.',
@@ -405,7 +405,7 @@ export const Day_25_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day19-hw-1',
-        title: 'Task 1 (Challenge): Insert a New Product',
+        title: 'Add a new product to the catalog with the correct details',
         description: 'Catalogue a new product by inserting a complete row into the products table.',
         instructions: [
           'Write an `INSERT INTO products` statement that specifies every required column: `name`, `supplier_id`, `category_id`, `price`, `quantity_in_stock`, and `reorder_level`.',
@@ -426,7 +426,7 @@ export const Day_25_MODULE: ModuleData = {
       },
       {
         id: 'day19-hw-2',
-        title: 'Task 2: Update the price of a product by 10%',
+        title: 'Increase one product price by 10% without changing other products',
         description: 'Update the price of product_id = 1 by 10% (price = price * 1.10).',
         instructions: [
           'Update `products` set `price = price * 1.10` where `product_id = 1`.',

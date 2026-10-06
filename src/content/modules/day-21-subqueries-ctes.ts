@@ -109,7 +109,7 @@ export const Day_21_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day17-c1a-t1',
-          title: 'Task 1: Products Priced Above Average',
+          title: 'Which products cost more than the current catalog average?',
           description: 'Select name and price for all products priced higher than the overall average product price.',
           instructions: [
             'Select `name` and `price` from `products`.',
@@ -133,7 +133,7 @@ export const Day_21_MODULE: ModuleData = {
         },
         {
           id: 'day17-c1a-t2',
-          title: 'Task 2: Students Older Than Average Student Age',
+          title: 'Which students are older than the average student?',
           description: 'Select name and age for students who are strictly older than the student average age.',
           instructions: [
             'Query the `students` table.',
@@ -248,7 +248,7 @@ export const Day_21_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day17-c1b-t1',
-          title: 'Task 1: Customers with Recorded Orders (IN)',
+          title: 'Which customers have placed at least one order?',
           description: 'Retrieve customer_id and name for customers who have placed at least one order using an IN subquery.',
           instructions: [
             'Query the `customers` table.',
@@ -274,7 +274,7 @@ export const Day_21_MODULE: ModuleData = {
         },
         {
           id: 'day17-c1b-t2',
-          title: 'Task 2: Products in Large Categories',
+          title: 'Which products belong to categories with five or more items?',
           description: 'Select name, category_id, and price for products belonging to categories that contain 5 or more products.',
           instructions: [
             'Query the `products` table.',
@@ -395,7 +395,7 @@ export const Day_21_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day17-c1c-t1',
-          title: 'Task 1: Products Never Ordered (Safe NOT IN)',
+          title: 'Which products have never been ordered?',
           description: 'Find the name and price of all products that have never been ordered using a safe NOT IN subquery with `WHERE product_id IS NOT NULL`.',
           instructions: [
             'Select `name` and `price` from `products`.',
@@ -420,7 +420,7 @@ export const Day_21_MODULE: ModuleData = {
         },
         {
           id: 'day17-c1c-t2',
-          title: 'Task 2: Fix the Broken NOT IN Subquery',
+          title: 'This NOT IN query returns nothing: Can you find and fix the NULL bug?',
           description: 'A developer wrote a query that returned 0 rows because of the NULL trap. Fix it by ensuring the subquery filters out NULL product IDs.',
           instructions: [
             'Query the `products` table.',
@@ -568,7 +568,7 @@ export const Day_21_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day17-c1d-t1',
-          title: 'Task 1: Products Above Category Average',
+          title: 'Which products cost more than their own category average?',
           description: 'Find products that are more expensive than the average price of the products in their own category. Show each product\'s name, price, and category_id.',
           instructions: [
             'Query `products p1`.',
@@ -596,7 +596,7 @@ export const Day_21_MODULE: ModuleData = {
         },
         {
           id: 'day17-c1d-t2',
-          title: 'Task 2: Products with Above-Average Stock in Category',
+          title: 'Which products have more stock than the average for their category?',
           description: 'Find products whose stock is higher than the average stock of the products in their own category. Show each product\'s name, quantity_in_stock, and category_id.',
           instructions: [
             'Query `products p1`.',
@@ -710,7 +710,7 @@ export const Day_21_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day17-c2-t1',
-          title: 'Task 1: Customer Order CTE',
+          title: 'Can you build a reusable customer order summary with a CTE?',
           description: 'Rewrite the active customer order query using a WITH cte AS (...) clause.',
           instructions: [
             'Define `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders)`.',
@@ -733,7 +733,7 @@ export const Day_21_MODULE: ModuleData = {
         },
         {
           id: 'day17-c2-t2',
-          title: 'Task 2: Category Stats CTE',
+          title: 'Can you turn category calculations into a clean CTE pipeline?',
           description: 'Create a CTE named CategoryStats that computes average price per category, then select categories with average price > 25.',
           instructions: [
             'Define `WITH CategoryStats AS (SELECT category_id, AVG(price) AS avg_price FROM products GROUP BY category_id)`.',
@@ -766,7 +766,7 @@ export const Day_21_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day17-hw-1',
-        title: 'Task 1: Products priced higher than the overall average',
+        title: 'Find every product priced above the catalog average',
         description: 'Products priced higher than the catalog-wide average product price.',
         instructions: [
           'Select `name`, `price` from `products` where `price > (SELECT AVG(price) FROM products)`.',
@@ -788,7 +788,7 @@ export const Day_21_MODULE: ModuleData = {
       },
       {
         id: 'day17-hw-2',
-        title: 'Task 2: Customers who placed at least one order (IN subquery)',
+        title: 'Find every customer who has placed an order',
         description: 'Customers who placed at least one order (using IN subquery).',
         instructions: [
           'Select `customer_id`, `name` from `customers` where `customer_id IN (SELECT customer_id FROM orders)`.',
@@ -810,7 +810,7 @@ export const Day_21_MODULE: ModuleData = {
       },
       {
         id: 'day17-hw-3',
-        title: 'Task 3: Products priced above their own category average (Correlated Subquery)',
+        title: 'Find products priced above their own category average',
         description: 'Products priced higher than their own category average using a correlated subquery.',
         instructions: [
           'Select `p1.name`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
@@ -832,7 +832,7 @@ export const Day_21_MODULE: ModuleData = {
       },
       {
         id: 'day17-hw-4',
-        title: 'Task 4: Customer Order CTE',
+        title: 'Build a customer order report using a CTE',
         description: 'Rewrite the active customer order query using a WITH cte AS (...) clause.',
         instructions: [
           'Use `WITH ActiveCustomers AS (SELECT DISTINCT customer_id FROM orders) SELECT c.customer_id, c.name FROM customers c JOIN ActiveCustomers ac ON c.customer_id = ac.customer_id;`.',

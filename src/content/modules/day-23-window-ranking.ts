@@ -153,7 +153,7 @@ export const Day_23_MODULE: ModuleData = {
       tasks: [
         {
           id: 'rownum-t1',
-          title: 'Task 1 (Guided): The price leaderboard',
+          title: 'Build a price leaderboard where every product gets a unique position',
           description: 'Marketing wants every product ranked from most to least expensive — without losing any product from the list.',
           instructions: [
             'Select `name`, `price`, and `ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank`.',
@@ -179,7 +179,7 @@ export const Day_23_MODULE: ModuleData = {
         },
         {
           id: 'rownum-t2',
-          title: 'Task 2 (Independent): Stock-level ranking',
+          title: 'Rank every product by stock level from highest to lowest',
           description: 'Ops wants products ranked by how much stock they hold, most first. Same tool, different column.',
           instructions: [
             'Select `name`, `quantity_in_stock`, and a ROW_NUMBER over `quantity_in_stock DESC` aliased AS `stock_rank`.',
@@ -325,7 +325,7 @@ export const Day_23_MODULE: ModuleData = {
       tasks: [
         {
           id: 'partition-t1',
-          title: 'Task 1 (Guided): Most expensive per category',
+          title: 'Find the most expensive product in every category',
           description: 'Give every category its own price ranking — most expensive first.',
           instructions: [
             'Select `name`, `category_id`, `price`, and `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS cat_rank`.',
@@ -351,7 +351,7 @@ export const Day_23_MODULE: ModuleData = {
         },
         {
           id: 'partition-t2',
-          title: 'Task 2 (Independent): Rank within each supplier',
+          title: 'Rank each supplier products separately',
           description: 'Procurement wants to see each supplier\'s most expensive products first. Rank products within each supplier (suppliers have up to 8 products each — a JOIN is not needed, the column lives on products).',
           instructions: [
             'Select `p.name`, `p.supplier_id`, `p.price` and a ROW_NUMBER partitioned BY `p.supplier_id`, ordered BY `p.price DESC`, aliased AS `sup_rank`.',
@@ -491,7 +491,7 @@ export const Day_23_MODULE: ModuleData = {
       tasks: [
         {
           id: 'rank-t1',
-          title: 'Task 1 (Guided): The tie-aware price leaderboard',
+          title: 'Build a price leaderboard where tied products share the same rank',
           description: 'Rebuild the price leaderboard with RANK() instead of ROW_NUMBER() — and observe what happens around the two $55.00 products.',
           instructions: [
             'Select `name`, `price`, and `RANK() OVER (ORDER BY price DESC) AS price_rank`.',
@@ -517,7 +517,7 @@ export const Day_23_MODULE: ModuleData = {
         },
         {
           id: 'rank-t2',
-          title: 'Task 2 (Independent): Predict, then verify',
+          title: 'Two products share the same price: What rank should the next product receive?',
           description: 'Before running anything: the stock leaderboard ranks by quantity_in_stock DESC. Predict by hand what RANK() does with the two products that have 20 units in stock (Wireless Earbuds and Pruning Shears). Then run it and check yourself.',
           instructions: [
             'Select `name`, `quantity_in_stock`, and `RANK() OVER (ORDER BY quantity_in_stock DESC) AS stock_rank`.',
@@ -642,7 +642,7 @@ export const Day_23_MODULE: ModuleData = {
       tasks: [
         {
           id: 'dense-t1',
-          title: 'Task 1 (Guided): The gapless leaderboard',
+          title: 'Build a leaderboard where tied prices do not leave ranking gaps',
           description: 'Produce the DENSE_RANK price leaderboard and compare it with yesterday\'s intuition — same tie, different continuation.',
           instructions: [
             'Select `name`, `price`, and `DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank`.',
@@ -668,7 +668,7 @@ export const Day_23_MODULE: ModuleData = {
         },
         {
           id: 'dense-t2',
-          title: 'Task 2 (Independent): All three, side by side',
+          title: 'Compare ROW_NUMBER(), RANK(), and DENSE_RANK() on the same products',
           description: 'One query, three ranking columns: ROW_NUMBER, RANK, and DENSE_RANK over price DESC. This is the comparison that makes tie behavior permanent.',
           instructions: [
             'Select `name`, `price`, then three window columns aliased `rn`, `rk`, and `drk` — each with its own OVER (ORDER BY price DESC).',
@@ -802,7 +802,7 @@ export const Day_23_MODULE: ModuleData = {
       tasks: [
         {
           id: 'topn-t1',
-          title: 'Task 1 (Guided): The 2 cheapest per category',
+          title: 'Find the two cheapest products in every category',
           description: 'Build the pattern from scratch: rank by ascending price within each category in a CTE, then keep the top 2.',
           instructions: [
             'CTE `ranked`: name, category_id, price, and `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price ASC) AS price_rank` FROM products.',
@@ -829,7 +829,7 @@ export const Day_23_MODULE: ModuleData = {
         },
         {
           id: 'topn-t2',
-          title: 'Task 2 (Independent): Top-3 best-sellers per category',
+          title: 'Find the three best-selling products in every category',
           description: 'Transfer to sales data: which 3 products sold the most units within each category? One more CTE is needed — sales per product first, then the ranking.',
           instructions: [
             'CTE `sold`: FROM `order_items oi` JOIN `products p` ON `oi.product_id = p.product_id`, select `p.product_id, p.name, p.category_id`, and `SUM(oi.quantity) AS total_sold`, GROUP BY the three product columns.',
@@ -869,7 +869,7 @@ export const Day_23_MODULE: ModuleData = {
     tasks: [
       {
         id: 'rank-hw-1',
-        title: 'Task 1: The official price leaderboard (ties handled)',
+        title: 'Build the official price leaderboard with ties handled correctly',
         description: 'The storefront\'s "Top prices" page needs the price leaderboard where equal prices share a rank and no rank is skipped afterwards. DENSE_RANK is the business choice: no gaps, ties shared.',
         instructions: [
           'Select `name`, `price`, and `DENSE_RANK() OVER (ORDER BY price DESC) AS price_rank` FROM `products`.',
@@ -893,7 +893,7 @@ export const Day_23_MODULE: ModuleData = {
         successMessage: 'Official leaderboard shipped — tie semantics chosen deliberately, not by accident.',
       },        {
           id: 'rank-hw-2',
-          title: 'Task 2: Top-3 premium products per category',
+          title: 'Find the three most expensive products in every category',
           description: 'Merchandising wants the 3 most expensive products of every category, cheapest of the three last.',
           instructions: [
             'CTE ranked: name, category_id, price, ROW_NUMBER partitioned BY category_id, ordered BY price DESC.',
@@ -918,7 +918,7 @@ export const Day_23_MODULE: ModuleData = {
           successMessage: 'Top-3 per category excluding unassigned stock - the pattern is now yours to aim at any N and any metric.',
         },      {
         id: 'rank-hw-3',
-        title: 'Task 3 (Stretch): Best-seller per supplier',
+        title: 'Find each supplier best-selling product',
         description: 'For the supplier review: the single best-selling product (by total units sold) for each supplier. Everything from today in one query — aggregate, join, partition, cut to 1.',
         instructions: [
           'CTE `sold`: FROM `order_items oi` JOIN `products p` ON `oi.product_id = p.product_id`; select `p.product_id, p.name, p.supplier_id, SUM(oi.quantity) AS total_sold`; GROUP BY the three product columns.',

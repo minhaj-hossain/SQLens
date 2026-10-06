@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 24 — Window Functions II: Running Metrics  (id: day-24 · order 24)
@@ -182,7 +182,7 @@ export const Day_24_MODULE: ModuleData = {
       tasks: [
         {
           id: 'running-total-t1',
-          title: 'Task 1 (Guided): Running revenue by month',
+          title: 'Build a month-by-month revenue report with a running total',
           description:
             "Finance wants a revenue trend table: each month's revenue side by side with the revenue to date. Build the exact pattern from the concept.",
           instructions: [
@@ -215,7 +215,7 @@ export const Day_24_MODULE: ModuleData = {
         },
         {
           id: 'running-total-t2',
-          title: 'Task 2 (Independent): Customer lifetime-spend ledger',
+          title: 'Build a running lifetime-spend ledger for every customer',
           description:
             "Support wants a ledger: for every order, the customer's cumulative spend up to that order. Same cumulative frame, new partition.",
           instructions: [
@@ -398,7 +398,7 @@ export const Day_24_MODULE: ModuleData = {
       tasks: [
         {
           id: 'lag-t1',
-          title: 'Task 1 (Guided): Month-over-month growth',
+          title: 'Calculate how revenue changed from one month to the next',
           description:
             "The CEO wants to see each month's revenue next to its growth vs the prior month. Use the exact two-stage pattern from the concept.",
           instructions: [
@@ -431,7 +431,7 @@ export const Day_24_MODULE: ModuleData = {
         },
         {
           id: 'lag-t2',
-          title: 'Task 2 (Independent): Days between a customer\'s orders',
+          title: 'Find the number of days between each customer orders',
           description:
             'Customer success wants to know how long each customer waits between orders. For each order after a customer\'s first, report the days elapsed since their previous order.',
           instructions: [
@@ -601,7 +601,7 @@ export const Day_24_MODULE: ModuleData = {
     tasks: [
       {
         id: 'metrics-hw-1',
-        title: 'Task 1: The executive revenue trend (running total + growth)',
+        title: 'Build an executive revenue trend with running revenue and growth',
         description:
           'Finance wants one table that tells the whole story: each month\'s revenue, the revenue to date, and the growth vs the previous month. Harness both of today\'s window functions in a single report.',
         instructions: [
@@ -633,7 +633,7 @@ export const Day_24_MODULE: ModuleData = {
       },
       {
         id: 'metrics-hw-2',
-        title: 'Task 2: Each customer\'s longest wait between orders',
+        title: 'Find each customer longest wait between two orders',
         description:
           'Retention analysis: for each repeat customer, what is the LONGEST gap between two consecutive orders (in days)? Customers with only one order do not appear.',
         instructions: [

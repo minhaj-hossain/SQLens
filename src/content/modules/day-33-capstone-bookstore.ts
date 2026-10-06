@@ -269,7 +269,7 @@ export const Day_33_MODULE: ModuleData = {
       tasks: [
         {
           id: 'cap-c2-t1',
-          title: 'Task 1 (Guided): CREATE the parent tables — publishers & authors',
+          title: 'Build the bookstore publisher and author tables',
           description: 'Create the two parent tables for the bookstore. Both use AUTO_INCREMENT primary keys; publishers.name must be UNIQUE.',
           instructions: [
             'Create `publishers` with `publisher_id INT PRIMARY KEY AUTO_INCREMENT` and `name VARCHAR(100) NOT NULL UNIQUE`.',
@@ -293,7 +293,7 @@ export const Day_33_MODULE: ModuleData = {
         },
         {
           id: 'cap-c2-t2',
-          title: 'Task 2 (Independent): CREATE the books table with its constraint ladder',
+          title: 'Build the books table with its keys and constraints',
           description: 'books is the many side of both relationships — it carries two foreign keys plus NOT NULL, CHECK, and DEFAULT guards.',
           instructions: [
             'Create `books` with `book_id INT PRIMARY KEY AUTO_INCREMENT`.',
@@ -317,7 +317,7 @@ export const Day_33_MODULE: ModuleData = {
         },
         {
           id: 'cap-c2-t3',
-          title: 'Task 3 (Independent): CREATE the sales table as the child of books',
+          title: 'Connect sales to books with the correct relationship',
           description: 'sales records each purchase. It references books and guards quantity to be positive.',
           instructions: [
             'Create `sales` with `sale_id INT PRIMARY KEY AUTO_INCREMENT`.',
@@ -425,7 +425,7 @@ export const Day_33_MODULE: ModuleData = {
       tasks: [
         {
           id: 'cap-c3-t1',
-          title: 'Task 1 (Guided): Seed the authors',
+          title: 'Populate the bookstore with its authors',
           description: 'Insert three authors. Omit the id column so AUTO_INCREMENT assigns it.',
           instructions: ["Insert into `authors (name)` the values 'James Clear', 'Michelle Obama', and 'Matt Haig' in one multi-row statement.", 'Do NOT supply author_id — AUTO_INCREMENT assigns 1, 2, 3.'],
           type: 'guided',
@@ -442,7 +442,7 @@ export const Day_33_MODULE: ModuleData = {
         },
         {
           id: 'cap-c3-t2',
-          title: 'Task 2 (Independent): Seed the publishers',
+          title: 'Add the publishers without breaking relationships',
           description: 'Insert two publishers — the second parent table.',
           instructions: ["Insert into `publishers (name)` the values 'HarperCollins' and 'Penguin Random House'.", 'AUTO_INCREMENT assigns publisher_id 1 and 2.'],
           type: 'independent',
@@ -461,7 +461,7 @@ export const Day_33_MODULE: ModuleData = {
           // Books need authors + publishers to already exist for FK references
           setupSql: BOOKSTORE_STAGE3_BOOKS_SETUP_SQL,
           id: 'cap-c3-t3',
-          title: 'Task 3 (Independent): Seed the books',
+          title: 'Populate the catalog with books linked to their authors and publishers',
           description: 'Insert four books referencing the author and publisher ids created above.',
           instructions: [
             "Insert into `books (title, author_id, publisher_id, genre, price, quantity_in_stock)`.",
@@ -486,7 +486,7 @@ export const Day_33_MODULE: ModuleData = {
           // Sales need schema + authors + publishers + books pre-populated for FK references
           setupSql: BOOKSTORE_STAGE3_SALES_SETUP_SQL,
           id: 'cap-c3-t4',
-          title: 'Task 4 (Independent): Seed the sales',
+          title: 'Record the bookstore sales',
           description: 'Insert five sales referencing the book ids, with a date, a positive quantity, and the price charged.',
           instructions: [
             "Insert into `sales (book_id, sale_date, quantity, unit_price)`.",
@@ -594,7 +594,7 @@ export const Day_33_MODULE: ModuleData = {
         {
           setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c4-t1',
-          title: 'Task 1 (Guided): The 3-way JOIN — readable sales',
+          title: 'Turn raw sales into a readable bookstore report',
           description: 'Turn every sale into a readable row: book title, author, publisher, quantity, and unit price.',
           instructions: [
             'Select `b.title`, `a.name AS author`, `p.name AS publisher`, `s.quantity`, `s.unit_price`.',
@@ -622,7 +622,7 @@ export const Day_33_MODULE: ModuleData = {
         {
           setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c4-t2',
-          title: 'Task 2 (Independent): Revenue per author',
+          title: 'Find how much revenue each author generated',
           description: 'Alice, the store analyst, wants total revenue per author so she can see who drives earnings.',
           instructions: [
             'Select `a.name AS author` and `SUM(s.quantity * s.unit_price) AS revenue`.',
@@ -651,7 +651,7 @@ export const Day_33_MODULE: ModuleData = {
         {
           setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c4-t3',
-          title: 'Task 3 (Independent): Rank the best-sellers with a window',
+          title: 'Rank the bookstore best-selling books',
           description: 'The marketing team needs a ranked best-seller board: aggregate copies sold per book, then rank by that total.',
           instructions: [
             'Build a CTE `sold` that selects `b.title` and `SUM(s.quantity) AS total_sold`, FROM `sales s` JOIN `books b` ON `s.book_id = b.book_id` and grouping by title.',
@@ -780,7 +780,7 @@ export const Day_33_MODULE: ModuleData = {
         {
           setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c5-t1',
-          title: 'Task 1 (Guided): Add an edition column to books',
+          title: 'The bookstore now tracks editions: Can you add the new column?',
           description: 'The store now sells multiple editions. Add an `edition` column to the live books table with a default so every existing row gets a value.',
           instructions: [
             'Alter the live `books` table to add a new column named `edition`.',
@@ -800,7 +800,7 @@ export const Day_33_MODULE: ModuleData = {
         {
           setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c5-t2',
-          title: 'Task 2 (Independent): Index titles and prove it with EXPLAIN',
+          title: 'Book searches are slow: Can you add an index and prove it works?',
           description: 'Title lookups are slow. Create an index on books(title), then EXPLAIN a title filter to confirm it no longer scans.',
           instructions: [
             'Create a secondary index named `idx_books_title` on the `title` column of `books`.',
@@ -830,7 +830,7 @@ export const Day_33_MODULE: ModuleData = {
         {
           setupSql: BOOKSTORE_FULL_SETUP_SQL,
           id: 'cap-c5-t3',
-          title: 'Task 3 (Challenge): The Rollback Lab',
+          title: 'A schema change goes wrong: Can you roll it back safely?',
           description: 'Test adding a book inside a transaction, then roll it back and prove the count returned to 4 — atomicity in action.',
           instructions: [
             'Open an explicit transaction block.',
@@ -870,7 +870,7 @@ export const Day_33_MODULE: ModuleData = {
     tasks: [
       {
         id: 'cap-ch-t1',
-        title: 'Task 1: Create the full schema from scratch',
+        title: 'Build the entire bookstore database from an empty database',
         description: 'Create all four tables in one script, parents before children, with every constraint.',
         instructions: [
           'Create `publishers (publisher_id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100) NOT NULL UNIQUE)`.',
@@ -892,7 +892,7 @@ export const Day_33_MODULE: ModuleData = {
       },
       {
         id: 'cap-ch-t2',
-        title: 'Task 2: Seed the whole store',
+        title: 'Populate the bookstore with a complete relational dataset',
         description:
           'Load every table with multi-row INSERTs, letting AUTO_INCREMENT assign the ids (parents first). Use exactly the store data listed below — the leadership dashboard in Task 3 is graded on the exact result these values produce.',
         instructions: [
@@ -921,7 +921,7 @@ export const Day_33_MODULE: ModuleData = {
       },
       {
         id: 'cap-ch-t3',
-        title: 'Task 3: The leadership revenue dashboard',
+        title: 'Build the leadership revenue dashboard query',
         description: 'Answer the COO: total revenue per author, richest first.',
         instructions: [
           'Select `a.name AS author` and `SUM(s.quantity * s.unit_price) AS revenue`.',
@@ -950,7 +950,7 @@ export const Day_33_MODULE: ModuleData = {
       },
       {
         id: 'cap-ch-t4',
-        title: 'Task 4: Keep the catalog fast',
+        title: 'Keep the bookstore catalog fast as the data grows',
         description: 'Add an index on books(title), then prove with EXPLAIN that a title lookup no longer scans.',
         instructions: [
           'Create an index named `idx_books_title` on the `title` column in `books`.',

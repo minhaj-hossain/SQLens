@@ -202,7 +202,7 @@ export const Day_19_MODULE: ModuleData = {
       },
       {
         id: 'day19-hw-2',
-        title: 'Task 2: Inactive customer temporal audit (90 days or zero orders)',
+        title: 'Increase one product price by 10% without changing other products',
         description: 'Audit customers whose last order is older than 90 days — or who never ordered at all. Rebuild the inactive account audit with relative dates and DATEDIFF.',
         instructions: [
           'FROM `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`; GROUP BY `c.customer_id, c.name`.',

@@ -114,7 +114,7 @@ export const Day_29_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl3-c1-t1',
-          title: 'Task 1 (Guided): Add a Column to a Live Table',
+          title: 'The live table needs a new field: Can you add it without losing data?',
           description: 'The live products catalog needs a tagline column. Add it to the existing table without touching any data that already exists.',
           instructions: [
             'Write an ALTER TABLE statement that adds a `tagline VARCHAR(120)` column to the `products` table.',
@@ -132,7 +132,7 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c1-t2',
-          title: 'Task 2 (Independent): Add a Backfilled Status Column',
+          title: 'Add a status field and give existing rows a sensible value',
           description: 'Add a `lifecycle_status` column to the products table that immediately populates all existing rows with a meaningful default, eliminating the need for a follow-up UPDATE.',
           instructions: [
             'Write an ALTER TABLE statement that adds `lifecycle_status VARCHAR(20)` to `products`, with a default value of "active".',
@@ -225,7 +225,7 @@ export const Day_29_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl3-c2-t1',
-          title: 'Task 1 (Guided): Create a Relationship-Guarded Table',
+          title: 'Create a table that refuses to reference a missing parent',
           description: 'Create a `wishlist_items` table whose product and customer references are enforced by the database. An item cannot reference a product or customer that does not exist.',
           instructions: [
             'Create a table named `wishlist_items` with three columns: `item_id INT AUTO_INCREMENT PRIMARY KEY`, `product_id INT` (mandatory), and `customer_id INT` (mandatory).',
@@ -244,7 +244,7 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c2-t2',
-          title: 'Task 2 (Independent): Verify Foreign Key Enforcement Against Orphan Inserts',
+          title: 'Someone tries to insert an orphan record: Can your foreign key stop them?',
           description: 'Confirm that the foreign key constraint on `wishlist_items.product_id` is actively enforced by attempting an insert that references a non-existent product. This task expects the insert to be rejected.',
           instructions: [
             'Attempt to insert a row into `wishlist_items` referencing a product that does not exist (e.g. product_id 999).',
@@ -342,7 +342,7 @@ export const Day_29_MODULE: ModuleData = {
       tasks: [
         {
           id: 'ddl3-c3-t1',
-          title: 'Task 1 (Guided): Create and Tear Down a Staging Table',
+          title: 'Create a temporary staging table and tear it down safely',
           description: 'Create a temporary staging table, then drop it using the safe, idempotent form. Run the DROP twice to observe that the second execution succeeds silently — that is idempotence.',
           instructions: [
             'Create a temporary staging table named `temp_order_staging` with `staging_id INT PRIMARY KEY` and `note VARCHAR(80)`.',
@@ -361,7 +361,7 @@ export const Day_29_MODULE: ModuleData = {
         },
         {
           id: 'ddl3-c3-t2',
-          title: 'Task 2 (Independent): Write a Reproducible Teardown Statement',
+          title: 'Write a teardown script that can be run repeatedly without errors',
           description: 'Write the teardown statement for a legacy table as part of a replayable cleanup script. The statement must succeed whether or not the table currently exists.',
           instructions: [
             'Write a DROP TABLE statement for `legacy_student_grades` that uses the IF EXISTS clause to make it safe to execute in any environment state.',
@@ -388,7 +388,7 @@ export const Day_29_MODULE: ModuleData = {
     tasks: [
       {
         id: 'ddl3-hw-1',
-        title: 'Task 1: Create a Child Table with Enforced Relationships',
+        title: 'Build a child table with enforced parent-child relationships',
         description: 'Create a `wishlists` table that enforces both of its parent relationships. A wishlist entry must reference a real product and a real customer — orphaned rows are structurally impossible.',
         instructions: [
           'Create a table named `wishlists`.',
@@ -412,7 +412,7 @@ export const Day_29_MODULE: ModuleData = {
       },
       {
         id: 'ddl3-hw-2',
-        title: 'Task 2: Add a Featured Flag to the Products Table',
+        title: 'Add a featured flag to the products table without losing existing data',
         description: 'Extend the live products table with a `featured` flag. All existing products must start as non-featured without requiring a separate UPDATE step.',
         instructions: [
           'Write an `ALTER TABLE` statement targeting the `products` table.',
@@ -430,7 +430,7 @@ export const Day_29_MODULE: ModuleData = {
       },
       {
         id: 'ddl3-hw-3',
-        title: 'Task 3: Write a Safe, Idempotent Teardown Statement',
+        title: 'Write a teardown script that is safe to run more than once',
         description: 'Complete the migration script with a teardown for the temporary import table. The statement must run cleanly regardless of whether the table currently exists.',
         instructions: [
           'Write a `DROP TABLE` statement targeting `temp_import_orders`.',

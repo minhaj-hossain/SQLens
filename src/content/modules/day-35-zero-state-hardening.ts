@@ -93,7 +93,7 @@ export const Day_35_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day35-c1-t1',
-          title: 'Task 1 (Guided Fix): Customer Order Volume Audit',
+          title: 'Your report hides customers with zero orders: Can you fix it?',
           description: 'List every customer together with how many orders they have placed. Customers who have never placed an order must still appear in the results, showing 0 orders.',
           instructions: [
             'Query `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`.',
@@ -119,7 +119,7 @@ export const Day_35_MODULE: ModuleData = {
         },
         {
           id: 'day35-c1-t2',
-          title: 'Task 2 (Transfer): Catalog Sales Volume Audit with COALESCE',
+          title: 'Products with no sales show NULL instead of 0: Can you fix the report?',
           description: 'Show the total units sold for every product. Products that have never been purchased must appear too — their total should show 0 instead of being empty or missing.',
           instructions: [
             'Query `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -156,7 +156,7 @@ export const Day_35_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day35-hw-1',
-        title: 'Task 1: Customer order roster with 0-order preservation',
+        title: 'Build a customer order report that includes customers with zero orders',
         description: 'Customer order roster preserving all customers (LEFT JOIN).',
         instructions: [
           'Select `c.customer_id`, `c.name`, `COUNT(o.order_id) AS total_orders` from `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id` GROUP BY `c.customer_id`, `c.name`.',

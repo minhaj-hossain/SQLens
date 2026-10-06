@@ -91,7 +91,7 @@ export const Day_27_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day20-c1-t1',
-          title: 'Task 1 (Guided): Create the Product Tags Table',
+          title: 'Can you design a table for product tags?',
           description: 'Define the table schema for product tags to allow categorizing inventory items with tags.',
           instructions: [
             'Create a new table named `product_tags`.',
@@ -116,7 +116,7 @@ export const Day_27_MODULE: ModuleData = {
         },
         {
           id: 'day20-c1-t2',
-          title: 'Task 2 (Independent): Create Quick Notes Table',
+          title: 'Can you create a simple notes table with the right columns?',
           description: 'Create a storage table named `quick_notes` for internal team notes.',
           instructions: [
             'Create a new table named `quick_notes`.',
@@ -223,7 +223,7 @@ export const Day_27_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day20-c2-t1',
-          title: 'Task 1 (Guided): Create Product Metrics Table',
+          title: 'Choose the right data types for product metrics',
           description: 'Define a table named `product_metrics` to record physical package characteristics and log timestamps.',
           instructions: [
             'Create a table named `product_metrics`.',
@@ -250,7 +250,7 @@ export const Day_27_MODULE: ModuleData = {
         },
         {
           id: 'day20-c2-t2',
-          title: 'Task 2 (Independent): Create Customer Preferences Table',
+          title: 'Design a customer preferences table with appropriate data types',
           description: 'Define a table named `customer_preferences` to track marketing subscriptions and financial budgets.',
           instructions: [
             'Create a table named `customer_preferences`.',
@@ -350,7 +350,7 @@ export const Day_27_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day20-c3-t1',
-          title: 'Task 1 (Guided): Create Categories Table with Primary Key',
+          title: 'Create a categories table where every category gets a unique ID',
           description: 'Create a new table named `categories_new` with an automatically incrementing primary key.',
           instructions: [
             'Create a table named `categories_new`.',
@@ -375,7 +375,7 @@ export const Day_27_MODULE: ModuleData = {
         },
         {
           id: 'day20-c3-t2',
-          title: 'Task 2 (Independent): Create Departments Table with Primary Key',
+          title: 'Create a departments table with automatically generated IDs',
           description: 'Define an organizational `departments` table using an auto-generated primary key.',
           instructions: [
             'Create a table named `departments`.',
@@ -414,7 +414,7 @@ export const Day_27_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day27-hw-1',
-        title: 'Task 1 (Challenge): Design the Product Reviews Table',
+        title: 'Design a product reviews table from the requirements',
         description: 'Design and create a resilient `product_reviews` schema that enforces identity, non-null relationships, rating domain validation, and automatic timestamping.',
         instructions: [
           'Create a table named `product_reviews`.',
@@ -442,7 +442,7 @@ export const Day_27_MODULE: ModuleData = {
       },
       {
         id: 'day27-hw-2',
-        title: 'Task 2 (Challenge): Aggregate Product Rating Performance',
+        title: 'Build a rating report to measure product performance',
         description: 'Compute summary metrics across catalog products by linking products to customer review records.',
         instructions: [
           'Query from `products p` joined with `reviews r` on matching product IDs.',

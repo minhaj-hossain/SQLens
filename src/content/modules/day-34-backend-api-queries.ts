@@ -91,7 +91,7 @@ export const Day_34_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day34-c1-t1',
-          title: 'Mission 1 (Guided): Product Detail View Endpoint Query',
+          title: 'Build the single query behind a product detail page',
           description: 'Retrieve product information with category name and supplier name for `product_id = 1`.',
           instructions: [
             'Select `p.product_id`, `p.name`, `p.price`, `c.name AS category_name`, `s.name AS supplier_name` from `products p` JOIN `categories c` ON `p.category_id = c.category_id` JOIN `suppliers s` ON `p.supplier_id = s.supplier_id` WHERE `p.product_id = 1`.',
@@ -115,7 +115,7 @@ export const Day_34_MODULE: ModuleData = {
         },
         {
           id: 'day34-c1-t2',
-          title: 'Mission 2 (Independent): Executive Dashboard KPI Summary Query',
+          title: 'Build one query that gives the executive dashboard all its key metrics',
           description: 'Calculate overall total distinct orders and grand total revenue in a single query.',
           instructions: [
             'Query `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
@@ -150,7 +150,7 @@ export const Day_34_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day34-hw-1',
-        title: 'Endpoint 1: "Get Product Detail Page" Query',
+        title: 'Power the product detail endpoint with one efficient query',
         description: 'Product info + category name + supplier name for product 1.',
         instructions: [
           'Select `p.product_id`, `p.name`, `p.price`, `c.name AS category_name`, `s.name AS supplier_name` from `products p` JOIN `categories c` ON `p.category_id = c.category_id` JOIN `suppliers s` ON `p.supplier_id = s.supplier_id` WHERE `p.product_id = 1`.',
@@ -174,7 +174,7 @@ export const Day_34_MODULE: ModuleData = {
       },
       {
         id: 'day34-hw-2',
-        title: 'Endpoint 2: "Executive Dashboard KPI Query" (Revenue & Orders)',
+        title: 'Power the executive dashboard with one revenue and order summary query',
         description: 'Calculate grand total revenue and total distinct order count in a single query.',
         instructions: [
           'Select `COUNT(DISTINCT o.order_id) AS total_orders`, `SUM(oi.quantity * oi.unit_price) AS total_revenue` from `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',

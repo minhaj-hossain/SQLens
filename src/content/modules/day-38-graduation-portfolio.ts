@@ -97,7 +97,7 @@ export const Day_38_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day38-c1-t1',
-          title: 'Exploration 1: Rank Products within Categories',
+          title: 'Rank every product within its own category',
           description: 'Use ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) to rank products in each category.',
           instructions: [
             'Select `name`, `category_id`, `price`, `ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS category_rank` from `products`.',
@@ -119,7 +119,7 @@ export const Day_38_MODULE: ModuleData = {
         },
         {
           id: 'day38-c1-t2',
-          title: 'Exploration 2: Top 2 Products per Category via CTE',
+          title: 'Find the top two products in every category using a CTE',
           description: 'Combine a Window Function with a CTE to extract only the top 2 highest priced products per category.',
           instructions: [
             'Define `WITH RankedProducts AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS rank_num FROM products)`.',
@@ -152,7 +152,7 @@ export const Day_38_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day38-hw-1',
-        title: 'Graduation Milestone: Top 2 Most Expensive Products in Each Category',
+        title: 'Build the final top-two product report for every category',
         description: 'Find the top 2 most expensive products in each category using ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC).',
         instructions: [
           'Use `WITH RankedProducts AS (SELECT name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS rank_num FROM products) SELECT * FROM RankedProducts WHERE rank_num <= 2;`.',

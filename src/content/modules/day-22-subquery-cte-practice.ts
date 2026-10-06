@@ -94,7 +94,7 @@ export const Day_22_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day18-c1-t1',
-          title: 'Task 1 (High Guidance): Products Above Category Average',
+          title: 'Find products that beat their category average price',
           description: 'Find products that cost more than the average price of the products in their own category. Show name, price, and category_id.',
           instructions: [
             'Query `products p1`.',
@@ -120,7 +120,7 @@ export const Day_22_MODULE: ModuleData = {
         },
         {
           id: 'day18-c1-t2',
-          title: 'Task 2 (Partial Guidance): High Spenders Tier CTE (> $150)',
+          title: 'Build a customer spending report and find customers above $150',
           description: 'Build a CTE named CustomerSpend to calculate total spend per customer, then query customers who spent more than $150.',
           instructions: [
             'Define `WITH CustomerSpend AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name)`.',
@@ -146,7 +146,7 @@ export const Day_22_MODULE: ModuleData = {
         },
         {
           id: 'day18-c1-t3',
-          title: 'Task 3 (Goal Only): CTE Refactoring Challenge',
+          title: 'Refactor this deeply nested query into clear CTE stages',
           description: 'Create a CTE named HighValueOrders that selects order_id and order_date from orders having status = "delivered", then join it with order_items to sum total revenue per order for delivered orders.',
           instructions: [
             'Define `WITH DeliveredOrders AS (SELECT order_id, order_date FROM orders WHERE status = \'delivered\')`.',
@@ -188,7 +188,7 @@ export const Day_22_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day18-hw-1',
-        title: 'Task 1: Products priced above their own category average',
+        title: 'Find products that beat the average price of their category',
         description: 'Find products whose price is higher than the average price of the products in the same category. Show name and price.',
         instructions: [
           'Select `p1.name`, `p1.price` from `products p1` where `p1.price > (SELECT AVG(p2.price) FROM products p2 WHERE p2.category_id = p1.category_id)`.',
@@ -210,7 +210,7 @@ export const Day_22_MODULE: ModuleData = {
       },
       {
         id: 'day18-hw-2',
-        title: 'Task 2: CTE that calculates spend per customer, then queries for customers above $150',
+        title: 'Build a CTE pipeline to find customers who spent more than $150',
         description: 'CTE that calculates total spend per customer, then queries that CTE for customers above $150.',
         instructions: [
           'Use `WITH CustomerSpend AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerSpend WHERE total_spent > 150 ORDER BY total_spent DESC;`.',

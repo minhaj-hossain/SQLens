@@ -107,7 +107,7 @@ export const Day_31_MODULE: ModuleData = {
       tasks: [
         {
           id: 'perf-c1-t1',
-          title: 'Task 1 (Guided): Confirm a scan on the whole products table',
+          title: 'Can you prove that this query is scanning the entire products table?',
           description: 'Run EXPLAIN on a query that reads all of products. You should see type: ALL and key: null.',
           instructions: [
             'Generate the execution plan for a query selecting all columns from `products`.',
@@ -137,7 +137,7 @@ export const Day_31_MODULE: ModuleData = {
         },
         {
           id: 'perf-c1-t2',
-          title: 'Task 2 (Independent): A filtered query can still scan',
+          title: 'The query has a WHERE clause but is still scanning everything: Can you explain why?',
           description: 'Even with a WHERE clause, a column without an index causes a scan. Run EXPLAIN on WHERE price > 50 and confirm type stays ALL.',
           instructions: [
             'Inspect the execution plan for filtering `products` where `price` is greater than 50.',
@@ -242,7 +242,7 @@ export const Day_31_MODULE: ModuleData = {
       tasks: [
         {
           id: 'perf-c2-t1',
-          title: 'Task 1 (Guided): A PRIMARY KEY lookup — the cheapest plan',
+          title: 'Inspect the execution plan for a primary-key lookup',
           description: 'Run EXPLAIN on a product_id = 7 lookup and confirm the PK index is used (type: const, key: PRIMARY, rows: 1).',
           instructions: [
             'Inspect the execution plan for retrieving a single product by primary key (`product_id = 7`).',
@@ -272,7 +272,7 @@ export const Day_31_MODULE: ModuleData = {
         },
         {
           id: 'perf-c2-t2',
-          title: 'Task 2 (Independent): Create an index and watch the plan change',
+          title: 'Create an index and prove that the query plan changed',
           description: 'supplier_id has no index yet. Create one, then re-explain a supplier lookup — the plan should flip from ALL to ref.',
           instructions: [
             'Run `CREATE INDEX idx_products_supplier ON products(supplier_id);` - a secondary index on the `supplier_id` column of `products`.',
@@ -381,7 +381,7 @@ export const Day_31_MODULE: ModuleData = {
       tasks: [
         {
           id: 'perf-c3-t1',
-          title: 'Task 1 (Guided): Run the loop on a category filter',
+          title: 'This category search is slow: Can you diagnose and optimize it?',
           description: 'category_id has no index. Create one and prove the plan changed: ALL → ref.',
           instructions: [
             'Create a secondary index named `idx_products_category` on the `category_id` column in `products`.',
@@ -409,7 +409,7 @@ export const Day_31_MODULE: ModuleData = {
         },
         {
           id: 'perf-c3-t2',
-          title: 'Task 2 (Independent): Convert a range scan into range',
+          title: 'Can you turn an unindexed range search into an indexed range scan?',
           description: 'The price > 50 filter was ALL earlier. Create an index on price and watch type become range.',
           instructions: [
             'Create a secondary B-tree index named `idx_products_price` on the `price` column of `products`.',
@@ -449,7 +449,7 @@ export const Day_31_MODULE: ModuleData = {
     tasks: [
       {
         id: 'perf-hw-1',
-        title: 'Task 1 (Challenge): Confirm the slow query scans (orders.customer_id)',
+        title: 'Prove that the customer-order query is doing a full scan',
         description: 'Run EXPLAIN on a customer_id filter in orders. There is no index on customer_id → you should see type: ALL.',
         instructions: [
           'Inspect the baseline execution plan for selecting from `orders` where `customer_id` equals 3.',
@@ -479,7 +479,7 @@ export const Day_31_MODULE: ModuleData = {
       },
       {
         id: 'perf-hw-2',
-        title: 'Task 2 (Challenge): Create the index on orders.customer_id',
+        title: 'Add the index that the query actually needs',
         description: 'Create an index on orders(customer_id) and verify with EXPLAIN that the access type transitions from ALL to ref.',
         instructions: [
           'Create an index named `idx_orders_customer` on `orders(customer_id)`.',
@@ -508,7 +508,7 @@ export const Day_31_MODULE: ModuleData = {
       },
       {
         id: 'perf-hw-3',
-        title: 'Task 3 (Challenge): Clean up — DROP the index and confirm reversion',
+        title: 'Remove the index and prove the slow plan comes back',
         description: 'Drop the index you just created (state carries over between tasks), then EXPLAIN again. The plan must return to ALL.',
         instructions: [
           'Drop the newly created index `idx_orders_customer` from the `orders` table.',
@@ -537,7 +537,7 @@ export const Day_31_MODULE: ModuleData = {
       },
       {
         id: 'perf-hw-4',
-        title: 'Task 4 (Challenge): Prove a PRIMARY KEY lookup never needed a custom index',
+        title: 'Prove that the primary key already gives you the index you need',
         description: 'orders.order_id is the primary key — show its plan is const / PRIMARY without any custom index.',
         instructions: [
           'Inspect the execution plan for a lookup filtering `orders` where `order_id` equals 3.',

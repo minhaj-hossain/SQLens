@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 32 - SECURITY & PRODUCTION SAFETY (id: day-32, order 32)
@@ -137,7 +137,7 @@ export const Day_32_MODULE: ModuleData = {
       tasks: [
         {
           id: 'sec-c1-t1',
-          title: 'Task 1 (Guided): The honest query - what the app MEANT to run',
+          title: 'What SQL did the application intend to run? Inspect the honest query',
           description: 'First, establish the baseline: an honest search for a customer by name returns exactly one row.',
           instructions: [
             "Select `customer_id`, `name`, `email` from `customers`.",
@@ -159,7 +159,7 @@ export const Day_32_MODULE: ModuleData = {
         },
         {
           id: 'sec-c1-t2',
-          title: "Task 2 (Independent): Run the attack - `' OR '1'='1`",
+          title: 'Can you demonstrate how malicious input bypasses the login filter?',
           description: "Now concatenate the attacker's payload instead of the honest name and run the result. Watch the WHERE clause collapse.",
           instructions: [
             "Select `customer_id`, `name`, `email` from `customers`.",
@@ -183,7 +183,7 @@ export const Day_32_MODULE: ModuleData = {
         },
         {
           id: 'sec-c1-t3',
-          title: 'Task 3 (Independent): Escalate - exfiltrate another table with UNION',
+          title: 'Exfiltrate sensitive data from another table using a UNION attack',
           description: 'Bypassing a filter is bad; reading a table the endpoint never owned is worse. Append a second SELECT with UNION and leak the suppliers.',
           instructions: [
             "Start from the bypass: `SELECT name, email FROM customers WHERE name = ''` (matches nothing on its own).",
@@ -319,7 +319,7 @@ export const Day_32_MODULE: ModuleData = {
       tasks: [
         {
           id: 'sec-c2-t1',
-          title: 'Task 1 (Guided): The bound-numeric lookup',
+          title: 'Can you turn the numeric lookup into a safe parameterized query?',
           description: 'The customer profile endpoint takes an id. Parameterized, the id arrives as an actual number - the SQL shape is fixed before any data shows up.',
           instructions: [
             'Select `customer_id`, `name`, `city` from `customers`.',
@@ -341,7 +341,7 @@ export const Day_32_MODULE: ModuleData = {
         },
         {
           id: 'sec-c2-t2',
-          title: 'Task 2 (Independent): Feed the payload to the bound-string version',
+          title: 'The injection payload is back: Can your parameterized query stop it?',
           description: "Same attack, parameterized: the payload is bound as the *value* of name. Predict the row count before you run it.",
           instructions: [
             "Select `customer_id`, `name` from `customers`.",
@@ -365,7 +365,7 @@ export const Day_32_MODULE: ModuleData = {
         },
         {
           id: 'sec-c2-t3',
-          title: 'Task 3 (Independent): Whitelist the sort column',
+          title: 'The sort column is user-controlled: Can you safely whitelist it?',
           description: 'ORDER BY cannot take a parameter - so the backend whitelists it. You are the whitelist: only a server-side constant may reach the sort.',
           instructions: [
             'Select `product_id`, `name`, `price` from `products` where `category_id = 1` (Electronics).',
@@ -501,7 +501,7 @@ export const Day_32_MODULE: ModuleData = {
       tasks: [
         {
           id: 'sec-c3-t1',
-          title: 'Task 1 (Guided): Dry-run a 50% discount - then prove the ROLLBACK erased it',
+          title: 'A 50% discount update looks risky: Can you test it and roll it back safely?',
           description: 'Marketing wants every Electronics price halved. Before touching live data, rehearse it: BEGIN, UPDATE, ROLLBACK, then prove the table never changed.',
           instructions: [
             'Initiate an explicit transaction block.',
@@ -534,7 +534,7 @@ export const Day_32_MODULE: ModuleData = {
         },
         {
           id: 'sec-c3-t2',
-          title: 'Task 2 (Independent): Ship the guarded version - commit only what passed review',
+          title: 'The update passed review: Can you commit only the intended changes?',
           description: 'The dry-run looked right. Now ship the guarded change: a narrowed WHERE plus a COMMIT, and verify the final catalog state.',
           instructions: [
             'Initiate an explicit transaction.',
@@ -563,7 +563,7 @@ export const Day_32_MODULE: ModuleData = {
         },
         {
           id: 'sec-c3-t3',
-          title: 'Task 3 (Stretch): Think like a least-privilege reporting role',
+          title: 'A reporting role needs database access: What should it be allowed to do?',
           description: 'A read-only reporting integration needs two columns - not the whole table. Write the query the way a least-privilege account should run it.',
           instructions: [
             'Select only `name` and `price` from `products` (no `SELECT *`).',
@@ -599,7 +599,7 @@ export const Day_32_MODULE: ModuleData = {
     tasks: [
       {
         id: 'sec-ch-t1',
-        title: 'Task 1: Replay the breach (so it never happens twice)',
+        title: 'Reproduce the vulnerable login query to understand how it fails',
         description: "Reproduce the finding: the email-search endpoint concatenates input. Run the attacker's payload against it and capture the evidence.",
         instructions: [
           "The endpoint builds: `SELECT customer_id, name, email FROM customers WHERE email = '<input>'`.",
@@ -621,7 +621,7 @@ export const Day_32_MODULE: ModuleData = {
       },
       {
         id: 'sec-ch-t2',
-        title: 'Task 2: Ship the parameterized rewrite',
+        title: 'Rewrite the vulnerable query so the attack becomes harmless',
         description: 'Finding #2: the profile endpoint must take a bound id. Write the exact SQL the prepared statement produces for customer 7.',
         instructions: [
           'Select `customer_id`, `name`, `city` from `customers`.',
@@ -643,7 +643,7 @@ export const Day_32_MODULE: ModuleData = {
       },
       {
         id: 'sec-ch-t3',
-        title: 'Task 3: Drill the guarded pending-order migration',
+        title: 'Safely migrate pending orders without risking an accidental mass update',
         description: "Finding #3: ops ships UPDATEs unrehearsed. Run the drill for real - begin, update pending orders placed before 2026-08-15 to 'shipped', commit, and verify.",
         instructions: [
           'Start an explicit transaction block.',

@@ -94,7 +94,7 @@ export const Day_36_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day24-c1-t1',
-          title: 'Warmup 1: Top 3 Categories by Revenue',
+          title: 'Which three categories generated the most revenue?',
           description: 'Calculate top 3 categories by total revenue generated across order items.',
           instructions: [
             'Select `cat.name`, `SUM(oi.quantity * oi.unit_price) AS category_revenue` from `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -122,7 +122,7 @@ export const Day_36_MODULE: ModuleData = {
         },
         {
           id: 'day24-c1-t2',
-          title: 'Warmup 2: Above-Average Customer Spenders (CTE)',
+          title: 'Which customers spent more than the average customer?',
           description: 'Find customers whose total spend is higher than the overall average customer spend using a CTE.',
           instructions: [
             'Define `WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name)`.',
@@ -158,7 +158,7 @@ export const Day_36_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day36-hw-1',
-        title: 'Deliverable 1 (Complex Retrieval): Top 3 categories by revenue',
+        title: 'Build the top-three revenue category report',
         description: 'Top 3 categories by revenue (categories → products → order_items).',
         instructions: [
           'Select `cat.name`, `SUM(oi.quantity * oi.unit_price) AS category_revenue` from `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `cat.category_id`, `cat.name` ORDER BY `category_revenue DESC` LIMIT 3.',
@@ -184,7 +184,7 @@ export const Day_36_MODULE: ModuleData = {
       },
       {
         id: 'day36-hw-2',
-        title: 'Deliverable 2 (CTE Analysis): Customers with above-average total spend',
+        title: 'Find every customer whose total spending beats the average',
         description: 'Find customers whose total spend is higher than the overall average customer spend.',
         instructions: [
           'Use `WITH CustomerTotals AS (SELECT c.customer_id, c.name, SUM(oi.quantity * oi.unit_price) AS total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_items oi ON o.order_id = oi.order_id GROUP BY c.customer_id, c.name) SELECT * FROM CustomerTotals WHERE total_spent > (SELECT AVG(total_spent) FROM CustomerTotals) ORDER BY total_spent DESC;`.',
@@ -207,7 +207,7 @@ export const Day_36_MODULE: ModuleData = {
       },
       {
         id: 'day36-hw-3',
-        title: 'Deliverable 3 (Schema DDL): Add status column to products with default',
+        title: 'Add a default status to the products table without losing existing data',
         description: 'Add a status column to products: `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`.',
         instructions: [
           'Execute `ALTER TABLE products ADD COLUMN status VARCHAR(20) DEFAULT \'active\';`.',
@@ -229,7 +229,7 @@ export const Day_36_MODULE: ModuleData = {
       },
       {
         id: 'day36-hw-4',
-        title: 'Deliverable 4 (Index Optimization): Create index on orders(customer_id)',
+        title: 'Speed up customer-order lookups with the right index',
         description: 'Create an index named idx_orders_customer_id on orders(customer_id).',
         instructions: [
           'Execute `CREATE INDEX idx_orders_customer_id ON orders(customer_id);`.',

@@ -238,7 +238,7 @@ export const Day_37_MODULE: ModuleData = {
       tasks: [
         {
           id: 'gauntlet-t1',
-          title: 'Task 1: The second-highest price',
+          title: 'Find the second-highest product price without using simple LIMIT offset tricks',
           description: '"What is the second-highest distinct product price in the catalog?" One row out, no tie fudging.',
           instructions: [
             'SELECT DISTINCT price FROM products (ties must collapse to one value).',
@@ -265,7 +265,7 @@ export const Day_37_MODULE: ModuleData = {
         },
         {
           id: 'gauntlet-t2',
-          title: 'Task 2: Priced above the catalog average',
+          title: 'Find every product priced above the catalog average',
           description: '"Which products cost more than the average price of the whole catalog?"',
           instructions: [
             'SELECT name, price FROM products.',
@@ -300,7 +300,7 @@ export const Day_37_MODULE: ModuleData = {
     tasks: [
       {
         id: 'gauntlet-hw-1',
-        title: 'Task 1: Top-3 premium products per category',
+        title: 'Find the three most expensive products in every category',
         description: 'The most expensive 3 products of every category, cheapest of the three last. The single most-asked modern SQL interview question.',
         instructions: [
           'CTE ranked: name, category_id, price, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY price DESC) AS price_rank.',
@@ -325,7 +325,7 @@ export const Day_37_MODULE: ModuleData = {
       },
       {
         id: 'gauntlet-hw-2',
-        title: 'Task 2: The executive revenue trend',
+        title: 'Build the executive revenue trend',
         description: 'Month, revenue, running total, and month-over-month growth - one query, two window functions. Verified against the store ledger.',
         instructions: [
           'CTE monthly: FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id`; select MONTH(o.order_date) AS mon, SUM(oi.quantity * oi.unit_price) AS revenue; GROUP BY the month expression.',
@@ -353,7 +353,7 @@ export const Day_37_MODULE: ModuleData = {
       },
       {
         id: 'gauntlet-hw-3',
-        title: 'Task 3: The fan-out count',
+        title: 'Fix the fan-out count and return the correct totals',
         description: '"How many distinct orders does the ledger actually contain?" Asked after showing the candidate an orders-to-order_items join.',
         instructions: [
           'FROM `orders o` JOIN `order_items oi` ON `o.order_id = oi.order_id` — orders is the one side, order_items the many side, so each order fans out to its line items.',

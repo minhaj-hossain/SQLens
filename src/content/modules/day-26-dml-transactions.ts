@@ -152,7 +152,7 @@ export const Day_26_MODULE: ModuleData = {
       tasks: [
         {
           id: 'tx-c1-t1',
-          title: 'Task 1 (Guided): Open, Mutate, Commit',
+          title: 'Make several changes, then decide whether to commit them',
           description: 'Execute the minimal transaction lifecycle: open a transaction, insert the flash-sale product `(\'Flash Sale Mouse\', 1, 1, 9.99, 100, 20)` into the `products` table, then commit it to make the change permanent.',
           instructions: [
             'Open a transaction using the appropriate SQL keyword.',
@@ -178,7 +178,7 @@ export const Day_26_MODULE: ModuleData = {
         },
         {
           id: 'tx-c1-t2',
-          title: 'Task 2 (Independent): Commit a Batch of Flash-Sale Items',
+          title: 'Prepare all three flash-sale products and commit them together',
           description: 'The marketing team approved three flash-sale products. Wrap all three inserts as a single atomic unit so the catalog update either lands completely or not at all.',
           instructions: [
             'Open a transaction.',
@@ -204,7 +204,7 @@ export const Day_26_MODULE: ModuleData = {
         },
         {
           id: 'tx-c1-t3',
-          title: 'Task 3 (Independent): Verify Durability with SELECT',
+          title: 'The transaction was committed: Can you verify the changes survived?',
           description: 'After committing, prove the rows survived by querying them back. Write a SELECT that retrieves all flash-sale products from the committed transaction.',
           instructions: [
             'Write a SELECT query that retrieves the name column for all products whose name begins with "Flash Sale".',
@@ -230,7 +230,7 @@ export const Day_26_MODULE: ModuleData = {
         },
         {
           id: 'tx-c1-t4',
-          title: 'Task 4 (Challenge): Commit an Order and Its Line Items Atomically',
+          title: 'Create an order and its line items as one atomic operation',
           description: 'An order is never a single row — it requires a parent row in `orders` and at least one row in `order_items`. Insert both within one transaction so the order can never be left half-built.',
           instructions: [
             'Open a transaction.',
@@ -352,7 +352,7 @@ export const Day_26_MODULE: ModuleData = {
       tasks: [
         {
           id: 'tx-c2-t1',
-          title: 'Task 1 (Guided): Undo a Price Change with ROLLBACK',
+          title: 'You changed the wrong price: Can you undo it with ROLLBACK?',
           description: 'Product 1 received an unplanned 10% price increase. Apply it inside a transaction, inspect the provisional result, then discard the change using ROLLBACK.',
           instructions: [
             'Open a transaction.',
@@ -379,7 +379,7 @@ export const Day_26_MODULE: ModuleData = {
         },
         {
           id: 'tx-c2-t2',
-          title: 'Task 2 (Independent): Verify the Rollback with SELECT',
+          title: 'The transaction was rolled back: Can you prove the old data is back?',
           description: 'Write a SELECT query that confirms product 1 is back at its original price of 15.99 following the rollback.',
           instructions: [
             'Write a SELECT that returns the name and price of product 1.',
@@ -524,7 +524,7 @@ export const Day_26_MODULE: ModuleData = {
       tasks: [
         {
           id: 'tx-c3-t1',
-          title: 'Task 1 (Guided): Trigger the Foreign-Key Violation',
+          title: 'A foreign key error breaks step two: What happens to step one?',
           description: 'Run a single INSERT that references a category that does not exist. Do NOT wrap it in BEGIN/ROLLBACK — the goal here is simply to watch the engine reject it with a foreign-key error. That error is the expected and correct result.',
           instructions: [
             'Write a single INSERT into `products` that uses `category_id = 999` (a category that does not exist).',
@@ -548,7 +548,7 @@ export const Day_26_MODULE: ModuleData = {
         },
         {
           id: 'tx-c3-t2',
-          title: 'Task 2 (Independent): Prove Atomicity — Full Batch Inside a Transaction',
+          title: 'Make a multi-step operation fail and prove that none of its changes remain',
           description: 'Now run the full failure scenario inside a transaction. Insert one valid row, then one row with a bad category_id. After the constraint fires, ROLLBACK and confirm that zero rows survived — not even the valid one.',
           instructions: [
             'Open a transaction with `BEGIN;`.',
@@ -586,7 +586,7 @@ export const Day_26_MODULE: ModuleData = {
     tasks: [
       {
         id: 'tx-hw-1',
-        title: 'Task 1: Open the Go-Live Transaction',
+        title: 'Prepare the flash-sale launch inside one transaction',
         description: 'The catalog change starts now. Open a transaction to keep the entire batch provisional until you are ready to commit it.',
         instructions: ['Write the SQL statement that opens a new transaction.'],
         type: 'challenge',
@@ -602,7 +602,7 @@ export const Day_26_MODULE: ModuleData = {
       },
       {
         id: 'tx-hw-2',
-        title: 'Task 2: Seed All Three Flash-Sale Products in One Statement',
+        title: 'Add all three flash-sale products together',
         description: 'One multi-row INSERT adds the entire sale catalog atomically. If any tuple is invalid, none will land — that is the protection you need on go-live day.',
         instructions: [
           'Write a single multi-row INSERT into `products (name, supplier_id, category_id, price, quantity_in_stock, reorder_level)` that adds all three flash-sale products: Flash Sale Mouse (supplier 1, category 1, $9.99, 100 stock, reorder 20), Flash Sale Speaker (supplier 2, category 1, $19.99, 80 stock, reorder 15), and Flash Sale Pan (supplier 3, category 2, $24.99, 60 stock, reorder 10).',
@@ -622,7 +622,7 @@ export const Day_26_MODULE: ModuleData = {
       },
       {
         id: 'tx-hw-3',
-        title: 'Task 3: Commit the Go-Live',
+        title: 'Commit the launch only when every step succeeds',
         description: 'The batch is complete and correct. Make it permanent by committing the transaction.',
         instructions: ['Write the SQL statement that commits the open transaction, making all changes durable.'],
         type: 'challenge',
@@ -638,7 +638,7 @@ export const Day_26_MODULE: ModuleData = {
       },
       {
         id: 'tx-hw-4',
-        title: 'Task 4: Verify Durability with SELECT',
+        title: 'Verify that the committed changes are still present',
         description: 'Confirm the committed batch is durable by querying the flash-sale catalog back. All three rows must be present.',
         instructions: [
           'Write a SELECT that retrieves the name and price of all flash-sale products, ordered by name.',
