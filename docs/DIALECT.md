@@ -421,3 +421,18 @@ never sees "passed" while one engine rejects the SQL.
   atomic module. It flags suspected bundling (`Composite + covering +
   partial`, `JSON + UUID + ENUM`, `Backup + PITR + migration`) for review.
 
+---
+
+## 11. Prisma Track Dialect & Runtime Standards
+
+> **Status: Normative for `track: 'prisma'`.**
+
+| Aspect | Ruling | Details |
+|---|---|---|
+| **Pinned Version** | **Prisma 5.22 LTS** | Stable single-schema datasource configuration (`datasource db { provider = "postgresql", url = env("DATABASE_URL") }`). Standard dual compilation pipeline. |
+| **Primary Database Target** | **PostgreSQL** | PostgreSQL syntax, error codes, and behavioral invariants are the normative reference (with SQLite in-memory simulation for interactive sandbox tasks). |
+| **Compilation Pipeline** | **Dual Compilation** | `npx prisma generate` compiles the TypeScript client to `node_modules/@prisma/client`; `npx prisma migrate dev` creates and executes SQL migrations against the physical database. |
+| **Financial & Metric Modeling** | **Integer Cents (`Int`)** | Never store currency as `Float`. Use integer cents (`balanceCents`, `priceCents`) for transactional safety, or `Decimal` (`@db.Decimal(10, 2)`) for accounting. |
+| **Soft Delete Unique Constraints** | **Partial Unique Index** | In PostgreSQL, `NULL` values are distinct in unique indexes. Enforcing email uniqueness for active users requires a partial unique index in a custom migration (`CREATE UNIQUE INDEX "User_email_active_key" ON "User" ("email") WHERE "deletedAt" IS NULL;`). |
+| **Concurrency & Atomic Updates** | **In-Database Guards** | Concurrency safety requires conditional in-database atomic updates (`where: { balance: { gte: amount } }`) rather than naive check-then-act JavaScript logic. |
+

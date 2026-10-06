@@ -129,7 +129,7 @@ describe('Phase 5 — PrismaTheoryBlock Stepper & Hero Components', () => {
 
     it('renders mode switchers (Stepper and All Steps) when >= 2 steps exist', () => {
       const html = renderToStaticMarkup(<PrismaTheorySteps theory={mockTheory} />);
-      expect(html).toContain('How Prisma executes this call');
+      expect(html).toContain('Step-by-step breakdown');
       expect(html).toContain('Stepper');
       expect(html).toContain('All Steps');
     });
@@ -199,7 +199,7 @@ describe('Phase 5 — PrismaTheoryBlock Stepper & Hero Components', () => {
         for (const concept of mod.concepts) {
           if (concept.theory.prisma?.stepBreakdowns && concept.theory.prisma.stepBreakdowns.length > 0) {
             const html = renderToStaticMarkup(<PrismaTheorySteps theory={concept.theory} />);
-            expect(html).toContain('How Prisma executes this call');
+            expect(html).toContain('Step-by-step breakdown');
             inspectedConcepts++;
           }
         }

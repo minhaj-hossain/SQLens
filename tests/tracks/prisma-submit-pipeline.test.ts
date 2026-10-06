@@ -266,7 +266,7 @@ describe('P1.2 — snippet-lab terminal display contract', () => {
   });
 
   it('attaches terminal output to CLI labs and drops the reference rows', () => {
-    const task = taskById('prisma02-c1-t2');
+    const task = taskById('prisma02-c1-t1');
     const { out } = submit(task, task.prisma!.solutionCode);
     expect(out.passed).toBe(true);
     expect(out.displayMode).toBe('terminal');
@@ -357,9 +357,9 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
         expect(out.terminalOutput ?? '', `${id} / ${runner} echo`).toContain(runner);
       }
     }
-    // Non-vacuous: exactly the 4 CLI labs / 6 CLI fragments the census found.
+    // Non-vacuous: exactly the 4 CLI labs / 5 CLI fragments the census found.
     expect(CLI_TASK_IDS).toHaveLength(4);
-    expect(cliFragments).toBe(6);
+    expect(cliFragments).toBe(5);
   });
 
   it('accepts quoted / equals flag values and parses the migration name from them', () => {
@@ -385,7 +385,7 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
   });
 
   it('treats double-spaced and newline-split commands as the same command', () => {
-    const gen = taskById('prisma02-c1-t2');
+    const gen = taskById('prisma02-c1-t1');
     const t1 = taskById('prisma05-c1-t1');
     const t2 = taskById('prisma05-c1-t2');
     expect(submit(gen, gen.prisma!.solutionCode.replace('npx prisma generate', 'npx prisma\n  generate')).out.passed).toBe(true);
@@ -419,7 +419,7 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
   });
 
   it('quotes the AUTHORED fragment in failures; non-CLI fragments keep the literal contract', () => {
-    const gen = taskById('prisma02-c1-t2');
+    const gen = taskById('prisma02-c1-t1');
     // Failure text always shows the authored spelling, even for runner variants.
     const miss = validatePrismaCode('return "pnpm dlx prisma validate";', gen.prisma!.validation);
     expect(miss.passed).toBe(false);

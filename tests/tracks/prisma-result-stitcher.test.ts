@@ -218,7 +218,7 @@ describe('Phase 3: Prisma In-Memory Result Stitcher', () => {
   });
 
   it('threads stitchedJson through previewPrismaTask and submitForTask in the real pipeline', async () => {
-    const task = findTask('prisma04-c1-t1');
+    const task = findTask('prisma04-c1-t2');
     expect(task).toBeDefined();
 
     const executor = new SqlExecutor();

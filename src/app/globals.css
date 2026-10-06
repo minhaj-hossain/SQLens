@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* ============================================================
    SQLENS DESIGN TOKENS — "execution plan" visual system

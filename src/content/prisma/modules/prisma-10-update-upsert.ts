@@ -34,9 +34,9 @@ export const Prisma_10_MODULE: ModuleData = {
           'update requires a unique key; updateMany updates behind a filter; atomic math prevents lost-update race conditions.',
         sql: "UPDATE users\nSET name = 'Alexandra'\nWHERE id = 1\nRETURNING id, name;",
         heroCode:
-          'const user = await prisma.user.update({\n  where: { id: 1 },\n  data: { id: { increment: 1 } },\n  select: { id: true },\n});',
+          'const user = await prisma.user.update({\n  where: { id: 1 },\n  data: { loginCount: { increment: 1 } },\n  select: { id: true, loginCount: true },\n});',
         heroLang: 'typescript',
-        heroWhy: 'Atomic increment rewrites to `id = id + 1` in SQL, keeping writes concurrency-safe.',
+        heroWhy: 'Atomic increment rewrites to `login_count = login_count + 1` in SQL, keeping counter writes concurrency-safe.',
         mentalModel:
           '**Targeted Row Mutation vs Batch Transformations.** When updating an individual entity, `prisma.user.update()` targets an exact unique identifier and returns the updated model. When running bulk operations, `updateMany()` touches zero, one, or thousands of rows in a single UPDATE query without throwing if none match. Concurrency conflicts on counters are avoided by delegating math to the database engine via atomic operators.',
         littleDetails: {
@@ -57,7 +57,7 @@ export const Prisma_10_MODULE: ModuleData = {
             {
               ruleNumber: 3,
               title: 'Use atomic operators to eliminate lost updates',
-              description: 'Instead of reading a counter into Node.js memory, adding 1, and saving it back (which suffers from race conditions), pass `{ increment: 1 }`. Prisma translates this directly to `SET count = count + 1` in SQL.',
+              description: 'Consider an account with $60 balance receiving two concurrent $50 debit requests. In a naive read-check-write flow in JavaScript: both requests read balance = $60 concurrently, both pass the "balance >= 50" check, both compute new balance = 60 - 50 = $10, and both write $10. The sender ends with $10 while the recipient received $100 ($50 created out of thin air)! In Prisma, passing atomic operators ({ decrement: 50 }) delegates calculation directly to the SQL engine (SET balance = balance - 50), preventing check-then-act lost updates.',
               badge: 'Concurrency',
             },
           ],
@@ -143,7 +143,11 @@ export const Prisma_10_MODULE: ModuleData = {
           title: 'Rename one user',
           description: 'Change user 1\'s name and return id + name only.',
           instructions: ['Use `prisma.user.update`', '`where: { id: 1 }`', 'Select `id` and `name`'],
-          hint: 'A single-row update needs a unique `where`.',
+          hintLadder: [
+            'Updating single records requires a unique key in where so Prisma can ensure exactly one row is modified.',
+            'Call prisma.user.update with where id, data name, and select id, name.',
+            'Update single row: return await prisma.user.update({ where: { id }, data: { name }, select: { id: true, name: /* boolean flag */ } });',
+          ],
           scaffold: '-- The row you are about to change:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
           why: 'Reading the row first is how you know the update hit exactly one.',
@@ -164,7 +168,11 @@ export const Prisma_10_MODULE: ModuleData = {
           title: 'Batch edit behind a filter',
           description: 'Update every user called Alex — prove the filter first.',
           instructions: ['Use `prisma.user.updateMany`', 'Filter with `where: { name: "Alex" }`'],
-          hint: 'Read the `where` as a SELECT before running the batch update.',
+          hintLadder: [
+            'Batch updates execute a bulk UPDATE across all matching records and return the total modified count.',
+            'Call prisma.user.updateMany passing the filter predicate in where and the changes in data.',
+            'Update matching rows: return await prisma.user.updateMany({ where: { name: \'Alex\' }, data: { name: /* new name */ } });',
+          ],
           scaffold: '-- Which rows would this batch update touch?\nSELECT id FROM users WHERE id = 99;',
           solutionSql: "SELECT id FROM users WHERE name = 'Alex';",
           why: 'The lens is the `where` of the batch update: one row matched.',
@@ -178,36 +186,40 @@ export const Prisma_10_MODULE: ModuleData = {
             'export async function renameAll() {\n  return await prisma.user.updateMany({\n    where: { name: \'Alex\' },\n    data: { name: \'Alexandra\' },\n  });\n}',
           rtype: '{ count: number }',
         }),
-        prismaReadTask({
+        prismaSnippetTask({
           id: 'prisma10-c1-t3',
-          title: 'Atomic numeric increment',
+          title: 'Atomic numeric increment on a domain counter',
           description:
-            'Increment a numeric field atomically without read-modify-write race conditions. (Note: in production, apply this to domain counters like viewCount rather than surrogate primary keys).',
+            'Increment a domain counter atomically in the database without read-modify-write race conditions. Never apply numeric increments to surrogate primary keys; use them on metrics, view counters, or inventory balances.',
           instructions: [
             'Use `prisma.user.update`',
             '`where: { id: 1 }`',
-            'Increment `id` by 1 using `{ increment: 1 }`',
-            'Select `id`',
+            'Increment `loginCount` by 1 using `{ increment: 1 }`',
+            'Select `id` and `loginCount`',
           ],
-          hint: '`data: { id: { increment: 1 } }` avoids concurrent write collisions. In production, use this on metrics/counters rather than primary keys.',
-          scaffold: '-- The row before the atomic increment:\nSELECT id FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id FROM users WHERE id = 1;',
-          why: 'Atomic increment rewrites to id = id + 1 in SQL so concurrent updates cannot collide. In production schemas, apply this pattern to business counters (views, inventory, balances) rather than surrogate primary keys.',
-          cols: ['id'],
-          select: ['id'],
-          method: 'update',
-          snippets: ['increment: 1'],
+          hintLadder: [
+            'Atomic operators instruct the database engine to perform arithmetic in SQL, eliminating concurrent read-modify-write lost updates.',
+            'Inside data, set loginCount to an object with increment: 1.',
+            'Increment counter atomically: return await prisma.user.update({ where: { id }, data: { loginCount: { increment: /* numeric step */ } }, select: { id: true, loginCount: true } });',
+          ],
+          scaffold: '-- The user before the counter update:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'Atomic increment rewrites to login_count = login_count + 1 in SQL so concurrent updates cannot collide. Apply this pattern to business counters (views, login counts, inventory) rather than primary keys.',
+          cols: ['id', 'name'],
           rows: 1,
+          setupSql:
+            'CREATE TABLE users (id INTEGER, name TEXT, email TEXT, loginCount INTEGER); ' +
+            'INSERT INTO users (id, name, email, loginCount) VALUES ' +
+            "(1, 'Alex', 'alex@prisma.io', 0), (2, 'Mina', 'mina@prisma.io', 0), (3, 'Rafi', 'rafi@prisma.io', 0);",
+          schemaSource:
+            'model User {\n  id         Int    @id @default(autoincrement())\n  name       String\n  email      String @unique\n  loginCount Int    @default(0)\n}',
           code0:
-            'export async function bumpUser(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { id: 2 },\n    select: { id: true },\n  });\n}',
+            'export async function bumpUserLoginCount(id: number) {\n  // Anti-pattern: hardcoding the value or reading then writing causes lost updates\n  return await prisma.user.update({\n    where: { id },\n    data: { loginCount: 2 },\n    select: { id: true, loginCount: true },\n  });\n}',
           code1:
-            'export async function bumpUser(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { id: { increment: 1 } },\n    select: { id: true },\n  });\n}',
-          rtype: '{ id: number }',
+            'export async function bumpUserLoginCount(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { loginCount: { increment: 1 } },\n    select: { id: true, loginCount: true },\n  });\n}',
+          need: ['prisma.user.update', 'loginCount: { increment: 1 }'],
+          rtype: '{ id: number; loginCount: number }',
         }),
-        // NOTE: Relational mutation via `connect:` intentionally excluded from Day 10.
-        // `connect`, `create`, and `connectOrCreate` nested write syntax is introduced
-        // on Day 12 (Nested Writes & Transactions) after learners have a full mental
-        // model of relations. Placing it here creates a prerequisite inversion.
       ],
     },
     {
@@ -321,7 +333,11 @@ export const Prisma_10_MODULE: ModuleData = {
           title: 'Insert-or-leave',
           description: 'Create the user only if that email is free.',
           instructions: ['Use `prisma.user.upsert`', '`where: { email }`', 'Select `id` and `email`'],
-          hint: 'An empty `update: {}` makes the second run a no-op.',
+          hintLadder: [
+            'Passing an empty update object to upsert creates the record if absent while leaving existing data intact.',
+            'Use prisma.user.upsert specifying where email, update: {}, and create: { name, email }.',
+            'Insert or ignore: return await prisma.user.upsert({ where: { email }, update: {}, create: { name, email }, select: { id: true, email: /* boolean flag */ } });',
+          ],
           scaffold: '-- The row upsert resolves to:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           why: 'Either branch ends with exactly this row in the table.',
@@ -340,7 +356,11 @@ export const Prisma_10_MODULE: ModuleData = {
           title: 'Give the update branch a body',
           description: 'The upsert currently has no update branch, so it is not idempotent.',
           instructions: ['Add `update: { name }`', 'Keep the unique `where` on email'],
-          hint: 'An upsert without `update` cannot be replayed.',
+          hintLadder: [
+            'Idempotent synchronization requires defining what happens when the record already exists via the update branch.',
+            'Add update: { name } alongside where: { email } and create in the upsert options.',
+            'Supply the update branch: return await prisma.user.upsert({ where: { email }, update: { name: /* updated field */ }, create: { name, email } });',
+          ],
           scaffold: '-- Both branches land on the same row:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
           why: 'name is refreshed on every replay, email stays the identity.',
@@ -369,7 +389,12 @@ export const Prisma_10_MODULE: ModuleData = {
           title: 'Replayable write',
           description: 'Upsert by email and return id + email only.',
           instructions: ['Use `prisma.user.upsert`', 'Select `id` and `email`'],
-          hint: 'Unique `where`, `update` branch, `create` branch — all three.',
+          hintLadder: [
+            'Idempotent writes converge to the desired record state regardless of whether the record already exists, preventing duplicate key errors.',
+            'Call prisma.user.upsert with where email, update: { name }, create: { name, email }, and select id, email.',
+            'Build the upsert call: return await prisma.user.upsert({ where: { email }, update: { name }, create: { name, email }, select: { id: true, email: /* boolean flag */ } });',
+          ],
+          fromScratch: true,
           scaffold: '-- The row a replay resolves to:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
           why: 'Replaying the same payload leaves the table untouched.',
@@ -381,7 +406,7 @@ export const Prisma_10_MODULE: ModuleData = {
           demoVariables: { name: 'Rafi', email: 'rafi@prisma.io' },
           rows: 1,
           code0:
-            'export async function reconcile(name: string, email: string) {\n  return await prisma.user.update({\n    where: { email },\n    data: { name },\n    select: { id: true, email: true },\n  });\n}',
+            'export async function reconcile(name: string, email: string) {\n  // Write idempotent upsert query from scratch:\n\n}',
           code1:
             'export async function reconcile(name: string, email: string) {\n  return await prisma.user.upsert({\n    where: { email },\n    update: { name },\n    create: { name, email },\n    select: { id: true, email: true },\n  });\n}',
           rtype: '{ id: number; email: string }',
@@ -398,7 +423,11 @@ export const Prisma_10_MODULE: ModuleData = {
             'Diagnose why `where: { name }` is rejected by the compiler',
             'Repair the selector to target the unique `email` field',
           ],
-          hint: 'The `where` clause of an upsert only accepts fields marked with `@id` or `@unique` in your schema.',
+          hintLadder: [
+            'Prisma upsert requires a unique selector so the database can target a specific unique index for conflict resolution.',
+            'Change where: { name } to where: { email } because email is unique in the schema.',
+            'Fix the selector: return await prisma.user.upsert({ where: { email: /* unique field */ }, update: { name }, create: { name, email } });',
+          ],
           scaffold: '-- Repaired upsert resolves to this record:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
           why: 'Prisma Client enforces database unique constraints at compile-time to prevent ambiguous multi-row updates.',

@@ -101,6 +101,23 @@ export interface PrismaTaskExtras {
   activeTab?: 'editor' | 'schema';
   /** Phase 9/Phase 6: custom schema.prisma source for multi-model or custom tasks. */
   schemaSource?: string;
+  /** Custom bootstrap SQL statements for custom table definitions/columns. */
+  setupSql?: string;
+  /** Phase 2: behavioral evaluation harness hook. */
+  behavioralGrader?:
+    | 'day6-singleton'
+    | 'day9-zod'
+    | 'day12-transaction'
+    | 'day13-errors'
+    | 'orderby-tiebreaker'
+    | 'checkpoint1-schema'
+    | 'checkpoint2-feed';
+  /** Custom hints override (defaults to single-level from `hint`). */
+  hints?: TaskHint[];
+  /** Phase 3: 3-tier cumulative hint ladder [concept anchor, structural skeleton, cumulative 1-step-short]. */
+  hintLadder?: [string, string, string];
+  /** Phase 3: flags task as a 5-minute blank-slate fluency rep. */
+  fromScratch?: boolean;
 }
 
 /** Rules shared by both factories' Prisma side (needs `code1` to infer the method). */
@@ -120,6 +137,7 @@ function prismaRules(
     ...(t.pagination ? { requirePagination: t.pagination } : {}),
     ...(t.snippets?.length ? { requiredCodeSnippets: t.snippets } : {}),
     ...(t.forbidden?.length ? { forbiddenCodeSnippets: t.forbidden } : {}),
+    ...(t.behavioralGrader ? { behavioralGrader: t.behavioralGrader } : {}),
   };
 }
 
@@ -157,7 +175,7 @@ export type PrismaReadTaskOptions = PrismaTaskExtras & {
   title: string;
   description: string;
   instructions: string[];
-  hint: string;
+  hint?: string;
   scaffold: string;
   solutionSql: string;
   why: string;
@@ -189,11 +207,17 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
     gradingType,
     primaryTable: 'users',
     databaseLifecycle: 'fresh',
-    setupSql: PRISMA_TASK_SETUP_SQL,
+    setupSql: t.setupSql ?? PRISMA_TASK_SETUP_SQL,
     initialSql: `${t.scaffold}\n`,
     solutionSql: t.solutionSql,
     solutionExplanation: t.why,
-    hints: [{ level: 1, text: t.hint }],
+    hints: t.hintLadder
+      ? [
+          { level: 1, text: t.hintLadder[0] },
+          { level: 2, text: t.hintLadder[1] },
+          { level: 3, text: t.hintLadder[2] },
+        ]
+      : (t.hints ?? (t.hint ? [{ level: 1, text: t.hint }] : [])),
     validation: {
       requireExactResult: true,
       targetTable: 'users',
@@ -205,6 +229,7 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
     prisma: {
       skillType,
       gradingType,
+      ...(t.fromScratch ? { fromScratch: true } : {}),
       initialCode: t.code0,
       solutionCode: t.code1,
       expectedType: t.rtype,
@@ -230,7 +255,7 @@ export type PrismaSnippetTaskOptions = PrismaTaskExtras & {
   title: string;
   description: string;
   instructions: string[];
-  hint: string;
+  hint?: string;
   scaffold: string;
   solutionSql: string;
   why: string;
@@ -269,11 +294,17 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     gradingType,
     primaryTable: 'users',
     databaseLifecycle: 'fresh',
-    setupSql: PRISMA_TASK_SETUP_SQL,
+    setupSql: t.setupSql ?? PRISMA_TASK_SETUP_SQL,
     initialSql: `${t.scaffold}\n`,
     solutionSql: t.solutionSql,
     solutionExplanation: t.why,
-    hints: [{ level: 1, text: t.hint }],
+    hints: t.hintLadder
+      ? [
+          { level: 1, text: t.hintLadder[0] },
+          { level: 2, text: t.hintLadder[1] },
+          { level: 3, text: t.hintLadder[2] },
+        ]
+      : (t.hints ?? (t.hint ? [{ level: 1, text: t.hint }] : [])),
     validation: {
       requireExactResult: true,
       targetTable: 'users',
@@ -284,6 +315,7 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     prisma: {
       skillType,
       gradingType,
+      ...(t.fromScratch ? { fromScratch: true } : {}),
       initialCode: t.code0,
       solutionCode: t.code1,
       expectedType: t.rtype ?? 'string',
@@ -294,6 +326,7 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
         requiredCodeSnippets: t.need,
         ...(t.ban ? { forbiddenCodeSnippets: t.ban } : {}),
         ...(t.forbidden ? { forbiddenCodeSnippets: t.forbidden } : {}),
+        ...(t.behavioralGrader ? { behavioralGrader: t.behavioralGrader } : {}),
         ...(t.noModelContract || !structural
           ? {}
           : prismaRules({ ...t, snippets: undefined }, selectFields)),

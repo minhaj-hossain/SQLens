@@ -44,7 +44,7 @@ export const Prisma_08_MODULE: ModuleData = {
           'Each operator has one SQL equivalent, chosen by the engine — you never hand-write the WHERE.',
           'Relational filters (`some`, `every`, `none`) let you query parent records by conditions on their child relations.',
           'Because filters are objects, they can be composed, narrowed and unit-tested before they reach the database.',
-          'CRITICAL HAZARD: Passing `undefined` to a filter field causes Prisma to ignore the condition completely (e.g. `{ email: undefined }` emits NO WHERE clause, returning all rows or leaking the first row in `findFirst`), whereas `null` explicitly compiles to `WHERE email IS NULL`.',
+          'CRITICAL HAZARD: In modern Prisma, passing `undefined` to `findUnique({ where: { email: undefined } })` throws a runtime validation error. BUT in `findFirst`, `findMany`, and `updateMany`, Prisma silently strips the condition entirely! `{ where: { email: undefined } }` in `findFirst` emits NO WHERE clause, returning the first record in the entire table instead of zero rows. In contrast, `null` compiles to SQL `WHERE email IS NULL`.',
         ],
         steps: [
           {
@@ -79,8 +79,8 @@ export const Prisma_08_MODULE: ModuleData = {
           rules: [
             {
               ruleNumber: 1,
-              title: 'CRITICAL HAZARD: undefined strips the WHERE clause',
-              description: 'In Prisma, `{ where: { email: undefined } }` completely omits the WHERE clause! If an optional query param (`req.query.email`) is undefined, `findFirst` will return the first row in the entire table instead of null. Always guard optional inputs before querying: `if (!email) return null;`.',
+              title: 'CRITICAL HAZARD: undefined strips the WHERE clause in findFirst / findMany',
+              description: 'In Prisma, passing undefined to findUnique throws a runtime validation error. But in findFirst, findMany, and updateMany, `{ where: { email: undefined } }` silently drops the filter! If req.query.email is undefined, findFirst returns the first user in the database instead of null. Always guard optional inputs before querying: `if (email === undefined) return null;`.',
               badge: 'Hazard',
             },
             {
@@ -143,7 +143,11 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Substring filter',
           description: 'Return every user whose email contains prisma.io.',
           instructions: ['Filter with `email: { contains: "prisma.io" }`', 'Select `id` and `name`'],
-          hint: '`contains` maps to LIKE \'%…%\'.',
+          hintLadder: [
+            'Prisma contains operator translates to a parameterized SQL LIKE condition matching substrings anywhere within the text column.',
+            'Inside where, set the target field to an object with contains: "prisma.io".',
+            'Add the contains filter: return await prisma.user.findMany({ where: { email: { contains: /* domain substring */ } }, select: { id: true, name: true } });',
+          ],
           scaffold: '-- Substring filter -- the WHERE is still missing:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: "SELECT id, name FROM users WHERE email LIKE '%prisma.io';",
           why: 'contains is a LIKE with a bound parameter.',
@@ -160,7 +164,11 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Filter on a set of values',
           description: 'Return Alex and Mina, nobody else.',
           instructions: ['Filter with `name: { in: [\'Alex\', \'Mina\'] }`'],
-          hint: '`in` takes an array of allowed values.',
+          hintLadder: [
+            'The in filter operator compares a column against a list of acceptable values, compiling to a clean parameterized SQL IN predicate.',
+            'Specify in with an array containing the exact strings inside where.',
+            'Add the in array: return await prisma.user.findMany({ where: { name: { in: [/* names array */] } }, select: { id: true, name: true } });',
+          ],
           scaffold: '-- Set filter -- the WHERE is still missing:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: "SELECT id, name FROM users WHERE name IN ('Alex', 'Mina');",
           why: 'One IN list replaces a chain of ORs.',
@@ -181,7 +189,11 @@ export const Prisma_08_MODULE: ModuleData = {
             'Filter with `posts: { some: { title: { contains: \'Prisma\' } } }`',
             'Select `id` and `name`',
           ],
-          hint: '`some` tests if at least one related record matches the condition.',
+          hintLadder: [
+            'Relational filters like some check if at least one related child record satisfies a nested predicate condition.',
+            'Filter the child relation using some containing a nested where condition on title.',
+            'Filter parent records by child relation: return await prisma.user.findMany({ where: { posts: { some: { title: { contains: /* post keyword */ } } } }, select: { id: true, name: true } });',
+          ],
           scaffold: '-- Users with matching posts:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
           why: 'Relational filters let you query parent records by conditions on related records.',
@@ -198,15 +210,19 @@ export const Prisma_08_MODULE: ModuleData = {
           id: 'prisma08-c1-t4',
           title: 'Diagnostic Repair — The undefined vs null Filter Hazard',
           description:
-            'Passing undefined to a Prisma filter causes Prisma to ignore the WHERE condition completely, returning unexpected rows or risking data leaks. Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst or findUnique.',
+            'Passing undefined to an optional filter in findFirst, findMany, or updateMany causes Prisma to silently drop the WHERE condition completely, returning unexpected rows or leaking data (while findUnique throws a validation error). Guard optional search parameters explicitly so undefined is never passed unchecked into findFirst.',
           instructions: [
             'Check `if (email === undefined)` and return `null` immediately',
             'Only query `prisma.user.findFirst` when `email` is defined',
           ],
-          hint: '`undefined` strips the filter from the generated SQL; check for `if (email === undefined) return null;`.',
+          hintLadder: [
+            'In findFirst and findMany, passing undefined for a filter property silently drops the WHERE clause entirely, potentially returning unwanted records.',
+            'Guard the parameter before calling the query, returning null if email is undefined.',
+            'Guard the undefined value: if (email === undefined) { return null; } return await prisma.user.findFirst({ where: { email }, select: /* select object */ });',
+          ],
           scaffold: '-- Safe single-user read:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'In Prisma, { where: { email: undefined } } strips the WHERE clause and matches the first row in the table instead of zero rows.',
+          why: 'In Prisma findFirst/findMany/updateMany, { where: { email: undefined } } strips the WHERE clause and matches the first row in the table instead of zero rows. (findUnique throws a runtime validation error instead).',
           cols: ['id', 'email'],
           rows: 1,
           code0:
@@ -328,7 +344,11 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Page two, one row per page',
           description: 'Return the second user when sorted by id.',
           instructions: ['`orderBy: { id: "asc" }`', '`skip: 1` with `take: 1`'],
-          hint: '`skip: 1` skips the first row, `take: 1` keeps the next one.',
+          hintLadder: [
+            'Offset pagination pairs skip and take to paginate through deterministic sorted records.',
+            'Specify skip to omit prior rows and take to limit page size alongside orderBy.',
+            'Apply offset pagination: return await prisma.user.findMany({ orderBy: { id: \'asc\' }, skip: 1, take: /* page size */, select: { id: true, name: true } });',
+          ],
           scaffold: '-- Offset page:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name FROM users ORDER BY id ASC LIMIT 1 OFFSET 1;',
           why: 'ORDER BY plus LIMIT/OFFSET is exactly what skip/take compiles to.',
@@ -351,7 +371,11 @@ export const Prisma_08_MODULE: ModuleData = {
             'Add `skip: 1` so the cursor item itself is not repeated',
             '`take: 2` with `orderBy: { id: "asc" }`',
           ],
-          hint: 'Prisma cursor is inclusive by default. Add `skip: 1` next to `cursor` to fetch subsequent rows.',
+          hintLadder: [
+            'Prisma cursor pagination is inclusive by default; skip: 1 must be passed to avoid repeating the pivot item on subsequent pages.',
+            'Include cursor: { id } and skip: 1 next to take and orderBy.',
+            'Combine cursor and skip: return await prisma.user.findMany({ cursor: { id }, skip: 1, take: 2, orderBy: { id: /* sort direction */ }, select: { id: true, name: true } });',
+          ],
           scaffold: '-- Cursor page:\nSELECT id, name FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name FROM users WHERE id > 1 ORDER BY id ASC LIMIT 2;',
           why: 'The cursor compiles to a WHERE on the key plus a LIMIT, and skip: 1 prevents duplicating the cursor item.',
@@ -471,7 +495,11 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Group and count',
           description: 'Return one row per distinct name, with the number of rows in each group.',
           instructions: ['Call `prisma.user.groupBy`', "Group with `by: ['name']`", 'Ask for `_count: true`'],
-          hint: '`groupBy({ by: [...], _count: true })` compiles to GROUP BY + COUNT(*).',
+          hintLadder: [
+            'The groupBy method collapses rows by shared values in the specified columns and computes database-level aggregations.',
+            'Pass by with an array of grouping columns and set _count: true.',
+            'Group and count: return await prisma.user.groupBy({ by: [\'name\'], _count: /* set boolean flag */ });',
+          ],
           scaffold: '-- One row per name, counted:\nSELECT name, COUNT(*) AS total FROM users WHERE id = 99;',
           solutionSql: 'SELECT name, COUNT(*) AS total FROM users GROUP BY name;',
           why: 'The database collapses the rows into groups and counts each one in a single query.',
@@ -489,7 +517,11 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Order the groups by size',
           description: 'Return the same groups, biggest first.',
           instructions: ["Keep `by: ['name']` and `_count: true`", "Order with `orderBy: { _count: { name: 'desc' } }`"],
-          hint: '`orderBy` can target the aggregation itself.',
+          hintLadder: [
+            'Sorting on calculated aggregations in groupBy compiles directly to SQL ORDER BY COUNT(...) expressions.',
+            'Add an orderBy clause nested inside _count specifying the sort direction.',
+            'Order by aggregate: return await prisma.user.groupBy({ by: [\'name\'], _count: true, orderBy: { _count: { name: /* sort direction */ } } });',
+          ],
           scaffold: '-- Biggest group first:\nSELECT name, COUNT(*) AS total FROM users WHERE id = 99;',
           solutionSql: 'SELECT name, COUNT(*) AS total FROM users GROUP BY name ORDER BY total DESC;',
           why: 'Sorting on the aggregate is what turns a count into a leaderboard.',
@@ -517,7 +549,12 @@ export const Prisma_08_MODULE: ModuleData = {
           title: 'Newest two members',
           description: 'Return id + email, sorted by id descending, limited to two rows.',
           instructions: ['`orderBy: { id: "desc" }`', '`take: 2`', 'Select `id` + `email` only'],
-          hint: 'Sort desc, then take 2 — a stable "latest" list.',
+          hintLadder: [
+            'Retrieving the most recently created records requires an explicit descending sort order paired with a take limit.',
+            'Call findMany on prisma.user with orderBy id desc, take 2, and select id, email.',
+            'Build the latest query: return await prisma.user.findMany({ orderBy: { id: \'desc\' }, take: 2, select: { id: true, email: /* boolean flag */ } });',
+          ],
+          fromScratch: true,
           scaffold: '-- Latest-rows query:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users ORDER BY id DESC LIMIT 2;',
           why: 'Descending order plus a LIMIT is the canonical latest-N query.',
@@ -527,10 +564,43 @@ export const Prisma_08_MODULE: ModuleData = {
           pagination: { take: 2 },
           rows: 2,
           code0:
-            'export async function latest() {\n  return await prisma.user.findMany({\n    select: { id: true, email: true },\n  });\n}',
+            'export async function latest() {\n  // Write latest query with sorting and pagination from scratch:\n\n}',
           code1:
             'export async function latest() {\n  return await prisma.user.findMany({\n    orderBy: { id: \'desc\' },\n    take: 2,\n    select: { id: true, email: true },\n  });\n}',
           rtype: '{ id: number; email: string }[]',
+        }),
+        type: 'challenge',
+      },
+      {
+        ...prismaSnippetTask({
+          id: 'prisma08-hw-2',
+          title: 'Milestone 2 Checkpoint — Deterministic Category Product Feed',
+          description:
+            'Implement a production feed query with M:N relational filtering, cursor pagination with skip: 1, and a secondary tiebreaker.',
+          instructions: [
+            'Filter products matching `categoryId` via `categories: { some: { id: categoryId } }`',
+            'Apply `take` limit to bound page size',
+            'When cursor is provided, set `cursor: { id: cursor.id }` and `skip: 1`',
+            'Enforce deterministic ordering with unique tiebreaker: `orderBy: [{ createdAt: "desc" }, { id: "desc" }]`',
+          ],
+          hintLadder: [
+            'Deterministic cursor pagination requires a relational filter to isolate the target category, an explicit skip of one when a cursor is provided to avoid repeating the pivot item, and a secondary unique tiebreaker to prevent unstable ordering when timestamps collide.',
+            'Call prisma.product.findMany with where filtering categories with some, take, conditional spread for cursor with skip: 1, and an orderBy array with createdAt desc followed by id desc.',
+            'Implement the deterministic feed query stopping one step short:\nreturn await prisma.product.findMany({\n  where: { categories: { some: { id: categoryId } } },\n  take,\n  ...(cursor ? { skip: 1, cursor: { id: cursor.id } } : {}),\n  orderBy: [{ createdAt: \'desc\' }, /* unique tiebreaker */],\n});',
+          ],
+          scaffold: '-- Validating Deterministic Feed Query:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'Deterministic pagination requires relational filtering, skip: 1 to advance past the cursor item, and a secondary unique tiebreaker to prevent unstable ordering under timestamp collisions.',
+          cols: ['id', 'name'],
+          rows: 1,
+          code0:
+            'export async function getCategoryProductFeed(\n  categoryId: number,\n  take: number,\n  cursor?: { id: number },\n) {\n  // TODO: Implement deterministic category feed with cursor pagination and tiebreakers:\n\n}',
+          code1:
+            'export async function getCategoryProductFeed(\n  categoryId: number,\n  take: number,\n  cursor?: { id: number },\n) {\n  return await prisma.product.findMany({\n    where: {\n      categories: {\n        some: { id: categoryId },\n      },\n    },\n    take,\n    ...(cursor ? { skip: 1, cursor: { id: cursor.id } } : {}),\n    orderBy: [\n      { createdAt: \'desc\' },\n      { id: \'desc\' },\n    ],\n  });\n}',
+          need: ['findMany', 'categories', 'some', 'orderBy', 'createdAt', 'id'],
+          behavioralGrader: 'checkpoint2-feed',
+          noModelContract: true,
+          rtype: 'Product[]',
         }),
         type: 'challenge',
       },

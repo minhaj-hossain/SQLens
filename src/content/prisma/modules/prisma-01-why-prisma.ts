@@ -163,8 +163,9 @@ export const Prisma_01_MODULE: ModuleData = {
           solutionExplanation:
             'Adding email to select instructs Prisma to include the email column in the generated SELECT statement.',
           hints: [
-            { level: 1, text: 'Click Run first to see the current output: id and name for user 1.' },
-            { level: 2, text: 'Add `email: true,` right below `name: true,` in the `select` block.' },
+            { level: 1, text: 'The Prisma Query Engine translates the select object into the SQL column projection list, requesting only the specified columns from the database.' },
+            { level: 2, text: 'Inside the `select` block, add the field name with a boolean flag: `email: true`.' },
+            { level: 3, text: 'Add `email: true` right after `name: true`: `select: { id: true, name: true, email: /* set to boolean flag */ }`' },
           ],
           validation: {
             requireExactResult: true,
@@ -208,7 +209,11 @@ export const Prisma_01_MODULE: ModuleData = {
             "-- In raw SQL, a typo like user_mail causes a database error.\n-- Fix the filter to use the real column `email`:\nSELECT id, email\nFROM users\nWHERE user_mail = 'mina@prisma.io';\n",
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           solutionExplanation: 'Filtering by the real `email` field matches the unique constraint and returns the user.',
-          hints: [{ level: 1, text: 'Replace `user_mail: "mina@prisma.io"` with `email` (or `email: email`) in `where`.' }],
+          hints: [
+            { level: 1, text: 'Prisma validates query filters against your schema at compile time. Querying by a non-existent field generates a type error rather than a runtime crash.' },
+            { level: 2, text: 'Provide the unique `where` argument with the exact model property defined in the schema, matching the parameter name.' },
+            { level: 3, text: 'Replace `user_mail: "mina@prisma.io"` with the valid field: `where: { email: /* use parameter or email string */ }`' },
+          ],
           validation: {
             requireExactResult: true,
             targetTable: 'users',
@@ -259,7 +264,11 @@ export const Prisma_01_MODULE: ModuleData = {
           "-- Expected shape: one row with id + email — fill in the email filter:\nSELECT id, email\nFROM users\nWHERE ;\n",
         solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
         solutionExplanation: 'One row, two columns — the minimal safe lookup.',
-        hints: [{ level: 1, text: 'Inside `select`, specify `id: true` and `email: true`.' }],
+        hints: [
+          { level: 1, text: 'A safe single-row lookup targets a uniquely indexed column with findUnique and restricts returned fields with select to avoid leaking sensitive attributes.' },
+          { level: 2, text: 'Call `prisma.user.findUnique` passing an object with both `where` and `select` properties.' },
+          { level: 3, text: 'Return the query result: `return await prisma.user.findUnique({ where: { email }, select: { id: true, email: /* add boolean */ } });`' },
+        ],
         validation: {
           requireExactResult: true,
           targetTable: 'users',
@@ -271,8 +280,9 @@ export const Prisma_01_MODULE: ModuleData = {
         prisma: {
           skillType: 'assess',
           gradingType: 'executable',
+          fromScratch: true,
           initialCode:
-            'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      // Select only id and email\n    },\n  });\n}',
+            'export async function lookupMember(email: string) {\n  // Write the query from scratch using prisma.user.findUnique:\n\n}',
           solutionCode:
             'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
           expectedType: '{ id: number; email: string } | null',

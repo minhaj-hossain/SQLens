@@ -59,13 +59,13 @@ describe('Phase 6: Adaptive Schema Tab Activation', () => {
 
   it('configures activeTab: schema on Day 4 relation modeling tasks', () => {
     const tasks = Prisma_04_MODULE.concepts.flatMap((c) => c.tasks);
-    const c1t2 = tasks.find((t) => t.id === 'prisma04-c1-t2');
+    const c1t1 = tasks.find((t) => t.id === 'prisma04-c1-t1');
     const c2t2 = tasks.find((t) => t.id === 'prisma04-c2-t2');
     const c3t1 = tasks.find((t) => t.id === 'prisma04-c3-t1');
     const c3t2 = tasks.find((t) => t.id === 'prisma04-c3-t2');
 
-    expect(c1t2).toBeDefined();
-    expect(defaultEditorTab(c1t2!)).toBe('schema');
+    expect(c1t1).toBeDefined();
+    expect(defaultEditorTab(c1t1!)).toBe('schema');
 
     expect(c2t2).toBeDefined();
     expect(defaultEditorTab(c2t2!)).toBe('schema');

@@ -32,10 +32,10 @@ export const Prisma_02_MODULE: ModuleData = {
           'schema.prisma compiles into two distinct targets: `prisma generate` compiles TypeScript types and query builders into application code, while `prisma migrate dev` creates and runs versioned SQL migrations against your live database.',
         takeaway:
           'generate compiles client application code; migrate dev applies database schema migrations.',
-        sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
-        heroCode: 'export function getGenerateCommand(): string {\n  return "npx prisma generate";\n}',
+        sql: 'SELECT id, name, email FROM users;',
+        heroCode: 'export function resolveTypeDesync(): string {\n  return "npx prisma generate";\n}',
         heroLang: 'typescript',
-        heroWhy: 'The command that recompiles the client.',
+        heroWhy: 'The command that recompiles client types after schema changes.',
         mentalModel:
           '**The Dual Compilation Pipeline.** `schema.prisma` is the single source of truth that branches into two parallel compilation targets:\n```\nschema.prisma (Single Source of Truth)\n     │\n     ├── npx prisma generate   ──▶  Prisma Client (TypeScript types + query builder)\n     │                              Target: node_modules/@prisma/client (Application Code)\n     │\n     └── npx prisma migrate dev ──▶  Database Schema (SQL migration files + DB tables)\n                                    Target: prisma/migrations/*.sql + Live Database\n```\nConflating them is the most common beginner mistake: `generate` builds your TypeScript autocomplete; `migrate dev` updates the tables your database actually stores.',
         explanation: [
@@ -93,36 +93,53 @@ export const Prisma_02_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c1-t1',
-          title: 'Bootstrap a new project',
-          description: 'Initialize Prisma in a new project with the PostgreSQL datasource provider.',
+          title: 'Stage 1: Resolve Client Type Desynchronization',
+          description:
+            'You added `bio String?` to `schema.prisma`. In your application code, TypeScript raises: `Property \'bio\' does not exist on type \'User\'`. Provide the CLI command that compiles the updated models into `node_modules/@prisma/client` to resolve the compile-time type desync.',
           instructions: [
-            'Use `npx prisma init` to scaffold the directory and configuration',
-            'Specify the PostgreSQL provider with `--datasource-provider postgresql`',
+            'Identify the CLI command that compiles TypeScript types into node_modules/@prisma/client',
+            'Return `"npx prisma generate"`',
           ],
-          hint: '`npx prisma init --datasource-provider postgresql` creates `prisma/schema.prisma` and `.env`.',
-          scaffold: '-- Validating CLI bootstrap command:\nSELECT id, name, email FROM users WHERE id = 99;',
+          hintLadder: [
+            'Prisma Client is a generated build artifact. When models change in the schema, TypeScript autocomplete cannot see them until the client generator recompiles into node_modules.',
+            'Call the Prisma CLI generator command with npx.',
+            'Return the generation CLI string: return "/* run prisma generate with npx */";',
+          ],
+          scaffold: '-- Validating CLI compilation target:\nSELECT id, name, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
-          why: 'Initializing scaffolds the schema.prisma configuration and sets the datasource provider.',
-          cols: ['id', 'name', 'email'],
-          rows: 1,
-          code0: 'export function getInitCommand(): string {\n  return "";\n}',
-          code1: 'export function getInitCommand(): string {\n  return "npx prisma init --datasource-provider postgresql";\n}',
-          need: ['npx prisma init', '--datasource-provider postgresql'],
-        }),
-        prismaSnippetTask({
-          id: 'prisma02-c1-t2',
-          title: 'Regenerate the client',
-          description: 'Recompile the typed client after modifying models in schema.prisma.',
-          instructions: ['Execute npx prisma generate to compile the client', 'Verify the output build artifact'],
-          hint: 'After every schema edit, `npx prisma generate` rebuilds the client in node_modules.',
-          scaffold: '-- Prove the dual pipeline:\nSELECT id, name, email FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name, email FROM users WHERE id = 2;',
           why: 'Client regeneration compiles the schema into TypeScript autocomplete and query builder methods.',
           cols: ['id', 'name', 'email'],
           rows: 1,
-          code0: 'export function getGenerateCommand(): string {\n  return "";\n}',
-          code1: 'export function getGenerateCommand(): string {\n  return "npx prisma generate";\n}',
+          code0:
+            'export function resolveTypeDesync(): string {\n  // TypeScript compile error: Property "bio" does not exist on type "User".\n  // Return the command that compiles schema.prisma into node_modules/@prisma/client:\n  return "";\n}',
+          code1:
+            'export function resolveTypeDesync(): string {\n  return "npx prisma generate";\n}',
           need: ['npx prisma generate'],
+        }),
+        prismaSnippetTask({
+          id: 'prisma02-c1-t2',
+          title: 'Stage 2: Resolve Database Schema Desynchronization',
+          description:
+            'After running `prisma generate`, TypeScript autocomplete recognizes `user.bio`. However, executing the application query crashes at runtime with: `column "bio" does not exist in table "User"`. Provide the CLI command that detects the schema difference, creates an SQL migration, and applies the physical column to your database.',
+          instructions: [
+            'Identify the command that generates versioned SQL and alters the physical database table',
+            'Return `"npx prisma migrate dev"`',
+          ],
+          hintLadder: [
+            'The Prisma dual compilation pipeline separates client code from physical storage. Compiling client types does not alter physical tables on disk; a migration command is required to apply DDL changes.',
+            'Invoke the migration development workflow command using the Prisma CLI.',
+            'Return the migration development command: return "/* run prisma migrate dev with npx */";',
+          ],
+          scaffold: '-- Prove the dual pipeline:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users WHERE id = 2;',
+          why: 'migrate dev alters the physical database schema, whereas generate alters application client code.',
+          cols: ['id', 'name', 'email'],
+          rows: 1,
+          code0:
+            'export function resolveDatabaseDesync(): string {\n  // Runtime database error: column "bio" does not exist in table "User".\n  // Return the command that creates and applies versioned SQL migrations to the database:\n  return "";\n}',
+          code1:
+            'export function resolveDatabaseDesync(): string {\n  return "npx prisma migrate dev";\n}',
+          need: ['npx prisma migrate dev'],
         }),
       ],
     },
@@ -196,7 +213,11 @@ export const Prisma_02_MODULE: ModuleData = {
           title: 'Wire the datasource',
           description: 'Point schema.prisma at PostgreSQL via the environment.',
           instructions: ['Set datasource provider to "postgresql"', 'Set url to read env("DATABASE_URL")'],
-          hint: '`provider = "postgresql"` and `url = env("DATABASE_URL")`.',
+          hintLadder: [
+            'Datasource blocks configure dialect translation and credentials. Sourcing connection secrets from environment variables keeps credentials safe and portable.',
+            'Set provider to postgresql and wrap the connection string in the env helper function.',
+            'Configure the datasource block: provider = "postgresql", url = env("/* environment variable name */")',
+          ],
           scaffold: '-- Configuration and schema validation runs automatically against the engine.\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           why: 'Env-wired datasource still reads the seed.',
@@ -215,7 +236,11 @@ export const Prisma_02_MODULE: ModuleData = {
             'Add `@map("cust_email")` to the email field to map the column',
             'Add `@@map("tbl_customers")` to the model to map the table name',
           ],
-          hint: '`@map("cust_email")` on the field, `@@map("tbl_customers")` on the model.',
+          hintLadder: [
+            'Prisma decouples application model names from physical database identifiers using mapping attributes without breaking idiomatic TypeScript naming conventions.',
+            'Use single @map on the field declaration and double @@map at the model block level.',
+            'Attach the mappings: email String @map("cust_email"), @@map("/* legacy table name */")',
+          ],
           scaffold: '-- Configuration and schema validation runs automatically against the engine.\nSELECT id FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, name, email FROM users WHERE id = 3;',
           why: 'Mapping is cosmetic; the seed still reads.',
@@ -245,14 +270,19 @@ export const Prisma_02_MODULE: ModuleData = {
             'Source the database connection url from env("DATABASE_URL")',
             'Map the User model to table "tbl_users" using @@map',
           ],
-          hint: '`provider = "postgresql"`, `url = env("DATABASE_URL")`, and `@@map("tbl_users")`.',
+          hintLadder: [
+            'Enterprise configuration decouples deployment environments via environment variables and aligns Prisma models with legacy database naming conventions.',
+            'Define a datasource block with provider and env url, followed by a User model with @@map pointing to tbl_users.',
+            'Draft the schema block stopping 1 step short: datasource db { provider = "postgresql", url = env("DATABASE_URL") } model User { ... @@map("/* legacy table name */") }',
+          ],
+          fromScratch: true,
           scaffold: '-- Validates schema configuration against the engine:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
           why: 'Configuring the datasource via environment variables and mapping legacy tables enables zero-code database portability.',
           cols: ['id', 'email'],
           rows: 1,
           code0:
-            'datasource db {\n  provider = "sqlite"\n  url      = "file:./dev.db"\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n}',
+            '// Configure datasource and User model mapping from scratch:\n\n',
           code1:
             'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n\n  @@map("tbl_users")\n}',
           need: ['provider = "postgresql"', 'env("DATABASE_URL")', '@@map("tbl_users")'],

@@ -142,6 +142,11 @@ export const Prisma_14_MODULE: ModuleData = {
           description: 'Fetch user by id. If missing, throw a typed P2025 error instead of returning null.',
           instructions: ['Use `prisma.user.findUniqueOrThrow`', 'Select `id` and `email`'],
           hint: '`findUniqueOrThrow` raises `P2025` on a miss — no null check needed.',
+          hintLadder: [
+            'When looking up an entity that is required to exist for route execution, assertion lookup methods throw a typed not-found error rather than returning null. This eliminates manual existence branching in handler code.',
+            'Use findUniqueOrThrow with where identifying the record and select projecting id and email.',
+            'Replace findUnique with findUniqueOrThrow:\nreturn await prisma.user.findUniqueOrThrow({\n  where: { id },\n  select: { id: true, email: /* boolean */ },\n});',
+          ],
           scaffold: '-- The row the lookup must resolve:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users WHERE id = 1;',
           why: '`findUniqueOrThrow` pairs with a P2025 catch block instead of an explicit null guard.',
@@ -164,6 +169,11 @@ export const Prisma_14_MODULE: ModuleData = {
             'Use `prisma.user.findMany` with `where: { deletedAt: null }` to list live accounts',
           ],
           hint: 'Two operations: one update to tombstone, one read to filter. Both use `select`.',
+          hintLadder: [
+            'A complete soft-delete lifecycle mutates the record by setting its tombstone timestamp before subsequent business queries filter out non-active entities with a null check.',
+            'Perform an update setting data: { deletedAt: new Date() }, then call findMany with where: { deletedAt: null } and projection.',
+            'Tombstone with update and filter live rows with findMany:\nawait prisma.user.update({\n  where: { id },\n  data: { deletedAt: new Date() },\n});\nreturn await prisma.user.findMany({\n  where: { deletedAt: /* active condition */ },\n  select: { id: true, email: true },\n});',
+          ],
           scaffold: '-- Only live accounts appear in the roster:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users;',
           why: 'Soft-delete (Day 11) + filtered read is a complete tombstone lifecycle in two calls.',
@@ -289,6 +299,11 @@ export const Prisma_14_MODULE: ModuleData = {
           description: 'Return the first 2 live users ordered by id, projecting id + email only.',
           instructions: ['`orderBy: { id: "asc" }`', '`take: 2`', 'Select `id` and `email` only'],
           hint: 'ORDER BY + LIMIT is the combination that makes pagination reproducible.',
+          hintLadder: [
+            'Deterministic pagination requires an explicit ordering column so database engines return identical page slices across subsequent calls. Combining ordering with a limit and column projection creates stable, leak-free paginated endpoints.',
+            'In findMany, supply orderBy: { id: \'asc\' }, take: 2, and select: { id: true, email: true } while omitting unrequested attributes.',
+            'Add orderBy and take while refining select:\nreturn await prisma.user.findMany({\n  orderBy: { id: \'asc\' },\n  select: { id: true, email: /* boolean */ },\n  take: 2,\n});',
+          ],
           scaffold: '-- The two users returned by page 1:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users ORDER BY id ASC LIMIT 2;',
           why: 'Ordered projection is the contract every paginated API must honour.',
@@ -312,6 +327,11 @@ export const Prisma_14_MODULE: ModuleData = {
             "Catch `PrismaClientKnownRequestError` with `code === 'P2002'` and return 409",
           ],
           hint: 'Interactive transaction + inline P2002 trap = atomic + conflict-safe registration.',
+          hintLadder: [
+            'Wrapping registration in an interactive transaction guarantees that creating account records executes atomically, while catching unique key violations at the perimeter converts constraint failures into clean HTTP 409 Conflict responses.',
+            'Wrap tx.user.create in prisma.$transaction(async (tx) => ...), wrapped in try-catch that inspects error.code === \'P2002\'.',
+            'Execute create on tx inside transaction and trap P2002:\ntry {\n  const user = await prisma.$transaction(async (tx) => {\n    return await tx.user.create({\n      data: { email, name },\n      select: { id: true, email: true },\n    });\n  });\n  return res.status(201).json(user);\n} catch (err) {\n  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === \'P2002\') {\n    return res.status(409).json({ error: /* message */ });\n  }\n  throw err;\n}',
+          ],
           scaffold: '-- The row a successful registration creates:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
           why: 'Transaction guarantees atomicity; P2002 catch prevents 500 on duplicate email.',
@@ -432,6 +452,11 @@ export const Prisma_14_MODULE: ModuleData = {
           description: 'Fetch a user with a tagged-template query — no string concatenation.',
           instructions: ['Use `prisma.$queryRaw` with a template literal', 'Bind the email as an interpolated parameter'],
           hint: 'Write the SQL inside a $queryRaw tagged template; the value stays a bound parameter.',
+          hintLadder: [
+            'When complex SQL operations cannot be expressed with the standard query builder, tagged raw query templates execute custom SQL statements while automatically binding interpolated variables as secure parameterized inputs.',
+            'Invoke prisma.$queryRaw as a tagged template with the raw SELECT statement and interpolated email parameter.',
+            'Execute the raw query with template interpolation:\nreturn await prisma.$queryRaw`\n  SELECT id, email FROM users WHERE email = ${/* email variable */}\n`;',
+          ],
           scaffold: '-- The raw read still hits this row:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
           why: 'The tagged template keeps the value bound while you write the SQL yourself.',
@@ -451,6 +476,11 @@ export const Prisma_14_MODULE: ModuleData = {
           description: 'Build a reusable WHERE fragment and stitch it into the query.',
           instructions: ['Use `Prisma.sql` for the fragment', 'Interpolate it into `$queryRaw`'],
           hint: 'Prisma.sql returns a composable fragment; embed it in the tagged template.',
+          hintLadder: [
+            'Dynamic SQL composition can lead to injection vulnerabilities if raw strings are concatenated. Helper SQL templates produce composable query fragments that preserve parameter binding when embedded inside outer raw queries.',
+            'Construct the where fragment using Prisma.sql`WHERE id = ${id}` and embed it into the $queryRaw tagged template.',
+            'Compose the fragment and interpolate into $queryRaw:\nconst where = Prisma.sql`WHERE id = ${id}`;\nreturn await prisma.$queryRaw`\n  SELECT id, email FROM users ${/* composable fragment */}\n`;',
+          ],
           scaffold: '-- The composed query reads the seed:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users;',
           why: 'Composable fragments keep dynamic SQL parameterized and readable.',
@@ -486,6 +516,12 @@ export const Prisma_14_MODULE: ModuleData = {
             'Nest `posts: { select: { title: true } }` to include post titles without over-fetching',
           ],
           hint: 'Combine `where: { deletedAt: null }`, `orderBy: { id: \'asc\' }`, `take: 2`, and nested `posts: { select: { title: true } }` inside `select`.',
+          hintLadder: [
+            'Enterprise data services synthesize multiple query concerns: filtering soft-deleted records, enforcing deterministic primary-key ordering, capping page window size, and projecting related entity collections without over-fetching sensitive columns.',
+            'In prisma.user.findMany, configure where: { deletedAt: null }, orderBy: { id: \'asc\' }, take: 2, and select with id, email, and nested posts: { select: { title: true } }.',
+            'Assemble the synthesis query options:\nreturn await prisma.user.findMany({\n  where: { deletedAt: null },\n  orderBy: { id: \'asc\' },\n  take: 2,\n  select: {\n    id: true,\n    email: true,\n    posts: { select: { title: /* boolean */ } },\n  },\n});',
+          ],
+          fromScratch: true,
           scaffold:
             '-- Directory synthesis (first two active members):\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: 'SELECT id, email FROM users ORDER BY id ASC LIMIT 2;',
@@ -494,7 +530,7 @@ export const Prisma_14_MODULE: ModuleData = {
           cols: ['id', 'email'],
           rows: 2,
           code0:
-            'export async function getDirectoryPage() {\n  // BUG: Leaks soft-deleted users, over-fetches sensitive columns, and misses relation data\n  return await prisma.user.findMany({\n    select: { id: true, email: true, name: true },\n  });\n}',
+            'export async function getDirectoryPage() {\n  // Write paginated member directory query with soft-delete and posts from scratch:\n\n}',
           code1:
             'export async function getDirectoryPage() {\n  return await prisma.user.findMany({\n    where: { deletedAt: null },\n    orderBy: { id: \'asc\' },\n    take: 2,\n    select: {\n      id: true,\n      email: true,\n      posts: { select: { title: true } },\n    },\n  });\n}',
           need: [
@@ -520,6 +556,11 @@ export const Prisma_14_MODULE: ModuleData = {
             'Create the user and the initial post using the transaction client `tx`',
           ],
           hint: '`prisma.$transaction(async (tx) => { ... })` guarantees atomicity across related writes.',
+          hintLadder: [
+            'Multi-table onboarding workflows must execute inside an interactive transaction callback so creating both the user account and the initial welcome post commits together. If post creation fails, the transaction rolls back without leaving an orphaned user record.',
+            'Return the promise from prisma.$transaction(async (tx) => ...), creating the user with tx.user.create and the post with tx.post.create.',
+            'Execute both writes on tx inside the callback:\nreturn await prisma.$transaction(async (tx) => {\n  const user = await tx.user.create({ data: { email, name: \'New Member\' } });\n  const post = await tx.post.create({ data: { title, authorId: /* link to user id */ } });\n  return { user, post };\n});',
+          ],
           scaffold:
             '-- All-or-nothing registration verification:\nSELECT id, email FROM users WHERE id = 99;',
           solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
@@ -549,6 +590,11 @@ export const Prisma_14_MODULE: ModuleData = {
             'Pass unhandled errors down the pipeline with `next(err)`',
           ],
           hint: 'Check schema validity before writing to the database, and inspect known request errors for duplicate keys.',
+          hintLadder: [
+            'A production controller coordinates defensive perimeter validation with database error handling: parsing input schemas before database execution, trapping duplicate constraint codes into HTTP 409 responses, and passing unhandled errors to the next middleware.',
+            'Validate body with MemberSchema.safeParse, wrap user creation in try-catch testing for PrismaClientKnownRequestError and code P2002, and pass errors to next(err).',
+            'Structure validation, creation, and conflict translation:\nconst parsed = MemberSchema.safeParse(req.body);\nif (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() });\ntry {\n  const user = await prisma.user.create({ data: parsed.data });\n  return res.status(201).json(user);\n} catch (err) {\n  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === \'P2002\') {\n    return res.status(409).json({ error: /* message */ });\n  }\n  return next(err);\n}',
+          ],
           scaffold:
             "-- Conflict handling protects uniqueness:\nSELECT id, email FROM users WHERE email = 'nobody@prisma.io';",
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",

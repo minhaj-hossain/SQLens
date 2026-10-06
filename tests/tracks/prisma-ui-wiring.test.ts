@@ -162,10 +162,9 @@ describe('Phase 7 — submitForTask routing', () => {
     // P1.2: the CLI lab renders simulated terminal output instead of the
     // authored reference rows.
     expect(out.displayMode).toBe('terminal');
-    // `prisma02-c1-t1` bootstraps a project, so the simulated run is
-    // `npx prisma init …` — the old `npx prisma generate` expectation belonged
-    // to the sibling lab and failed on a perfectly correct pipeline.
-    expect(out.terminalOutput).toContain('$ npx prisma init --datasource-provider postgresql');
+    // `prisma02-c1-t1` resolves client type desync, so the simulated run is
+    // `npx prisma generate`.
+    expect(out.terminalOutput).toContain('$ npx prisma generate');
     expect(out.result).toBeUndefined();
   });
 

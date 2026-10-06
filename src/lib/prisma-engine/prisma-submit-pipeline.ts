@@ -59,6 +59,7 @@ import { parsePrismaSchema, type PrismaSchema } from './prisma-schema-parser';
 import { stitchPrismaExecution } from './prisma-in-memory-stitcher';
 import { gradePrismaCode, gradePrismaExecution } from './prisma-execution';
 import { PRISMA_CLI_RUNNER_SRC, validatePrismaCode } from './prisma-validator';
+import { dispatchBehavioralGrader } from './graders';
 import { gradeFinalState } from '../sql-engine/state-verification';
 import {
   type GradingStage,
@@ -456,6 +457,18 @@ function emit(
 }
 
 
+export function resolveBehavioralGrader(taskId: string, explicit?: string): string | undefined {
+  if (explicit) return explicit;
+  if (/^prisma06-(?:c1-t1|c1-t2|hw-1)$/.test(taskId)) return 'day6-singleton';
+  if (/^prisma09-(?:c2-t1|c2-t2|c2-t3|hw-1)$/.test(taskId)) return 'day9-zod';
+  if (/^prisma12-(?:c2-t1|c2-t2|c2-t3|hw-1)$/.test(taskId)) return 'day12-transaction';
+  if (/^prisma13-(?:c1-t1|c1-t2|c1-t3|c2-t1|c2-t2|hw-1|hw-2)$/.test(taskId)) return 'day13-errors';
+  if (/^prisma08-c2-t2$/.test(taskId)) return 'orderby-tiebreaker';
+  if (/^prisma04-hw-2$/.test(taskId)) return 'checkpoint1-schema';
+  if (/^prisma08-hw-2$/.test(taskId)) return 'checkpoint2-feed';
+  return undefined;
+}
+
 /**
  * Run one Prisma submission end-to-end. UI calls this; scripts call the same
  * function with the same hooks, so an audit failure is a real user-visible
@@ -465,6 +478,7 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
   const { task, code, hooks, surface, attempt = 1, record = true } = options;
   const { execute, getDatabaseState, resetDatabase } = hooks;
   const rule = task.prisma?.validation as PrismaValidationRule | undefined;
+  const behavioralGraderName = resolveBehavioralGrader(task.id, rule?.behavioralGrader);
   let gen: GenerateResult | undefined;
   const done = (outcome: PrismaSubmitResult): PrismaSubmitOutcome =>
     emit(
@@ -531,6 +545,20 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
         stage: 'validation',
       });
     }
+
+    // Phase 2: Behavioral Grader execution for snippet labs
+    if (behavioralGraderName) {
+      const behavioral = dispatchBehavioralGrader(behavioralGraderName, code, task.id);
+      if (!behavioral.passed) {
+        return done({
+          passed: false,
+          feedback: behavioral.feedback,
+          readThrough: true,
+          steps: [],
+          stage: 'validation',
+        });
+      }
+    }
     // Task 0.4: a task whose OWN reference is a translatable client call is a
     // client-code lab — a submission that does not translate (e.g. the `where`
     // clause deleted from an update) must FAIL. Falling through to the
@@ -576,6 +604,19 @@ export function runAndGradePrismaSubmission(options: PrismaSubmitOptions): Prism
       steps: [],
       stage: 'validation',
     });
+  }
+
+  // Phase 2: Behavioral Grader execution for client calls
+  if (behavioralGraderName) {
+    const behavioral = dispatchBehavioralGrader(behavioralGraderName, code, task.id);
+    if (!behavioral.passed) {
+      return done({
+        passed: false,
+        feedback: behavioral.feedback,
+        steps: [],
+        stage: 'validation',
+      });
+    }
   }
 
   // Static passed — execute the plan on the session executor through the ONE

@@ -41,6 +41,8 @@ export interface PrismaSchemaModel {
   columns: string[];
   /** Relation field names (navigation only — never selected by default). */
   relations: string[];
+  /** Model-level block attributes (`@@index(...)`, `@@unique(...)`, `@@id(...)`). */
+  blockAttributes: string[];
 }
 
 export interface PrismaSchemaEnum {
@@ -213,13 +215,18 @@ export function parsePrismaSchema(source: string): PrismaSchema {
       continue;
     }
     const fields: PrismaSchemaField[] = [];
+    const blockAttributes: string[] = [];
     for (const line of splitTopLevel(body)) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('@@')) {
+        blockAttributes.push(trimmed.replace(/\/\/.*$/, '').trim());
+      }
       const field = parseField(line);
       if (field) fields.push(field);
     }
     const columns = fields.filter((f) => f.isScalar).map((f) => f.name);
     const relations = fields.filter((f) => !f.isScalar).map((f) => f.name);
-    const model: PrismaSchemaModel = { name, fields, columns, relations };
+    const model: PrismaSchemaModel = { name, fields, columns, relations, blockAttributes };
     models.push(model);
     byName.set(name.toLowerCase(), model);
   }

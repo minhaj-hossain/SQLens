@@ -73,6 +73,19 @@ export interface PrismaValidationRule {
     valid: boolean;
     message?: string;
   };
+  /**
+   * Phase 2: behavioral evaluation harness hook. Replaces brittle snippet
+   * matching with simulated runtime execution (Day 6 singleton, Day 9 Zod,
+   * Day 12 transaction, Day 13 error handlers, Day 8 tiebreakers).
+   */
+  behavioralGrader?:
+    | 'day6-singleton'
+    | 'day9-zod'
+    | 'day12-transaction'
+    | 'day13-errors'
+    | 'orderby-tiebreaker'
+    | 'checkpoint1-schema'
+    | 'checkpoint2-feed';
 }
 
 /**
@@ -85,6 +98,8 @@ export interface PrismaTaskContent {
   skillType?: SkillType;
   /** Phase 3 Quality Rubric: grading channel ('executable' | 'snippet-lab'). */
   gradingType?: GradingType;
+  /** Phase 3: Flags task as a 5-minute blank-slate fluency rep. */
+  fromScratch?: boolean;
   /**
    * Which editor surface this task OPENS on. Default `editor` (the TypeScript
    * file); `schema` opens the read-only `schema.prisma` tab, which also carries
