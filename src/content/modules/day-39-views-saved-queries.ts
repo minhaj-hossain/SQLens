@@ -128,7 +128,7 @@ export const Day_39_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day39-t1',
-          title: 'Create a Simple View',
+          title: 'Can you create a view for affordable products?',
           description:
             'Save a filtered product query as a view named v_affordable_products that shows only products priced at $20 or less.',
           instructions: [
@@ -223,7 +223,7 @@ export const Day_39_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day39-t2',
-          title: 'Query Your View',
+          title: 'Can you query your affordable products view sorted by price?',
           description:
             'The view v_affordable_products was just created. Query it to get all product names and prices, sorted cheapest first.',
           instructions: [
@@ -252,7 +252,7 @@ export const Day_39_MODULE: ModuleData = {
         },
         {
           id: 'day39-t3',
-          title: 'Build a Multi-Table View',
+          title: 'Can you build a multi table order summary view?',
           description:
             'Create a view v_order_summary that joins orders and customers, showing: order_id, customer name, and order_date.',
           instructions: [
@@ -344,7 +344,7 @@ export const Day_39_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day39-t4',
-          title: 'Drop a View',
+          title: 'Can you safely remove a view with DROP VIEW IF EXISTS?',
           description:
             'Create a temporary view v_temp_report, confirm it works, then drop it.',
           instructions: [
@@ -381,7 +381,7 @@ export const Day_39_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day39-ch1',
-        title: 'High-Value Orders View',
+        title: 'Can you build a clean active customer directory view?',
         description:
           'Create a view v_high_value_orders showing order_id and total_value (SUM of quantity * unit_price) for orders where the total is over $100.',
         instructions: [
@@ -409,7 +409,7 @@ export const Day_39_MODULE: ModuleData = {
       },
       {
         id: 'day39-ch2',
-        title: 'Customer Purchase Summary View',
+        title: 'Can you build a customer lifetime spend summary view?',
         description:
           'Create a view v_customer_spend that shows each customer name and their total spend (SUM of payments.amount), joining customers and payments through orders.',
         instructions: [

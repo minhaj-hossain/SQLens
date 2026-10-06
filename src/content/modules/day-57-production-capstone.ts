@@ -115,7 +115,7 @@ export const Day_57_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day57-t1',
-          title: 'Deploy the Tenant Security Boundary View',
+          title: 'Can you deploy an isolated tenant security view for customer orders?',
           description:
             'Create a view named v_customer1_orders that selects order_id, customer_id, order_date, and status from orders where customer_id = 1, then query the view.',
           instructions: [
@@ -195,7 +195,7 @@ export const Day_57_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day57-t2',
-          title: 'Deploy the Composite Timeline Index',
+          title: 'Can you accelerate order timeline queries with a composite index?',
           description:
             'Create a composite index named idx_orders_cust_date on orders (customer_id, order_date) and run a customer timeline query.',
           instructions: [
@@ -281,7 +281,7 @@ export const Day_57_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day57-t3',
-          title: 'Implement the Keyset Feed Endpoint',
+          title: 'Can you build a high throughput keyset pagination endpoint?',
           description:
             'Write a keyset query retrieving the next 2 delivered orders for customer 1 where order_id > 1, ordered by order_id ASC.',
           instructions: [
@@ -315,7 +315,7 @@ export const Day_57_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day57-ch1',
-        title: 'Deliverable 4: Zero-Downtime Priority Flag Migration',
+        title: 'Can you complete a zero downtime schema migration for priority order flags?',
         description:
           'Alter the orders table to add is_priority INTEGER, backfill all rows where is_priority IS NULL with 0, and query order_id, customer_id, status, and is_priority.',
         instructions: [

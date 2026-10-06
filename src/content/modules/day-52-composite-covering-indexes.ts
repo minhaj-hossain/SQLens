@@ -117,7 +117,7 @@ export const Day_52_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day52-t1',
-          title: 'Create a Composite Index and Filter on Both Columns',
+          title: 'Can you accelerate multi column filters with a composite index?',
           description:
             'Create a composite index on products covering category_id and price, then write a query that filters on both columns.',
           instructions: [
@@ -201,7 +201,7 @@ export const Day_52_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day52-t2',
-          title: 'Query Using the Leftmost Column Alone',
+          title: 'Can you leverage the leftmost prefix rule for single column filters?',
           description:
             'Create the composite index on (category_id, price), then write a query that filters ONLY on category_id to demonstrate leftmost prefix usage.',
           instructions: [
@@ -286,7 +286,7 @@ export const Day_52_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day52-t3',
-          title: 'Execute a Covering Query',
+          title: 'Can you execute zero heap lookups using a covering index query?',
           description:
             'Create the composite index on (category_id, price), then write a covering query that selects ONLY those two columns.',
           instructions: [
@@ -322,7 +322,7 @@ export const Day_52_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day52-ch1',
-        title: 'Build and Query a Composite Index on Orders',
+        title: 'Can you optimize customer order status lookups with a composite index?',
         description:
           'Create a composite index named idx_orders_cust_status on orders (customer_id, status), then query all delivered orders for customer_id = 1.',
         instructions: [

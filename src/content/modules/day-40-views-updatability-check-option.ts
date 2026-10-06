@@ -128,7 +128,7 @@ export const Day_40_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day40-t1',
-          title: 'Update Through a View',
+          title: 'Can you update underlying table data through a simple view?',
           description:
             'Create a view v_pending_orders showing only pending orders, then update the status of order_id 1 to "shipped" through the view.',
           instructions: [
@@ -230,7 +230,7 @@ export const Day_40_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day40-t2',
-          title: 'Create a View with CHECK OPTION',
+          title: 'Can you enforce city boundaries using WITH CHECK OPTION?',
           description:
             'Create a view v_active_customers that shows only customers from "New York". Add WITH CHECK OPTION so no customer from another city can be inserted through this view.',
           instructions: [
@@ -256,7 +256,7 @@ export const Day_40_MODULE: ModuleData = {
         },
         {
           id: 'day40-t3',
-          title: 'Verify the Check Option Works',
+          title: 'Can you verify that WITH CHECK OPTION rejects non matching inserts?',
           description:
             'Using the v_active_customers view you created, try inserting a customer from "Boston". Observe that it is blocked. Then insert one from "New York" and confirm it succeeds.',
           instructions: [
@@ -351,7 +351,7 @@ export const Day_40_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day40-t4',
-          title: 'Replace a View Definition',
+          title: 'Can you update a view definition using CREATE OR REPLACE VIEW?',
           description:
             'A view v_high_stock currently shows products with quantity_in_stock > 50. The threshold needs to change to > 100. Use CREATE OR REPLACE VIEW to update it.',
           instructions: [
@@ -388,7 +388,7 @@ export const Day_40_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day40-ch1',
-        title: 'Create the Protected Low-Stock View',
+        title: 'Can you create a protected low stock inventory view?',
         description:
           'Create a view v_low_stock showing product_id, name, and quantity_in_stock for products where quantity_in_stock < 10. Add WITH CHECK OPTION to protect the filter.',
         instructions: [
@@ -413,7 +413,7 @@ export const Day_40_MODULE: ModuleData = {
       },
       {
         id: 'day40-ch2',
-        title: 'Upgrade the View With OR REPLACE',
+        title: 'Can you update the low stock threshold without dropping the view?',
         description:
           'The business changed the "low stock" threshold to < 5. Use CREATE OR REPLACE VIEW to update v_low_stock to the new threshold, keeping WITH CHECK OPTION in place.',
         instructions: [

@@ -121,7 +121,7 @@ export const Day_43_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day43-t1',
-          title: 'Create and Use a Tax Function',
+          title: 'Can you create and test a custom sales tax function?',
           description:
             'Create a function named fn_calculate_tax that accepts subtotal and tax_rate, and returns subtotal * tax_rate. Then select product_id, name, and the calculated tax using a 10% rate (0.10) for product_id = 1.',
           instructions: [
@@ -223,7 +223,7 @@ export const Day_43_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day43-t2',
-          title: 'Calculate Discount and Filter',
+          title: 'Can you filter and project product prices with a discount function?',
           description:
             'Create a function fn_discount_price(price, discount_rate) that returns price * (1 - discount_rate). Then query products where the discounted price at a 20% discount (0.20) is less than $15. Show name, price, and the discounted price as sale_price.',
           instructions: [
@@ -317,7 +317,7 @@ export const Day_43_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day43-t3',
-          title: 'Create and Clean Up a Function',
+          title: 'Can you create, test, and safely drop a custom scalar function?',
           description:
             'Create a temporary function fn_double_price(val DECIMAL) that returns val * 2. Verify it by calling it in a SELECT on product_id = 1, then drop it with DROP FUNCTION.',
           instructions: [
@@ -357,7 +357,7 @@ export const Day_43_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day43-ch1',
-        title: 'Build the Retail Markup Function',
+        title: 'Can you build and apply a standardized retail markup formula?',
         description:
           'Create a function fn_retail_price(cost DECIMAL) that returns (cost * 1.25) + 2.00. Then query all products showing product_id, name, price, and fn_retail_price(price) AS retail_price, sorted by retail_price descending.',
         instructions: [

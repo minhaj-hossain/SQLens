@@ -124,7 +124,7 @@ export const Day_54_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day54-t1',
-          title: 'Store and Extract JSON Attributes',
+          title: 'Can you store and extract semi structured attributes using JSON_EXTRACT?',
           description:
             'Create a user_profiles table with a preferences JSON column, insert two profiles, and project each user\'s theme.',
           instructions: [
@@ -215,7 +215,7 @@ export const Day_54_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day54-t2',
-          title: 'Filter Profiles by JSON Setting',
+          title: 'Can you filter user profiles based on nested JSON attributes?',
           description:
             'Query the user_profiles table and return only users who have preferences with theme equal to "dark".',
           instructions: [
@@ -308,7 +308,7 @@ export const Day_54_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day54-t3',
-          title: 'Extract and Unquote a JSON Attribute',
+          title: 'Can you unquote extracted JSON strings for clean display?',
           description:
             'Query user_profiles to extract and unquote the theme property using JSON_UNQUOTE and JSON_EXTRACT.',
           instructions: [
@@ -343,7 +343,7 @@ export const Day_54_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day54-ch1',
-        title: 'Filter Catalog by Dynamic JSON Attribute',
+        title: 'Can you query catalog inventory by dynamic JSON specification tags?',
         description:
           'Create an items table with a specs JSON column, insert two items, and query for items where storage equals "256GB".',
         instructions: [

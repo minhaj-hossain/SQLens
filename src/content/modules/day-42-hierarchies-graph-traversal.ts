@@ -124,7 +124,7 @@ export const Day_42_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day42-t1',
-          title: 'Build the Employees Table and Explore It',
+          title: 'Can you build and explore a self referencing employee table?',
           description:
             'Create the employees table, insert 5 rows (Alice as CEO, then 4 levels below), and do a self-join to see each employee with their direct manager.',
           instructions: [
@@ -213,7 +213,7 @@ export const Day_42_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day42-t2',
-          title: 'Walk from Dave to the CEO',
+          title: 'Can you traverse the management hierarchy upwards to the CEO?',
           description:
             'Using the employees table (already created with setupSql), write a WITH RECURSIVE query that starts at emp_id = 4 (Dave) and walks up to the CEO. Show name and level for each person in the chain.',
           instructions: [
@@ -303,7 +303,7 @@ export const Day_42_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day42-t3',
-          title: 'Build Dave\'s Breadcrumb',
+          title: 'Can you assemble a breadcrumb path from CEO to employee?',
           description:
             'Using the employees table, write a WITH RECURSIVE query that produces the breadcrumb path from CEO to Dave as a single string: "Alice > Bob > Carol > Dave".',
           instructions: [
@@ -331,7 +331,7 @@ export const Day_42_MODULE: ModuleData = {
         },
         {
           id: 'day42-t4',
-          title: 'Breadcrumbs for All Employees',
+          title: 'Can you generate breadcrumb reporting paths for every team member?',
           description:
             'Modify the query to show the full breadcrumb path for EVERY non-root employee (emp_id != 1). Use a CTE that starts from each person individually.',
           instructions: [
@@ -370,7 +370,7 @@ export const Day_42_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day42-ch1',
-        title: 'Walk DOWN from a VP',
+        title: 'Can you traverse downwards to find all reports under a leader?',
         description:
           'Create a 6-level org chart, then use WITH RECURSIVE to walk DOWN from Bob (emp_id = 2) and find all employees in his subtree. Show emp_id, name, and depth (Bob = 1).',
         instructions: [

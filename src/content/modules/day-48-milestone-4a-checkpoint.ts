@@ -112,7 +112,7 @@ export const Day_48_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day48-t1',
-          title: 'Deliverable 1: High-Value Orders View',
+          title: 'Can you build a high value orders view filtered by aggregate total?',
           description:
             'Create a view v_high_value_orders that exposes order_id, customer_id, status, and the order total aliased total_amount (SUM of quantity * unit_price) for orders whose total reaches 100 or more. Then query the view ordered by total_amount DESC.',
           instructions: [
@@ -144,7 +144,7 @@ export const Day_48_MODULE: ModuleData = {
         },
         {
           id: 'day48-t2',
-          title: 'Deliverable 2: Loyalty Discount Function',
+          title: 'Can you implement a parameterized member discount function?',
           description:
             'Create a scalar function fn_member_discount(base_price DECIMAL, discount_percent DECIMAL) that returns base_price * (1 - discount_percent / 100). Query product_id, name, price, and fn_member_discount(price, 15) AS discounted_price from products where product_id = 1.',
           instructions: [
@@ -173,7 +173,7 @@ export const Day_48_MODULE: ModuleData = {
         },
         {
           id: 'day48-t3',
-          title: 'Deliverable 3: Order Fulfillment Procedure',
+          title: 'Can you package order fulfillment into a stored procedure?',
           description:
             'Create a procedure sp_fulfill_shipment(target_id INT) that updates orders setting status = "shipped" WHERE order_id = target_id. Call it on order_id = 1, then select order_id and status from orders for order 1.',
           instructions: [
@@ -203,7 +203,7 @@ export const Day_48_MODULE: ModuleData = {
         },
         {
           id: 'day48-t4',
-          title: 'Deliverable 4: Inventory Change Trigger',
+          title: 'Can you deploy an automatic inventory adjustment trigger?',
           description:
             'Create an audit table stock_audit (audit_id INT PRIMARY KEY AUTO_INCREMENT, product_id INT, old_qty INT, new_qty INT). Create an AFTER UPDATE trigger trg_audit_stock on products that inserts OLD.product_id, OLD.quantity_in_stock, and NEW.quantity_in_stock. Update product 1 to add 5 units of stock, then query stock_audit.',
           instructions: [
@@ -245,7 +245,7 @@ export const Day_48_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day48-ch1',
-        title: 'Master Capstone Integration',
+        title: 'Can you architect an integrated low stock alert view?',
         description:
           'Create a view v_low_stock_alerts showing product_id, name, and quantity_in_stock where quantity_in_stock < 20. Then create a procedure sp_emergency_reorder(min_stock INT) that sets quantity_in_stock = quantity_in_stock + 50 WHERE quantity_in_stock < min_stock. Query the view before and after calling sp_emergency_reorder(20).',
         instructions: [

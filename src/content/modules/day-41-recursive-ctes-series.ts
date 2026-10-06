@@ -136,7 +136,7 @@ export const Day_41_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day41-t1',
-          title: 'Generate Numbers 1 to 7',
+          title: 'Can you generate a sequence of numbers from 1 to 7?',
           description:
             'Write a WITH RECURSIVE query that generates the numbers 1 through 7 in a single column called n.',
           instructions: [
@@ -224,7 +224,7 @@ export const Day_41_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day41-t2',
-          title: 'Generate Even Numbers 2 to 20',
+          title: 'Can you generate even numbers up to 20 with recursive addition?',
           description:
             'Write a WITH RECURSIVE query that generates the even numbers 2, 4, 6, 8, 10, 12, 14, 16, 18, 20.',
           instructions: [
@@ -314,7 +314,7 @@ export const Day_41_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day41-t3',
-          title: 'Generate a 7-Day Date Series',
+          title: 'Can you generate a seven day calendar date series?',
           description:
             'Write a WITH RECURSIVE query that generates every date from 2024-01-01 through 2024-01-07 (7 rows total).',
           instructions: [
@@ -340,7 +340,7 @@ export const Day_41_MODULE: ModuleData = {
         },
         {
           id: 'day41-t4',
-          title: 'Fill the Zero-Orders Gap',
+          title: 'Can you fill zero order calendar gaps using a date series?',
           description:
             'Using a date series from 2024-01-01 to 2024-01-07, LEFT JOIN with orders to count how many orders were placed each day. Days with no orders should show 0.',
           instructions: [
@@ -383,7 +383,7 @@ export const Day_41_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day41-ch1',
-        title: 'Daily Revenue Report with Gap-Filling',
+        title: 'Can you build a complete daily revenue timeline with zero gap filling?',
         description:
           'Generate all 31 days of January 2024 using WITH RECURSIVE, then LEFT JOIN orders and order_items to compute total revenue per day (SUM of quantity * unit_price). Show sale_date and daily_revenue. Days with no sales should show 0.',
         instructions: [

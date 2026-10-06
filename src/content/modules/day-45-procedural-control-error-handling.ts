@@ -119,7 +119,7 @@ export const Day_45_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day45-t1',
-          title: 'Execute a Guarded Inventory Deduction',
+          title: 'Can you prevent inventory underflow using conditional updates?',
           description:
             'Deduct 10 units from product_id = 1, but only if quantity_in_stock is at least 10. Then select product_id, name, and quantity_in_stock for product 1 to confirm the new stock level.',
           instructions: [
@@ -218,7 +218,7 @@ export const Day_45_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day45-t2',
-          title: 'Protect Mutations with Rollback',
+          title: 'Can you protect database state with an explicit transaction rollback?',
           description:
             'Start a transaction with BEGIN. Update product_id = 1 setting price = 999.99. Then execute ROLLBACK to cancel the mistake, and query product 1 to confirm its original price is preserved.',
           instructions: [
@@ -315,7 +315,7 @@ export const Day_45_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day45-t3',
-          title: 'Observe Constraint Rejection on Invalid Data',
+          title: 'Can you enforce domain invariants using CHECK constraint rejections?',
           description:
             'An accounts table exists with a CHECK constraint requiring balance >= 0. Setting balance = -50 on the existing account violates that rule. Run this script and observe the failure.',
           instructions: [
@@ -356,7 +356,7 @@ export const Day_45_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day45-ch1',
-        title: 'Execute Safe Atomic Checkout',
+        title: 'Can you execute an atomic checkout with underflow guards?',
         description:
           'Wrap the inventory deduction in a transaction: BEGIN, update product 2 subtracting 3 units with the safety guard quantity_in_stock >= 3, COMMIT, and select product 2 to verify the final quantity.',
         instructions: [

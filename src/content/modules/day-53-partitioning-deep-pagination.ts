@@ -126,7 +126,7 @@ export const Day_53_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day53-t1',
-          title: 'Fetch Page 2 Using Standard OFFSET',
+          title: 'Can you fetch paginated catalog records using traditional OFFSET?',
           description:
             'Write a query to fetch the second page of products (page size 5) using LIMIT and OFFSET.',
           instructions: [
@@ -226,7 +226,7 @@ export const Day_53_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day53-t2',
-          title: 'Implement Keyset Pagination',
+          title: 'Can you achieve constant time pagination with keyset cursor filtering?',
           description:
             'Write a keyset query to fetch the 5 products that follow product_id = 5, ordered by product_id ASC.',
           instructions: [
@@ -328,7 +328,7 @@ export const Day_53_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day53-t3',
-          title: 'Keyset Pagination on Orders with Filtering',
+          title: 'Can you combine status filtering with keyset pagination on orders?',
           description:
             'Write a keyset pagination query on the orders table to retrieve 5 delivered orders where order_id > 3, ordered by order_id ASC.',
           instructions: [
@@ -362,7 +362,7 @@ export const Day_53_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day53-ch1',
-        title: 'Customer Feed Keyset Cursor',
+        title: 'Can you implement a fast customer feed cursor for delivered orders?',
         description:
           'Fetch the next delivered orders for customer_id = 1 with order_id > 1, ordered by order_id ASC, limited to 2 items.',
         instructions: [

@@ -115,7 +115,7 @@ export const Day_49_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day49-t1',
-          title: 'Set Up an Accounts Table and Read It',
+          title: 'Can you initialize and inspect concurrent banking balances?',
           description:
             'Create a simple accounts table and run a SELECT to see the current balances. This is the foundation for understanding what two transactions would see.',
           instructions: [
@@ -204,7 +204,7 @@ export const Day_49_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day49-t2',
-          title: 'Write a Transaction with an Explicit Isolation Level',
+          title: 'Can you execute a transaction under explicit REPEATABLE READ isolation?',
           description:
             'Write a transaction that explicitly sets REPEATABLE READ isolation, reads account balances, and commits. This is how you protect a read from non-repeatable read anomalies.',
           instructions: [
@@ -308,7 +308,7 @@ export const Day_49_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day49-t3',
-          title: 'Safe Balance Transfer with REPEATABLE READ',
+          title: 'Can you execute a balance transfer with repeatable read guarantees?',
           description:
             'Write a transaction that checks Alice\'s balance, then transfers 200 to Bob only if she has enough. Use REPEATABLE READ to protect the check from concurrent interference.',
           instructions: [
@@ -349,7 +349,7 @@ export const Day_49_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day49-ch1',
-        title: 'Fix the Ticket Booking to Prevent Overselling',
+        title: 'Can you prevent ticket overselling in concurrent booking transactions?',
         description:
           'Create an events table with 1 ticket left. Write a safe booking transaction using REPEATABLE READ that only succeeds if a ticket is actually available, preventing the lost-update problem.',
         instructions: [

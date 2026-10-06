@@ -118,7 +118,7 @@ export const Day_50_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day50-t1',
-          title: 'Sell an Item Safely with FOR UPDATE',
+          title: 'Can you prevent race conditions using SELECT FOR UPDATE row locking?',
           description:
             'Create a store_inventory table, then write a transaction that locks a row, checks stock, and decrements it safely. The FOR UPDATE prevents another transaction from changing the stock between your read and write.',
           instructions: [
@@ -208,7 +208,7 @@ export const Day_50_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day50-t2',
-          title: 'Use a Savepoint to Protect a Partial Transfer',
+          title: 'Can you isolate partial failures using transaction savepoints?',
           description:
             'Write a transaction that debits Alice by 200, creates a savepoint, tries to credit an account that does not exist (id=99), rolls back only that failed step, and commits the debit.',
           instructions: [
@@ -302,7 +302,7 @@ export const Day_50_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day50-t3',
-          title: 'Safe Multi-Row Lock with Ordered SELECT FOR UPDATE',
+          title: 'Can you eliminate deadlocks by enforcing deterministic lock acquisition?',
           description:
             'Write a transfer transaction that locks BOTH the source and destination rows in consistent order (lower ID first) before making any changes. This is the deadlock-prevention pattern.',
           instructions: [
@@ -343,7 +343,7 @@ export const Day_50_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day50-ch1',
-        title: 'Book a Seat with a Protected Audit Log',
+        title: 'Can you book reserved seats safely with row locks and audit logging?',
         description:
           'Create a seats table and a booking_log table. Write a transaction that locks seat 5, marks it reserved, creates a savepoint, inserts an audit row, then commits. The savepoint protects the booking if the audit insert ever fails.',
         instructions: [

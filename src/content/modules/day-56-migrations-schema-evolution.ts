@@ -115,7 +115,7 @@ export const Day_56_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day56-t1',
-          title: 'Phase 1: Expand the Products Schema',
+          title: 'Can you execute the expand phase by adding a nullable column?',
           description:
             'Execute the Expand phase on the products table by adding a new column named discount_price, then query the table to verify its presence.',
           instructions: [
@@ -199,7 +199,7 @@ export const Day_56_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day56-t2',
-          title: 'Execute Expand and Backfill',
+          title: 'Can you backfill historical pricing data safely in production?',
           description:
             'Expand the products table with discount_price, backfill it with price * 0.9 for all rows, and select the updated products.',
           instructions: [
@@ -236,7 +236,7 @@ export const Day_56_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day56-ch1',
-        title: 'Migrate and Backfill Customer Loyalty Points',
+        title: 'Can you migrate and backfill default customer loyalty rewards?',
         description:
           'Alter the customers table to add loyalty_points INTEGER, backfill all existing customers with 100 points, and query customer_id, name, and loyalty_points.',
         instructions: [

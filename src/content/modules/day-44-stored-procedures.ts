@@ -128,7 +128,7 @@ export const Day_44_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day44-t1',
-          title: 'Create and Call a Restocking Procedure',
+          title: 'Can you create and execute a parameter driven restock procedure?',
           description:
             'Create a procedure named sp_restock_product(p_id INT, p_qty INT) that increases quantity_in_stock by p_qty for product_id = p_id. Then call it to add 15 units to product 1, and verify with a SELECT.',
           instructions: [
@@ -227,7 +227,7 @@ export const Day_44_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day44-t2',
-          title: 'Build an Order Status Procedure',
+          title: 'Can you package an order status update into a stored procedure?',
           description:
             'Create a procedure sp_update_order_status(target_order_id INT, new_status TEXT) that updates the status of the specified order. Then call it to set order_id = 2 to "completed". Verify with a SELECT on order 2.',
           instructions: [
@@ -322,7 +322,7 @@ export const Day_44_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day44-t3',
-          title: 'Create, Call, and Drop a Procedure',
+          title: 'Can you deploy, execute, and decommission a stored procedure?',
           description:
             'Create a temporary procedure sp_discount_product(p_id INT, amt DECIMAL) that reduces a product price by amt. Call it on product_id = 2 with amt = 5.00, verify the change, then drop the procedure.',
           instructions: [
@@ -363,7 +363,7 @@ export const Day_44_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day44-ch1',
-        title: 'Build the Inventory Clearance Procedure',
+        title: 'Can you automate warehouse clearance discounts with a procedure?',
         description:
           'Create a procedure sp_apply_clearance() that updates products with quantity_in_stock > 100, setting price = price * 0.85. Call the procedure, then select product_id, name, price, and quantity_in_stock for products with quantity_in_stock > 100.',
         instructions: [

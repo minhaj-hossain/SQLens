@@ -125,7 +125,7 @@ export const Day_51_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day51-t1',
-          title: 'Inspect an Unindexed Query with EXPLAIN',
+          title: 'Can you inspect full table scan cost using EXPLAIN?',
           description:
             'Use EXPLAIN to inspect the execution plan for an unindexed filter on the products table.',
           instructions: [
@@ -219,7 +219,7 @@ export const Day_51_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day51-t2',
-          title: 'Create an Index and Verify Plan Improvement',
+          title: 'Can you verify index range access in the EXPLAIN query plan?',
           description:
             'Create an index on the products price column, then run EXPLAIN to prove the engine switches from ALL to range.',
           instructions: [
@@ -311,7 +311,7 @@ export const Day_51_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day51-t3',
-          title: 'Observe a type = const Lookup',
+          title: 'Can you identify constant primary key lookups in query plans?',
           description:
             'Run an EXPLAIN query looking up a category by its primary key category_id to observe the const access type.',
           instructions: [
@@ -344,7 +344,7 @@ export const Day_51_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day51-ch1',
-        title: 'Optimize the Customer City Filter',
+        title: 'Can you optimize regional customer lookups with indexed execution plans?',
         description:
           'Create an index on the customers table for the city column, then run an EXPLAIN query filtering by city to verify the index is used.',
         instructions: [

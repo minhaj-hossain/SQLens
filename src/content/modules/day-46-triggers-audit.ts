@@ -118,7 +118,7 @@ export const Day_46_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day46-t1',
-          title: 'Create an Automatic Update Trigger',
+          title: 'Can you record automated audit entries when product rows update?',
           description:
             'Create an audit table named product_audit with columns: audit_id INT PRIMARY KEY AUTO_INCREMENT, product_id INT, action TEXT. Then create an AFTER UPDATE trigger trg_audit_product on products that inserts into product_audit (product_id, action) VALUES (NEW.product_id, "PRICE_UPDATED"). Update product 1 to trigger it, and query product_audit.',
           instructions: [
@@ -219,7 +219,7 @@ export const Day_46_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day46-t2',
-          title: 'Track Before-and-After Prices in Audit Log',
+          title: 'Can you capture before and after price history with OLD and NEW?',
           description:
             'Create a table price_history with columns: hist_id INT PRIMARY KEY AUTO_INCREMENT, product_id INT, old_price DECIMAL, new_price DECIMAL. Create an AFTER UPDATE trigger trg_track_price that logs OLD.product_id, OLD.price, and NEW.price. Update product 1 setting price = 29.99, then select product_id, old_price, and new_price from price_history.',
           instructions: [
@@ -315,7 +315,7 @@ export const Day_46_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day46-t3',
-          title: 'Create and Remove a Trigger',
+          title: 'Can you create and safely drop an event trigger?',
           description:
             'Create a temporary trigger trg_temp_check AFTER UPDATE ON products FOR EACH ROW BEGIN INSERT INTO categories (name) VALUES ("Temp"); END; and then immediately remove it using DROP TRIGGER.',
           instructions: [
@@ -354,7 +354,7 @@ export const Day_46_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day46-ch1',
-        title: 'Build the Deletion Audit Trigger',
+        title: 'Can you build an immutable deletion audit trigger?',
         description:
           'Create a table deleted_items_log with columns: log_id INT PRIMARY KEY AUTO_INCREMENT, order_id INT, product_id INT. Create an AFTER DELETE trigger trg_log_delete on order_items that logs OLD.order_id and OLD.product_id. Delete the row with order_item_id = 1 from order_items, then query deleted_items_log.',
         instructions: [

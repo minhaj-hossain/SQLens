@@ -123,7 +123,7 @@ export const Day_55_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day55-t1',
-          title: 'Provision a Secure Reporting View and Role',
+          title: 'Can you provision a public reporting view and role under least privilege?',
           description:
             'Create a public view of suppliers exposing only supplier_id and name (hiding email), create a reporting role, and grant SELECT permission on the view.',
           instructions: [
@@ -221,7 +221,7 @@ export const Day_55_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day55-t2',
-          title: 'Build a Regional Boundary View',
+          title: 'Can you enforce regional tenancy boundaries with a filtered view?',
           description:
             'Create a regional view named v_dhaka_customers showing customer_id, name, and city for Dhaka customers, grant access to regional_analyst, and query it.',
           instructions: [
@@ -259,7 +259,7 @@ export const Day_55_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day55-ch1',
-        title: 'Provision an Aggregated Boundary View',
+        title: 'Can you protect underlying order rows using an aggregated summary view?',
         description:
           'Create a view named v_customer_order_counts that groups orders by customer_id and counts total orders as order_count. Grant SELECT to vendor_role and query the view.',
         instructions: [

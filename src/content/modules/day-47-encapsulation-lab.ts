@@ -121,7 +121,7 @@ export const Day_47_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day47-t1',
-          title: 'Refactor Query into a Reusable View',
+          title: 'Can you encapsulate multi table inventory reporting in a reusable view?',
           description:
             'Create a view v_product_inventory that combines products and categories, showing: product_id, product name (aliased as product_name), category name (aliased as category_name), price, and quantity_in_stock. Then query it ordered by product_id ASC.',
           instructions: [
@@ -153,7 +153,7 @@ export const Day_47_MODULE: ModuleData = {
         },
         {
           id: 'day47-t2',
-          title: 'Encapsulate Fee Calculation into a Function',
+          title: 'Can you encapsulate threshold shipping logic into a stored function?',
           description:
             'Create a function fn_shipping_fee(item_price DECIMAL) that calculates shipping: returns 0.00 for items >= 50.00 (free shipping) and 5.99 for items under 50.00. Then query product_id, name, price, and fn_shipping_fee(price) AS shipping_fee from products where product_id <= 3.',
           instructions: [
@@ -182,7 +182,7 @@ export const Day_47_MODULE: ModuleData = {
         },
         {
           id: 'day47-t3',
-          title: 'Package an Inventory Adjustment Procedure',
+          title: 'Can you package stock level adjustments into a safe procedure?',
           description:
             'Create a stored procedure sp_adjust_inventory(p_id INT, delta INT) that modifies quantity_in_stock by adding delta (can be positive for restock or negative for sale). Call it to add 10 units to product 1, then select product 1.',
           instructions: [
@@ -223,7 +223,7 @@ export const Day_47_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day47-ch1',
-        title: 'Deploy Customer Relocation Trigger',
+        title: 'Can you deploy an audit trigger to track customer city relocations?',
         description:
           'Create table customer_audit (audit_id INT PRIMARY KEY AUTO_INCREMENT, customer_id INT, old_city TEXT, new_city TEXT). Create an AFTER UPDATE trigger trg_audit_city on customers that logs customer_id, OLD.city, and NEW.city. Update customer 1 setting city = "San Francisco". Then query customer_audit.',
         instructions: [
