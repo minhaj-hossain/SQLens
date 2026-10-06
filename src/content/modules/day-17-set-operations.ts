@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 17 — Set Operations  (id: day-17 · order 17)
@@ -153,7 +153,7 @@ export const Day_17_MODULE: ModuleData = {
       tasks: [
         {
           id: 'union-all-t1',
-          title: 'Task 1 (Guided): One directory for customers and suppliers',
+          title: 'Can you build one directory containing customers and suppliers?',
           description: 'Ops keeps two contact lists and keeps losing one of them. Stack customers and suppliers into a single name list, with a source tag per row.',
           instructions: [
             "Top query: SELECT `name`, `'Customer' AS source` FROM `customers`.",
@@ -182,7 +182,7 @@ export const Day_17_MODULE: ModuleData = {
         },
         {
           id: 'union-all-t2',
-          title: 'Task 2 (Independent): All cities, duplicates and all',
+          title: 'Can you list every city from both sources without removing duplicates?',
           description: 'New pair of tables, same move: stack the cities of every customer with the cities of every student — no deduplication yet, raw rows only.',
           instructions: [
             'SELECT `city` FROM `customers` UNION ALL SELECT `city` FROM `students`.',
@@ -334,7 +334,7 @@ export const Day_17_MODULE: ModuleData = {
       tasks: [
         {
           id: 'union-dedupe-t1',
-          title: 'Task 1 (Guided): The one-row-per-city report',
+          title: 'Can you build a one row per city report?',
           description: 'The city report must list each city once, whether it is home to customers, students, or both.',
           instructions: [
             'SELECT `city` FROM `customers` UNION SELECT `city` FROM `students`.',
@@ -362,7 +362,7 @@ export const Day_17_MODULE: ModuleData = {
         },
         {
           id: 'union-dedupe-t2',
-          title: 'Task 2 (Independent): When UNION changes nothing',
+          title: 'Can you find a case where UNION removes nothing?',
           description: 'Dedupe only matters when duplicates exist. Stack every customer email with every supplier contact email - using UNION - and watch the row count. Two customers have NULL emails, so guard them first.',
           instructions: [
             'SELECT email AS contact FROM customers WHERE email IS NOT NULL UNION SELECT contact_email AS contact FROM suppliers.',
@@ -502,7 +502,7 @@ export const Day_17_MODULE: ModuleData = {
       tasks: [
         {
           id: 'shape-compat-t1',
-          title: 'Bug Hunt (Guided): Repair the broken directory',
+          title: 'Can you fix the broken directory query?',
           description: "A teammate's combined directory refuses to run. Diagnose the shape mismatch, then fix it so both sides stack cleanly.",
           instructions: [
             'The broken query: `SELECT name, city FROM customers UNION ALL SELECT name FROM suppliers;` — run it and read the error.',
@@ -532,7 +532,7 @@ export const Day_17_MODULE: ModuleData = {
         },
         {
           id: 'shape-compat-t2',
-          title: 'Task 2 (Independent): Build an aligned 2-column stack',
+          title: 'Can you combine two result sets into one aligned two column list?',
           description: 'From scratch this time: stack customers and students (both tables have name and city) into one 2-column directory.',
           instructions: [
             'SELECT `name, city` FROM `customers` UNION ALL SELECT `name, city` FROM `students`.',
@@ -682,7 +682,7 @@ export const Day_17_MODULE: ModuleData = {
       tasks: [
         {
           id: 'except-t1',
-          title: 'Task 1 (Guided): Never-ordered products, the direct way',
+          title: 'Can you find products that have never been ordered using EXCEPT?',
           description: 'Day 14 needed a LEFT JOIN and an IS NULL check for this. Now state it directly: product IDs that appear nowhere in order_items.',
           instructions: [
             'SELECT `product_id` FROM `products` EXCEPT SELECT `product_id` FROM `order_items`.',
@@ -710,7 +710,7 @@ export const Day_17_MODULE: ModuleData = {
         },
         {
           id: 'except-t2',
-          title: 'Task 2 (Independent): Customers who never ordered',
+          title: 'Can you find customers who have never placed an order?',
           description: 'New pair, same direction logic: find the IDs of customers who have never placed an order. (You met them on Day 14 as the zero-order trio.)',
           instructions: [
             'SELECT `customer_id` FROM `customers` EXCEPT SELECT `customer_id` FROM `orders`.',
@@ -750,7 +750,7 @@ export const Day_17_MODULE: ModuleData = {
     tasks: [
       {
         id: 'setops-hw-1',
-        title: 'Task 1: The tagged all-people directory',
+        title: 'Can you build one directory that identifies every person by source?',
         description: 'One sorted list of every person in the system — customers and suppliers — each row tagged with its source. Sort by the tag (Customer first), then by name.',
         instructions: [
           "SELECT `name`, `'Customer' AS source` FROM `customers` UNION ALL SELECT `name`, `'Supplier' AS source` FROM `suppliers`.",
@@ -777,7 +777,7 @@ export const Day_17_MODULE: ModuleData = {
       },
       {
         id: 'setops-hw-2',
-        title: 'Task 2: Dead stock report (EXCEPT edition)',
+        title: 'Can you find dead stock using EXCEPT?',
         description: "The warehouse team wants the dead-stock list — catalog products that have never sold — and this time they want product names, not just IDs.",
         instructions: [
           'Left side: SELECT `product_id, name` FROM `products`.',
@@ -805,7 +805,7 @@ export const Day_17_MODULE: ModuleData = {
       },
       {
         id: 'setops-hw-3',
-        title: "Task 3: Cities we serve but the university doesn't (final boss)",
+        title: 'Can you find cities we serve that the university does not?',
         description: 'A partnership report: cities where the shop has customers but no students live. One EXCEPT, one direction decision — get the sides right and the answer falls out.',
         instructions: [
           'Left side: SELECT `city` FROM `customers`.',

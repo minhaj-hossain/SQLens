@@ -112,7 +112,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c1a-t1',
-          title: 'Task 1: Total Product Count',
+          title: 'How many products are in the catalog?',
           description: 'Calculate the total number of products in the products table using COUNT(*).',
           instructions: [
             'Select `COUNT(*) AS total_products` from `products`.',
@@ -134,7 +134,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c1a-t2',
-          title: 'Task 2: Count Customers with Valid Email',
+          title: 'How many customers have a valid email?',
           description: 'Use COUNT(email) to count how many customers have provided a valid (non-NULL) email address without using a WHERE clause.',
           instructions: [
             'Query the `customers` table.',
@@ -243,7 +243,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c1b-t1',
-          title: 'Task 1: Minimum Product Price',
+          title: 'What is the lowest product price in the catalog?',
           description: 'Find the lowest product price in the products table using MIN(price).',
           instructions: [
             'Select `MIN(price) AS lowest_price` from `products`.',
@@ -265,7 +265,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c1b-t2',
-          title: 'Task 2: Youngest Student Age',
+          title: 'What is the youngest student\'s age?',
           description: 'Find the youngest student age in the students table using MIN(age).',
           instructions: [
             'Query the `students` table.',
@@ -379,7 +379,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c1c-t1',
-          title: 'Task 1: Maximum Product Price',
+          title: 'What is the highest product price in the catalog?',
           description: 'Find the highest product price in the products table using MAX(price).',
           instructions: [
             'Select `MAX(price) AS highest_price` from `products`.',
@@ -401,7 +401,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c1c-t2',
-          title: 'Task 2: Oldest Student Age',
+          title: 'What is the oldest student\'s age?',
           description: 'Find the oldest student age in the students table using MAX(age).',
           instructions: [
             'Query the `students` table.',
@@ -513,7 +513,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c1d-t1',
-          title: 'Task 1: Total Catalog Price Sum',
+          title: 'What is the total price across the catalog?',
           description: 'Calculate the sum of all product prices using SUM(price).',
           instructions: [
             'Select `SUM(price) AS total_catalog_price` from `products`.',
@@ -535,7 +535,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c1d-t2',
-          title: 'Task 2: Total Units in Stock',
+          title: 'How many units are currently in stock?',
           description: 'Calculate the total number of stock units across all products in inventory.',
           instructions: [
             'Query the `products` table.',
@@ -651,7 +651,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c1e-t1',
-          title: 'Task 1: Average Product Price',
+          title: 'What is the average product price?',
           description: 'Calculate the average price of all products in the catalog.',
           instructions: [
             'Select `AVG(price) AS avg_price` from `products`.',
@@ -673,7 +673,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c1e-t2',
-          title: 'Task 2: Average Student Age',
+          title: 'What is the average age of the students?',
           description: 'Calculate the average age of all students in the students table.',
           instructions: [
             'Query the `students` table.',
@@ -798,7 +798,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c2-t1',
-          title: 'Task 1: Total Products per Category',
+          title: 'How many products are in each category?',
           description: 'Count the total number of products in each category.',
           instructions: [
             'Select `category_id` and `COUNT(*) AS total_products` from `products`.',
@@ -822,7 +822,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c2-t2',
-          title: 'Task 2: Customer Distribution by City',
+          title: 'How are customers distributed across cities?',
           description: 'Count the number of customers residing in each city.',
           instructions: [
             'Query the `customers` table.',
@@ -946,7 +946,7 @@ export const Day_09_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day09-c3-t1',
-          title: 'Task 1: Average Price per Category',
+          title: 'Can you rank categories by their average product price?',
           description: 'Calculate the average price for each category, sorted highest first.',
           instructions: [
             'Select `category_id` and `AVG(price) AS avg_price` from `products`.',
@@ -971,7 +971,7 @@ export const Day_09_MODULE: ModuleData = {
         },
         {
           id: 'day09-c3-t2',
-          title: 'Task 2: High Density Cities (HAVING)',
+          title: 'Which cities have at least two customers?',
           description: 'Find cities with 2 or more customers, sorted by customer count descending.',
           instructions: [
             'Query the `customers` table.',
@@ -1012,7 +1012,7 @@ export const Day_09_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day09-hw-1',
-        title: 'Task 1: Total products per category',
+        title: 'How many products does each category have?',
         description: 'Total products per category.',
         instructions: [
           'Select `category_id` and `COUNT(*) AS total_products` from `products` grouped by `category_id`.',
@@ -1035,7 +1035,7 @@ export const Day_09_MODULE: ModuleData = {
       },
       {
         id: 'day09-hw-2',
-        title: 'Task 2: Average price per category, sorted highest first',
+        title: 'Which categories have the highest average prices?',
         description: 'Average price per category, sorted highest first.',
         instructions: [
           'Select `category_id` and `AVG(price) AS avg_price` from `products` grouped by `category_id` ordered by `avg_price DESC`.',
@@ -1059,7 +1059,7 @@ export const Day_09_MODULE: ModuleData = {
       },
       {
         id: 'day09-hw-3',
-        title: 'Task 3: Categories with average price above $25 (HAVING)',
+        title: 'Which categories have an average price above $25?',
         description: 'Categories with average price above $25 (HAVING).',
         instructions: [
           'Select `category_id` and `AVG(price) AS avg_price` from `products` grouped by `category_id` having `AVG(price) > 25`.',

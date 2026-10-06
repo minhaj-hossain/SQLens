@@ -107,7 +107,7 @@ export const Day_19_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day15-c1-t1',
-          title: 'Task 1 (Guided): Recent Customer Spending (Last 60 Days)',
+          title: 'Can you calculate recent customer spending for the last 60 days?',
           description: 'Calculate customer spend for orders placed on or after 2026-06-25 (last 60 days).',
           instructions: [
             'Select `c.name`, `SUM(oi.quantity * oi.unit_price) AS recent_spend` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
@@ -138,7 +138,7 @@ export const Day_19_MODULE: ModuleData = {
         },
         {
           id: 'day15-c1-t2',
-          title: 'Task 2 (Independent): Inactive Customer Audit',
+          title: 'Can you identify customers who have been inactive?',
           description: 'Identify customers who have placed 0 orders by grouping with a LEFT JOIN and filtering with HAVING.',
           instructions: [
             'Query `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`.',
@@ -177,7 +177,7 @@ export const Day_19_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day15-hw-1',
-        title: 'Task 1: Polish multi-table customer spend report with date range',
+        title: 'Can you add a date window to the customer spending report?',
         description: 'Rebuild the multi-table customer spend report so only orders from the cutoff date onward count — then run it and sanity-check the totals against the raw orders.',
         instructions: [
           'Select `c.name`, `SUM(oi.quantity * oi.unit_price) AS recent_spend` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` WHERE `o.order_date >= \'2026-06-25\'` GROUP BY `c.customer_id`, `c.name` ORDER BY `recent_spend DESC`.',
@@ -202,7 +202,7 @@ export const Day_19_MODULE: ModuleData = {
       },
       {
         id: 'day19-hw-2',
-        title: 'Increase one product price by 10% without changing other products',
+        title: 'Can you find customers who have been inactive for 90 days or have never ordered?',
         description: 'Audit customers whose last order is older than 90 days — or who never ordered at all. Rebuild the inactive account audit with relative dates and DATEDIFF.',
         instructions: [
           'FROM `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`; GROUP BY `c.customer_id, c.name`.',

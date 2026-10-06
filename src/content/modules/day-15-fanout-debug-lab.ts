@@ -118,7 +118,7 @@ export const Day_15_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day12-c1-t1',
-          title: 'Task 1 (Guided Fix): Fix Customer Order Count & Spend',
+          title: 'Can you fix the inflated order count and spend total?',
           description: 'Calculate distinct order count and total money spent per customer across 3 joined tables.',
           instructions: [
             'Query `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id`.',
@@ -147,7 +147,7 @@ export const Day_15_MODULE: ModuleData = {
         },
         {
           id: 'day12-c1-t2',
-          title: 'Task 2 (Transfer): Category Product Inventory Valuation',
+          title: 'Can you calculate category inventory value without double counting products?',
           description: 'Join categories with products to calculate total inventory units and average product price per category.',
           instructions: [
             'Query `categories c` JOIN `products p` ON `c.category_id = p.category_id`.',
@@ -187,7 +187,7 @@ export const Day_15_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day12-hw-1',
-        title: 'Task 1: Per-customer order counts and spend totals across multiple joins',
+        title: 'Can you calculate each customer\'s order count and total spend without fan out errors?',
         description: 'Per-customer distinct order counts and spend totals across customers, orders, and order_items.',
         instructions: [
           'Select `c.name`, `COUNT(DISTINCT o.order_id) AS order_count`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name`.',

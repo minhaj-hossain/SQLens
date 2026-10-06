@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_13_MODULE: ModuleData = {
   id: 'day-13',
@@ -116,7 +116,7 @@ export const Day_13_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day10-c1-t1',
-          title: 'Task 1 (High Guidance): Category Overview Widget',
+          title: 'Can you build a category overview for the dashboard?',
           description: 'Calculate product count and average price per category for categories averaging above $15, sorted by product count descending.',
           instructions: [
             'Query the `products` table.',
@@ -147,7 +147,7 @@ export const Day_13_MODULE: ModuleData = {
         },
         {
           id: 'day10-c1-t2',
-          title: 'Task 2 (Partial Guidance): Order Status Breakdown',
+          title: 'Can you break down all orders by status?',
           description: 'Count the total number of orders for each status in the orders table, sorted by count descending.',
           instructions: [
             'Query the `orders` table.',
@@ -176,7 +176,7 @@ export const Day_13_MODULE: ModuleData = {
         },
         {
           id: 'day10-c1-t3',
-          title: 'Task 3 (Goal Only): In-Stock Category Inventory Audit',
+          title: 'Can you audit inventory levels for every category?',
           description: 'Count how many in-stock products each category has (ignore products with zero stock). Only include categories that have at least 4 in-stock products, and put the categories with the most in-stock products first.',
           instructions: [
             'Select `category_id` and `COUNT(*) AS in_stock_count` from `products`.',
@@ -218,7 +218,7 @@ export const Day_13_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day10-hw-1',
-        title: 'Task 1: "Category Overview" Dashboard Widget',
+        title: 'Can you build the Category Overview dashboard widget?',
         description: '"Category Overview" dashboard widget — product count and average price per category, only categories averaging above $15, sorted by product count descending.',
         instructions: [
           'Select `category_id`, `COUNT(*) AS product_count`, `AVG(price) AS avg_price` from `products` grouped by `category_id` having `AVG(price) > 15` order by `product_count DESC`.',

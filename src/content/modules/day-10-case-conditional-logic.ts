@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 // =============================================================================
 // DAY 10 — CASE & Conditional Logic  (id: day-10 · order 10)
@@ -126,7 +126,7 @@ export const Day_10_MODULE: ModuleData = {
       tasks: [
         {
           id: 'case-basic-t1',
-          title: 'Task 1 (Guided): Label every product\'s stock status',
+          title: 'Can you label every product as In Stock or Sold Out?',
           description: 'Produce a stock_status column: \'Out of Stock\' for products with 0 units, \'Available\' for everything else.',
           instructions: [
             'Select `name`, `quantity_in_stock`, then a CASE: WHEN `quantity_in_stock = 0` THEN `\'Out of Stock\'`, ELSE `\'Available\'`.',
@@ -153,7 +153,7 @@ export const Day_10_MODULE: ModuleData = {
         },
         {
           id: 'case-basic-t2',
-          title: 'Task 2 (Independent): Flag customers with missing emails',
+          title: 'Can you flag customers who are missing an email?',
           description: 'Newsletter audit: produce email_status = \'Missing\' when email is NULL, \'OK\' otherwise. (Recall Day 3: NULL needs IS NULL.)',
           instructions: [
             'Select `name`, `email`, then CASE WHEN `email IS NULL` THEN `\'Missing\'` ELSE `\'OK\'` END AS `email_status`.',
@@ -263,7 +263,7 @@ export const Day_10_MODULE: ModuleData = {
       tasks: [
         {
           id: 'case-multi-t1',
-          title: 'Task 1 (Guided): Build the price tier system',
+          title: 'Can you sort products into Budget, Standard, and Premium tiers?',
           description: 'Classify products: < 25 → \'Budget\', < 100 → \'Standard\', otherwise \'Premium\'.',
           instructions: [
             'Select `name`, `price`, and a three-branch CASE AS `price_tier`.',
@@ -290,7 +290,7 @@ export const Day_10_MODULE: ModuleData = {
         },
         {
           id: 'case-multi-t2',
-          title: 'Task 2 (Independent): Stock health labels',
+          title: 'Can you label the stock health of each product?',
           description: 'Ops wants stock health: quantity_in_stock = 0 → \'Zero\', < 10 → \'Low\', otherwise \'Healthy\'. Same shape, different column and domain.',
           instructions: [
             'Select `name`, `quantity_in_stock`, and a three-branch CASE AS `stock_health`.',
@@ -410,7 +410,7 @@ export const Day_10_MODULE: ModuleData = {
       tasks: [
         {
           id: 'case-order-t1',
-          title: 'Task 1 (Guided): Predict, then fix the mislabeling bug',
+          title: 'Can you find and fix the CASE mislabeling bug?',
           description: 'QC reported that cheap products show as \'Standard\'. First predict the bug\'s reach, then fix the branch order.',
           instructions: [
             'Run the broken query from the theory (it is pre-loaded in the editor) and confirm products under $25 show Standard.',
@@ -437,7 +437,7 @@ export const Day_10_MODULE: ModuleData = {
         },
         {
           id: 'case-order-t2',
-          title: 'Task 2 (Independent): NULL with no ELSE',
+          title: 'What happens to non matching rows when a CASE expression omits ELSE?',
           description: 'Flag only the expensive items: tier = \'Luxury\' when price >= 100, and NO ELSE clause. Predict what the other 27 rows output before running.',
           instructions: [
             'Select `name`, `price`, and a single-branch CASE AS `tier` with no ELSE.',
@@ -558,7 +558,7 @@ export const Day_10_MODULE: ModuleData = {
       tasks: [
         {
           id: 'case-agg-t1',
-          title: 'Task 1 (Guided): Out-of-stock count per category',
+          title: 'How many products are out of stock in each category?',
           description: 'Per category (excluding the NULL-category clearance item): count out-of-stock products next to the total.',
           instructions: [
             'Select `category_id`, `SUM(CASE WHEN quantity_in_stock = 0 THEN 1 ELSE 0 END) AS out_of_stock`, and `COUNT(*) AS total_products`.',
@@ -586,7 +586,7 @@ export const Day_10_MODULE: ModuleData = {
         },
         {
           id: 'case-agg-t2',
-          title: 'Task 2 (Independent): Email audit per city',
+          title: 'Can you audit missing emails for every city?',
           description: 'Per city: how many customers are missing an email? Use COUNT(CASE WHEN email IS NULL THEN 1 END) — no ELSE needed.',
           instructions: [
             'Select `city` and `COUNT(CASE WHEN email IS NULL THEN 1 END) AS missing_email`.',
@@ -699,7 +699,7 @@ export const Day_10_MODULE: ModuleData = {
       tasks: [
         {
           id: 'case-orderby-t1',
-          title: 'Task 1 (Guided): Build the restock priority list',
+          title: 'Can you build a restock list ordered by urgency?',
           description: 'Zero-stock products first, then everything else by ascending stock.',
           instructions: [
             'Select `name`, `quantity_in_stock` from `products`.',
@@ -726,7 +726,7 @@ export const Day_10_MODULE: ModuleData = {
         },
         {
           id: 'case-orderby-t2',
-          title: 'Task 2 (Independent): Department-first student directory',
+          title: 'Can you list CSE students first in the student directory?',
           description: 'New domain, same tool: list students with CSE students first, then the rest — each group alphabetical by name.',
           instructions: [
             'Select `name`, `department`, `age` from `students`.',
@@ -765,7 +765,7 @@ export const Day_10_MODULE: ModuleData = {
     tasks: [
       {
         id: 'case-hw-1',
-        title: 'Task 1: Customer order volume tiers',
+        title: 'Can you classify customers by their order volume?',
         description: 'Operations wants to classify customers into volume tiers based on how many orders they have placed. Tag customers who placed 3+ orders as \'High Volume\', 2 orders as \'Regular\', and 1 order as \'Single Order\'.',
         instructions: [
           'From `orders`, group by `customer_id`.',
@@ -793,7 +793,7 @@ export const Day_10_MODULE: ModuleData = {
       },
       {
         id: 'case-hw-2',
-        title: 'Task 2: Category stock-health report',
+        title: 'Can you build a stock health report for every category?',
         description: 'Per category (excluding the NULL-category clearance item), count in-stock vs out-of-stock products side by side.',
         instructions: [
           'WHERE `category_id IS NOT NULL`; GROUP BY `category_id`.',
@@ -820,7 +820,7 @@ export const Day_10_MODULE: ModuleData = {
       },
       {
         id: 'case-hw-3',
-        title: 'Task 3: Restock priority list (top 5)',
+        title: 'Can you create a top five restock priority list?',
         description: 'The picker only walks one aisle: the 5 most urgent products. Zero-stock first, then lowest stock — and only the top 5 rows.',
         instructions: [
           'Select `name`, `quantity_in_stock` from `products`.',
@@ -847,7 +847,7 @@ export const Day_10_MODULE: ModuleData = {
       },
       {
         id: 'case-hw-4',
-        title: 'Task 4: Per-category tier breakdown (final boss)',
+        title: 'Can you break down every category by price tier?',
         description: 'One query, three conditional counts: per category, how many Budget (< 25), Standard (25–99.99), and Premium (>= 100) products. No WHERE — include every category, sorted by category_id.',
         instructions: [
           'Select `category_id` plus three SUM(CASE …) columns: `budget_products` (< 25), `standard_products` (>= 25 AND < 100), `premium_products` (>= 100) — each contributing 1 or 0.',

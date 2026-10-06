@@ -108,7 +108,7 @@ export const Day_18_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day14-c1-t1',
-          title: 'Mission 1 (Guided): Product Sales Volume Ranking',
+          title: 'Can you rank products by the number of units sold?',
           description: 'List products with their total units sold, sorted highest first.',
           instructions: [
             'Select `p.name`, `SUM(oi.quantity) AS total_units_sold` from `products p` JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -135,7 +135,7 @@ export const Day_18_MODULE: ModuleData = {
         },
         {
           id: 'day14-c1-t2',
-          title: 'Mission 2 (Independent): Unpurchased Products Discovery',
+          title: 'Can you find products that have never been purchased?',
           description: 'Identify all products that have never appeared in any order using a LEFT JOIN and IS NULL filter.',
           instructions: [
             'Query `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -173,7 +173,7 @@ export const Day_18_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day14-hw-1',
-        title: 'Report 1: Product Sales Volume Ranking',
+        title: 'Can you build a product sales volume report?',
         description: 'Products with total units sold, highest first.',
         instructions: [
           'Select `p.name`, `SUM(oi.quantity) AS total_units_sold` from `products p` JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `p.product_id`, `p.name` ORDER BY `total_units_sold DESC`.',
@@ -198,7 +198,7 @@ export const Day_18_MODULE: ModuleData = {
       },
       {
         id: 'day14-hw-2',
-        title: 'Report 2: Top 5 VIP Spenders Leaderboard',
+        title: 'Can you build a leaderboard of the five highest spending customers?',
         description: 'Build a leaderboard of the 5 customers who have spent the most money across all their orders. Show each customer\'s id, name, and their total amount spent, best spender first.',
         instructions: [
           'Select `c.customer_id`, `c.name`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name` ORDER BY `total_spent DESC` LIMIT 5.',
@@ -224,7 +224,7 @@ export const Day_18_MODULE: ModuleData = {
       },
       {
         id: 'day14-hw-3',
-        title: 'Report 3: Unpurchased Products (Anti-Join)',
+        title: 'Can you find every unpurchased product using an anti join?',
         description: 'Products that have never been ordered (LEFT JOIN + IS NULL anti-join).',
         instructions: [
           'Select `p.product_id`, `p.name` from `products p` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id` WHERE `oi.order_item_id IS NULL`.',

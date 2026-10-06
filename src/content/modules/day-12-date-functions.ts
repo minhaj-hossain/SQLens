@@ -113,7 +113,7 @@ export const Day_12_MODULE: ModuleData = {
       tasks: [
         {
           id: 'datecomp-t1',
-          title: 'Task 1 (Guided): Decompose order dates',
+          title: 'Can you break each order date into year, month, and day?',
           description: 'Output order_date alongside its yr, mon, and dy components.',
           instructions: [
             'Select `order_date`, `YEAR(order_date) AS yr`, `MONTH(order_date) AS mon`, `DAY(order_date) AS dy` from `orders`.',
@@ -139,7 +139,7 @@ export const Day_12_MODULE: ModuleData = {
         },
         {
           id: 'datecomp-t2',
-          title: 'Task 2 (Independent): Signup years of customers',
+          title: 'Can you find the signup year for every customer?',
           description: 'Customer signup dates span 2025 and 2026. Output each customer with their signup year.',
           instructions: [
             'Select `name`, `signup_date`, `YEAR(signup_date) AS signup_year` from `customers`.',
@@ -260,7 +260,7 @@ export const Day_12_MODULE: ModuleData = {
       tasks: [
         {
           id: 'dategrp-t1',
-          title: 'Task 1 (Guided): Monthly order volume',
+          title: 'How many orders were placed in each month?',
           description: 'Build the dashboard widget: order count per month, sorted by month.',
           instructions: [
             'Select `MONTH(order_date) AS mon` and `COUNT(*) AS order_count` from `orders`.',
@@ -288,7 +288,7 @@ export const Day_12_MODULE: ModuleData = {
         },
         {
           id: 'dategrp-t2',
-          title: 'Task 2 (Independent): Signups per year',
+          title: 'How many customers signed up each year?',
           description: 'Bucket customers by signup year: YEAR(signup_date), with COUNT(*) AS signups, sorted by year.',
           instructions: [
             'Select `YEAR(signup_date) AS signup_year` and `COUNT(*) AS signups` from `customers`.',
@@ -405,7 +405,7 @@ export const Day_12_MODULE: ModuleData = {
       tasks: [
         {
           id: 'datearith-t1',
-          title: 'Task 1 (Guided): The sliding 30-day report',
+          title: 'Can you build a report for orders from the last 30 days?',
           description: 'Finance\'s morning question: orders on or after CURDATE() - INTERVAL 30 DAY.',
           instructions: [
             'Select `order_id`, `order_date` from `orders`.',
@@ -430,7 +430,7 @@ export const Day_12_MODULE: ModuleData = {
         },
         {
           id: 'datearith-t2',
-          title: 'Task 2 (Independent): The 90-day churn window',
+          title: 'How many orders were placed in the last 90 days?',
           description: 'Retention wants an even wider net: customers whose last activity could reach back 90 days. Count orders in the last 90 days (CURDATE() - INTERVAL 90 DAY).',
           instructions: [
             'Select `COUNT(*) AS orders_last_90_days` from `orders`.',
@@ -543,7 +543,7 @@ export const Day_12_MODULE: ModuleData = {
       tasks: [
         {
           id: 'datediff-t1',
-          title: 'Task 1 (Guided): Customer tenure ladder',
+          title: 'How long has each customer been with us?',
           description: 'Compute days_since_signup for every customer, longest-tenured first.',
           instructions: [
             'Select `name`, `signup_date`, `DATEDIFF(CURDATE(), signup_date) AS days_since_signup` from `customers`.',
@@ -569,7 +569,7 @@ export const Day_12_MODULE: ModuleData = {
         },
         {
           id: 'datediff-t2',
-          title: 'Task 2 (Independent): Order age report',
+          title: 'How old is each order?',
           description: 'Same idea on orders: order_age = DATEDIFF(CURDATE(), order_date). Output order_id, order_date, order_age, oldest orders first.',
           instructions: [
             'Select `order_id`, `order_date`, `DATEDIFF(CURDATE(), order_date) AS order_age` from `orders`.',
@@ -607,7 +607,7 @@ export const Day_12_MODULE: ModuleData = {
     tasks: [
       {
         id: 'date-hw-1',
-        title: 'Task 1: Monthly order volume report',
+        title: 'Can you build a monthly order volume report?',
         description: 'The operations team needs total order volume broken down by calendar month, sorted chronologically from earliest to latest month.',
         instructions: [
           'Select `MONTH(order_date) AS mon` and `COUNT(*) AS order_count` from `orders`.',
@@ -634,7 +634,7 @@ export const Day_12_MODULE: ModuleData = {
       },
       {
         id: 'date-hw-2',
-        title: 'Task 2: Open order aging ladder',
+        title: 'Can you rank open orders by how long they have been waiting?',
         description: 'Customer support needs an aging audit of all unresolved orders (status not equal to \'delivered\'). Measure each order\'s age in days, oldest first.',
         instructions: [
           'Select `order_id`, `customer_id`, `status`, `order_date`, and `DATEDIFF(CURDATE(), order_date) AS order_age_days` from `orders`.',
@@ -662,7 +662,7 @@ export const Day_12_MODULE: ModuleData = {
       },
       {
         id: 'date-hw-3',
-        title: 'Task 3: Customer tenure leaderboard (final boss)',
+        title: 'Can you build a customer tenure leaderboard?',
         description: 'One query: every customer with signup year, tenure in days, and the signups-per-year buckets — no, keep it focused: name, signup_year, days_since_signup, ranked newest first, top 5 only.',
         instructions: [
           'Select `name`, `YEAR(signup_date) AS signup_year`, `DATEDIFF(CURDATE(), signup_date) AS days_since_signup` from `customers`.',

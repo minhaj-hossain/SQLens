@@ -103,7 +103,7 @@ export const Day_11_MODULE: ModuleData = {
       tasks: [
         {
           id: 'upper-t1',
-          title: 'Task 1 (Guided): Shipping manifest in capitals',
+          title: 'Can you create a shipping manifest with names in uppercase?',
           description: 'Warehouse manifest: every customer name in CAPITALS next to the original.',
           instructions: [
             'Select `name` and `UPPER(name) AS name_upper` from `customers`.',
@@ -129,7 +129,7 @@ export const Day_11_MODULE: ModuleData = {
         },
         {
           id: 'upper-t2',
-          title: 'Task 2 (Independent): Case-proof Dhaka filter',
+          title: 'Can you find Dhaka customers regardless of letter case?',
           description: 'Find all customers in Dhaka — but write the filter so it would work even if the stored casing were \'dhaka\' or \'DHAKA\'.',
           instructions: [
             'Select `name` and `city` from `customers`.',
@@ -233,7 +233,7 @@ export const Day_11_MODULE: ModuleData = {
       tasks: [
         {
           id: 'trim-t1',
-          title: 'Task 1 (Guided): Whitespace-proof city column',
+          title: 'Can you clean the extra spaces from city names?',
           description: 'Produce a clean_city column for every student, trimmed on both edges.',
           instructions: [
             'Select `name` and `TRIM(city) AS clean_city` from `students`.',
@@ -259,7 +259,7 @@ export const Day_11_MODULE: ModuleData = {
         },
         {
           id: 'trim-t2',
-          title: 'Task 2 (Independent): TRIM inside a WHERE filter',
+          title: 'Can you find cities correctly even when the data contains extra spaces?',
           description: 'Find Dhaka students using a whitespace-proof filter.',
           instructions: [
             'Select `name`, `city` from `students`.',
@@ -370,7 +370,7 @@ export const Day_11_MODULE: ModuleData = {
       tasks: [
         {
           id: 'concat-t1',
-          title: 'Task 1 (Guided): Build the email contact field',
+          title: 'Can you build a complete contact field from separate columns?',
           description: 'Produce contact = "Name <email>" for every customer who has an email.',
           instructions: [
             'Select `CONCAT(name, \' <\', email, \'>\') AS contact` from `customers`.',
@@ -396,7 +396,7 @@ export const Day_11_MODULE: ModuleData = {
         },
         {
           id: 'concat-t2',
-          title: 'Task 2 (Independent): City directory entries',
+          title: 'Can you create a readable entry for every city directory record?',
           description: 'Build directory entries like "Rahim (Dhaka)" for every student: CONCAT(name, \' (\', city, \')\') AS directory_entry.',
           instructions: [
             'Select `CONCAT(name, \' (\', city, \')\') AS directory_entry` from `students`.',
@@ -499,7 +499,7 @@ export const Day_11_MODULE: ModuleData = {
       tasks: [
         {
           id: 'substring-t1',
-          title: 'Task 1 (Guided): Three-letter initials',
+          title: 'Can you extract three letter initials from each name?',
           description: 'Badges need 3-letter initials: SUBSTRING(name, 1, 3) for every customer.',
           instructions: [
             'Select `name` and `SUBSTRING(name, 1, 3) AS initials` from `customers`.',
@@ -525,7 +525,7 @@ export const Day_11_MODULE: ModuleData = {
         },
         {
           id: 'substring-t2',
-          title: 'Task 2 (Independent): Monthly order tags',
+          title: 'Can you create a monthly tag from each order date?',
           description: 'Give every order a month_prefix column: SUBSTRING(order_date, 1, 7) — then sort by it.',
           instructions: [
             'Select `order_id`, `order_date`, `SUBSTRING(order_date, 1, 7) AS month_prefix` from `orders`.',
@@ -627,7 +627,7 @@ export const Day_11_MODULE: ModuleData = {
       tasks: [
         {
           id: 'length-t1',
-          title: 'Task 1 (Guided): Name vs email lengths',
+          title: 'Can you compare the lengths of customer names and emails?',
           description: 'Measure both text columns side by side for the first five customers.',
           instructions: [
             'Select `name`, `LENGTH(name) AS name_len`, `LENGTH(email) AS email_len` from `customers`.',
@@ -653,7 +653,7 @@ export const Day_11_MODULE: ModuleData = {
         },
         {
           id: 'length-t2',
-          title: 'Task 2 (Independent): Top 5 longest emails',
+          title: 'Which five customers have the longest email addresses?',
           description: 'Data-quality ranking: the 5 longest email addresses on file (skip customers without emails).',
           instructions: [
             'Select `name`, `LENGTH(email) AS email_len` from `customers`.',
@@ -692,7 +692,7 @@ export const Day_11_MODULE: ModuleData = {
     tasks: [
       {
         id: 'str-hw-1',
-        title: 'Task 1: The import-ready contact file',
+        title: 'Can you build a contact file ready for import?',
         description: 'One row per mailable customer: the contact field "Name <email>" — with the email part guaranteed lowercase.',
         instructions: [
           'WHERE `email IS NOT NULL`; output `CONCAT(name, \' <\', LOWER(email), \'>\') AS contact`.',
@@ -717,7 +717,7 @@ export const Day_11_MODULE: ModuleData = {
       },
       {
         id: 'str-hw-2',
-        title: 'Task 2: Uppercase display names for the app header',
+        title: 'Can you create uppercase display names for the app header?',
         description: 'The product team wants the welcome bar to show names fully capitalized, sorted alphabetically.',
         instructions: [
           'Select `UPPER(name) AS display_name` from `customers`.',
@@ -742,7 +742,7 @@ export const Day_11_MODULE: ModuleData = {
       },
       {
         id: 'str-hw-3',
-        title: 'Task 3: Monthly campaign tags (final boss)',
+        title: 'Can you generate monthly campaign tags from the order data?',
         description: 'Marketing campaigns run per month. Give every order a tag like "2026-08 — order #8": CONCAT(SUBSTRING(order_date, 1, 7), \' — order #\', order_id) AS campaign_tag, sorted by tag.',
         instructions: [
           'Select `order_id`, `order_date`, and `CONCAT(SUBSTRING(order_date, 1, 7), \' — order #\', order_id) AS campaign_tag` from `orders`.',

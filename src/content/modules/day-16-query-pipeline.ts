@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_16_MODULE: ModuleData = {
   id: 'day-16',
@@ -177,7 +177,7 @@ export const Day_16_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day13-c1-t1',
-          title: 'Task 1 (Guided): Trace Multi-Table 7-Step Query',
+          title: 'Can you trace this query through all seven execution stages?',
           description: 'Construct a multi-table query using WHERE, GROUP BY, HAVING, and ORDER BY with aliases.',
           instructions: [
             'Select `c.name`, `COUNT(o.order_id) AS valid_orders` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id`.',
@@ -211,7 +211,7 @@ export const Day_16_MODULE: ModuleData = {
         },
         {
           id: 'day13-c1-t2',
-          title: 'Task 2 (Transfer): Category Product Sales Filter',
+          title: 'Which categories have at least two in stock products?',
           description: 'Join categories with products to count in-stock items per category, keeping categories with at least 2 items, ordered by category name.',
           instructions: [
             'Query `categories c` JOIN `products p` ON `c.category_id = p.category_id`.',
@@ -257,7 +257,7 @@ export const Day_16_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day13-hw-1',
-        title: 'Task 1: Full 7-clause pipeline query',
+        title: 'Can you build a query using the full seven clause pipeline?',
         description: 'Select customer name, count of valid orders aliased as active_orders, grouped by customer, having active_orders >= 1, sorted by active_orders DESC, limit 5.',
         instructions: [
           'Select `c.name`, `COUNT(o.order_id) AS active_orders` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` WHERE `o.status != \'cancelled\'` GROUP BY `c.customer_id`, `c.name` HAVING `COUNT(o.order_id) >= 1` ORDER BY `active_orders DESC` LIMIT 5.',
@@ -284,7 +284,7 @@ export const Day_16_MODULE: ModuleData = {
       },
       {
         id: 'day16-hw-2',
-        title: 'Task 2: Customer loyalty tier classification (LEFT JOIN + CASE)',
+        title: 'Can you classify customers into loyalty tiers while keeping customers with zero orders?',
         description: 'Marketing wants every customer classified as Gold (3+ orders), Silver (1–2 orders), or Bronze (0 orders — preserved via LEFT JOIN).',
         instructions: [
           'FROM `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id`, GROUP BY `c.customer_id, c.name`.',

@@ -104,7 +104,7 @@ export const Day_20_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day16-c1-t1',
-          title: 'Warmup 1: Total Revenue Calculation',
+          title: 'Can you calculate the total revenue from all orders?',
           description: 'Calculate the grand total revenue across all order line items.',
           instructions: [
             'Select `SUM(quantity * unit_price) AS total_revenue` from `order_items`.',
@@ -125,7 +125,7 @@ export const Day_20_MODULE: ModuleData = {
         },
         {
           id: 'day16-c1-t2',
-          title: 'Warmup 2: Category Revenue Breakdown',
+          title: 'Can you break total revenue down by product category?',
           description: 'Join categories, products, and order_items to compute total revenue generated per category, sorted highest first.',
           instructions: [
             'Query `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id`.',
@@ -164,7 +164,7 @@ export const Day_20_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day16-hw-1',
-        title: 'Deliverable 1 (Core): Grand total revenue across all orders',
+        title: 'Can you calculate the grand total revenue across all orders?',
         description: 'Total revenue (SUM across order_items).',
         instructions: [
           'Select `SUM(quantity * unit_price) AS total_revenue` from `order_items`.',
@@ -185,7 +185,7 @@ export const Day_20_MODULE: ModuleData = {
       },
       {
         id: 'day16-hw-2',
-        title: 'Deliverable 2 (Combination): Revenue by product category',
+        title: 'Can you calculate revenue for every product category?',
         description: 'Revenue by category (categories → products → order_items).',
         instructions: [
           'Select `cat.name`, `SUM(oi.quantity * oi.unit_price) AS category_revenue` from `categories cat` JOIN `products p` ON `cat.category_id = p.category_id` JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `cat.category_id`, `cat.name` ORDER BY `category_revenue DESC`.',
@@ -209,7 +209,7 @@ export const Day_20_MODULE: ModuleData = {
       },
       {
         id: 'day16-hw-3',
-        title: 'Deliverable 3 (Transfer): High-value customers who spent more than $200',
+        title: 'Can you find customers who spent more than $200?',
         description: 'Customers who\'ve spent more than $200.',
         instructions: [
           'Select `c.customer_id`, `c.name`, `SUM(oi.quantity * oi.unit_price) AS total_spent` from `customers c` JOIN `orders o` ON `c.customer_id = o.customer_id` JOIN `order_items oi` ON `o.order_id = oi.order_id` GROUP BY `c.customer_id`, `c.name` HAVING `SUM(oi.quantity * oi.unit_price) > 200` ORDER BY `total_spent DESC`.',
@@ -234,7 +234,7 @@ export const Day_20_MODULE: ModuleData = {
       },
       {
         id: 'day16-hw-4',
-        title: 'Deliverable 4 (Hard Problem): Suppliers whose products have never been ordered',
+        title: 'Can you find suppliers whose products have never been ordered?',
         description: 'Suppliers whose products have never been ordered (find Unity Traders BD via anti-join).',
         instructions: [
           'Select `s.supplier_id`, `s.name` from `suppliers s` LEFT JOIN `products p` ON `s.supplier_id = p.supplier_id` LEFT JOIN `order_items oi` ON `p.product_id = oi.product_id` GROUP BY `s.supplier_id`, `s.name` HAVING `COUNT(oi.order_item_id) = 0`.',

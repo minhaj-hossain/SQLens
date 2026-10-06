@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_14_MODULE: ModuleData = {
   id: 'day-14',
@@ -126,7 +126,7 @@ export const Day_14_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day11-c1-t1',
-          title: 'Task 1: Products with Category Names',
+          title: 'Can you show every product with its category name?',
           description: 'Retrieve product name and category name by joining products with categories.',
           instructions: [
             'Select `p.name AS product_name` and `c.name AS category_name`.',
@@ -152,7 +152,7 @@ export const Day_14_MODULE: ModuleData = {
         },
         {
           id: 'day11-c1-t2',
-          title: 'Task 2: Orders with Customer Profiles',
+          title: 'Can you show every order with the customer\'s profile?',
           description: 'Retrieve order_id, customer name, and order_date by joining orders with customers.',
           instructions: [
             'Query `orders o` INNER JOIN `customers c` ON `o.customer_id = c.customer_id`.',
@@ -274,7 +274,7 @@ export const Day_14_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day11-c2a-t1',
-          title: 'Task 1: All Customers and Their Orders',
+          title: 'Can you show every customer even if they have never ordered?',
           description: 'Display customer name and order_id for all customers using a LEFT JOIN, ensuring customers with zero orders appear in the output.',
           instructions: [
             'Select `c.name` and `o.order_id`.',
@@ -300,7 +300,7 @@ export const Day_14_MODULE: ModuleData = {
         },
         {
           id: 'day11-c2a-t2',
-          title: 'Task 2: Suppliers and Their Products',
+          title: 'Can you show every supplier and the products they provide?',
           description: 'Display supplier name and product name for all suppliers using LEFT JOIN, including suppliers with no products.',
           instructions: [
             'Query `suppliers s` LEFT JOIN `products p` ON `s.supplier_id = p.supplier_id`.',
@@ -337,7 +337,7 @@ export const Day_14_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day11-hw-1',
-        title: 'Task 1: Every order with the customer\'s name and date',
+        title: 'Can you list every order with the customer\'s name and order date?',
         description: 'Every order with the customer\'s name and date.',
         instructions: [
           'Select `o.order_id`, `c.name`, `o.order_date` from `orders o` INNER JOIN `customers c` ON `o.customer_id = c.customer_id`.',
@@ -362,7 +362,7 @@ export const Day_14_MODULE: ModuleData = {
       },
       {
         id: 'day11-hw-2',
-        title: 'Task 2: Every customer with their order count, including customers with zero orders (LEFT JOIN)',
+        title: 'Can you count every customer\'s orders without losing customers who have zero orders?',
         description: 'Every customer with their order count, including customers with zero orders (LEFT JOIN).',
         instructions: [
           'Select `c.customer_id`, `c.name`, `COUNT(o.order_id) AS order_count` from `customers c` LEFT JOIN `orders o` ON `c.customer_id = o.customer_id` GROUP BY `c.customer_id`, `c.name`.',
