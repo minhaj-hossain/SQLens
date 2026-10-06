@@ -111,7 +111,7 @@ export const Day_07_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day07-c1-t1',
-          title: 'Mission 1 (Guided): Inspect Supplier Directory',
+          title: 'Can you inspect all records in the supplier directory?',
           description: 'Retrieve all columns from the `suppliers` table.',
           instructions: ['Select all columns from `suppliers`.', 'End with a semicolon (;).'],
           type: 'guided',
@@ -129,7 +129,7 @@ export const Day_07_MODULE: ModuleData = {
         },
         {
           id: 'day07-c1-t2',
-          title: 'Mission 2 (Semi-Guided): Audit Supplier #1 Catalog',
+          title: 'Can you audit products provided by supplier 1 sorted by price?',
           description: 'Find products supplied by supplier_id 1, sorted by price ascending.',
           instructions: [
             'Query the `products` table.',
@@ -167,7 +167,7 @@ export const Day_07_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day07-hw-1',
-        title: 'Task 1: List all suppliers',
+        title: 'Can you pull the complete supplier roster?',
         description: 'List all supplier records in the directory.',
         instructions: ['Select all columns from `suppliers`.', 'End with a semicolon (;).'],
         type: 'challenge',
@@ -185,7 +185,7 @@ export const Day_07_MODULE: ModuleData = {
       },
       {
         id: 'day07-hw-2',
-        title: 'Task 2: Products from Supplier #1 sorted by price',
+        title: 'Can you review all inventory items from supplier 1 by price?',
         description: 'Products from supplier_id 1, sorted by price ascending.',
         instructions: [
           'Select from `products` where `supplier_id = 1` order by `price ASC`.',
@@ -208,7 +208,7 @@ export const Day_07_MODULE: ModuleData = {
       },
       {
         id: 'day07-hw-3',
-        title: 'Task 3: Distinct categories in the system',
+        title: 'What distinct category names exist in the catalog taxonomy?',
         description: 'Distinct category names in the catalog taxonomy.',
         instructions: [
           'Select distinct category names from `categories`.',
@@ -230,7 +230,7 @@ export const Day_07_MODULE: ModuleData = {
       },
       {
         id: 'day07-hw-4',
-        title: 'Task 4: The 3 most expensive products',
+        title: 'Which three products are the most expensive in the catalog?',
         description: 'Retrieve the 3 highest priced products in the catalog.',
         instructions: [
           'Select from `products` ordered by `price DESC LIMIT 3`.',
@@ -253,7 +253,7 @@ export const Day_07_MODULE: ModuleData = {
       },
       {
         id: 'day07-hw-5',
-        title: 'Task 5: Page 2 of the full product catalog',
+        title: 'Can you build the second page of the product catalog?',
         description: 'Page 2 of the full product catalog (10 per page, sorted by product_id ASC).',
         instructions: [
           'Select from `products` ordered by `product_id ASC LIMIT 10 OFFSET 10`.',

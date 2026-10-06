@@ -127,7 +127,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c1a-t1",
-          title: "Task 1: CSE Students Aged 21",
+          title: 'Which CSE students are exactly 21 years old?',
           description:
             "Show name, age, and department for students in CSE who are exactly 21 years old.",
           instructions: [
@@ -161,7 +161,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c1a-t2",
-          title: "Task 2: High-Price & High-Stock Items",
+          title: 'Which premium products have more than 10 units in stock?',
           description:
             "Find products priced over $50.00 with quantity_in_stock greater than 10.",
           instructions: [
@@ -308,7 +308,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c1b-t1",
-          title: "Task 1: Students in Dhaka or Gazipur",
+          title: 'Which students live in either Dhaka or Gazipur?',
           description:
             "Show name and city of students who live in Dhaka or Gazipur.",
           instructions: [
@@ -340,7 +340,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c1b-t2",
-          title: "Task 2: Bargain Items or High-Stock Items",
+          title: 'Which items are either out of stock or priced under $15?',
           description:
             "Find products priced under $10.00 OR with quantity_in_stock greater than 50.",
           instructions: [
@@ -501,7 +501,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c1c-t1",
-          title: "Task 1: Students not living in Dhaka",
+          title: 'Which students live anywhere outside Dhaka?',
           description:
             "Show name and city of all students who do not live in Dhaka using NOT.",
           instructions: [
@@ -529,7 +529,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c1c-t2",
-          title: "Task 2: Products outside Category 1",
+          title: 'Which products belong to non electronics categories?',
           description:
             "Select name and category_id for all products not in category 1 (Electronics).",
           instructions: [
@@ -670,7 +670,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c1d-t1",
-          title: "Task 1: Premium items in Category 1 or 2",
+          title: 'Which expensive products belong to category 1 or category 2?',
           description:
             "Show name, category_id, and price for products priced over $50.00 that belong to category 1 or category 2.",
           instructions: [
@@ -712,7 +712,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c1d-t2",
-          title: "Task 2: Fix the Precedence Bug",
+          title: 'Can you fix the operator precedence bug in the budget search?',
           description:
             "Fix this buggy query so that it only returns products priced strictly under $20 that belong to category 1 or category 2.",
           instructions: [
@@ -865,7 +865,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c2a-t1",
-          title: "Task 1: Products in Price Band $25 to $100",
+          title: 'Which products fall inside the $25 to $100 price band?',
           description:
             "Show name and price for products priced between $25.00 and $100.00 inclusive.",
           instructions: [
@@ -895,7 +895,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c2a-t2",
-          title: "Task 2: Students aged 20 to 22",
+          title: 'Which students fall in the age range of 20 to 22 inclusive?',
           description:
             "Select name and age of students between 20 and 22 years old inclusive.",
           instructions: [
@@ -928,7 +928,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c2a-t3",
-          title: "Task 3: Boundary Confirmation ($15.99 to $65.00)",
+          title: 'Can you verify inclusive boundaries between $15.99 and $65?',
           description:
             "Select name and price for products priced between $15.99 and $65.00. Verify that items at both $15.99 and $65.00 appear in the result.",
           instructions: [
@@ -1074,7 +1074,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c2b-t1",
-          title: "Task 1: Students in Dhaka or Chattogram",
+          title: 'Which students reside in Dhaka or Chattogram using IN?',
           description:
             "Show name, department, and city for students in Dhaka or Chattogram using IN.",
           instructions: [
@@ -1106,7 +1106,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c2b-t2",
-          title: "Task 2: Products in Category 1 or 2",
+          title: 'Which products belong to either category 1 or 2 using IN?',
           description:
             "Select name, category_id, and price from products belonging to category 1 (Electronics) or category 2 (Kitchen & Dining) using IN.",
           instructions: [
@@ -1247,7 +1247,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c3a-t1",
-          title: "Task 1: Search emails ending with @example.com (%)",
+          title: 'Which customers use an example.com email address?',
           description:
             'Show name and email of all customers whose email address ends with "@example.com".',
           instructions: [
@@ -1278,7 +1278,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c3a-t2",
-          title: "Task 2: Single-Character Positional Match (_)",
+          title: 'Can you match products using the single character wildcard?',
           description:
             'Find products where the second and third characters are "SB" using the single-character wildcard (_).',
           instructions: [
@@ -1416,7 +1416,7 @@ export const Day_03_MODULE: ModuleData = {
       tasks: [
         {
           id: "day03-c3b-t1",
-          title: "Task 1: Customers Without Email (IS NULL)",
+          title: 'Which customers do not have an email address on file?',
           description:
             "Show name and city for customers who do not have an email address recorded.",
           instructions: [
@@ -1444,7 +1444,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c3b-t2",
-          title: "Task 2: Suppliers with Valid Contact Email (IS NOT NULL)",
+          title: 'Which suppliers have a verified contact email address?',
           description:
             "Find all suppliers that have a recorded contact email address.",
           instructions: [
@@ -1473,7 +1473,7 @@ export const Day_03_MODULE: ModuleData = {
         },
         {
           id: "day03-c3b-t3",
-          title: "Task 3: Fix the = NULL Bug",
+          title: 'Can you fix the equality bug when filtering for NULL values?',
           description:
             "A junior developer wrote `SELECT name, city FROM customers WHERE email = NULL;` and got 0 rows. Fix the query so it properly returns customers with missing emails.",
           instructions: [
@@ -1514,7 +1514,7 @@ export const Day_03_MODULE: ModuleData = {
     tasks: [
       {
         id: "day03-hw-1",
-        title: "Task 1: Mid-tier products ($25 to $100)",
+        title: 'Can you retrieve mid tier products priced between $25 and $100?',
         description:
           "Find products priced between $25.00 and $100.00 using BETWEEN.",
         instructions: [
@@ -1546,7 +1546,7 @@ export const Day_03_MODULE: ModuleData = {
       },
       {
         id: "day03-hw-2",
-        title: "Task 2: Customers in Regional Hubs (IN)",
+        title: 'Which customers are located in regional delivery hubs?',
         description:
           "Find customers located in Dhaka, Chittagong, or Sylhet using IN.",
         instructions: [
@@ -1581,7 +1581,7 @@ export const Day_03_MODULE: ModuleData = {
       },
       {
         id: "day03-hw-3",
-        title: "Task 3: Wireless Products Search (LIKE)",
+        title: 'Can you search for all wireless products in the inventory?',
         description:
           'Find all products whose name starts with "Wireless" using the LIKE operator.',
         instructions: [
@@ -1609,7 +1609,7 @@ export const Day_03_MODULE: ModuleData = {
       },
       {
         id: "day03-hw-4",
-        title: "Task 4: Customers with Missing Emails (IS NULL)",
+        title: 'Can you audit customer records that lack an email address?',
         description:
           "Find customers that do not have an email address recorded.",
         instructions: [
@@ -1637,7 +1637,7 @@ export const Day_03_MODULE: ModuleData = {
       },
       {
         id: "day03-hw-5",
-        title: "Task 5: Compound Filter with Parentheses",
+        title: 'Can you construct a safe compound filter combining category, price, and stock?',
         description:
           "Find products in categories 1 or 5 priced under $50 that are currently in stock (quantity_in_stock > 0).",
         instructions: [

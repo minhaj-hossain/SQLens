@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_01_MODULE: ModuleData = {
   id: 'day-01',
@@ -122,7 +122,7 @@ export const Day_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day01-c1-t1',
-          title: 'List all student names',
+          title: 'Can you list all student names?',
           description: 'The guidance counselor wants a simple list of student names to send out notices. Write a query to retrieve just the name column.',
           instructions: [
             'Select the `name` column from the `students` table',
@@ -148,7 +148,7 @@ export const Day_01_MODULE: ModuleData = {
         },
         {
           id: 'day01-c1-t2',
-          title: 'Task 2: Show only city',
+          title: 'Can you retrieve every city in the student directory?',
           description: 'Show only the city column from the students table.',
           instructions: [
             'Write a query to retrieve only the `city` column from `students`.',
@@ -276,7 +276,7 @@ export const Day_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day01-c2-t1',
-          title: 'Task 1: Show name and department',
+          title: 'Can you display each student along with their department?',
           description: 'Show name and department from the students table.',
           instructions: [
             'Select `name` and `department` from `students`.',
@@ -301,7 +301,7 @@ export const Day_01_MODULE: ModuleData = {
         },
         {
           id: 'day01-c2-t2',
-          title: 'Task 2: Show id, name, and city',
+          title: 'Can you view student IDs, names, and home cities?',
           description: 'Show id, name, and city from the students table.',
           instructions: [
             'Select `id`, `name`, and `city` from `students`.',
@@ -428,7 +428,7 @@ export const Day_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day01-c3-t1',
-          title: 'Task 1: Show everything from the table',
+          title: 'Can you inspect all records and columns in the students table?',
           description: 'Show everything from the students table.',
           instructions: [
             'Write a query to retrieve all columns and all rows from `students`.',
@@ -453,7 +453,7 @@ export const Day_01_MODULE: ModuleData = {
         },
         {
           id: 'day01-c3-t2',
-          title: 'Task 2: Show name, age, and city',
+          title: 'Can you select name, age, and city for every student?',
           description: 'Show name, age, and city from the students table.',
           instructions: [
             'Select `name`, `age`, and `city` from `students`.',
@@ -606,7 +606,7 @@ export const Day_01_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day01-c4-t1',
-          title: 'Task 1: Show name as student_name',
+          title: 'Can you rename the name column to student_name?',
           description: 'Show name, but the output column should be called student_name.',
           instructions: [
             'Select `name` from `students`.',
@@ -631,7 +631,7 @@ export const Day_01_MODULE: ModuleData = {
         },
         {
           id: 'day01-c4-t2',
-          title: 'Task 2: Show name and department renamed',
+          title: 'Can you rename name and department for the student roster?',
           description: 'Show name and department, renamed as student_name and student_department.',
           instructions: [
             'Select `name` AS `student_name`.',
@@ -657,7 +657,7 @@ export const Day_01_MODULE: ModuleData = {
         },
         {
           id: 'day01-c4-t3',
-          title: 'Task 3: Show id, name, and age renamed',
+          title: 'Can you create a custom report with all three student columns aliased?',
           description: 'Show id, name, and age, renamed as student_id, student_name, and student_age.',
           instructions: [
             'Select `id` AS `student_id`.',
@@ -684,7 +684,7 @@ export const Day_01_MODULE: ModuleData = {
         },
         {
           id: 'day01-c4-t4',
-          title: 'Task 4: Principal Report Challenge',
+          title: 'Can you format legacy student records into an executive report?',
           description: 'Imagine you are creating a report for a school principal. Convert std_id, std_nm, std_age, dept into Student ID, Student Name, Age, Department.',
           instructions: [
             'Query the `student_records` table.',
@@ -734,7 +734,7 @@ export const Day_01_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day01-hw-1',
-        title: 'Task 1: Display name, price, quantity_in_stock from products',
+        title: 'Can you pull product names, prices, and stock counts?',
         description: 'Display name, price, and quantity_in_stock from the products table.',
         instructions: [
           'Select name, price, and quantity_in_stock from the products table.',
@@ -758,7 +758,7 @@ export const Day_01_MODULE: ModuleData = {
       },
       {
         id: 'day01-hw-2',
-        title: 'Task 2: Display name and email from customers',
+        title: 'Can you extract a customer contact list with names and emails?',
         description: 'Display name and email from customers (any order).',
         instructions: [
           'Select name and email from the customers table.',
@@ -782,7 +782,7 @@ export const Day_01_MODULE: ModuleData = {
       },
       {
         id: 'day01-hw-3',
-        title: 'Task 3: Display with column aliases',
+        title: 'Can you alias catalog columns to business friendly names?',
         description: 'Repeat Task 1, aliasing columns as product_name, unit_price, stock.',
         instructions: [
           'Select name AS product_name, price AS unit_price, quantity_in_stock AS stock from products.',

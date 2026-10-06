@@ -156,7 +156,7 @@ export const Day_06_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day06-c1-t1',
-          title: 'Task 1 (Guided Fix): Fix the Alias in WHERE Error',
+          title: 'Can you fix the alias in WHERE error in the taxed price query?',
           description: 'Repair the broken query by placing the raw calculation in `WHERE` and using the alias in `ORDER BY`.',
           instructions: [
             'Select `name` and `price * 1.15 AS taxed_price` from `products`.',
@@ -186,7 +186,7 @@ export const Day_06_MODULE: ModuleData = {
         },
         {
           id: 'day06-c1-t2',
-          title: 'Task 2 (Transfer): Customer Alias Sorting',
+          title: 'Can you filter by raw column and sort by alias for Dhaka customers?',
           description: 'Select customer name aliased as customer_name and city from customers in Dhaka, sorted by customer_name ASC.',
           instructions: [
             'Query the `customers` table.',
@@ -228,7 +228,7 @@ export const Day_06_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day06-hw-1',
-        title: 'Task 1: Trace execution order with WHERE and ORDER BY',
+        title: 'Can you align query clauses with logical execution order?',
         description: 'Select products with price > 40, alias price as catalog_price, order by catalog_price DESC, limit 5.',
         instructions: [
           'Select `name`, `price AS catalog_price` from `products` where `price > 40` order by `catalog_price DESC` limit 5.',

@@ -117,7 +117,7 @@ export const Day_05_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day05-c1-t1',
-          title: 'Task 1 (High Guidance): Products Needing Restock',
+          title: 'Can you generate a restock list ordered by lowest stock?',
           description: 'Find products where `quantity_in_stock <= reorder_level`, ordered by `quantity_in_stock ASC`.',
           instructions: [
             'Query the `products` table.',
@@ -147,7 +147,7 @@ export const Day_05_MODULE: ModuleData = {
         },
         {
           id: 'day05-c1-t2',
-          title: 'Task 2 (Partial Guidance): Active Customer Roster',
+          title: 'Can you pull the first five customers who have verified emails?',
           description: 'Select name, email, and city from customers where email is NOT NULL, ordered by name ASC and limited to 5.',
           instructions: [
             'Query the `customers` table.',
@@ -177,7 +177,7 @@ export const Day_05_MODULE: ModuleData = {
         },
         {
           id: 'day05-c1-t3',
-          title: 'Task 3 (Goal Only): Product Catalog Page 2',
+          title: 'Can you retrieve page 2 of the product catalog?',
           description: 'Retrieve Page 2 of the product catalog (10 items per page, sorted by product_id ASC).',
           instructions: [
             'Select all columns from `products`.',
@@ -217,7 +217,7 @@ export const Day_05_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day05-hw-1',
-        title: 'Task 1: All Out-of-Stock Products',
+        title: 'Which products in the catalog are completely out of stock?',
         description: 'Retrieve all products that currently have 0 units in stock.',
         instructions: [
           'Select all columns from `products` where `quantity_in_stock = 0`.',
@@ -240,7 +240,7 @@ export const Day_05_MODULE: ModuleData = {
       },
       {
         id: 'day05-hw-2',
-        title: 'Task 2: Priority Reorder Products',
+        title: 'Can you flag priority restock items starting with the most urgent?',
         description: 'Find all products whose current stock has reached or dropped below their reorder level. Show them starting with the ones closest to running out.',
         instructions: [
           'Select `name`, `quantity_in_stock`, `reorder_level` from `products`.',
@@ -263,7 +263,7 @@ export const Day_05_MODULE: ModuleData = {
       },
       {
         id: 'day05-hw-3',
-        title: 'Task 3: Catalog Page 2 Pagination',
+        title: 'Can you paginate through page 2 of the product catalog?',
         description: 'Page 2 of the product catalog, 10 per page, sorted by product_id ASC.',
         instructions: [
           'Select all columns from `products` ordered by `product_id ASC LIMIT 10 OFFSET 10`.',
@@ -285,7 +285,7 @@ export const Day_05_MODULE: ModuleData = {
       },
       {
         id: 'day05-hw-4',
-        title: 'Task 4: Newest Customer Signups (Top 5)',
+        title: 'Who are the five newest customers to register on the platform?',
         description: 'Retrieve the 5 most recently registered customers, sorted newest first.',
         instructions: [
           'Select `customer_id`, `name`, `signup_date` from `customers`.',

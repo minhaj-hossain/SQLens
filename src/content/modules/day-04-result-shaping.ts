@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../types/curriculum';
+import { ModuleData } from '../../types/curriculum';
 
 export const Day_04_MODULE: ModuleData = {
   id: 'day-04',
@@ -116,7 +116,7 @@ export const Day_04_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day04-c1a-t1',
-          title: 'Task 1: Sort Products by Price Descending',
+          title: 'Can you sort the catalog from highest to lowest price?',
           description: 'Sort all products by price starting with the highest price.',
           instructions: [
             'Select `name` and `price` from `products`.',
@@ -140,7 +140,7 @@ export const Day_04_MODULE: ModuleData = {
         },
         {
           id: 'day04-c1a-t2',
-          title: 'Task 2: Customers Alphabetical Directory',
+          title: 'Can you sort customers alphabetically from A to Z?',
           description: 'Show customer name and city, sorted alphabetically by name from A to Z.',
           instructions: [
             'Query the `customers` table.',
@@ -271,7 +271,7 @@ export const Day_04_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day04-c1b-t1',
-          title: 'Task 1: Students Sorted by Age and Name',
+          title: 'Can you sort students youngest first and break ties alphabetically?',
           description: 'Show student name and age, sorted youngest first (age ASC), and alphabetically by name (name ASC) for any age ties.',
           instructions: [
             'Select `name` and `age` from `students`.',
@@ -298,7 +298,7 @@ export const Day_04_MODULE: ModuleData = {
         },
         {
           id: 'day04-c1b-t2',
-          title: 'Task 2: Products by Category and Price',
+          title: 'Can you organize products by category and then by descending price?',
           description: 'Show name, category_id, and price from products, sorted by category_id ascending, and price descending within each category.',
           instructions: [
             'Query the `products` table.',
@@ -424,7 +424,7 @@ export const Day_04_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day04-c2-t1',
-          title: 'Task 1: Distinct Customer Cities',
+          title: 'Which unique cities do our customers reside in?',
           description: 'Get a unique list of all cities where customers are based.',
           instructions: [
             'Select `DISTINCT city` from `customers`.',
@@ -448,7 +448,7 @@ export const Day_04_MODULE: ModuleData = {
         },
         {
           id: 'day04-c2-t2',
-          title: 'Task 2: Distinct Product Categories',
+          title: 'What distinct category IDs are currently assigned to products?',
           description: 'Show a unique list of all category_id values present in the products table.',
           instructions: [
             'Query the `products` table.',
@@ -573,7 +573,7 @@ export const Day_04_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day04-c3-t1',
-          title: 'Task 1: Top 5 Lowest Stock Products',
+          title: 'Which five products have the lowest stock quantities?',
           description: 'Find the 5 products with the lowest stock quantities.',
           instructions: [
             'Select `name` and `quantity_in_stock` from `products`.',
@@ -599,7 +599,7 @@ export const Day_04_MODULE: ModuleData = {
         },
         {
           id: 'day04-c3-t2',
-          title: 'Task 2: Page 2 of Customers (5 per page)',
+          title: 'Can you fetch page 2 of the customer directory?',
           description: 'Fetch page 2 of customer records (5 per page), sorted by customer_id ascending.',
           instructions: [
             'Query the `customers` table.',
@@ -633,12 +633,12 @@ export const Day_04_MODULE: ModuleData = {
   // ===========================================================================
   challenge: {
     id: 'day-04-homework',
-    title: 'Day 4 — Result Shaping (Homework)',
+    title: 'Day 4 — Sort, Deduplicate & Paginate (Homework)',
     scenario: 'Apply sorting, deduplication, and row slicing to real inventory queries:',
     tasks: [
       {
         id: 'day04-hw-1',
-        title: 'Task 1: Products sorted by price, highest first',
+        title: 'Can you order all products by price with the most expensive first?',
         description: 'Products sorted by price, highest first.',
         instructions: [
           'Select from `products` and sort by `price DESC`.',
@@ -660,7 +660,7 @@ export const Day_04_MODULE: ModuleData = {
       },
       {
         id: 'day04-hw-2',
-        title: 'Task 2: Distinct list of cities customers are based in',
+        title: 'Can you build a deduplicated list of customer cities?',
         description: 'Distinct list of cities customers are based in.',
         instructions: [
           'Select `DISTINCT city` from `customers`.',
@@ -684,7 +684,7 @@ export const Day_04_MODULE: ModuleData = {
       },
       {
         id: 'day04-hw-3',
-        title: 'Task 3: The 5 lowest-stock products',
+        title: 'Can you retrieve the five lowest stock items in the warehouse?',
         description: 'The 5 lowest-stock products (ORDER BY + LIMIT).',
         instructions: [
           'Select from `products` ordered by `quantity_in_stock ASC` with `LIMIT 5`.',

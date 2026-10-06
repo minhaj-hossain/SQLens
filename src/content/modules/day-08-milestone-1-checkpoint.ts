@@ -155,7 +155,7 @@ export const Day_08_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day08-c1-t1',
-          title: 'Warmup 1: Low Stock Products (Lowest Stock First)',
+          title: 'Can you generate an urgent restock alert with lowest stock first?',
           description: 'List products that need restocking — their stock has reached or fallen below their reorder level. Put the lowest stock at the top.',
           instructions: [
             'Select `name`, `quantity_in_stock`, `reorder_level` from `products`.',
@@ -181,7 +181,7 @@ export const Day_08_MODULE: ModuleData = {
         },
         {
           id: 'day08-c1-t2',
-          title: 'Warmup 2: Unique Customer City Directory',
+          title: 'Can you create an alphabetized directory of unique customer cities?',
           description: 'Retrieve a distinct list of cities from the customers table, ordered alphabetically.',
           instructions: [
             'Query the `customers` table.',
@@ -218,7 +218,7 @@ export const Day_08_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day08-hw-1',
-        title: 'Deliverable 1 (Core): Products at or below reorder level, lowest stock first',
+        title: 'Can you list all critical items at or below reorder level?',
         description: 'Find every product that needs restocking — its stock has reached or dropped below its reorder level — and list the most critical (lowest stock) first.',
         instructions: [
           'Select from `products` where `quantity_in_stock <= reorder_level` ordered by `quantity_in_stock ASC`.',
@@ -241,7 +241,7 @@ export const Day_08_MODULE: ModuleData = {
       },
       {
         id: 'day08-hw-2',
-        title: 'Deliverable 2 (Combination): Distinct supplier IDs in low-stock inventory',
+        title: 'Which unique suppliers are impacted by low stock inventory?',
         description: 'Which suppliers are affected by the low-stock situation? List each affected supplier only once, even if several low-stock products come from the same supplier.',
         instructions: [
           'Select `DISTINCT supplier_id` from `products` where `quantity_in_stock <= reorder_level`.',
@@ -265,7 +265,7 @@ export const Day_08_MODULE: ModuleData = {
       },
       {
         id: 'day08-hw-3',
-        title: 'Deliverable 3 (Transfer): The single newest customer signup',
+        title: 'Who is the single most recent customer signup?',
         description: 'Find the customer who signed up most recently.',
         instructions: [
           'Select from `customers` ordered by `signup_date DESC LIMIT 1`.',
@@ -288,7 +288,7 @@ export const Day_08_MODULE: ModuleData = {
       },
       {
         id: 'day08-hw-4',
-        title: 'Deliverable 4 (Transfer): Top 5 cheapest products',
+        title: 'Which five products are the cheapest in the catalog?',
         description: 'Show the 5 cheapest products in the catalog.',
         instructions: [
           'Select from `products` ordered by `price ASC LIMIT 5`.',
@@ -311,7 +311,7 @@ export const Day_08_MODULE: ModuleData = {
       },
       {
         id: 'day08-hw-5',
-        title: 'Deliverable 5 (Hard Problem): Customer Directory Page 2 Pagination',
+        title: 'Can you retrieve page 2 of the customer directory by signup date?',
         description: 'Retrieve Page 2 of the customer directory (5 customers per page, sorted by signup_date DESC).',
         instructions: [
           'Select all columns from `customers`.',

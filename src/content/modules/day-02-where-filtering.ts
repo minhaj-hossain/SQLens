@@ -160,7 +160,7 @@ export const Day_02_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day02-c1a-t1',
-          title: 'Task 1: Students aged exactly 22',
+          title: 'Which students are exactly 22 years old?',
           description: 'Show the name and age of students whose age is exactly 22.',
           instructions: [
             'Write a query to select `name` and `age` from the `students` table.',
@@ -189,7 +189,7 @@ export const Day_02_MODULE: ModuleData = {
         },
         {
           id: 'day02-c1a-t2',
-          title: 'Task 2: Lookup Product by ID',
+          title: 'Can you look up product details by its unique ID?',
           description: 'Lookup product details for product_id 4 from the products table.',
           instructions: [
             'Query the `products` table.',
@@ -336,7 +336,7 @@ export const Day_02_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day02-c1b-t1',
-          title: 'Task 1: Exclude EEE department students',
+          title: 'Which students belong to departments outside EEE?',
           description: 'Show name and department of all students who are NOT in the EEE department.',
           instructions: [
             'Select `name` and `department` from `students`.',
@@ -363,7 +363,7 @@ export const Day_02_MODULE: ModuleData = {
         },
         {
           id: 'day02-c1b-t2',
-          title: 'Task 2: Products other than Product #1',
+          title: 'Can you list all catalog products excluding product 1?',
           description: 'Select name and price of all products except product_id 1.',
           instructions: [
             'Query the `products` table.',
@@ -506,7 +506,7 @@ export const Day_02_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day02-c2a-t1',
-          title: 'Task 1: Products priced strictly over $50',
+          title: 'Which products cost strictly more than $50?',
           description: 'Show name and price of products costing strictly more than $50.00.',
           instructions: [
             'Select `name` and `price` from `products`.',
@@ -533,7 +533,7 @@ export const Day_02_MODULE: ModuleData = {
         },
         {
           id: 'day02-c2a-t2',
-          title: 'Task 2: Students strictly under 22 years old',
+          title: 'Which students are strictly younger than 22?',
           description: 'Show name and age of students who are strictly younger than 22.',
           instructions: [
             'Query the `students` table.',
@@ -681,7 +681,7 @@ export const Day_02_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day02-c2b-t1',
-          title: 'Task 1: Items priced at $50.00 or more (>=)',
+          title: 'Which products meet or exceed the $50 premium threshold?',
           description: 'Show name and price for products priced at $50.00 or higher.',
           instructions: [
             'Select `name` and `price` from `products`.',
@@ -708,7 +708,7 @@ export const Day_02_MODULE: ModuleData = {
         },
         {
           id: 'day02-c2b-t2',
-          title: 'Task 2: Students aged 21 or younger (<=)',
+          title: 'Which students are 21 years old or younger?',
           description: 'Show name and age of students who are 21 years old or younger.',
           instructions: [
             'Query the `students` table.',
@@ -735,7 +735,7 @@ export const Day_02_MODULE: ModuleData = {
         },
         {
           id: 'day02-c2b-t3',
-          title: 'Task 3: Boundary Confirmation (Stock <= 15)',
+          title: 'Which products have reached or fallen below 15 units in stock?',
           description: 'Find all products with quantity_in_stock of 15 or fewer. Confirm that products with exactly 15 units appear in the result.',
           instructions: [
             'Query the `products` table.',
@@ -878,7 +878,7 @@ export const Day_02_MODULE: ModuleData = {
       tasks: [
         {
           id: 'day02-c3-t1',
-          title: 'Task 1: Dhaka students only',
+          title: 'Which students are located in Dhaka?',
           description: 'Show the name and city of students who live in Dhaka.',
           instructions: [
             'Select `name` and `city` from `students`.',
@@ -906,7 +906,7 @@ export const Day_02_MODULE: ModuleData = {
         },
         {
           id: 'day02-c3-t2',
-          title: 'Task 2: Find Chittagong customers',
+          title: 'Can you find all customers living in Chittagong?',
           description: 'The sales team needs a list of all customers located in Chittagong.',
           instructions: [
             'Query the `customers` table.',
@@ -945,7 +945,7 @@ export const Day_02_MODULE: ModuleData = {
     tasks: [
       {
         id: 'day02-hw-1',
-        title: 'Task 1: Products priced strictly under $50',
+        title: 'Which budget items cost strictly under $50?',
         description: 'Find all products priced strictly under $50.00.',
         instructions: [
           'Select `name` and `price` from `products` where `price < 50`.',
@@ -971,7 +971,7 @@ export const Day_02_MODULE: ModuleData = {
       },
       {
         id: 'day02-hw-2',
-        title: 'Task 2: High-stock products (Stock > 20)',
+        title: 'Which items have more than 20 units available in stock?',
         description: 'Find all products with quantity_in_stock greater than 20.',
         instructions: [
           'Select `name` and `quantity_in_stock` from `products` where `quantity_in_stock > 20`.',
@@ -997,7 +997,7 @@ export const Day_02_MODULE: ModuleData = {
       },
       {
         id: 'day02-hw-3',
-        title: 'Task 3: Products that are completely out of stock',
+        title: 'Which catalog products are completely sold out?',
         description: 'Find all products that are completely out of stock (`quantity_in_stock = 0`).',
         instructions: [
           'Select `name`, `price`, and `quantity_in_stock` from `products` where `quantity_in_stock = 0`.',
@@ -1023,7 +1023,7 @@ export const Day_02_MODULE: ModuleData = {
       },
       {
         id: 'day02-hw-4',
-        title: 'Task 4: Find all customers in Chittagong',
+        title: 'Can you export contact details for all Chittagong customers?',
         description: 'Retrieve name, email, and city of all customers residing in Chittagong.',
         instructions: [
           'Select `name`, `email`, and `city` from `customers`.',
@@ -1050,7 +1050,7 @@ export const Day_02_MODULE: ModuleData = {
       },
       {
         id: 'day02-hw-5',
-        title: 'Task 5: Premium products ($50 or more)',
+        title: 'Can you identify all products priced at $50 or higher?',
         description: 'Find all premium items in the catalog priced at $50.00 or higher.',
         instructions: [
           'Select `name`, `price`, and `quantity_in_stock` from `products`.',
