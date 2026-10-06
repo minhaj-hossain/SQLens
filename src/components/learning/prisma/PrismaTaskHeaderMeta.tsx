@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Database, FileCode, Key, Layers, Code, CheckCircle2 } from 'lucide-react';
 import type { PracticeTask, Concept } from '../../../types/curriculum';
 
 interface PrismaTaskHeaderMetaProps {
@@ -49,14 +48,12 @@ export const PrismaTaskHeaderMeta: React.FC<PrismaTaskHeaderMetaProps> = ({ task
     <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 font-mono text-xs bg-surface-2 border border-border-soft rounded-lg p-2.5 sm:px-4 sm:py-2.5 min-w-0">
       {/* Model */}
       <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
-        <Database className="w-3.5 h-3.5 text-func shrink-0" />
         <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">MODEL</span>
         <span className="text-text font-semibold text-[11px] sm:text-xs">{modelName}</span>
       </div>
 
       {/* Surface / Editor Tab */}
       <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
-        <FileCode className="w-3.5 h-3.5 text-blue-400 shrink-0" />
         <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">TARGET</span>
         <span className="text-text font-semibold text-[11px] sm:text-xs">{surface}</span>
       </div>
@@ -64,7 +61,6 @@ export const PrismaTaskHeaderMeta: React.FC<PrismaTaskHeaderMetaProps> = ({ task
       {/* Contract / Focus */}
       {targetFocus && (
         <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border min-w-0 max-w-full">
-          <Key className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <span className="text-text-faint text-[10px] sm:text-xs tracking-wider shrink-0">FOCUS</span>
           <span className="text-text font-semibold text-[11px] sm:text-xs truncate">
             {targetFocus}
@@ -74,7 +70,6 @@ export const PrismaTaskHeaderMeta: React.FC<PrismaTaskHeaderMetaProps> = ({ task
 
       {/* Role / Stage */}
       <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 shrink-0">
-        <Layers className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
         <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">STAGE</span>
         <span className="text-text font-semibold text-[11px] sm:text-xs">{roleLabel}</span>
       </div>

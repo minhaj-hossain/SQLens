@@ -354,7 +354,9 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   });
 
   const tableRowCount = resolveRowCount(currentTask.primaryTable, liveTables);
-  const cleanedPrompt = cleanBackticks(currentTask.description || currentTask.title);
+  const cleanedPrompt = cleanBackticks(
+    (currentTask.title || '').replace(/^Task\s+\d+:\s*/i, '').trim() || 'Complete the challenge task'
+  );
 
   return (
     <motion.div

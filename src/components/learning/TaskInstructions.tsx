@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PracticeTask, Concept } from '../../types/curriculum';
-import { BookOpen, CheckCircle2, ChevronDown, ChevronUp, Code, Copy, Check, HelpCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Code, Copy, Check, HelpCircle } from 'lucide-react';
 import { solutionReveal, isPrismaTask } from '../../lib/track-submit';
 import { PrismaTaskHeaderMeta } from './prisma/PrismaTaskHeaderMeta';
 
@@ -72,10 +72,9 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
     setTimeout(() => setCopiedSolution(false), 1500);
   };
 
-  // Clean and unify the single task statement without repetitive duplicate phrases
+  // Display only the clean, clear task title in the UI
   const rawTitle = (task.title || '').replace(/^Task\s+\d+:\s*/i, '').replace(/`/g, '').trim();
-  const rawDesc = (task.description || '').replace(/`/g, '').trim();
-  const taskStatement = rawDesc || rawTitle;
+  const taskStatement = rawTitle || 'Complete the task';
 
   return (
     <div
