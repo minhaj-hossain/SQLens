@@ -1,4 +1,4 @@
-import type { PracticeTask } from '../../types/curriculum';
+import type { PracticeTask, TaskHint } from '../../types/curriculum';
 import type {
   GradingType,
   PrismaHowToThink,
