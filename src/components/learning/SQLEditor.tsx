@@ -262,29 +262,48 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
 
       {!showSchema && (
       <div className="flex items-center gap-1.5 px-3 py-2 bg-surface border-t border-border-soft overflow-x-auto text-xs scrollbar-none">
-        <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
-          {showQuickChips ? 'Quick:' : 'Model:'}
-        </span>
         {showQuickChips ? (
-          ["SELECT", "FROM", "WHERE", "ORDER BY", "LIMIT", "JOIN"].map(
-          (chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => {
-                editorRef.current?.focus();
-                editorRef.current?.applySuggestion(chip);
-              }}
-              className="px-2 py-0.5 rounded bg-surface-2 hover:bg-surface hover:text-text text-text-dim text-[11px] font-mono border border-border transition shrink-0 cursor-pointer"
-            >
-              {chip}
-            </button>
-          ),
-        )
+          <>
+            <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
+              Quick:
+            </span>
+            {["SELECT", "FROM", "WHERE", "ORDER BY", "LIMIT", "JOIN"].map(
+              (chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => {
+                    editorRef.current?.focus();
+                    editorRef.current?.applySuggestion(chip);
+                  }}
+                  className="px-2 py-0.5 rounded bg-surface-2 hover:bg-surface hover:text-text text-text-dim text-[11px] font-mono border border-border transition shrink-0 cursor-pointer"
+                >
+                  {chip}
+                </button>
+              ),
+            )}
+          </>
+        ) : language === 'prisma' ? (
+          <>
+            <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
+              Target:
+            </span>
+            <span className="font-mono text-[11px] text-func truncate">schema.prisma</span>
+          </>
+        ) : fileLabel.endsWith('.sh') ? (
+          <>
+            <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
+              Target:
+            </span>
+            <span className="font-mono text-[11px] text-func truncate">terminal CLI</span>
+          </>
         ) : (
-          // Prisma track: no SQL chips (the editor is TypeScript). The row still
-          // names the model whose SQL this code will generate.
-          <span className="font-mono text-[11px] text-text-dim truncate">{tableName}</span>
+          <>
+            <span className="text-[11px] text-text-faint uppercase tracking-wider font-semibold mr-1 shrink-0">
+              Model:
+            </span>
+            <span className="font-mono text-[11px] text-text-dim truncate">{tableName}</span>
+          </>
         )}
       </div>
       )}

@@ -17,6 +17,7 @@ import {
   previewPrismaTask,
   submitForTask,
   typeInspectorState,
+  taskWorkspaceMode,
   type ConsoleDisplayMode,
   type SqlLensState,
 } from '../../lib/track-submit';
@@ -82,6 +83,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   // edit TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
   const starterCode = editorStarterCode(task);
   const chrome = editorSurface(task);
+  const currentMode = taskWorkspaceMode(task);
   // Phase 9: schema tab exists on the Prisma track only (`undefined` on SQL —
   // the SQL editor keeps its single-file layout), and `activeTab: 'schema'`
   // opens a task directly on it. The inspector state is derived per render so
@@ -311,25 +313,27 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
             </div>
           )}
 
-          {/* Order 4 on Mobile (or below task on desktop): Database Explorer */}
-          <div className="order-4 lg:order-2 min-w-0 w-full">
-            <DatabaseExplorer
-              initialTableName={task.primaryTable}
-              highlightedColumns={task.validation.requiredColumns}
-              expectedColumns={
-                /\b(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX)\b/i.test(
-                  task.solutionSql,
-                )
-                  ? task.validation.requiredColumns
-                  : undefined
-              }
-              getDatabaseState={getDatabaseState}
-              refreshKey={executionResult}
-              onSelectColumn={(colName) => {
-                // Click column helper
-              }}
-            />
-          </div>
+          {/* Order 4 on Mobile (or below task on desktop): Database Explorer — hidden in Schema mode */}
+          {currentMode !== 'schema' && (
+            <div className="order-4 lg:order-2 min-w-0 w-full">
+              <DatabaseExplorer
+                initialTableName={task.primaryTable}
+                highlightedColumns={task.validation.requiredColumns}
+                expectedColumns={
+                  /\b(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|DROP\s+INDEX)\b/i.test(
+                    task.solutionSql,
+                  )
+                    ? task.validation.requiredColumns
+                    : undefined
+                }
+                getDatabaseState={getDatabaseState}
+                refreshKey={executionResult}
+                onSelectColumn={(colName) => {
+                  // Click column helper
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* RIGHT COLUMN (Desktop): SQL Editor + Results Console */}
@@ -406,6 +410,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               sqlLens={sqlLens}
               displayMode={terminalDisplay?.mode}
               terminalOutput={terminalDisplay?.output}
+              workspaceMode={currentMode}
             />
           </div>
         </div>

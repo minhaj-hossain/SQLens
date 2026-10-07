@@ -93,7 +93,18 @@ export interface PrismaValidationRule {
  * executable reference: the Prisma engine generates SQL from `solutionCode`
  * and runs it through the existing in-browser SQL executor (real execution).
  */
+/**
+ * Workspace Interaction Mode (Milestone 1):
+ * Dictates what UI surface the learner interacts with.
+ * - `schema`: Full-width schema.prisma editor + ERD / schema visualizer + AST checklist.
+ * - `query`: query.ts editor + unified data/JSON results + secondary SQL lens / type inspector.
+ * - `cli`: Terminal shell prompt + simulated execution stdout.
+ */
+export type PrismaWorkspaceMode = 'schema' | 'query' | 'cli';
+
 export interface PrismaTaskContent {
+  /** The workspace interaction surface ('schema' | 'query' | 'cli'). */
+  workspaceMode?: PrismaWorkspaceMode;
   /** Phase 3 Quality Rubric: pedagogical role ('introduce' | 'practice' | 'assess'). */
   skillType?: SkillType;
   /** Phase 3 Quality Rubric: grading channel ('executable' | 'snippet-lab'). */

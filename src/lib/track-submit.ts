@@ -38,12 +38,14 @@ import {
 } from './prisma-engine/prisma-type-inference';
 import type { PrismaExecutionStep } from './prisma-engine/prisma-proxy-executor';
 import { splitTaskScaffold } from './task-scaffold';
+import type { PrismaWorkspaceMode } from '../types/prisma-curriculum';
 
 export type { SubmitHooks } from './sql-engine/submit-pipeline';
 export type { PrismaExecutionStep } from './prisma-engine/prisma-proxy-executor';
 export type { InferredField, InferredResultType } from './prisma-engine/prisma-type-inference';
 export type { ConsoleDisplayMode } from './prisma-engine/prisma-submit-pipeline';
 export { isPrismaTask } from './prisma-engine/prisma-submit-pipeline';
+export type { PrismaWorkspaceMode } from '../types/prisma-curriculum';
 
 /** Prisma SQL Lens payload — what `SqlLensPanel` renders. */
 export interface SqlLensState {
@@ -243,16 +245,31 @@ export function editorStarterCode(task: PracticeTask): string {
   return splitTaskScaffold(task.initialSql).code;
 }
 
+/**
+ * Resolves the active workspace mode for a task ('schema' | 'query' | 'cli' | 'sql').
+ * Prioritizes explicit task.prisma.workspaceMode, then falls back safely.
+ */
+export function taskWorkspaceMode(task: PracticeTask): PrismaWorkspaceMode | 'sql' {
+  if (!isPrismaTask(task)) return 'sql';
+  if (task.prisma!.workspaceMode) return task.prisma!.workspaceMode;
+  if (task.prisma!.activeTab === 'schema' || task.prisma!.schemaSource !== undefined) {
+    return 'schema';
+  }
+  return 'query';
+}
+
 /** The reference "View Solution" reveals — and the language to label it with. */
 export function solutionReveal(task: PracticeTask): {
-  language: 'typescript' | 'sql';
+  language: 'typescript' | 'sql' | 'prisma';
   label: string;
   code: string;
 } {
   if (isPrismaTask(task)) {
+    const mode = taskWorkspaceMode(task);
+    const isSchema = mode === 'schema' || task.prisma!.activeTab === 'schema';
     return {
-      language: 'typescript',
-      label: 'Solution (TypeScript)',
+      language: isSchema ? 'prisma' : 'typescript',
+      label: isSchema ? 'Solution (schema.prisma)' : 'Solution (TypeScript)',
       code: task.prisma!.solutionCode,
     };
   }
@@ -265,10 +282,11 @@ export function solutionReveal(task: PracticeTask): {
  * `isExecutablePrismaTask` answers "does this task have a client call to
  * translate?" at render time, so a snippet lab is never mistaken for a broken
  * lens: the panel says which of the two it is. `undefined` on the SQL track,
- * which renders no lens UI at all.
+ * which renders no lens UI at all. Schema mode suppresses the lens completely.
  */
 export function idleLensState(task: PracticeTask): SqlLensState | undefined {
   if (!isPrismaTask(task)) return undefined;
+  if (taskWorkspaceMode(task) === 'schema') return undefined;
   return {
     steps: [],
     note: isExecutablePrismaTask(task)
@@ -280,6 +298,7 @@ export function idleLensState(task: PracticeTask): SqlLensState | undefined {
 /**
  * Editor chrome per track: the Prisma surface is a TypeScript file, so the SQL
  * keyword chips make no sense there and the Type Inspector takes their place.
+ * Schema mode points fileLabel to schema.prisma.
  */
 export function editorSurface(task: PracticeTask): {
   fileLabel: string;
@@ -289,10 +308,17 @@ export function editorSurface(task: PracticeTask): {
   if (!isPrismaTask(task)) {
     return { fileLabel: 'query.sql', showQuickChips: true, expectedType: null };
   }
+  const mode = taskWorkspaceMode(task);
+  const fileLabel =
+    mode === 'schema'
+      ? 'schema.prisma'
+      : mode === 'cli'
+      ? 'terminal.sh'
+      : 'query.ts';
   return {
-    fileLabel: 'query.ts',
+    fileLabel,
     showQuickChips: false,
-    expectedType: task.prisma!.expectedType ?? null,
+    expectedType: mode === 'schema' ? null : (task.prisma!.expectedType ?? null),
   };
 }
 
@@ -330,8 +356,8 @@ export function defaultEditorTab(task: PracticeTask): PrismaEditorTab {
 /**
  * Phase 9 — the Type Inspector payload for a task and the rows it just produced.
  *
- * `undefined` on the SQL track. Both halves are reported separately because they
- * are different things: the authored reference type (a promise from the task
+ * `undefined` on the SQL track or in Schema mode. Both halves are reported separately
+ * because they are different things: the authored reference type (a promise from the task
  * author) and the type observed on THIS run (measured). Either can be absent —
  * never faked.
  */
@@ -351,8 +377,12 @@ export function typeInspectorState(
   result: QueryExecutionResult | null | undefined,
 ): TypeInspectorState | undefined {
   if (!isPrismaTask(task)) return undefined;
+  if (taskWorkspaceMode(task) === 'schema') return undefined;
   const inferred = inferResultType(result);
   const expectedType = task.prisma!.expectedType?.trim() || null;
+  if (!expectedType && (!result || !result.rows || result.rows.length === 0)) {
+    return undefined;
+  }
   return {
     expectedType,
     inferred,

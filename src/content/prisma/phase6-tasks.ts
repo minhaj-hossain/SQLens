@@ -8,6 +8,7 @@ import type {
   PrismaStepBreakdown,
   PrismaTargetHero,
   PrismaValidationRule,
+  PrismaWorkspaceMode,
   SkillType,
 } from '../../types/prisma-curriculum';
 import { extractPrismaTarget } from '../../lib/prisma-engine/prisma-validator';
@@ -93,6 +94,8 @@ export interface PrismaTaskExtras {
   forbidden?: string[];
   /** `true` for labs the structural validator cannot grade (e.g. $transaction). */
   noModelContract?: boolean;
+  /** Milestone 1: Workspace interaction surface ('schema' | 'query' | 'cli'). */
+  workspaceMode?: PrismaWorkspaceMode;
   /** Phase 3 Quality Rubric: pedagogical role ('introduce' | 'practice' | 'assess'). */
   skillType?: SkillType;
   /** Phase 3 Quality Rubric: Strategy C grading channel ('executable' | 'snippet-lab'). */
@@ -227,6 +230,7 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
     },
     successMessage: 'Correct — the SQL lens proves it.',
     prisma: {
+      workspaceMode: t.workspaceMode ?? 'query',
       skillType,
       gradingType,
       ...(t.fromScratch ? { fromScratch: true } : {}),
@@ -284,6 +288,16 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     !!t.includes?.length ||
     !!t.orderBy?.length ||
     t.pagination !== undefined;
+  const workspaceMode: PrismaWorkspaceMode =
+    t.workspaceMode ??
+    (t.activeTab === 'schema' || t.schemaSource !== undefined
+      ? 'schema'
+      : /\b(npx prisma|prisma init|prisma generate|prisma migrate|resolveTypeDesync)\b/.test(
+            t.code1 + ' ' + (t.code0 || '')
+          )
+        ? 'cli'
+        : 'query');
+
   return {
     id: t.id,
     title: t.title,
@@ -313,12 +327,15 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     },
     successMessage: 'Correct.',
     prisma: {
+      workspaceMode,
       skillType,
       gradingType,
       ...(t.fromScratch ? { fromScratch: true } : {}),
       initialCode: t.code0,
       solutionCode: t.code1,
-      expectedType: t.rtype ?? 'string',
+      expectedType:
+        t.rtype ??
+        (workspaceMode === 'schema' ? 'schema.prisma' : workspaceMode === 'cli' ? 'terminal' : 'string'),
       ...(t.activeTab ? { activeTab: t.activeTab } : {}),
       ...(t.schemaSource ? { schemaSource: t.schemaSource } : {}),
       ...(t.demoVariables ? { demoVariables: t.demoVariables } : {}),
