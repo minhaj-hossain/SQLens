@@ -10,7 +10,7 @@ export const Prisma_08_MODULE: ModuleData = {
   shortTitle: 'Filter & Paginate',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-2',
+  milestoneId: 'prisma-milestone-4',
   description: 'Filter with operators, sort deterministically and page with offset or cursor.',
   estimatedMinutes: 60,
   curriculumOrder: 8,

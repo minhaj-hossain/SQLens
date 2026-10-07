@@ -10,7 +10,7 @@ export const Prisma_03_MODULE: ModuleData = {
   shortTitle: 'Models & Constraints',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-1',
+  milestoneId: 'prisma-milestone-2',
   description: 'Model scalar types, optionality, enums and table-level constraints in schema.prisma.',
   estimatedMinutes: 50,
   curriculumOrder: 3,

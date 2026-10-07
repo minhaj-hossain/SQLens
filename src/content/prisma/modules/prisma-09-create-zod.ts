@@ -10,7 +10,7 @@ export const Prisma_09_MODULE: ModuleData = {
   shortTitle: 'Create & Validate',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-3',
+  milestoneId: 'prisma-milestone-5',
   description: 'Insert single rows and batches, then validate every payload before it reaches Prisma.',
   estimatedMinutes: 55,
   curriculumOrder: 9,

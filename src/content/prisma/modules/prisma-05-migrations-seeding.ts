@@ -10,7 +10,7 @@ export const Prisma_05_MODULE: ModuleData = {
   shortTitle: 'Migrations & Seeding',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-2',
+  milestoneId: 'prisma-milestone-3',
   description: 'Turn schema.prisma into versioned SQL migrations and seed data deterministically.',
   estimatedMinutes: 50,
   curriculumOrder: 5,

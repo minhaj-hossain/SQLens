@@ -10,7 +10,7 @@ export const Prisma_10_MODULE: ModuleData = {
   shortTitle: 'Updating Data',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-3',
+  milestoneId: 'prisma-milestone-5',
   description: 'Change single rows, batch edits with a filter, and make writes idempotent with upsert.',
   estimatedMinutes: 55,
   curriculumOrder: 10,

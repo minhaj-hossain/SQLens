@@ -91,7 +91,7 @@ flowchart TD
 ### Milestone 2: Curriculum Index & Roadmap Alignment
 *Goal: Realign module registration, milestone boundaries, and publish schedules.*
 
-- [ ] **Task 2.1: Roadmap Milestones**
+- [x] **Task 2.1: Roadmap Milestones**
   - Update `src/content/prisma/prisma-roadmap.ts` to reflect the 7 phases:
     1. Foundations (Days 1–2)
     2. Reading Data (Days 3–4)
@@ -100,9 +100,10 @@ flowchart TD
     5. Writing Data (Days 9–10)
     6. Workflow & CLI (Days 11–12)
     7. Advanced Prisma (Days 13–14)
-- [ ] **Task 2.2: Curriculum Order & Index**
-  - Align `src/content/prisma/prisma-curriculum-order.ts`.
-  - Update module imports and slugs in `src/content/prisma/prisma-curriculum-index.ts`.
+- [x] **Task 2.2: Curriculum Order & Index**
+  - Updated `milestoneId` across all 14 modules (`prisma-01` through `prisma-14`).
+  - Aligned `src/content/prisma/prisma-curriculum-order.ts` and `src/content/prisma/prisma-curriculum-index.ts`.
+  - Verified across Vitest (94 files, 1031 tests passed) and Next.js production build (87/87 static pages).
 
 ---
 

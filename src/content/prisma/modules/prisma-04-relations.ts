@@ -10,7 +10,7 @@ export const Prisma_04_MODULE: ModuleData = {
   shortTitle: 'Relations',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-1',
+  milestoneId: 'prisma-milestone-2',
   description: 'Model one-to-many, one-to-one and many-to-many relations, and load them safely.',
   estimatedMinutes: 55,
   curriculumOrder: 4,

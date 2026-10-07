@@ -10,7 +10,7 @@ export const Prisma_14_MODULE: ModuleData = {
   shortTitle: 'Capstone',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-4',
+  milestoneId: 'prisma-milestone-7',
   description: 'Synthesise the full Prisma curriculum: reads, writes, relations, transactions, error trapping, and the raw SQL escape hatch.',
   estimatedMinutes: 70,
   curriculumOrder: 14,

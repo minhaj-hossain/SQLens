@@ -10,7 +10,7 @@ export const Prisma_12_MODULE: ModuleData = {
   shortTitle: 'Nested Writes',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-4',
+  milestoneId: 'prisma-milestone-6',
   description: 'Write across relations in one call, and wrap multi-step writes in a transaction.',
   estimatedMinutes: 60,
   curriculumOrder: 12,

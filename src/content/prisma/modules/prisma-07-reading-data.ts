@@ -10,7 +10,7 @@ export const Prisma_07_MODULE: ModuleData = {
   shortTitle: 'Reading Data',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-2',
+  milestoneId: 'prisma-milestone-4',
   description: 'Pick the right read method, then decide between a precise `select` and a relation `include`.',
   estimatedMinutes: 55,
   curriculumOrder: 7,

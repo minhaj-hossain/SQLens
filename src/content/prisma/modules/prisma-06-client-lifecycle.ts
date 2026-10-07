@@ -10,7 +10,7 @@ export const Prisma_06_MODULE: ModuleData = {
   shortTitle: 'Client Lifecycle',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-2',
+  milestoneId: 'prisma-milestone-4',
   description: 'Keep one PrismaClient per process, log the queries you cannot see, and shut down cleanly.',
   estimatedMinutes: 45,
   curriculumOrder: 6,

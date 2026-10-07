@@ -10,7 +10,7 @@ export const Prisma_13_MODULE: ModuleData = {
   shortTitle: 'Error Codes',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-4',
+  milestoneId: 'prisma-milestone-7',
   description: 'Branch on typed Prisma error codes — P2002, P2025, P2003 — and turn them into correct HTTP responses without ever reading the error message.',
   estimatedMinutes: 55,
   curriculumOrder: 13,

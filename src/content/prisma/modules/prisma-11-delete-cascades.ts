@@ -10,7 +10,7 @@ export const Prisma_11_MODULE: ModuleData = {
   shortTitle: 'Delete & Cascades',
   type: 'module',
   track: 'prisma',
-  milestoneId: 'prisma-milestone-3',
+  milestoneId: 'prisma-milestone-6',
   description: 'Delete safely: chosen referential actions at the schema level, soft deletes at the app level.',
   estimatedMinutes: 55,
   curriculumOrder: 11,
