@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
+import { Prisma_05_MODULE as Prisma_05_Migrations_MODULE } from '../../src/content/prisma/modules/prisma-05-migrations-seeding';
 import { renderGeneratedSql } from '../../src/lib/prisma-engine/prisma-sql-generator';
 import {
   isPrismaSchemaLab,
@@ -51,7 +52,7 @@ function firstPrismaTask(): PracticeTask {
 
 /** Any Prisma task by id (concept task or challenge task). */
 function taskById(id: string): PracticeTask {
-  for (const mod of PRISMA_MODULES) {
+  for (const mod of [Prisma_05_Migrations_MODULE, ...PRISMA_MODULES]) {
     const hit = [...mod.concepts.flatMap((c) => c.tasks), ...(mod.challenge?.tasks ?? [])].find(
       (t) => t.id === id,
     );
@@ -291,7 +292,7 @@ describe('P1.2 — snippet-lab terminal display contract', () => {
     let cli = 0;
     let schema = 0;
     const failures: string[] = [];
-    for (const mod of PRISMA_MODULES) {
+    for (const mod of [...PRISMA_MODULES, Prisma_05_Migrations_MODULE]) {
       const all = [...mod.concepts.flatMap((c) => c.tasks), ...(mod.challenge?.tasks ?? [])];
       for (const task of all) {
         const ex = new SqlExecutor();

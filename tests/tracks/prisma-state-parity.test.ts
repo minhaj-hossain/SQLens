@@ -174,11 +174,11 @@ describe('Phase 12 — Prisma final-state grading parity (Task 0.1)', () => {
   });
 
   it('keeps reads result-graded: stateOk stays undefined', () => {
-    const task = taskById('prisma07-c1-t1'); // findUnique — a translated SELECT
+    const task = taskById('prisma03-c1-t1'); // findFirst — a translated SELECT
     const outcome = submitGraded(task, task.prisma!.solutionCode, fullHooks(new SqlExecutor()));
     expect(outcome.passed).toBe(true);
     expect(outcome.stage).toBe('pass');
-    expect(outcome.generatedSql).toEqual(['SELECT id, name FROM users WHERE id = 1;']);
+    expect(outcome.generatedSql).toEqual(["SELECT id, name, email FROM users WHERE name = 'Alex';"]);
     // The final-state layer never ran: a read cannot change the database.
     expect(outcome.stateOk).toBeUndefined();
     expect(outcome.diffColumns).toBeUndefined();

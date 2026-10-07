@@ -28,8 +28,8 @@ function hooksFor(exec: SqlExecutor) {
 
 describe('Phase 14 — SQL Lens Hierarchy & Transaction Semantics', () => {
   it('marks relation follow-up queries with role relation on include tasks', () => {
-    // include task: getAuthorWithPosts (findUnique with include: { posts: true })
-    const task = findTask('prisma07-c2-t2');
+    // include task: getUserWithPosts (findUnique with include: { posts: true })
+    const task = findTask('prisma06-c2-t1');
     const exec = new SqlExecutor();
     const outcome = submitForTask({
       task,
@@ -55,7 +55,7 @@ describe('Phase 14 — SQL Lens Hierarchy & Transaction Semantics', () => {
   });
 
   it('preserves relation tagging and metadata in previewPrismaTask', () => {
-    const task = findTask('prisma07-c2-t2');
+    const task = findTask('prisma06-c2-t1');
     const exec = new SqlExecutor();
     const preview = previewPrismaTask(task, task.prisma!.solutionCode, hooksFor(exec));
 

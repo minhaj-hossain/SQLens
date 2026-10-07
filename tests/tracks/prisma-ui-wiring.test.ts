@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { runAndGradeSubmission } from '../../src/lib/sql-engine/submit-pipeline';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
+import { Prisma_05_MODULE as Prisma_05_Migrations_MODULE } from '../../src/content/prisma/modules/prisma-05-migrations-seeding';
 import { ALL_MODULES } from '../../src/content/curriculum-index';
 import { deriveEvaluationState } from '../../src/lib/evaluation-state';
 import {
@@ -58,7 +59,7 @@ function fullHooks(ex: SqlExecutor) {
 
 describe('Phase 7 — editor + reveal + idle lens decisions', () => {
   it('the editor opens with the track starter: TS on Prisma, scaffold on SQL', () => {
-    const prisma = prismaTaskById('prisma07-c1-t1');
+    const prisma = prismaTaskById('prisma14-c1-t1');
     expect(editorStarterCode(prisma)).toBe(prisma.prisma!.initialCode);
     expect(editorStarterCode(prisma)).toContain('prisma.user.');
     // Loading `initialSql` into the Prisma editor would ask the learner to
@@ -71,7 +72,7 @@ describe('Phase 7 — editor + reveal + idle lens decisions', () => {
   });
 
   it('solution reveal: solutionCode on Prisma, solutionSql on SQL', () => {
-    const prisma = prismaTaskById('prisma07-c1-t1');
+    const prisma = prismaTaskById('prisma14-c1-t1');
     const reveal = solutionReveal(prisma);
     expect(reveal.language).toBe('typescript');
     expect(reveal.label).toContain('TypeScript');
@@ -86,7 +87,7 @@ describe('Phase 7 — editor + reveal + idle lens decisions', () => {
   });
 
   it('editor surface: query.ts + no SQL chips + Type Inspector on Prisma', () => {
-    const prisma = prismaTaskById('prisma07-c1-t1');
+    const prisma = prismaTaskById('prisma14-c1-t1');
     const chrome = editorSurface(prisma);
     expect(chrome.fileLabel).toBe('query.ts');
     expect(chrome.showQuickChips).toBe(false);
@@ -103,7 +104,7 @@ describe('Phase 7 — editor + reveal + idle lens decisions', () => {
 
 describe('Phase 7 — submitForTask routing', () => {
   it('a Prisma solution passes with labeled lens steps', () => {
-    const task = prismaTaskById('prisma07-c1-t1');
+    const task = prismaTaskById('prisma03-c1-t2');
     const ex = new SqlExecutor();
     const out = submitForTask({
       task,
@@ -128,7 +129,7 @@ describe('Phase 7 — submitForTask routing', () => {
   });
 
   it('a Prisma starter fails with feedback and an explained empty lens', () => {
-    const task = prismaTaskById('prisma07-c1-t1');
+    const task = prismaTaskById('prisma14-c1-t1');
     const ex = new SqlExecutor();
     const out = submitForTask({
       task,
@@ -146,7 +147,7 @@ describe('Phase 7 — submitForTask routing', () => {
   });
 
   it('a snippet-lab solution passes through the read-through contract', () => {
-    const task = prismaTaskById('prisma05-c1-t1');
+    const task = Prisma_05_Migrations_MODULE.concepts[0].tasks[0];
     const ex = new SqlExecutor();
     const out = submitForTask({
       task,
@@ -262,9 +263,9 @@ describe('Phase 7 — submitForTask routing', () => {
 
 describe('Phase 7 — previewPrismaTask (ungraded Run)', () => {
   it('a failing starter still shows its SQL: preview executes, never grades', () => {
-    // The prisma07 starter uses `findFirst` where the contract needs
-    // `findUnique`: static-fail, but the generated SELECT is real and runnable.
-    const task = prismaTaskById('prisma07-c1-t1');
+    // The prisma14 starter uses `findUnique` without throw:
+    // static-fail against findUniqueOrThrow, but the generated SELECT is real and runnable.
+    const task = prismaTaskById('prisma14-c1-t1');
     const ex = new SqlExecutor();
     const preview = previewPrismaTask(task, task.prisma!.initialCode, fullHooks(ex));
     expect(preview.lens.steps.length).toBeGreaterThan(0);
@@ -342,16 +343,17 @@ describe('Phase 7 — whole-track wiring invariants', () => {
 });
 
 describe('Phase 7 — editor + reveal + idle lens decisions', () => {
-  it('idle lens: undefined on SQL; a runnable hint on executable Prisma tasks', () => {
+  it('idle lens: undefined on SQL and schema mode; a runnable hint on executable Prisma tasks', () => {
     expect(idleLensState(firstSqlTask())).toBeUndefined();
+    expect(idleLensState(prismaTaskById('prisma05-c1-t1'))).toBeUndefined();
 
-    const idle = idleLensState(prismaTaskById('prisma07-c1-t1'))!;
+    const idle = idleLensState(prismaTaskById('prisma02-c3-t1'))!;
     expect(idle.steps).toEqual([]);
     expect(idle.note).toContain('Run your code');
   });
 
   it('idle lens: snippet labs say there is nothing to translate', () => {
-    const idle = idleLensState(prismaTaskById('prisma05-c1-t1'))!;
+    const idle = idleLensState(Prisma_05_Migrations_MODULE.concepts[0].tasks[0])!;
     expect(idle.steps).toEqual([]);
     expect(idle.note).toContain('no Prisma client call');
   });

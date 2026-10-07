@@ -134,22 +134,22 @@ flowchart TD
 ### Milestone 4: Phase 3 & Phase 4 Modules (Schema Design & Relations)
 *Goal: Build constraints incrementally and teach relations alongside their storage foreign keys.*
 
-- [ ] **Task 4.1: Day 5: Schema Constraints & Indexes (Granular Micro-Steps)**
+- [x] **Task 4.1: Day 5: Schema Constraints & Indexes (Granular Micro-Steps)**
   - Concept 1: Primary keys (`@id`, `@default(autoincrement())`, `cuid()`, `uuid()`).
   - Concept 2: Default values (`@default`).
   - Concept 3: Single-field uniqueness (`@unique`).
   - Concept 4: Composite uniqueness (`@@unique([provider, providerId])`).
   - Concept 5: Secondary query indexes (`@@index([createdAt])`).
   - Concept 6: Legacy database mapping (`@map` and `@@map`).
-- [ ] **Task 4.2: Day 6: One-to-Many & One-to-One Relations**
+- [x] **Task 4.2: Day 6: One-to-Many & One-to-One Relations**
   - Concept 1: 1:N relations with foreign key bridge (`authorId Int` + `@relation` + `posts Post[]`).
   - Concept 2: Querying relations with `include: { posts: true }` and nested `select`.
   - Concept 3: 1:1 relations (`Profile` with unique `userId Int @unique`).
-- [ ] **Task 4.3: Day 7: Referential Actions & Lifecycle Integrity**
+- [x] **Task 4.3: Day 7: Referential Actions & Lifecycle Integrity**
   - Concept 1: What happens on delete/update?
   - Concept 2: `onDelete: Cascade` vs `onDelete: Restrict` vs `onDelete: SetNull`.
   - Concept 3: Verifying referential constraints in practice.
-- [ ] **Task 4.4: Day 8: Many-to-Many Relations**
+- [x] **Task 4.4: Day 8: Many-to-Many Relations**
   - Concept 1: Implicit M:N (`categories Category[]` and `posts Post[]`) and hidden join tables.
   - Concept 2: Explicit M:N with join model (`PostTag` with `@@id([postId, tagId])`).
   - Concept 3: Join models with relationship metadata (`addedAt DateTime`, `role String`).

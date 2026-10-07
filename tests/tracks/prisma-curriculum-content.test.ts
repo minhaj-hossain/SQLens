@@ -219,21 +219,32 @@ describe('P2.1 — rich Prisma theory', () => {
   });
 });
 
-describe('P2.2 — production concepts', () => {
+describe('Phase 3 & Phase 4 — Schema Design & Relations concepts', () => {
   const conceptById = (moduleId: string, conceptId: string) =>
     PRISMA_MODULES.find((m) => m.id === moduleId)?.concepts.find((c) => c.id === conceptId);
 
-  it('the four production concepts exist in their modules', () => {
-    expect(conceptById('prisma-08', 'aggregating-grouping')).toBeDefined();
+  it('Phase 3 and Phase 4 concepts exist in their modules', () => {
+    // Phase 3 (Day 5)
+    expect(conceptById('prisma-05', 'primary-keys-and-identifiers')).toBeDefined();
+    expect(conceptById('prisma-05', 'uniqueness-constraints')).toBeDefined();
+    // Phase 4 (Days 6-8)
+    expect(conceptById('prisma-06', 'foreign-key-bridge')).toBeDefined();
+    expect(conceptById('prisma-06', 'querying-relations')).toBeDefined();
+    expect(conceptById('prisma-07', 'relational-lifecycle')).toBeDefined();
+    expect(conceptById('prisma-07', 'cascade-restrict-setnull')).toBeDefined();
+    expect(conceptById('prisma-08', 'implicit-many-to-many')).toBeDefined();
+    expect(conceptById('prisma-08', 'explicit-join-models')).toBeDefined();
+    // Production concepts in later milestones
     expect(conceptById('prisma-13', 'client-extensions')).toBeDefined();
     expect(conceptById('prisma-14', 'raw-sql-escape-hatch')).toBeDefined();
-    // Cursor-vs-offset contrast stays taught by prisma-08's existing pagination concept.
-    expect(conceptById('prisma-08', 'pagination-strategies')).toBeDefined();
   });
 
   it('every new concept carries rich theory (hero + mental model + ≥3 steps)', () => {
     const ids: [string, string][] = [
-      ['prisma-08', 'aggregating-grouping'],
+      ['prisma-05', 'primary-keys-and-identifiers'],
+      ['prisma-06', 'foreign-key-bridge'],
+      ['prisma-07', 'cascade-restrict-setnull'],
+      ['prisma-08', 'explicit-join-models'],
       ['prisma-13', 'client-extensions'],
       ['prisma-14', 'raw-sql-escape-hatch'],
     ];
@@ -252,15 +263,13 @@ describe('P2.2 — production concepts', () => {
     expect(failures).toEqual([]);
   });
 
-  it('aggregation lab: groupBy + _count, read-through by engine derivation', () => {
-    const c = conceptById('prisma-08', 'aggregating-grouping')!;
-    const lab = c.tasks.find((t) => t.id === 'prisma08-c3-t1');
+  it('explicit join model lab: @@id composite primary key on PostTag', () => {
+    const c = conceptById('prisma-08', 'explicit-join-models')!;
+    const lab = c.tasks.find((t) => t.id === 'prisma08-c2-t1');
     expect(lab).toBeDefined();
-    expect(lab!.prisma!.solutionCode).toContain('groupBy(');
-    expect(lab!.prisma!.validation.requiredCodeSnippets).toContain('_count');
-    // The generator cannot translate groupBy — classification is the engine's answer,
-    // not a hardcoded flag (so the audit's read-through contract is honest).
-    expect(isExecutablePrismaTask(lab!)).toBe(false);
+    expect(lab!.prisma!.solutionCode).toContain('model PostTag');
+    expect(lab!.prisma!.solutionCode).toContain('@@id([postId, tagId])');
+    expect(lab!.prisma!.validation.requiredCodeSnippets).toContain('@@id([postId, tagId])');
   });
 
   it('$extends concept bans the deprecated $use in its lab', () => {
