@@ -13,8 +13,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { prismaReadTask, prismaSnippetTask } from '../../src/content/prisma/phase6-tasks';
 import { defaultEditorTab, editorSchemaTab } from '../../src/lib/track-submit';
-import { Prisma_04_MODULE } from '../../src/content/prisma/modules/prisma-04-relations';
-import { Prisma_03_MODULE } from '../../src/content/prisma/modules/prisma-03-models-constraints';
 import { SQLEditor } from '../../src/components/learning/SQLEditor';
 import { PrismaSchemaTab } from '../../src/components/learning/prisma/PrismaSchemaTab';
 
@@ -57,39 +55,28 @@ describe('Phase 6: Adaptive Schema Tab Activation', () => {
     expect(schemaTab?.source).toBe(customSchema);
   });
 
-  it('configures activeTab: schema on Day 4 relation modeling tasks', () => {
-    const tasks = Prisma_04_MODULE.concepts.flatMap((c) => c.tasks);
-    const c1t1 = tasks.find((t) => t.id === 'prisma04-c1-t1');
-    const c2t2 = tasks.find((t) => t.id === 'prisma04-c2-t2');
-    const c3t1 = tasks.find((t) => t.id === 'prisma04-c3-t1');
-    const c3t2 = tasks.find((t) => t.id === 'prisma04-c3-t2');
+  it('configures schemaSource on custom schema and counter update tasks', () => {
+    const task = prismaSnippetTask({
+      id: 'test-schema-task',
+      title: 'Relation Task',
+      description: 'Relation test',
+      instructions: ['Read schema'],
+      scaffold: 'SELECT 1;',
+      solutionSql: 'SELECT 1;',
+      why: 'test',
+      rows: 1,
+      code0: '',
+      code1: '',
+      need: [''],
+      activeTab: 'schema',
+      schemaSource: 'model Profile {\n  id Int @id\n  bio String?\n}',
+    });
 
-    expect(c1t1).toBeDefined();
-    expect(defaultEditorTab(c1t1!)).toBe('schema');
-
-    expect(c2t2).toBeDefined();
-    expect(defaultEditorTab(c2t2!)).toBe('schema');
-    expect(c2t2?.prisma?.schemaSource).toContain('Profile');
-
-    expect(c3t1).toBeDefined();
-    expect(defaultEditorTab(c3t1!)).toBe('schema');
-    expect(c3t1?.prisma?.schemaSource).toContain('Category');
-
-    expect(c3t2).toBeDefined();
-    expect(defaultEditorTab(c3t2!)).toBe('schema');
-    expect(c3t2?.prisma?.schemaSource).toContain('PostCategory');
-  });
-
-  it('configures schemaSource on Day 3 enum and constraint tasks', () => {
-    const tasks = Prisma_03_MODULE.concepts.flatMap((c) => c.tasks);
-    const c2t1 = tasks.find((t) => t.id === 'prisma03-c2-t1');
-    const c2t2 = tasks.find((t) => t.id === 'prisma03-c2-t2');
-
-    expect(c2t1).toBeDefined();
-    expect(c2t1?.prisma?.schemaSource).toContain('enum Role');
-
-    expect(c2t2).toBeDefined();
-    expect(c2t2?.prisma?.schemaSource).toContain('@@unique([name, email])');
+    expect(defaultEditorTab(task)).toBe('schema');
+    expect(task.prisma?.schemaSource).toContain('Profile');
+    const schemaTab = editorSchemaTab(task);
+    expect(schemaTab).toBeDefined();
+    expect(schemaTab?.source).toContain('Profile');
   });
 
   it('renders the persistent relation indicator pill on multi-model schemas', () => {

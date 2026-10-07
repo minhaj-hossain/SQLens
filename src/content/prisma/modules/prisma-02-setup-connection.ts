@@ -1,73 +1,80 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
-/** Prisma Day 2 — Setup & Connection. CLI lifecycle + pooled datasource. */
+/**
+ * Prisma Day 2 — Field Modifiers & Defaults.
+ * Shape: Module -> 3 Concepts -> rich theory + 2 tasks each -> challenge.
+ *
+ * Pedagogical Sequence:
+ *   Concept 1: Optional fields with `?` (Schema Mode)
+ *   Concept 2: Default values with `@default()` and `@default(now())` (Schema Mode)
+ *   Concept 3: Point lookup with `prisma.user.findUnique()` (Query Mode)
+ *   Challenge: Single Member Inspector (Query Mode from scratch)
+ */
 export const Prisma_02_MODULE: ModuleData = {
   id: 'prisma-02',
-  slug: 'setup-and-connection',
+  slug: 'field-modifiers-and-defaults',
   day: 2,
-  title: 'Day 2 — Setup & Connection',
-  shortTitle: 'Setup & Connection',
+  title: 'Day 2 — Field Modifiers & Defaults',
+  shortTitle: 'Modifiers & Defaults',
   type: 'module',
   track: 'prisma',
   milestoneId: 'prisma-milestone-1',
-  description: 'Run the CLI lifecycle and connect PostgreSQL with pooling.',
+  description:
+    'Handle nullable fields with the ? modifier, attach default values with @default(), and perform your first point lookup using findUnique().',
   estimatedMinutes: 45,
   curriculumOrder: 2,
   displayLabel: 'Day 2',
   completionLearnings: [
-    'Run init, generate, migrate dev in order',
-    'Regenerate the client after schema edits',
-    'Build a pooled PostgreSQL connection string',
-    'Prove the connection with a seeded read',
+    'Model nullable/optional fields using the ? modifier on the scalar type',
+    'Assign static defaults (@default("USER")) and dynamic defaults (@default(now()))',
+    'Execute targeted single-row queries using prisma.user.findUnique()',
+    'Combine point lookups with select projections to return minimal safe payloads',
+    'Understand the SQL difference between NULL columns, DEFAULT constraints, and WHERE id = 1',
   ],
   concepts: [
     {
-      id: 'cli-lifecycle',
+      id: 'optional-fields',
       order: 1,
-      title: 'The Prisma CLI Lifecycle',
-      shortDescription: 'init scaffolds, generate compiles, migrate moves the schema.',
+      title: 'Optional Fields with the ? Modifier',
+      shortDescription:
+        'Model nullable fields by appending the ? modifier directly to the scalar type.',
       theory: richPrismaTheory({
         summary:
-          'schema.prisma compiles into two distinct targets: `prisma generate` compiles TypeScript types and query builders into application code, while `prisma migrate dev` creates and runs versioned SQL migrations against your live database.',
-        takeaway:
-          'generate compiles client application code; migrate dev applies database schema migrations.',
-        sql: 'SELECT id, name, email FROM users;',
-        heroCode: 'export function resolveTypeDesync(): string {\n  return "npx prisma generate";\n}',
-        heroLang: 'typescript',
-        heroWhy: 'The command that recompiles client types after schema changes.',
+          'In relational databases, columns are either required (`NOT NULL`) or optional (`NULL`). In Prisma Schema, fields are required by default. To make a field optional, append `?` directly to its scalar type: `bio String?`.',
+        takeaway: 'Append ? to the scalar type (String?, Int?) to make a field nullable/optional.',
+        sql: 'SELECT id, name FROM users WHERE id = 1;',
+        heroCode: 'model User {\n  id   Int     @id @default(autoincrement())\n  name String\n  bio  String?\n}',
+        heroLang: 'prisma',
+        heroWhy: 'The ? modifier allows the bio column to store NULL when omitted.',
         mentalModel:
-          '**The Dual Compilation Pipeline.** `schema.prisma` is the single source of truth that branches into two parallel compilation targets:\n```\nschema.prisma (Single Source of Truth)\n     │\n     ├── npx prisma generate   ──▶  Prisma Client (TypeScript types + query builder)\n     │                              Target: node_modules/@prisma/client (Application Code)\n     │\n     └── npx prisma migrate dev ──▶  Database Schema (SQL migration files + DB tables)\n                                    Target: prisma/migrations/*.sql + Live Database\n```\nConflating them is the most common beginner mistake: `generate` builds your TypeScript autocomplete; `migrate dev` updates the tables your database actually stores.',
+          'In TypeScript, optional properties put the question mark on the key: `bio?: string`. In Prisma Schema, the question mark goes on the TYPE: `bio String?`. Writing `bio? String` is a syntax error.',
         explanation: [
-          'The Dual Pipeline: `generate` compiles application client code; `migrate dev` updates the database schema.',
-          'Re-run `generate` after every schema edit — the client in TypeScript is a generated build artifact, not a live runtime reflection.',
-          'Run `migrate dev` to generate versioned SQL migrations and apply them to your database.',
+          'All fields without a modifier are strictly required in both the schema and generated database tables.',
+          'Appending `?` to a scalar type (`String?`, `Int?`, `DateTime?`) marks it as optional.',
+          'When queried through Prisma Client, optional fields are typed as `T | null` (e.g. `string | null`).',
+          'During inserts, optional fields can be safely omitted without triggering constraint violations.',
         ],
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'init writes the source of truth',
-            codeSnippet: '// prisma/schema.prisma\nmodel User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  email String @unique\n}',
-            explanation: 'Every CLI command reads this one file — it defines the models the whole toolchain speaks in.',
+            stepTitle: 'Identify the optional column',
+            codeSnippet: 'bio String?',
+            explanation: 'The question mark immediately follows String, indicating nullable storage.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'generate compiles the typed client',
-            codeSnippet: 'npx prisma generate',
-            explanation: 'Prisma reads the schema and emits a client whose types mirror the models — `User` fields reach your editor as real autocomplete.',
+            stepTitle: 'SQL generation for nullable read',
+            codeSnippet: 'SELECT id, name, bio FROM users WHERE id = 1;',
+            explanation: 'Prisma maps String? to a nullable text column in SQL.',
+            visualData: { type: 'sql_lens', title: 'Nullable Column Query', details: null },
           },
           {
             stepNumber: 3,
-            stepTitle: 'the compiled client turns reads into calls',
-            codeSnippet: 'const user = await prisma.user.findUnique({\n  where: { id: 1 },\n  select: { id: true, name: true, email: true },\n});',
-            explanation: '`where` picks the row, `select` picks the fields — and the compiler already knows the result type.',
-          },
-          {
-            stepNumber: 4,
-            stepTitle: 'each call sends one parameterized SELECT',
-            codeSnippet: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
-            explanation: 'The Query Engine translates the call to SQL with bound parameters — the SQL Lens shows this exact statement after every run.',
-            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+            stepTitle: 'Client type inference',
+            codeSnippet: '{ bio: string | null }',
+            explanation: 'TypeScript autocomplete and type checker enforce null handling.',
+            visualData: { type: 'type_preview', title: 'TypeScript Inferred Type', details: null },
           },
         ],
         littleDetails: {
@@ -75,17 +82,30 @@ export const Prisma_02_MODULE: ModuleData = {
           rules: [
             {
               ruleNumber: 1,
-              title: 'generate vs migrate dev (The Dual Pipeline)',
-              description:
-                '`prisma generate` compiles TypeScript types and query builders into application code (`node_modules/@prisma/client`). `prisma migrate dev` applies SQL schema migrations to the live database.',
-              badge: 'CLI',
+              title: '? Belongs to the Type',
+              description: 'Always write `name String?`, never `name? String`. The modifier is part of the type definition in Prisma.',
+              badge: 'Syntax',
             },
             {
               ruleNumber: 2,
-              title: 'Re-run generate after every schema edit',
-              description:
-                'Because Prisma Client is a generated build artifact, your TypeScript autocomplete only updates after running `npx prisma generate`.',
-              badge: 'Workflow',
+              title: 'Prisma Uses null, Not undefined',
+              description: 'In database queries, omitted optional values evaluate to `null` rather than JavaScript `undefined`.',
+              badge: 'Runtime',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL Nullability to Prisma Modifiers',
+          mappings: [
+            {
+              sql: 'bio TEXT NULL',
+              prisma: 'bio String?',
+              note: 'Permits null values when a profile is created without a bio',
+            },
+            {
+              sql: 'name VARCHAR(255) NOT NULL',
+              prisma: 'name String',
+              note: 'Required column, cannot contain null',
             },
           ],
         },
@@ -93,98 +113,96 @@ export const Prisma_02_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c1-t1',
-          title: 'Your Prisma types are outdated: Can you bring the client back in sync?',
-          description:
-            'You added `bio String?` to `schema.prisma`. In your application code, TypeScript raises: `Property \'bio\' does not exist on type \'User\'`. Provide the CLI command that compiles the updated models into `node_modules/@prisma/client` to resolve the compile-time type desync.',
+          title: 'Make a profile field optional: Add bio String?',
+          description: 'Declare an optional bio field on the User model using the ? modifier on the scalar type.',
           instructions: [
-            'Identify the CLI command that compiles TypeScript types into node_modules/@prisma/client',
-            'Return `"npx prisma generate"`',
+            'Inside `model User`, declare a field named `bio`',
+            'Make it an optional text field using `String?`',
           ],
           hintLadder: [
-            'Prisma Client is a generated build artifact. When models change in the schema, TypeScript autocomplete cannot see them until the client generator recompiles into node_modules.',
-            'Call the Prisma CLI generator command with npx.',
-            'Return the generation CLI string: return "/* run prisma generate with npx */";',
+            'Place the question mark directly on the scalar type name.',
+            'Declare the field on its own line: `bio String?`.',
+            'Add `bio String?` inside the model User block.',
           ],
-          scaffold: '-- Validating CLI compilation target:\nSELECT id, name, email FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
-          why: 'Client regeneration compiles the schema into TypeScript autocomplete and query builder methods.',
-          cols: ['id', 'name', 'email'],
+          scaffold: '-- Validating optional field bio String?:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'The ? modifier makes a field optional in the schema and nullable in the database.',
+          cols: ['id', 'name'],
           rows: 1,
-          code0:
-            'export function resolveTypeDesync(): string {\n  // TypeScript compile error: Property "bio" does not exist on type "User".\n  // Return the command that compiles schema.prisma into node_modules/@prisma/client:\n  return "";\n}',
-          code1:
-            'export function resolveTypeDesync(): string {\n  return "npx prisma generate";\n}',
-          need: ['npx prisma generate'],
+          workspaceMode: 'schema',
+          code0: 'model User {\n  id   Int    @id @default(autoincrement())\n  name String\n  // Add an optional bio field of type String below:\n\n}',
+          code1: 'model User {\n  id   Int     @id @default(autoincrement())\n  name String\n  bio  String?\n}',
+          need: ['bio String?'],
+          ban: ['bio? String'],
         }),
         prismaSnippetTask({
           id: 'prisma02-c1-t2',
-          title: 'Your database and Prisma schema disagree: Can you fix the mismatch?',
-          description:
-            'After running `prisma generate`, TypeScript autocomplete recognizes `user.bio`. However, executing the application query crashes at runtime with: `column "bio" does not exist in table "User"`. Provide the CLI command that detects the schema difference, creates an SQL migration, and applies the physical column to your database.',
+          title: 'Model optional profile attributes: Combine required and nullable fields',
+          description: 'Model real-world user profiles with a mix of required identity fields and optional profile metadata.',
           instructions: [
-            'Identify the command that generates versioned SQL and alters the physical database table',
-            'Return `"npx prisma migrate dev"`',
+            'In `model User`, keep `id`, `name`, and `email`',
+            'Add an optional `avatarUrl` field with type `String?`',
+            'Add an optional `age` field with type `Int?`',
           ],
           hintLadder: [
-            'The Prisma dual compilation pipeline separates client code from physical storage. Compiling client types does not alter physical tables on disk; a migration command is required to apply DDL changes.',
-            'Invoke the migration development workflow command using the Prisma CLI.',
-            'Return the migration development command: return "/* run prisma migrate dev with npx */";',
+            'Each field takes its own line with no trailing punctuation.',
+            'Declare `avatarUrl String?` and `age Int?`.',
+            'Complete model with:\n  avatarUrl String?\n  age Int?',
           ],
-          scaffold: '-- Prove the dual pipeline:\nSELECT id, name, email FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name, email FROM users WHERE id = 2;',
-          why: 'migrate dev alters the physical database schema, whereas generate alters application client code.',
+          scaffold: '-- Validating mixed required and optional fields:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
+          why: 'Nullable modifiers represent non-mandatory user attributes.',
           cols: ['id', 'name', 'email'],
           rows: 1,
-          code0:
-            'export function resolveDatabaseDesync(): string {\n  // Runtime database error: column "bio" does not exist in table "User".\n  // Return the command that creates and applies versioned SQL migrations to the database:\n  return "";\n}',
-          code1:
-            'export function resolveDatabaseDesync(): string {\n  return "npx prisma migrate dev";\n}',
-          need: ['npx prisma migrate dev'],
+          workspaceMode: 'schema',
+          code0: 'model User {\n  id        Int     @id @default(autoincrement())\n  name      String\n  email     String\n  // Add optional avatarUrl (String?) and optional age (Int?) below:\n\n}',
+          code1: 'model User {\n  id        Int     @id @default(autoincrement())\n  name      String\n  email     String\n  avatarUrl String?\n  age       Int?\n}',
+          need: ['avatarUrl String?', 'age Int?'],
         }),
       ],
     },
     {
-      id: 'datasource-mapping',
+      id: 'default-values',
       order: 2,
-      title: 'Datasource & Schema Mapping',
-      shortDescription: 'Env-sourced URL plus @map for legacy tables.',
+      title: 'Default Values with @default()',
+      shortDescription:
+        'Supply fallback values for omitted fields with static and dynamic @default() attributes.',
       theory: richPrismaTheory({
-        summary: 'Datasource reads the URL from env; @map keeps snake_case tables queryable.',
-        takeaway: 'Datasource via env; legacy names via @map.',
-        sql: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-        heroCode: 'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}',
+        summary:
+          'The `@default()` attribute provides automatic fallback values when records are inserted without specifying a field. Defaults can be static primitives (`"USER"`, `true`) or database generator functions (`now()`, `autoincrement()`).',
+        takeaway: '@default() sets automatic values on record insertion; now() generates current timestamps.',
+        sql: 'SELECT id, name, email FROM users WHERE id = 1;',
+        heroCode: 'model User {\n  id        Int      @id @default(autoincrement())\n  name      String\n  role      String   @default("USER")\n  createdAt DateTime @default(now())\n}',
         heroLang: 'prisma',
-        heroWhy: 'Provider plus env-sourced URL.',
-        mentalModel: '**Shape vs names.** The model defines the SHAPE your code sees; `@map`/`@@map` define the NAMES the database actually stores. The engine resolves both before it sends any SQL.',
+        heroWhy: 'Static default ("USER") and dynamic default (now()) automate data population.',
+        mentalModel:
+          'Defaults simplify mutations. Without defaults, every insert must supply values for role and timestamps. With @default(), callers can omit these fields, and the database fills them in reliably.',
         explanation: [
-          'The datasource block points at the environment: `env("DATABASE_URL")` keeps credentials out of the schema and lets one schema run in every environment.',
-          '`@map`/`@@map` keep TypeScript names clean while the table keeps its legacy `snake_case` name.',
+          'Static string defaults are quoted inside parentheses: `@default("USER")`.',
+          'Static boolean and number defaults are unquoted: `@default(true)`, `@default(0)`.',
+          'Dynamic timestamp defaults call the database time function: `@default(now())`.',
+          'Defaults ensure data consistency even when application code forgets to supply values.',
         ],
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'the datasource picks provider + URL',
-            codeSnippet: 'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}',
-            explanation: '`provider` selects the SQL dialect; `url` defers the connection string to the environment.',
+            stepTitle: 'Declare field with scalar type',
+            codeSnippet: 'createdAt DateTime',
+            explanation: 'Use DateTime to store timestamp information.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'the URL is resolved from the environment',
-            codeSnippet: '// .env\nDATABASE_URL="postgresql://user:pass@host:5432/app"',
-            explanation: 'The same schema runs everywhere — only the environment variable changes between dev and production.',
+            stepTitle: 'Attach @default(now())',
+            codeSnippet: 'createdAt DateTime @default(now())',
+            explanation: 'Instructs the database to stamp the current time on record creation.',
+            visualData: { type: 'type_preview', title: 'Default Generator', details: null },
           },
           {
             stepNumber: 3,
-            stepTitle: '@@map maps the table; @map maps the column',
-            codeSnippet: 'model Customer {\n  id    Int    @id @default(autoincrement())\n  email String @map("cust_email")\n\n  @@map("tbl_customers")\n}',
-            explanation: 'Use `@map("cust_email")` on the field for the column name; use `@@map("tbl_customers")` at the model level for the table name. Resolved at query time.',
-          },
-          {
-            stepNumber: 4,
-            stepTitle: 'the read is still plain SQL',
-            codeSnippet: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-            explanation: 'Mapping changes names only — the statement the engine sends is ordinary SQL, which the Lens shows after every run.',
-            visualData: { type: 'sql_lens', title: 'Generated SQL', details: null },
+            stepTitle: 'SQL insert with defaults',
+            codeSnippet: 'INSERT INTO users (name, role, created_at) VALUES (\'Alex\', \'USER\', CURRENT_TIMESTAMP);',
+            explanation: 'The database engine evaluates default expressions automatically.',
+            visualData: { type: 'sql_lens', title: 'INSERT with DEFAULT', details: null },
           },
         ],
         littleDetails: {
@@ -192,17 +210,30 @@ export const Prisma_02_MODULE: ModuleData = {
           rules: [
             {
               ruleNumber: 1,
-              title: '@map (field) vs @@map (model)',
-              description:
-                'Use `@map("column_name")` on a specific field to map it to a legacy database column. Use `@@map("table_name")` at the bottom of the model to map the entire table name.',
-              badge: 'Mapping',
+              title: 'Function Calls Need Parentheses',
+              description: 'Generator defaults like now() and autoincrement() must include parentheses. Writing @default(now) is invalid.',
+              badge: 'Syntax',
             },
             {
               ruleNumber: 2,
-              title: 'Connection String URL Anatomy',
-              description:
-                '`postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public` defines the full connection topology. Store this in `.env` and load via `env("DATABASE_URL")`.',
-              badge: 'Config',
+              title: 'String Quotes Inside Parentheses',
+              description: 'String literals inside @default require double quotes: @default("USER").',
+              badge: 'Syntax',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL Defaults to Prisma Attributes',
+          mappings: [
+            {
+              sql: 'role VARCHAR(50) DEFAULT \'USER\'',
+              prisma: 'role String @default("USER")',
+              note: 'Static string default value on insertion',
+            },
+            {
+              sql: 'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
+              prisma: 'createdAt DateTime @default(now())',
+              note: 'Automatic timestamp generated at insertion time',
             },
           ],
         },
@@ -210,86 +241,213 @@ export const Prisma_02_MODULE: ModuleData = {
       tasks: [
         prismaSnippetTask({
           id: 'prisma02-c2-t1',
-          title: 'The database URL is hardcoded: Can you move it into the environment?',
-          description: 'Point schema.prisma at PostgreSQL via the environment.',
-          instructions: ['Set datasource provider to "postgresql"', 'Set url to read env("DATABASE_URL")'],
-          hintLadder: [
-            'Datasource blocks configure dialect translation and credentials. Sourcing connection secrets from environment variables keeps credentials safe and portable.',
-            'Set provider to postgresql and wrap the connection string in the env helper function.',
-            'Configure the datasource block: provider = "postgresql", url = env("/* environment variable name */")',
+          title: 'Add an automatic timestamp: Configure createdAt with @default(now())',
+          description: 'Attach a default timestamp to track when user records are created.',
+          instructions: [
+            'Inside `model User`, add a field named `createdAt`',
+            'Set its type to `DateTime` with attribute `@default(now())`',
           ],
-          scaffold: '-- Configuration and schema validation runs automatically against the engine.\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
-          why: 'Env-wired datasource still reads the seed.',
-          cols: ['id', 'email'],
+          hintLadder: [
+            'The attribute follows the field type: `createdAt DateTime @default(now())`.',
+            'Be sure to include parentheses on `now()`.',
+            'Write: `createdAt DateTime @default(now())`.',
+          ],
+          scaffold: '-- Validating createdAt DateTime @default(now()):\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: '@default(now()) stamps the current timestamp automatically on insert.',
+          cols: ['id', 'name'],
           rows: 1,
-          code0: 'datasource db {\n  provider = "sqlite"\n  url      = "file:./dev.db"\n}',
-          code1: 'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}',
-          need: ['postgresql', 'DATABASE_URL'],
-          ban: ['sqlite'],
+          workspaceMode: 'schema',
+          code0: 'model User {\n  id   Int    @id @default(autoincrement())\n  name String\n  // Add createdAt DateTime with default current timestamp below:\n\n}',
+          code1: 'model User {\n  id        Int      @id @default(autoincrement())\n  name      String\n  createdAt DateTime @default(now())\n}',
+          need: ['createdAt DateTime @default(now())'],
         }),
         prismaSnippetTask({
           id: 'prisma02-c2-t2',
-          title: 'The legacy database uses tbl_customers: Can you map it to Customer in Prisma?',
-          description: 'Keep model Customer while the table stays tbl_customers.',
+          title: 'Model default user settings: Combine static and dynamic defaults',
+          description: 'Configure standard default values for user roles and account activity status.',
           instructions: [
-            'Add `@map("cust_email")` to the email field to map the column',
-            'Add `@@map("tbl_customers")` to the model to map the table name',
+            'In `model User`, add `role String @default("USER")`',
+            'Add `isActive Boolean @default(true)`',
           ],
           hintLadder: [
-            'Prisma decouples application model names from physical database identifiers using mapping attributes without breaking idiomatic TypeScript naming conventions.',
-            'Use single @map on the field declaration and double @@map at the model block level.',
-            'Attach the mappings: email String @map("cust_email"), @@map("/* legacy table name */")',
+            'String defaults require quotes inside parentheses: `@default("USER")`.',
+            'Boolean defaults are unquoted: `@default(true)`.',
+            'Add both lines:\n  role String @default("USER")\n  isActive Boolean @default(true)',
           ],
-          scaffold: '-- Configuration and schema validation runs automatically against the engine.\nSELECT id FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name, email FROM users WHERE id = 3;',
-          why: 'Mapping is cosmetic; the seed still reads.',
+          scaffold: '-- Validating static and boolean defaults:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
+          why: 'Static defaults populate default settings without requiring caller input.',
           cols: ['id', 'name', 'email'],
           rows: 1,
-          code0: 'model Customer {\n  id    Int    @id @default(autoincrement())\n  email String\n}',
-          code1: 'model Customer {\n  id    Int    @id @default(autoincrement())\n  email String @map("cust_email")\n\n  @@map("tbl_customers")\n}',
-          need: ['@map("cust_email")', '@@map("tbl_customers")'],
+          workspaceMode: 'schema',
+          code0: 'model User {\n  id   Int    @id @default(autoincrement())\n  name String\n  // Add role String defaulting to "USER" and isActive Boolean defaulting to true below:\n\n}',
+          code1: 'model User {\n  id       Int     @id @default(autoincrement())\n  name     String\n  role     String  @default("USER")\n  isActive Boolean @default(true)\n}',
+          need: ['role String @default("USER")', 'isActive Boolean @default(true)'],
+        }),
+      ],
+    },
+    {
+      id: 'first-point-lookup',
+      order: 3,
+      title: 'Point Lookup with findUnique()',
+      shortDescription:
+        'Retrieve a single specific record by unique identifier with prisma.user.findUnique().',
+      theory: richPrismaTheory({
+        summary:
+          '`findUnique()` searches for exactly one record using a unique identifier (`@id` or `@unique`). If a matching row exists, it returns the typed object; if no match exists, it returns `null`.',
+        takeaway: 'findUnique({ where: { id } }) retrieves exactly one record or returns null.',
+        sql: 'SELECT id, name, email FROM users WHERE id = 1;',
+        heroCode: 'const user = await prisma.user.findUnique({\n  where: { id: 1 },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Fetch a single record by primary key without array wrappers.',
+        mentalModel:
+          '`findMany()` returns an array (`User[]`), which might be empty `[]`. In contrast, `findUnique()` returns a single entity or null (`User | null`). It requires a unique field in the where clause.',
+        explanation: [
+          '`findUnique()` is optimized for point lookups by unique key.',
+          'The `where` argument requires a field marked with `@id` or `@unique`.',
+          'Prisma translates `findUnique` into a SQL query with `LIMIT 1`.',
+          'You can add `select` to specify exactly which columns are returned.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Call findUnique on model delegate',
+            codeSnippet: 'prisma.user.findUnique',
+            explanation: 'Targets the user model for a single-record lookup.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Provide unique where criteria',
+            codeSnippet: 'where: { id: userId }',
+            explanation: 'Locates the row by its unique primary key.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'SQL generation',
+            codeSnippet: 'SELECT id, name, email FROM users WHERE id = 1 LIMIT 1;',
+            explanation: 'The Query Engine emits an exact point query.',
+            visualData: { type: 'sql_lens', title: 'WHERE id = 1 LIMIT 1', details: null },
+          },
+        ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Only Unique Fields in findUnique',
+              description: 'You cannot use non-unique fields (like name) in findUnique where clauses. Use findFirst for non-unique criteria.',
+              badge: 'Constraint',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Nullable Return Value',
+              description: 'Because a record might not exist, findUnique return types always include null: User | null.',
+              badge: 'TypeScript',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL Point Lookups to Prisma Client',
+          mappings: [
+            {
+              sql: 'SELECT * FROM users WHERE id = 1 LIMIT 1;',
+              prisma: 'await prisma.user.findUnique({ where: { id: 1 } })',
+              note: 'Point query returning single object or null',
+            },
+          ],
+        },
+      }),
+      tasks: [
+        prismaReadTask({
+          id: 'prisma02-c3-t1',
+          title: 'Target an exact record: Retrieve user by ID with findUnique()',
+          description: 'Fetch and return a single user using their unique ID with findUnique.',
+          instructions: [
+            'Inside `getUserById`, call `await prisma.user.findUnique()`',
+            'Pass `where: { id: userId }` to locate the user',
+            'Return the resulting record',
+          ],
+          hintLadder: [
+            'Use `findUnique` on the user model delegate: `prisma.user.findUnique({ where: { id: userId } })`.',
+            'Await the call and return its result.',
+            'Write: `return await prisma.user.findUnique({ where: { id: userId } });`',
+          ],
+          scaffold: '-- Retrieve user by id:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
+          why: 'findUnique fetches a single record matching a unique key.',
+          select: [],
+          cols: ['id', 'name', 'email'],
+          rows: 1,
+          code0: 'export async function getUserById(userId: number) {\n  // Fetch and return the unique user with the given id:\n\n}',
+          code1: 'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n  });\n}',
+          rtype: '{ id: number; name: string; email: string } | null',
+          workspaceMode: 'query',
+        }),
+        prismaReadTask({
+          id: 'prisma02-c3-t2',
+          title: 'Precise projection: Point lookup with select',
+          description: 'Retrieve a single user and project only their id and email fields.',
+          instructions: [
+            'Call `await prisma.user.findUnique()` with `where: { id: userId }`',
+            'Add a `select` block projecting `id: true` and `email: true`',
+            'Return the query result',
+          ],
+          hintLadder: [
+            'Combine `where` and `select` inside the argument object.',
+            'Include `select: { id: true, email: true }`.',
+            'Write: `return await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } });`',
+          ],
+          scaffold: '-- Retrieve user id and email:\nSELECT id, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, email FROM users WHERE id = 1;',
+          why: 'Pairing findUnique with select produces a minimal typed record.',
+          select: ['id', 'email'],
+          cols: ['id', 'email'],
+          rows: 1,
+          code0: 'export async function getUserEmail(userId: number) {\n  // Fetch user by id and return only id and email:\n  return await prisma.user.findUnique({\n\n  });\n}',
+          code1: 'export async function getUserEmail(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
+          rtype: '{ id: number; email: string } | null',
+          workspaceMode: 'query',
         }),
       ],
     },
   ],
   challenge: {
     id: 'prisma02-challenge',
-    title: 'Final Challenge — Configure Enterprise Datasource & Environment Wire',
-    scenario: 'Wire the enterprise client to production PostgreSQL and map legacy database tables.',
+    title: 'Final Challenge — Single Member Inspector',
+    scenario:
+      'Given member ID 1, write a typed query from scratch that returns only their name and email, omitting id to adhere to the principle of least privilege.',
     databaseLifecycle: 'fresh',
     tasks: [
-      {
-        ...prismaSnippetTask({
-          id: 'prisma02-hw-1',
-          title: 'Connect Prisma to an existing enterprise database without changing its naming conventions',
-          description:
-            'Complete the schema configuration by declaring an env-sourced PostgreSQL datasource and mapping the User model to legacy tbl_users.',
-          instructions: [
-            'Set datasource provider to "postgresql"',
-            'Source the database connection url from env("DATABASE_URL")',
-            'Map the User model to table "tbl_users" using @@map',
-          ],
-          hintLadder: [
-            'Enterprise configuration decouples deployment environments via environment variables and aligns Prisma models with legacy database naming conventions.',
-            'Define a datasource block with provider and env url, followed by a User model with @@map pointing to tbl_users.',
-            'Draft the schema block stopping 1 step short: datasource db { provider = "postgresql", url = env("DATABASE_URL") } model User { ... @@map("/* legacy table name */") }',
-          ],
-          fromScratch: true,
-          scaffold: '-- Validates schema configuration against the engine:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'Configuring the datasource via environment variables and mapping legacy tables enables zero-code database portability.',
-          cols: ['id', 'email'],
-          rows: 1,
-          code0:
-            '// Configure datasource and User model mapping from scratch:\n\n',
-          code1:
-            'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}\n\nmodel User {\n  id    Int    @id @default(autoincrement())\n  email String @unique\n\n  @@map("tbl_users")\n}',
-          need: ['provider = "postgresql"', 'env("DATABASE_URL")', '@@map("tbl_users")'],
-          ban: ['provider = "sqlite"', '"file:./dev.db"'],
-        }),
-        type: 'challenge',
-      },
+      prismaReadTask({
+        id: 'prisma02-hw-1',
+        title: 'Final Challenge — Single Member Inspector',
+        description: 'Fetch user 1 by ID and return only name and email from scratch.',
+        instructions: [
+          'Write the query from scratch inside `inspectMember(id: number)`',
+          'Use `prisma.user.findUnique` with `where: { id }`',
+          'Project only `name` and `email` using `select`',
+          'Ensure `id` is omitted from the selection',
+        ],
+        hintLadder: [
+          'Call `prisma.user.findUnique` passing `where: { id }` and `select: { name: true, email: true }`.',
+          'Do not include `id: true` in the select object.',
+          'Complete function: `return await prisma.user.findUnique({ where: { id }, select: { name: true, email: true } });`',
+        ],
+        scaffold: '-- Inspect user without id:\nSELECT name, email FROM users WHERE id = 99;',
+        solutionSql: 'SELECT name, email FROM users WHERE id = 1;',
+        why: 'Least-privilege point lookups prevent leaking internal table IDs.',
+        select: ['name', 'email'],
+        cols: ['name', 'email'],
+        noCols: ['id'],
+        rows: 1,
+        code0: 'export async function inspectMember(id: number) {\n  // Write the query from scratch:\n\n}',
+        code1: 'export async function inspectMember(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    select: {\n      name: true,\n      email: true,\n    },\n  });\n}',
+        rtype: '{ name: string; email: string } | null',
+        skillType: 'assess',
+        fromScratch: true,
+        workspaceMode: 'query',
+      }),
     ],
   },
 };

@@ -1,89 +1,79 @@
 import type { ModuleData } from '../../../types/curriculum';
-import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
+import { prismaReadTask, richPrismaTheory } from '../phase6-tasks';
 
-/** Prisma Day 4 — Relations (1:N, 1:1, M:N implicit vs explicit). */
+/**
+ * Prisma Day 4 — Shaping & Paginating Data.
+ * Shape: Module -> 3 Concepts -> rich theory + 2 tasks each -> challenge.
+ *
+ * Pedagogical Sequence:
+ *   Concept 1: Field shaping with select (trimming payloads)
+ *   Concept 2: Deterministic ordering with orderBy
+ *   Concept 3: Offset pagination with take and skip
+ *   Challenge: Paged Member Directory (Query Mode from scratch)
+ */
 export const Prisma_04_MODULE: ModuleData = {
   id: 'prisma-04',
-  slug: 'relations',
+  slug: 'shaping-and-pagination',
   day: 4,
-  title: 'Day 4 — Relations (1:N, 1:1, M:N)',
-  shortTitle: 'Relations',
+  title: 'Day 4 — Shaping & Paginating Data',
+  shortTitle: 'Shaping & Pagination',
   type: 'module',
   track: 'prisma',
   milestoneId: 'prisma-milestone-2',
-  description: 'Model one-to-many, one-to-one and many-to-many relations, and load them safely.',
-  estimatedMinutes: 55,
+  description:
+    'Shape network payloads with select, sort results deterministically with orderBy, and build offset pagination with take and skip.',
+  estimatedMinutes: 50,
   curriculumOrder: 4,
   displayLabel: 'Day 4',
   completionLearnings: [
-    'Explain how the many-side owns the foreign key',
-    'Load a relation with `include` instead of a second manual query',
-    'Enforce one-to-one with a unique foreign key',
-    'Choose between an implicit and an explicit join table',
+    'Use select to restrict returned columns and narrow TypeScript types',
+    'Sort results deterministically using orderBy (asc and desc)',
+    'Implement offset pagination using take (LIMIT) and skip (OFFSET)',
+    'Understand why reliable pagination strictly requires deterministic sorting',
   ],
   concepts: [
     {
-      id: 'relation-one-to-many',
+      id: 'payload-shaping',
       order: 1,
-      title: 'One-to-Many (1:N)',
-      shortDescription: 'The many-side stores `authorId`; the one-side lists `Post[]`.',
+      title: 'Field Shaping with select',
+      shortDescription:
+        'Trim response payloads and narrow TypeScript return types with select.',
       theory: richPrismaTheory({
         summary:
-          'A one-to-many relation is a foreign key plus a list. The many-side owns the physical FK column (`authorId`), the one-side declares the list (`posts Post[]`), and `include` loads the related rows in a second query.',
-        takeaway:
-          'The foreign key lives physically on the many-side; the list on the one-side is a virtual code convenience handle.',
-        sql: 'SELECT id, name\nFROM users\nWHERE id = 1;',
-        heroCode:
-          'model User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post[]\n}\n\nmodel Post {\n  id       Int    @id @default(autoincrement())\n  title    String\n  authorId Int\n  author   User   @relation(fields: [authorId], references: [id])\n}',
-        heroLang: 'prisma',
-        heroWhy:
-          'Only authorId is a real column in the database. posts and author are virtual handles for application code.',
+          'By default, Prisma queries return all scalar columns from a model. Using `select: { [field]: true }`, you can project only the exact columns your application needs, eliminating overfetching and tightening network payloads.',
+        takeaway: 'select projects only the requested fields and narrows the TypeScript return type.',
+        sql: 'SELECT id, name FROM users;',
+        heroCode: 'const users = await prisma.user.findMany({\n  select: {\n    id: true,\n    name: true,\n  },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Project only id and name, eliminating unnecessary email transfers.',
         mentalModel:
-          '**One foreign key, two code handles.** The database only stores `authorId` on `Post`. Prisma requires both sides of the relationship declared in `schema.prisma` so your application code can traverse in both directions (`user.posts` and `post.author`).',
+          'Think of `select` as the column list in a SQL `SELECT col1, col2` statement. Beyond saving database I/O and network bandwidth, Prisma uses your `select` object to dynamically generate an exact TypeScript type containing only those keys.',
         explanation: [
-          'The many-side owns the physical column: Post has many rows, each pointing back to one User via `authorId`.',
-          'Read the relation line as a sentence: "author is a User, found by matching my authorId to their id."',
-          'Only `authorId` exists in the database. `author` and `posts` take zero bytes of database storage.',
+          'Without `select`, Prisma generates `SELECT *`, fetching every column in the table.',
+          'With `select`, only fields explicitly flagged with `true` are requested from the database.',
+          'Fields not included in `select` are completely omitted from the returned JavaScript object.',
+          'Attempting to read an unselected property on the returned object triggers a compile-time error.',
         ],
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Two separate models',
-            codeSnippet:
-              'model User {\n  id   Int    @id @default(autoincrement())\n  name String\n}\n\nmodel Post {\n  id    Int    @id @default(autoincrement())\n  title String\n}',
-            explanation:
-              'These are two unrelated tables, just like two CREATE TABLE statements with no link between them.',
+            stepTitle: 'Define the select block',
+            codeSnippet: 'select: { id: true, name: true }',
+            explanation: 'Maps each required property to boolean true.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: Add the foreign key column',
-            codeSnippet:
-              'model User {\n  id   Int    @id @default(autoincrement())\n  name String\n}\n\nmodel Post {\n  id       Int    @id @default(autoincrement())\n  title    String\n  authorId Int    // NEW\n}',
-            explanation:
-              'authorId is the same foreign key column from SQL, a plain integer on Post matching User.id. Right now Prisma sees only a number, not a link.',
-            isPhysicalColumn: true,
+            stepTitle: 'SQL translation',
+            codeSnippet: 'SELECT id, name FROM users',
+            explanation: 'The Query Engine translates select keys into the SQL column projection list.',
+            visualData: { type: 'sql_lens', title: 'Column Projection', details: null },
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: Add the relation field on the many side',
-            codeSnippet:
-              'model Post {\n  id       Int    @id @default(autoincrement())\n  title    String\n  authorId Int\n  author   User   @relation(fields: [authorId], references: [id]) // NEW\n}',
-            explanation:
-              'fields: [authorId] names the column on this model (Post). references: [id] names the column on the other model (User).',
-            sentenceReading:
-              'author is a User, found by matching my authorId to their id.',
-            isVirtualRelation: true,
-          },
-          {
-            stepNumber: 4,
-            stepTitle: 'Step 4: Add the back-relation on the one side',
-            codeSnippet:
-              'model User {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post[] // NEW\n}\n\nmodel Post {\n  id       Int    @id @default(autoincrement())\n  title    String\n  authorId Int\n  author   User   @relation(fields: [authorId], references: [id])\n}',
-            explanation:
-              'posts Post[] lets you write user.posts. This line adds NO column to the User table because the foreign key already lives on Post.',
-            sentenceReading:
-              'posts Post[] is a virtual list handle allowing code to load all posts belonging to this user.',
-            isVirtualRelation: true,
+            stepTitle: 'Inferred return type',
+            codeSnippet: '{ id: number; name: string }[]',
+            explanation: 'TypeScript types reflect exactly the fields listed in select.',
+            visualData: { type: 'type_preview', title: 'Pick<User, "id" | "name">[]', details: null },
           },
         ],
         littleDetails: {
@@ -91,199 +81,125 @@ export const Prisma_04_MODULE: ModuleData = {
           rules: [
             {
               ruleNumber: 1,
-              title: 'Name the foreign key after what it points to (<relationName>Id)',
-              description:
-                'Naming it `commentId` on Comment reads as "the id of a comment." Name it `postId` because it stores a Post\'s id. The convention is the singular name of the model it points to, plus Id.',
-              codeSnippet: '// On Comment pointing to Post:\npostId Int\npost   Post @relation(fields: [postId], references: [id])',
-              badge: 'Convention',
+              title: 'select vs include Mutual Exclusivity',
+              description: 'In Prisma, you cannot specify both `select` and `include` at the same level of a query. To load relations within a shaped query, nest select inside select.',
+              badge: 'Architecture',
             },
             {
               ruleNumber: 2,
-              title: 'Type names are capitalized',
-              description:
-                'Prisma scalar types are `Int`, `String`, `Boolean`, and `DateTime`, never lowercase `int` or `string`.',
+              title: 'Always Use Boolean true',
+              description: 'Field selections are turned on with `true`: `id: true`. Setting `id: false` is not supported; simply omit the field instead.',
               badge: 'Syntax',
             },
-            {
-              ruleNumber: 3,
-              title: 'One field per line & closing braces',
-              description:
-                'Prisma rejects multiple fields on one line, and each model must have its matching closing `}`.',
-              badge: 'Format',
-            },
-            {
-              ruleNumber: 4,
-              title: 'Physical column vs virtual relation',
-              description:
-                'Only `authorId` becomes a real column in the database table. `author` and `posts` are virtual code handles that take zero bytes of database storage.',
-              badge: 'Storage',
-            },
           ],
-        },
-        howToThink: {
-          bidirectionalCheck: {
-            forward: 'One User has many Posts.',
-            reverse: 'Each Post has exactly one User.',
-          },
-          decisionQuestions: [
-            {
-              questionNumber: 1,
-              question: 'Which side is "many"?',
-              answer:
-                'Post. Everything stored goes there, and the foreign key column (`authorId`) lives on that model.',
-            },
-            {
-              questionNumber: 2,
-              question: 'What does the foreign key point to?',
-              answer:
-                'User.id. Copy that type exactly for `authorId` (`Int`).',
-            },
-            {
-              questionNumber: 3,
-              question: 'Write the relation field on the many side:',
-              answer:
-                'Use the template: name OtherModel @relation(fields: [myFkColumn], references: [theirPrimaryKey]).',
-              template: 'author User @relation(fields: [authorId], references: [id])',
-            },
-            {
-              questionNumber: 4,
-              question: 'Write the list on the one side:',
-              answer:
-                'Use the template: plural ManyModel[].',
-              template: 'posts Post[]',
-            },
-          ],
-          toolingTip:
-            'If you forget step 4, run `npx prisma format`. It automatically adds the missing back-relation field for you!',
         },
         sqlBridge: {
-          title: 'From SQL to Prisma',
-          description:
-            'How foreign key constraints in relational databases map onto Prisma Schema definitions.',
+          title: 'From SQL Projection to Prisma select',
           mappings: [
             {
-              sql: 'authorId INT',
-              prisma: 'authorId Int',
-              note: 'Physical foreign key integer column on posts table',
-            },
-            {
-              sql: 'FOREIGN KEY (authorId) REFERENCES users(id)',
-              prisma: 'author User @relation(fields: [authorId], references: [id])',
-              note: 'Relationship definition matching child FK to parent PK',
-            },
-            {
-              sql: '(no equivalent)',
-              prisma: 'posts Post[]',
-              note: 'Code convenience handle only (no column in users table)',
-              isVirtual: true,
+              sql: 'SELECT id, name FROM users;',
+              prisma: 'await prisma.user.findMany({ select: { id: true, name: true } })',
+              note: 'Exact column selection matching SQL column lists',
             },
           ],
         },
       }),
       tasks: [
-        prismaSnippetTask({
+        prismaReadTask({
           id: 'prisma04-c1-t1',
-          title: 'Every post needs an author: Where should the authorId foreign key live?',
-          description: 'The Post model must store the FK column it is keyed by.',
+          title: 'Minimal user card: Select only id and name',
+          description: 'Fetch all users but return only their id and name fields.',
           instructions: [
-            'Declare `authorId Int` on the Post model',
-            'Add `@relation(fields: [authorId], references: [id])` to `author User`',
+            'Inside `getMinimalUserCards`, call `await prisma.user.findMany()`',
+            'Add a `select` option containing `id: true` and `name: true`',
+            'Return the shaped user array',
           ],
           hintLadder: [
-            'A one-to-many relationship physically requires a foreign key column on the child table referencing the parent primary key.',
-            'Add the integer foreign key field and annotate the parent reference with the @relation directive specifying fields and references.',
-            'Declare the relation on Post: authorId Int\n  author User @relation(fields: [authorId], references: [/* parent primary key */])',
+            'Pass `{ select: { id: true, name: true } }` into `findMany()`.',
+            'Ensure only `id` and `name` are marked as `true`.',
+            'Write: `return await prisma.user.findMany({ select: { id: true, name: true } });`',
           ],
-          scaffold: '-- The relation resolves to this read:\nSELECT id, name FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name FROM users WHERE id = 3;',
-          why: 'The many-side owns the FK column — that is what makes 1:N possible.',
+          scaffold: '-- Project id and name:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users;',
+          why: 'Field projection reduces network payloads and prevents leaking unused columns.',
+          select: ['id', 'name'],
           cols: ['id', 'name'],
-          rows: 1,
-          activeTab: 'schema',
-          skillType: 'introduce',
-          code0:
-            'model Post {\n  id     Int    @id @default(autoincrement())\n  title  String\n  author User\n}',
-          code1:
-            'model Post {\n  id       Int    @id @default(autoincrement())\n  title    String\n  authorId Int\n  author   User   @relation(fields: [authorId], references: [id])\n}',
-          need: ['@relation(fields: [authorId], references: [id])', 'authorId Int'],
+          rows: 3,
+          code0: 'export async function getMinimalUserCards() {\n  // Fetch all users and project only id and name:\n\n}',
+          code1: 'export async function getMinimalUserCards() {\n  return await prisma.user.findMany({\n    select: {\n      id: true,\n      name: true,\n    },\n  });\n}',
+          rtype: '{ id: number; name: string }[]',
+          workspaceMode: 'query',
         }),
         prismaReadTask({
           id: 'prisma04-c1-t2',
-          title: 'The profile page needs the user and all their posts: Can you load both?',
-          description: 'One parent row, one extra query for the related rows.',
-          instructions: ['findUnique on `where: { id }`', 'Load the relation with `include`'],
-          hintLadder: [
-            'Prisma include clause eager-loads related child records along with the parent model in a single orchestrated query.',
-            'Specify include on findUnique containing the relation name set to true.',
-            'Add include next to where: return await prisma.user.findUnique({ where: { id }, include: { posts: /* boolean flag */ } });',
+          title: 'Email directory: Select email and name, excluding id',
+          description: 'Construct a contact directory query selecting name and email while excluding id.',
+          instructions: [
+            'Inside `getEmailRoster`, call `await prisma.user.findMany()`',
+            'Include `name: true` and `email: true` in the `select` block',
+            'Ensure `id` is omitted from the selection',
           ],
-          scaffold:
-            '-- The first of the two queries Prisma sends:\nSELECT id, name FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
-          why: 'Prisma reads the parent row first and the related rows second.',
-          cols: ['id', 'name'],
-          select: [],
-          includes: ['posts'],
-          rows: 1,
-          skillType: 'practice',
-          code0:
-            'export async function getAuthorWithPosts(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n  });\n}',
-          code1:
-            'export async function getAuthorWithPosts(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    include: { posts: true },\n  });\n}',
-          rtype: 'User & { posts: Post[] } | null',
+          hintLadder: [
+            'Only include fields you want in the returned objects.',
+            'Select `name: true` and `email: true`.',
+            'Write: `return await prisma.user.findMany({ select: { name: true, email: true } });`',
+          ],
+          scaffold: '-- Project name and email:\nSELECT name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT name, email FROM users;',
+          why: 'Omitting internal primary keys from public roster views enforces data hygiene.',
+          select: ['name', 'email'],
+          cols: ['name', 'email'],
+          noCols: ['id'],
+          rows: 3,
+          code0: 'export async function getEmailRoster() {\n  // Fetch users projecting name and email, excluding id:\n\n}',
+          code1: 'export async function getEmailRoster() {\n  return await prisma.user.findMany({\n    select: {\n      name: true,\n      email: true,\n    },\n  });\n}',
+          rtype: '{ name: string; email: string }[]',
+          workspaceMode: 'query',
         }),
       ],
     },
     {
-      id: 'relation-one-to-one',
+      id: 'deterministic-ordering',
       order: 2,
-      title: 'One-to-One (1:1)',
-      shortDescription: 'Same FK shape as 1:N — but the FK column is `@unique`.',
+      title: 'Deterministic Ordering with orderBy',
+      shortDescription:
+        'Sort query results in ascending or descending order using orderBy.',
       theory: richPrismaTheory({
         summary:
-          'A one-to-one relation is a one-to-many relation whose foreign key is unique. That single `@unique` is what stops a user from owning two profiles.',
-        takeaway: 'One-to-one = FK + `@unique` on the FK column.',
-        sql: "SELECT id, email\nFROM users\nWHERE email = 'mina@prisma.io';",
-        heroCode:
-          'model User {\n  id      Int      @id @default(autoincrement())\n  email   String   @unique\n  profile Profile?\n}\n\nmodel Profile {\n  id     Int    @id @default(autoincrement())\n  bio    String?\n  user   User   @relation(fields: [userId], references: [id])\n  userId Int    @unique\n}',
-        heroLang: 'prisma',
-        heroWhy:
-          'Identical to 1:N except for @unique on userId — and profile Profile? on the back side.',
+          'In relational databases, rows have no inherent order. Without an explicit sort clause, the database may return rows in any sequence. In Prisma, `orderBy: { [field]: "asc" | "desc" }` enforces predictable row ordering.',
+        takeaway: 'Use orderBy with "asc" or "desc" to ensure predictable, deterministic row ordering.',
+        sql: 'SELECT id, name, email FROM users ORDER BY name ASC;',
+        heroCode: 'const users = await prisma.user.findMany({\n  orderBy: {\n    name: "asc",\n  },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Sort users alphabetically by name in ascending order.',
         mentalModel:
-          '**A unique foreign key turns 1:N into 1:1.** The physical storage is identical to a one-to-many relation: one table stores the foreign key column. Adding `@unique` guarantees the database will reject any second row pointing to the same parent.',
+          'Never rely on insertion order or primary key order unless you explicitly ask for it. Always specify `orderBy` whenever the visual presentation of results matters or before applying pagination.',
         explanation: [
-          'In a 1:1 relation, decide which model owns the foreign key: Profile is child to User, so `userId` lives on Profile.',
-          'Add `@unique` to `userId Int @unique` — this prevents duplicate foreign key values.',
-          'The back-relation `profile Profile?` on User is singular and optional with `?`.',
+          '`orderBy` accepts `"asc"` for ascending order (A-Z, 0-9) or `"desc"` for descending order (Z-A, 9-0).',
+          'You can sort by any scalar column defined in your schema.',
+          'Multi-column sorts are passed as an array: `orderBy: [{ role: "asc" }, { id: "desc" }]`.',
+          'Deterministic sorting guarantees consistent results across repeated API calls.',
         ],
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: The 1:N starting point',
-            codeSnippet:
-              'model Profile {\n  id     Int  @id @default(autoincrement())\n  userId Int\n  user   User @relation(fields: [userId], references: [id])\n}',
-            explanation:
-              'Without @unique, one user could own multiple profile records (a standard 1:N relation).',
+            stepTitle: 'Add orderBy clause',
+            codeSnippet: 'orderBy: { name: "asc" }',
+            explanation: 'Instructs the database to sort by name ascending.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: Make the foreign key unique',
-            codeSnippet:
-              'model Profile {\n  id     Int  @id @default(autoincrement())\n  userId Int  @unique // NEW\n  user   User @relation(fields: [userId], references: [id])\n}',
-            explanation:
-              'Adding @unique tells the database engine to enforce a unique constraint on userId, converting 1:N into 1:1.',
-            isPhysicalColumn: true,
+            stepTitle: 'SQL generation',
+            codeSnippet: 'SELECT id, name, email FROM users ORDER BY name ASC;',
+            explanation: 'Prisma maps orderBy directly to the SQL ORDER BY statement.',
+            visualData: { type: 'sql_lens', title: 'ORDER BY ASC/DESC', details: null },
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: Declare the back-relation on User',
-            codeSnippet:
-              'model User {\n  id      Int      @id @default(autoincrement())\n  profile Profile? // NEW\n}',
-            explanation:
-              'profile Profile? is singular (not a list) and optional with `?`, because a user may exist before creating a profile.',
-            sentenceReading:
-              'profile is an optional Profile, found by matching User.id to Profile.userId.',
-            isVirtualRelation: true,
+            stepTitle: 'Inferred sorted result type',
+            codeSnippet: '{ id: number; name: string; email: string }[]',
+            explanation: 'Prisma Client infers the full model array with predictable row ordering.',
+            visualData: { type: 'type_preview', title: 'Sorted User[]', details: null },
           },
         ],
         littleDetails: {
@@ -291,44 +207,30 @@ export const Prisma_04_MODULE: ModuleData = {
           rules: [
             {
               ruleNumber: 1,
-              title: '1:1 = FK + @unique',
-              description:
-                'A 1:1 relation is simply a 1:N relation where the foreign key column is marked `@unique`.',
-              badge: 'Core Rule',
+              title: 'Lower-case Sort Directions',
+              description: 'In Prisma, sort directions are lowercase string literals: `"asc"` or `"desc"`.',
+              badge: 'Syntax',
             },
             {
               ruleNumber: 2,
-              title: 'The back-relation is optional (?)',
-              description:
-                'Because a user is usually registered before their profile is filled out, `profile Profile?` uses `?` to allow null values.',
-              badge: 'Optionality',
+              title: 'Multi-field Tie Breaking',
+              description: 'When sorting by non-unique fields (like name), always include a unique tie-breaker (like id): `orderBy: [{ name: "asc" }, { id: "asc" }]`.',
+              badge: 'Best Practice',
             },
           ],
         },
-        howToThink: {
-          bidirectionalCheck: {
-            forward: 'One User has at most one Profile.',
-            reverse: 'Each Profile belongs to exactly one User.',
-          },
-        },
         sqlBridge: {
-          title: 'From SQL to Prisma',
+          title: 'From SQL ORDER BY to Prisma orderBy',
           mappings: [
             {
-              sql: 'userId INT UNIQUE',
-              prisma: 'userId Int @unique',
-              note: 'Physical unique foreign key column on profiles table',
+              sql: 'ORDER BY name ASC',
+              prisma: 'orderBy: { name: \'asc\' }',
+              note: 'Ascending alphabetical sort',
             },
             {
-              sql: 'FOREIGN KEY (userId) REFERENCES users(id)',
-              prisma: 'user User @relation(fields: [userId], references: [id])',
-              note: 'Relation attribute linking profile to user',
-            },
-            {
-              sql: '(no equivalent)',
-              prisma: 'profile Profile?',
-              note: 'Singular optional code handle (no column in users table)',
-              isVirtual: true,
+              sql: 'ORDER BY id DESC',
+              prisma: 'orderBy: { id: \'desc\' }',
+              note: 'Descending numeric/chronological sort',
             },
           ],
         },
@@ -336,99 +238,100 @@ export const Prisma_04_MODULE: ModuleData = {
       tasks: [
         prismaReadTask({
           id: 'prisma04-c2-t1',
-          title: 'The dashboard needs profile details: Can you load the profile with the user?',
-          description: 'An optional relation loads as one nested object, not a list.',
-          instructions: ['findUnique on `where: { id }`', 'Load the relation with `include`'],
-          hintLadder: [
-            'A one-to-one relationship returns a single nested object rather than an array when loaded via include.',
-            'Pass the relation property name inside the include option on findUnique.',
-            'Include the singular profile: return await prisma.user.findUnique({ where: { id }, include: { profile: /* boolean flag */ } });',
+          title: 'Alphabetical ordering: Sort users by name ascending',
+          description: 'Retrieve all users sorted alphabetically by name in ascending order.',
+          instructions: [
+            'Inside `getUsersSortedByName`, call `await prisma.user.findMany()`',
+            'Add `orderBy: { name: "asc" }`',
+            'Return the sorted user array',
           ],
-          scaffold: '-- Parent row of the 1:1 read:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
-          why: 'Only one profile can exist, so the loader returns an object.',
-          cols: ['id', 'email'],
+          hintLadder: [
+            'Pass `orderBy: { name: "asc" }` into the options object.',
+            'Ensure the direction is `"asc"` in lowercase.',
+            'Write: `return await prisma.user.findMany({ orderBy: { name: "asc" } });`',
+          ],
+          scaffold: '-- Order by name:\nSELECT id, name, email FROM users WHERE id = 99 ORDER BY name ASC;',
+          solutionSql: 'SELECT id, name, email FROM users ORDER BY name ASC;',
+          why: 'orderBy guarantees deterministic alphabetical sorting.',
           select: [],
-          includes: ['profile'],
-          rows: 1,
-          code0:
-            'export async function getUserWithProfile(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n  });\n}',
-          code1:
-            'export async function getUserWithProfile(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    include: { profile: true },\n  });\n}',
-          rtype: 'User & { profile: Profile | null } | null',
+          orderBy: [{ field: 'name', direction: 'asc' }],
+          cols: ['id', 'name', 'email'],
+          rows: 3,
+          code0: 'export async function getUsersSortedByName() {\n  // Fetch all users sorted by name ascending:\n\n}',
+          code1: 'export async function getUsersSortedByName() {\n  return await prisma.user.findMany({\n    orderBy: {\n      name: "asc",\n    },\n  });\n}',
+          rtype: '{ id: number; name: string; email: string }[]',
+          workspaceMode: 'query',
         }),
-        prismaSnippetTask({
+        prismaReadTask({
           id: 'prisma04-c2-t2',
-          title: 'A user is getting multiple profiles: Can you make the relationship truly one to one?',
-          description: 'Stop a user from owning two profiles.',
-          instructions: ['Add `@unique` to `userId Int` on the Profile model'],
-          hintLadder: [
-            'Adding a unique constraint to a child foreign key column restricts each parent record to at most one matching child row, enforcing 1:1 cardinality.',
-            'Append @unique to the foreign key integer column on the child model.',
-            'Update the field definition: userId Int /* add unique directive */',
+          title: 'Reverse chronology: Sort descending with id tie-breaker',
+          description: 'Retrieve all users sorted in descending order by id, projecting id and name.',
+          instructions: [
+            'Call `await prisma.user.findMany()`',
+            'Add `orderBy: { id: "desc" }`',
+            'Add `select: { id: true, name: true }`',
+            'Return the resulting records',
           ],
-          scaffold: '-- The row the profile hangs off:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
-          why: 'A unique FK is the whole difference between 1:N and 1:1.',
-          cols: ['id', 'email'],
-          rows: 1,
-          activeTab: 'schema',
-          schemaSource:
-            'model User {\n  id      Int      @id @default(autoincrement())\n  email   String   @unique\n  profile Profile?\n}\n\nmodel Profile {\n  id     Int    @id @default(autoincrement())\n  bio    String?\n  user   User   @relation(fields: [userId], references: [id])\n  userId Int    @unique\n}',
-          code0:
-            'model Profile {\n  id     Int  @id @default(autoincrement())\n  user   User @relation(fields: [userId], references: [id])\n  userId Int\n}',
-          code1:
-            'model Profile {\n  id     Int  @id @default(autoincrement())\n  user   User @relation(fields: [userId], references: [id])\n  userId Int @unique\n}',
-          need: ['userId Int @unique'],
+          hintLadder: [
+            'Combine `orderBy: { id: "desc" }` and `select: { id: true, name: true }`.',
+            'Both options live inside the single query options object.',
+            'Write: `return await prisma.user.findMany({ orderBy: { id: "desc" }, select: { id: true, name: true } });`',
+          ],
+          scaffold: '-- Order by id descending:\nSELECT id, name FROM users WHERE id = 99 ORDER BY id DESC;',
+          solutionSql: 'SELECT id, name FROM users ORDER BY id DESC;',
+          why: 'Combining orderBy with select pairs deterministic order with compact payload size.',
+          select: ['id', 'name'],
+          orderBy: [{ field: 'id', direction: 'desc' }],
+          cols: ['id', 'name'],
+          rows: 3,
+          code0: 'export async function getRecentUsers() {\n  // Fetch users sorted by id descending, selecting id and name:\n\n}',
+          code1: 'export async function getRecentUsers() {\n  return await prisma.user.findMany({\n    orderBy: {\n      id: "desc",\n    },\n    select: {\n      id: true,\n      name: true,\n    },\n  });\n}',
+          rtype: '{ id: number; name: string }[]',
+          workspaceMode: 'query',
         }),
       ],
     },
     {
-      id: 'relation-many-to-many',
+      id: 'offset-pagination',
       order: 3,
-      title: 'Many-to-Many — Implicit vs Explicit',
-      shortDescription: 'A list on both sides, or a join model you own.',
+      title: 'Offset Pagination with take and skip',
+      shortDescription:
+        'Paginate large datasets into clean pages using take (limit) and skip (offset).',
       theory: richPrismaTheory({
         summary:
-          'Prisma supports many-to-many two ways: implicit (a list on each side, Prisma owns the hidden join table) and explicit (you declare the join model). Choose explicit the moment the join row needs columns of its own.',
-        takeaway: 'Lists on both sides = implicit; a join model = explicit.',
-        sql: 'SELECT id, name\nFROM users\nWHERE id = 2;',
-        heroCode:
-          'model Post {\n  id         Int        @id @default(autoincrement())\n  title      String\n  categories Category[]\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post[]\n}',
-        heroLang: 'prisma',
-        heroWhy: 'Two lists, one hidden join table — nothing for you to migrate by hand.',
+          'Offset pagination allows applications to fetch data in small chunks (pages). `take` specifies how many records to return (SQL `LIMIT`), and `skip` specifies how many records to bypass (SQL `OFFSET`).',
+        takeaway: 'take limits page size; skip offsets page position; always pair with orderBy.',
+        sql: 'SELECT id, name, email FROM users ORDER BY id ASC LIMIT 2 OFFSET 0;',
+        heroCode: 'const page1 = await prisma.user.findMany({\n  take: 2,\n  skip: 0,\n  orderBy: { id: "asc" },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Fetch the first page of 2 users with deterministic ordering.',
         mentalModel:
-          '**Who owns the join table?** In an implicit M:N relation, Prisma creates and manages `_CategoryToPost` under the hood. In an explicit relation, you declare `PostCategory` yourself with `@@id([postId, categoryId])`, enabling extra columns like `assignedAt DateTime`.',
+          'To calculate pagination: `skip = (pageNumber - 1) * pageSize`, and `take = pageSize`. Always pair pagination with `orderBy` — without sorting, rows can shift between pages unpredictably.',
         explanation: [
-          'Implicit relations require lists on both sides: `categories Category[]` on Post and `posts Post[]` on Category.',
-          'Explicit relations are required as soon as the link needs attributes (e.g. timestamp, role, or order index).',
+          '`take: n` restricts the result set to at most `n` records.',
+          '`skip: m` bypasses the first `m` records before returning the remainder.',
+          'Prisma translates `take` and `skip` into SQL `LIMIT` and `OFFSET` clauses.',
+          'Pagination keeps API response times fast regardless of total table size.',
         ],
         steps: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: Implicit many-to-many',
-            codeSnippet:
-              'model Post {\n  id         Int        @id @default(autoincrement())\n  categories Category[] // NEW\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  posts Post[]     // NEW\n}',
-            explanation:
-              'Prisma recognizes lists on both models and automatically generates a hidden junction table (_CategoryToPost).',
-            isVirtualRelation: true,
+            stepTitle: 'Configure page size and offset',
+            codeSnippet: 'take: 2, skip: 0',
+            explanation: 'Requests 2 records starting from index 0.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: The limitation — storing relation metadata',
-            codeSnippet:
-              '// Implicit tables CANNOT store extra columns:\n// assignedAt DateTime\n// assignedBy String',
-            explanation:
-              'When you need to store data about the relationship itself (such as who assigned the tag or when), implicit join tables cannot hold those columns.',
+            stepTitle: 'Add deterministic sort',
+            codeSnippet: 'orderBy: { id: "asc" }',
+            explanation: 'Guarantees stable row order across pages.',
           },
           {
             stepNumber: 3,
-            stepTitle: 'Step 3: Explicit join table with custom columns',
-            codeSnippet:
-              'model PostCategory {\n  postId     Int\n  categoryId Int\n  post       Post     @relation(fields: [postId], references: [id])\n  category   Category @relation(fields: [categoryId], references: [id])\n  assignedAt DateTime @default(now()) // NEW: custom column!\n\n  @@id([postId, categoryId])\n}',
-            explanation:
-              'By defining the join model explicitly, you gain full control to store metadata on the relationship and key it with a composite primary key.',
-            isPhysicalColumn: true,
+            stepTitle: 'SQL generation',
+            codeSnippet: 'SELECT id, name, email FROM users ORDER BY id ASC LIMIT 2 OFFSET 0;',
+            explanation: 'The Query Engine emits standard pagination SQL.',
+            visualData: { type: 'sql_lens', title: 'LIMIT & OFFSET', details: null },
           },
         ],
         littleDetails: {
@@ -436,170 +339,131 @@ export const Prisma_04_MODULE: ModuleData = {
           rules: [
             {
               ruleNumber: 1,
-              title: 'Implicit = Pure Linking',
-              description:
-                'Use implicit M:N when relations are pure links with no extra properties.',
-              badge: 'Decision',
+              title: 'Always Pair with orderBy',
+              description: 'Paginating without an orderBy clause can cause duplicate or missed rows between page transitions.',
+              badge: 'Critical Rule',
             },
             {
               ruleNumber: 2,
-              title: 'Explicit = Custom Metadata',
-              description:
-                'Switch to an explicit join table the moment you need columns like `assignedAt` or `role`.',
-              badge: 'Decision',
-            },
-            {
-              ruleNumber: 3,
-              title: 'Composite Primary Key (@@id)',
-              description:
-                'Explicit join models use `@@id([postId, categoryId])` to uniquely identify each link.',
-              badge: 'Syntax',
+              title: 'Zero-Based Offset',
+              description: 'The first page always uses `skip: 0` (or omits skip entirely). Page 2 with size 10 uses `skip: 10`.',
+              badge: 'Math',
             },
           ],
         },
         sqlBridge: {
-          title: 'From SQL to Prisma',
+          title: 'From SQL Pagination to Prisma Keys',
           mappings: [
             {
-              sql: 'CREATE TABLE _CategoryToPost (A INT, B INT)',
-              prisma: 'categories Category[] + posts Post[]',
-              note: 'Implicit M:N: Prisma manages the junction table automatically',
+              sql: 'LIMIT 2 OFFSET 0',
+              prisma: 'take: 2, skip: 0',
+              note: 'Page 1 with 2 items',
             },
             {
-              sql: 'CREATE TABLE post_categories (post_id INT, category_id INT, PRIMARY KEY (post_id, category_id))',
-              prisma: 'model PostCategory { ... @@id([postId, categoryId]) }',
-              note: 'Explicit M:N: Developer defines and owns the junction model',
+              sql: 'LIMIT 2 OFFSET 1',
+              prisma: 'take: 2, skip: 1',
+              note: 'Offset by 1 item',
             },
           ],
         },
       }),
       tasks: [
-        prismaSnippetTask({
+        prismaReadTask({
           id: 'prisma04-c3-t1',
-          title: 'Posts can have multiple categories: Can you model many to many without a join table?',
-          description: 'Posts and categories relate many-to-many without a join model.',
-          instructions: ['`categories Category[]` on Post', '`posts Post[]` on Category'],
-          hintLadder: [
-            'Prisma generates an internal junction table when both models define relation lists without an explicit join entity.',
-            'Declare array types of each related model on both sides of the relationship.',
-            'Use array relation fields on both models: categories Category[] on Post, and posts /* Category relation type */[] on Category.',
+          title: 'Fetch the first page: Limit results with take',
+          description: 'Fetch the first 2 users in ascending ID order using take and orderBy.',
+          instructions: [
+            'Inside `getFirstTwoUsers`, call `await prisma.user.findMany()`',
+            'Set `take: 2` to limit the results',
+            'Sort by `orderBy: { id: "asc" }`',
+            'Return the first page of users',
           ],
-          scaffold: '-- The rows behind the relation:\nSELECT id, name FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, name FROM users WHERE email = 'rafi@prisma.io';",
-          why: 'Both sides list the other, so Prisma generates the hidden join table.',
-          cols: ['id', 'name'],
-          rows: 1,
-          activeTab: 'schema',
-          schemaSource:
-            'model Post {\n  id         Int        @id @default(autoincrement())\n  title      String\n  categories Category[]\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post[]\n}',
-          code0:
-            'model Post {\n  id       Int      @id @default(autoincrement())\n  title    String\n  category Category\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post\n}',
-          code1:
-            'model Post {\n  id         Int        @id @default(autoincrement())\n  title      String\n  categories Category[]\n}\n\nmodel Category {\n  id    Int    @id @default(autoincrement())\n  name  String\n  posts Post[]\n}',
-          need: ['categories Category[]', 'posts Post[]'],
+          hintLadder: [
+            'Combine `take: 2` and `orderBy: { id: "asc" }` in the query options.',
+            'Ensure the take limit is 2.',
+            'Write: `return await prisma.user.findMany({ take: 2, orderBy: { id: "asc" } });`',
+          ],
+          scaffold: '-- Page 1 (limit 2):\nSELECT id, name, email FROM users WHERE id = 99 LIMIT 2;',
+          solutionSql: 'SELECT id, name, email FROM users ORDER BY id ASC LIMIT 2;',
+          why: 'take limits the maximum number of returned rows.',
+          select: [],
+          pagination: { take: 2 },
+          orderBy: [{ field: 'id', direction: 'asc' }],
+          cols: ['id', 'name', 'email'],
+          rows: 2,
+          code0: 'export async function getFirstTwoUsers() {\n  // Fetch the first 2 users sorted by id ascending:\n\n}',
+          code1: 'export async function getFirstTwoUsers() {\n  return await prisma.user.findMany({\n    take: 2,\n    orderBy: {\n      id: "asc",\n    },\n  });\n}',
+          rtype: '{ id: number; name: string; email: string }[]',
+          workspaceMode: 'query',
         }),
-        prismaSnippetTask({
+        prismaReadTask({
           id: 'prisma04-c3-t2',
-          title: 'The relationship now needs extra data: Can you replace the implicit relation with a join model?',
-          description: 'Take ownership of the join table with a composite primary key.',
-          instructions: ['Declare `model PostCategory`', 'Key it with `@@id([postId, categoryId])`'],
-          hintLadder: [
-            'Explicit many-to-many models give you complete control over join table schemas, allowing additional metadata columns on the relationship.',
-            'Define the join model with two foreign keys and a composite primary key attribute.',
-            'Declare the join model and composite ID: model PostCategory {\n  postId Int\n  categoryId Int\n  /* relations ... */\n  @@id([postId, categoryId])\n}',
+          title: 'Navigate to page two: Combine take and skip',
+          description: 'Fetch the next page by skipping 1 user and taking 2, selecting id and name.',
+          instructions: [
+            'Call `await prisma.user.findMany()`',
+            'Set `skip: 1` and `take: 2`',
+            'Sort by `orderBy: { id: "asc" }`',
+            'Select `id: true` and `name: true`',
           ],
-          scaffold: '-- The rows the join table points at:\nSELECT id, name FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name FROM users WHERE id = 3;',
-          why: 'Owning the join model lets the join row grow real columns later.',
+          hintLadder: [
+            'Combine `skip: 1`, `take: 2`, `orderBy: { id: "asc" }`, and `select: { id: true, name: true }`.',
+            'All options belong inside the single options object.',
+            'Write: `return await prisma.user.findMany({ skip: 1, take: 2, orderBy: { id: "asc" }, select: { id: true, name: true } });`',
+          ],
+          scaffold: '-- Page 2 (offset 1, limit 2):\nSELECT id, name FROM users WHERE id = 99 LIMIT 2 OFFSET 1;',
+          solutionSql: 'SELECT id, name FROM users ORDER BY id ASC LIMIT 2 OFFSET 1;',
+          why: 'skip bypasses earlier rows to navigate between pages.',
+          select: ['id', 'name'],
+          pagination: { take: 2, skip: 1 },
+          orderBy: [{ field: 'id', direction: 'asc' }],
           cols: ['id', 'name'],
-          rows: 1,
-          activeTab: 'schema',
-          schemaSource:
-            'model Post {\n  id         Int            @id @default(autoincrement())\n  title      String\n  categories PostCategory[]\n}\n\nmodel Category {\n  id    Int            @id @default(autoincrement())\n  name  String\n  posts PostCategory[]\n}\n\nmodel PostCategory {\n  postId     Int\n  categoryId Int\n  post       Post     @relation(fields: [postId], references: [id])\n  category   Category @relation(fields: [categoryId], references: [id])\n\n  @@id([postId, categoryId])\n}',
-          code0:
-            'model Post {\n  id         Int            @id @default(autoincrement())\n  categories PostCategory[]\n}\n\nmodel Category {\n  id    Int            @id @default(autoincrement())\n  posts PostCategory[]\n}',
-          code1:
-            'model Post {\n  id         Int            @id @default(autoincrement())\n  categories PostCategory[]\n}\n\nmodel Category {\n  id    Int            @id @default(autoincrement())\n  posts PostCategory[]\n}\n\nmodel PostCategory {\n  postId     Int\n  categoryId Int\n  post       Post     @relation(fields: [postId], references: [id])\n  category   Category @relation(fields: [categoryId], references: [id])\n\n  @@id([postId, categoryId])\n}',
-          need: ['model PostCategory', '@@id([postId, categoryId])'],
+          rows: 2,
+          code0: 'export async function getSecondPage() {\n  // Skip 1, take 2, order by id asc, select id and name:\n\n}',
+          code1: 'export async function getSecondPage() {\n  return await prisma.user.findMany({\n    skip: 1,\n    take: 2,\n    orderBy: {\n      id: "asc",\n    },\n    select: {\n      id: true,\n      name: true,\n    },\n  });\n}',
+          rtype: '{ id: number; name: string }[]',
+          workspaceMode: 'query',
         }),
       ],
     },
   ],
   challenge: {
     id: 'prisma04-challenge',
-    title: 'Final Challenge — Social Graph Read',
-    scenario: 'Load one member by email together with everything they authored.',
+    title: 'Final Challenge — Paged Member Directory',
+    scenario:
+      'Build a production-ready paginated query from scratch: retrieve page 1 (size: 2), sorted alphabetically by name ascending, projecting only id and email.',
     databaseLifecycle: 'fresh',
     tasks: [
-      {
-        ...prismaReadTask({
-          id: 'prisma04-hw-1',
-          title: 'Build a member feed that pulls together users and their related posts',
-          description: 'Return id + email for rafi@prisma.io and include their posts.',
-          instructions: ['findUnique on `where: { email }`', 'Load `posts` with `include`'],
-          hintLadder: [
-            'Relational queries fetch the parent record and related child collections in coordinated queries using the include option.',
-            'Call findUnique on prisma.user passing where with email and include with posts: true.',
-            'Return the query: return await prisma.user.findUnique({ where: { email }, include: { posts: /* boolean flag */ } });',
-          ],
-          fromScratch: true,
-          scaffold: '-- Parent half of the feed query:\nSELECT id, email FROM users WHERE id = 99;',
-          solutionSql: "SELECT id, email FROM users WHERE email = 'rafi@prisma.io';",
-          why: 'A unique lookup plus one relation load — no N+1, no manual join.',
-          cols: ['id', 'email'],
-          select: [],
-          includes: ['posts'],
-          noCols: ['name'],
-          rows: 1,
-          code0:
-            'export async function loadFeed(email: string) {\n  // Write feed query from scratch:\n\n}',
-          code1:
-            'export async function loadFeed(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    include: { posts: true },\n  });\n}',
-          rtype: 'User & { posts: Post[] } | null',
-        }),
-        type: 'challenge',
-      },
-      {
-        ...prismaSnippetTask({
-          id: 'prisma04-hw-2',
-          title: 'Milestone 1 Checkpoint: Architect a complete e commerce catalog with relations and indexes',
-          description:
-            'Design the complete e-commerce catalog schema: enums, 1:1, 1:N, M:N relations, and composite indexing.',
-          instructions: [
-            'Define `enum ProductStatus` with `DRAFT`, `PUBLISHED`, and `ARCHIVED`',
-            'Define `model Product` with 1:1 `detail`, 1:N `reviews`, and M:N `categories`',
-            'Define `model ProductDetail` with strictly unique foreign key `productId Int @unique`',
-            'Define `model Review` with `rating Int` and composite index `@@index([productId, createdAt])`',
-            'Define `model Category` with `products Category[]` inverse relation',
-            'Note: Rating 1–5 range validation belongs in application Zod schemas, as Prisma PSL has no CHECK constraint',
-          ],
-          hintLadder: [
-            'Relational data modeling in Prisma requires declaring the scalar foreign key column on the owning child model alongside relation navigation fields on both parent and child models. Enforcing uniqueness on the foreign key column establishes a strict one-to-one relationship rather than one-to-many.',
-            'Declare enum ProductStatus with variants, model ProductDetail with productId Int @unique and @relation(fields: [productId], references: [id]), model Review with @@index([productId, createdAt]), and model Category with products Product[].',
-            'Model the catalog schema stopping one step short:\nenum ProductStatus { DRAFT PUBLISHED ARCHIVED }\nmodel ProductDetail {\n  id Int @id @default(autoincrement())\n  description String\n  productId Int @unique\n  product Product @relation(fields: [productId], references: [id])\n}\nmodel Review {\n  /* rating, comment, productId, product relation */\n  @@index([productId, createdAt])\n}',
-          ],
-          scaffold: '-- Validating Catalog Schema:\nSELECT id, name FROM users WHERE id = 99;',
-          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
-          why: 'Strict relational data modeling with enums, unique foreign keys, and composite indexes ensures database integrity and performant querying.',
-          cols: ['id', 'name'],
-          rows: 1,
-          activeTab: 'schema',
-          code0:
-            '// Milestone 1 Checkpoint: Catalog & Review Data Modeling\n// 1. Define enum ProductStatus with DRAFT, PUBLISHED, ARCHIVED\nenum ProductStatus {\n  // TODO: Add variants\n}\n\n// 2. Define model Product\nmodel Product {\n  // TODO: Add id, title, status (default DRAFT), detail, reviews, categories, createdAt\n}\n\n// 3. Define model ProductDetail (1:1 with Product - foreign key must be @unique)\nmodel ProductDetail {\n  // TODO: Add id, description, productId (@unique FK), product relation\n}\n\n// 4. Define model Review (1:N with Product, rating 1-5 validated in Zod, composite index)\nmodel Review {\n  // TODO: Add id, rating, comment, productId, product relation, createdAt\n  // TODO: Add composite index on [productId, createdAt]\n}\n\n// 5. Define model Category (M:N with Product)\nmodel Category {\n  // TODO: Add id, name, products relation\n}',
-          code1:
-            'enum ProductStatus {\n  DRAFT\n  PUBLISHED\n  ARCHIVED\n}\n\nmodel Product {\n  id         Int            @id @default(autoincrement())\n  title      String\n  status     ProductStatus  @default(DRAFT)\n  detail     ProductDetail?\n  reviews    Review[]\n  categories Category[]\n  createdAt  DateTime       @default(now())\n}\n\nmodel ProductDetail {\n  id          Int     @id @default(autoincrement())\n  description String\n  productId   Int     @unique\n  product     Product @relation(fields: [productId], references: [id])\n}\n\nmodel Review {\n  id        Int      @id @default(autoincrement())\n  rating    Int\n  comment   String?\n  productId Int\n  product   Product  @relation(fields: [productId], references: [id])\n  createdAt DateTime @default(now())\n\n  @@index([productId, createdAt])\n}\n\nmodel Category {\n  id       Int       @id @default(autoincrement())\n  name     String\n  products Product[]\n}',
-          need: [
-            'enum ProductStatus',
-            'productId Int @unique',
-            '@@index([productId, createdAt])',
-            'Review[]',
-            'ProductDetail?',
-          ],
-          behavioralGrader: 'checkpoint1-schema',
-          noModelContract: true,
-        }),
-        type: 'challenge',
-      },
+      prismaReadTask({
+        id: 'prisma04-hw-1',
+        title: 'Final Challenge — Paged Member Directory',
+        description: 'Combine take, orderBy, and select to build a production paginated read from scratch.',
+        instructions: [
+          'Write the query from scratch inside `getPagedDirectory()`',
+          'Use `prisma.user.findMany` with `take: 2` and `skip: 0`',
+          'Sort alphabetically with `orderBy: { name: "asc" }`',
+          'Project only `id` and `email` using `select`',
+        ],
+        hintLadder: [
+          'Combine `take: 2`, `skip: 0`, `orderBy: { name: "asc" }`, and `select: { id: true, email: true }`.',
+          'Project only `id` and `email`.',
+          'Complete function: `return await prisma.user.findMany({ take: 2, skip: 0, orderBy: { name: "asc" }, select: { id: true, email: true } });`',
+        ],
+        scaffold: '-- Paged directory challenge:\nSELECT id, email FROM users WHERE id = 99 LIMIT 2;',
+        solutionSql: 'SELECT id, email FROM users ORDER BY name ASC LIMIT 2 OFFSET 0;',
+        why: 'Production pagination strictly unites page size, deterministic sorting, and minimal projection.',
+        select: ['id', 'email'],
+        pagination: { take: 2 },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        cols: ['id', 'email'],
+        rows: 2,
+        code0: 'export async function getPagedDirectory() {\n  // Write the query from scratch:\n\n}',
+        code1: 'export async function getPagedDirectory() {\n  return await prisma.user.findMany({\n    take: 2,\n    skip: 0,\n    orderBy: {\n      name: "asc",\n    },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
+        rtype: '{ id: number; email: string }[]',
+        skillType: 'assess',
+        fromScratch: true,
+        workspaceMode: 'query',
+      }),
     ],
   },
 };

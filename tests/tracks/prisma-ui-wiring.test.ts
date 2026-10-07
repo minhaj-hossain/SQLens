@@ -146,7 +146,7 @@ describe('Phase 7 — submitForTask routing', () => {
   });
 
   it('a snippet-lab solution passes through the read-through contract', () => {
-    const task = prismaTaskById('prisma02-c1-t1');
+    const task = prismaTaskById('prisma05-c1-t1');
     const ex = new SqlExecutor();
     const out = submitForTask({
       task,
@@ -162,9 +162,9 @@ describe('Phase 7 — submitForTask routing', () => {
     // P1.2: the CLI lab renders simulated terminal output instead of the
     // authored reference rows.
     expect(out.displayMode).toBe('terminal');
-    // `prisma02-c1-t1` resolves client type desync, so the simulated run is
-    // `npx prisma generate`.
-    expect(out.terminalOutput).toContain('$ npx prisma generate');
+    // `prisma05-c1-t1` is a CLI migration lab, so the simulated run is
+    // `npx prisma migrate dev`.
+    expect(out.terminalOutput).toContain('$ npx prisma migrate dev');
     expect(out.result).toBeUndefined();
   });
 
@@ -351,7 +351,7 @@ describe('Phase 7 — editor + reveal + idle lens decisions', () => {
   });
 
   it('idle lens: snippet labs say there is nothing to translate', () => {
-    const idle = idleLensState(prismaTaskById('prisma02-c1-t1'))!;
+    const idle = idleLensState(prismaTaskById('prisma05-c1-t1'))!;
     expect(idle.steps).toEqual([]);
     expect(idle.note).toContain('no Prisma client call');
   });

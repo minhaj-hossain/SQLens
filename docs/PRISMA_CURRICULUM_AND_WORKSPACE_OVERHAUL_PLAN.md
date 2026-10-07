@@ -116,15 +116,15 @@ flowchart TD
   - Concept 3: Immediate gratification: `prisma.user.findMany()` and `select` fetching real seeded data in Query Mode.
   - Challenge: Member directory projection from scratch.
   - *Zero CLI generation machinery lectures — pure model to query connection verified.*
-- [ ] **Task 3.2: Day 2: Field Modifiers & Defaults**
+- [x] **Task 3.2: Day 2: Field Modifiers & Defaults**
   - Concept 1: Optional fields with `?` (`bio String?`).
   - Concept 2: Default values with `@default()` (`createdAt DateTime @default(now())`, `role String @default("USER")`).
   - Concept 3: Point lookup with `prisma.user.findUnique({ where: { id: 1 } })`.
-- [ ] **Task 3.3: Day 3: Core Querying (Finding Data)**
+- [x] **Task 3.3: Day 3: Core Querying (Finding Data)**
   - Concept 1: Point lookups vs general search (`findUnique` vs `findFirst`).
   - Concept 2: Filtering with `where` (exact match, `contains`, `in`, `gt`/`lt`).
   - Concept 3: Compound filters with `AND`, `OR`, `NOT`.
-- [ ] **Task 3.4: Day 4: Shaping & Paginating Data**
+- [x] **Task 3.4: Day 4: Shaping & Paginating Data**
   - Concept 1: Field shaping with `select` (trimming payloads).
   - Concept 2: Sorting with `orderBy` (single and multi-field sort).
   - Concept 3: Offset pagination (`take` and `skip`).
