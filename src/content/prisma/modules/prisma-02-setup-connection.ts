@@ -3,12 +3,13 @@ import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-t
 
 /**
  * Prisma Day 2 — Field Modifiers & Defaults.
- * Shape: Module -> 3 Concepts -> rich theory + 2 tasks each -> challenge.
+ * Shape: Module -> 4 Concepts -> rich theory + tasks -> challenge.
  *
  * Pedagogical Sequence:
  *   Concept 1: Optional fields with `?` (Schema Mode)
  *   Concept 2: Default values with `@default()` and `@default(now())` (Schema Mode)
  *   Concept 3: Point lookup with `prisma.user.findUnique()` (Query Mode)
+ *   Concept 4: Precise projection with `select` (Query Mode)
  *   Challenge: Single Member Inspector (Query Mode from scratch)
  */
 export const Prisma_02_MODULE: ModuleData = {
@@ -384,8 +385,75 @@ export const Prisma_02_MODULE: ModuleData = {
           rtype: '{ id: number; name: string; email: string } | null',
           workspaceMode: 'query',
         }),
+      ],
+    },
+    {
+      id: 'precise-projection',
+      order: 4,
+      title: 'Precise Projection with select',
+      shortDescription:
+        'Use the select object to return only the specific columns you need, instead of fetching the entire row.',
+      theory: richPrismaTheory({
+        summary:
+          'By default, Prisma queries return all scalar fields of a record. Using the `select` object allows you to project only the fields you actually need. This improves performance and prevents over-fetching sensitive data.',
+        takeaway: 'Pass a select object with true values to explicitly choose which fields are returned.',
+        sql: 'SELECT id, email FROM users WHERE id = 1;',
+        heroCode: 'const userEmail = await prisma.user.findUnique({\n  where: { id: 1 },\n  select: {\n    id: true,\n    email: true,\n  },\n});',
+        heroLang: 'typescript',
+        heroWhy: 'Reduces database load and prevents accidental exposure of sensitive data like passwords.',
+        mentalModel:
+          'Think of `select` as the `SELECT column1, column2` part of a SQL query. If you do not provide `select`, Prisma runs `SELECT *`.',
+        explanation: [
+          'The `select` object is passed alongside `where` in query methods.',
+          'Set a field to `true` to include it in the returned object.',
+          'If you use `select`, ONLY the specified fields are returned. All other fields are omitted.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Add a select block',
+            codeSnippet: 'select: { }',
+            explanation: 'Include a select block in your query arguments.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Specify fields',
+            codeSnippet: 'email: true',
+            explanation: 'Set the fields you want to return to true.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'SQL generation',
+            codeSnippet: 'SELECT id, email FROM users WHERE id = 1 LIMIT 1;',
+            explanation: 'Only the requested columns are fetched from the database.',
+            visualData: { type: 'sql_lens', title: 'Targeted Select', details: null },
+          },
+        ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Boolean Values Only',
+              description: 'You must use boolean `true` in the select object to include a field.',
+              badge: 'Syntax',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL SELECT to Prisma select',
+          mappings: [
+            {
+              sql: 'SELECT id, email FROM users;',
+              prisma: 'await prisma.user.findMany({ select: { id: true, email: true } })',
+              note: 'Explicitly requesting specific columns',
+            },
+          ],
+        },
+      }),
+      tasks: [
         prismaReadTask({
-          id: 'prisma02-c3-t2',
+          id: 'prisma02-c4-t1',
           title: 'Precise projection: Point lookup with select',
           description: 'Retrieve a single user and project only their id and email fields.',
           instructions: [
@@ -414,20 +482,20 @@ export const Prisma_02_MODULE: ModuleData = {
   ],
   challenge: {
     id: 'prisma02-challenge',
-    title: 'Final Challenge — Single Member Inspector',
+    title: 'Final Challenge: Fetch Name and Email, Omit ID',
     scenario:
       'Given member ID 1, write a typed query from scratch that returns only their name and email, omitting id to adhere to the principle of least privilege.',
     databaseLifecycle: 'fresh',
     tasks: [
       prismaReadTask({
         id: 'prisma02-hw-1',
-        title: 'Final Challenge — Single Member Inspector',
-        description: 'Fetch user 1 by ID and return only name and email from scratch.',
+        title: 'Final Challenge: Fetch Name and Email, Omit ID',
+        description: 'Fetch user 1 by ID and return ONLY name and email from scratch. DO NOT return the id.',
         instructions: [
           'Write the query from scratch inside `inspectMember(id: number)`',
           'Use `prisma.user.findUnique` with `where: { id }`',
-          'Project only `name` and `email` using `select`',
-          'Ensure `id` is omitted from the selection',
+          'Project ONLY `name` and `email` using `select`',
+          'Ensure `id` is OMITTED from the select object',
         ],
         hintLadder: [
           'Call `prisma.user.findUnique` passing `where: { id }` and `select: { name: true, email: true }`.',
@@ -441,7 +509,7 @@ export const Prisma_02_MODULE: ModuleData = {
         cols: ['name', 'email'],
         noCols: ['id'],
         rows: 1,
-        code0: 'export async function inspectMember(id: number) {\n  // Write the query from scratch:\n\n}',
+        code0: 'export async function inspectMember(id: number) {\n  // Write the query from scratch:\n  // IMPORTANT: Return ONLY `name` and `email`. Omit `id`!\n\n}',
         code1: 'export async function inspectMember(id: number) {\n  return await prisma.user.findUnique({\n    where: { id },\n    select: {\n      name: true,\n      email: true,\n    },\n  });\n}',
         rtype: '{ name: string; email: string } | null',
         skillType: 'assess',
