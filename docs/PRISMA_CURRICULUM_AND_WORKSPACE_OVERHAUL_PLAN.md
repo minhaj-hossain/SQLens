@@ -110,11 +110,12 @@ flowchart TD
 ### Milestone 3: Phase 1 & Phase 2 Modules (Foundations & Reading)
 *Goal: Establish the instant Schema → Client → findMany() loop and data retrieval mastery.*
 
-- [ ] **Task 3.1: Day 1: Schema Foundations & Your First Query**
-  - Concept 1: The `model` block, field names, and scalar types (`Int`, `String`).
-  - Concept 2: Primary Key (`@id`) and auto-increment identity.
-  - Concept 3: Immediate gratification: `prisma.user.findMany()` fetching real seeded data.
-  - *No CLI generation machinery lectures — pure model to query connection.*
+- [x] **Task 3.1: Day 1: Schema Foundations & Your First Query**
+  - Concept 1: The `model` block, field names, and scalar types (`Int`, `String`) in Schema Mode.
+  - Concept 2: Primary Key (`@id`) and auto-increment identity (`@default(autoincrement())`) in Schema Mode.
+  - Concept 3: Immediate gratification: `prisma.user.findMany()` and `select` fetching real seeded data in Query Mode.
+  - Challenge: Member directory projection from scratch.
+  - *Zero CLI generation machinery lectures — pure model to query connection verified.*
 - [ ] **Task 3.2: Day 2: Field Modifiers & Defaults**
   - Concept 1: Optional fields with `?` (`bio String?`).
   - Concept 2: Default values with `@default()` (`createdAt DateTime @default(now())`, `role String @default("USER")`).

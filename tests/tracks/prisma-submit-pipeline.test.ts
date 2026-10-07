@@ -43,7 +43,10 @@ function hooksFor(ex: SqlExecutor, resets: { n: number } = { n: 0 }) {
 
 function firstPrismaTask(): PracticeTask {
   const mod = PRISMA_MODULES.find((m) => m.id === 'prisma-01')!;
-  return mod.concepts[0].tasks[0];
+  return (
+    mod.concepts.flatMap((c) => c.tasks).find((t) => t.gradingType === 'executable') ??
+    mod.concepts[0].tasks[0]
+  );
 }
 
 /** Any Prisma task by id (concept task or challenge task). */

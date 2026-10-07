@@ -1,301 +1,462 @@
 import { ModuleData } from '../../../types/curriculum';
+import { prismaReadTask, prismaSnippetTask, richPrismaTheory } from '../phase6-tasks';
 
 /**
- * Prisma Day 1 — Why Prisma? (Pilot module, Phase 1).
- * Shape mirrors SQL Day 1: Module → Concepts → theory + ≥2 tasks + challenge.
- * Prisma-only content rides on OPTIONAL `prisma` extensions; SQL fields stay
- * populated so shared components render and execute without forks.
- * IDs use `prisma-NN` — never collides with SQL `day-NN`.
+ * Prisma Day 1 — Schema Foundations & Your First Query.
+ * Shape: Module -> 3 Concepts -> rich theory + 2 tasks each -> challenge.
+ *
+ * Pedagogical Sequence:
+ *   Concept 1: The `model` block, field names, and scalar types (Schema Mode)
+ *   Concept 2: Primary Key (`@id`) and auto-increment identity (Schema Mode)
+ *   Concept 3: The Model-to-Query Connection: `prisma.user.findMany()` (Query Mode)
+ *   Challenge: Member Directory Projection (Query Mode from scratch)
  */
 export const Prisma_01_MODULE: ModuleData = {
   id: 'prisma-01',
-  slug: 'why-prisma',
+  slug: 'schema-foundations',
   day: 1,
-  title: 'Day 1 — Why Prisma?',
-  shortTitle: 'Why Prisma?',
+  title: 'Day 1 — Schema Foundations & Your First Query',
+  shortTitle: 'Schema Foundations',
   type: 'module',
   track: 'prisma',
   milestoneId: 'prisma-milestone-1',
   description:
-    'Understand the database problems Prisma solves, compare raw SQL vs query builders vs ORMs, and run your first type-safe Prisma read.',
+    'Declare your first Prisma model with scalar types and primary keys, and experience instant data retrieval using findMany() with zero setup friction.',
   estimatedMinutes: 45,
   curriculumOrder: 1,
   displayLabel: 'Day 1',
   completionLearnings: [
-    'Convert raw SQL queries into type-safe findUnique calls',
-    'Compare raw SQL drivers vs query builders vs Prisma ORM',
-    'Read one user with prisma.user.findUnique + select',
-    'See the exact SQL Prisma generates (Generated SQL Lens)',
+    'Define database tables declaratively using model blocks in schema.prisma',
+    'Assign scalar types (String, Int) to model fields',
+    'Designate primary keys with @id and auto-incrementing identity with @default(autoincrement())',
+    'Query seeded tables with prisma.user.findMany() and shape results with select',
+    'Observe the exact SQL Prisma generates in the SQL Lens',
   ],
   concepts: [
     {
-      id: 'raw-sql-vs-prisma',
+      id: 'model-and-scalar-types',
       order: 1,
-      title: 'From Raw SQL Strings to Type-Safe Reads',
+      title: 'The Model Block & Scalar Types',
       shortDescription:
-        'Raw SQL drivers return untyped tuples and brittle strings; Prisma returns typed objects with autocompletion.',
-      theory: {
+        'Declare database tables as TypeScript-friendly models using field names and scalar types.',
+      theory: richPrismaTheory({
         summary:
-          'Applications work with nested objects, databases store flat tables. Raw drivers force you to bridge that gap by hand with untyped query strings. Prisma bridges it with a type-safe client.',
-        introTable: {
-          tableName: 'users',
-          description: 'Seeded table the pilot tasks read from.',
-          columns: ['id', 'name', 'email'],
-          rows: [
-            [1, 'Alex', 'alex@prisma.io'],
-            [2, 'Mina', 'mina@prisma.io'],
-            [3, 'Rafi', 'rafi@prisma.io'],
-          ],
-        },
+          'In Prisma, the schema file (`schema.prisma`) is the single source of truth for your database. Every database table is defined as a `model` block containing named fields and scalar types.',
+        takeaway: 'Models define database tables; field names paired with scalar types define columns.',
+        sql: 'SELECT id, name FROM users WHERE id = 1;',
+        heroCode: 'model User {\n  name String\n  age  Int\n}',
+        heroLang: 'prisma',
+        heroWhy: 'A clean declarative model block mapping directly to a database table.',
+        mentalModel:
+          'Think of a Prisma model as a typed blueprint. Instead of writing verbose CREATE TABLE DDL strings, you declare the structure in schema.prisma, and Prisma generates matching database tables and typed client delegates.',
         explanation: [
-          'With a raw driver you write raw query strings and get back `any[]` — rename a column and you find out at runtime.',
-          'With Prisma you write `prisma.user.findUnique({ where, select })` and get back a typed `User` object with autocompletion.',
-          'Under the hood Prisma still sends parameterized SQL — the SQL Lens shows exactly what it generates.',
-          'Interactive Onboarding: In your first task, run the query directly to observe how Prisma translates TypeScript into SQL and JSON results, then customize it with a single property!',
+          'A model begins with the `model` keyword followed by the model name in PascalCase (e.g. `model User`).',
+          'Each field consists of a field name followed by its scalar type: `name String`, `age Int`, or `isAdmin Boolean`.',
+          'Prisma scalar types map directly to native database types while providing compile-time type safety in TypeScript.',
+          'In the learning workspace, you write schema models directly in the Schema Editor and receive instant structural AST feedback.',
         ],
-        targetQuery: {
-          sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
-          explanation: 'The exact SQL Prisma generates for the hero read.',
-          badge: "The query we're going to break down",
-        },
-        stepBreakdowns: [
+        steps: [
           {
             stepNumber: 1,
-            stepTitle: 'Step 1: FROM users (Find the source table)',
-            sqlSnippet: 'FROM users',
-            explanation: 'Both raw SQL and Prisma start from the users table.',
+            stepTitle: 'Declare the model container',
+            codeSnippet: 'model User {\n  // fields go here\n}',
+            explanation: 'The model block represents a relational table in your database.',
           },
           {
             stepNumber: 2,
-            stepTitle: 'Step 2: WHERE id = 1 + SELECT id, name, email',
-            sqlSnippet: 'SELECT id, name, email',
-            explanation: 'The `where` argument becomes WHERE; `select` becomes the column list.',
+            stepTitle: 'Add scalar fields',
+            codeSnippet: 'name String\nage  Int',
+            explanation: 'Field names are followed by scalar types like String or Int without punctuation.',
           },
-        ],
-        syntaxBlocks: [
           {
-            title: 'Prisma read maps to generated SQL',
-            sql: 'SELECT id, name, email\nFROM users\nWHERE id = 1;',
-            description: 'One Prisma call, one predictable parameterized query.',
+            stepNumber: 3,
+            stepTitle: 'Prisma compiler validates structure',
+            codeSnippet: '// AST validation ensures valid syntax and type declarations',
+            explanation: 'The Schema AST engine validates your model definitions instantly.',
+            visualData: { type: 'type_preview', title: 'Schema AST Validation', details: null },
           },
         ],
-        keyTakeaway: 'Prisma generates precise SQL and adds compile-time type safety on top.',
-        exampleQuery: 'SELECT id, name, email FROM users WHERE id = 1;',
-        exampleQueryExplanation: 'Fetch exactly one user with exactly three columns.',
-        liveDemoSql: 'SELECT id, name, email FROM users WHERE id = 1;',
-        liveDemoNotes: 'Run it — the grid shows one row with id, name, email.',
-        prisma: {
-          targetHero: {
-            code: 'const user = await prisma.user.findUnique({\n  where: { id: 1 },\n  select: { id: true, name: true, email: true },\n});',
-            language: 'typescript',
-            explanation: 'Type-safe read: where picks the row, select picks the columns.',
-            badge: 'Target Pattern We Dissect',
-          },
-          liveDemoCode:
-            'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: { id: true, name: true, email: true },\n  });\n}',
-          littleDetails: {
-            title: 'Syntax Rules & Conventions',
-            rules: [
-              {
-                ruleNumber: 1,
-                title: 'Prisma Client is 100% Parameterized',
-                description:
-                  'Prisma never concatenates strings directly into SQL queries. Passing `where: { id: 1 }` automatically uses parameterized placeholders, eliminating SQL injection hazards by default.',
-                badge: 'Security',
-              },
-              {
-                ruleNumber: 2,
-                title: 'Dynamic Type Inference',
-                description:
-                  'The return type of a Prisma query is not generic `any[]`. It is an exact TypeScript type dynamically constructed from your `select` or `include` arguments.',
-                badge: 'TypeScript',
-              },
-            ],
-          },
-          sqlBridge: {
-            title: 'From SQL to Prisma',
-            mappings: [
-              {
-                sql: 'SELECT id, name, email FROM users WHERE id = 1',
-                prisma:
-                  'prisma.user.findUnique({ where: { id: 1 }, select: { id: true, name: true, email: true } })',
-                note: 'Type-safe read: where maps to WHERE, select maps to column projection',
-              },
-            ],
-          },
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'PascalCase for Model Names',
+              description: 'Model names should use PascalCase (User, Post, Order). Prisma conventions use singular nouns.',
+              badge: 'Convention',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Core Scalar Types',
+              description: 'The most common scalar types are String (text), Int (integer), Boolean (true/false), Float (floating-point decimal), and DateTime (timestamps).',
+              badge: 'Types',
+            },
+            {
+              ruleNumber: 3,
+              title: 'No Commas or Semicolons',
+              description: 'Prisma schema fields are separated by line breaks only. Do not add commas or semicolons at the end of field lines.',
+              badge: 'Syntax',
+            },
+          ],
         },
-        mcqs: [
-          {
-            question: 'What does `select: { id: true, name: true }` do in a Prisma read?',
-            options: [
-              'A. Filters which rows are returned',
-              'B. Picks which columns/fields come back (and types the result)',
-              'C. Sorts the result set',
-              'D. Creates a database index',
-            ],
-            correctIndex: 1,
-            explanation: '`select` projects fields and drives the inferred TypeScript type.',
-          },
-        ],
-      },
-      masteryPoints: [
-        'Know that raw drivers return untyped results',
-        'Know that where maps to the WHERE clause',
-        'Know that select maps to the column list + result type',
-      ],
+        sqlBridge: {
+          title: 'From SQL DDL to Prisma Schema',
+          mappings: [
+            {
+              sql: 'CREATE TABLE users (name TEXT);',
+              prisma: 'model User { name String }',
+              note: 'Clean declarative syntax replacing verbose DDL statements',
+            },
+            {
+              sql: 'age INTEGER',
+              prisma: 'age Int',
+              note: 'Prisma Int maps to standard database INTEGER columns',
+            },
+          ],
+        },
+      }),
       tasks: [
-        {
+        prismaSnippetTask({
           id: 'prisma01-c1-t1',
-          title: 'Your API needs more user info: Can you expand the query to include email?',
-          description:
-            'Run your first Prisma query to inspect the generated SQL and returned object, then add email to the selection.',
+          title: 'Define your first Prisma model: Add a String name field',
+          description: 'Declare a simple User model with a required String name field in schema.prisma.',
           instructions: [
-            'Click Run Query to observe how Prisma executes the query and generates clean SQL',
-            'Add `email: true` inside the `select` block to include the email field in the returned object',
+            'Inside the `model User` block, declare a field named `name`',
+            'Assign it the scalar type `String`',
           ],
-          type: 'guided',
-          skillType: 'introduce',
-          gradingType: 'executable',
-          primaryTable: 'users',
-          initialSql:
-            '-- Step 1: Run this query to observe the initial 2-column result\n-- Step 2: Add email to the SELECT list to match the final requirement\nSELECT id, name\nFROM users\nWHERE id = 1;\n',
-          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
-          solutionExplanation:
-            'Adding email to select instructs Prisma to include the email column in the generated SELECT statement.',
-          hints: [
-            { level: 1, text: 'The Prisma Query Engine translates the select object into the SQL column projection list, requesting only the specified columns from the database.' },
-            { level: 2, text: 'Inside the `select` block, add the field name with a boolean flag: `email: true`.' },
-            { level: 3, text: 'Add `email: true` right after `name: true`: `select: { id: true, name: true, email: /* set to boolean flag */ }`' },
+          hintLadder: [
+            'A field declaration consists of the field name followed by its scalar type, separated by a space.',
+            'Type `name String` on its own line inside the curly braces of `model User`.',
+            'Write: `name String` inside the `model User { ... }` block.',
           ],
-          validation: {
-            requireExactResult: true,
-            targetTable: 'users',
-            requiredColumns: ['id', 'name', 'email'],
-            expectedRowCount: 1,
-          },
-          successMessage: 'First query executed! Notice how adding a field in select instantly updates the generated SQL.',
-          prisma: {
-            skillType: 'introduce',
-            gradingType: 'executable',
-            initialCode:
-              'export async function getUserById(userId: number) {\n  // 1. Click "Run Query" to see the generated SQL and returned object!\n  // 2. Then add `email: true` inside `select` to include the user\'s email.\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: {\n      id: true,\n      name: true,\n    },\n  });\n}',
-            solutionCode:
-              'export async function getUserById(userId: number) {\n  return await prisma.user.findUnique({\n    where: { id: userId },\n    select: {\n      id: true,\n      name: true,\n      email: true,\n    },\n  });\n}',
-            expectedType: '{ id: number; name: string; email: string } | null',
-            validation: {
-              targetModel: 'user',
-              requiredMethod: 'findUnique',
-              requiredFieldsInSelect: ['id', 'name', 'email'],
-              requiredWhereClauses: ['id'],
-              expectedRowCount: 1,
-            },
-          },
-        },
-        {
+          scaffold: '-- Validating model User and scalar type String:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'A model field pairs a column name with its Prisma scalar type.',
+          cols: ['id', 'name'],
+          rows: 1,
+          workspaceMode: 'schema',
+          code0: 'model User {\n  // Add the name field with scalar type String below:\n\n}',
+          code1: 'model User {\n  name String\n}',
+          need: ['model User', 'name String'],
+          ban: ['name String?'],
+        }),
+        prismaSnippetTask({
           id: 'prisma01-c1-t2',
-          title: 'You misspelled a field: Can Prisma catch the mistake before the query runs?',
-          description:
-            'A raw SQL query with a wrong column name only crashes at runtime. Prisma prevents invalid column lookups at compile time.',
+          title: 'Expand the User model: Add multiple scalar types',
+          description: 'Combine multiple scalar types into a single model to represent real user attributes.',
           instructions: [
-            'Notice the query is looking up `user_mail` which does not exist in the schema',
-            'Change `where: { user_mail: "mina@prisma.io" }` to use the valid schema field `where: { email }`',
-            'Keep `select` returning `id` and `email`',
+            'In `model User`, keep the existing `name String` field',
+            'Add an `email` field with scalar type `String`',
+            'Add an `age` field with scalar type `Int`',
           ],
-          type: 'independent',
-          skillType: 'practice',
-          gradingType: 'executable',
-          primaryTable: 'users',
-          initialSql:
-            "-- In raw SQL, a typo like user_mail causes a database error.\n-- Fix the filter to use the real column `email`:\nSELECT id, email\nFROM users\nWHERE user_mail = 'mina@prisma.io';\n",
-          solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
-          solutionExplanation: 'Filtering by the real `email` field matches the unique constraint and returns the user.',
-          hints: [
-            { level: 1, text: 'Prisma validates query filters against your schema at compile time. Querying by a non-existent field generates a type error rather than a runtime crash.' },
-            { level: 2, text: 'Provide the unique `where` argument with the exact model property defined in the schema, matching the parameter name.' },
-            { level: 3, text: 'Replace `user_mail: "mina@prisma.io"` with the valid field: `where: { email: /* use parameter or email string */ }`' },
+          hintLadder: [
+            'Each field occupies its own line inside the model block with no trailing commas.',
+            'Declare `email String` and `age Int` beneath `name String`.',
+            'Complete the model with:\n  name String\n  email String\n  age Int',
           ],
-          validation: {
-            requireExactResult: true,
-            targetTable: 'users',
-            requiredColumns: ['id', 'email'],
-            expectedRowCount: 1,
+          scaffold: '-- Validating multiple scalar types in User model:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
+          why: 'Different scalar types map to appropriate SQL storage columns.',
+          cols: ['id', 'name', 'email'],
+          rows: 1,
+          workspaceMode: 'schema',
+          code0: 'model User {\n  name String\n  // Add email (String) and age (Int) below:\n\n}',
+          code1: 'model User {\n  name String\n  email String\n  age Int\n}',
+          need: ['model User', 'name String', 'email String', 'age Int'],
+        }),
+      ],
+    },
+    {
+      id: 'primary-keys-identity',
+      order: 2,
+      title: 'Primary Keys & Auto-Increment Identity',
+      shortDescription:
+        'Guarantee unique row identification with @id and generate sequential numbers with @default(autoincrement()).',
+      theory: richPrismaTheory({
+        summary:
+          'Every relational database table requires a Primary Key to uniquely identify every row. In Prisma, the `@id` attribute designates a field as the primary key, and `@default(autoincrement())` automates sequential ID generation.',
+        takeaway: '@id designates primary keys; @default(autoincrement()) automates unique sequence generation.',
+        sql: 'SELECT id, name, email FROM users WHERE id = 1;',
+        heroCode: 'model User {\n  id   Int    @id @default(autoincrement())\n  name String\n}',
+        heroLang: 'prisma',
+        heroWhy: 'An auto-incrementing integer primary key provides durable unique record identity.',
+        mentalModel:
+          'Think of the primary key as a social security number or passport ID for database records. With @default(autoincrement()), the database engine automatically assigns 1, 2, 3... every time a new row is inserted, preventing duplicate identity conflicts.',
+        explanation: [
+          'Relational tables must have a primary key so individual rows can be queried, updated, and related.',
+          'In Prisma schema, attributes begin with an `@` symbol and are placed after the field type.',
+          'The `@id` attribute marks the field as the table primary key.',
+          'Adding `@default(autoincrement())` instructs the database to generate monotonically increasing IDs automatically.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Declare an integer ID column',
+            codeSnippet: 'id Int',
+            explanation: 'The id column uses scalar type Int to store numeric identifiers.',
           },
-          successMessage: 'Error caught and fixed! The schema guarantees that you can only query fields that truly exist.',
-          prisma: {
-            skillType: 'practice',
-            gradingType: 'executable',
-            initialCode:
-              'export async function getActiveMember(email: string) {\n  // `user_mail` is invalid. Fix the lookup property to use the real schema field `email`:\n  return await prisma.user.findUnique({\n    where: { user_mail: "mina@prisma.io" } as any,\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
-            solutionCode:
-              'export async function getActiveMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
-            expectedType: '{ id: number; email: string } | null',
-            validation: {
-              targetModel: 'user',
-              requiredMethod: 'findUnique',
-              requiredFieldsInSelect: ['id', 'email'],
-              requiredWhereClauses: ['email'],
-              expectedRowCount: 1,
+          {
+            stepNumber: 2,
+            stepTitle: 'Mark with @id',
+            codeSnippet: 'id Int @id',
+            explanation: 'The @id attribute informs Prisma that this column is the table Primary Key.',
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Attach auto-increment generator',
+            codeSnippet: 'id Int @id @default(autoincrement())',
+            explanation: 'Database automatically supplies the next integer on each insert.',
+            visualData: { type: 'sql_lens', title: 'PRIMARY KEY AUTOINCREMENT', details: null },
+          },
+        ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: '@id is Mandatory for Models',
+              description: 'In Prisma, every model must have at least one primary key declared via @id (or @@id for composite keys).',
+              badge: 'Requirement',
             },
-          },
+            {
+              ruleNumber: 2,
+              title: 'Default Function Call Syntax',
+              description: 'Generator functions inside @default require trailing parentheses, such as autoincrement(), now(), or uuid().',
+              badge: 'Syntax',
+            },
+          ],
         },
+        sqlBridge: {
+          title: 'From SQL to Prisma Attributes',
+          mappings: [
+            {
+              sql: 'id INTEGER PRIMARY KEY',
+              prisma: 'id Int @id',
+              note: 'Designates the column as the primary key constraint',
+            },
+            {
+              sql: 'id SERIAL PRIMARY KEY / AUTOINCREMENT',
+              prisma: 'id Int @id @default(autoincrement())',
+              note: 'Database automatically generates incrementing sequence values',
+            },
+          ],
+        },
+      }),
+      tasks: [
+        prismaSnippetTask({
+          id: 'prisma01-c2-t1',
+          title: 'Designate the primary key: Add @id to the id field',
+          description: 'Ensure every user record can be uniquely referenced by marking id with the @id attribute.',
+          instructions: [
+            'Notice the `id Int` field in `model User`',
+            'Append `@id` to mark it as the model primary key',
+          ],
+          hintLadder: [
+            'Field attributes begin with an `@` sign and follow the field type.',
+            'Add `@id` immediately after `id Int`.',
+            'Update the line to: `id Int @id`',
+          ],
+          scaffold: '-- Validating primary key @id:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
+          why: 'The @id attribute marks the primary key for the model.',
+          cols: ['id', 'name'],
+          rows: 1,
+          workspaceMode: 'schema',
+          code0: 'model User {\n  id Int\n  name String\n  email String\n}',
+          code1: 'model User {\n  id Int @id\n  name String\n  email String\n}',
+          need: ['id Int @id'],
+          ban: ['@default(autoincrement())'],
+        }),
+        prismaSnippetTask({
+          id: 'prisma01-c2-t2',
+          title: 'Automate ID generation: Combine @id with @default(autoincrement())',
+          description: 'Let the database generate IDs automatically when new records are inserted.',
+          instructions: [
+            'Update `id Int` so that it is both a primary key (`@id`) and auto-increments (`@default(autoincrement())`)',
+            'Keep `name String` and `email String` as declared',
+          ],
+          hintLadder: [
+            'Attributes can be chained together on the same line after the field type.',
+            'Append `@default(autoincrement())` after `@id`.',
+            'Declare the id line as: `id Int @id @default(autoincrement())`',
+          ],
+          scaffold: '-- Validating auto-incrementing identity:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users WHERE id = 1;',
+          why: 'Auto-increment generates sequential IDs automatically on INSERT.',
+          cols: ['id', 'name', 'email'],
+          rows: 1,
+          workspaceMode: 'schema',
+          code0: 'model User {\n  // Update id to be an auto-incrementing primary key:\n  id Int\n  name String\n  email String\n}',
+          code1: 'model User {\n  id Int @id @default(autoincrement())\n  name String\n  email String\n}',
+          need: ['id Int @id @default(autoincrement())'],
+        }),
+      ],
+    },
+    {
+      id: 'first-prisma-query',
+      order: 3,
+      title: 'Connecting Model to Query: Your First findMany()',
+      shortDescription:
+        'Experience immediate payoff: execute findMany() against seeded records without CLI friction.',
+      theory: richPrismaTheory({
+        summary:
+          'Once your `User` model is defined, Prisma Client exposes `prisma.user` to query records. Calling `prisma.user.findMany()` retrieves all rows as typed objects with autocompletion and zero runtime boilerplate.',
+        takeaway: 'Models become client delegates: prisma.user.findMany() retrieves all table rows.',
+        sql: 'SELECT id, name, email FROM users;',
+        heroCode: 'const users = await prisma.user.findMany();',
+        heroLang: 'typescript',
+        heroWhy: 'Retrieve all records from the users table in a single type-safe call.',
+        mentalModel:
+          'In raw SQL, querying requires establishing a connection pool, writing SELECT strings, and manually casting untyped row tuples. In Prisma, your model automatically generates the `prisma.user` delegate, which offers typed query methods like findMany().',
+        explanation: [
+          'Prisma Client generates a property on `prisma` for each model (e.g. `model User` -> `prisma.user`).',
+          '`prisma.user.findMany()` is the Prisma equivalent of `SELECT * FROM users;`.',
+          'The call returns a Promise resolving to an array of typed objects matching the seeded database.',
+          'You can add an optional `select` object to specify exactly which fields you need, reducing payload size.',
+        ],
+        steps: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Access the model delegate',
+            codeSnippet: 'prisma.user',
+            explanation: 'Prisma Client exposes lowercase delegates for each schema model.',
+          },
+          {
+            stepNumber: 2,
+            stepTitle: 'Call findMany()',
+            codeSnippet: 'const users = await prisma.user.findMany();',
+            explanation: 'Fetches all rows from the table as typed objects.',
+            visualData: { type: 'type_preview', title: 'User[]', details: null },
+          },
+          {
+            stepNumber: 3,
+            stepTitle: 'Observe the generated SQL',
+            codeSnippet: 'SELECT id, name, email FROM users;',
+            explanation: 'The Query Engine translates your client method into clean, optimized SQL.',
+            visualData: { type: 'sql_lens', title: 'Generated SQL Lens', details: null },
+          },
+        ],
+        littleDetails: {
+          title: 'Syntax Rules & Conventions',
+          rules: [
+            {
+              ruleNumber: 1,
+              title: 'Always Await Prisma Queries',
+              description: 'All Prisma Client query methods return Promises and must be awaited inside async functions.',
+              badge: 'Async',
+            },
+            {
+              ruleNumber: 2,
+              title: 'Lower-case Delegate Names',
+              description: 'While models are PascalCase in schema.prisma (User), client delegates are camelCase (prisma.user).',
+              badge: 'Convention',
+            },
+          ],
+        },
+        sqlBridge: {
+          title: 'From SQL Queries to Prisma Client',
+          mappings: [
+            {
+              sql: 'SELECT * FROM users;',
+              prisma: 'await prisma.user.findMany()',
+              note: 'Retrieves all rows and fields from the users table',
+            },
+            {
+              sql: 'SELECT id, name FROM users;',
+              prisma: 'await prisma.user.findMany({ select: { id: true, name: true } })',
+              note: 'Projects only the specified columns',
+            },
+          ],
+        },
+      }),
+      tasks: [
+        prismaReadTask({
+          id: 'prisma01-c3-t1',
+          title: 'Your first query: Retrieve all users with findMany()',
+          description: 'Fetch the entire user roster using Prisma Client’s findMany() method.',
+          instructions: [
+            'Use `await prisma.user.findMany()` to fetch all records from the database',
+            'Return the resulting user array from `getAllUsers()`',
+          ],
+          hintLadder: [
+            'Prisma Client provides `prisma.user.findMany()` to retrieve multiple rows from the users table.',
+            'Inside `getAllUsers`, return the awaited result of `prisma.user.findMany()`.',
+            'Write: `return await prisma.user.findMany();`',
+          ],
+          scaffold: '-- Retrieve all users:\nSELECT id, name, email FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name, email FROM users;',
+          why: 'findMany() retrieves all matching records from the model table.',
+          select: [],
+          cols: ['id', 'name', 'email'],
+          rows: 3,
+          code0: 'export async function getAllUsers() {\n  // Retrieve and return all records from the user model:\n\n}',
+          code1: 'export async function getAllUsers() {\n  return await prisma.user.findMany();\n}',
+          rtype: '{ id: number; name: string; email: string }[]',
+          workspaceMode: 'query',
+        }),
+        prismaReadTask({
+          id: 'prisma01-c3-t2',
+          title: 'Shape your first payload: Pair findMany() with select',
+          description: 'Trim the returned payload so that your API only transfers the id and name fields.',
+          instructions: [
+            'Call `await prisma.user.findMany()`',
+            'Provide a `select` option containing `id: true` and `name: true`',
+          ],
+          hintLadder: [
+            'The `select` argument accepts an object where field names are mapped to `true`.',
+            'Pass `{ select: { id: true, name: true } }` into `findMany()`.',
+            'Return the call: `return await prisma.user.findMany({ select: { id: true, name: true } });`',
+          ],
+          scaffold: '-- Project id and name for all users:\nSELECT id, name FROM users WHERE id = 99;',
+          solutionSql: 'SELECT id, name FROM users;',
+          why: 'Pairing findMany with select limits column projection to only what is needed.',
+          select: ['id', 'name'],
+          cols: ['id', 'name'],
+          rows: 3,
+          code0: 'export async function getUserDirectory() {\n  // Fetch all users but project only id and name:\n  return await prisma.user.findMany({\n\n  });\n}',
+          code1: 'export async function getUserDirectory() {\n  return await prisma.user.findMany({\n    select: {\n      id: true,\n      name: true,\n    },\n  });\n}',
+          rtype: '{ id: number; name: string }[]',
+          workspaceMode: 'query',
+        }),
       ],
     },
   ],
   challenge: {
     id: 'prisma01-challenge',
-    title: 'Final Challenge — Safe Member Lookup',
-    scenario: 'Given an email, return only id + email for exactly one member to follow the principle of least privilege.',
+    title: 'Final Challenge — Member Directory Projection',
+    scenario:
+      'You are creating the public member directory. Given the User model and seeded database, write a query that returns all users with only their id and email, strictly omitting name to protect privacy.',
     databaseLifecycle: 'fresh',
     tasks: [
-      {
+      prismaReadTask({
         id: 'prisma01-hw-1',
-        title: 'Build a safe member lookup using email and return only the required fields',
-        description: 'Return id + email for mina@prisma.io with findUnique, omitting name.',
+        title: 'Final Challenge — Member Directory Projection',
+        description: 'Write a complete query from scratch that fetches all users, projecting id and email while excluding name.',
         instructions: [
-          'Filter by the user email: mina@prisma.io',
-          'Complete the `select` block to project only `id` and `email`',
+          'Write the query from scratch inside `getPublicDirectory()`',
+          'Query the `user` model with `findMany()`',
+          'Include `id: true` and `email: true` in the `select` block',
+          'Ensure `name` is omitted from the selection',
         ],
-        type: 'challenge',
+        hintLadder: [
+          'Combine `prisma.user.findMany()` with a `select` object containing `id: true` and `email: true`.',
+          'Do not include `name: true` in the select object.',
+          'Complete function: `return await prisma.user.findMany({ select: { id: true, email: true } });`',
+        ],
+        scaffold: '-- Public directory without name:\nSELECT id, email FROM users WHERE id = 99;',
+        solutionSql: 'SELECT id, email FROM users;',
+        why: 'Least-privilege queries project only the fields required for the client view.',
+        select: ['id', 'email'],
+        cols: ['id', 'email'],
+        noCols: ['name'],
+        rows: 3,
+        code0: 'export async function getPublicDirectory() {\n  // Write the query from scratch:\n\n}',
+        code1: 'export async function getPublicDirectory() {\n  return await prisma.user.findMany({\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
+        rtype: '{ id: number; email: string }[]',
         skillType: 'assess',
-        gradingType: 'executable',
-        primaryTable: 'users',
-        databaseLifecycle: 'fresh',
-        initialSql:
-          "-- Expected shape: one row with id + email — fill in the email filter:\nSELECT id, email\nFROM users\nWHERE ;\n",
-        solutionSql: "SELECT id, email FROM users WHERE email = 'mina@prisma.io';",
-        solutionExplanation: 'One row, two columns — the minimal safe lookup.',
-        hints: [
-          { level: 1, text: 'A safe single-row lookup targets a uniquely indexed column with findUnique and restricts returned fields with select to avoid leaking sensitive attributes.' },
-          { level: 2, text: 'Call `prisma.user.findUnique` passing an object with both `where` and `select` properties.' },
-          { level: 3, text: 'Return the query result: `return await prisma.user.findUnique({ where: { email }, select: { id: true, email: /* add boolean */ } });`' },
-        ],
-        validation: {
-          requireExactResult: true,
-          targetTable: 'users',
-          requiredColumns: ['id', 'email'],
-          forbiddenColumns: ['name'],
-          expectedRowCount: 1,
-        },
-        successMessage: 'Challenge complete — minimal, typed, exact.',
-        prisma: {
-          skillType: 'assess',
-          gradingType: 'executable',
-          fromScratch: true,
-          initialCode:
-            'export async function lookupMember(email: string) {\n  // Write the query from scratch using prisma.user.findUnique:\n\n}',
-          solutionCode:
-            'export async function lookupMember(email: string) {\n  return await prisma.user.findUnique({\n    where: { email },\n    select: {\n      id: true,\n      email: true,\n    },\n  });\n}',
-          expectedType: '{ id: number; email: string } | null',
-          validation: {
-            targetModel: 'user',
-            requiredMethod: 'findUnique',
-            requiredFieldsInSelect: ['id', 'email'],
-            forbiddenFieldsInSelect: ['name'],
-            requiredWhereClauses: ['email'],
-            expectedRowCount: 1,
-          },
-        },
-      },
+        fromScratch: true,
+        workspaceMode: 'query',
+      }),
     ],
   },
 };

@@ -59,12 +59,14 @@ describe('Phase 1 — track foundation', () => {
     }
   });
 
-  it('prisma-01 pilot shape: 1 concept, 2 tasks, 1 challenge task', () => {
+  it('prisma-01 shape: 3 concepts, >=2 tasks each, 1 challenge task', () => {
     const mod = PRISMA_MODULES.find((m) => m.id === 'prisma-01');
     expect(mod).toBeDefined();
     expect(mod!.track).toBe('prisma');
-    expect(mod!.concepts.length).toBe(1);
-    expect(mod!.concepts[0].tasks.length).toBeGreaterThanOrEqual(2);
+    expect(mod!.concepts.length).toBe(3);
+    for (const c of mod!.concepts) {
+      expect(c.tasks.length).toBeGreaterThanOrEqual(2);
+    }
     expect(mod!.challenge?.tasks.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -94,16 +96,18 @@ describe('Phase 1 — track foundation', () => {
     ];
     for (const task of all) {
       const rule = task.prisma!.validation;
-      expect(validatePrismaCode(task.prisma!.solutionCode, rule).passed).toBe(true);
-      expect(validatePrismaCode(task.prisma!.initialCode, rule).passed).toBe(false);
+      const solRes = validatePrismaCode(task.prisma!.solutionCode, rule);
+      expect(solRes.passed, `${task.id} solution failed: ${solRes.feedback}`).toBe(true);
+      const initRes = validatePrismaCode(task.prisma!.initialCode, rule);
+      expect(initRes.passed, `${task.id} starter passed: ${initRes.feedback}`).toBe(false);
     }
   });
 
   it('track routes and storage stay namespaced; SQL keys byte-identical', () => {
     expect(trackRoadmapUrl('sql')).toBe('/sql');
     expect(trackRoadmapUrl('prisma', 'prisma-01')).toBe('/prisma?highlight=prisma-01');
-    expect(trackLearnUrl('prisma', 'prisma-01', 'theory', 'raw-sql-vs-prisma')).toBe(
-      '/prisma/learn/prisma-01/theory/raw-sql-vs-prisma',
+    expect(trackLearnUrl('prisma', 'prisma-01', 'theory', 'model-and-scalar-types')).toBe(
+      '/prisma/learn/prisma-01/theory/model-and-scalar-types',
     );
     expect(getTrackStorageKey('sql')).toBe(TRACK_META.sql.guestStorageKey);
     expect(getTrackStorageKey('sql')).toBe('sql_mastery_progress_v1');
