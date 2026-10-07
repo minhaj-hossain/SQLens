@@ -23,6 +23,7 @@ interface LearningPathViewProps {
   onOpenSchema: () => void;
   scrollToModuleId?: string;
   onScrolledToModule?: () => void;
+  onResetClick?: () => void;
 }
 
 const RING_CIRCUMFERENCE = 402; // 2 * PI * 64
@@ -41,6 +42,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   onSelectModuleAndConcept,
   scrollToModuleId,
   onScrolledToModule,
+  onResetClick,
 }) => {
   // Phase 2: aliased to the original names so the whole view below is
   // unchanged while resolving against the ACTIVE track.
@@ -468,8 +470,20 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
         </div>
       </section>
 
-      <footer className="mt-[74px] mb-11 text-center font-mono text-[11px] text-text-faint">
-        {track === 'prisma' ? 'Prisma' : 'SQL'} — {overallPct}% through the path.
+      <footer className="mt-[74px] mb-11 flex flex-col items-center justify-center gap-5 text-center">
+        <div className="font-mono text-[11px] text-text-faint">
+          {track === 'prisma' ? 'Prisma' : 'SQL'} — {overallPct}% through the path.
+        </div>
+        
+        {onResetClick && (
+          <button
+            onClick={onResetClick}
+            className="text-xs font-mono text-text-dim hover:text-error border border-border-soft hover:border-error/30 bg-surface px-4 py-2 rounded-lg transition-all inline-flex items-center gap-2 cursor-pointer"
+          >
+            <Icon name="restart_alt" className="text-[14px]" />
+            Reset {track === 'prisma' ? 'Prisma' : 'SQL'} Progress
+          </button>
+        )}
       </footer>
     </div>
   );

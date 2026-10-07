@@ -14,17 +14,19 @@ import { useUiChrome } from '@/components/providers/UiChromeProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
 import { useTrackCurriculum } from '@/components/learn/use-track';
 import { deriveLastPosition } from '@/lib/progress/unlock-calculator';
+import ResetProgressModal from '@/components/ui/ResetProgressModal';
 
 interface RoadmapPageProps {
   highlightDayId?: string;
 }
 
 export default function RoadmapPage({ highlightDayId }: RoadmapPageProps) {
-  const { userState } = useLearning();
+  const { userState, resetProgress, resetError } = useLearning();
   const { modules } = useTrackCurriculum();
   const { openSchema } = useUiChrome();
   const { selectModuleAndConcept } = useLearningNavigation();
   const router = useRouter();
+  const [resetModalOpen, setResetModalOpen] = React.useState(false);
 
   // The resume card reflects where the learner ACTUALLY is — the first module
   // not fully complete at its first incomplete concept (P9.7) — not the stale
@@ -40,14 +42,31 @@ export default function RoadmapPage({ highlightDayId }: RoadmapPageProps) {
   };
 
   return (
-    <LearningPathView
-      userState={userState}
-      currentModuleId={position.moduleId}
-      currentConceptId={position.conceptId}
-      onSelectModuleAndConcept={selectModuleAndConcept}
-      onOpenSchema={openSchema}
-      scrollToModuleId={highlightDayId}
-      onScrolledToModule={handleScrolledToModule}
-    />
+    <>
+      <LearningPathView
+        userState={userState}
+        currentModuleId={position.moduleId}
+        currentConceptId={position.conceptId}
+        onSelectModuleAndConcept={selectModuleAndConcept}
+        onOpenSchema={openSchema}
+        scrollToModuleId={highlightDayId}
+        onScrolledToModule={handleScrolledToModule}
+        onResetClick={() => setResetModalOpen(true)}
+      />
+      <ResetProgressModal
+        isOpen={resetModalOpen}
+        onClose={() => setResetModalOpen(false)}
+        serverError={resetError ?? null}
+        onConfirmReset={async (mode, moduleId) => {
+          if (mode === 'module' && moduleId) {
+            await resetProgress({ moduleId });
+            router.refresh();
+          } else {
+            await resetProgress();
+            router.refresh();
+          }
+        }}
+      />
+    </>
   );
 }

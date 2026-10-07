@@ -7,15 +7,11 @@ import { BrandLogo } from '@/components/ui/BrandLogo';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 import { useTrackCurriculum } from '@/components/learn/use-track';
-import ResetProgressModal from '@/components/ui/ResetProgressModal';
 
 
 interface HeaderProps {
   userState: UserLearningState;
   currentModule?: ModuleData | null;
-  onResetProgress: (mode?: 'all' | 'module', moduleId?: string) => Promise<void> | void;
-  /** Batch 5: last full-reset tombstone error — forwarded to the reset modal. */
-  resetError?: string | null;
   onOpenSchemaModal: () => void;
   activeViewTitle?: string;
   user?: { id?: string; name?: string | null; email?: string | null; role?: string | null } | null;
@@ -30,8 +26,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   userState,
   currentModule,
-  onResetProgress,
-  resetError,
   onOpenSchemaModal,
   activeViewTitle = 'Learning Path',
   user,
@@ -40,7 +34,6 @@ export const Header: React.FC<HeaderProps> = ({
   isMinimal = false,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [resetModalOpen, setResetModalOpen] = useState(false);
   const { track, modules, meta } = useTrackCurriculum();
   const totalModules = modules.length;
   const completedCount = Object.keys(userState.completedModules).length;
@@ -109,18 +102,6 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Color theme switcher (graphite / sky) */}
           <ThemeToggle round={isMinimal} />
-
-          {/* Guest reset progress trigger */}
-          {!isMinimal && !user && !isAuthPending && (
-            <button
-              onClick={() => setResetModalOpen(true)}
-              title="Reset course progress"
-              aria-label="Reset course progress"
-              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-error hover:border-error/40 transition-all duration-150 cursor-pointer"
-            >
-              <Icon name="restart_alt" className="text-[15px]" />
-            </button>
-          )}
 
           {/* Auth: signed-in user chip + sign-out, otherwise Sign In / Sign Up */}
           {isAuthPending ? (
@@ -231,17 +212,6 @@ export const Header: React.FC<HeaderProps> = ({
 
                       {/* Actions */}
                       <div className="border-t border-border/60 py-1">
-                        <button
-                          role="menuitem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            setResetModalOpen(true);
-                          }}
-                          className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
-                        >
-                          <Icon name="restart_alt" className="text-[15px]" />
-                          Reset Progress
-                        </button>
                         {user.role === 'admin' && (
                           <Link
                             href="/admin"
@@ -285,16 +255,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
       </div>
-
-      <ResetProgressModal
-        isOpen={resetModalOpen}
-        onClose={() => setResetModalOpen(false)}
-        currentModule={currentModule}
-        serverError={resetError ?? null}
-        onConfirmReset={async (mode, moduleId) => {
-          await onResetProgress(mode, moduleId);
-        }}
-      />
     </header>
   );
 };
