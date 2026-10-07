@@ -9,6 +9,7 @@ import {
   editorSurface,
   idleLensState,
   isPrismaTask,
+  isSavedCodeCompatibleWithTask,
   solutionReveal,
   submitForTask,
   typeInspectorState,
@@ -104,10 +105,12 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
 
   // Phase 7: the editor's starter comes from the track (Prisma tasks edit
   // TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
-  const initialSqlForTask = taskSqlCache[currentTask.id] ?? editorStarterCode(currentTask);
+  const cachedInitial = taskSqlCache[currentTask.id];
+  const isInitialCompat = isSavedCodeCompatibleWithTask(currentTask, cachedInitial);
+  const initialSqlForTask = isInitialCompat && cachedInitial ? cachedInitial : editorStarterCode(currentTask);
   const [currentSql, setCurrentSql] = useState<string>(initialSqlForTask);
   const [executionResult, setExecutionResult] = useState<QueryExecutionResult | null>(null);
-  const [taskPassed, setTaskPassed] = useState<boolean>(() => completedTaskIds.includes(currentTask.id));
+  const [taskPassed, setTaskPassed] = useState<boolean>(() => completedTaskIds.includes(currentTask.id) && (isInitialCompat || !cachedInitial));
   const [validationFeedback, setValidationFeedback] = useState<string | null>(null);
   /**
    * Phase 7: Prisma SQL Lens for the current task (`null` on the SQL track —
@@ -155,11 +158,14 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   // Sync state when selected task changes (tracked by currentTask.id)
   useEffect(() => {
     const isDone = completedTaskIds.includes(currentTask.id);
+    const cached = taskSqlCache[currentTask.id];
+    const isCompat = isSavedCodeCompatibleWithTask(currentTask, cached);
     // Phase 7: when a completed task reloads, show the track's own reference —
     // TypeScript on the Prisma track, SQL otherwise — never raw `initialSql`.
     const existingSql =
-      taskSqlCache[currentTask.id] ??
-      (isDone ? solutionReveal(currentTask).code : editorStarterCode(currentTask));
+      isCompat && cached
+        ? cached
+        : (isDone ? solutionReveal(currentTask).code : editorStarterCode(currentTask));
     
     setCurrentSql(existingSql);
     setExecutionResult(null);
@@ -170,7 +176,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
     // opens on the schema (not on the previous task's leftover code tab).
     setEditorTab(defaultEditorTab(currentTask));
     setSchemaView('source');
-    setTaskPassed(isDone);
+    setTaskPassed(isDone && (isCompat || !cached));
     setValidationFeedback(null);
     setRevealedHintLevel(0);
     setFailedAttemptsCount(0);
@@ -236,6 +242,7 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const handleTextChange = (text: string) => {
     setCurrentSql(text);
     setTaskSqlCache((prev) => ({ ...prev, [currentTask.id]: text }));
+    if (taskPassed) setTaskPassed(false);
     if (validationFeedback) setValidationFeedback(null);
   };
 

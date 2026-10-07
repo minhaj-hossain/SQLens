@@ -14,6 +14,7 @@ import {
   editorSurface,
   idleLensState,
   isPrismaTask,
+  isSavedCodeCompatibleWithTask,
   previewPrismaTask,
   submitForTask,
   typeInspectorState,
@@ -90,12 +91,13 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   // the panel always reflects the last run's rows.
   const schemaTab = editorSchemaTab(task);
   const openTab = defaultEditorTab(task);
-  const initialCode = savedSql && savedSql.trim().length > 0 ? savedSql : starterCode;
+  const isCompatible = isSavedCodeCompatibleWithTask(task, savedSql);
+  const initialCode = isCompatible && savedSql && savedSql.trim().length > 0 ? savedSql : starterCode;
   const [currentSql, setCurrentSql] = useState(initialCode);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [viewedSolution, setViewedSolution] = useState(false);
   const [executionResult, setExecutionResult] = useState<QueryExecutionResult | null>(null);
-  const [taskPassed, setTaskPassed] = useState<boolean>(isCompleted);
+  const [taskPassed, setTaskPassed] = useState<boolean>(isCompatible ? isCompleted : false);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   /**
    * Phase 7: Prisma SQL Lens — the statements the learner's TypeScript
@@ -124,11 +126,12 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
 
   // Re-sync when switching tasks (tracked by task.id)
   useEffect(() => {
-    const codeToSet = savedSql && savedSql.trim().length > 0 ? savedSql : editorStarterCode(task);
+    const isCompat = isSavedCodeCompatibleWithTask(task, savedSql);
+    const codeToSet = isCompat && savedSql && savedSql.trim().length > 0 ? savedSql : editorStarterCode(task);
     setCurrentSql(codeToSet);
     setJudgmentAnswers((task.validation.judgment ?? []).map(() => null));
     setExecutionResult(null);
-    setTaskPassed(isCompleted);
+    setTaskPassed(isCompat ? isCompleted : false);
     // Phase 9: the schema tab and Type Inspector derive from the task; the tab
     // resets below once the task switch settles, the inspector re-derives at
     // render from the fresh (cleared) `executionResult`.
@@ -369,6 +372,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
               defaultTab={openTab}
               onChange={(newVal) => {
                 setCurrentSql(newVal);
+                if (taskPassed) {
+                  setTaskPassed(false);
+                }
                 if (evaluationState === 'wrong') {
                   setValidationMessage(null);
                 }

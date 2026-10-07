@@ -12,6 +12,7 @@ import { useTrackCurriculum } from '@/components/learn/use-track';
 import { Concept, ModuleData } from '@/types/curriculum';
 import { trackLearnUrl } from '@/lib/track-routes';
 import { PracticeTaskView } from '@/components/learning/PracticeTaskView';
+import { isSavedCodeCompatibleWithTask } from '@/lib/track-submit';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -82,11 +83,16 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
       concept={concept}
       conceptIndex={mod.concepts.findIndex((c) => c.id === concept.id)}
       totalConcepts={mod.concepts.length}
-      isCompleted={Boolean(
-        userState.taskAttempts?.[task.id]?.completed ||
-        userState.completedModules?.[mod.id]?.completedTasks?.includes(task.id)
-      )}
-      savedSql={userState.taskAttempts?.[task.id]?.lastSubmittedSql}
+      {...(() => {
+        const rawSaved = userState.taskAttempts?.[task.id]?.lastSubmittedSql;
+        const isCompatible = isSavedCodeCompatibleWithTask(task, rawSaved);
+        const taskAttemptCompleted = Boolean(userState.taskAttempts?.[task.id]?.completed);
+        const moduleTasksCompleted = Boolean(userState.completedModules?.[mod.id]?.completedTasks?.includes(task.id));
+        return {
+          isCompleted: isCompatible && (taskAttemptCompleted || moduleTasksCompleted),
+          savedSql: isCompatible ? rawSaved : undefined,
+        };
+      })()}
       onExecuteSql={executeQuery}
       getDatabaseState={getDatabaseState}
       getCommittedState={getCommittedState}

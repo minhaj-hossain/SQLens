@@ -329,14 +329,19 @@ export type PrismaEditorTab = 'editor' | 'schema';
  * Phase 9 — the `schema.prisma` tab a Prisma editor shows.
  *
  * `undefined` on the SQL track: no schema UI exists there, so the SQL editor
- * keeps its exact single-file layout. On the Prisma track the tab always exists
- * (a Prisma task without an authored schema still runs against the two-model
- * seed universe — and hiding that would make the generated SQL unexplainable).
+ * keeps its exact single-file layout. On the Prisma track, it is shown for
+ * query tasks (to inspect the schema) and tasks with explicit `schemaSource`.
+ * For vanilla schema/cli tasks where the learner directly edits schema.prisma
+ * without a secondary reference, `undefined` is returned to prevent duplicate tabs.
  */
 export function editorSchemaTab(
   task: PracticeTask,
 ): { label: string; source: string; caption: string } | undefined {
   if (!isPrismaTask(task)) return undefined;
+  if (taskWorkspaceMode(task) === 'cli') return undefined;
+  if (taskWorkspaceMode(task) === 'schema' && !task.prisma?.schemaSource) {
+    return undefined;
+  }
   const authored = task.prisma!.schemaSource?.trim();
   return {
     label: 'schema.prisma',
@@ -351,6 +356,73 @@ export function editorSchemaTab(
 export function defaultEditorTab(task: PracticeTask): PrismaEditorTab {
   if (!isPrismaTask(task)) return 'editor';
   return task.prisma!.activeTab === 'schema' ? 'schema' : 'editor';
+}
+
+/**
+ * Verifies whether a previously saved attempt/draft is structurally compatible
+ * with the current version and workspace mode of a task.
+ *
+ * Prevents hydrating stale code from older curriculum versions (e.g. legacy TypeScript
+ * client probe saved under the same task ID now assigned to a schema or CLI task),
+ * which would otherwise cause confusing false completions or mismatched editor content.
+ */
+export function isSavedCodeCompatibleWithTask(
+  task: PracticeTask,
+  savedCode?: string | null,
+): boolean {
+  if (!savedCode || savedCode.trim().length === 0) return false;
+
+  const code = savedCode.trim();
+
+  if (!isPrismaTask(task)) {
+    // SQL Track: Must not contain TypeScript / Prisma Client / PSL keywords
+    if (/\b(export\s+async\s+function|export\s+function|prisma\.|model\s+[A-Z]\w*\s*\{)/i.test(code)) {
+      return false;
+    }
+    return true;
+  }
+
+  const mode = taskWorkspaceMode(task);
+
+  if (mode === 'schema') {
+    // Schema Mode: Must be Prisma Schema Language (PSL).
+    // Must NOT contain TypeScript functions, prisma client probes, or SQL queries.
+    if (
+      /\b(export\s+async\s+function|export\s+function|prisma\.|return\s+await\b|SELECT\s+|INSERT\s+INTO\b)/i.test(
+        code,
+      )
+    ) {
+      return false;
+    }
+    // Must look like PSL (has model, enum, datasource, generator, type, or comment)
+    const isPslLike =
+      /\b(model\s+[A-Z]\w*|datasource\b|generator\b|enum\s+[A-Z]\w*|\/\/)/.test(code);
+    return isPslLike;
+  }
+
+  if (mode === 'cli') {
+    // CLI Mode: Shell terminal commands (e.g. npx prisma ...)
+    // Must NOT contain TypeScript functions, Schema model definitions, or SQL queries.
+    if (
+      /\b(export\s+async\s+function|export\s+function|model\s+[A-Z]\w*\s*\{|SELECT\s+|INSERT\s+INTO\b)/i.test(
+        code,
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  if (mode === 'query') {
+    // Query Mode: TypeScript Prisma Client probe.
+    // Must NOT be pure PSL schema blocks or SQL queries.
+    if (/^\s*model\s+[A-Z]\w*\s*\{/m.test(code)) {
+      return false;
+    }
+    return true;
+  }
+
+  return true;
 }
 
 /**

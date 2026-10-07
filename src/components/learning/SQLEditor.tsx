@@ -153,14 +153,14 @@ export const SQLEditor: React.FC<SQLEditorProps> = ({
           <span className="text-[11px] font-mono text-text font-semibold tracking-wide shrink-0">
             {showSchema ? schemaTab!.label : fileLabel}
           </span>
-          {schemaTab ? (
+          {schemaTab && fileLabel !== 'schema.prisma' ? (
             <PrismaEditorTabs active={tab} onChange={setTab} className="ml-1" />
-          ) : (
+          ) : language === 'sql' ? (
             <span className="hidden sm:inline-block text-[10px] text-text-faint px-2 py-0.5 rounded bg-surface border border-border shrink-0">
               Active: {tableName}
             </span>
-          )}
-          {erdSummary && (
+          ) : null}
+          {erdSummary && fileLabel !== 'schema.prisma' && (
             <button
               id="erd-relation-pill"
               type="button"
