@@ -26,7 +26,7 @@ export function gradeDay6Singleton(code: string, taskId: string): BehavioralGrad
   try {
     const prepared = cleanTypeScriptCode(code);
 
-    if (taskId === 'prisma06-hw-1') {
+    if (taskId === 'prisma06-hw-1' || taskId === 'prisma11-hw-1') {
       return gradeGatewayChallenge(prepared);
     }
 
@@ -34,7 +34,7 @@ export function gradeDay6Singleton(code: string, taskId: string): BehavioralGrad
       return gradeBasicSingleton(prepared);
     }
 
-    if (taskId === 'prisma06-c1-2' || taskId === 'prisma06-c1-t2') {
+    if (taskId === 'prisma06-c1-2' || taskId === 'prisma06-c1-t2' || taskId === 'prisma11-c3-t1') {
       return gradeDevGuardedSingleton(prepared);
     }
 

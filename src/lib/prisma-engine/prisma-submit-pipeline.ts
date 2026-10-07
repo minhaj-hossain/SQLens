@@ -460,9 +460,8 @@ function emit(
 export function resolveBehavioralGrader(taskId: string, explicit?: string): string | undefined {
   if (explicit === 'none') return undefined;
   if (explicit) return explicit;
-  if (/^prisma09-(?:c2-t1|c2-t2|c2-t3|hw-1)$/.test(taskId)) return 'day9-zod';
-  if (/^prisma12-(?:c2-t1|c2-t2|c2-t3|hw-1)$/.test(taskId)) return 'day12-transaction';
-  if (/^prisma13-(?:c1-t1|c1-t2|c1-t3|c2-t1|c2-t2|hw-1|hw-2)$/.test(taskId)) return 'day13-errors';
+  if (/^prisma11-(?:c3-t1|hw-1)$/.test(taskId)) return 'day6-singleton';
+  if (/^prisma13-(?:c1-t1|c2-t1|c2-t2|c2-t3|hw-1)$/.test(taskId)) return 'day12-transaction';
   if (/^prisma04-hw-2$/.test(taskId)) return 'checkpoint1-schema';
   return undefined;
 }

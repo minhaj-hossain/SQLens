@@ -23,16 +23,16 @@ export function gradeDay12Transaction(code: string, taskId: string): BehavioralG
   try {
     const prepared = cleanTypeScriptCode(code);
 
-    if (taskId === 'prisma12-c2-t1') {
+    if (taskId === 'prisma12-c2-t1' || taskId === 'prisma13-c1-t1') {
       return gradeArrayTransaction(prepared);
     }
-    if (taskId === 'prisma12-c2-t2') {
+    if (taskId === 'prisma12-c2-t2' || taskId === 'prisma13-c2-t1' || taskId === 'prisma13-c2-t2') {
       return gradeInteractivePromote(prepared);
     }
-    if (taskId === 'prisma12-c2-t3') {
+    if (taskId === 'prisma12-c2-t3' || taskId === 'prisma13-c2-t3') {
       return gradeRollbackBehavior(prepared);
     }
-    if (taskId === 'prisma12-hw-1') {
+    if (taskId === 'prisma12-hw-1' || taskId === 'prisma13-hw-1') {
       return gradeInteractiveCheckout(prepared);
     }
 

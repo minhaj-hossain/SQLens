@@ -66,8 +66,8 @@ describe('Phase 14 — SQL Lens Hierarchy & Transaction Semantics', () => {
   });
 
   it('attaches batch transaction metadata (rowEffect sum) on $transaction([...])', () => {
-    // Day 12 Concept 2 Task 1: batch transaction
-    const task = findTask('prisma12-c2-t1');
+    // Day 13 Concept 1 Task 1: batch transaction
+    const task = findTask('prisma13-c1-t1');
     const exec = new SqlExecutor();
     const outcome = submitForTask({
       task,
@@ -85,8 +85,8 @@ describe('Phase 14 — SQL Lens Hierarchy & Transaction Semantics', () => {
   });
 
   it('attaches interactive transaction metadata (rowEffect last) on $transaction(async tx => ...)', () => {
-    // Day 12 Concept 2 Task 2: interactive transaction callback
-    const task = findTask('prisma12-c2-t2');
+    // Day 13 Concept 2 Task 1: interactive transaction callback
+    const task = findTask('prisma13-c2-t1');
     const exec = new SqlExecutor();
     const outcome = submitForTask({
       task,

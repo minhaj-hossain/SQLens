@@ -18,12 +18,12 @@ import { Prisma_05_MODULE } from './modules/prisma-05-schema-constraints';
 import { Prisma_06_MODULE } from './modules/prisma-06-relations-1-n-1-1';
 import { Prisma_07_MODULE } from './modules/prisma-07-referential-actions';
 import { Prisma_08_MODULE } from './modules/prisma-08-many-to-many';
-import { Prisma_09_MODULE } from './modules/prisma-09-create-zod';
-import { Prisma_10_MODULE } from './modules/prisma-10-update-upsert';
-import { Prisma_11_MODULE } from './modules/prisma-11-delete-cascades';
-import { Prisma_12_MODULE } from './modules/prisma-12-nested-transactions';
-import { Prisma_13_MODULE } from './modules/prisma-13-errors-middleware';
-import { Prisma_14_MODULE } from './modules/prisma-14-api-capstone';
+import { Prisma_09_MODULE } from './modules/prisma-09-create-writes';
+import { Prisma_10_MODULE } from './modules/prisma-10-updating-deleting';
+import { Prisma_11_MODULE } from './modules/prisma-11-workflow-init-generate';
+import { Prisma_12_MODULE } from './modules/prisma-12-migrations-seeding';
+import { Prisma_13_MODULE } from './modules/prisma-13-transactions-batching';
+import { Prisma_14_MODULE } from './modules/prisma-14-production-capstone';
 
 const RAW_PRISMA_MODULES: ModuleData[] = [
   Prisma_01_MODULE,

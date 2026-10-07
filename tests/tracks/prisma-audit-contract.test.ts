@@ -172,7 +172,7 @@ describe('Phase 8 — bulk router contract over every Prisma task', () => {
   });
 
   it('every executable pass carries a real statement (label + SQL + result)', () => {
-    const task = taskById('prisma12-hw-1');
+    const task = taskById('prisma13-hw-1');
     const outcome = submitForTask({
       task,
       code: task.prisma!.solutionCode,

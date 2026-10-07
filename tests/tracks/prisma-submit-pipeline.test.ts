@@ -191,7 +191,7 @@ describe('Phase 5 — Prisma submit pipeline', () => {
     // Array form: $transaction([a, b]) resolves to the LIST of operations, so
     // the batch grades the SUM of both updates' row effects (2), never the
     // last statement's 1.
-    const arrayTask = taskById('prisma12-c2-t1');
+    const arrayTask = taskById('prisma13-c1-t1');
     const array = submit(arrayTask, arrayTask.prisma!.solutionCode);
     expect(array.out.passed).toBe(true);
     expect(array.out.generatedSql).toHaveLength(2);
@@ -201,7 +201,7 @@ describe('Phase 5 — Prisma submit pipeline', () => {
     // callback's return value, so the LAST statement's own count is graded —
     // and the demo binding keeps the SQL Lens runnable (buyerEmail resolves
     // through the seeded email, not an honest-but-useless NULL).
-    const hw = taskById('prisma12-hw-1');
+    const hw = taskById('prisma13-hw-1');
     const interactive = submit(hw, hw.prisma!.solutionCode);
     expect(interactive.out.passed).toBe(true);
     expect(interactive.out.generatedSql).toHaveLength(2);
@@ -438,9 +438,9 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
     expect(canonicalizeCli('pnpm dlx prisma migrate dev --name "init"')).toBe('npx prisma migrate dev --name init');
     expect(canonicalizeCli('bunx prisma migrate\n  dev --name=init')).toBe('npx prisma migrate dev --name init');
     // A NON-CLI fragment is literal about WHITESPACE (a split token never matches)…
-    const zod = taskById('prisma09-c2-t1');
-    const spacedZod = zod.prisma!.solutionCode.replace('z.object(', 'z . object(');
-    expect(spacedZod).not.toBe(zod.prisma!.solutionCode);
-    expect(validatePrismaCode(spacedZod, zod.prisma!.validation).passed).toBe(false);
+    const task = taskById('prisma13-c3-t1');
+    const spaced = task.prisma!.solutionCode.replace('maxWait: 5000', 'maxWait : 5000');
+    expect(spaced).not.toBe(task.prisma!.solutionCode);
+    expect(validatePrismaCode(spaced, task.prisma!.validation).passed).toBe(false);
   });
 });

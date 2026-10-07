@@ -263,9 +263,9 @@ describe('Phase 7 — submitForTask routing', () => {
 
 describe('Phase 7 — previewPrismaTask (ungraded Run)', () => {
   it('a failing starter still shows its SQL: preview executes, never grades', () => {
-    // The prisma14 starter uses `findUnique` without throw:
-    // static-fail against findUniqueOrThrow, but the generated SELECT is real and runnable.
-    const task = prismaTaskById('prisma14-c1-t1');
+    // The prisma10 starter uses `findUnique` instead of `update`:
+    // static-fail against update, but the generated SELECT is real and runnable.
+    const task = prismaTaskById('prisma10-c1-t1');
     const ex = new SqlExecutor();
     const preview = previewPrismaTask(task, task.prisma!.initialCode, fullHooks(ex));
     expect(preview.lens.steps.length).toBeGreaterThan(0);
@@ -287,7 +287,7 @@ describe('Phase 7 — previewPrismaTask (ungraded Run)', () => {
     const ex = new SqlExecutor();
     const before = ex.executeQuery('SELECT email FROM users ORDER BY id;');
     expect(before.success).toBe(false);
-    const task = prismaTaskById('prisma12-hw-1');
+    const task = prismaTaskById('prisma13-hw-1');
     previewPrismaTask(task, task.prisma!.solutionCode, fullHooks(ex));
     const after = ex.executeQuery('SELECT email FROM users ORDER BY id;');
     expect(after.success).toBe(true);

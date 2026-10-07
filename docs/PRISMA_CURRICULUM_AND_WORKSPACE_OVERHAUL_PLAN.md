@@ -159,26 +159,26 @@ flowchart TD
 ### Milestone 5: Phase 5, Phase 6, & Phase 7 Modules
 *Goal: Master mutations, layered CLI workflows, and pure Prisma production patterns.*
 
-- [ ] **Task 5.1: Day 9: Creating & Writing Data**
+- [x] **Task 5.1: Day 9: Creating & Writing Data**
   - Concept 1: Single record creation (`prisma.user.create({ data: ... })`).
   - Concept 2: Batch creation (`prisma.user.createMany({ data: [...] })`).
   - Concept 3: Nested writes (creating User + Post in one call).
-- [ ] **Task 5.2: Day 10: Updating, Upserting & Deleting**
+- [x] **Task 5.2: Day 10: Updating, Upserting & Deleting**
   - Concept 1: Single updates (`prisma.user.update({ where, data })`).
   - Concept 2: Batch updates (`prisma.user.updateMany({ where, data })`).
   - Concept 3: Atomic upserts (`prisma.user.upsert({ where, update, create })`).
   - Concept 4: Record deletion (`delete` and `deleteMany`).
-- [ ] **Task 5.3: Day 11: Workflow Fundamentals (Init & Generate)**
+- [x] **Task 5.3: Day 11: Workflow Fundamentals (Init & Generate)**
   - Concept 1: Project setup (`prisma init`, `datasource`, `generator`).
   - Concept 2: Code generation (`npx prisma generate`) and updating `@prisma/client`.
-- [ ] **Task 5.4: Day 12: Database Evolution & Seeding**
+- [x] **Task 5.4: Day 12: Database Evolution & Seeding**
   - Concept 1: Migration creation with `npx prisma migrate dev`.
   - Concept 2: Migration history and drift inspection.
   - Concept 3: Writing programmatic seed scripts (`prisma/seed.ts`).
-- [ ] **Task 5.5: Day 13: Transactions & Batching**
+- [x] **Task 5.5: Day 13: Transactions & Batching**
   - Concept 1: Sequential batch transactions (`prisma.$transaction([...])`).
   - Concept 2: Interactive transactions (`prisma.$transaction(async (tx) => { ... })`).
-- [ ] **Task 5.6: Day 14: Production Prisma & Capstone**
+- [x] **Task 5.6: Day 14: Production Prisma & Capstone**
   - Concept 1: Prisma error codes (`P2002` duplicate key, `P2025` not found) and error handling.
   - Concept 2: Client extensions (`$extends`) for computed fields.
   - Concept 3: Final Fluency Capstone (multi-model schema + complex query + atomic transaction).
@@ -188,11 +188,11 @@ flowchart TD
 ### Milestone 6: Quality Verification & Test Suite
 *Goal: Verify every lab across all 14 modules passes static AST, DDL, and execution tests.*
 
-- [ ] **Task 6.1: Unit & Grader Tests**
+- [x] **Task 6.1: Unit & Grader Tests**
   - Verify all schema validators grade with AST accuracy.
   - Verify all query validators score both data shape and generated SQL.
-- [ ] **Task 6.2: Automated Solution Smoke Test**
+- [x] **Task 6.2: Automated Solution Smoke Test**
   - Run the test suite: verify `solutionCode` in every task passes 100% of validation rules.
-- [ ] **Task 6.3: UI & Visual Regression Check**
+- [x] **Task 6.3: UI & Visual Regression Check**
   - Confirm Schema Mode renders zero query/type inspector clutter.
   - Confirm Query Mode shows clean result tables with secondary inspection tabs.

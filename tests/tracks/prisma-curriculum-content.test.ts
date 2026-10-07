@@ -235,7 +235,7 @@ describe('Phase 3 & Phase 4 — Schema Design & Relations concepts', () => {
     expect(conceptById('prisma-08', 'implicit-many-to-many')).toBeDefined();
     expect(conceptById('prisma-08', 'explicit-join-models')).toBeDefined();
     // Production concepts in later milestones
-    expect(conceptById('prisma-13', 'client-extensions')).toBeDefined();
+    expect(conceptById('prisma-14', 'client-extensions')).toBeDefined();
     expect(conceptById('prisma-14', 'raw-sql-escape-hatch')).toBeDefined();
   });
 
@@ -245,7 +245,7 @@ describe('Phase 3 & Phase 4 — Schema Design & Relations concepts', () => {
       ['prisma-06', 'foreign-key-bridge'],
       ['prisma-07', 'cascade-restrict-setnull'],
       ['prisma-08', 'explicit-join-models'],
-      ['prisma-13', 'client-extensions'],
+      ['prisma-14', 'client-extensions'],
       ['prisma-14', 'raw-sql-escape-hatch'],
     ];
     const failures: string[] = [];
@@ -273,8 +273,8 @@ describe('Phase 3 & Phase 4 — Schema Design & Relations concepts', () => {
   });
 
   it('$extends concept bans the deprecated $use in its lab', () => {
-    const c = conceptById('prisma-13', 'client-extensions')!;
-    const lab = c.tasks.find((t) => t.id === 'prisma13-c3-t1')!;
+    const c = conceptById('prisma-14', 'client-extensions')!;
+    const lab = c.tasks.find((t) => t.id === 'prisma14-c2-t1')!;
     expect(lab.prisma!.validation.requiredCodeSnippets).toContain('$extends');
     expect(lab.prisma!.validation.forbiddenCodeSnippets).toContain('$use');
     expect(lab.prisma!.solutionCode).toContain('$extends');
