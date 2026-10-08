@@ -127,7 +127,7 @@ Every day of the course follows the same loop:
 - String & date functions: CONCAT, UPPER/LOWER, TRIM, SUBSTRING, LENGTH, YEAR/MONTH/DAY, EXTRACT, DATEDIFF, date arithmetic
 - DML: INSERT / UPDATE / DELETE (+ foreign-key awareness, multi-row INSERT)
 - DDL: CREATE TABLE / ALTER TABLE ADD COLUMN / DROP TABLE IF EXISTS, plus UNIQUE·CHECK·DEFAULT·NOT NULL·AUTO_INCREMENT
-- EXPLAIN output rendered as a plan table (defined simulation model — see `docs/DIALECT.md`)
+- EXPLAIN output rendered as a plan table (defined simulation model — see `docs/sql/DIALECT.md`)
 
 </details>
 

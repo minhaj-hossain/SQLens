@@ -26,7 +26,7 @@
  *
  * Run: npx tsx scripts/audit-grading-pipeline.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
 import { runAndGradeSubmission, isStateGraded, SubmitHooks } from '../src/lib/sql-engine/submit-pipeline';
 import { ModuleData, PracticeTask } from '../src/types/curriculum';

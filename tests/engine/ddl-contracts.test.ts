@@ -5,7 +5,7 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { runAndGradeSubmission, SubmitHooks } from '../../src/lib/sql-engine/submit-pipeline';
 import { QueryExecutionResult } from '../../src/types/database';
 import { ValidationRule } from '../../src/types/curriculum';
-import { Day_27_MODULE } from '../../src/content/modules/day-27-ddl-creating-tables';
+import { Day_27_MODULE } from '../../src/content/sql/modules/day-27-ddl-creating-tables';
 
 /**
  * DDL column contract (Workstream A — DDL audit follow-up):

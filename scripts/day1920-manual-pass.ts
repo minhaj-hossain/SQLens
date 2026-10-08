@@ -12,7 +12,7 @@
  * Run: npx tsx scripts/day1920-manual-pass.ts
  */
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
-import { getModuleById } from '../src/content/curriculum-index';
+import { getModuleById } from '../src/content/sql/curriculum-index';
 
 // DML now lives at Day 25 and DDL I (creating tables) at Day 27 after the
 // 2026 id consolidation; the pre-rename day-19/day-20 ids no longer exist.

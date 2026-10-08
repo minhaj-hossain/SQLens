@@ -11,7 +11,7 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import { highlightSql } from '@/lib/highlight-sql';
 import { EDITOR_TEXT_STYLE } from '@/lib/editor-text-style';
 import {

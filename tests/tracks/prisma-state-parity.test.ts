@@ -3,7 +3,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * The SQL track grades mutations by FINAL DATABASE STATE: an UPDATE that hits
  * the wrong row reports the same `affectedRows` as the right one, so only a
- * state comparison can tell them apart (`docs/GRADING_POLICY.md` Rule 2). The
+ * state comparison can tell them apart (`docs/sql/GRADING_POLICY.md` Rule 2). The
  * Prisma pipeline was missing that layer — `where: { id: 2 }` and
  * `data: { name: 'HACKED' }` both scored as passes (empirically proven before
  * this task landed). These tests pin the parity layer:

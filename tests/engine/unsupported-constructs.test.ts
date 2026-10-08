@@ -13,7 +13,7 @@ import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
 import { ValidationRule } from '../../src/types/curriculum';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { splitStatements } from '../../src/lib/sql-engine/split-statements';
 
 const run = (sql: string) => new SqlExecutor().executeQuery(sql);

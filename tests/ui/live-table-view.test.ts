@@ -5,7 +5,7 @@ import {
   resolveRowCount,
 } from '../../src/lib/sql-engine/live-table-view';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
-import { INITIAL_TABLES } from '../../src/content/database/tables';
+import { INITIAL_TABLES } from '../../src/content/sql/database/tables';
 
 /**
  * Phase 2 (live database explorer) regression tests.

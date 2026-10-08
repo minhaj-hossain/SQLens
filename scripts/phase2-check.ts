@@ -3,7 +3,7 @@
  * index→slug resolution (replicating resolveConceptId in the provider) works
  * for every module and every index, including out-of-bounds values.
  */
-import { ALL_MODULES, getModuleById } from '../src/content/curriculum-index';
+import { ALL_MODULES, getModuleById } from '../src/content/sql/curriculum-index';
 
 function resolveConceptId(
   moduleId: string | null | undefined,

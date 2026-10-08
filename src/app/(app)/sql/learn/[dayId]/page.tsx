@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect, notFound } from 'next/navigation';
-import { ALL_MODULES } from '@/content/curriculum-index';
+import { ALL_MODULES } from '@/content/sql/curriculum-index';
 import { learnPageMetadata } from '@/lib/learn-metadata';
 import { getTrackModuleById } from '@/tracks/registry';
 import { trackLearnUrl } from '@/lib/track-routes';

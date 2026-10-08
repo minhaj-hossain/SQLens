@@ -19,7 +19,7 @@
  *
  * Run: npx tsx scripts/audit-equivalence.ts  (wired as npm run audit:equivalence:tasks)
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
 import { validateTaskSolution, isReadOnlySelect } from '../src/lib/sql-engine/validator';
 import { serializeCellValue } from '../src/lib/sql-engine/state-verification';

@@ -3,11 +3,11 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
 import { QueryExecutionResult } from '../../src/types/database';
 import { ValidationRule } from '../../src/types/curriculum';
-import { Day_29_MODULE } from '../../src/content/modules/day-29-ddl-schema-evolution';
+import { Day_29_MODULE } from '../../src/content/sql/modules/day-29-ddl-schema-evolution';
 
 /**
  * Workstream D — DDL is honest end to end:
- *  - unsupported forms fail with NAMED errors quoting docs/DIALECT.md §5
+ *  - unsupported forms fail with NAMED errors quoting docs/sql/DIALECT.md §5
  *    (the old fall-through reported success while executing nothing);
  *  - privilege/principal statements keep succeeding as LABELED simulations
  *    (Day-55 content executes them — §8);

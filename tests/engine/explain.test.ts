@@ -7,7 +7,7 @@ function planRow(ex: SqlExecutor, sql: string) {
   return r.rows[0] as any;
 }
 
-describe('EXPLAIN simulation (docs/DIALECT.md §6)', () => {
+describe('EXPLAIN simulation (docs/sql/DIALECT.md §6)', () => {
   it('no WHERE clause → full table scan (ALL)', () => {
     const ex = new SqlExecutor();
     const row = planRow(ex, 'EXPLAIN SELECT * FROM products;');

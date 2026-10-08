@@ -1,5 +1,5 @@
 import { DatabaseState, TableRow } from '../../types/database';
-import { INITIAL_TABLES } from '../../content/database/tables';
+import { INITIAL_TABLES } from '../../content/sql/database/tables';
 
 /**
  * Phase 2 (live database explorer): which rows should a learner SEE right now?

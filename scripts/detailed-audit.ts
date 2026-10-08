@@ -1,5 +1,5 @@
-import { ALL_MODULES } from '../src/content/curriculum-index';
-import { DATABASE_SCHEMAS } from '../src/content/database/schema';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
+import { DATABASE_SCHEMAS } from '../src/content/sql/database/schema';
 
 console.log('=== DETAILED AUDIT FOR DAYS 20 TO 38 ===\n');
 

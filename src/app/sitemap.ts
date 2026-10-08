@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { ALL_MODULES } from '../content/curriculum-index';
+import { ALL_MODULES } from '../content/sql/curriculum-index';
 import { PRISMA_MODULES } from '../content/prisma/prisma-curriculum-index';
 import { TRACK_META } from '../types/track';
 

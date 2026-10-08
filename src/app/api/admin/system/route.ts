@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/authorize';
 import { db } from '@/lib/auth';
-import { ALL_MODULES } from '@/content/curriculum-index';
+import { ALL_MODULES } from '@/content/sql/curriculum-index';
 import { ROADMAP_MILESTONES } from '@/config/roadmap';
 
 export const dynamic = 'force-dynamic';

@@ -6,7 +6,7 @@ import {
 } from '../../src/lib/autocomplete';
 import { historyBoostFromList } from '../../src/lib/suggestion-history';
 import { preserveCase } from '../../src/lib/completion-replace';
-import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
+import { DATABASE_SCHEMAS } from '../../src/content/sql/database/schema';
 import { TableSchema } from '../../src/types/database';
 
 const schemas = DATABASE_SCHEMAS as unknown as Record<string, TableSchema>;

@@ -1,5 +1,5 @@
 import type { ModuleData, PracticeTask } from '../../types/curriculum';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import { normLiteral, renderedTaskText } from './taught-before-tested';
 
 /**

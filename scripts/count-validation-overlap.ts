@@ -7,7 +7,7 @@
  * drift (zero exact-result tasks would mean the audit's premise is stale).
  * Run: npx tsx scripts/count-validation-overlap.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 
 const tasks: any[] = [];
 for (const m of ALL_MODULES as any[]) {

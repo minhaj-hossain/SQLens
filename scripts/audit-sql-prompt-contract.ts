@@ -19,7 +19,7 @@
  *
  * Run: npx tsx scripts/audit-sql-prompt-contract.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { PracticeTask } from '../src/types/curriculum';
 
 interface Finding {

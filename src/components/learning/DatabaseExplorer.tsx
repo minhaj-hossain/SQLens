@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Table, Database, Key, Search, ChevronDown, Check, Info, Network, ArrowRight } from 'lucide-react';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import { DatabaseState } from '../../types/database';
 import { readLiveDatabase, readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
 import { DataGrid } from './DataGrid';

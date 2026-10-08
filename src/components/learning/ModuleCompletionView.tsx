@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { ModuleData } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
-import { ALL_MODULES } from '../../content/curriculum-index';
+import { ALL_MODULES } from '../../content/sql/curriculum-index';
 import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
 import {

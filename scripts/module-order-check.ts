@@ -13,7 +13,7 @@
  *
  * Run: npm run test:module-order
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { ModuleData } from '../src/types/curriculum';
 import {
   getModuleOrder,

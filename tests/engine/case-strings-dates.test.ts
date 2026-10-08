@@ -5,7 +5,7 @@
  * or task authored in Days 10–12 of the curriculum. These tests are the gate:
  * content may only reference features that pass here.
  *
- * Dialect contract: docs/DIALECT.md §2.
+ * Dialect contract: docs/sql/DIALECT.md §2.
  */
 import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';

@@ -19,7 +19,7 @@
  */
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 
 interface Scope {
   module: string;

@@ -17,7 +17,7 @@
  *
  * Only DIALECT-blessed, engine-executable vocabulary belongs here:
  * CASCADE / RESTRICT / GRANT / REVOKE are deliberately absent (unsupported —
- * Workstream D decides their fate; see docs/DIALECT.md §5).
+ * Workstream D decides their fate; see docs/sql/DIALECT.md §5).
  */
 
 /** Data types — curated in Day-27 teaching order (the six taught first). */

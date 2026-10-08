@@ -13,8 +13,8 @@ import {
 } from '@/lib/prisma-playground';
 import { buildErdDiagramFromSource } from '@/lib/prisma-engine/prisma-erd';
 import { QueryExecutionResult } from '@/types/database';
-import { DATABASE_SCHEMAS } from '@/content/database/schema';
-import { INITIAL_TABLES } from '@/content/database/tables';
+import { DATABASE_SCHEMAS } from '@/content/sql/database/schema';
+import { INITIAL_TABLES } from '@/content/sql/database/tables';
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from './DataGrid';
 import { MonacoCodeEditor, MonacoCodeEditorHandle } from './MonacoCodeEditor';

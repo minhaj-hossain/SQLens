@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import sitemap from '../../src/app/sitemap';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
 import { initialStateForTrack } from '../../src/lib/progress/track-storage';
 import type { UserLearningState } from '../../src/types/progress';

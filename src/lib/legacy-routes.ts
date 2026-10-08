@@ -10,7 +10,7 @@
  * the destination page renders the locked-state UI when the day is locked,
  * mirroring the pre-migration behaviour of refusing locked deep links.
  */
-import { getModuleById } from '@/content/curriculum-index';
+import { getModuleById } from '@/content/sql/curriculum-index';
 
 export type LegacySearchParams = Record<string, string | string[] | undefined>;
 

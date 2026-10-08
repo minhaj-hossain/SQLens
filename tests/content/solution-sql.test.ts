@@ -5,7 +5,7 @@
  * fails "Run & Check", the learner can never complete it legitimately.
  */
 import { describe, it, expect } from 'vitest';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution, isReadOnlySelect } from '../../src/lib/sql-engine/validator';
 import type { JudgmentExercise } from '../../src/types/curriculum';

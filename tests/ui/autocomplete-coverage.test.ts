@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildSuggestions } from '../../src/lib/autocomplete';
-import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
+import { DATABASE_SCHEMAS } from '../../src/content/sql/database/schema';
 
 /**
  * Regression coverage for the autocomplete-coverage bug (tracker item 12):

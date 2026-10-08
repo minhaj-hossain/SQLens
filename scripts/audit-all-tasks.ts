@@ -7,11 +7,11 @@
  *
  * Run: npx tsx scripts/audit-all-tasks.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
 import { validateTaskSolution, isReadOnlySelect } from '../src/lib/sql-engine/validator';
 import { ModuleData, PracticeTask } from '../src/types/curriculum';
-import { INITIAL_TABLES } from '../src/content/database/tables';
+import { INITIAL_TABLES } from '../src/content/sql/database/tables';
 
 interface AuditIssue {
   day: number;

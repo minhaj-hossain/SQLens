@@ -6,7 +6,7 @@ export default async function LearnPage({ params }: { params: Promise<{ track: s
   try {
     const resolvedParams = await params;
     
-    // Parse the markdown file from docs/ai_curriculum/[track]-[module].md
+    // Parse the markdown file from docs/global/ai_curriculum/[track]-[module].md
     const steps = parseAiModule(resolvedParams.track, resolvedParams.module);
     
     return (

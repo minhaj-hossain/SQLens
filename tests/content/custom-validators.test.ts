@@ -218,14 +218,14 @@ describe('custom-validators — ladder', () => {
 
 describe('custom-validators — shipped curriculum', () => {
   it('every authored predicate is reachable, refutable, explainable and discoverable', async () => {
-    const { ALL_MODULES } = await import('../../src/content/curriculum-index');
+    const { ALL_MODULES } = await import('../../src/content/sql/curriculum-index');
     const { checked, findings } = auditCustomValidators(ALL_MODULES);
     expect(checked).toBeGreaterThan(0);
     expect(findings).toEqual([]);
   });
 
   it('found and kept fixed the Day-1 predicate that spoke under a dead key', async () => {
-    const { ALL_MODULES } = await import('../../src/content/curriculum-index');
+    const { ALL_MODULES } = await import('../../src/content/sql/curriculum-index');
     const site = collectCustomValidatorSites(ALL_MODULES).find((s) => s.taskId === 'day01-c4-t4');
     expect(site).toBeDefined();
     // Batch 5's real content fix: `feedback:` -> `message:`, so rule 14 surfaces it.

@@ -12,7 +12,7 @@ import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { runAndGradeSubmission } from '../../src/lib/sql-engine/submit-pipeline';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
 import { Prisma_05_MODULE as Prisma_05_Migrations_MODULE } from '../../src/content/prisma/modules/prisma-05-migrations-seeding';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { deriveEvaluationState } from '../../src/lib/evaluation-state';
 import {
   editorStarterCode,

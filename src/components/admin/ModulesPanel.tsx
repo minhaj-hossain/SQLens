@@ -8,7 +8,7 @@ import {
   adminSetModule,
   AdminApiError,
 } from '../../lib/admin-api';
-import { ALL_MODULES } from '../../content/curriculum-index';
+import { ALL_MODULES } from '../../content/sql/curriculum-index';
 
 const MODE_META: Record<
   ModuleAvailability['unlockMode'],

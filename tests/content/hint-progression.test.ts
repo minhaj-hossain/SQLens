@@ -12,7 +12,7 @@
  * while legitimately related phrasing passes.
  */
 import { describe, it, expect } from 'vitest';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 
 const STOPWORDS = new Set([
   'a', 'an', 'the', 'of', 'to', 'in', 'on', 'for', 'and', 'or', 'is', 'are',

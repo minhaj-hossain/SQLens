@@ -5,7 +5,7 @@
  * completable by just pressing "Run & Check" with zero typing.
  */
 import { describe, it, expect } from 'vitest';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
 

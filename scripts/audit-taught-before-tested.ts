@@ -13,7 +13,7 @@
  *
  * Run: npx tsx scripts/audit-taught-before-tested.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { auditTaughtBeforeTested } from '../src/lib/curriculum/taught-before-tested';
 
 console.log('\n=== Taught-before-tested audit (Batch 2) ===');

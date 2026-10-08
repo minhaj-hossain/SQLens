@@ -3,8 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { SqlExecutor } from '@/lib/sql-engine/executor';
-import { INITIAL_TABLES } from '@/content/database/tables';
-import { DATABASE_SCHEMAS } from '@/content/database/schema';
+import { INITIAL_TABLES } from '@/content/sql/database/tables';
+import { DATABASE_SCHEMAS } from '@/content/sql/database/schema';
 import { QueryExecutionResult } from '@/types/database';
 import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from '../learning/DataGrid';

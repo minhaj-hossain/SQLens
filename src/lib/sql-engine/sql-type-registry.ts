@@ -2,7 +2,7 @@
  * SQL type registry — the single source of truth for which column data types
  * SQLens accepts and what internal kind each maps to (Workstream B, DDL audit).
  *
- * Contract (docs/DIALECT.md §5, "fails loudly by design"): a type token in
+ * Contract (docs/sql/DIALECT.md §5, "fails loudly by design"): a type token in
  * `CREATE TABLE (...)` / `ALTER ... ADD COLUMN` either resolves here or the
  * statement fails with a NAMED error — typo'd tokens get a "did you mean"
  * suggestion, and a column with no type is an error. The engine never silently

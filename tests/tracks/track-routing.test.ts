@@ -25,7 +25,7 @@ import {
   getTrackModuleById,
   getTrackModules,
 } from '../../src/tracks/registry';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { getPreviousStep, learnUrl, roadmapUrl } from '../../src/lib/learn-routes';
 
 describe('Phase 2 — namespaced track routing', () => {

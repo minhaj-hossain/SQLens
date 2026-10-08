@@ -18,7 +18,7 @@ import {
 import { buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { JudgmentBlock } from './JudgmentBlock';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import { readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
 import {
   Play,

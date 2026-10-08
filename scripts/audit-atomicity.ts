@@ -1,4 +1,4 @@
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 
 // Lightweight atomicity lint: flags modules whose concept titles look like
 // several unrelated Tier-1 constructs bundled into one day. Human-review

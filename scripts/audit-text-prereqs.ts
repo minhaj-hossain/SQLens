@@ -1,4 +1,4 @@
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 
 console.log('=== Checking for forward day references in module text ===\n');
 

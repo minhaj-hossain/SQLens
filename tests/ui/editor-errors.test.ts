@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { errorGutterLine, parseEditorError, findClosestMatch, levenshtein } from '../../src/lib/editor-errors';
-import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
+import { DATABASE_SCHEMAS } from '../../src/content/sql/database/schema';
 
 describe('editor error parsing & did-you-mean', () => {
   it('computes levenshtein distance correctly', () => {
@@ -95,7 +95,7 @@ describe('editor error parsing & did-you-mean', () => {
   it('parses Unknown data type and suggests the closest canonical type', () => {
     const sql = 'CREATE TABLE t (id VARCHR(20));';
     const parsed = parseEditorError(
-      "Unknown data type 'VARCHR(20)' for column 'id' — did you mean 'VARCHAR'? (supported: INT, VARCHAR, … see docs/DIALECT.md §5).",
+      "Unknown data type 'VARCHR(20)' for column 'id' — did you mean 'VARCHAR'? (supported: INT, VARCHAR, … see docs/sql/DIALECT.md §5).",
       sql,
       DATABASE_SCHEMAS,
     );

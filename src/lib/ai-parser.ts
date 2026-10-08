@@ -12,7 +12,7 @@ export type LessonStep =
     };
 
 export function parseAiModule(trackSlug: string, moduleSlug: string): LessonStep[] {
-  const filePath = path.join(process.cwd(), 'docs', 'ai_curriculum', `${trackSlug}-${moduleSlug}.md`);
+  const filePath = path.join(process.cwd(), 'docs', 'global', 'ai_curriculum', `${trackSlug}-${moduleSlug}.md`);
   
   if (!fs.existsSync(filePath)) {
     throw new Error(`Curriculum file not found: ${filePath}`);

@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { adminGetAnalytics, AdminAnalyticsData } from '@/lib/admin-api';
 // Task 0.2 — this panel renders SQL-track analytics (src/lib/admin/analytics.ts
 // aggregates ALL_MODULES only), so counts derive from the same source.
-import { ALL_MODULES } from '@/content/curriculum-index';
+import { ALL_MODULES } from '@/content/sql/curriculum-index';
 
 export default function AdminAnalyticsPanel() {
   const [data, setData] = useState<AdminAnalyticsData | null>(null);

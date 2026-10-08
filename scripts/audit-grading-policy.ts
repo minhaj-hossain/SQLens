@@ -1,7 +1,7 @@
 /**
  * scripts/audit-grading-policy.ts
  * -----------------------------------------------------------------------------
- * Phase 4 enforcer for `docs/GRADING_POLICY.md`. Static census over every
+ * Phase 4 enforcer for `docs/sql/GRADING_POLICY.md`. Static census over every
  * curriculum task — no execution, no DB, milliseconds to run. Fails CI (exit 1)
  * when a task violates the policy, so the contract holds without hand-review.
  *
@@ -21,7 +21,7 @@
  *
  * Run: npx tsx scripts/audit-grading-policy.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { isReadOnlySelect } from '../src/lib/sql-engine/validator';
 import { ModuleData, PracticeTask } from '../src/types/curriculum';
 
@@ -110,7 +110,7 @@ function checkTask(module: ModuleData, where: Surface, task: PracticeTask): void
 }
 
 console.log('\n=== Grading-policy audit (Phase 4) ===');
-console.log('Static enforcement of docs/GRADING_POLICY.md.\n');
+console.log('Static enforcement of docs/sql/GRADING_POLICY.md.\n');
 
 for (const module of ALL_MODULES) {
   for (const concept of module.concepts) {
@@ -132,7 +132,7 @@ if (findings.length) {
     console.log(`  ✗ Day ${f.day} ${f.where.padEnd(9)} ${f.taskId.padEnd(20)} [${f.rule}]`);
     console.log(`      ${f.detail}`);
   }
-  console.log('\nGRADING POLICY AUDIT FAILED — fix the task, not the enforcer (see docs/GRADING_POLICY.md).');
+  console.log('\nGRADING POLICY AUDIT FAILED — fix the task, not the enforcer (see docs/sql/GRADING_POLICY.md).');
   process.exit(1);
 }
 

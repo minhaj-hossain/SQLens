@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { diagnoseSql, suggestColumnInScope } from '../../src/lib/editor-diagnostics';
-import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
+import { DATABASE_SCHEMAS } from '../../src/content/sql/database/schema';
 
 describe('AST editor diagnostics', () => {
   it('finds a typo inside a computed projection that the engine skips', () => {

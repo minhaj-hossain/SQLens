@@ -1,8 +1,8 @@
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
 import { runAndGradeSubmission } from '../src/lib/sql-engine/submit-pipeline';
-import { DATABASE_SCHEMAS } from '../src/content/database/schema';
-import { INITIAL_TABLES } from '../src/content/database/tables';
+import { DATABASE_SCHEMAS } from '../src/content/sql/database/schema';
+import { INITIAL_TABLES } from '../src/content/sql/database/tables';
 import { PracticeTask, ModuleData } from '../src/types/curriculum';
 
 interface TaskFinding {

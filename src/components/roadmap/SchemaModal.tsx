@@ -1,8 +1,8 @@
 ﻿import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
-import { INITIAL_TABLES } from '../../content/database/tables';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
+import { INITIAL_TABLES } from '../../content/sql/database/tables';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 
 interface SchemaModalProps {

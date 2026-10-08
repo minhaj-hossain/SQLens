@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildSuggestions, Suggestion, referencedTables, suggestionContext } from '../../src/lib/autocomplete';
-import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
+import { DATABASE_SCHEMAS } from '../../src/content/sql/database/schema';
 
 const sug = (opts: {
   prefix: string;

@@ -1,6 +1,6 @@
 /**
  * Set Operations regression suite (Batch 6 — Day 17 content).
- * Engine contract: docs/DIALECT.md §2 ('union all/union/except').
+ * Engine contract: docs/sql/DIALECT.md §2 ('union all/union/except').
  * Shape-compatibility validation is deliberate: a UNION of mismatched column
  * counts must fail loudly (taught concept), not silently concatenate.
  */

@@ -12,7 +12,7 @@
  *      surface BEFORE the reasoning gate (reachable, refutable, ordered).
  */
 import { describe, it, expect } from 'vitest';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { validateTaskSolution } from '../../src/lib/sql-engine/validator';
 import type { JudgmentKind } from '../../src/types/curriculum';

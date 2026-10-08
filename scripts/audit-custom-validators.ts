@@ -30,7 +30,7 @@
  *
  * Run: npx tsx scripts/audit-custom-validators.ts
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
 import { runAndGradeSubmission, SubmitHooks } from '../src/lib/sql-engine/submit-pipeline';
 import {

@@ -26,7 +26,7 @@
  * Run: npx tsx scripts/audit-visual-coverage.ts   (npm run audit:visual-coverage)
  * Exit 1 on any blocking finding.
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import {
   resolveConceptArchetype,
   resolveVisualizerVariant,

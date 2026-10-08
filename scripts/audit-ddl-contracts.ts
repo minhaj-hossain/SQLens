@@ -19,7 +19,7 @@
  * Run: npx tsx scripts/audit-ddl-contracts.ts   (npm run audit:ddl-contracts)
  * Exit 1 on any blocking finding.
  */
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { renderedTaskText } from '../src/lib/curriculum/taught-before-tested';
 import { extractDdlTableColumns } from '../src/lib/sql-engine/ddl-columns';
 import { ModuleData, PracticeTask } from '../src/types/curriculum';

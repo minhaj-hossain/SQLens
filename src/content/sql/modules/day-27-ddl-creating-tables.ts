@@ -1,0 +1,472 @@
+import { ModuleData } from '../../../types/curriculum';
+
+export const Day_27_MODULE: ModuleData = {
+  id: 'day-27',
+  slug: 'ddl-schema-design',
+  day: 27,
+  title: 'Day 27 - Blueprint Tables and Schema: DDL Foundations',
+  shortTitle: 'DDL I (Creating Tables)',
+  type: 'module',
+  milestoneId: 'milestone-3',
+  description: 'Learn Data Definition Language: create table structures with CREATE TABLE, choose the right column data types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN), and give every row a durable identity with PRIMARY KEY and AUTO_INCREMENT.',
+  estimatedMinutes: 50,
+  completionLearnings: [
+    'Create structured tables using CREATE TABLE with column definitions',
+    'Choose appropriate column data types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN)',
+    'Enforce row identity with PRIMARY KEY and AUTO_INCREMENT for surrogate keys',
+  ],
+  concepts: [
+    // =========================================================================
+    // CONCEPT 1: Creating a Table with CREATE TABLE
+    // =========================================================================
+    {
+      id: 'ddl-create-table',
+      order: 1,
+      title: 'Creating a Table with CREATE TABLE',
+      shortDescription: 'Define table structure and allocate new database entities.',
+      theory: {
+        summary: 'The store needs a product_tags table that does not exist yet. CREATE TABLE name (col1 type, col2 type) draws the blueprint — every column, its type, and the value rules — and creates an empty structure ready for data.',
+        introTable: {
+          tableName: 'product_tags (blueprint)',
+          description: 'Blueprint for tagging inventory items',
+          columns: ['tag_id', 'tag_name'],
+          rows: [
+            [1, 'bestseller'],
+            [2, 'clearance'],
+          ],
+        },
+        explanation: [
+          '### 1. The Core CREATE TABLE Syntax',
+          '```sql\nCREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);\n```',
+          'Table names should be lowercase, descriptive, and pluralized by convention (e.g. `products`, `orders`, `tags`).',
+        ],
+        targetQuery: {
+          sql: 'CREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);',
+          explanation: 'Allocate a new table structure for tagging catalog items with integer IDs and descriptive names.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Creating Table',
+            sqlSnippet: 'CREATE TABLE product_tags (\n  tag_id INT,\n  tag_name VARCHAR(50)\n);',
+            explanation: 'Allocates storage structure with two columns: tag_id and tag_name.',
+            tableData: {
+              tableName: 'Created Structure',
+              columns: ['Column Name', 'Type'],
+              rows: [
+                ['tag_id', 'INT'],
+                ['tag_name', 'VARCHAR(50)'],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'CREATE TABLE syntax',
+            sql: 'CREATE TABLE table_name (\n  column1 datatype,\n  column2 datatype\n);',
+            description: 'Creates a new table schema.',
+          },
+        ],
+        keyTakeaway: 'CREATE TABLE defines the column blueprint for your database entity.',
+        exampleQuery: 'CREATE TABLE product_tags ( tag_id INT, tag_name VARCHAR(50) );',
+        exampleQueryExplanation: 'Defines the product_tags blueprint — two columns, ready for rows.',
+        liveDemoSql: 'SELECT * FROM categories LIMIT 1;',
+        liveDemoNotes: 'A peek at an existing table to see what a CREATE TABLE blueprint should produce.',
+        mcqs: [
+          {
+            question: 'What is the minimum requirement to create a table in SQL?',
+            options: [
+              'A. Only a table name',
+              'B. A table name and at least one column definition (name and data type)',
+              'C. A table name and an existing CSV file',
+              'D. A foreign key constraint',
+            ],
+            correctIndex: 1,
+            explanation: 'Every CREATE TABLE requires a table name and at least one column with a defined data type.',
+          },
+        ],
+        masteryPoints: ['Write clean CREATE TABLE statements'],
+      },
+      tasks: [
+        {
+          id: 'day20-c1-t1',
+          title: 'Can you design a table for product tags?',
+          description: 'Define the table schema for product tags to allow categorizing inventory items with tags.',
+          instructions: [
+            'Create a new table named `product_tags`.',
+            'Define `tag_id` as `INT`.',
+            'Define `tag_name` as `VARCHAR(50)` (a string of up to 50 characters).',
+            'Terminate your SQL statement with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'product_tags',
+          initialSql: 'CREATE TABLE product_tags (\n  -- tag_id\n  -- tag_name\n);\n',
+          solutionSql: 'CREATE TABLE product_tags (tag_id INT, tag_name VARCHAR(50));',
+          solutionExplanation: 'Creates product_tags with tag_id and tag_name.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE product_tags (tag_id INT, tag_name VARCHAR(50));`' }],
+          validation: {
+            targetTable: 'product_tags',
+            requiredColumns: ['tag_id', 'tag_name'],
+            verifyColumnTypes: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Product tags table created!',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'day20-c1-t2',
+          title: 'Can you create a simple notes table with the right columns?',
+          description: 'Create a storage table named `quick_notes` for internal team notes.',
+          instructions: [
+            'Create a new table named `quick_notes`.',
+            'Define `note_id` as `INT`.',
+            'Define `content` as `TEXT` (unbounded text for long notes).',
+            'Terminate your SQL statement with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'quick_notes',
+          initialSql: 'CREATE TABLE quick_notes (\n  -- note_id\n  -- content\n);\n',
+          solutionSql: 'CREATE TABLE quick_notes (note_id INT, content TEXT);',
+          solutionExplanation: 'Allocates the quick_notes table schema.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE quick_notes (note_id INT, content TEXT);`' }],
+          validation: {
+            targetTable: 'quick_notes',
+            requiredColumns: ['note_id', 'content'],
+            verifyColumnTypes: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Well done! Quick notes table created.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 2: Column Data Types (INT, VARCHAR, DECIMAL, DATETIME, BOOLEAN)
+    // =========================================================================
+    {
+      id: 'ddl-data-types',
+      order: 2,
+      title: 'Choosing Column Data Types',
+      shortDescription: 'INT, VARCHAR, DECIMAL, DATETIME, and MySQL BOOLEAN / TINYINT(1).',
+      theory: {
+        summary: 'Store a price as VARCHAR and numeric sorting breaks; store an ISBN as INT and the leading zeros vanish. The data type you choose decides how much space a column eats, how fast it compares, and whether the data stays honest.',
+        introTable: {
+          tableName: 'Common SQL Data Types',
+          description: 'Standard SQL data types comparison',
+          columns: ['Type', 'Usage', 'Example Values'],
+          rows: [
+            ['INT', 'Whole numbers / IDs', '1, 42, -500'],
+            ['VARCHAR(255)', 'Variable-length text', "'Wireless Mouse'"],
+            ['DECIMAL(10,2)', 'Exact financial numbers (10 digits, 2 decimals)', '49.99, 1200.50'],
+            ['DATETIME', 'Timestamps with date & time', "'2026-08-25 14:30:00'"],
+            ['BOOLEAN', 'True/False (In MySQL: TINYINT(1) where 1=TRUE, 0=FALSE)', 'TRUE (1), FALSE (0)'],
+          ],
+        },
+        explanation: [
+          '### 1. DECIMAL Precision & Scale',
+          '`DECIMAL(10, 2)` means **10 total digits** with **2 digits after the decimal point** (maximum: 99,999,999.99). Never use FLOAT for currency because floating-point rounding causes financial inaccuracy!',
+          '### 2. MySQL BOOLEAN Note',
+          'In MySQL, `BOOLEAN` is an alias for `TINYINT(1)`. `TRUE` evaluates to `1` and `FALSE` evaluates to `0`.',
+        ],
+        targetQuery: {
+          sql: 'CREATE TABLE product_metrics (\n  product_id INT,\n  weight_kg DECIMAL(6,2),\n  is_fragile BOOLEAN,\n  logged_at DATETIME\n);',
+          explanation: 'Define appropriate data types (INT, exact DECIMAL, BOOLEAN, and DATETIME) for a metrics table.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Multi-Type Schema Definition',
+            sqlSnippet: 'CREATE TABLE product_metrics (\n  product_id INT,\n  weight_kg DECIMAL(6,2),\n  is_fragile BOOLEAN,\n  logged_at DATETIME\n);',
+            explanation: 'Demonstrates integer, decimal, boolean, and timestamp data types.',
+            tableData: {
+              tableName: 'Metrics Schema',
+              columns: ['Column', 'Type'],
+              rows: [
+                ['product_id', 'INT'],
+                ['weight_kg', 'DECIMAL(6,2)'],
+                ['is_fragile', 'BOOLEAN / TINYINT(1)'],
+                ['logged_at', 'DATETIME'],
+              ],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'Data type declarations',
+            sql: 'CREATE TABLE product_metrics (\n  product_id INT,\n  weight_kg DECIMAL(6,2),\n  is_fragile BOOLEAN,\n  logged_at DATETIME\n);',
+            description: 'Declares appropriate data types for varied business attributes.',
+          },
+        ],
+        keyTakeaway: 'Always use DECIMAL for financial currency and appropriate string lengths for VARCHAR.',
+        exampleQuery: 'CREATE TABLE product_metrics ( product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME );',
+        exampleQueryExplanation: 'A table mixing INT, DECIMAL, BOOLEAN, and DATETIME — the column types you\'ll reach for again and again.',
+        liveDemoSql: 'SELECT product_id, price FROM products LIMIT 3;',
+        liveDemoNotes: 'Shows why prices belong in DECIMAL — exact two-decimal values, no rounding drift.',
+        mcqs: [
+          {
+            question: 'Why should monetary prices always use DECIMAL(10,2) instead of FLOAT?',
+            options: [
+              'A. Because FLOAT is deprecated',
+              'B. Because FLOAT uses binary approximations that cause floating-point rounding errors on money calculations',
+              'C. Because DECIMAL only works on positive numbers',
+              'D. Because FLOAT cannot store decimals',
+            ],
+            correctIndex: 1,
+            explanation: 'DECIMAL stores exact fixed-point numbers, preventing floating-point rounding inaccuracies.',
+          },
+        ],
+        masteryPoints: ['Select appropriate data types', 'Understand DECIMAL precision and MySQL BOOLEAN/TINYINT(1)'],
+      },
+      tasks: [
+        {
+          id: 'day20-c2-t1',
+          title: 'Choose the right data types for product metrics',
+          description: 'Define a table named `product_metrics` to record physical package characteristics and log timestamps.',
+          instructions: [
+            'Create a table named `product_metrics`.',
+            'Define `product_id` as an INT.',
+            'Define `weight_kg` as `DECIMAL(6,2)` (6 total digits, 2 after the decimal point).',
+            'Define `is_fragile` as a BOOLEAN flag.',
+            'Define `logged_at` as a DATETIME timestamp.',
+            'Terminate your SQL statement with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'product_metrics',
+          initialSql: 'CREATE TABLE product_metrics (\n  -- product_id\n  -- weight_kg\n  -- is_fragile\n  -- logged_at\n);\n',
+          solutionSql: 'CREATE TABLE product_metrics (product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME);',
+          solutionExplanation: 'Creates product_metrics schema with precision decimals and booleans.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE product_metrics (product_id INT, weight_kg DECIMAL(6,2), is_fragile BOOLEAN, logged_at DATETIME);`' }],
+          validation: {
+            targetTable: 'product_metrics',
+            requiredColumns: ['product_id', 'weight_kg', 'is_fragile', 'logged_at'],
+            verifyColumnTypes: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Product metrics table created!',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'day20-c2-t2',
+          title: 'Design a customer preferences table with appropriate data types',
+          description: 'Define a table named `customer_preferences` to track marketing subscriptions and financial budgets.',
+          instructions: [
+            'Create a table named `customer_preferences`.',
+            'Define `customer_id` as an INT.',
+            'Define `newsletter_subscribed` as a BOOLEAN.',
+            'Define `monthly_budget` as a DECIMAL with 10 total digits and 2 decimal places for currency accuracy.',
+            'Terminate your SQL statement with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'customer_preferences',
+          initialSql: 'CREATE TABLE customer_preferences (\n  -- customer_id\n  -- newsletter_subscribed\n  -- monthly_budget\n);\n',
+          solutionSql: 'CREATE TABLE customer_preferences (customer_id INT, newsletter_subscribed BOOLEAN, monthly_budget DECIMAL(10,2));',
+          solutionExplanation: 'Defines preferences with boolean and currency decimal types.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE customer_preferences (customer_id INT, newsletter_subscribed BOOLEAN, monthly_budget DECIMAL(10,2));`' }],
+          validation: {
+            targetTable: 'customer_preferences',
+            requiredColumns: ['customer_id', 'newsletter_subscribed', 'monthly_budget'],
+            verifyColumnTypes: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Well done! Data types declared accurately.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+
+    // =========================================================================
+    // CONCEPT 3: The PRIMARY KEY Constraint
+    // =========================================================================
+    {
+      id: 'ddl-primary-key',
+      order: 3,
+      title: 'The PRIMARY KEY Constraint',
+      shortDescription: 'Uniquely identify every row and configure AUTO_INCREMENT.',
+      theory: {
+        summary: 'Every product, customer, and order needs one identity that can never repeat and never be empty. The PRIMARY KEY is exactly that — unique, non-NULL, and built for fast lookups — the anchor every other table foreign key points back to.',
+        introTable: {
+          tableName: 'categories_new',
+          description: 'Primary key identity demo',
+          columns: ['category_id (PK)', 'name'],
+          rows: [
+            [1, 'Electronics'],
+            [2, 'Kitchen & Dining'],
+            [3, 'Office Supplies'],
+          ],
+        },
+        explanation: [
+          '### 1. PRIMARY KEY & AUTO_INCREMENT',
+          '```sql\nCREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);\n```',
+          'When you insert a row without specifying `category_id`, the database automatically generates the next sequential integer (1, 2, 3, 4...).',
+        ],
+        targetQuery: {
+          sql: 'CREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);',
+          explanation: 'Establish unique row identity and automatic sequential numbering with AUTO_INCREMENT PRIMARY KEY.',
+          badge: "The query we're going to break down",
+        },
+        stepBreakdowns: [
+          {
+            stepNumber: 1,
+            stepTitle: 'Step 1: Primary Key Declaration',
+            sqlSnippet: 'CREATE TABLE categories_new (\n  category_id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);',
+            explanation: 'Declares category_id as the unique row identifier.',
+            tableData: {
+              tableName: 'Primary Key Table',
+              columns: ['Column', 'Constraint'],
+              rows: [['category_id', 'PRIMARY KEY AUTO_INCREMENT']],
+            },
+          },
+        ],
+        syntaxBlocks: [
+          {
+            title: 'PRIMARY KEY syntax',
+            sql: 'CREATE TABLE table_name (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  name VARCHAR(100)\n);',
+            description: 'Defines auto-increment primary key.',
+          },
+        ],
+        keyTakeaway: 'A PRIMARY KEY guarantees uniqueness and provides a permanent identity for each record.',
+        exampleQuery: 'CREATE TABLE categories_new ( category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) );',
+        exampleQueryExplanation: 'A PRIMARY KEY that hands out its own IDs — no manual number-typing.',
+        liveDemoSql: 'SELECT customer_id, name FROM customers LIMIT 3;',
+        liveDemoNotes: 'Sequential customer IDs — the auto-incrementing pattern in action.',
+        mcqs: [
+          {
+            question: 'Can a PRIMARY KEY column contain NULL values?',
+            options: [
+              'A. Yes, at most one NULL',
+              'B. No, PRIMARY KEY columns are implicitly NOT NULL and strictly unique',
+              'C. Yes, if AUTO_INCREMENT is off',
+              'D. Only in SQLite',
+            ],
+            correctIndex: 1,
+            explanation: 'Primary keys strictly disallow NULL values and require unique scalar entries for every row.',
+          },
+        ],
+        masteryPoints: ['Declare PRIMARY KEY with AUTO_INCREMENT'],
+      },
+      tasks: [
+        {
+          id: 'day20-c3-t1',
+          title: 'Create a categories table where every category gets a unique ID',
+          description: 'Create a new table named `categories_new` with an automatically incrementing primary key.',
+          instructions: [
+            'Create a table named `categories_new`.',
+            'Define `category_id` as an INT configured with both AUTO_INCREMENT and PRIMARY KEY constraints.',
+            'Define `name` as a VARCHAR column with a maximum length of 100 characters.',
+            'Terminate your statement with a semicolon.',
+          ],
+          type: 'guided',
+          primaryTable: 'categories_new',
+          initialSql: 'CREATE TABLE categories_new (\n  -- category_id\n  -- name\n);\n',
+          solutionSql: 'CREATE TABLE categories_new (category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100));',
+          solutionExplanation: 'Creates table with auto-incrementing primary key.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE categories_new (category_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100));`' }],
+          validation: {
+            targetTable: 'categories_new',
+            requiredColumns: ['category_id', 'name'],
+            verifyColumnTypes: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Categories table created with Primary Key!',
+          databaseLifecycle: 'fresh',
+        },
+        {
+          id: 'day20-c3-t2',
+          title: 'Create a departments table with automatically generated IDs',
+          description: 'Define an organizational `departments` table using an auto-generated primary key.',
+          instructions: [
+            'Create a table named `departments`.',
+            'Set `dept_id` as an INT with AUTO_INCREMENT and PRIMARY KEY.',
+            'Set `title` as a VARCHAR column allowing up to 80 characters.',
+            'Terminate your SQL statement with a semicolon.',
+          ],
+          type: 'independent',
+          primaryTable: 'departments',
+          initialSql: 'CREATE TABLE departments (\n  -- dept_id\n  -- title\n);\n',
+          solutionSql: 'CREATE TABLE departments (dept_id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(80));',
+          solutionExplanation: 'Allocates departments with primary key.',
+          hints: [{ level: 1, text: 'Use `CREATE TABLE departments (dept_id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(80));`' }],
+          validation: {
+            targetTable: 'departments',
+            requiredColumns: ['dept_id', 'title'],
+            verifyColumnTypes: true,
+            expectedRowCount: 1,
+          },
+          successMessage: 'Perfect! Primary key constraint configured.',
+          databaseLifecycle: 'fresh',
+        },
+      ],
+    },
+
+  ],
+
+  // ===========================================================================
+  // DAY 27 CHALLENGE (MASTER CURRICULUM ASSIGNMENT)
+  // ===========================================================================
+  challenge: {
+    id: 'day-27-homework',
+    title: 'Day 27 — DDL I Challenge: Creating Tables (Ending Activity)',
+    scenario: 'Design a new table schema, then analyze the seeded review data:',
+    databaseLifecycle: 'inherit',
+    tasks: [
+      {
+        id: 'day27-hw-1',
+        title: 'Design a product reviews table from the requirements',
+        description: 'Design and create a resilient `product_reviews` schema that enforces identity, non-null relationships, rating domain validation, and automatic timestamping.',
+        instructions: [
+          'Create a table named `product_reviews`.',
+          'Define `review_id` as an INT with AUTO_INCREMENT and PRIMARY KEY.',
+          'Define `product_id` and `customer_id` as non-nullable integer columns (`INT NOT NULL`).',
+          'Define `rating` as `INT NOT NULL` with `CHECK (rating BETWEEN 1 AND 5)`.',
+          'Define `comment` as a TEXT column for free-form review notes.',
+          'Define `created_at` as `DATETIME DEFAULT CURRENT_TIMESTAMP` (the column has a default).' ,
+          'Terminate your SQL statement with a semicolon.',
+        ],
+        type: 'challenge',
+        primaryTable: 'product_reviews',
+        initialSql: 'CREATE TABLE product_reviews (\n  -- review_id\n  -- product_id\n  -- customer_id\n  -- rating\n  -- comment\n  -- created_at\n);\n',
+        solutionSql: 'CREATE TABLE product_reviews ( review_id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, customer_id INT NOT NULL, rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5), comment TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP );',
+        solutionExplanation: 'Creates the new product_reviews entity table with complete constraints.',
+        hints: [{ level: 1, text: 'Use `CREATE TABLE product_reviews (...)` with column definitions for review_id, product_id, customer_id, rating, comment, and created_at.' }],
+        validation: {
+          targetTable: 'product_reviews',
+          requiredColumns: ['review_id', 'product_id', 'customer_id', 'rating', 'comment', 'created_at'],
+          verifyColumnTypes: true,
+          expectedRowCount: 1,
+        },
+        successMessage: 'Task 1 completed! product_reviews table schema defined.',
+        databaseLifecycle: 'fresh',
+      },
+      {
+        id: 'day27-hw-2',
+        title: 'Build a rating report to measure product performance',
+        description: 'Compute summary metrics across catalog products by linking products to customer review records.',
+        instructions: [
+          'Query from `products p` joined with `reviews r` on matching product IDs.',
+          'Select the product ID (`p.product_id`) and product name (`p.name`).',
+          'Calculate the average rating aliased as `avg_rating` and the total number of reviews aliased as `total_reviews`.',
+          'Group the results by product ID and product name.',
+          'Terminate your query with a semicolon.',
+        ],
+        type: 'challenge',
+        primaryTable: 'products',
+        secondaryTables: ['reviews'],
+        initialSql: '-- Task 2: Average rating per product\n',
+        solutionSql: 'SELECT p.product_id, p.name, AVG(r.rating) AS avg_rating, COUNT(r.review_id) AS total_reviews FROM products p JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;',
+        solutionExplanation: 'Links each product to its reviews and rolls them up into an average rating and review count.',
+        hints: [{ level: 1, text: 'Use `JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.name;`' }],
+        validation: {
+          requireExactResult: true,
+          targetTable: 'products',
+          requireJoin: true,
+          requireGroupBy: true,
+          expectedRowCount: 12,
+        },
+        successMessage: 'Task 2 completed! Product ratings aggregated.',
+      },
+    ],
+  },
+};

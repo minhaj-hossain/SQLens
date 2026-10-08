@@ -16,7 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { ALL_MODULES, getModuleById as getSqlModuleById } from '../../src/content/curriculum-index';
+import { ALL_MODULES, getModuleById as getSqlModuleById } from '../../src/content/sql/curriculum-index';
 import {
   PRISMA_MODULES,
   getPrismaModuleById,

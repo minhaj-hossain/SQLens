@@ -3,7 +3,7 @@ import { ValidationRule, ExpectedErrorCategory } from '../../types/curriculum';
 import { parseSql, ParsedOrderBy } from './parser';
 import { splitStatements } from './split-statements';
 import { extractDdlColumns } from './ddl-columns';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 
 export interface ValidationOutcome {
   passed: boolean;

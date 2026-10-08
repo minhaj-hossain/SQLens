@@ -3,8 +3,8 @@ import { parseSql, parseCaseExpression, splitFunctionArgs, ParsedSqlQuery, Parse
 import { errorPositionFields, shiftPosition, statementStartPosition } from './source-position';
 import { splitStatements } from './split-statements';
 import { resolveSqlType } from './sql-type-registry';
-import { INITIAL_TABLES } from '../../content/database/tables';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { INITIAL_TABLES } from '../../content/sql/database/tables';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import { SIMULATED_TODAY } from '../../config/simulated-date';
 import { SQL_KEYWORDS } from '../sql-keywords';
 
@@ -212,41 +212,41 @@ function unknownTypeError(col: string, sqlType: string, suggestion?: string): st
   return (
     `Unknown data type '${sqlType}' for column '${col}'` +
     (suggestion ? ` — did you mean '${suggestion}'?` : '') +
-    ` (supported: INT, VARCHAR, DECIMAL, DATE/DATETIME, BOOLEAN, TEXT — see docs/DIALECT.md §5).`
+    ` (supported: INT, VARCHAR, DECIMAL, DATE/DATETIME, BOOLEAN, TEXT — see docs/sql/DIALECT.md §5).`
   );
 }
 
 /**
  * Workstream D: name the unsupported DDL form (never a silent no-op).
- * Every branch quotes the support matrix (docs/DIALECT.md §5) so the learner
+ * Every branch quotes the support matrix (docs/sql/DIALECT.md §5) so the learner
  * can see exactly what IS executable. Privilege/principal statements never
  * reach this — they are handled as simulations at the call site (§8).
  */
 function unsupportedDdlError(cmd: string): string {
   const c = cmd.trim();
   if (/^TRUNCATE\b/i.test(c)) {
-    return `TRUNCATE is not supported by SQLens. Use DELETE FROM <table> to remove rows (the table itself stays) — docs/DIALECT.md §5.`;
+    return `TRUNCATE is not supported by SQLens. Use DELETE FROM <table> to remove rows (the table itself stays) — docs/sql/DIALECT.md §5.`;
   }
   if (/^RENAME\s+TABLE\b/i.test(c)) {
-    return `RENAME TABLE is not supported by SQLens — create the new table, copy the rows, then DROP the old one (docs/DIALECT.md §5).`;
+    return `RENAME TABLE is not supported by SQLens — create the new table, copy the rows, then DROP the old one (docs/sql/DIALECT.md §5).`;
   }
   if (/^ALTER\b/i.test(c)) {
     if (/\bDROP\s+COLUMN\b/i.test(c)) {
-      return `ALTER ... DROP COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/DIALECT.md §5).`;
+      return `ALTER ... DROP COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
     }
     if (/\bRENAME\b/i.test(c)) {
-      return `ALTER ... RENAME is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/DIALECT.md §5).`;
+      return `ALTER ... RENAME is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
     }
     if (/\b(MODIFY|ALTER\s+COLUMN|CHANGE\s+COLUMN)\b/i.test(c)) {
-      return `ALTER ... MODIFY/CHANGE COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/DIALECT.md §5).`;
+      return `ALTER ... MODIFY/CHANGE COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
     }
     if (/\bCONSTRAINT\b/i.test(c)) {
-      return `ALTER ... CONSTRAINT is not supported by SQLens. Declare constraints inside CREATE TABLE instead (docs/DIALECT.md §5).`;
+      return `ALTER ... CONSTRAINT is not supported by SQLens. Declare constraints inside CREATE TABLE instead (docs/sql/DIALECT.md §5).`;
     }
-    return `Unsupported or malformed ALTER statement. SQLens supports: ALTER TABLE <table> ADD COLUMN <col> <type> [DEFAULT <value>] (docs/DIALECT.md §5).`;
+    return `Unsupported or malformed ALTER statement. SQLens supports: ALTER TABLE <table> ADD COLUMN <col> <type> [DEFAULT <value>] (docs/sql/DIALECT.md §5).`;
   }
   const head = c.split('\n')[0].slice(0, 60);
-  return `Unsupported DDL statement${head ? `: "${head}${c.split('\n')[0].length > 60 ? '…' : ''}"` : ''} — SQLens cannot execute it. Supported forms are listed in docs/DIALECT.md §5.`;
+  return `Unsupported DDL statement${head ? `: "${head}${c.split('\n')[0].length > 60 ? '…' : ''}"` : ''} — SQLens cannot execute it. Supported forms are listed in docs/sql/DIALECT.md §5.`;
 }
 
 /**
@@ -331,7 +331,7 @@ function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTab
     // the supported table-level form the Day 29 lesson teaches.
     if (/\bREFERENCES\b/i.test(rest)) {
       return fail(
-        `Column-level REFERENCES is not supported. Declare the relationship as a table-level constraint instead: FOREIGN KEY (${name}) REFERENCES <table>(<column>) inside CREATE TABLE (docs/DIALECT.md §5).`,
+        `Column-level REFERENCES is not supported. Declare the relationship as a table-level constraint instead: FOREIGN KEY (${name}) REFERENCES <table>(<column>) inside CREATE TABLE (docs/sql/DIALECT.md §5).`,
       );
     }
 
@@ -366,7 +366,7 @@ function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTab
       // exact class DIALECT's engine-honesty contract forbids).
       if (/\bon\s+(delete|update)\b/i.test(p)) {
         return fail(
-          `ON DELETE / ON UPDATE actions on FOREIGN KEY are not supported (docs/DIALECT.md §5). Declare a plain FOREIGN KEY (col) REFERENCES parent(col).`,
+          `ON DELETE / ON UPDATE actions on FOREIGN KEY are not supported (docs/sql/DIALECT.md §5). Declare a plain FOREIGN KEY (col) REFERENCES parent(col).`,
         );
       }
       const fm = p.match(/foreign\s+key\s*\(([^)]+)\)\s*references\s*([`"']?[\w]+[`"']?)\s*\(([^)]+)\)/i);
@@ -381,9 +381,9 @@ function parseColumnDefs(body: string): { cols: ColumnDefinition[]; meta: DdlTab
     } else if (/^constraint\b/i.test(p)) {
       // Workstream D: a NAMED constraint (`CONSTRAINT fk FOREIGN KEY …`) was
       // silently dropped — the relationship never registered. Named error in
-      // the support-matrix style (docs/DIALECT.md §5).
+      // the support-matrix style (docs/sql/DIALECT.md §5).
       return fail(
-        `Naming a constraint with CONSTRAINT is not supported. Write it without the name: FOREIGN KEY (col) REFERENCES parent(col), UNIQUE (col), or CHECK (rule) (docs/DIALECT.md §5).`,
+        `Naming a constraint with CONSTRAINT is not supported. Write it without the name: FOREIGN KEY (col) REFERENCES parent(col), UNIQUE (col), or CHECK (rule) (docs/sql/DIALECT.md §5).`,
       );
     }
   }
@@ -586,7 +586,7 @@ export class SqlExecutor {
   }
 
   /** Extract simple column predicates from a WHERE clause for plan simulation.
-   *  Only used by the EXPLAIN teaching simulation (see docs/DIALECT.md §6). */
+   *  Only used by the EXPLAIN teaching simulation (see docs/sql/DIALECT.md §6). */
   private extractWherePredicates(whereClause: string): { column: string; op: 'eq' | 'range' }[] {
     const out: { column: string; op: 'eq' | 'range' }[] = [];
     for (const clause of splitLogicalClauses(whereClause, 'AND')) {
@@ -1784,7 +1784,7 @@ export class SqlExecutor {
         rows: [
           {
             status: silentReplace
-              ? `View '${viewName}' already existed — replaced for retry (real SQL would error without OR REPLACE — docs/DIALECT.md §5).`
+              ? `View '${viewName}' already existed — replaced for retry (real SQL would error without OR REPLACE — docs/sql/DIALECT.md §5).`
               : `View '${viewName}' created successfully`,
           },
         ],
@@ -1918,7 +1918,7 @@ export class SqlExecutor {
         rows: [
           {
             status: recreated
-              ? `Table '${tbl}' already existed — dropped and re-created for retry (real SQL would error here; use IF NOT EXISTS or DROP TABLE first — docs/DIALECT.md §5).`
+              ? `Table '${tbl}' already existed — dropped and re-created for retry (real SQL would error here; use IF NOT EXISTS or DROP TABLE first — docs/sql/DIALECT.md §5).`
               : `Table '${tbl}' created successfully (0 rows affected)`,
           },
         ],
@@ -1946,7 +1946,7 @@ export class SqlExecutor {
           rows: [],
           rowCount: 0,
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-          error: `Unsupported clause after DROP TABLE: "${dropLeftover.slice(0, 60)}${dropLeftover.length > 60 ? '…' : ''}". SQLens drops ONE table per statement and supports no trailing clauses (docs/DIALECT.md §5).`,
+          error: `Unsupported clause after DROP TABLE: "${dropLeftover.slice(0, 60)}${dropLeftover.length > 60 ? '…' : ''}". SQLens drops ONE table per statement and supports no trailing clauses (docs/sql/DIALECT.md §5).`,
         };
       }
       if (!this.db.tables[tbl]) {
@@ -1968,7 +1968,7 @@ export class SqlExecutor {
           rows: [],
           rowCount: 0,
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-          error: `Table '${tbl}' doesn't exist. Use DROP TABLE IF EXISTS ${tbl} to make this teardown idempotent (docs/DIALECT.md §5).`,
+          error: `Table '${tbl}' doesn't exist. Use DROP TABLE IF EXISTS ${tbl} to make this teardown idempotent (docs/sql/DIALECT.md §5).`,
         };
       }
       delete this.db.tables[tbl];
@@ -2024,7 +2024,7 @@ export class SqlExecutor {
           rows: [],
           rowCount: 0,
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-          error: `Unsupported clause after ADD COLUMN: "${leftover.slice(0, 60)}${leftover.length > 60 ? '…' : ''}". SQLens runs ONE clause per ALTER TABLE statement — split it into separate statements (docs/DIALECT.md §5).`,
+          error: `Unsupported clause after ADD COLUMN: "${leftover.slice(0, 60)}${leftover.length > 60 ? '…' : ''}". SQLens runs ONE clause per ALTER TABLE statement — split it into separate statements (docs/sql/DIALECT.md §5).`,
         };
       }
       const tbl = alterMatch[1].replace(/[`"']/g, '').toLowerCase();
@@ -2135,7 +2135,7 @@ export class SqlExecutor {
         rows: [
           {
             status: recreatedIndex
-              ? `Index '${name}' already existed — dropped and re-created for retry (real SQL would error; DROP INDEX first — docs/DIALECT.md §5).`
+              ? `Index '${name}' already existed — dropped and re-created for retry (real SQL would error; DROP INDEX first — docs/sql/DIALECT.md §5).`
               : `Index '${name}' created on ${tbl}(${cols.join(', ')})`,
           },
         ],
@@ -2173,7 +2173,7 @@ export class SqlExecutor {
     // statement (this fall-through used to report success while executing
     // NOTHING — the audit's worst fails-silently finding):
     //  (a) privilege/principal statements are DESIGNATED SIMULATIONS
-    //      (docs/DIALECT.md §8): Day-55 content executes them, so they keep
+    //      (docs/sql/DIALECT.md §8): Day-55 content executes them, so they keep
     //      succeeding — but the status row now says what really happened;
     //  (b) anything else fails LOUDLY with a named unsupported-form error.
     const simulation = cmd.match(
@@ -2185,7 +2185,7 @@ export class SqlExecutor {
         columns: ['status'],
         rows: [
           {
-            status: `Simulated: ${simulation[0].trim()} — SQLens does not persist privileges or principals (concept-only simulation, docs/DIALECT.md §8).`,
+            status: `Simulated: ${simulation[0].trim()} — SQLens does not persist privileges or principals (concept-only simulation, docs/sql/DIALECT.md §8).`,
           },
         ],
         rowCount: 1,

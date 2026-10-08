@@ -5,7 +5,7 @@
  * Replaces six duplicated `<table>` recipes (ResultsConsole, sql-blocks
  * `DataTable`, ConceptLessonView demo + markdown tables, DatabaseExplorer,
  * Playground and IndependentChallengeView + its inspector modal). One visual
- * spec, per docs/STYLE.md §3 (upgraded):
+ * spec, per docs/global/STYLE.md §3 (upgraded):
  *
  *  - type-aware cells: numbers right-aligned + tabular-nums, money keeps 2dp,
  *    dates tabular, NULL as a muted chip             (src/lib/format-cell.ts)
@@ -15,7 +15,7 @@
  */
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { DATABASE_SCHEMAS } from '../../content/database/schema';
+import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import {
   CellType,
   resolveCellType,

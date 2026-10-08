@@ -4,7 +4,7 @@
  * solutionCode passes the code validator; ids/keys/routes stay isolated.
  */
 import { describe, it, expect } from 'vitest';
-import { ALL_MODULES } from '../../src/content/curriculum-index';
+import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
 import { PRISMA_ROADMAP_MILESTONES } from '../../src/content/prisma/prisma-roadmap';
 import { ROADMAP_MILESTONES } from '../../src/config/roadmap';

@@ -1,4 +1,4 @@
-import { ALL_MODULES } from '../src/content/curriculum-index';
+import { ALL_MODULES } from '../src/content/sql/curriculum-index';
 import { ModuleData, PracticeTask } from '../src/types/curriculum';
 
 interface Finding {

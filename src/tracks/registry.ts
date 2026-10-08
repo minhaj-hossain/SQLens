@@ -23,7 +23,7 @@
  *    everything else (legacy ids, junk) → sql.
  */
 
-import { ALL_MODULES, getModuleById as getSqlModuleById } from '../content/curriculum-index';
+import { ALL_MODULES, getModuleById as getSqlModuleById } from '../content/sql/curriculum-index';
 import { ROADMAP_MILESTONES } from '../config/roadmap';
 import {
   PRISMA_MODULES,

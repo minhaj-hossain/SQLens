@@ -9,7 +9,7 @@
  * Run: npx tsx scripts/db-lifecycle-check.ts
  */
 import { SqlExecutor } from '../src/lib/sql-engine/executor';
-import { getModuleById } from '../src/content/curriculum-index';
+import { getModuleById } from '../src/content/sql/curriculum-index';
 import { PracticeTask, ModuleChallenge } from '../src/types/curriculum';
 
 let pass = 0;

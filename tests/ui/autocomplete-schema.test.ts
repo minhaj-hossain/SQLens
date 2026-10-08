@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildSuggestions, Suggestion } from '../../src/lib/autocomplete';
 import { connectedTables, parseQueryScope } from '../../src/lib/sql-scope';
-import { DATABASE_SCHEMAS } from '../../src/content/database/schema';
+import { DATABASE_SCHEMAS } from '../../src/content/sql/database/schema';
 import { TableSchema } from '../../src/types/database';
 
 const schemas = DATABASE_SCHEMAS as unknown as Record<string, TableSchema>;
