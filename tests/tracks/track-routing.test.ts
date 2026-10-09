@@ -10,6 +10,7 @@
  *      indexed URLs and bookmarks depend on them.
  */
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { TRACK_IDS, TRACK_META, isTrackId } from '../../src/types/track';
 import {
   getTrackPreviousStep,
@@ -160,5 +161,16 @@ describe('Phase 2 — namespaced track routing', () => {
 
   it('no module id collides across tracks', () => {
     expect(assertNoModuleIdCollision()).toEqual([]);
+  });
+
+  it('learn index entry pages use deriveLastPosition and isProgressReady', () => {
+    const sqlSrc = readFileSync('src/app/(app)/sql/learn/page.tsx', 'utf8');
+    const prismaSrc = readFileSync('src/app/(app)/prisma/learn/page.tsx', 'utf8');
+
+    for (const src of [sqlSrc, prismaSrc]) {
+      expect(src).toContain('deriveLastPosition');
+      expect(src).toContain('isProgressReady');
+      expect(src).not.toContain('userState.currentModuleId');
+    }
   });
 });
