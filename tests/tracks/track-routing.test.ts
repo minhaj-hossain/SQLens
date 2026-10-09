@@ -193,4 +193,35 @@ describe('Phase 2 — namespaced track routing', () => {
     expect(headerSrc).toContain('signin?from=');
     expect(headerSrc).toContain('playground?mode=prisma');
   });
+
+  it('Phase 4: ChallengeView back navigation targets the last task of the last concept', () => {
+    const challengeSrc = readFileSync('src/components/learn/ChallengeView.tsx', 'utf8');
+    const independentChallengeSrc = readFileSync(
+      'src/components/learning/IndependentChallengeView.tsx',
+      'utf8',
+    );
+
+    // Verifies ChallengeView calculates last concept's last task index dynamically
+    expect(challengeSrc).toContain('Math.max(0, taskCount - 1)');
+    expect(challengeSrc).not.toContain("trackLearnUrl(track, mod.id, 'practice', last.id, 0)");
+
+    // Verifies IndependentChallengeView renders the Back button with challenge-back-btn id
+    expect(independentChallengeSrc).toContain('id="challenge-back-btn"');
+    expect(independentChallengeSrc).toContain('onBackToPractice');
+  });
+
+  it('Phase 5: Hydration shells & skeleton fallbacks replace blank null returns', () => {
+    const layoutSrc = readFileSync('src/components/learn/TrackDayLayoutView.tsx', 'utf8');
+    const practiceSrc = readFileSync('src/components/learn/PracticeView.tsx', 'utf8');
+
+    // Verifies TrackDayLayoutView renders TrackDaySkeleton shell instead of return null
+    expect(layoutSrc).toContain('TrackDaySkeleton');
+    expect(layoutSrc).not.toContain('if (!isProgressReady) return null;');
+
+    // Verifies PracticeView provides PracticeSkeleton in Suspense fallback
+    expect(practiceSrc).toContain('<Suspense fallback={<PracticeSkeleton />}>');
+    expect(practiceSrc).not.toContain('<Suspense fallback={null}>');
+  });
 });
+
+

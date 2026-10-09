@@ -33,6 +33,7 @@ import { useTrackConceptId } from '@/components/learn/use-track';
 import { getModuleUnlockStatus } from '@/lib/progress/unlock-calculator';
 import { getTrackDefinition } from '@/tracks/registry';
 import { LockedDayNotice } from '@/components/learn/LockedDayNotice';
+import { TrackDaySkeleton } from '@/components/learn/TrackDaySkeleton';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -100,11 +101,9 @@ export default function TrackDayLayoutView({
   // useStepBack, which also owns scroll memory + prefetch. The top bar only
   // carries the roadmap link + day chip.
   //
-  // Phase 3: hold the exact route until the authoritative snapshot has landed
-  // (no redirect, no blank lock). This is what keeps a refreshed task page on
-  // that exact route/task instead of bouncing off it mid-hydration.
-  if (!isProgressReady) return null;
-
+  // Phase 5: render the breadcrumb shell with a theme-consistent skeleton loader
+  // while progress readiness hydrates — eliminates the blank dark flicker while
+  // keeping the route steady.
   return (
     <div className="flex flex-col w-full pb-8 px-2.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 max-w-7xl mx-auto min-w-0 overflow-x-clip">
       {/* Breadcrumb Header */}
@@ -125,7 +124,13 @@ export default function TrackDayLayoutView({
         </div>
       </div>
 
-      {isLocked ? <LockedDayNotice mod={mod} /> : children}
+      {!isProgressReady ? (
+        <TrackDaySkeleton />
+      ) : isLocked ? (
+        <LockedDayNotice mod={mod} />
+      ) : (
+        children
+      )}
     </div>
   );
 }

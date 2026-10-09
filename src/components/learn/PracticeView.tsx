@@ -17,6 +17,7 @@ import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
 import { useStepBack } from './use-step-back';
+import { PracticeSkeleton } from './PracticeSkeleton';
 
 interface PracticeViewProps {
   dayId: string;
@@ -30,7 +31,7 @@ export default function PracticeView({ dayId, conceptId }: PracticeViewProps) {
   if (!mod || !concept) notFound();
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PracticeSkeleton />}>
       <PracticeInner mod={mod} concept={concept} />
     </Suspense>
   );

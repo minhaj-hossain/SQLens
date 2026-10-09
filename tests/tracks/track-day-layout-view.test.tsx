@@ -127,13 +127,19 @@ describe('Phase 4.2 — TrackDayLayoutView renders both tracks from the registry
     expect(h.replace).not.toHaveBeenCalled();
   });
 
-  it('holds the exact route (no chrome) until progress is ready — even for an unlocked day', () => {
-    // Phase 3: a signed-in refresh mounts with the seeded guest state (looks
-    // empty) before the user snapshot lands. The layout must render nothing —
-    // NOT bounce — until `isProgressReady`, so the refreshed task page survives.
+  it('holds the exact route with skeleton shell until progress is ready — even for an unlocked day', () => {
+    // Phase 5: a signed-in refresh mounts with the seeded guest state (looks
+    // empty) before the user snapshot lands. The layout renders the persistent
+    // breadcrumb shell and skeleton loader — NOT bounce or flash children/lock —
+    // until `isProgressReady`, so the refreshed task page survives smoothly.
     h.isProgressReady = false;
     const html = render('sql', 'day-01', '/sql/learn/day-01/theory/select-basics');
-    expect(html).toBe('');
+    expect(html).toContain('Roadmap');
+    expect(html).toContain('Day 1 of 57');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('animate-pulse');
+    expect(html).not.toContain('CHILD-CONTENT-MARKER');
+    expect(html).not.toContain('is locked');
     expect(h.replace).not.toHaveBeenCalled();
   });
 

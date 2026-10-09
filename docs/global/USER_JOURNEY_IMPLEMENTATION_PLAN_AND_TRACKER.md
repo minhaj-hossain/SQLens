@@ -39,8 +39,8 @@ Eliminate critical user flow disconnects, disorienting navigation traps, and tra
 | **Phase 1** | Track-Aware Module Completion & Prisma Gating | **P0** | `src/components/learning/ModuleCompletionView.tsx` | ✅ Completed |
 | **Phase 2** | Dynamic Resume Calculation on Track Entry | **P0** | `src/app/(app)/sql/learn/page.tsx`, `src/app/(app)/prisma/learn/page.tsx` | ✅ Completed |
 | **Phase 3** | Route Context Preservation (Auth & Playground) | **P0 / P1** | `src/components/auth/AuthScreen.tsx`, `src/components/auth/AuthView.tsx`, `src/app/playground/page.tsx`, `src/components/learning/Playground.tsx` | ✅ Completed |
-| **Phase 4** | Exact Step-Chain Challenge Back Navigation | **P1** | `src/components/learn/ChallengeView.tsx` | 🔲 Not Started |
-| **Phase 5** | Hydration Shells & Skeleton Fallbacks | **P1** | `src/components/learn/TrackDayLayoutView.tsx`, `src/components/learn/PracticeView.tsx` | 🔲 Not Started |
+| **Phase 4** | Exact Step-Chain Challenge Back Navigation | **P1** | `src/components/learn/ChallengeView.tsx`, `src/components/learning/IndependentChallengeView.tsx` | ✅ Completed |
+| **Phase 5** | Hydration Shells & Skeleton Fallbacks | **P1** | `src/components/learn/TrackDayLayoutView.tsx`, `src/components/learn/PracticeView.tsx`, `src/components/learn/PracticeSkeleton.tsx`, `src/components/learn/TrackDaySkeleton.tsx` | ✅ Completed |
 | **Phase 6** | Homepage Returning Learner Widget & Copy Polish | **P1 / P2** | `src/components/home/ClickHomepage.tsx`, `src/app/not-found.tsx`, `src/components/learning/ConceptLessonView.tsx`, `src/components/learning/PracticeTaskView.tsx` | 🔲 Not Started |
 | **Phase 7** | End-to-End Journey QA & Regression Testing | **Gate** | CI scripts, Vitest suite, manual flow check | 🔲 Not Started |
 
@@ -72,15 +72,16 @@ Ensures users returning from sign-in or closing the playground return to their a
 
 #### Phase 4: Exact Step-Chain Challenge Back Navigation (P1)
 Aligns Challenge "Back" navigation with the step-chain contract.
-- [ ] **4.1** In [src/components/learn/ChallengeView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learn/ChallengeView.tsx), update `onBackToPractice`.
-- [ ] **4.2** Determine the last concept and its total tasks (`lastConcept.tasks.length`).
-- [ ] **4.3** Route to `task = Math.max(0, lastConcept.tasks.length - 1)` instead of index `0`.
+- [x] **4.1** In [src/components/learn/ChallengeView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learn/ChallengeView.tsx), update `onBackToPractice`.
+- [x] **4.2** Determine the last concept and its total tasks (`lastConcept.tasks.length`).
+- [x] **4.3** Route to `task = Math.max(0, lastConcept.tasks.length - 1)` instead of index `0`.
+- [x] **4.4** In [src/components/learning/IndependentChallengeView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learning/IndependentChallengeView.tsx), wire `onBackToPractice` to `challenge-back-btn`.
 
 #### Phase 5: Hydration Shells & Skeleton Fallbacks (P1)
 Eliminates blank dark flickers during progress readiness evaluation.
-- [ ] **5.1** In [src/components/learn/TrackDayLayoutView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learn/TrackDayLayoutView.tsx), replace `if (!isProgressReady) return null;` with a styled breadcrumb shell and skeleton loader.
-- [ ] **5.2** In [src/components/learn/PracticeView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learn/PracticeView.tsx), provide a skeleton fallback in `<Suspense fallback={<PracticeSkeleton />}>`.
-- [ ] **5.3** Ensure skeletons match dark theme tokens (`bg-surface`, `bg-surface-2`, `animate-pulse`).
+- [x] **5.1** In [src/components/learn/TrackDayLayoutView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learn/TrackDayLayoutView.tsx), replace `if (!isProgressReady) return null;` with a styled breadcrumb shell and skeleton loader.
+- [x] **5.2** In [src/components/learn/PracticeView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learn/PracticeView.tsx), provide a skeleton fallback in `<Suspense fallback={<PracticeSkeleton />}>`.
+- [x] **5.3** Ensure skeletons match dark theme tokens (`bg-surface`, `bg-surface-2`, `animate-pulse`).
 
 #### Phase 6: Homepage Returning Learner Widget & Copy Polish (P1 / P2)
 Restores missing homepage resume widget and polishes misleading button labels.
@@ -127,3 +128,5 @@ npm run test:engine
 - **2026-10-09:** Phase 1 implemented & committed (`b625106`): Track-aware module completion & Prisma milestones.
 - **2026-10-09:** Phase 2 implemented & committed (`a5584e5`): Dynamic resume calculation on `/sql/learn` and `/prisma/learn`.
 - **2026-10-09:** Phase 3 implemented: Route context preservation across Auth transitions and Playground modal/page exits.
+- **2026-10-09:** Phase 4 implemented: Exact step-chain challenge back navigation to last concept's last task & Challenge Back button wiring.
+- **2026-10-09:** Phase 5 implemented: Hydration breadcrumb shell with TrackDaySkeleton loader and PracticeSkeleton Suspense fallback.
