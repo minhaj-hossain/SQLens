@@ -31,6 +31,7 @@ import {
   Check,
   RotateCcw,
   Sparkles,
+  ArrowLeft,
   ArrowRight,
   ChevronDown,
   X,
@@ -552,28 +553,42 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
             </span>
           </div>
 
-          {/* SINGLE Unified Action Button for Run / Next Task */}
-          {taskPassed ? (
-            <button
-              id="challenge-next-btn"
-              onClick={handleNextAction}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
-            >
-              <span>{isLastTask ? 'Finish Challenge' : 'Next Task'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              id="challenge-run-btn"
-              onClick={() => handleRunQuery()}
-              className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>
-                {validationFeedback ? 'Try Again' : isPrismaSurface ? 'Run & Check' : 'Run Query'}
-              </span>
-            </button>
-          )}
+          {/* Action Buttons for Back / Run / Next Task */}
+          <div className="flex items-center gap-2">
+            {onBackToPractice && (
+              <button
+                id="challenge-back-btn"
+                type="button"
+                onClick={onBackToPractice}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono text-text-dim border border-border bg-surface-2 hover:text-text hover:bg-surface-3 transition cursor-pointer shrink-0"
+                title="Back to practice"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back</span>
+              </button>
+            )}
+            {taskPassed ? (
+              <button
+                id="challenge-next-btn"
+                onClick={handleNextAction}
+                className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
+              >
+                <span>{isLastTask ? 'Finish Challenge' : 'Next Task'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                id="challenge-run-btn"
+                onClick={() => handleRunQuery()}
+                className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-semibold font-sans bg-func hover:bg-func/80 text-ink transition cursor-pointer active:scale-95"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>
+                  {validationFeedback ? 'Try Again' : isPrismaSurface ? 'Run & Check' : 'Run Query'}
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

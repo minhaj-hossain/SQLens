@@ -76,7 +76,17 @@ export default function ChallengeView({ dayId }: ChallengeViewProps) {
       }}
       onBackToPractice={() => {
         const last = mod.concepts[mod.concepts.length - 1];
-        if (last) router.push(trackLearnUrl(track, mod.id, 'practice', last.id, 0));
+        if (!last) {
+          router.push(trackRoadmapUrl(track, mod.id));
+          return;
+        }
+        const taskCount = last.tasks?.length ?? 0;
+        if (taskCount > 0) {
+          const lastTaskIndex = Math.max(0, taskCount - 1);
+          router.push(trackLearnUrl(track, mod.id, 'practice', last.id, lastTaskIndex));
+        } else {
+          router.push(trackLearnUrl(track, mod.id, 'theory', last.id));
+        }
       }}
     />
   );
