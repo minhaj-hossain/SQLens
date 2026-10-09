@@ -393,6 +393,13 @@ describe('Phase 5 — no app source builds a bare /learn/<moduleId> overview URL
       );
     }
   });
+
+  it('ModuleCompletionView never statically imports SQL curriculum or milestones', () => {
+    const src = layoutSource('src/components/learning/ModuleCompletionView.tsx');
+    expect(src).not.toContain('content/sql/curriculum-index');
+    expect(src).not.toContain('config/roadmap');
+    expect(src).toContain('useTrackCurriculum');
+  });
 });
 
 

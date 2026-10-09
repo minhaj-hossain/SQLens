@@ -14,8 +14,6 @@ import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { ModuleData } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
-import { ALL_MODULES } from '../../content/sql/curriculum-index';
-import { ROADMAP_MILESTONES } from '../../config/roadmap';
 import { getModuleDisplayLabel } from '../../lib/curriculum/module-order';
 import {
   getModuleUnlockStatus,
@@ -24,7 +22,7 @@ import {
   isModuleFullyComplete,
 } from '../../lib/progress/unlock-calculator';
 import { trackLearnUrl } from '../../lib/track-routes';
-import { useTrack } from '../learn/use-track';
+import { useTrackCurriculum } from '../learn/use-track';
 import { useStepBack } from '../learn/use-step-back';
 
 interface ModuleCompletionViewProps {
@@ -43,19 +41,21 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
   onContinueNextDay,
 }) => {
   const router = useRouter();
-  const track = useTrack();
+  const { track, meta, modules, milestones } = useTrackCurriculum();
   const { backStep, goBack } = useStepBack(module.id);
 
   const currentMilestone =
-    ROADMAP_MILESTONES.find((m) => m.id === module.milestoneId) || ROADMAP_MILESTONES[0];
-  const milestoneModules = ALL_MODULES.filter((m) => currentMilestone.moduleIds.includes(m.id));
+    milestones.find((m) => m.id === module.milestoneId) || milestones[0];
+  const milestoneModules = modules.filter((m) => currentMilestone.moduleIds.includes(m.id));
   const completedInMilestone = milestoneModules.filter((m) =>
     isModuleFullyComplete(m, userState),
   ).length;
-  const milestonePercent = Math.round((completedInMilestone / milestoneModules.length) * 100);
+  const milestonePercent = Math.round(
+    (completedInMilestone / Math.max(milestoneModules.length, 1)) * 100,
+  );
 
   const nextStatus = nextModule
-    ? getModuleUnlockStatus(nextModule, ALL_MODULES, userState)
+    ? getModuleUnlockStatus(nextModule, modules, userState)
     : null;
   const nextLocked = Boolean(nextStatus && !nextStatus.isUnlocked);
 
@@ -156,7 +156,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
           <div className='py-1 text-center'>
             <div className='text-[15px] font-semibold text-func'>Curriculum completed</div>
             <p className='mx-auto mt-1.5 max-w-md text-[13px] text-text-dim'>
-              You&apos;ve finished all {ALL_MODULES.length} days of the SQLens curriculum.
+              You&apos;ve finished all {modules.length} days of the {meta.label} curriculum.
             </p>
           </div>
         )}
@@ -181,7 +181,7 @@ export const ModuleCompletionView: React.FC<ModuleCompletionViewProps> = ({
           <Icon name='restart_alt' className='text-[14px]' />
           Review Day
         </button>
-        {nextModule && (
+        {nextModule && Boolean(nextModule.concepts?.[0]?.id) && (
           <button
             onClick={() => router.push(trackLearnUrl(track, nextModule.id, 'theory', nextModule.concepts[0].id))}
             title={`Open ${getModuleDisplayLabel(nextModule)}`}
