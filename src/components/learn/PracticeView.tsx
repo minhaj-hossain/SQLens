@@ -84,6 +84,7 @@ function PracticeInner({ mod, concept }: { mod: ModuleData; concept: Concept }) 
       concept={concept}
       conceptIndex={mod.concepts.findIndex((c) => c.id === concept.id)}
       totalConcepts={mod.concepts.length}
+      hasChallenge={Boolean(mod.challenge)}
       {...(() => {
         const rawSaved = userState.taskAttempts?.[task.id]?.lastSubmittedSql;
         const isCompatible = isSavedCodeCompatibleWithTask(task, rawSaved);

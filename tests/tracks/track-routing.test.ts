@@ -222,6 +222,31 @@ describe('Phase 2 — namespaced track routing', () => {
     expect(practiceSrc).toContain('<Suspense fallback={<PracticeSkeleton />}>');
     expect(practiceSrc).not.toContain('<Suspense fallback={null}>');
   });
+
+  it('Phase 6: Action labels polish, not-found routing, and homepage widget contracts', () => {
+    const conceptLessonSrc = readFileSync('src/components/learning/ConceptLessonView.tsx', 'utf8');
+    const practiceTaskSrc = readFileSync('src/components/learning/PracticeTaskView.tsx', 'utf8');
+    const notFoundSrc = readFileSync('src/app/not-found.tsx', 'utf8');
+    const homepageSrc = readFileSync('src/components/home/ClickHomepage.tsx', 'utf8');
+
+    // 6.1 & 6.2: Homepage returning learner card contract
+    expect(homepageSrc).toContain('returning-learner-card');
+    expect(homepageSrc).toContain('resume-learning-btn');
+    expect(homepageSrc).toContain('deriveLastPosition');
+
+    // 6.3: ConceptLessonView label polish when concept.tasks.length === 0
+    expect(conceptLessonSrc).toContain("concept.tasks.length === 0 ? 'Complete Concept & Continue' : 'Continue to Practice'");
+
+    // 6.4: PracticeTaskView checks hasChallenge before Module Challenge vs Complete Module
+    expect(practiceTaskSrc).toContain('hasChallenge');
+    expect(practiceTaskSrc).toContain("'Complete Module'");
+
+    // 6.5: not-found routes directly to /sql and /prisma
+    expect(notFoundSrc).toContain('href="/sql"');
+    expect(notFoundSrc).toContain('href="/prisma"');
+    expect(notFoundSrc).not.toContain('lives at the root of the site');
+  });
 });
+
 
 

@@ -59,6 +59,8 @@ interface PracticeTaskViewProps {
   /** P11.2: step-chain Back (task N -> task N-1 -> lesson -> prev-concept task). */
   onBack?: () => void;
   backLabel?: string;
+  /** Phase 6: whether the module contains an end-of-module challenge. */
+  hasChallenge?: boolean;
 }
 
 export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
@@ -79,6 +81,7 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   onNextTask,
   onBack,
   backLabel,
+  hasChallenge = true,
 }) => {
   // Phase 7: the editor's starter + chrome come from the track (Prisma tasks
   // edit TypeScript, so the SQL scaffold of `initialSql` must NOT load there).
@@ -251,7 +254,9 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
   const nextActionLabel = isLastTask
     ? conceptIndex < totalConcepts - 1
       ? 'Next Concept'
-      : 'Module Challenge'
+      : hasChallenge
+        ? 'Module Challenge'
+        : 'Complete Module'
     : 'Next Task';
 
   // Batch B: txn pill reads the last execution result (session view). Open/failed

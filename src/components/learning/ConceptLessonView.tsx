@@ -975,7 +975,8 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
             onClick={onStartPractice}
             className="inline-flex items-center gap-2 bg-func text-ink font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:brightness-110 transition-colors cursor-pointer"
           >
-            Continue to Practice <Icon name="arrow_forward" className="text-[15px]" />
+            {concept.tasks.length === 0 ? 'Complete Concept & Continue' : 'Continue to Practice'}{' '}
+            <Icon name="arrow_forward" className="text-[15px]" />
           </button>
         </div>
       </div>

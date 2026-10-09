@@ -41,7 +41,7 @@ Eliminate critical user flow disconnects, disorienting navigation traps, and tra
 | **Phase 3** | Route Context Preservation (Auth & Playground) | **P0 / P1** | `src/components/auth/AuthScreen.tsx`, `src/components/auth/AuthView.tsx`, `src/app/playground/page.tsx`, `src/components/learning/Playground.tsx` | ✅ Completed |
 | **Phase 4** | Exact Step-Chain Challenge Back Navigation | **P1** | `src/components/learn/ChallengeView.tsx`, `src/components/learning/IndependentChallengeView.tsx` | ✅ Completed |
 | **Phase 5** | Hydration Shells & Skeleton Fallbacks | **P1** | `src/components/learn/TrackDayLayoutView.tsx`, `src/components/learn/PracticeView.tsx`, `src/components/learn/PracticeSkeleton.tsx`, `src/components/learn/TrackDaySkeleton.tsx` | ✅ Completed |
-| **Phase 6** | Homepage Returning Learner Widget & Copy Polish | **P1 / P2** | `src/components/home/ClickHomepage.tsx`, `src/app/not-found.tsx`, `src/components/learning/ConceptLessonView.tsx`, `src/components/learning/PracticeTaskView.tsx` | 🔲 Not Started |
+| **Phase 6** | Homepage Returning Learner Widget & Copy Polish | **P1 / P2** | `src/components/home/ClickHomepage.tsx`, `src/app/not-found.tsx`, `src/components/learning/ConceptLessonView.tsx`, `src/components/learning/PracticeTaskView.tsx` | ✅ Completed |
 | **Phase 7** | End-to-End Journey QA & Regression Testing | **Gate** | CI scripts, Vitest suite, manual flow check | 🔲 Not Started |
 
 ---
@@ -85,11 +85,11 @@ Eliminates blank dark flickers during progress readiness evaluation.
 
 #### Phase 6: Homepage Returning Learner Widget & Copy Polish (P1 / P2)
 Restores missing homepage resume widget and polishes misleading button labels.
-- [ ] **6.1** In [src/components/home/ClickHomepage.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/home/ClickHomepage.tsx), render a returning learner resume card above the track grid if user has saved progress.
-- [ ] **6.2** Include active track badge, current day title, completion percentage, and a direct "Resume Learning" button.
-- [ ] **6.3** In [src/components/learning/ConceptLessonView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learning/ConceptLessonView.tsx), set button label to "Complete Concept & Continue" when `concept.tasks.length === 0`.
-- [ ] **6.4** In [src/components/learning/PracticeTaskView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learning/PracticeTaskView.tsx), check `concept.module?.challenge` (or parent module) before setting label to "Module Challenge" vs "Complete Module".
-- [ ] **6.5** In [src/app/not-found.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/app/not-found.tsx), update copy to link directly to `/sql` and `/prisma` learning paths.
+- [x] **6.1** In [src/components/home/ClickHomepage.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/home/ClickHomepage.tsx), render a returning learner resume card above the track grid if user has saved progress.
+- [x] **6.2** Include active track badge, current day title, completion percentage, and a direct "Resume Learning" button.
+- [x] **6.3** In [src/components/learning/ConceptLessonView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learning/ConceptLessonView.tsx), set button label to "Complete Concept & Continue" when `concept.tasks.length === 0`.
+- [x] **6.4** In [src/components/learning/PracticeTaskView.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/learning/PracticeTaskView.tsx), check `concept.module?.challenge` (or parent module) before setting label to "Module Challenge" vs "Complete Module".
+- [x] **6.5** In [src/app/not-found.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/app/not-found.tsx), update copy to link directly to `/sql` and `/prisma` learning paths.
 
 #### Phase 7: Verification & QA Testing (Gate)
 - [ ] **7.1** Run `npm run lint` (TypeScript type check across entire project).
@@ -130,3 +130,4 @@ npm run test:engine
 - **2026-10-09:** Phase 3 implemented: Route context preservation across Auth transitions and Playground modal/page exits.
 - **2026-10-09:** Phase 4 implemented: Exact step-chain challenge back navigation to last concept's last task & Challenge Back button wiring.
 - **2026-10-09:** Phase 5 implemented: Hydration breadcrumb shell with TrackDaySkeleton loader and PracticeSkeleton Suspense fallback.
+- **2026-10-09:** Phase 6 implemented: Homepage returning learner resume widget, action button labels refinement, and 404 direct track links.
