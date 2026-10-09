@@ -4,7 +4,10 @@ import type {
   PrismaTheoryContent,
   SkillType,
 } from './prisma-curriculum';
+import type { NetworkingTaskContent } from './networking-curriculum';
 import type { TrackId } from './track';
+
+export type { NetworkingTaskContent };
 
 export type { GradingType, SkillType };
 
@@ -187,6 +190,11 @@ export interface PracticeTask {
    * stays the executable reference (generated SQL runs via the SQL engine).
    */
   prisma?: PrismaTaskContent;
+  /**
+   * Networking track extension (Gate 3).
+   * Defines topology, transmission sequence, and interactive prediction choices.
+   */
+  networking?: NetworkingTaskContent;
 }
 
 export interface SyntaxBlock {

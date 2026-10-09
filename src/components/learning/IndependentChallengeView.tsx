@@ -14,9 +14,11 @@ import {
   submitForTask,
   typeInspectorState,
   type SqlLensState,
+  isNetworkingTask,
 } from '../../lib/track-submit';
 import { buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { JudgmentBlock } from './JudgmentBlock';
+import { NetworkingPracticeTaskView } from './networking/NetworkingPracticeTaskView';
 import { useCloseOnOutside } from '../../lib/use-close-on-outside';
 import { DATABASE_SCHEMAS } from '../../content/sql/database/schema';
 import { readLiveTables, resolveLiveRows, resolveRowCount } from '../../lib/sql-engine/live-table-view';
@@ -365,6 +367,48 @@ export const IndependentChallengeView: React.FC<IndependentChallengeViewProps> =
   const cleanedPrompt = cleanBackticks(
     (currentTask.title || '').replace(/^Task\s+\d+:\s*/i, '').trim() || 'Complete the challenge task'
   );
+
+  if (isNetworkingTask(currentTask)) {
+    return (
+      <div className="w-full max-w-[1440px] mx-auto space-y-4 px-0 sm:px-4">
+        {challenge.tasks.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border-soft">
+            {challenge.tasks.map((t, idx) => {
+              const isTaskDone = completedTaskIds.includes(t.id);
+              const isActive = selectedTaskIdx === idx;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setSelectedTaskIdx(idx)}
+                  className={`px-3 py-1.5 rounded-xl font-mono text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-func text-ink shadow-md'
+                      : 'bg-surface-2 text-text-dim hover:text-text'
+                  }`}
+                >
+                  {isTaskDone && <span className="text-done font-bold text-xs">✓</span>}
+                  <span>Task {idx + 1}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <NetworkingPracticeTaskView
+          task={currentTask}
+          taskIndex={selectedTaskIdx}
+          totalTasks={challenge.tasks.length}
+          isCompleted={completedTaskIds.includes(currentTask.id)}
+          onTaskSuccess={(code) => {
+            onChallengeTaskSuccess(currentTask.id, code);
+          }}
+          onNextTask={handleNextAction}
+          onBack={onBackToPractice}
+          backLabel="Back to Practice"
+          isChallenge={true}
+        />
+      </div>
+    );
+  }
 
   return (
     <motion.div
