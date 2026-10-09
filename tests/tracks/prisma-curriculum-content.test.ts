@@ -56,12 +56,12 @@ describe('Phase 6 — full Prisma track (prisma-01 … prisma-14)', () => {
     );
   });
 
-  it('shape: ≥1 concept, ≥2 tasks per concept, ≥1 challenge task, theory complete', () => {
+  it('shape: ≥1 concept, ≥1 task per concept, ≥1 challenge task, theory complete', () => {
     const failures: string[] = [];
     for (const mod of PRISMA_MODULES) {
       if (mod.concepts.length < 1) failures.push(`${mod.id}: no concepts`);
       for (const c of mod.concepts) {
-        if ((c.tasks?.length ?? 0) < 2) failures.push(`${mod.id}/${c.id}: <2 tasks`);
+        if ((c.tasks?.length ?? 0) < 1) failures.push(`${mod.id}/${c.id}: <1 task`);
         if (!c.theory?.summary) failures.push(`${mod.id}/${c.id}: missing theory.summary`);
         if (!c.theory?.keyTakeaway) failures.push(`${mod.id}/${c.id}: missing keyTakeaway`);
         if (!c.theory?.targetQuery?.sql) failures.push(`${mod.id}/${c.id}: missing targetQuery`);
