@@ -38,7 +38,7 @@ Eliminate critical user flow disconnects, disorienting navigation traps, and tra
 |---|---|---|---|---|
 | **Phase 1** | Track-Aware Module Completion & Prisma Gating | **P0** | `src/components/learning/ModuleCompletionView.tsx` | ✅ Completed |
 | **Phase 2** | Dynamic Resume Calculation on Track Entry | **P0** | `src/app/(app)/sql/learn/page.tsx`, `src/app/(app)/prisma/learn/page.tsx` | ✅ Completed |
-| **Phase 3** | Route Context Preservation (Auth & Playground) | **P0 / P1** | `src/components/auth/AuthScreen.tsx`, `src/components/auth/AuthView.tsx`, `src/app/playground/page.tsx`, `src/components/learning/Playground.tsx` | 🔲 Not Started |
+| **Phase 3** | Route Context Preservation (Auth & Playground) | **P0 / P1** | `src/components/auth/AuthScreen.tsx`, `src/components/auth/AuthView.tsx`, `src/app/playground/page.tsx`, `src/components/learning/Playground.tsx` | ✅ Completed |
 | **Phase 4** | Exact Step-Chain Challenge Back Navigation | **P1** | `src/components/learn/ChallengeView.tsx` | 🔲 Not Started |
 | **Phase 5** | Hydration Shells & Skeleton Fallbacks | **P1** | `src/components/learn/TrackDayLayoutView.tsx`, `src/components/learn/PracticeView.tsx` | 🔲 Not Started |
 | **Phase 6** | Homepage Returning Learner Widget & Copy Polish | **P1 / P2** | `src/components/home/ClickHomepage.tsx`, `src/app/not-found.tsx`, `src/components/learning/ConceptLessonView.tsx`, `src/components/learning/PracticeTaskView.tsx` | 🔲 Not Started |
@@ -64,11 +64,11 @@ Prevents `/sql/learn` and `/prisma/learn` from redirecting learners to completed
 
 #### Phase 3: Route Context Preservation for Auth & Playground (P0 / P1)
 Ensures users returning from sign-in or closing the playground return to their active lesson rather than being kicked to `/`.
-- [ ] **3.1** In [src/components/auth/AuthScreen.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/auth/AuthScreen.tsx), read `redirect` or `from` query parameter via `useSearchParams()`.
-- [ ] **3.2** Update `handleBack` to navigate to `returnUrl` (defaulting to current track or `/` only if no return target).
-- [ ] **3.3** Pass `returnUrl` to `AuthView` so cancel / back arrow and successful login/signup resolve to `returnUrl`.
-- [ ] **3.4** Update Header "Sign In" link in [Header.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/layout/Header.tsx) to attach `?from=${encodeURIComponent(pathname)}`.
-- [ ] **3.5** In [src/app/playground/page.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/app/playground/page.tsx), read `from` search param or use browser history fallback (`router.back()`) when closing Playground.
+- [x] **3.1** In [src/components/auth/AuthScreen.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/auth/AuthScreen.tsx), read `redirect` or `from` query parameter via `useSearchParams()`.
+- [x] **3.2** Update `handleBack` to navigate to `returnUrl` (defaulting to current track or `/` only if no return target).
+- [x] **3.3** Pass `returnUrl` to `AuthView` so cancel / back arrow and successful login/signup resolve to `returnUrl`.
+- [x] **3.4** Update Header "Sign In" link in [Header.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/components/layout/Header.tsx) to attach `?from=${encodeURIComponent(pathname)}`.
+- [x] **3.5** In [src/app/playground/page.tsx](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/src/app/playground/page.tsx), read `from` search param or use browser history fallback (`router.back()`) when closing Playground.
 
 #### Phase 4: Exact Step-Chain Challenge Back Navigation (P1)
 Aligns Challenge "Back" navigation with the step-chain contract.
@@ -124,3 +124,6 @@ npm run test:engine
 ## 5. Changelog & Progress Log
 
 - **2026-10-09:** Initial Journey Audit completed (Artifact: `user_journey_audit.md`). Implementation Plan and Tracker created in `docs/global/USER_JOURNEY_IMPLEMENTATION_PLAN_AND_TRACKER.md`.
+- **2026-10-09:** Phase 1 implemented & committed (`b625106`): Track-aware module completion & Prisma milestones.
+- **2026-10-09:** Phase 2 implemented & committed (`a5584e5`): Dynamic resume calculation on `/sql/learn` and `/prisma/learn`.
+- **2026-10-09:** Phase 3 implemented: Route context preservation across Auth transitions and Playground modal/page exits.

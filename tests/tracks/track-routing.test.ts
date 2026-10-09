@@ -173,4 +173,24 @@ describe('Phase 2 — namespaced track routing', () => {
       expect(src).not.toContain('userState.currentModuleId');
     }
   });
+
+  it('AuthScreen, Playground and Header preserve route context and return targets', () => {
+    const authSrc = readFileSync('src/components/auth/AuthScreen.tsx', 'utf8');
+    const playSrc = readFileSync('src/app/playground/page.tsx', 'utf8');
+    const headerSrc = readFileSync('src/components/layout/Header.tsx', 'utf8');
+
+    expect(authSrc).toContain('useSearchParams');
+    expect(authSrc).toContain('sanitizeReturnUrl');
+    expect(authSrc).toContain('returnTarget');
+
+    expect(playSrc).toContain('useSearchParams');
+    expect(playSrc).toContain('sanitizeReturnUrl');
+    expect(playSrc).toContain('/prisma');
+    expect(playSrc).toContain('/sql');
+    expect(playSrc).not.toContain("onClose={() => router.push('/')}");
+
+    expect(headerSrc).toContain('usePathname');
+    expect(headerSrc).toContain('signin?from=');
+    expect(headerSrc).toContain('playground?mode=prisma');
+  });
 });

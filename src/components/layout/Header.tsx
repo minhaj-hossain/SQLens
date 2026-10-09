@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -34,6 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   isMinimal = false,
 }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const pathname = usePathname();
   const { track, modules, meta } = useTrackCurriculum();
   const totalModules = modules.length;
   const completedCount = Object.keys(userState.completedModules).length;
@@ -91,7 +93,11 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Playground — real route since Phase 1; track-routed since P0.3 */}
           {!isMinimal && (
             <Link
-              href={track === 'prisma' ? '/playground?mode=prisma' : '/playground'}
+              href={
+                track === 'prisma'
+                  ? `/playground?mode=prisma${pathname && pathname !== '/' ? `&from=${encodeURIComponent(pathname)}` : ''}`
+                  : `/playground${pathname && pathname !== '/' ? `?from=${encodeURIComponent(pathname)}` : ''}`
+              }
               title={`Open ${meta.label} Playground`}
               aria-label={`Open ${meta.label} Playground`}
               className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-surface-2 border border-border text-text-dim hover:text-text hover:border-text-dim transition-all duration-150"
@@ -244,7 +250,7 @@ export const Header: React.FC<HeaderProps> = ({
           ) : (
             <Link
               id="header-signin-btn"
-              href="/signin"
+              href={pathname && pathname !== '/' ? `/signin?from=${encodeURIComponent(pathname)}` : '/signin'}
               title="Sign in"
               aria-label="Sign in"
               className={`flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full font-semibold hover:brightness-110 transition-all duration-150 font-mono text-[12px] whitespace-nowrap ${isMinimal ? 'bg-[#0d1526] border border-[#38bdf8] text-[#38bdf8] hover:bg-[#38bdf8]/10' : 'bg-func text-ink rounded-lg text-[11px] sm:text-xs'}`}

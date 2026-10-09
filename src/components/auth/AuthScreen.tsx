@@ -1,28 +1,42 @@
 'use client';
 /**
- * AuthScreen — route wrapper around AuthView (Phase 1).
- * Mode switching and back/success navigation become real route navigation:
- *   /signin ↔ /signup, success/back → /
+ * AuthScreen — route wrapper around AuthView.
+ * Mode switching and back/success navigation respect the originating URL (?from= / ?redirect=):
+ *   /signin ↔ /signup (propagating from parameter)
+ *   success / back → return target (or / if none)
  */
-import React, { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthView } from './AuthView';
+
+function sanitizeReturnUrl(url: string | null): string {
+  if (!url) return '/';
+  if (url.startsWith('/') && !url.startsWith('//')) {
+    return url;
+  }
+  return '/';
+}
 
 interface AuthScreenProps {
   mode: 'signin' | 'signup';
 }
 
-export default function AuthScreen({ mode }: AuthScreenProps) {
+function AuthScreenInner({ mode }: AuthScreenProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTarget = sanitizeReturnUrl(searchParams.get('from') || searchParams.get('redirect'));
 
   const handleSetMode = useCallback(
     (next: 'signin' | 'signup') => {
-      router.push(next === 'signin' ? '/signin' : '/signup');
+      const qs = returnTarget !== '/' ? `?from=${encodeURIComponent(returnTarget)}` : '';
+      router.push(next === 'signin' ? `/signin${qs}` : `/signup${qs}`);
     },
-    [router],
+    [router, returnTarget],
   );
 
-  const handleBack = useCallback(() => router.push('/'), [router]);
+  const handleBack = useCallback(() => {
+    router.push(returnTarget);
+  }, [router, returnTarget]);
 
   return (
     <AuthView
@@ -31,5 +45,13 @@ export default function AuthScreen({ mode }: AuthScreenProps) {
       onBack={handleBack}
       onSuccess={handleBack}
     />
+  );
+}
+
+export default function AuthScreen({ mode }: AuthScreenProps) {
+  return (
+    <Suspense fallback={null}>
+      <AuthScreenInner mode={mode} />
+    </Suspense>
   );
 }

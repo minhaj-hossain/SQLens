@@ -37,7 +37,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ mode, onSetMode, onBack, onS
       <header className="w-full max-w-[460px] mx-auto px-6 pt-6">
         <button
           onClick={onBack}
-          aria-label="Back to homepage"
+          aria-label="Back"
           className="w-9 h-9 -ml-2 flex items-center justify-center rounded-lg text-text-dim hover:text-text hover:bg-surface-2 transition cursor-pointer"
         >
           <ArrowLeft className="w-[18px] h-[18px]" />
