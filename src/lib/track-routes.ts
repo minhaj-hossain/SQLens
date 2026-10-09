@@ -38,12 +38,12 @@ export function trackLearnUrl(
   }
 }
 
-const TRACK_DAY_PATTERN = /^(?:day-\d{2}|prisma-\d{2})$/;
+const TRACK_DAY_PATTERN = /^(?:day-\d{2}|prisma-\d{2}|net-\d{2})$/;
 
-/** Extract a module id (`day-NN` or `prisma-NN`) from a track-namespaced learn pathname. */
+/** Extract a module id (`day-NN`, `prisma-NN`, or `net-NN`) from a track-namespaced learn pathname. */
 export function trackModuleIdFromPathname(pathname: string | null): string | null {
   if (!pathname) return null;
-  const match = /^\/(?:sql|prisma)\/learn\/([a-z]+-\d{2})(?:\/|$)/.exec(pathname);
+  const match = /^\/(?:sql|prisma|networking)\/learn\/([a-z]+-\d{2})(?:\/|$)/.exec(pathname);
   if (!match) return null;
   return TRACK_DAY_PATTERN.test(match[1]) ? match[1] : null;
 }
@@ -51,15 +51,16 @@ export function trackModuleIdFromPathname(pathname: string | null): string | nul
 /** Concept slug from a track-namespaced theory/practice pathname, else null. */
 export function trackConceptIdFromPathname(pathname: string | null): string | null {
   if (!pathname) return null;
-  const match = /^\/(?:sql|prisma)\/learn\/[a-z]+-\d{2}\/(?:theory|practice)\/([a-z0-9-]+)/.exec(pathname);
+  const match = /^\/(?:sql|prisma|networking)\/learn\/[a-z]+-\d{2}\/(?:theory|practice)\/([a-z0-9-]+)/.exec(pathname);
   return match ? match[1] : null;
 }
 
-/** Which track owns a pathname (`/sql/...` → sql, `/prisma/...` → prisma). */
+/** Which track owns a pathname (`/sql/...` → sql, `/prisma/...` → prisma, `/networking/...` → networking). */
 export function trackFromPathname(pathname: string | null): TrackId | null {
   if (!pathname) return null;
   if (pathname === '/sql' || pathname.startsWith('/sql/')) return 'sql';
   if (pathname === '/prisma' || pathname.startsWith('/prisma/')) return 'prisma';
+  if (pathname === '/networking' || pathname.startsWith('/networking/')) return 'networking';
   return null;
 }
 
