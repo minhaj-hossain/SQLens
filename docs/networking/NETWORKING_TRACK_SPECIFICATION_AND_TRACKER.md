@@ -1,11 +1,11 @@
 # Networking Fundamentals Track: Master Implementation Plan & Architecture Tracker
 
-**Document Version:** 2.5 (Gate 4 Browser QA & Educational Acceptance Validation Complete & Verified)  
+**Document Version:** 2.6 (Gate 5 Milestone 3 — Modules net-04, net-05, net-06 Implemented & Verified)  
 **Date:** October 10, 2026  
-**Status:** Gate 4 Complete & Verified (Standing by for User Authorization for Gate 5)  
+**Status:** Gate 5 In Progress — Milestone 3 Complete (Standing by for User Authorization for Milestone 4)  
 **Location:** `docs/networking/NETWORKING_TRACK_SPECIFICATION_AND_TRACKER.md`  
 **Track Identity:** `Networking Fundamentals` (Track ID: `'networking'`, Base Route: `/networking`, Nomenclature: `Module N`)  
-**Post-Gate 4 Verification:** `npm run lint` = 0 errors | `npm test` = 98/98 test files passed, 1,090/1,090 tests passed (31.09s) | Live Browser QA Recording verified: `net03_qa_walkthrough_1791571076579.webp` (7/7 Educational Acceptance Criteria passed).  
+**Post-Gate 5 M3 Verification:** `npm run lint` = 0 errors | `npm test` = 99/99 test files passed, 1,126/1,126 tests passed (39.69s) — 36 new Gate 5 M3 tests (net-04/05/06 registration, grader, sweep, regression, collision) + 0 regressions across all existing SQL/Prisma/Networking tests.  
 
 ---
 
@@ -357,7 +357,9 @@ The prototype must pass 7 independent verification gates:
 | **Gate 1** | Track Shell Registration & Minimal Ordered Journey | ✅ **Completed & Verified** | Track registration in `TRACK_IDS`/`TRACK_REGISTRY`, namespaced routing `/networking/...`, module shells (`net-01` → `net-02` → `net-03`), progress isolation, delegate layouts, 0 lint errors, and 1,068/1,068 tests passing (19 new tests, 0 regressions). Committed to main. |
 | **Gate 2** | Lean Switching Simulation Engine | ✅ **Completed & Verified** | Pure deterministic state machine in `src/lib/network-engine/switching-sim.ts` with 100% unit test coverage in `tests/engine/networking-switching-sim.test.ts` verifying all 7 switch decisions, state snapshots, 5-port transfer topology, and pure replayability. |
 | **Gate 4** | Browser QA & Educational Acceptance Validation | ✅ **Completed & Verified** | Live browser session validated against all 7 Educational Acceptance Criteria. Recorded session: `net03_qa_walkthrough_1791571076579.webp`. Tested: roadmap landing, interactive simulation stepper, mandatory Prediction Gate pause, misconception banner display, unlock on correct answer, practice split-pane topology lab, Task 1 & Task 2 question submissions, and roadmap progress tracking. |
-| **Gate 5** | Phased Milestone Expansion | ⏸️ Queued | Incremental expansion through remaining modules (`net-04` through `net-16`). |
+| **Gate 5 — M3** | Phased Expansion: Milestone 3 (net-04/05/06) | ✅ **Completed & Verified** | `net-04` (IPv4 Addressing: C15–C20, 3 concepts + challenge), `net-05` (ARP & Local Delivery: C21–C23, 3 concepts), `net-06` (IPv6 & NDP: C24a–C24e, 3 concepts) authored with full judgment grading. Milestone 2 roadmap registered. 36 new tests: 99/99 files, 1,126/1,126 tests, 0 regressions. Committed `8146887`. |
+| **Gate 5 — M4** | Phased Expansion: Milestone 4 (net-07/08) | ⏸️ Queued | Default Gateways & Internetwork Routing (`net-07`); NAT & PAT (`net-08`). |
+| **Gate 5 — M5+** | Phased Expansion: Milestones 5–9 (net-09 through net-16) | ⏸️ Queued | DHCP, DNS, TCP/UDP, HTTP/TLS, Diagnostics, Security, VLANs/Wireless. |
 
 ---
 
@@ -461,6 +463,6 @@ When continuing this project in a new conversation, the agent should:
 
 ---
 
-*Current Status: Gate 4 Complete & Verified. Standing by for User Authorization for Gate 5 (Phased Milestone Expansion).*
+*Current Status: Gate 5 In Progress — Milestone 3 Complete & Verified (net-04 IPv4, net-05 ARP, net-06 IPv6 authored and tested). Standing by for User Authorization for Gate 5 Milestone 4 (net-07 Default Gateways & Routing, net-08 NAT & PAT).*
 
 
