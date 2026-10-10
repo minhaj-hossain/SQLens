@@ -18,4 +18,14 @@ export const NETWORKING_ROADMAP_MILESTONES: MilestoneData[] = [
     daysRange: 'Modules 1–3',
     moduleIds: ['net-01', 'net-02', 'net-03'],
   },
+  {
+    id: 'net-milestone-2',
+    number: 2,
+    title: 'Network Addressing & Resolution',
+    subtitle: 'IPv4, IPv6, Subnets & ARP',
+    description:
+      'Master IPv4 dotted-decimal notation, CIDR subnetting, the binary AND subnet decision, ARP Request/Reply resolution, ARP cache management, and IPv6 fundamentals including zero compression, address scopes, solicited-node multicast, NDP, and SLAAC autoconfiguration.',
+    daysRange: 'Modules 4–6',
+    moduleIds: ['net-04', 'net-05', 'net-06'],
+  },
 ];

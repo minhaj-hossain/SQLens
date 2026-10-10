@@ -90,10 +90,13 @@ describe('Gate 1 — Networking track registration & identity', () => {
 });
 
 describe('Gate 1 — Minimal module shells & ordering (net-01 -> net-02 -> net-03)', () => {
-  it('registers exactly 3 modules in the initial slice', () => {
+  it('registers all 6 milestone-1 and milestone-2 modules in order', () => {
     const modules = getTrackModules('networking');
-    expect(modules).toHaveLength(3);
-    expect(modules.map((m) => m.id)).toEqual(['net-01', 'net-02', 'net-03']);
+    expect(modules).toHaveLength(6);
+    expect(modules.map((m) => m.id)).toEqual([
+      'net-01', 'net-02', 'net-03',
+      'net-04', 'net-05', 'net-06',
+    ]);
   });
 
   it('modules have sequential curriculumOrder and displayLabel "Module N"', () => {
@@ -114,6 +117,24 @@ describe('Gate 1 — Minimal module shells & ordering (net-01 -> net-02 -> net-0
       id: 'net-03',
       curriculumOrder: 3,
       displayLabel: 'Module 3',
+      track: 'networking',
+    });
+    expect(modules[3]).toMatchObject({
+      id: 'net-04',
+      curriculumOrder: 4,
+      displayLabel: 'Module 4',
+      track: 'networking',
+    });
+    expect(modules[4]).toMatchObject({
+      id: 'net-05',
+      curriculumOrder: 5,
+      displayLabel: 'Module 5',
+      track: 'networking',
+    });
+    expect(modules[5]).toMatchObject({
+      id: 'net-06',
+      curriculumOrder: 6,
+      displayLabel: 'Module 6',
       track: 'networking',
     });
   });

@@ -9,11 +9,17 @@ import { ModuleData } from '../../types/curriculum';
 import { NET_01_MODULE } from './modules/net-01';
 import { NET_02_MODULE } from './modules/net-02';
 import { NET_03_MODULE } from './modules/net-03';
+import { NET_04_MODULE } from './modules/net-04';
+import { NET_05_MODULE } from './modules/net-05';
+import { NET_06_MODULE } from './modules/net-06';
 
 const RAW_NETWORKING_MODULES: ModuleData[] = [
   NET_01_MODULE,
   NET_02_MODULE,
   NET_03_MODULE,
+  NET_04_MODULE,
+  NET_05_MODULE,
+  NET_06_MODULE,
 ];
 
 export const NETWORKING_MODULES: ModuleData[] = RAW_NETWORKING_MODULES.map((m) => ({
