@@ -134,6 +134,10 @@ export function submitForTask(options: TrackSubmitOptions): TrackSubmitOutcome {
     const netOutcome = gradeNetworkingSubmission({
       task,
       judgmentAnswers,
+      selectedOptionIndex:
+        code !== undefined && code !== '' && !Number.isNaN(Number(code))
+          ? Number(code)
+          : undefined,
     });
     return {
       passed: netOutcome.passed,

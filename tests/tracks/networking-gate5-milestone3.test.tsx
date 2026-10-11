@@ -14,13 +14,20 @@
  * 10. No module ID collisions in the full NETWORKING_MODULES array.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { NETWORKING_MODULES, getNetworkingModuleById } from '../../src/content/networking/networking-curriculum-index';
 import { NETWORKING_ROADMAP_MILESTONES } from '../../src/content/networking/networking-roadmap';
 import { NET_04_MODULE } from '../../src/content/networking/modules/net-04';
 import { NET_05_MODULE } from '../../src/content/networking/modules/net-05';
 import { NET_06_MODULE } from '../../src/content/networking/modules/net-06';
-import { gradeNetworkingSubmission } from '../../src/lib/network-engine/networking-submit-pipeline';
+import {
+  gradeNetworkingSubmission,
+  isNetworkingTask,
+} from '../../src/lib/network-engine/networking-submit-pipeline';
+import { submitForTask } from '../../src/lib/track-submit';
+import { NetworkingPracticeTaskView } from '../../src/components/learning/networking/NetworkingPracticeTaskView';
 import type { PracticeTask } from '../../src/types/curriculum';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -403,5 +410,117 @@ describe('Gate 5 Milestone 3 — Test 10: No Module ID Collisions', () => {
     expect(orders).toEqual([4, 5, 6]);
     const unique = new Set(orders);
     expect(unique.size).toBe(3);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 11: Task Classification via isNetworkingTask
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Gate 5 Milestone 3 — Test 11: Task Classification via isNetworkingTask', () => {
+  it('identifies all tasks in net-04, net-05, and net-06 as networking tasks', () => {
+    const allTasks = collectAllTasks(NET_04_MODULE, NET_05_MODULE, NET_06_MODULE);
+    expect(allTasks.length).toBeGreaterThanOrEqual(11);
+
+    for (const task of allTasks) {
+      expect(
+        isNetworkingTask(task),
+        `Task ${task.id} was not identified as a networking task`,
+      ).toBe(true);
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 12: Unified Pipeline Routing via submitForTask
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Gate 5 Milestone 3 — Test 12: Unified Pipeline Routing via submitForTask', () => {
+  const mockHooks = {
+    execute: () => ({ success: true, columns: [], rows: [], rowCount: 0, executionTimeMs: 0 }),
+  };
+
+  it('grades all net-04, net-05, net-06 practice and challenge tasks through submitForTask', () => {
+    const allTasks = collectAllTasks(NET_04_MODULE, NET_05_MODULE, NET_06_MODULE);
+
+    for (const task of allTasks) {
+      const judgments = task.validation.judgment ?? [];
+      const correctAnswers = judgments.map((j) => j.correctIndex);
+
+      // Submission with correct answers must pass
+      const passOutcome = submitForTask({
+        task,
+        code: '',
+        hooks: mockHooks,
+        judgmentAnswers: correctAnswers,
+        surface: 'lesson',
+      });
+
+      expect(
+        passOutcome.passed,
+        `Task ${task.id} failed submitForTask with its reference answers: ${passOutcome.feedback}`,
+      ).toBe(true);
+
+      // Submission with missing answers must fail with stage 'validation'
+      const emptyOutcome = submitForTask({
+        task,
+        code: '',
+        hooks: mockHooks,
+        judgmentAnswers: judgments.map(() => null),
+        surface: 'lesson',
+      });
+
+      expect(emptyOutcome.passed).toBe(false);
+      expect(emptyOutcome.stage).toBe('validation');
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 13: UI Component Rendering Parity
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Gate 5 Milestone 3 — Test 13: UI Component Rendering Parity', () => {
+  it('renders NetworkingPracticeTaskView without phantom switch lab for non-topology tasks', () => {
+    const task04p1 = NET_04_MODULE.concepts[0].tasks[0];
+    const concept04 = NET_04_MODULE.concepts[0];
+
+    const html = renderToStaticMarkup(
+      <NetworkingPracticeTaskView
+        task={task04p1}
+        taskIndex={0}
+        totalTasks={3}
+        concept={concept04}
+        onTaskSuccess={vi.fn()}
+      />
+    );
+
+    // Renders instructions and prediction assessment
+    expect(html).toContain('Prediction &amp; Causal Defense');
+    expect(html).toContain('Check Prediction');
+    expect(html).toContain('Why would a router need billions of table entries');
+
+    // DOES NOT render switch lab or port inspection chips
+    expect(html).not.toContain('data-testid="switch-simulation-lab"');
+    expect(html).not.toContain('Direct Port Inspection &amp; Selection:');
+  });
+
+  it('renders challenge task without concept prop cleanly', () => {
+    const chTask = NET_04_MODULE.challenge!.tasks[0];
+
+    const html = renderToStaticMarkup(
+      <NetworkingPracticeTaskView
+        task={chTask}
+        taskIndex={0}
+        totalTasks={2}
+        isChallenge={true}
+        onTaskSuccess={vi.fn()}
+      />
+    );
+
+    expect(html).toContain('Module Challenge Task');
+    expect(html).toContain(chTask.title);
+    expect(html).toContain('Check Prediction');
+    expect(html).not.toContain('data-testid="switch-simulation-lab"');
   });
 });

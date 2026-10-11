@@ -115,6 +115,8 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
         : 'Complete Module'
     : 'Next Task';
 
+  const hasTopology = Boolean(topology && topology.length > 0);
+
   return (
     <motion.div
       key={task.id}
@@ -127,28 +129,72 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
     >
       {/* 
         SPLIT-PANE RESPONSIVE LAYOUT (per specification §9.2):
-        Desktop (>= 768px): Left: Topology Canvas & Live CAM Table, Right: Instructions & Questions.
-        Mobile (< 768px): Stacked layout with Topology Canvas pinned at the top.
+        When topology exists: Left: Topology Canvas & Live CAM Table, Right: Instructions & Questions.
+        When purely conceptual / addressing: Left: Scenario Instructions & References, Right: Questions & Assessment.
+        Mobile (< 768px): Stacked layout.
       */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full min-w-0">
-        {/* LEFT COLUMN: Interactive Network Topology Simulator & CAM Table */}
-        <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
-          <SwitchSimulationLab
-            hosts={topology}
-            sequence={sequence}
-            enablePredictionGate={false} // Practice exercises have their own explicit form gate
-            interactivePortSelection={true}
-            selectedPorts={selectedPorts}
-            onTogglePort={handleTogglePort}
-            title={task.title}
-            subtitle={task.description}
-          />
-        </div>
+        {hasTopology ? (
+          /* LEFT COLUMN: Interactive Network Topology Simulator & CAM Table */
+          <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            <SwitchSimulationLab
+              hosts={topology}
+              sequence={sequence}
+              enablePredictionGate={false} // Practice exercises have their own explicit form gate
+              interactivePortSelection={true}
+              selectedPorts={selectedPorts}
+              onTogglePort={handleTogglePort}
+              title={task.title}
+              subtitle={task.description}
+            />
+          </div>
+        ) : (
+          /* LEFT COLUMN: Full Instructions and Scenario Context for Non-Topology Tasks */
+          <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            {concept ? (
+              <TaskInstructions
+                task={task}
+                taskIndex={taskIndex}
+                totalTasks={totalTasks}
+                concept={concept}
+                isCompleted={taskPassed}
+                onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
+                onViewSolution={() => setViewedSolution(true)}
+              />
+            ) : (
+              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4">
+                <div className="space-y-1">
+                  <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider">
+                    {isChallenge ? 'Module Challenge Task' : 'Network Engineering Task'}
+                  </span>
+                  <h3 className="font-mono text-base sm:text-lg font-bold text-text">
+                    {task.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
+                    {task.description}
+                  </p>
+                </div>
+                {task.instructions.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border-soft">
+                    <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
+                      Instructions &amp; Constraints:
+                    </span>
+                    <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
+                      {task.instructions.map((inst, i) => (
+                        <li key={i} className="leading-relaxed">{inst}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* RIGHT COLUMN: Instructions, Prediction Options, Hints & Remediation */}
-        <div className="lg:col-span-5 xl:col-span-5 flex flex-col gap-4 min-w-0 w-full order-2">
-          {/* Task Instructions */}
-          {concept && (
+        {/* RIGHT COLUMN: Questions, Predictions, Options & Action Bar */}
+        <div className={`${hasTopology ? 'lg:col-span-5 xl:col-span-5' : 'lg:col-span-6 xl:col-span-5'} flex flex-col gap-4 min-w-0 w-full order-2`}>
+          {/* Task Instructions (shown in right column only when topology lab occupies left column) */}
+          {hasTopology && concept && (
             <TaskInstructions
               task={task}
               taskIndex={taskIndex}
@@ -165,7 +211,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 sm:p-5 shadow-lg space-y-3">
               <div className="flex items-center justify-between border-b border-border-soft pb-2.5">
                 <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-text">
-                  Prediction & Causal Defense
+                  Prediction &amp; Causal Defense
                 </h4>
                 <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-2 text-text-dim">
                   Interactive Assessment
@@ -188,35 +234,37 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             </div>
           )}
 
-          {/* Direct Port Selection Helper (Interactive synchronization) */}
-          <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 shadow-md space-y-2">
-            <span className="font-mono text-xs font-semibold text-text-dim uppercase tracking-wider block">
-              Direct Port Inspection & Selection:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {(topology ?? []).map((h) => {
-                const isSelected = selectedPorts.includes(h.port);
-                return (
-                  <button
-                    key={h.port}
-                    onClick={() => handleTogglePort(h.port)}
-                    aria-label={`Toggle Port ${h.port}`}
-                    className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-func text-ink shadow-md'
-                        : 'bg-surface-2 text-text-dim hover:text-text border border-border-soft'
-                    }`}
-                  >
-                    <span>Port {h.port}</span>
-                    <span className="text-[10px] opacity-75">({h.name})</span>
-                  </button>
-                );
-              })}
+          {/* Direct Port Selection Helper (Rendered only when active topology ports exist) */}
+          {hasTopology && (topology ?? []).length > 0 && (
+            <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 shadow-md space-y-2">
+              <span className="font-mono text-xs font-semibold text-text-dim uppercase tracking-wider block">
+                Direct Port Inspection &amp; Selection:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(topology ?? []).map((h) => {
+                  const isSelected = selectedPorts.includes(h.port);
+                  return (
+                    <button
+                      key={h.port}
+                      onClick={() => handleTogglePort(h.port)}
+                      aria-label={`Toggle Port ${h.port}`}
+                      className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-func text-ink shadow-md'
+                          : 'bg-surface-2 text-text-dim hover:text-text border border-border-soft'
+                      }`}
+                    >
+                      <span>Port {h.port}</span>
+                      <span className="text-[10px] opacity-75">({h.name})</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-text-muted font-sans pt-1">
+                Click ports on the canvas or the chips above to inspect link connections.
+              </p>
             </div>
-            <p className="text-[11px] text-text-muted font-sans pt-1">
-              Click ports on the canvas or the chips above to inspect link connections.
-            </p>
-          </div>
+          )}
 
           {/* Validation Feedback & Misconception Remediation Banner */}
           {validationMessage && (

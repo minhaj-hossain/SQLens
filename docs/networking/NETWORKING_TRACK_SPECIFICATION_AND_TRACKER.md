@@ -1,11 +1,11 @@
 # Networking Fundamentals Track: Master Implementation Plan & Architecture Tracker
 
-**Document Version:** 2.8 (Gate 4 Educational Acceptance Verification Complete with 14 Automated Acceptance Tests in `tests/tracks/networking-gate-4.test.tsx`)  
+**Document Version:** 2.9 (Gate 5 Milestone 3 Integration Completed & Verified — Classifier, Pipeline Routing & Non-Topology Layout Verified)  
 **Date:** October 11, 2026  
-**Status:** Gate 4 Complete & Verified | Gate 5 M3 Complete (Standing by for User Authorization for Gate 5 Milestone 4)  
+**Status:** Gate 4 & Gate 5 M3 Complete & Verified (Standing by for User Authorization for Gate 5 Milestone 4)  
 **Location:** `docs/networking/NETWORKING_TRACK_SPECIFICATION_AND_TRACKER.md`  
 **Track Identity:** `Networking Fundamentals` (Track ID: `'networking'`, Base Route: `/networking`, Nomenclature: `Module N`)  
-**Post-Gate 4 Verification:** `npm run lint` = 0 errors | `npm test` = 100/100 test files passed, 1,140/1,140 tests passed (53.88s) — 14 new Gate 4 EA tests + 0 regressions across all SQL, Prisma, and Networking suites.  
+**Post-Gate 5 M3 Verification:** `npm run lint` = 0 errors | `npm test` = 100/100 test files passed, 1,144/1,144 tests passed (25.68s) — 40 Gate 5 M3 tests + 14 Gate 4 EA tests + 0 regressions across all SQL, Prisma, and Networking suites.  
 
 ---
 
@@ -358,7 +358,7 @@ The prototype must pass 7 independent verification gates:
 | **Gate 2** | Lean Switching Simulation Engine | ✅ **Completed & Verified** | Pure deterministic state machine in `src/lib/network-engine/switching-sim.ts` with 100% unit test coverage in `tests/engine/networking-switching-sim.test.ts` verifying all 7 switch decisions, state snapshots, 5-port transfer topology, and pure replayability. |
 | **Gate 3** | Interactive Switch MAC Learning Slice Build | ✅ **Completed & Verified** | Visualizer components (`SwitchingTopologyCanvas`, `MacTableView`, `PlaybackControls`, `PredictionGate`, `SwitchSimulationLab`, `NetworkingPracticeTaskView`) fully implemented with reduced-motion fallback and keyboard accessibility. Wired into `net-03` theory (mental model), practice tasks (cold-start flood & station migration), and module challenges (known unicast causal defense, broadcast flood, same-port filter, and 5-port unfamiliar transfer validation). Graded via single submission pipeline in `submitForTask`. Verified with 10 acceptance tests in `tests/tracks/networking-gate-3.test.ts`. |
 | **Gate 4** | Browser QA & Educational Acceptance Validation | ✅ **Completed & Verified** | All 7 Educational Acceptance Criteria verified via automated component & engine integration tests in `tests/tracks/networking-gate-4.test.tsx`: protocol correctness (all 7 switch decisions), structured state parity with CAM table snapshots, mandatory Prediction Gate pause/unlock, causal explanation defense, 5-port unfamiliar transfer validation, misconception remediation copy, and accessibility/320px mobile viewport responsive layout. |
-| **Gate 5 — M3** | Phased Expansion: Milestone 3 (net-04/05/06) | ✅ **Completed & Verified** | `net-04` (IPv4 Addressing: C15–C20, 3 concepts + challenge), `net-05` (ARP & Local Delivery: C21–C23, 3 concepts), `net-06` (IPv6 & NDP: C24a–C24e, 3 concepts) authored with full judgment grading. Milestone 2 roadmap registered. 36 new tests: 99/99 files, 1,126/1,126 tests, 0 regressions. Committed `8146887`. |
+| **Gate 5 — M3** | Phased Expansion: Milestone 3 (net-04/05/06) | ✅ **Completed & Verified** | `net-04` (IPv4 Addressing: C15–C20, 3 concepts + challenge), `net-05` (ARP & Local Delivery: C21–C23, 3 concepts), `net-06` (IPv6 & NDP: C24a–C24e, 3 concepts) authored with full judgment grading. End-to-end integration verified: `isNetworkingTask` classifier, `submitForTask` central routing, and non-topology balanced split-pane layout in `NetworkingPracticeTaskView`. Milestone 2 roadmap registered. 40 tests in `tests/tracks/networking-gate5-milestone3.test.tsx`. |
 | **Gate 5 — M4** | Phased Expansion: Milestone 4 (net-07/08) | ⏸️ Queued | Default Gateways & Internetwork Routing (`net-07`); NAT & PAT (`net-08`). |
 | **Gate 5 — M5+** | Phased Expansion: Milestones 5–9 (net-09 through net-16) | ⏸️ Queued | DHCP, DNS, TCP/UDP, HTTP/TLS, Diagnostics, Security, VLANs/Wireless. |
 
