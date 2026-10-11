@@ -1,28 +1,28 @@
-# Module 4 Pilot Specification: IPv4 Subnetting, Boundaries & Local vs. Remote Forwarding
+# Module 4 Pilot Specification: IPv4 Subnetting, Boundaries & Forwarding
 
-> **Document Version:** 1.1.0 (Rigorous Technical Refinement)  
+> **Document Version:** 1.2.0 (Final Approved Specification)  
 > **Status:** Approved Pilot Architecture Specification  
 > **Location:** `docs/networking/NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md`  
-> **Pedagogical Model:** 5-Stage Cognitive Fading (Observe ➔ Complete ➔ Perform ➔ Transfer ➔ Diagnose)
+> **Pedagogical Model:** 5-Stage Cognitive Fading + Assessed Active-Octet Transfer
 
 ---
 
 ## Executive Overview
 
-This specification details the complete learner experience for **Module 4, Concept 2: CIDR Subnet Boundaries, Usable Host Ranges, and Forwarding Decisions**.
+This specification details the approved learner experience for **Module 4, Concept 2: CIDR Subnet Boundaries, Usable Host Ranges, and Forwarding Decisions**.
 
-Version 1.1.0 incorporates essential technical corrections:
-1. **Precise Next-Hop Routing Behavior:** Replaces vague "circular loop" phrasing with accurate host routing table and neighbor-resolution failure semantics when a configured gateway is off-link.
-2. **Unambiguous Topology & Broadcast Domain Definitions:** Explicitly specifies VLAN memberships, physical router interfaces, and broadcast domain boundaries so Layer 2 and Layer 3 interactions are technically sound.
-3. **Synchronized Multi-Device Corrective Configuration:** Guarantees that router interface addressing, workstation IP/mask, and gateway definitions correspond to a reachable, working topology.
-4. **Curricular Dependency Alignment:** Clearly delineates what is assumed from Modules 1–2, what is assessed in Module 4 (the IP subnet boundary decision), and what is deferred to Module 5 (the ARP resolution mechanism).
-5. **Universal Subnetting Method (The Active Octet Rule):** Ensures beginners do not falsely generalize the 4th-octet shortcut to `/20` or `/23` subnets.
+Version 1.2.0 incorporates the final architectural refinements:
+1. **Accurate Router-on-a-Stick Topology (Stage 4):** A single physical 802.1Q trunk link (`Router Gig0/0` $\leftrightarrow$ `Switch Port 24`) carrying tagged VLANs 10 and 20 into dedicated router subinterfaces (`Gig0/0.10` and `Gig0/0.20`), with explicit access ports for hosts.
+2. **Explicit Simulated Host Next-Hop Mechanics (Stage 5):** Replaces ambiguous OS assumptions with a defined simulator routing model, exact terminal telemetry, and a two-device synchronized configuration task (aligning both Router `Gig0/0` and Workstation B).
+3. **Assessed Active-Octet Transfer Task:** A no-hint assessment on `10.50.14.73/22` requiring mask calculation, network boundary, broadcast, usable host range ($1,022$ hosts), and local vs. remote classification in the 3rd octet.
+4. **Historical Classful Wording Correction:** Replaces "classful /24 boundary" in the `/27` feedback with "assumed a /24 boundary" (respecting that `172.16.0.0` is historically Class B).
+5. **Cross-Octet Delayed Retest:** Specifies an unseen prefix (`172.20.45.10/20`) testing the 3rd octet with an increment of 16 to evaluate 24-hour retention.
 
 ---
 
-## 1. Generalizing the Subnetting Method: The Active Octet Rule
+## 1. The Active Octet Rule & Scope
 
-To prevent learners from assuming that subnet increments only exist in the 4th octet, the curriculum explicitly introduces the **Active (Interesting) Octet Rule**:
+To prevent beginners from internalizing a false "4th-octet-only" shortcut, the curriculum explicitly anchors the **Active (Interesting) Octet Rule**:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -30,39 +30,29 @@ To prevent learners from assuming that subnet increments only exist in the 4th o
 ├─────────────┬──────────────┬───────────────┬───────────────────────────┤
 │ CIDR Prefix │ Active Octet │ Octet Base    │ Host Bits in Active Octet │
 ├─────────────┼──────────────┼───────────────┼───────────────────────────┤
-│ /1 to /8    │ Octet 1      │ Base = /0     │ H = 8 - Prefix            │
-│ /9 to /16   │ Octet 2      │ Base = /8     │ H = 16 - Prefix           │
-│ /17 to /24  │ Octet 3      │ Base = /16    │ H = 24 - Prefix           │
-│ /25 to /32  │ Octet 4      │ Base = /24    │ H = 32 - Prefix           │
+│ /1 to /8    │ Octet 1      │ Base = /0     │ H_active = 8 - Prefix     │
+│ /9 to /16   │ Octet 2      │ Base = /8     │ H_active = 16 - Prefix    │
+│ /17 to /24  │ Octet 3      │ Base = /16    │ H_active = 24 - Prefix    │
+│ /25 to /32  │ Octet 4      │ Base = /24    │ H_active = 32 - Prefix    │
 ├─────────────┴──────────────┴───────────────┴───────────────────────────┤
 │ Universal Formula:                                                     │
-│   Block Increment = 2 ^ (Bits remaining in Active Octet)               │
+│   Block Increment = 2 ^ (Host Bits in Active Octet)                    │
+│   • Octets before the Active Octet: Preserved unchanged.               │
+│   • Octets after the Active Octet:  All 0s in Network Address;         │
+│                                     All 255s in Broadcast Address.     │
 │                                                                        │
-│ Example for /22 on 10.50.14.0/22:                                      │
-│   • Active Octet: Octet 3 (since 22 is between 17 and 24).             │
-│   • Host bits in Octet 3: 24 - 22 = 2 bits.                            │
-│   • Increment: 2^2 = 4 in the 3rd octet!                               │
-│   • Subnet multiples in 3rd octet: 0, 4, 8, 12, 16...                  │
-│   • 14 falls in block 12.0 ➔ Network: 10.50.12.0/22                    │
-│   • Next block: 10.50.16.0 ➔ Broadcast: 10.50.15.255                  │
+│ Total Usable Hosts across the whole address = 2 ^ (32 - Prefix) - 2    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
-
-*Scaffolding note:* Stages 1–3 use the 4th octet (`/25` through `/28`) to control initial cognitive load on binary conversion, while a dedicated visual callout explicitly anchors the Active Octet rule so learners understand that `/20` or `/22` operates identically on Octet 3.
 
 ---
 
 ## 2. Learning-Sequence Dependencies: Module 4 vs. Module 5 (ARP)
 
-We explicitly separate what is tested in Module 4 from what is deferred to Module 5:
-- **Prior Knowledge (Assumed from Module 1 & 2):**
-  - An Ethernet frame encapsulates an IP packet.
-  - A local host sends directly to the destination's MAC address; a remote packet must be addressed at Layer 2 to the Default Gateway's MAC address.
-- **Assessed in Module 4 (Core Objective):**
-  - Calculating whether a destination IP is **on-link (local)** or **off-link (remote)** using the IP address and subnet mask.
-  - Using that boundary calculation to make the Layer 2 forwarding decision: *"Do I target the host's MAC or the gateway's MAC?"*
-- **Deferred to Module 5 (ARP Deep-Dive):**
-  - How the host dynamically discovers that MAC address via ARP broadcast and unicast reply if it is not already in the ARP cache. In Module 4, assume the required MAC is known or resolves normally once the forwarding target is chosen.
+We strictly delineate the boundary between Module 4 and Module 5:
+- **Assumed from Modules 1 & 2:** An Ethernet frame encapsulates an IP packet; local delivery targets the destination endpoint's MAC, while remote delivery targets the default gateway's MAC.
+- **Assessed in Module 4 (Core Objective):** Applying the **subnet mask calculation** to determine whether an IP is on-link (local) or off-link (remote), and choosing the correct Layer 2 forwarding target (Destination MAC vs. Gateway MAC).
+- **Deferred to Module 5 (ARP Deep-Dive):** The dynamic packet-level exchange of *how* that MAC address is discovered via ARP requests, replies, switch CAM learning, and cache expiration. In Module 4, learners assume the MAC is known or resolves normally once the forwarding target is selected.
 
 ---
 
@@ -152,7 +142,7 @@ Total Usable Hosts: [ 62 ]
 
 ### Deterministic Grading & Misconception Feedback
 - **Entered Network Address `172.16.20.0`:**
-  - *Feedback:* "You defaulted to `.0`. A `/27` has 5 host bits ($2^5 = 32$ increment). Subnets start at `0, 32, 64, 96, 128`. Since 100 is between 96 and 127, the network address is `172.16.20.96`."
+  - *Feedback:* "You assumed a /24 boundary. A `/27` has 5 host bits ($2^5 = 32$ increment). Subnets start at `0, 32, 64, 96, 128`. Since 100 is between 96 and 127, the network address is `172.16.20.96`."
 - **Entered Broadcast Address `172.16.20.128`:**
   - *Feedback:* "`.128` is the network address of the *next* subnet. The broadcast address is one less than the next subnet: $96 + 32 - 1 = 127$."
 - **Entered Capacity `32`:**
@@ -162,32 +152,34 @@ Total Usable Hosts: [ 62 ]
 
 ## 6. Stage 4 — Transfer (Authentic Layer 2 vs. Layer 3 Forwarding Decision)
 
-### Precise Topology & Broadcast Domain Specification
-To ensure the networking consequences are technically accurate:
-- **Switch 1:** Configured with two isolated broadcast domains:
-  - **VLAN 10:** Subnet `10.10.4.80/28`.
-    - Host Workstation A: Port 1 (Access VLAN 10), IP `10.10.4.82/28`, Gateway `10.10.4.81`.
-    - Destination 1: Port 2 (Access VLAN 10), IP `10.10.4.94/28`.
-    - Router Interface `Gig0/0.10`: IP `10.10.4.81/28`, MAC `GW:81:81:81:81:81`.
-  - **VLAN 20:** Subnet `10.10.4.96/28`.
-    - Destination 2: Port 5 (Access VLAN 20), IP `10.10.4.98/28`.
-    - Router Interface `Gig0/0.20`: IP `10.10.4.97/28`, MAC `GW:97:97:97:97:97`.
+### Precise Router-on-a-Stick Topology Specification
+The network uses a standard Router-on-a-Stick architecture with a **single physical 802.1Q trunk cable**:
 
 ```
-        ┌─────────────────────────────────────────────────────────────┐
-        │                          ROUTER R1                          │
-        │   Gig0/0.10: 10.10.4.81/28        Gig0/0.20: 10.10.4.97/28  │
-        └──────────────┬──────────────────────────────┬───────────────┘
-                       │                              │
-         VLAN 10 Trunk │                VLAN 20 Trunk │
-        ┌──────────────┴──────────────────────────────┴───────────────┐
-        │                          SWITCH SW1                         │
-        │   [Port 1: VLAN 10]    [Port 2: VLAN 10]   [Port 5: VLAN 20]│
-        └──────────┬─────────────────────┬────────────────────┬───────┘
-                   │                     │                    │
-              Workstation A         Destination 1        Destination 2
-             10.10.4.82/28          10.10.4.94/28        10.10.4.98/28
+                              ROUTER R1
+                       [Physical Interface Gig0/0]
+                                  │
+                  Single 802.1Q Trunk Link (Tagged VLANs 10, 20)
+                                  │
+                       [Switch Port 24: Trunk]
+                             SWITCH SW1
+    ┌─────────────────────────────┼─────────────────────────────┐
+    │                             │                             │
+[Port 1: Access VLAN 10]    [Port 2: Access VLAN 10]    [Port 5: Access VLAN 20]
+    │                             │                             │
+Workstation A               Destination 1               Destination 2
+10.10.4.82/28               10.10.4.94/28               10.10.4.98/28
+GW: 10.10.4.81
 ```
+
+- **Router R1 Interface `Gig0/0`:** Single physical port with two 802.1Q subinterfaces:
+  - `Gig0/0.10`: Encapsulation dot1Q 10, IP `10.10.4.81/28`, MAC `GW:81:81:81:81:81`
+  - `Gig0/0.20`: Encapsulation dot1Q 20, IP `10.10.4.97/28`, MAC `GW:97:97:97:97:97`
+- **Switch SW1 Configuration:**
+  - `Port 24`: 802.1Q Trunk port connected to Router `Gig0/0` (allowing VLANs 10 and 20).
+  - `Port 1`: Access port in VLAN 10 connected to Workstation A (`10.10.4.82/28`).
+  - `Port 2`: Access port in VLAN 10 connected to Destination 1 (`10.10.4.94/28`).
+  - `Port 5`: Access port in VLAN 20 connected to Destination 2 (`10.10.4.98/28`).
 
 ### Learner Inputs & Decisions
 ```
@@ -211,7 +203,7 @@ Ethernet Dest MAC: [ Default Gateway's MAC Address (GW:81:...)            ▼]
 ### Real-World Consequence Feedback (Why This Matters)
 - **If learner marks Destination 2 (`10.10.4.98`) as Local:**
   - *Grading:* Incorrect.
-  - *Network Consequence:* "Workstation A computes that `.98` is outside its `/28` range (`.80–.95`). If Workstation A incorrectly assumed `.98` was local, it would send an ARP request for `10.10.4.98` out its interface. Because Switch 1 isolates VLAN 10 from VLAN 20, the ARP broadcast would never enter VLAN 20. Destination 2 would never receive the request, and communication would fail with an ARP timeout. By recognizing `.98` as remote, Workstation A stamps the Ethernet frame with Default Gateway `10.10.4.81`'s MAC, allowing Router R1 to route the packet across to VLAN 20."
+  - *Network Consequence:* "Workstation A computes that `.98` is outside its `/28` range (`.80–.95`). If Workstation A incorrectly assumed `.98` was local, it would send an ARP request for `10.10.4.98` out Port 1. Because Switch SW1 confines broadcasts on Port 1 to Access VLAN 10, the frame never enters Access VLAN 20 (Port 5). Destination 2 never sees it, causing an ARP timeout. By recognizing `.98` as remote, Workstation A stamps the Ethernet frame with Default Gateway `10.10.4.81`'s MAC, sending it across Trunk Port 24 to Router R1 for inter-VLAN routing."
 
 ---
 
@@ -228,26 +220,25 @@ A remote office reports that Workstation B cannot connect to the corporate netwo
   - Workstation B: Configured as IP `192.168.1.120`, Subnet Mask `255.255.255.128` (`/25`), Default Gateway `192.168.1.129`.
   - Router Interface `Gig0/0`: Configured as IP `192.168.1.129`, Subnet Mask `255.255.255.128` (`/25`).
 
-```
-    Workstation B                                   Router R1 (Gig0/0)
-    IP: 192.168.1.120/25                            IP: 192.168.1.129/25
-    Gateway: 192.168.1.129                          (Connected on VLAN 10)
-            │                                               │
-            └───────► [Switch Port 2]       [Switch Port 1] ◄───────┘
-                                VLAN 10 (Access)
-```
-
-### Technical Root Cause: Route & Next-Hop Resolution Failure
-When Workstation B attempts to transmit a packet to an Internet host (or tries to `ping 192.168.1.129`):
-1. **Subnet Evaluation:** Workstation B checks whether target `192.168.1.129` is on-link:
-   $$\text{Local Subnet} = 192.168.1.0/25 \quad (\text{Range: } 192.168.1.0 \text{ to } 192.168.1.127)$$
-   Since `.129` is outside `.0–.127`, Workstation B evaluates it as **off-link (remote)**.
-2. **Next-Hop Lookup:** To reach a remote destination, Workstation B consults its routing table for the Default Gateway: `192.168.1.129`.
-3. **The Next-Hop Failure (Not a Forwarding Loop):**
-   - The OS routing engine inspects the default gateway IP (`192.168.1.129`).
-   - A host can only send traffic to a gateway if that gateway itself is directly reachable via an **on-link interface route**.
-   - Because `192.168.1.129` does not match Workstation B's on-link route (`192.168.1.0/25`), the routing table cannot resolve an interface or a next-hop link-layer address for the gateway.
-   - The OS network stack treats the gateway as **unreachable/indirect**. The packet is discarded immediately inside the host's IP stack with an error (e.g. `Destination host unreachable` or `Network is unreachable`), without transmitting an Ethernet frame onto the wire.
+### Simulated Host Routing Engine Rules
+The simulation implements an explicit host routing evaluation engine:
+1. **On-Link Route Derivation:** Workstation B derives its local on-link route from its IP and subnet mask:
+   $$\text{Subnet} = 192.168.1.0/25 \quad (\text{Usable range: } 192.168.1.1 - 192.168.1.126)$$
+2. **Next-Hop Evaluation Rule:** When sending to an off-link target or when pinging the gateway directly:
+   - The host evaluates gateway IP `192.168.1.129` against its on-link route (`192.168.1.0/25`).
+   - Because `192.168.1.129` is outside `.0–.127`, the simulator flags the configured gateway as **unreachable (off-link next-hop)**.
+3. **Telemetry Displayed to the Learner:**
+   - **Simulated Terminal `ip route show`:**
+     ```
+     default via 192.168.1.129 dev eth0 [status: unreachable - gateway not on link]
+     192.168.1.0/25 dev eth0 proto kernel scope link src 192.168.1.120
+     ```
+   - **Simulated Ping Output:**
+     ```
+     C:\> ping 192.168.1.129
+     PING 192.168.1.129: Destination host unreachable (no valid on-link route to gateway)
+     ```
+   - **Packet Sniffer View:** 0 packets transmitted on the physical link.
 
 ### Learner Inputs & Diagnostic Isolation
 ```
@@ -262,67 +253,122 @@ Router Gig0/0 Subnet (192.168.1.129/25): [ 192.168.1.128 ] to [ 192.168.1.255 ]
 [ ] Switch VLAN 10 is blocking IP packets because the physical link is down.
 
 [ Step 3: Explain the Transmission Failure ]
-"When Workstation B attempts to reach 192.168.1.129, why does the connection fail?"
-[●] Workstation B determines that 192.168.1.129 is on a remote subnet. Because its 
-    configured gateway is also on that remote subnet, the routing table cannot 
-    resolve an on-link path to the gateway, dropping the packet locally.
-[ ] The packet loops endlessly between the workstation and switch until TTL expires.
+"Why does the simulated host fail to transmit packets to 192.168.1.129?"
+[●] The host routing engine determines that 192.168.1.129 is not on its local subnet 
+    (192.168.1.0/25). Because the gateway itself is off-link, the host cannot resolve 
+    an on-link next hop and drops the packet internally before sending.
+[ ] The frame loops endlessly between switch and router until TTL expires.
 [ ] The router receives the frame but drops it because .120 is an even number.
 ```
 
-### Complete Synchronized Corrective Configuration
-A gateway address is useless unless it corresponds to a live, matching router interface on the same broadcast domain.
-
-The learner must provide the **synchronized two-device correction**:
+### Complete Synchronized Two-Device Configuration Task
+To resolve the fault, the learner must independently reconfigure both devices to align with Subnet 1 (`192.168.1.0/25`):
 
 ```
-[ Step 4: Propose the Complete Network Correction ]
-Option A (Align to Subnet 1: 192.168.1.0/25):
-  • Router Gig0/0 IP:       [ 192.168.1.1   ]  (Usable in 192.168.1.0/25)
-  • Router Gig0/0 Mask:     [ 255.255.255.128 ] (/25)
-  • Workstation B IP:       [ 192.168.1.120 ]  (Unchanged)
-  • Workstation B Mask:     [ 255.255.255.128 ] (/25)
-  • Workstation B Gateway:  [ 192.168.1.1   ]  (Points to Router Gig0/0)
+┌────────────────────────────────────────────────────────────────────────┐
+│ CONFIGURATION CARD 1: Router R1 Interface Gig0/0                       │
+│   IP Address:    [ 192.168.1.1       ] (Valid usable range: .1 to .126)│
+│   Subnet Mask:   [ 255.255.255.128   ] (/25)                           │
+├────────────────────────────────────────────────────────────────────────┤
+│ CONFIGURATION CARD 2: Workstation B Settings                           │
+│   IP Address:    [ 192.168.1.120     ] (Kept on Subnet 1)              │
+│   Subnet Mask:   [ 255.255.255.128   ] (/25)                           │
+│   Gateway:       [ 192.168.1.1       ] (Must match Router Gig0/0 IP!)  │
+└────────────────────────────────────────────────────────────────────────┘
 
-Verification of Event Sequence After Fix:
-  1. Workstation B checks gateway 192.168.1.1 against its mask /25 ➔ ON-LINK.
-  2. Workstation B broadcasts ARP Request for 192.168.1.1 on VLAN 10.
+Verified Event Sequence After Learner Submission:
+  1. Workstation B checks gateway 192.168.1.1 against /25 mask ➔ ON-LINK.
+  2. Workstation B broadcasts ARP Request for 192.168.1.1 across VLAN 10.
   3. Router Gig0/0 receives ARP broadcast on VLAN 10 and replies with its MAC.
-  4. Workstation B populates ARP cache and forwards traffic to the router successfully.
+  4. Ping succeeds with 0% packet loss.
 ```
 
 ---
 
-## 8. Empirical Beginner Testing: Success Evidence & Acceptance Criteria
+## 8. Assessed Active-Octet Transfer Task (The 3rd-Octet Challenge)
+
+To prove that learners have mastered the universal subnetting formula and are not merely executing a 4th-octet shortcut, this **unassisted, no-hint assessment** tests a prefix in the **3rd octet**:
+
+### Problem Statement
+An enterprise allocates a branch office block: **`10.50.14.73/22`**.
+
+### Learner Inputs (Clean Numerical Entry)
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ ASSESSED ACTIVE-OCTET TASK (NO HINTS AVAILABLE)                        │
+│ Target: 10.50.14.73 / 22                                               │
+├────────────────────────────────────────────────────────────────────────┤
+│ 1. Active (Interesting) Octet:       [ Octet 3 (3rd Octet)       ▼ ]   │
+│ 2. Subnet Mask (Dotted-Decimal):     [ 255.255.252.0             ]     │
+│ 3. Block Increment in Active Octet:  [ 4                         ]     │
+│ 4. Subnet Network Address:           [ 10.50.12.0                ]     │
+│ 5. Subnet Broadcast Address:         [ 10.50.15.255              ]     │
+│ 6. First Usable Host IP:             [ 10.50.12.1                ]     │
+│ 7. Last Usable Host IP:              [ 10.50.15.254              ]     │
+│ 8. Total Usable Host Capacity:       [ 1022                      ]     │
+├────────────────────────────────────────────────────────────────────────┤
+│ 9. Forwarding Decision for Destination 10.50.15.200:                   │
+│    [ (●) Local Subnet (On-Link)    ( ) Remote Subnet (Off-Link) ]      │
+│                                                                        │
+│ 10. Forwarding Decision for Destination 10.50.16.5:                    │
+│    [ ( ) Local Subnet (On-Link)    (●) Remote Subnet (Off-Link) ]      │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Deterministic Grading Rationale
+- **Active Octet:** 22 is between 17 and 24 $\implies$ Octet 3.
+- **Host Bits in Octet 3:** $24 - 22 = 2$ bits.
+- **Increment:** $2^2 = 4$ in the 3rd octet. Multiples: `0, 4, 8, 12, 16...`
+- **Subnet ID:** $14$ falls into the block starting at $12$ $\implies$ **`10.50.12.0`**.
+- **Broadcast ID:** Next block is $16.0$, minus 1 $\implies$ **`10.50.15.255`**.
+- **Capacity:** Total host bits $= 32 - 22 = 10 \implies 2^{10} - 2 = 1024 - 2 =$ **`1022`**.
+- **Forwarding:** `.15.200` is inside `.12.0–.15.255` $\implies$ **Local**. `.16.5` is outside $\implies$ **Remote**.
+
+---
+
+## 9. Delayed Retest Specification (24-Hour Cross-Octet Retention)
+
+To confirm long-term retention without scaffolding:
+- **Scenario:** 24 hours post-module, the learner receives an unannounced quick assessment:
+- **Test IP:** **`172.20.45.10/20`** (testing Octet 3 with an increment of $16$).
+- **Success Criteria:** The learner correctly calculates:
+  - Subnet Mask: `255.255.240.0`
+  - Network Address: `172.20.32.0`
+  - Broadcast Address: `172.20.47.255`
+  - Total Usable Hosts: $4094$ ($2^{12} - 2$)
+  - Zero hints permitted.
+
+---
+
+## 10. Empirical Acceptance Criteria: Usability vs. Learning Transfer
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        VALIDATION CRITERIA                             │
 ├───────────────────────┬────────────────────────────────────────────────┤
-│ USABILITY CRITERIA    │ LEARNING EVIDENCE CRITERIA                     │
+│ USABILITY CRITERIA    │ LEARNING TRANSFER CRITERIA                     │
 ├───────────────────────┼────────────────────────────────────────────────┤
-│ 1. 100% Task Naviga-  │ 1. Unassisted Independence:                    │
+│ 1. 100% Task Naviga-  │ 1. Active-Octet Independence:                  │
 │    tion: Novices find │    ≥ 75% of novices correctly calculate the    │
-│    all fields without │    network/broadcast addresses in Stage 3      │
-│    prompting.         │    (Perform) with the bit-slicer collapsed     │
-│                       │    and 0 hints opened.                         │
+│    all fields without │    mask, network ID, and usable capacity for   │
+│    prompting.         │    10.50.14.73/22 in Section 8 with 0 hints.   │
 ├───────────────────────┼────────────────────────────────────────────────┤
-│ 2. Zero Input Format- │ 2. Boundary Decision Transfer:                 │
-│    ting Confusion: 0% │    ≥ 80% of novices correctly classify Dest 1 │
-│    of errors caused   │    as Local and Dest 2 as Remote in Stage 4    │
-│    by dotted-decimal  │    based on the /28 calculation.               │
-│    vs prefix syntax.  │                                                │
+│ 2. Zero Formatting    │ 2. Dual-Device Gateway Alignment:              │
+│    Ambiguity: 0%      │    ≥ 80% of novices in Stage 5 reconfigure     │
+│    input errors from  │    BOTH Router Gig0/0 and Workstation B to     │
+│    dotted-decimal vs  │    matching Subnet 1 parameters.               │
+│    prefix syntax.     │                                                │
 ├───────────────────────┼────────────────────────────────────────────────┤
-│ 3. Clear Feedback     │ 3. Root Cause Isolation:                       │
-│    Comprehension:     │    ≥ 70% of novices in Stage 5 identify the    │
-│    Learners read and  │    off-link gateway mismatch as the root cause │
-│    correct errors on  │    without guessing or attributing it to a     │
-│    their next trial.  │    physical wire failure.                      │
+│ 3. Clear Feedback     │ 3. Boundary Forwarding Decision:               │
+│    Comprehension:     │    ≥ 85% of novices correctly classify .15.200 │
+│    Learners read and  │    as Local and .16.5 as Remote in the /22     │
+│    correct errors on  │    transfer task.                              │
+│    their next trial.  │                                                │
 ├───────────────────────┼────────────────────────────────────────────────┤
-│ 4. Scaffolding Clari- │ 4. 24-Hour Retention Retest:                   │
-│    ty: Learners don't │    When tested 24h later with an unseen prefix │
-│    report feeling     │    (e.g. /29) with no visualizer, learners     │
-│    trapped by the     │    calculate the usable range and host count   │
-│    collapsed widget.  │    accurately.                                 │
+│ 4. Scaffolding Clari- │ 4. 24-Hour Cross-Octet Retention:              │
+│    ty: Learners don't │    ≥ 70% of novices successfully solve the     │
+│    report feeling     │    172.20.45.10/20 retest 24 hours later with  │
+│    trapped by the     │    no access to the visualizer.                │
+│    collapsed widget.  │                                                │
 └───────────────────────┴────────────────────────────────────────────────┘
 ```
