@@ -22,12 +22,13 @@ export interface NetworkingSubmitOutcome {
 }
 
 export function isNetworkingTask(task: PracticeTask): boolean {
+  if (!task) return false;
   return Boolean(
     task.networking ||
-    task.id.startsWith('net-') ||
-    /^net\d+/i.test(task.id) ||
+    task.id?.startsWith('net-') ||
+    /^net\d+/i.test(task.id || '') ||
     task.solutionSql === 'NETWORKING_JUDGMENT_TASK' ||
-    task.solutionSql.startsWith('PREDICT_'),
+    task.solutionSql?.startsWith('PREDICT_'),
   );
 }
 

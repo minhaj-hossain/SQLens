@@ -90,66 +90,29 @@ describe('Gate 1 — Networking track registration & identity', () => {
 });
 
 describe('Gate 1 — Minimal module shells & ordering (net-01 -> net-02 -> net-03)', () => {
-  it('registers all milestone-1, milestone-2, and milestone-3 modules in order', () => {
+  it('registers all 16 curriculum modules in order', () => {
     const modules = getTrackModules('networking');
-    expect(modules).toHaveLength(8);
+    expect(modules).toHaveLength(16);
     expect(modules.map((m) => m.id)).toEqual([
-      'net-01', 'net-02', 'net-03',
-      'net-04', 'net-05', 'net-06',
-      'net-07', 'net-08',
+      'net-01', 'net-02', 'net-03', 'net-04',
+      'net-05', 'net-06', 'net-07', 'net-08',
+      'net-09', 'net-10', 'net-11', 'net-12',
+      'net-13', 'net-14', 'net-15', 'net-16',
     ]);
   });
 
   it('modules have sequential curriculumOrder and displayLabel "Module N"', () => {
     const modules = getTrackModules('networking');
-    expect(modules[0]).toMatchObject({
-      id: 'net-01',
-      curriculumOrder: 1,
-      displayLabel: 'Module 1',
-      track: 'networking',
-    });
-    expect(modules[1]).toMatchObject({
-      id: 'net-02',
-      curriculumOrder: 2,
-      displayLabel: 'Module 2',
-      track: 'networking',
-    });
-    expect(modules[2]).toMatchObject({
-      id: 'net-03',
-      curriculumOrder: 3,
-      displayLabel: 'Module 3',
-      track: 'networking',
-    });
-    expect(modules[3]).toMatchObject({
-      id: 'net-04',
-      curriculumOrder: 4,
-      displayLabel: 'Module 4',
-      track: 'networking',
-    });
-    expect(modules[4]).toMatchObject({
-      id: 'net-05',
-      curriculumOrder: 5,
-      displayLabel: 'Module 5',
-      track: 'networking',
-    });
-    expect(modules[5]).toMatchObject({
-      id: 'net-06',
-      curriculumOrder: 6,
-      displayLabel: 'Module 6',
-      track: 'networking',
-    });
-    expect(modules[6]).toMatchObject({
-      id: 'net-07',
-      curriculumOrder: 7,
-      displayLabel: 'Module 7',
-      track: 'networking',
-    });
-    expect(modules[7]).toMatchObject({
-      id: 'net-08',
-      curriculumOrder: 8,
-      displayLabel: 'Module 8',
-      track: 'networking',
-    });
+    for (let i = 0; i < 16; i++) {
+      const num = i + 1;
+      const pad = String(num).padStart(2, '0');
+      expect(modules[i]).toMatchObject({
+        id: `net-${pad}`,
+        curriculumOrder: num,
+        displayLabel: `Module ${num}`,
+        track: 'networking',
+      });
+    }
   });
 
   it('every module resolves by ID from the track registry', () => {

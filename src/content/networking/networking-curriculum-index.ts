@@ -14,6 +14,14 @@ import { NET_05_MODULE } from './modules/net-05';
 import { NET_06_MODULE } from './modules/net-06';
 import { NET_07_MODULE } from './modules/net-07';
 import { NET_08_MODULE } from './modules/net-08';
+import { NET_09_MODULE } from './modules/net-09';
+import { NET_10_MODULE } from './modules/net-10';
+import { NET_11_MODULE } from './modules/net-11';
+import { NET_12_MODULE } from './modules/net-12';
+import { NET_13_MODULE } from './modules/net-13';
+import { NET_14_MODULE } from './modules/net-14';
+import { NET_15_MODULE } from './modules/net-15';
+import { NET_16_MODULE } from './modules/net-16';
 
 const RAW_NETWORKING_MODULES: ModuleData[] = [
   NET_01_MODULE,
@@ -24,6 +32,14 @@ const RAW_NETWORKING_MODULES: ModuleData[] = [
   NET_06_MODULE,
   NET_07_MODULE,
   NET_08_MODULE,
+  NET_09_MODULE,
+  NET_10_MODULE,
+  NET_11_MODULE,
+  NET_12_MODULE,
+  NET_13_MODULE,
+  NET_14_MODULE,
+  NET_15_MODULE,
+  NET_16_MODULE,
 ];
 
 export const NETWORKING_MODULES: ModuleData[] = RAW_NETWORKING_MODULES.map((m) => ({

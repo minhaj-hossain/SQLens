@@ -38,4 +38,44 @@ export const NETWORKING_ROADMAP_MILESTONES: MilestoneData[] = [
     daysRange: 'Modules 7–8',
     moduleIds: ['net-07', 'net-08'],
   },
+  {
+    id: 'net-milestone-4',
+    number: 4,
+    title: 'Core Network Services',
+    subtitle: 'Dynamic IP Allocation & Name Resolution',
+    description:
+      'Master essential infrastructure protocols: DHCP client bootstrap, the 4-step DORA exchange, lease renewal timers, DHCP relay agents, APIPA fallback, and the global hierarchical Domain Name System (DNS).',
+    daysRange: 'Modules 9–10',
+    moduleIds: ['net-09', 'net-10'],
+  },
+  {
+    id: 'net-milestone-5',
+    number: 5,
+    title: 'Transport & Application Protocols',
+    subtitle: 'Sockets, TCP Reliability & Modern Web Delivery',
+    description:
+      'Understand end-to-end application multiplexing: 5-tuple socket bindings, UDP lightweight transport, TCP sequence numbers and cumulative ACKs, sliding window flow control, connection teardown, HTTP evolution, and TLS 1.3 cryptography.',
+    daysRange: 'Modules 11–13',
+    moduleIds: ['net-11', 'net-12', 'net-13'],
+  },
+  {
+    id: 'net-milestone-6',
+    number: 6,
+    title: 'Diagnostics & Troubleshooting',
+    subtitle: 'Systematic OSI Triage & Command Line Utilities',
+    description:
+      'Troubleshoot network anomalies with engineering discipline: ICMP Echo and Traceroute hop analysis, essential command-line tools (ipconfig, ping, tracert, nslookup, netstat), and isolating the 5 Classic Office Failures.',
+    daysRange: 'Module 14',
+    moduleIds: ['net-14'],
+  },
+  {
+    id: 'net-milestone-7',
+    number: 7,
+    title: 'Enterprise Infrastructure & Security',
+    subtitle: 'Loop Prevention, Firewalls, VLANs & Routing',
+    description:
+      'Scale enterprise networks securely: Spanning Tree Protocol (STP) loop prevention, stateless ACLs vs stateful conntrack firewalls, IEEE 802.1Q VLAN trunking, Wi-Fi 802.11 CSMA/CA, and dynamic routing protocol selection (OSPF vs BGP).',
+    daysRange: 'Modules 15–16',
+    moduleIds: ['net-15', 'net-16'],
+  },
 ];

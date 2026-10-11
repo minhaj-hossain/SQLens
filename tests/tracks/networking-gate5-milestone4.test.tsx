@@ -70,9 +70,9 @@ describe('Gate 5 Milestone 4 — Test 1: Module Registration', () => {
     expect(mod!.curriculumOrder).toBe(8);
   });
 
-  it('has 8 total modules in sequential order (net-01 through net-08)', () => {
-    expect(NETWORKING_MODULES).toHaveLength(8);
-    const ids = NETWORKING_MODULES.map((m) => m.id);
+  it('has at least 8 total modules with net-01 through net-08 in sequential order', () => {
+    expect(NETWORKING_MODULES.length).toBeGreaterThanOrEqual(8);
+    const ids = NETWORKING_MODULES.slice(0, 8).map((m) => m.id);
     expect(ids).toEqual([
       'net-01', 'net-02', 'net-03', 'net-04',
       'net-05', 'net-06', 'net-07', 'net-08',
@@ -85,9 +85,9 @@ describe('Gate 5 Milestone 4 — Test 1: Module Registration', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('Gate 5 Milestone 4 — Test 2: Milestone Registration', () => {
-  it('has 3 milestones registered in NETWORKING_ROADMAP_MILESTONES', () => {
-    expect(NETWORKING_ROADMAP_MILESTONES).toHaveLength(3);
-    const ids = NETWORKING_ROADMAP_MILESTONES.map((m) => m.id);
+  it('has milestones 1 through 3 registered in NETWORKING_ROADMAP_MILESTONES', () => {
+    expect(NETWORKING_ROADMAP_MILESTONES.length).toBeGreaterThanOrEqual(3);
+    const ids = NETWORKING_ROADMAP_MILESTONES.slice(0, 3).map((m) => m.id);
     expect(ids).toEqual(['net-milestone-1', 'net-milestone-2', 'net-milestone-3']);
   });
 
@@ -407,11 +407,11 @@ describe('Gate 5 Milestone 4 — Test 9: UI Component Rendering Parity', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('Gate 5 Milestone 4 — Test 10: Zero Regression & Collision Isolation', () => {
-  it('all 8 module IDs in NETWORKING_MODULES are unique and match net-NN pattern', () => {
+  it('all module IDs in NETWORKING_MODULES are unique and match net-NN pattern', () => {
     const ids = NETWORKING_MODULES.map((m) => m.id);
-    expect(ids).toHaveLength(8);
+    expect(ids.length).toBeGreaterThanOrEqual(8);
     const unique = new Set(ids);
-    expect(unique.size).toBe(8);
+    expect(unique.size).toBe(ids.length);
     for (const id of ids) {
       expect(id).toMatch(/^net-\d{2}$/);
     }
