@@ -38,4 +38,9 @@ export {
   type Ipv6NdpSimulatorProps,
   type Eui64Result,
 } from './Ipv6NdpSimulator';
+export {
+  DhcpDoraSimulator,
+  calculateDhcpTimers,
+  type DhcpDoraSimulatorProps,
+} from './DhcpDoraSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

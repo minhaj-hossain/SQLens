@@ -256,3 +256,28 @@ export interface Ipv6NdpTaskContent {
   explanationNotes?: string[];
 }
 
+export interface DhcpServerInfo {
+  name: string;
+  serverIp: string;
+  serverMac: string;
+  offeredIp: string;
+  subnetMask: string;
+  gateway: string;
+  dns: string;
+  leaseTimeSeconds: number; // e.g. 28800 (8 hours)
+  isRogue?: boolean;
+}
+
+export interface DhcpTaskContent {
+  title?: string;
+  description?: string;
+  clientMac?: string;
+  clientHostname?: string;
+  transactionId?: string; // e.g. '0x39A2F1B0'
+  primaryServer?: DhcpServerInfo;
+  competingServer?: DhcpServerInfo;
+  initialStep?: 1 | 2 | 3 | 4;
+  scenarioMode?: 'standard' | 'competing_servers' | 'apipa_timeout';
+  leaseSeconds?: number;
+}
+

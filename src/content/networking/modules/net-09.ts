@@ -82,6 +82,15 @@ export const NET_09_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'An unconfigured client sources from 0.0.0.0:68 to destination 255.255.255.255:67 with Layer 2 MAC FF:FF:FF:FF:FF:FF.',
+          dhcp: {
+            title: 'DHCP Bootstrap & Broadcast Dilemma',
+            description:
+              'Trace the unconfigured client sending a DHCP Discover datagram from 0.0.0.0:68 to limited broadcast 255.255.255.255:67 with Layer 2 MAC FF:FF:FF:FF:FF:FF.',
+            clientMac: '00:1A:2B:3C:4D:5E',
+            transactionId: '0x39A2F1B0',
+            initialStep: 1,
+            scenarioMode: 'standard',
+          },
           hints: [
             {
               level: 1,
@@ -177,6 +186,35 @@ export const NET_09_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'The client broadcasts Request so other servers can release their offers. At T1 (50% = 4 hours), the client sends a unicast Request to the original server.',
+          dhcp: {
+            title: 'DORA 4-Way Handshake & T1/T2 Lease Timers',
+            description:
+              'Step through Discover, Offer, Request, and ACK. Evaluate why Request is broadcast to decline competing servers, and inspect T1 (50%) and T2 (87.5%) timers.',
+            clientMac: '00:1A:2B:3C:4D:5E',
+            primaryServer: {
+              name: 'Enterprise DHCP Server',
+              serverIp: '192.168.1.1',
+              serverMac: '00:50:56:C0:00:01',
+              offeredIp: '192.168.1.100',
+              subnetMask: '255.255.255.0 (/24)',
+              gateway: '192.168.1.1',
+              dns: '8.8.8.8, 1.1.1.1',
+              leaseTimeSeconds: 28800,
+            },
+            competingServer: {
+              name: 'Secondary DHCP Pool',
+              serverIp: '192.168.1.2',
+              serverMac: '00:50:56:C0:00:02',
+              offeredIp: '192.168.1.150',
+              subnetMask: '255.255.255.0 (/24)',
+              gateway: '192.168.1.1',
+              dns: '8.8.8.8',
+              leaseTimeSeconds: 28800,
+            },
+            initialStep: 3,
+            scenarioMode: 'competing_servers',
+            leaseSeconds: 28800,
+          },
           hints: [
             {
               level: 1,
@@ -268,6 +306,14 @@ export const NET_09_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             '169.254.x.x is an APIPA link-local address indicating the client received no DHCP reply. DHCP Relays fill giaddr to inform the centralized server which pool to use.',
+          dhcp: {
+            title: 'APIPA Fallback Diagnosis (169.254.0.0/16)',
+            description:
+              'Client discovery broadcast times out without a server response, falling back to RFC 3927 Automatic Private IP Addressing.',
+            clientMac: '00:1A:2B:3C:4D:5E',
+            scenarioMode: 'apipa_timeout',
+            initialStep: 1,
+          },
           hints: [
             {
               level: 1,
@@ -340,6 +386,35 @@ export const NET_09_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'DHCP clients accept the first valid DHCP Offer they receive. DHCP Snooping on switches marks access ports as untrusted and drops unauthorized DHCP server replies.',
+        dhcp: {
+          title: 'Rogue DHCP Server Detection & Snooping Defense',
+          description:
+            'A rogue home router offers incorrect gateway 192.168.1.1 competing with legitimate corporate server 10.50.0.1.',
+          clientMac: '00:22:33:44:55:66',
+          primaryServer: {
+            name: 'Corporate DHCP Server',
+            serverIp: '10.50.0.1',
+            serverMac: '00:00:0C:07:AC:01',
+            offeredIp: '10.50.0.125',
+            subnetMask: '255.255.255.0 (/24)',
+            gateway: '10.50.0.1',
+            dns: '10.50.0.10, 10.50.0.11',
+            leaseTimeSeconds: 28800,
+          },
+          competingServer: {
+            name: 'Rogue Wi-Fi Router (Floor 3)',
+            serverIp: '192.168.1.1',
+            serverMac: '00:14:D1:E2:34:56',
+            offeredIp: '192.168.1.100',
+            subnetMask: '255.255.255.0 (/24)',
+            gateway: '192.168.1.1',
+            dns: '192.168.1.1',
+            leaseTimeSeconds: 86400,
+            isRogue: true,
+          },
+          initialStep: 2,
+          scenarioMode: 'competing_servers',
+        },
         hints: [
           {
             level: 1,

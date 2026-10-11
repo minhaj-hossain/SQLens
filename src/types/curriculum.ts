@@ -21,6 +21,8 @@ import type {
   EthernetFrameTaskContent,
   EthernetVlanTag,
   Ipv6NdpTaskContent,
+  DhcpTaskContent,
+  DhcpServerInfo,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -41,6 +43,8 @@ export type {
   EthernetFrameTaskContent,
   EthernetVlanTag,
   Ipv6NdpTaskContent,
+  DhcpTaskContent,
+  DhcpServerInfo,
 };
 
 export type { GradingType, SkillType };
@@ -259,6 +263,11 @@ export interface PracticeTask {
    * Modified EUI-64 transformation, Solicited-Node Multicast derivation, and NS/NA resolution flow.
    */
   ipv6Ndp?: Ipv6NdpTaskContent;
+  /**
+   * DHCP DORA Protocol Stepper extension (Sprint 3 / Module 9).
+   * 4-way DORA handshake, lease countdown timers (T1/T2), competing server resolution, and APIPA failure.
+   */
+  dhcp?: DhcpTaskContent;
 }
 
 export interface SyntaxBlock {
