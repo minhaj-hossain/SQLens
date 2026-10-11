@@ -281,3 +281,40 @@ export interface DhcpTaskContent {
   leaseSeconds?: number;
 }
 
+export interface DnsRecordEntry {
+  name: string;
+  type: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT' | 'NS' | 'SOA';
+  value: string;
+  ttl: number; // seconds
+  priority?: number; // for MX
+}
+
+export interface DnsResolutionHop {
+  tier: 'stub' | 'recursive' | 'root' | 'tld' | 'authoritative';
+  serverName: string;
+  serverIp: string;
+  query: string;
+  queryType: string;
+  responseType: 'referral' | 'answer' | 'cname_chain' | 'servfail' | 'nxdomain';
+  referredServers?: string[];
+  records?: DnsRecordEntry[];
+  protocol: 'UDP 53' | 'TCP 53';
+  isTruncated?: boolean;
+  latencyMs: number;
+}
+
+export interface DnsTaskContent {
+  title?: string;
+  description?: string;
+  queryDomain?: string; // e.g. 'portal.example.com' or 'api.github.com'
+  queryType?: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'TXT';
+  defaultView?: 'hierarchy' | 'cache_comparison' | 'records_table' | 'failure_diagnosis';
+  hops?: DnsResolutionHop[];
+  records?: DnsRecordEntry[];
+  cacheTtlRemaining?: number; // seconds
+  isCached?: boolean;
+  isTruncated?: boolean; // triggers TCP 53 fallback
+  failureCode?: 'NOERROR' | 'NXDOMAIN' | 'SERVFAIL';
+  explanationNotes?: string[];
+}
+

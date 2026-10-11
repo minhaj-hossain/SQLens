@@ -14,13 +14,13 @@ If you are resuming this work in a fresh conversation, **read this first before 
 1. **Do NOT re-debate settled topics:** All instructional design ("Third Way" prediction-before-explanation), RFC accuracy rules, and platform contracts are **frozen**. See [`NETWORKING_STATUS_AND_DECISION_RECORD.md`](./NETWORKING_STATUS_AND_DECISION_RECORD.md).
 2. **Current Baseline State:**
    - Git branch: `main`
-   - Test suite: `npm test` runs 111 test files (1,318 tests) with 100% passing.
-   - Track tests: `npx vitest run tests/tracks/` runs 37 test files (490 tests) with 100% passing.
+   - Test suite: `npm test` runs 112 test files (1,338 tests) with 100% passing.
+   - Track tests: `npx vitest run tests/tracks/` runs 38 test files (510 tests) with 100% passing.
    - Typecheck: `npm run lint` (`tsc --noEmit`) passes with 0 errors.
    - **Protected Invariants:** SQL (57 days) and Prisma (14 days) tracks are 100% frozen. Never modify their files.
 3. **Current Curriculum Status:**
    - **All 16 modules** already implement the "Third Way" choose-and-defend judgment gates (136 total questions, zero raw recall MCQs) and RFC technical errata.
-   - **10 modules** already have dedicated interactive widgets:
+   - **11 modules** already have dedicated interactive widgets:
      - `net-01`: `PacketInspector` (L2/L3/L4/L7 progressive disclosure)
      - `net-02`: `EthernetFrameInspector` (framing dissection, 46B padding slider, CRC-32 bit-flip error injector)
      - `net-03`: `SwitchSimulationLab` (interactive port selection & CAM table)
@@ -30,9 +30,10 @@ If you are resuming this work in a fresh conversation, **read this first before 
      - `net-07`: `PacketInspector` (Cross-hop MAC rewrites + TTL decrement)
      - `net-08`: `PacketInspector` (NAT/PAT translation table)
      - `net-09`: `DhcpDoraSimulator` (4-step DORA state machine, T1/T2 lease countdown, rogue server detection, APIPA fallback)
+     - `net-10`: `DnsResolutionTreeSimulator` (iterative namespace tree walk, cache hit vs miss comparison, resource records table, SERVFAIL forensics, TCP 53 truncation)
      - `net-11`: `PacketInspector` (5-tuple socket multiplexing)
      - `net-14`: `VirtualTerminalSimulator` (Windows CLI diagnostics: `ipconfig`, `ping`, `tracert`, `nslookup`, `netstat`)
-   - **6 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
+   - **5 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
 
 ---
 
@@ -53,7 +54,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ net-07 │ Gateways & Routing          │ PacketInspector (TTL)    │ ✅ LIVE (Phase 5)    │
 │ net-08 │ NAT & PAT                   │ PacketInspector (NAT)    │ ✅ LIVE (Phase 5)    │
 │ net-09 │ DHCP & Auto-Configuration   │ DhcpDoraSimulator        │ ✅ LIVE (Sprint 3)   │
-│ net-10 │ DNS & Name Resolution       │ DnsResolutionTreeSim     │ 📋 SPECIFIED (Sprint 4)
+│ net-10 │ DNS & Name Resolution       │ DnsResolutionTreeSim     │ ✅ LIVE (Sprint 4)   │
 │ net-11 │ UDP & TCP Foundations       │ PacketInspector (5-T)    │ ✅ LIVE (Phase 5)    │
 │ net-12 │ TCP Reliability & Teardown  │ TcpSequenceLadderSim     │ 📋 SPECIFIED (Sprint 5)
 │ net-13 │ HTTP & TLS/HTTPS            │ HttpTlsHandshakeSim      │ 📋 SPECIFIED (Sprint 6)
@@ -287,14 +288,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 4: Module 10 — DNS Resolution Tree & Cache Simulator
-- [ ] Build `src/components/learning/networking/DnsResolutionTreeSimulator.tsx`
-- [ ] Export `DnsResolutionTreeSimulator` in `src/components/learning/networking/index.ts`
-- [ ] Add `dns` property to `PracticeTask` and curriculum types
-- [ ] Wire `DnsResolutionTreeSimulator` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-10.ts` with recursive resolution scenarios
-- [ ] Author `tests/tracks/networking-sprint4-dns-tree.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 4: Module 10 — DNS Resolution Tree & Cache Simulator (COMPLETED)
+- [x] Build `src/components/learning/networking/DnsResolutionTreeSimulator.tsx`
+- [x] Export `DnsResolutionTreeSimulator` in `src/components/learning/networking/index.ts`
+- [x] Add `dns` property to `PracticeTask` and curriculum types
+- [x] Wire `DnsResolutionTreeSimulator` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-10.ts` with recursive resolution scenarios
+- [x] Author `tests/tracks/networking-sprint4-dns-tree.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (112 files, 1338 tests)
 
 ---
 

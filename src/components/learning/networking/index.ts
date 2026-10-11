@@ -43,4 +43,10 @@ export {
   calculateDhcpTimers,
   type DhcpDoraSimulatorProps,
 } from './DhcpDoraSimulator';
+export {
+  DnsResolutionTreeSimulator,
+  calculateDnsResolutionMetrics,
+  getDnsRcodeExplanation,
+  type DnsResolutionTreeSimulatorProps,
+} from './DnsResolutionTreeSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

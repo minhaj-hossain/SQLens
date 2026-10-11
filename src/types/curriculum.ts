@@ -23,6 +23,9 @@ import type {
   Ipv6NdpTaskContent,
   DhcpTaskContent,
   DhcpServerInfo,
+  DnsTaskContent,
+  DnsRecordEntry,
+  DnsResolutionHop,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -45,6 +48,9 @@ export type {
   Ipv6NdpTaskContent,
   DhcpTaskContent,
   DhcpServerInfo,
+  DnsTaskContent,
+  DnsRecordEntry,
+  DnsResolutionHop,
 };
 
 export type { GradingType, SkillType };
@@ -268,6 +274,11 @@ export interface PracticeTask {
    * 4-way DORA handshake, lease countdown timers (T1/T2), competing server resolution, and APIPA failure.
    */
   dhcp?: DhcpTaskContent;
+  /**
+   * DNS Resolution Tree & Cache Simulator extension (Sprint 4 / Module 10).
+   * Recursive vs iterative tree resolution, TTL caching, records table, and failure diagnostics (SERVFAIL/NXDOMAIN).
+   */
+  dns?: DnsTaskContent;
 }
 
 export interface SyntaxBlock {

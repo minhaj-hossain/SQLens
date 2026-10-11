@@ -76,6 +76,14 @@ export const NET_10_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'The Root server delegates to TLD (.com); the TLD delegates to the company authoritative servers, which hold the final answer.',
+          dns: {
+            title: 'DNS Namespace Tree & Referral Delegation',
+            description:
+              'Trace how queries for app.example.com walk the inverted tree: Root (.) referrals, TLD (.com) referrals, and Authoritative server answers.',
+            queryDomain: 'app.example.com',
+            queryType: 'A',
+            defaultView: 'hierarchy',
+          },
           hints: [
             {
               level: 1,
@@ -166,6 +174,15 @@ export const NET_10_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Clients issue recursive queries to resolvers; resolvers issue iterative queries to root/TLD/auth servers. If response > 512 bytes and TC flag is set, client retries over TCP 53.',
+          dns: {
+            title: 'Resolution Walk & UDP/TCP 53 Truncation',
+            description:
+              'Analyze how the recursive resolver performs iterative lookups, and observe fallback to TCP port 53 when responses are truncated (TC=1).',
+            queryDomain: 'www.wikipedia.org',
+            queryType: 'A',
+            defaultView: 'hierarchy',
+            isTruncated: true,
+          },
           hints: [
             {
               level: 1,
@@ -258,6 +275,16 @@ export const NET_10_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'A maps to IPv4, AAAA maps to IPv6, CNAME creates an alias to another name. Clients cache records until TTL reaches 0.',
+          dns: {
+            title: 'Record Types, CNAME Constraints & TTL Caching',
+            description:
+              'Evaluate why CNAME cannot alias to an IP or coexist at the apex, and observe how resolvers serve cached records until the 24-hour TTL decrements to 0.',
+            queryDomain: 'blog.company.com',
+            queryType: 'A',
+            defaultView: 'cache_comparison',
+            cacheTtlRemaining: 86400,
+            isCached: true,
+          },
           hints: [
             {
               level: 1,
@@ -330,6 +357,15 @@ export const NET_10_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'When authoritative name servers fail to respond, the recursive resolver cannot complete resolution and returns SERVFAIL (Server Failure).',
+        dns: {
+          title: 'Authoritative Server Timeout: SERVFAIL Forensics',
+          description:
+            'Root and .org TLD referrals succeed, but authoritative name servers ns1.partner.org fail to answer queries, resulting in SERVFAIL (RCODE=2).',
+          queryDomain: 'portal.partner.org',
+          queryType: 'A',
+          defaultView: 'failure_diagnosis',
+          failureCode: 'SERVFAIL',
+        },
         hints: [
           {
             level: 1,
@@ -378,6 +414,16 @@ export const NET_10_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'Lowering the TTL to 300 seconds (5 minutes) days in advance ensures that when the IP is updated, all resolvers will re-query within 5 minutes.',
+        dns: {
+          title: 'Proactive TTL Reduction for Zero-Downtime Migration',
+          description:
+            'Simulate shortening TTL to 300 seconds 48 hours in advance to eliminate stale resolver cache windows before server cutover.',
+          queryDomain: 'portal.company.com',
+          queryType: 'A',
+          defaultView: 'cache_comparison',
+          cacheTtlRemaining: 300,
+          isCached: false,
+        },
         hints: [
           {
             level: 1,
