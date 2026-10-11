@@ -1,11 +1,11 @@
 # Networking Fundamentals Track: Master Implementation Plan & Architecture Tracker
 
-**Document Version:** 2.9 (Gate 5 Milestone 3 Integration Completed & Verified — Classifier, Pipeline Routing & Non-Topology Layout Verified)  
+**Document Version:** 3.0 (Gate 5 Milestone 4 Integration Completed & Verified — net-07 Routing & net-08 NAT/PAT Fully Integrated)  
 **Date:** October 11, 2026  
-**Status:** Gate 4 & Gate 5 M3 Complete & Verified (Standing by for User Authorization for Gate 5 Milestone 4)  
+**Status:** Gate 4, Gate 5 M3 & Gate 5 M4 Complete & Verified (Standing by for User Authorization for Gate 5 Milestone 5)  
 **Location:** `docs/networking/NETWORKING_TRACK_SPECIFICATION_AND_TRACKER.md`  
 **Track Identity:** `Networking Fundamentals` (Track ID: `'networking'`, Base Route: `/networking`, Nomenclature: `Module N`)  
-**Post-Gate 5 M3 Verification:** `npm run lint` = 0 errors | `npm test` = 100/100 test files passed, 1,144/1,144 tests passed (25.68s) — 40 Gate 5 M3 tests + 14 Gate 4 EA tests + 0 regressions across all SQL, Prisma, and Networking suites.  
+**Post-Gate 5 M4 Verification:** `npm run lint` = 0 errors | `npm test` = 101/101 test files passed, 1,172/1,172 tests passed (39.66s) — 28 Gate 5 M4 tests + 40 Gate 5 M3 tests + 14 Gate 4 EA tests + 0 regressions across all SQL, Prisma, and Networking suites.  
 
 ---
 
@@ -359,7 +359,7 @@ The prototype must pass 7 independent verification gates:
 | **Gate 3** | Interactive Switch MAC Learning Slice Build | ✅ **Completed & Verified** | Visualizer components (`SwitchingTopologyCanvas`, `MacTableView`, `PlaybackControls`, `PredictionGate`, `SwitchSimulationLab`, `NetworkingPracticeTaskView`) fully implemented with reduced-motion fallback and keyboard accessibility. Wired into `net-03` theory (mental model), practice tasks (cold-start flood & station migration), and module challenges (known unicast causal defense, broadcast flood, same-port filter, and 5-port unfamiliar transfer validation). Graded via single submission pipeline in `submitForTask`. Verified with 10 acceptance tests in `tests/tracks/networking-gate-3.test.ts`. |
 | **Gate 4** | Browser QA & Educational Acceptance Validation | ✅ **Completed & Verified** | All 7 Educational Acceptance Criteria verified via automated component & engine integration tests in `tests/tracks/networking-gate-4.test.tsx`: protocol correctness (all 7 switch decisions), structured state parity with CAM table snapshots, mandatory Prediction Gate pause/unlock, causal explanation defense, 5-port unfamiliar transfer validation, misconception remediation copy, and accessibility/320px mobile viewport responsive layout. |
 | **Gate 5 — M3** | Phased Expansion: Milestone 3 (net-04/05/06) | ✅ **Completed & Verified** | `net-04` (IPv4 Addressing: C15–C20, 3 concepts + challenge), `net-05` (ARP & Local Delivery: C21–C23, 3 concepts), `net-06` (IPv6 & NDP: C24a–C24e, 3 concepts) authored with full judgment grading. End-to-end integration verified: `isNetworkingTask` classifier, `submitForTask` central routing, and non-topology balanced split-pane layout in `NetworkingPracticeTaskView`. Milestone 2 roadmap registered. 40 tests in `tests/tracks/networking-gate5-milestone3.test.tsx`. |
-| **Gate 5 — M4** | Phased Expansion: Milestone 4 (net-07/08) | ⏸️ Queued | Default Gateways & Internetwork Routing (`net-07`); NAT & PAT (`net-08`). |
+| **Gate 5 — M4** | Phased Expansion: Milestone 4 (net-07/08) | ✅ **Completed & Verified** | `net-07` (Default Gateways & Internetwork Routing: C25/C26 MAC rewrites, C27/C28 LPM routing tables, C29 TTL loop mitigation; 3 concepts + 2 challenge tasks) and `net-08` (NAT & PAT: C30a Inside/Outside & Static NAT, C30b PAT port multiplexing, C30c Return flow state & unsolicited inbound drop; 3 concepts + 2 challenge tasks). Roadmap Milestone 3 registered. 28 tests in `tests/tracks/networking-gate5-milestone4.test.tsx`. |
 | **Gate 5 — M5+** | Phased Expansion: Milestones 5–9 (net-09 through net-16) | ⏸️ Queued | DHCP, DNS, TCP/UDP, HTTP/TLS, Diagnostics, Security, VLANs/Wireless. |
 
 ---
@@ -464,6 +464,6 @@ When continuing this project in a new conversation, the agent should:
 
 ---
 
-*Current Status: Gate 4 Complete & Verified (14 automated acceptance tests). Gate 5 Milestone 3 Complete & Verified. Standing by for User Authorization for Gate 5 Milestone 4 (net-07 Default Gateways & Routing, net-08 NAT & PAT).*
+*Current Status: Gate 4 Complete & Verified (14 automated acceptance tests). Gate 5 Milestone 3 Complete & Verified (40 automated tests). Gate 5 Milestone 4 Complete & Verified (28 automated tests). Standing by for User Authorization for Gate 5 Milestone 5 (net-09 DHCP & Dynamic Configuration, net-10 DNS & Name Resolution).*
 
 

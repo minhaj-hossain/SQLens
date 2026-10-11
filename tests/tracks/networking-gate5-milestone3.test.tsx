@@ -76,9 +76,9 @@ describe('Gate 5 Milestone 3 — Test 1: Module Registration', () => {
     expect(mod!.milestoneId).toBe('net-milestone-2');
   });
 
-  it('has 6 total modules in order (net-01 through net-06)', () => {
-    expect(NETWORKING_MODULES).toHaveLength(6);
-    const ids = NETWORKING_MODULES.map((m) => m.id);
+  it('has at least 6 total modules with net-01 through net-06 in order', () => {
+    expect(NETWORKING_MODULES.length).toBeGreaterThanOrEqual(6);
+    const ids = NETWORKING_MODULES.slice(0, 6).map((m) => m.id);
     expect(ids).toEqual(['net-01', 'net-02', 'net-03', 'net-04', 'net-05', 'net-06']);
   });
 });
@@ -88,8 +88,8 @@ describe('Gate 5 Milestone 3 — Test 1: Module Registration', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('Gate 5 Milestone 3 — Test 2: Milestone Registration', () => {
-  it('has 2 milestones: net-milestone-1 and net-milestone-2', () => {
-    expect(NETWORKING_ROADMAP_MILESTONES).toHaveLength(2);
+  it('has milestones: net-milestone-1 and net-milestone-2', () => {
+    expect(NETWORKING_ROADMAP_MILESTONES.length).toBeGreaterThanOrEqual(2);
     const ids = NETWORKING_ROADMAP_MILESTONES.map((m) => m.id);
     expect(ids).toContain('net-milestone-1');
     expect(ids).toContain('net-milestone-2');

@@ -28,4 +28,14 @@ export const NETWORKING_ROADMAP_MILESTONES: MilestoneData[] = [
     daysRange: 'Modules 4–6',
     moduleIds: ['net-04', 'net-05', 'net-06'],
   },
+  {
+    id: 'net-milestone-3',
+    number: 3,
+    title: 'Internetwork Routing & NAT',
+    subtitle: 'Default Gateways, Route Tables & Port Address Translation',
+    description:
+      'Connect disparate networks across router boundaries. Master Default Gateways, hop-by-hop Layer 2 MAC rewrites, routing table lookup via Longest Prefix Match, the IPv4 TTL loop mitigation field, and Network Address Translation (NAT/PAT) state tracking.',
+    daysRange: 'Modules 7–8',
+    moduleIds: ['net-07', 'net-08'],
+  },
 ];
