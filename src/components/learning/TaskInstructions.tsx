@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PracticeTask, Concept } from '../../types/curriculum';
 import { ChevronDown, ChevronUp, Code, Copy, Check, HelpCircle } from 'lucide-react';
-import { solutionReveal, isPrismaTask } from '../../lib/track-submit';
+import { solutionReveal, isPrismaTask, isNetworkingTask } from '../../lib/track-submit';
 import { PrismaTaskHeaderMeta } from './prisma/PrismaTaskHeaderMeta';
 
 interface TaskInstructionsProps {
@@ -162,7 +162,11 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
           <div className="flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
             <span className="font-medium">
-              {isPrismaSurface ? 'Need help with this code?' : 'Need help with this query?'}
+              {isNetworkingTask(task)
+                ? 'Need a hint for this network scenario?'
+                : isPrismaSurface
+                ? 'Need help with this code?'
+                : 'Need help with this query?'}
             </span>
           </div>
           {isHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -212,30 +216,44 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
             {/* Inline Solution Display */}
             {showSolution && (
               <div className="mt-2 p-3 rounded-lg bg-ink border border-border relative text-xs">
-                <div className="flex items-center justify-between mb-1.5 text-text-dim text-[11px]">
-                  <span className="font-bold text-text-dim flex items-center gap-1">
-                    <Code className="w-3 h-3" /> {reveal.label}:
-                  </span>
-                  <button
-                    onClick={handleCopySolution}
-                    className="flex items-center gap-1 text-text-dim hover:text-text cursor-pointer"
-                    title="Copy Solution"
-                  >
-                    {copiedSolution ? (
-                      <Check className="w-3 h-3 text-text" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
+                {isNetworkingTask(task) ? (
+                  <div className="space-y-1.5 font-sans">
+                    <div className="flex items-center gap-1.5 text-func text-[11px] font-bold uppercase tracking-wider font-mono">
+                      <Code className="w-3.5 h-3.5" />
+                      <span>{reveal.label}</span>
+                    </div>
+                    <p className="text-text text-xs leading-relaxed font-sans">
+                      {task.solutionExplanation || reveal.code}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-1.5 text-text-dim text-[11px]">
+                      <span className="font-bold text-text-dim flex items-center gap-1">
+                        <Code className="w-3 h-3" /> {reveal.label}:
+                      </span>
+                      <button
+                        onClick={handleCopySolution}
+                        className="flex items-center gap-1 text-text-dim hover:text-text cursor-pointer"
+                        title="Copy Solution"
+                      >
+                        {copiedSolution ? (
+                          <Check className="w-3 h-3 text-text" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                        <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <pre className="text-editor-text font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                      {reveal.code}
+                    </pre>
+                    {task.solutionExplanation && (
+                      <p className="mt-2 pt-2 border-t border-border text-text-dim text-[11px] font-body leading-relaxed">
+                        {task.solutionExplanation}
+                      </p>
                     )}
-                    <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
-                <pre className="text-editor-text font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-                  {reveal.code}
-                </pre>
-                {task.solutionExplanation && (
-                  <p className="mt-2 pt-2 border-t border-border text-text-dim text-[11px] font-body leading-relaxed">
-                    {task.solutionExplanation}
-                  </p>
+                  </>
                 )}
               </div>
             )}

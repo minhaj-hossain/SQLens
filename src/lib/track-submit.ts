@@ -294,6 +294,13 @@ export function solutionReveal(task: PracticeTask): {
       code: task.prisma!.solutionCode,
     };
   }
+  if (isNetworkingTask(task)) {
+    return {
+      language: 'sql',
+      label: 'Technical Explanation',
+      code: task.solutionExplanation || 'Review the technical rule governing this scenario.',
+    };
+  }
   return { language: 'sql', label: 'Solution SQL', code: task.solutionSql };
 }
 

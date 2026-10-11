@@ -1,13 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { PracticeTask, Concept } from '../../../types/curriculum';
 import { submitForTask } from '../../../lib/track-submit';
 import { SwitchSimulationLab } from './SwitchSimulationLab';
 import { TaskInstructions } from '../TaskInstructions';
 import { JudgmentBlock } from '../JudgmentBlock';
-import { ArrowRight, CheckCircle2, AlertTriangle, Lightbulb, RotateCcw } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  AlertTriangle,
+  Lightbulb,
+  Network,
+  Terminal,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  ShieldCheck,
+  Check,
+} from 'lucide-react';
 
 interface NetworkingPracticeTaskViewProps {
   task: PracticeTask;
@@ -50,6 +63,9 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
   const [taskPassed, setTaskPassed] = useState(isCompleted);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [isMisconception, setIsMisconception] = useState(false);
+  const [isChallengeHelpOpen, setIsChallengeHelpOpen] = useState(false);
+  const [challengeHintLevel, setChallengeHintLevel] = useState(0);
+  const [showChallengeSolution, setShowChallengeSolution] = useState(false);
 
   // Sync state when task changes
   useEffect(() => {
@@ -61,6 +77,9 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
     setTaskPassed(isCompleted);
     setValidationMessage(null);
     setIsMisconception(false);
+    setIsChallengeHelpOpen(false);
+    setChallengeHintLevel(0);
+    setShowChallengeSolution(false);
   }, [task.id, isCompleted]);
 
   const handleTogglePort = (port: number) => {
@@ -70,7 +89,6 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
   };
 
   const handleCheckSubmission = () => {
-    // If task has judgment questions, submit via submitForTask
     const outcome = submitForTask({
       task,
       code: selectedOptionIndex !== null ? String(selectedOptionIndex) : '',
@@ -117,6 +135,8 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
 
   const hasTopology = Boolean(topology && topology.length > 0);
 
+  const cleanTitle = (task.title || '').replace(/^Task\s+\d+:\s*/i, '').trim();
+
   return (
     <motion.div
       key={task.id}
@@ -124,15 +144,61 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.2 }}
-      className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-6 px-0 sm:px-4 min-w-0"
+      className="w-full max-w-[1440px] mx-auto space-y-4 sm:space-y-5 px-0 sm:px-4 min-w-0"
       data-testid="networking-practice-task-view"
     >
-      {/* 
-        SPLIT-PANE RESPONSIVE LAYOUT (per specification §9.2):
-        When topology exists: Left: Topology Canvas & Live CAM Table, Right: Instructions & Questions.
-        When purely conceptual / addressing: Left: Scenario Instructions & References, Right: Questions & Assessment.
-        Mobile (< 768px): Stacked layout.
-      */}
+      {/* ─────────────────────────────────────────────────────────────
+          1. TOP STATUS & NAVIGATION STEPPER BAR
+          ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-surface-1/90 border border-border shadow-md backdrop-blur-md">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-func/15 border border-func/30 flex items-center justify-center shrink-0 text-func">
+            {isChallenge ? <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" /> : <Network className="w-4 h-4 sm:w-5 sm:h-5" />}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] sm:text-[11px] font-bold text-func uppercase tracking-wider">
+                {isChallenge ? 'Mastery Challenge' : 'Networking Practice'}
+              </span>
+              <span className="text-text-muted text-xs">•</span>
+              <span className="font-mono text-[10.5px] sm:text-[11px] text-text-dim">
+                Task {taskIndex + 1} of {totalTasks}
+              </span>
+            </div>
+            <h2 className="text-xs sm:text-sm font-bold text-text truncate">
+              {concept ? `${concept.title} • ` : ''}
+              {cleanTitle}
+            </h2>
+          </div>
+        </div>
+
+        {/* Task Progress Indicator Pills */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          {Array.from({ length: totalTasks }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === taskIndex
+                  ? 'w-6 bg-func shadow-sm'
+                  : i < taskIndex || (i === taskIndex && taskPassed)
+                  ? 'w-3.5 bg-emerald-500'
+                  : 'w-2 bg-surface-3'
+              }`}
+              title={`Task ${i + 1}`}
+            />
+          ))}
+          {taskPassed && (
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold">
+              <Check className="w-3 h-3" />
+              Passed
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          2. SPLIT-PANE RESPONSIVE LAYOUT (Specification §9.2)
+          ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full min-w-0">
         {hasTopology ? (
           /* LEFT COLUMN: Interactive Network Topology Simulator & CAM Table */
@@ -140,7 +206,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             <SwitchSimulationLab
               hosts={topology}
               sequence={sequence}
-              enablePredictionGate={false} // Practice exercises have their own explicit form gate
+              enablePredictionGate={false}
               interactivePortSelection={true}
               selectedPorts={selectedPorts}
               onTogglePort={handleTogglePort}
@@ -149,7 +215,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             />
           </div>
         ) : (
-          /* LEFT COLUMN: Full Instructions and Scenario Context for Non-Topology Tasks */
+          /* LEFT COLUMN: Scenario Context & Instructions Card */
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
             {concept ? (
               <TaskInstructions
@@ -162,28 +228,115 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4">
-                <div className="space-y-1">
-                  <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider">
-                    {isChallenge ? 'Module Challenge Task' : 'Network Engineering Task'}
-                  </span>
+              /* Challenge / Independent Briefing Card */
+              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider flex items-center gap-1.5">
+                      <Terminal className="w-3.5 h-3.5" />
+                      {isChallenge ? 'Module Challenge Task' : 'Network Engineering Task'}
+                    </span>
+                  </div>
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
-                    {task.title}
+                    {cleanTitle}
                   </h3>
                   <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
                     {task.description}
                   </p>
                 </div>
+
                 {task.instructions.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-border-soft">
+                  <div className="space-y-2.5 pt-3 border-t border-border-soft">
                     <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
                       Instructions &amp; Constraints:
                     </span>
                     <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
                       {task.instructions.map((inst, i) => (
-                        <li key={i} className="leading-relaxed">{inst}</li>
+                        <li key={i} className="leading-relaxed text-text/90">
+                          {inst}
+                        </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* Challenge Hints Drawer */}
+                {task.hints && task.hints.length > 0 && (
+                  <div className="pt-3 border-t border-border-soft">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsChallengeHelpOpen(!isChallengeHelpOpen);
+                        if (!isChallengeHelpOpen && challengeHintLevel === 0) {
+                          setChallengeHintLevel(1);
+                          setHintsUsed(1);
+                        }
+                      }}
+                      className="flex items-center justify-between w-full text-xs font-body text-text-dim hover:text-text transition py-1 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
+                        <span className="font-medium">Need a hint for this challenge scenario?</span>
+                      </div>
+                      {isChallengeHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+
+                    {isChallengeHelpOpen && (
+                      <div className="mt-2.5 space-y-2.5 text-xs font-mono">
+                        {task.hints.slice(0, challengeHintLevel).map((hint, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2.5 rounded-lg bg-surface-2 border border-border-soft text-text text-xs leading-relaxed"
+                          >
+                            <span className="font-bold text-text-dim mr-1.5">Hint {idx + 1}:</span>
+                            <span>{hint.text}</span>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center justify-between pt-1">
+                          {challengeHintLevel < task.hints.length ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextLvl = challengeHintLevel + 1;
+                                setChallengeHintLevel(nextLvl);
+                                setHintsUsed((prev) => Math.max(prev, nextLvl));
+                              }}
+                              className="px-2.5 py-1 rounded bg-surface-2 hover:bg-surface-3 text-text-dim border border-border text-[11px] font-semibold transition cursor-pointer"
+                            >
+                              Next Hint ({challengeHintLevel + 1}/{task.hints.length})
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-text-faint italic">All hints revealed</span>
+                          )}
+
+                          {!showChallengeSolution && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowChallengeSolution(true);
+                                setViewedSolution(true);
+                              }}
+                              className="text-[11px] text-text-dim hover:text-text underline underline-offset-2 transition cursor-pointer"
+                            >
+                              View Solution Explanation
+                            </button>
+                          )}
+                        </div>
+
+                        {showChallengeSolution && (
+                          <div className="mt-2 p-3.5 rounded-xl bg-surface-2/95 border border-border text-xs space-y-1.5 font-sans">
+                            <div className="flex items-center gap-1.5 text-func text-[11px] font-bold uppercase tracking-wider font-mono">
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Technical Solution Defense</span>
+                            </div>
+                            <p className="text-text leading-relaxed">
+                              {task.solutionExplanation || 'Review the technical rule governing this scenario.'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -191,7 +344,9 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
           </div>
         )}
 
-        {/* RIGHT COLUMN: Questions, Predictions, Options & Action Bar */}
+        {/* ─────────────────────────────────────────────────────────────
+            3. RIGHT COLUMN: Questions, Predictions, Options & Action Bar
+            ───────────────────────────────────────────────────────────── */}
         <div className={`${hasTopology ? 'lg:col-span-5 xl:col-span-5' : 'lg:col-span-6 xl:col-span-5'} flex flex-col gap-4 min-w-0 w-full order-2`}>
           {/* Task Instructions (shown in right column only when topology lab occupies left column) */}
           {hasTopology && concept && (
@@ -206,14 +361,17 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             />
           )}
 
-          {/* Reasoning / Prediction Judgment Questions */}
+          {/* Reasoning / Prediction Judgment Questions Card */}
           {(task.validation.judgment?.length ?? 0) > 0 && (
-            <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 sm:p-5 shadow-lg space-y-3">
+            <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 sm:p-5 shadow-lg space-y-3.5">
               <div className="flex items-center justify-between border-b border-border-soft pb-2.5">
-                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-text">
-                  Prediction &amp; Causal Defense
-                </h4>
-                <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-surface-2 text-text-dim">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-func" />
+                  <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-text">
+                    Prediction &amp; Causal Defense
+                  </h4>
+                </div>
+                <span className="font-mono text-[10.5px] px-2 py-0.5 rounded-md bg-surface-2 text-text-dim border border-border-soft">
                   Interactive Assessment
                 </span>
               </div>
@@ -234,7 +392,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             </div>
           )}
 
-          {/* Direct Port Selection Helper (Rendered only when active topology ports exist) */}
+          {/* Direct Port Selection Helper (when active topology ports exist) */}
           {hasTopology && (topology ?? []).length > 0 && (
             <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 shadow-md space-y-2">
               <span className="font-mono text-xs font-semibold text-text-dim uppercase tracking-wider block">
@@ -250,7 +408,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                       aria-label={`Toggle Port ${h.port}`}
                       className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                         isSelected
-                          ? 'bg-func text-ink shadow-md'
+                          ? 'bg-func text-ink shadow-md scale-102'
                           : 'bg-surface-2 text-text-dim hover:text-text border border-border-soft'
                       }`}
                     >
@@ -267,28 +425,34 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
           )}
 
           {/* Validation Feedback & Misconception Remediation Banner */}
-          {validationMessage && (
-            <div
-              className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 shadow-md ${
-                taskPassed
-                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                  : 'border-red-500/40 bg-red-500/10 text-red-300'
-              }`}
-              data-testid="task-validation-message"
-            >
-              {taskPassed ? (
-                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400 mt-0.5" />
-              ) : (
-                <AlertTriangle className="w-5 h-5 shrink-0 text-red-400 mt-0.5" />
-              )}
-              <div className="space-y-1 font-sans">
-                <p className="font-bold">
-                  {taskPassed ? 'Task Completed!' : 'Incorrect Prediction:'}
-                </p>
-                <p className="leading-relaxed opacity-95">{validationMessage}</p>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {validationMessage && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 shadow-lg ${
+                  taskPassed
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                    : 'border-red-500/40 bg-red-500/10 text-red-300'
+                }`}
+                data-testid="task-validation-message"
+              >
+                {taskPassed ? (
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 shrink-0 text-red-400 mt-0.5" />
+                )}
+                <div className="space-y-1 font-sans">
+                  <p className="font-bold">
+                    {taskPassed ? 'Task Completed!' : 'Incorrect Prediction:'}
+                  </p>
+                  <p className="leading-relaxed opacity-95">{validationMessage}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Action Bar: Check Prediction / Next Task */}
           <div className="flex items-center justify-between gap-3 pt-2">
@@ -306,7 +470,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 <button
                   onClick={handleCheckSubmission}
                   data-testid="check-prediction-button"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-func text-ink font-bold text-xs sm:text-sm hover:brightness-110 transition cursor-pointer shadow-lg"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-func text-ink font-bold text-xs sm:text-sm hover:brightness-110 active:scale-98 transition cursor-pointer shadow-lg shadow-func/20"
                 >
                   <span>Check Prediction</span>
                   <ArrowRight className="w-4 h-4" />
@@ -315,7 +479,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 <button
                   onClick={onNextTask}
                   data-testid="next-task-button"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-ink font-bold text-xs sm:text-sm hover:bg-emerald-400 transition cursor-pointer shadow-lg"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-ink font-bold text-xs sm:text-sm hover:bg-emerald-400 active:scale-98 transition cursor-pointer shadow-lg shadow-emerald-500/20"
                 >
                   <span>{nextActionLabel}</span>
                   <ArrowRight className="w-4 h-4" />
