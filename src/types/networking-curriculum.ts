@@ -23,6 +23,41 @@ export interface NetworkingPredictionOption {
   misconceptionExplanation?: string;
 }
 
+export interface SubnetFieldDef {
+  id: string;
+  label: string;
+  placeholder?: string;
+  type?: 'text' | 'number' | 'select' | 'radio';
+  options?: { label: string; value: string }[];
+  expected: string | number;
+  helperText?: string;
+  misconceptions?: {
+    testPattern?: string;
+    feedback: string;
+  }[];
+}
+
+export interface SubnettingTaskContent {
+  stage: 1 | 2 | 3 | 4 | 5;
+  targetIp: string;
+  prefix: number;
+  isInteractive?: boolean;
+  isCollapsed?: boolean;
+  fields?: SubnetFieldDef[];
+  reflectionPrompt?: string;
+  modelExplanation?: string;
+  routerOnAStick?: {
+    trunkPort: number;
+    subinterfaces: { id: string; vlan: number; ip: string; mac: string }[];
+    hosts: { name: string; ip: string; port: number; vlan: number }[];
+  };
+  diagnostics?: {
+    terminalOutput: string;
+    routeTableOutput: string;
+    pingOutput: string;
+  };
+}
+
 export interface NetworkingTaskContent {
   topology: HostNode[];
   initialSequence?: FrameTransmission[];
@@ -35,3 +70,4 @@ export interface NetworkingTaskContent {
   governingRule: string;
   misconceptionRemediation?: Record<number, string>;
 }
+

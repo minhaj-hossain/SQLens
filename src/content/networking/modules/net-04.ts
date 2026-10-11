@@ -315,6 +315,608 @@ export const NET_04_MODULE: ModuleData = {
           successMessage:
             'Well done! The subnet AND test correctly classifies local vs remote: 10.0.1.x is local, 10.0.2.x and public addresses go via the gateway.',
         },
+        // ── Stage 1: Observe (Worked Example 192.168.10.130/26) ──────
+        {
+          id: 'net04-stage1-observe',
+          title: 'Stage 1: Observe — Subnet Bit Slicing & Boundary Derivation',
+          description:
+            'Observe how the 32-bit subnet mask splits an IPv4 address into network bits and host bits on target 192.168.10.130/26.',
+          instructions: [
+            'Target IP: 192.168.10.130/26.',
+            'Examine the 32-bit bit slicer: Octets 1–3 (24 bits) are solid network bits.',
+            'In Octet 4 (130 = 10000010), the /26 mask allocates 2 network bits (128) and leaves 6 host bits.',
+            'Block increment = 2^6 = 64. Subnet blocks advance in multiples of 64: 0, 64, 128, 192.',
+            '130 falls into the block starting at 128 (192.168.10.128).',
+            'Broadcast is 128 + 64 - 1 = 192.168.10.191. Usable host range is 192.168.10.129 to 192.168.10.190 (62 usable hosts).',
+          ],
+          type: 'guided',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'With /26, 6 host bits remain in the 4th octet (increment 64). Blocks: 0, 64, 128, 192. 130 is in 192.168.10.128.',
+          hints: [
+            { level: 1, text: 'Look at the glowing divider at bit 26 in the 4th octet.' },
+            { level: 2, text: 'Increment = 2^(32-26) = 2^6 = 64. 130 falls between 128 and 191.' },
+          ],
+          subnetting: {
+            stage: 1,
+            targetIp: '192.168.10.130',
+            prefix: 26,
+            isInteractive: true,
+            isCollapsed: false,
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'Based on the 32-bit bit-slicer observation for 192.168.10.130/26, why is the network address 192.168.10.128 rather than 192.168.10.0?',
+                options: [
+                  'Because /26 leaves 6 host bits (increment 64), and .130 falls into the block spanning 128 to 191',
+                  'Because all class C subnets start at .128 by default',
+                  'Because the last octet is an even number',
+                  'Because 192.168.10.0 is reserved for default gateways only',
+                ],
+                correctIndex: 0,
+                explanation:
+                  'With prefix /26, 6 host bits remain in the 4th octet, giving a block increment of 2^6 = 64. Subnet blocks start at 0, 64, 128, and 192. Since 130 is between 128 and 191, the subnet network address is 192.168.10.128.',
+              },
+            ],
+          },
+          successMessage:
+            'Stage 1 observed! You derived the 64-block increment and verified 192.168.10.128 network boundary.',
+        },
+        // ── Stage 2: Complete (Guided Practice 192.168.10.65/26) ─────
+        {
+          id: 'net04-stage2-complete',
+          title: 'Stage 2: Complete — Guided Subnet Calculation & Host Range',
+          description:
+            'Complete the step-by-step intermediate calculations for target IP 192.168.10.65/26 using the interactive bit-slicer.',
+          instructions: [
+            'Target IP: 192.168.10.65/26.',
+            'Step 1: Calculate remaining host bits in the 4th octet (32 - 26).',
+            'Step 2: Calculate the block increment (2^H).',
+            'Step 3: Identify the subnet multiple containing .65.',
+            'Step 4: Compute the broadcast address and usable host range.',
+          ],
+          type: 'guided',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'Step 1: 6 host bits. Step 2: 2^6 = 64. Step 3: 192.168.10.64. Step 4: Broadcast .127, usable .65–.126 (62 hosts).',
+          hints: [
+            { level: 1, text: 'Host bits = 32 - prefix = 32 - 26 = 6.' },
+            { level: 2, text: 'Increment is 2^6 = 64. Multiples: 0, 64, 128, 192. .65 is in block 64.' },
+          ],
+          subnetting: {
+            stage: 2,
+            targetIp: '192.168.10.65',
+            prefix: 26,
+            isInteractive: true,
+            isCollapsed: false,
+            fields: [
+              {
+                id: 'host_bits',
+                label: 'Step 1: Host Bits in Active Octet (32 - 26)',
+                expected: '6',
+                type: 'number',
+              },
+              {
+                id: 'increment',
+                label: 'Step 2: Block Size Increment (2^H)',
+                expected: '64',
+                type: 'number',
+                misconceptions: [
+                  {
+                    testPattern: '^(32|128)$',
+                    feedback:
+                      'Remember that increment is 2^H, where H is the number of host bits in the active octet (H = 6 => 2^6 = 64).',
+                  },
+                ],
+              },
+              {
+                id: 'network_address',
+                label: 'Step 3: Subnet Network Address',
+                expected: '192.168.10.64',
+                misconceptions: [
+                  {
+                    testPattern: '192\\.168\\.10\\.0$',
+                    feedback:
+                      '.0 covers .0 through .63. Because the target address is .65, it falls into the next block starting at .64.',
+                  },
+                ],
+              },
+              {
+                id: 'broadcast_address',
+                label: 'Step 4: Broadcast Address (Network + Increment - 1)',
+                expected: '192.168.10.127',
+              },
+              {
+                id: 'first_usable',
+                label: 'Step 5: First Usable Host IP',
+                expected: '192.168.10.65',
+              },
+              {
+                id: 'last_usable',
+                label: 'Step 6: Last Usable Host IP',
+                expected: '192.168.10.126',
+              },
+              {
+                id: 'usable_capacity',
+                label: 'Step 7: Total Usable Host Capacity (2^H - 2)',
+                expected: '62',
+                type: 'number',
+                misconceptions: [
+                  {
+                    testPattern: '^64$',
+                    feedback:
+                      'You calculated the total number of IP addresses in the block (2^6 = 64). Remember to subtract 2 for the network address (.64) and broadcast address (.127). Usable count is 62.',
+                  },
+                ],
+              },
+            ],
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt: 'What is the network address for host 192.168.10.65/26?',
+                options: [
+                  '192.168.10.0 (the first block)',
+                  '192.168.10.64 (second block spanning .64 to .127)',
+                  '192.168.10.65 (the host IP itself)',
+                  '192.168.10.128 (third block)',
+                ],
+                correctIndex: 1,
+                explanation:
+                  'The /26 prefix divides the 4th octet into blocks of 64 (.0, .64, .128, .192). .65 falls into the second block starting at 192.168.10.64.',
+              },
+            ],
+          },
+          successMessage:
+            'Stage 2 completed! You calculated the 6 host bits, 64 block size, and 62 usable host capacity.',
+        },
+        // ── Stage 3: Perform Independently (Faded Visualizer 172.16.20.100/27) ──
+        {
+          id: 'net04-stage3-perform',
+          title: 'Stage 3: Perform Independently — Independent Subnetting Calculation',
+          description:
+            'Perform the full subnet calculation for 172.16.20.100/27 independently with the visualizer collapsed.',
+          instructions: [
+            'Target IP: 172.16.20.100/27.',
+            'The bit-slicer is collapsed to enforce independent mental calculation.',
+            'Calculate the dotted-decimal subnet mask, network address, broadcast address, and usable host range.',
+            'Submit clean numerical entries.',
+          ],
+          type: 'independent',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            '/27 gives 5 host bits (increment 32). Blocks: 0, 32, 64, 96, 128. 100 falls in 172.16.20.96. Broadcast 172.16.20.127, usable 97–126 (30 hosts).',
+          hints: [
+            { level: 1, text: 'Host bits = 32 - 27 = 5. Increment = 2^5 = 32.' },
+            { level: 2, text: 'Multiples of 32: 0, 32, 64, 96, 128. 100 is between 96 and 127.' },
+          ],
+          subnetting: {
+            stage: 3,
+            targetIp: '172.16.20.100',
+            prefix: 27,
+            isInteractive: false,
+            isCollapsed: true,
+            reflectionPrompt:
+              'Why cannot 172.16.20.96 and 172.16.20.127 be assigned to workstation network adapters?',
+            modelExplanation:
+              '172.16.20.96 has all host bits set to 0, representing the subnet wire ID. 172.16.20.127 has all host bits set to 1, representing the directed broadcast address for that subnet. Host IP stacks reject both.',
+            fields: [
+              {
+                id: 'mask',
+                label: 'Subnet Mask (Dotted-Decimal)',
+                expected: '255.255.255.224',
+              },
+              {
+                id: 'network',
+                label: 'Subnet Network Address',
+                expected: '172.16.20.96',
+                misconceptions: [
+                  {
+                    testPattern: '172\\.16\\.20\\.0$',
+                    feedback:
+                      'You assumed a /24 boundary. A /27 has 5 host bits (2^5 = 32 increment). Subnets start at 0, 32, 64, 96, 128. Since 100 is between 96 and 127, the network address is 172.16.20.96.',
+                  },
+                ],
+              },
+              {
+                id: 'broadcast',
+                label: 'Subnet Broadcast Address',
+                expected: '172.16.20.127',
+                misconceptions: [
+                  {
+                    testPattern: '172\\.16\\.20\\.128$',
+                    feedback:
+                      '.128 is the network address of the next subnet. The broadcast address is one less than the next subnet: 96 + 32 - 1 = 127.',
+                  },
+                ],
+              },
+              {
+                id: 'first_usable',
+                label: 'First Usable Host IP',
+                expected: '172.16.20.97',
+              },
+              {
+                id: 'last_usable',
+                label: 'Last Usable Host IP',
+                expected: '172.16.20.126',
+              },
+              {
+                id: 'capacity',
+                label: 'Total Usable Host Capacity',
+                expected: '30',
+                type: 'number',
+                misconceptions: [
+                  {
+                    testPattern: '^32$',
+                    feedback:
+                      '2^5 = 32 total addresses, but .96 (network ID) and .127 (broadcast ID) cannot be assigned to hosts. You must subtract 2.',
+                  },
+                ],
+              },
+            ],
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt: 'For 172.16.20.100/27, what is the valid usable host range?',
+                options: [
+                  '172.16.20.1 to 172.16.20.254',
+                  '172.16.20.97 to 172.16.20.126',
+                  '172.16.20.96 to 172.16.20.127',
+                  '172.16.20.65 to 172.16.20.94',
+                ],
+                correctIndex: 1,
+                explanation:
+                  'With a /27 prefix (increment 32), the subnet is 172.16.20.96/27. The first usable host is .97 (network + 1) and last usable host is .126 (broadcast - 1).',
+              },
+            ],
+          },
+          successMessage:
+            'Stage 3 mastered! Independent calculation verified for 172.16.20.100/27 without visualizer assistance.',
+        },
+        // ── Stage 4: Transfer (Router-on-a-Stick 10.10.4.82/28) ──────
+        {
+          id: 'net04-stage4-transfer',
+          title: 'Stage 4: Transfer — Layer 2 vs. Layer 3 Forwarding on Router-on-a-Stick',
+          description:
+            'Apply subnet mask boundaries to make on-link vs. off-link forwarding decisions across 802.1Q VLANs.',
+          instructions: [
+            'Router R1 connects to Switch SW1 via a single physical trunk link (Port 24) carrying tagged VLANs 10 and 20.',
+            'Subinterface Gig0/0.10: IP 10.10.4.81/28, MAC GW:81:81:81:81:81 (Default Gateway for VLAN 10).',
+            'Subinterface Gig0/0.20: IP 10.10.4.97/28, MAC GW:97:97:97:97:97 (Default Gateway for VLAN 20).',
+            'Workstation A is connected to Port 1 (Access VLAN 10) with IP 10.10.4.82/28.',
+            'Destination 1 is connected to Port 2 (Access VLAN 10) with IP 10.10.4.94/28.',
+            'Destination 2 is connected to Port 5 (Access VLAN 20) with IP 10.10.4.98/28.',
+            'Compute Workstation A\'s subnet boundaries and decide forwarding actions for Destination 1 and Destination 2.',
+          ],
+          type: 'independent',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'Workstation A is in 10.10.4.80/28 (.80–.95). .94 is local (send directly across VLAN 10). .98 is remote (send to Default Gateway Gig0/0.10 MAC GW:81).',
+          hints: [
+            { level: 1, text: '/28 has 4 host bits -> increment 16. Multiples: 0, 16, 32, 48, 64, 80, 96.' },
+            { level: 2, text: 'Workstation A is 10.10.4.80–.95. .94 is inside -> local. .98 is outside -> remote via router gateway.' },
+          ],
+          subnetting: {
+            stage: 4,
+            targetIp: '10.10.4.82',
+            prefix: 28,
+            routerOnAStick: {
+              trunkPort: 24,
+              subinterfaces: [
+                { id: 'Gig0/0.10', vlan: 10, ip: '10.10.4.81/28', mac: 'GW:81:81:81:81:81' },
+                { id: 'Gig0/0.20', vlan: 20, ip: '10.10.4.97/28', mac: 'GW:97:97:97:97:97' },
+              ],
+              hosts: [
+                { name: 'Workstation A', ip: '10.10.4.82/28', port: 1, vlan: 10 },
+                { name: 'Destination 1', ip: '10.10.4.94/28', port: 2, vlan: 10 },
+                { name: 'Destination 2', ip: '10.10.4.98/28', port: 5, vlan: 20 },
+              ],
+            },
+            fields: [
+              {
+                id: 'workstation_network',
+                label: 'Workstation A Subnet Network Address',
+                expected: '10.10.4.80',
+              },
+              {
+                id: 'workstation_broadcast',
+                label: 'Workstation A Broadcast Address',
+                expected: '10.10.4.95',
+              },
+              {
+                id: 'dest1_status',
+                label: 'Destination 1 (10.10.4.94) Subnet Status',
+                type: 'radio',
+                options: [
+                  { label: 'Local Subnet (On-Link)', value: 'local' },
+                  { label: 'Remote Subnet (Off-Link)', value: 'remote' },
+                ],
+                expected: 'local',
+              },
+              {
+                id: 'dest1_mac',
+                label: 'Destination 1 Ethernet Dest MAC Target',
+                type: 'select',
+                options: [
+                  { label: "Destination 1's MAC (AA:94:...)", value: 'dest1' },
+                  { label: 'Default Gateway MAC (GW:81:...)', value: 'gateway' },
+                ],
+                expected: 'dest1',
+              },
+              {
+                id: 'dest2_status',
+                label: 'Destination 2 (10.10.4.98) Subnet Status',
+                type: 'radio',
+                options: [
+                  { label: 'Local Subnet (On-Link)', value: 'local' },
+                  { label: 'Remote Subnet (Off-Link)', value: 'remote' },
+                ],
+                expected: 'remote',
+              },
+              {
+                id: 'dest2_mac',
+                label: 'Destination 2 Ethernet Dest MAC Target',
+                type: 'select',
+                options: [
+                  { label: "Destination 2's MAC (BB:98:...)", value: 'dest2' },
+                  { label: 'Default Gateway MAC (GW:81:...)', value: 'gateway' },
+                ],
+                expected: 'gateway',
+              },
+            ],
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'When Workstation A (10.10.4.82/28) sends a packet to Destination 2 (10.10.4.98/28), why MUST it address the Ethernet frame to Default Gateway MAC GW:81:81:81:81:81?',
+                options: [
+                  'Because 10.10.4.98 is outside Workstation A\'s /28 subnet (.80–.95); sending an ARP request locally would fail because Switch SW1 confines VLAN 10 broadcasts away from VLAN 20',
+                  'Because Destination 2 is powered off',
+                  'Because all /28 packets must go through the router regardless of destination',
+                  'Because switches cannot read IPv4 addresses',
+                ],
+                correctIndex: 0,
+                explanation:
+                  'Workstation A computes that .98 is outside its /28 range (.80–.95). Because Switch SW1 confines broadcasts on Port 1 to Access VLAN 10, an ARP request for .98 would never enter Access VLAN 20 (Port 5). By recognizing .98 as remote, Workstation A sends the frame to Default Gateway 10.10.4.81\'s MAC, transmitting across Trunk Port 24 to Router R1 for inter-VLAN routing.',
+              },
+            ],
+          },
+          successMessage:
+            'Stage 4 transfer achieved! You correctly applied subnet boundaries to choose destination MAC vs. default gateway MAC.',
+        },
+        // ── Stage 5: Diagnose (Off-Link Gateway Fault Isolation 192.168.1.120/25) ──
+        {
+          id: 'net04-stage5-diagnose',
+          title: 'Stage 5: Diagnose — Fault Isolation & Synchronized Gateway Configuration',
+          description:
+            'Diagnose an off-link gateway configuration error in simulated host telemetry and synchronize dual-device settings.',
+          instructions: [
+            'Workstation B (Port 2, VLAN 10) reports no connectivity to the network or default gateway.',
+            'Workstation B configuration: IP 192.168.1.120, Mask 255.255.255.128 (/25), Gateway 192.168.1.129.',
+            'Router R1 Gig0/0 (Port 1, VLAN 10) configuration: IP 192.168.1.129, Mask 255.255.255.128 (/25).',
+            'Physical link LEDs are solid green, but simulated ping fails with "Destination host unreachable (no valid on-link route to gateway)".',
+            'Step 1: Compute the subnets for Workstation B and Router Gig0/0 to identify the fault.',
+            'Step 2: Correctly reconfigure Router Gig0/0 and Workstation B to synchronize on Subnet 1 (192.168.1.0/25).',
+          ],
+          type: 'independent',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'Workstation B is in 192.168.1.0/25; Gateway .129 is in 192.168.1.128/25. Align both to Subnet 1: Router Gig0/0 = 192.168.1.1, Workstation B Gateway = 192.168.1.1.',
+          hints: [
+            { level: 1, text: 'A /25 mask splits the octet into two blocks: 0–127 and 128–255.' },
+            { level: 2, text: '.120 is in Subnet 0–127; .129 is in Subnet 128–255. The gateway is off-link!' },
+          ],
+          subnetting: {
+            stage: 5,
+            targetIp: '192.168.1.120',
+            prefix: 25,
+            diagnostics: {
+              routeTableOutput:
+                'default via 192.168.1.129 dev eth0 [status: unreachable - gateway not on link]\n192.168.1.0/25 dev eth0 proto kernel scope link src 192.168.1.120',
+              pingOutput:
+                'C:\\> ping 192.168.1.129\nPING 192.168.1.129: Destination host unreachable (no valid on-link route to gateway)',
+              terminalOutput: 'Simulated Host eth0: 0 packets transmitted on physical link',
+            },
+            fields: [
+              {
+                id: 'host_subnet',
+                label: 'Workstation B Subnet Network (192.168.1.120/25)',
+                expected: '192.168.1.0',
+              },
+              {
+                id: 'gateway_subnet',
+                label: 'Router Gig0/0 Subnet Network (192.168.1.129/25)',
+                expected: '192.168.1.128',
+              },
+              {
+                id: 'reconfig_router_ip',
+                label: 'Reconfigured Router Gig0/0 IP (in Subnet 1)',
+                expected: '192.168.1.1',
+              },
+              {
+                id: 'reconfig_router_mask',
+                label: 'Reconfigured Router Gig0/0 Subnet Mask',
+                expected: '255.255.255.128',
+              },
+              {
+                id: 'reconfig_host_gw',
+                label: 'Reconfigured Workstation B Default Gateway',
+                expected: '192.168.1.1',
+              },
+            ],
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'diagnose-plan',
+                prompt:
+                  'Why does the simulated host fail to transmit packets when attempting to ping gateway 192.168.1.129?',
+                options: [
+                  'The host routing engine determines that 192.168.1.129 is not on its local subnet (192.168.1.0/25). Because the configured gateway is off-link, the host cannot resolve an on-link next hop and drops the packet internally before sending',
+                  'The frame loops endlessly between switch and router until TTL expires',
+                  'The router receives the frame but drops it because .120 is an even number',
+                  'The physical cable between switch and workstation is defective',
+                ],
+                correctIndex: 0,
+                explanation:
+                  'Workstation B\'s on-link route is 192.168.1.0/25 (.0 to .127). The gateway 192.168.1.129 is in subnet 192.168.1.128/25. Because the gateway itself is off-link, the host\'s route table flags it as unreachable and suppresses packet transmission.',
+              },
+            ],
+          },
+          successMessage:
+            'Stage 5 diagnosed! You identified the off-link gateway misconfiguration and synchronized both devices on Subnet 1.',
+        },
+        // ── Active-Octet Transfer Assessment: 10.50.14.73/22 ───────────
+        {
+          id: 'net04-transfer-active-octet',
+          title: 'Active-Octet Transfer Assessment: 10.50.14.73/22 (No Hints Available)',
+          description:
+            'Master the universal Active-Octet Rule for enterprise 3rd-octet subnetting without shortcuts or hints.',
+          instructions: [
+            'Target allocation: 10.50.14.73/22.',
+            'Active (Interesting) Octet Rule: /22 falls into Octet 3 (between /17 and /24).',
+            'Host bits in Octet 3: 24 - 22 = 2 bits -> Increment = 2^2 = 4 in the 3rd octet.',
+            'Calculate the subnet mask, network address, broadcast address, and usable capacity (1,022 hosts).',
+            'Classify forwarding for Destination 10.50.15.200 and Destination 10.50.16.5.',
+          ],
+          type: 'independent',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'Active Octet = 3. Mask = 255.255.252.0. Increment = 4 in 3rd octet. Subnet = 10.50.12.0. Broadcast = 10.50.15.255. Usable = 10.50.12.1 to 10.50.15.254 (1,022 hosts). .15.200 is local; .16.5 is remote.',
+          hints: [],
+          subnetting: {
+            stage: 3,
+            targetIp: '10.50.14.73',
+            prefix: 22,
+            isInteractive: false,
+            isCollapsed: true,
+            fields: [
+              {
+                id: 'active_octet',
+                label: 'Active (Interesting) Octet',
+                type: 'select',
+                options: [
+                  { label: 'Octet 1', value: '1' },
+                  { label: 'Octet 2', value: '2' },
+                  { label: 'Octet 3', value: '3' },
+                  { label: 'Octet 4', value: '4' },
+                ],
+                expected: '3',
+              },
+              {
+                id: 'mask',
+                label: 'Subnet Mask (Dotted-Decimal)',
+                expected: '255.255.252.0',
+              },
+              {
+                id: 'increment',
+                label: 'Block Increment in Active Octet',
+                expected: '4',
+                type: 'number',
+              },
+              {
+                id: 'network',
+                label: 'Subnet Network Address',
+                expected: '10.50.12.0',
+              },
+              {
+                id: 'broadcast',
+                label: 'Subnet Broadcast Address',
+                expected: '10.50.15.255',
+              },
+              {
+                id: 'first_usable',
+                label: 'First Usable Host IP',
+                expected: '10.50.12.1',
+              },
+              {
+                id: 'last_usable',
+                label: 'Last Usable Host IP',
+                expected: '10.50.15.254',
+              },
+              {
+                id: 'usable_capacity',
+                label: 'Total Usable Host Capacity (2^10 - 2)',
+                expected: '1022',
+                type: 'number',
+              },
+              {
+                id: 'dest1_forwarding',
+                label: 'Forwarding Decision for Destination 10.50.15.200',
+                type: 'radio',
+                options: [
+                  { label: 'Local Subnet (On-Link)', value: 'local' },
+                  { label: 'Remote Subnet (Off-Link)', value: 'remote' },
+                ],
+                expected: 'local',
+              },
+              {
+                id: 'dest2_forwarding',
+                label: 'Forwarding Decision for Destination 10.50.16.5',
+                type: 'radio',
+                options: [
+                  { label: 'Local Subnet (On-Link)', value: 'local' },
+                  { label: 'Remote Subnet (Off-Link)', value: 'remote' },
+                ],
+                expected: 'remote',
+              },
+            ],
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'For 10.50.14.73/22, which octet is active and what is its block increment?',
+                options: [
+                  'Octet 3 with increment 4 (subnets advance every 4 in the 3rd octet: 0, 4, 8, 12, 16...)',
+                  'Octet 4 with increment 64',
+                  'Octet 2 with increment 2',
+                  'Octet 3 with increment 252',
+                ],
+                correctIndex: 0,
+                explanation:
+                  'A /22 prefix falls in the 3rd octet (between /17 and /24). 24 - 22 = 2 host bits in the 3rd octet, so increment is 2^2 = 4. The 3rd octet values advance by 4.',
+              },
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'When host 10.50.14.73/22 sends a packet to 10.50.15.200, why is delivery local?',
+                options: [
+                  '10.50.15.200 falls within the subnet boundary 10.50.12.0 to 10.50.15.255',
+                  'Both addresses share the 10.50 prefix, and all 10.50 addresses are local',
+                  '10.50.15.200 is a broadcast address',
+                  'Because /22 subnets do not use default gateways',
+                ],
+                correctIndex: 0,
+                explanation:
+                  'The /22 subnet boundary spans from 10.50.12.0 through 10.50.15.255. 10.50.15.200 is inside this range, so it is on-link and delivered locally via ARP.',
+              },
+            ],
+          },
+          successMessage:
+            'Active-Octet Transfer Mastered! You solved the 3rd-octet enterprise subnetting challenge with 0 hints.',
+        },
       ],
     },
 

@@ -36,11 +36,11 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 │ Phase 1 │ RFC Technical Errata & Curriculum Valid.   │ DONE    │ 8 Module Files  │
 │         │ (Apply errata, write vitest validator)     │         │ + New Test File │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 2 │ Module 4 Subnetting Pilot Implementation   │ READY   │ Bit-Slicer UI + │
-│         │ (5-stage fading, /22 transfer task)        │ TO RUN  │ Structured Grdr │
+│ Phase 2 │ Module 4 Subnetting Pilot Implementation   │ DONE    │ Bit-Slicer UI + │
+│         │ (5-stage fading, /22 transfer task)        │         │ Structured Grdr │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 3 │ Module 5 ARP Companion Pilot Spec & Code   │ QUEUED  │ Spec v1.0 +     │
-│         │ (Queued packet state, remote GW transfer)  │         │ Simulator UI    │
+│ Phase 3 │ Module 5 ARP Companion Pilot Spec & Code   │ READY   │ Spec v1.0 +     │
+│         │ (Queued packet state, remote GW transfer)  │ TO RUN  │ Simulator UI    │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
 │ Phase 4 │ Component Library Extraction               │ QUEUED  │ PacketInspector │
 │         │ (PacketInspector.tsx, SubnetBitSlicer.tsx) │         │ shared package  │
@@ -86,24 +86,27 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 
 ---
 
-## 3. Phase 2 Execution Checklist (QUEUED)
+## 3. Phase 2 Execution Checklist (COMPLETED)
 
 **Goal:** Implement the approved Module 4 Subnetting Pilot specification ([`NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/networking/NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md)).
 
-- [ ] Build `src/components/learning/networking/SubnetBitSlicer.tsx`:
-  - [ ] 32-bit binary visualizer with 4 octets.
-  - [ ] Interactive CIDR slider with network (blue) vs host (emerald) bit illumination.
-  - [ ] Real-time block size, network address, broadcast address, and usable host count calculation.
-  - [ ] Collapsible state for Stage 3 (Perform Independently) cognitive fading.
-- [ ] Build `src/components/learning/networking/StructuredTaskGrader.tsx`:
-  - [ ] Clean numerical entry fields for IP dotted-quads and host capacities.
-  - [ ] Deterministic regex & integer evaluation.
-  - [ ] Targeted misconception feedback cards.
-  - [ ] Optional ungraded reflection box with unlockable model explanations.
-- [ ] Wire Stages 1–5 into `NetworkingPracticeTaskView.tsx` for `net-04`.
-- [ ] Add the assessed Active-Octet transfer task (`10.50.14.73/22` in 3rd octet).
-- [ ] Author `tests/tracks/networking-module-4-pilot.test.tsx` verifying Stages 1–5.
-- [ ] Run lint, test suite, and commit.
+- [x] Build `src/components/learning/networking/SubnetBitSlicer.tsx`:
+  - [x] 32-bit binary visualizer with 4 octets.
+  - [x] Interactive CIDR slider with network (blue) vs host (emerald) bit illumination.
+  - [x] Real-time block size, network address, broadcast address, and usable host count calculation.
+  - [x] Collapsible state for Stage 3 (Perform Independently) cognitive fading.
+- [x] Build `src/components/learning/networking/StructuredTaskGrader.tsx`:
+  - [x] Clean numerical entry fields for IP dotted-quads and host capacities.
+  - [x] Deterministic regex & integer evaluation.
+  - [x] Targeted misconception feedback cards.
+  - [x] Optional ungraded reflection box with unlockable model explanations.
+- [x] Build `src/components/learning/networking/SubnetPilotVisuals.tsx`:
+  - [x] Router-on-a-Stick diagram with single 802.1Q trunk port 24 and VLAN 10/20 subinterfaces.
+  - [x] Host telemetry terminal simulator with `ip route show` and ping failure states.
+- [x] Wire Stages 1–5 into `NetworkingPracticeTaskView.tsx` for `net-04`.
+- [x] Add the assessed Active-Octet transfer task (`10.50.14.73/22` in 3rd octet).
+- [x] Author `tests/tracks/networking-module-4-pilot.test.tsx` verifying Stages 1–5.
+- [x] Run lint, test suite, and commit.
 
 ---
 

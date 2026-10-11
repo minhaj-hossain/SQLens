@@ -4,10 +4,10 @@ import type {
   PrismaTheoryContent,
   SkillType,
 } from './prisma-curriculum';
-import type { NetworkingTaskContent } from './networking-curriculum';
+import type { NetworkingTaskContent, SubnettingTaskContent, SubnetFieldDef } from './networking-curriculum';
 import type { TrackId } from './track';
 
-export type { NetworkingTaskContent };
+export type { NetworkingTaskContent, SubnettingTaskContent, SubnetFieldDef };
 
 export type { GradingType, SkillType };
 
@@ -195,6 +195,11 @@ export interface PracticeTask {
    * Defines topology, transmission sequence, and interactive prediction choices.
    */
   networking?: NetworkingTaskContent;
+  /**
+   * Subnetting Pilot extension (Module 4).
+   * Defines 5-stage cognitive fading, Bit-Slicer config, and structured fields.
+   */
+  subnetting?: SubnettingTaskContent;
 }
 
 export interface SyntaxBlock {

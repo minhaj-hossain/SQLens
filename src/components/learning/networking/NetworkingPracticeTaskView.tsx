@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { PracticeTask, Concept } from '../../../types/curriculum';
 import { submitForTask } from '../../../lib/track-submit';
 import { SwitchSimulationLab } from './SwitchSimulationLab';
+import { SubnetBitSlicer } from './SubnetBitSlicer';
+import { StructuredTaskGrader, type StructuredFieldDef } from './StructuredTaskGrader';
+import { RouterOnAStickDiagram, HostTelemetryTerminal } from './SubnetPilotVisuals';
 import { TaskInstructions } from '../TaskInstructions';
 import { JudgmentBlock } from '../JudgmentBlock';
 import {
@@ -20,6 +23,7 @@ import {
   Sparkles,
   ShieldCheck,
   Check,
+  Sliders,
 } from 'lucide-react';
 
 interface NetworkingPracticeTaskViewProps {
@@ -134,6 +138,22 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
     : 'Next Task';
 
   const hasTopology = Boolean(topology && topology.length > 0);
+  const hasSubnetting = Boolean(task.subnetting);
+
+  // Map SubnetFieldDef to StructuredFieldDef
+  const graderFields: StructuredFieldDef[] = (task.subnetting?.fields ?? []).map((f) => ({
+    id: f.id,
+    label: f.label,
+    placeholder: f.placeholder,
+    type: f.type,
+    options: f.options,
+    expected: f.expected,
+    helperText: f.helperText,
+    misconceptions: (f.misconceptions ?? []).map((m) => ({
+      test: (val: string) => Boolean(m.testPattern && new RegExp(m.testPattern, 'i').test(val)),
+      feedback: m.feedback,
+    })),
+  }));
 
   const cleanTitle = (task.title || '').replace(/^Task\s+\d+:\s*/i, '').trim();
 
@@ -158,7 +178,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] sm:text-[11px] font-bold text-func uppercase tracking-wider">
-                {isChallenge ? 'Mastery Challenge' : 'Networking Practice'}
+                {isChallenge ? 'Mastery Challenge' : hasSubnetting ? 'Subnetting Lab' : 'Networking Practice'}
               </span>
               <span className="text-text-muted text-xs">•</span>
               <span className="font-mono text-[10.5px] sm:text-[11px] text-text-dim">
@@ -213,6 +233,64 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               title={task.title}
               subtitle={task.description}
             />
+          </div>
+        ) : hasSubnetting ? (
+          /* LEFT COLUMN: Subnet Bit-Slicer & Visuals Lab */
+          <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            {task.subnetting?.targetIp && (
+              <SubnetBitSlicer
+                initialIp={task.subnetting.targetIp}
+                initialPrefix={task.subnetting.prefix}
+                isInteractive={task.subnetting.isInteractive ?? true}
+                initiallyCollapsed={task.subnetting.isCollapsed ?? false}
+                title={task.title}
+              />
+            )}
+            {task.subnetting?.routerOnAStick && (
+              <RouterOnAStickDiagram />
+            )}
+            {task.subnetting?.diagnostics && (
+              <HostTelemetryTerminal
+                routeOutput={task.subnetting.diagnostics.routeTableOutput}
+                pingOutput={task.subnetting.diagnostics.pingOutput}
+              />
+            )}
+            {concept ? (
+              <TaskInstructions
+                task={task}
+                taskIndex={taskIndex}
+                totalTasks={totalTasks}
+                concept={concept}
+                isCompleted={taskPassed}
+                onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
+                onViewSolution={() => setViewedSolution(true)}
+              />
+            ) : (
+              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+                <div className="space-y-1.5">
+                  <h3 className="font-mono text-base sm:text-lg font-bold text-text">
+                    {cleanTitle}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
+                    {task.description}
+                  </p>
+                </div>
+                {task.instructions.length > 0 && (
+                  <div className="space-y-2.5 pt-3 border-t border-border-soft">
+                    <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
+                      Instructions &amp; Constraints:
+                    </span>
+                    <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
+                      {task.instructions.map((inst, i) => (
+                        <li key={i} className="leading-relaxed text-text/90">
+                          {inst}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           /* LEFT COLUMN: Scenario Context & Instructions Card */
@@ -358,6 +436,33 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               isCompleted={taskPassed}
               onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
               onViewSolution={() => setViewedSolution(true)}
+            />
+          )}
+
+          {/* Structured Calculation & Task Grader (for Subnetting Stages) */}
+          {hasSubnetting && graderFields.length > 0 && (
+            <StructuredTaskGrader
+              title={cleanTitle}
+              description={task.description}
+              fields={graderFields}
+              isPassed={taskPassed}
+              onGrade={(passed, details) => {
+                if (passed) {
+                  setTaskPassed(true);
+                  setValidationMessage(details.feedback);
+                  setIsMisconception(false);
+                  if (task.validation.judgment) {
+                    setJudgmentAnswers(task.validation.judgment.map((j) => j.correctIndex));
+                  }
+                  onTaskSuccess('', hintsUsed, viewedSolution);
+                } else {
+                  setTaskPassed(false);
+                  setValidationMessage(details.feedback);
+                  setIsMisconception(true);
+                }
+              }}
+              reflectionPrompt={task.subnetting?.reflectionPrompt}
+              modelExplanation={task.subnetting?.modelExplanation}
             />
           )}
 
