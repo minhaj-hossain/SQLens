@@ -55,4 +55,17 @@ export {
   calculateFastRetransmitTrigger,
   type TcpSequenceLadderSimulatorProps,
 } from './TcpSequenceLadderSimulator';
+export {
+  HttpTlsHandshakeSimulator,
+  calculateHandshakeRttLatency,
+  evaluateHolBlockingImpact,
+  verifyCertificateTrust,
+  compareCipherKeyExchange,
+  type HttpTlsHandshakeSimulatorProps,
+  type SupportedProtocol,
+  type HandshakeCalculationResult,
+  type HolSimulationResult,
+  type CertVerificationResult,
+  type ForwardSecrecyComparisonResult,
+} from './HttpTlsHandshakeSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

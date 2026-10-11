@@ -28,6 +28,10 @@ import type {
   DnsResolutionHop,
   TcpLadderTaskContent,
   TcpSegmentEntry,
+  HttpTlsTaskContent,
+  HttpStreamEntry,
+  TlsHandshakeHop,
+  X509CertificateInfo,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -55,6 +59,10 @@ export type {
   DnsResolutionHop,
   TcpLadderTaskContent,
   TcpSegmentEntry,
+  HttpTlsTaskContent,
+  HttpStreamEntry,
+  TlsHandshakeHop,
+  X509CertificateInfo,
 };
 
 export type { GradingType, SkillType };
@@ -288,6 +296,11 @@ export interface PracticeTask {
    * Space-time ladder diagram, sequence/ACK byte math, fast retransmit on 3 dup ACKs, zero window, and 4-way teardown with TIME_WAIT.
    */
   tcpLadder?: TcpLadderTaskContent;
+  /**
+   * HTTP/2, HTTP/3 & TLS 1.3 Handshake Simulator extension (Sprint 6 / Module 13).
+   * 1-RTT/0-RTT handshake latency waterfall, TCP vs QUIC HoL blocking, ECDHE forward secrecy, and X.509 PKI certificate chain validation.
+   */
+  httpTls?: HttpTlsTaskContent;
 }
 
 export interface SyntaxBlock {

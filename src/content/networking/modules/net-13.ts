@@ -79,6 +79,18 @@ export const NET_13_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             '502 Bad Gateway indicates an upstream server error. HTTP/2 multiplexes multiple streams across a single TCP connection, eliminating HTTP/1.1 HoL blocking.',
+          httpTls: {
+            title: 'HTTP/1.1 vs HTTP/2 vs HTTP/3 Latency Analyzer',
+            description:
+              'Evaluate connection setup round trips (RTT) and time-to-first-byte (TTFB) across web protocol generations.',
+            defaultTab: 'handshake_latency',
+            activeProtocol: 'http2_tls13',
+            rttMs: 50,
+            explanationNotes: [
+              'HTTP/2 multiplexes streams concurrently over a single TCP connection',
+              'HTTP/3 runs over UDP/QUIC to eliminate cross-stream transport Head-of-Line blocking',
+            ],
+          },
           hints: [
             {
               level: 1,
@@ -170,6 +182,29 @@ export const NET_13_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Browsers validate the certificate signature chain against the trusted root store and verify the requested hostname matches the SAN (Subject Alternative Name).',
+          httpTls: {
+            title: 'X.509 Certificate Chain & SAN Validator',
+            description:
+              'Simulate browser validation of domain names against certificate Subject Alternative Name (SAN) fields.',
+            defaultTab: 'pki_certificates',
+            targetDomain: 'admin.company.com',
+            certificate: {
+              subject: 'CN=company.com, O=Company Inc, C=US',
+              issuer: 'CN=DigiCert Global Root CA, O=DigiCert Inc, C=US',
+              sanList: ['company.com', 'www.company.com'],
+              validFrom: '2025-01-01',
+              validTo: '2027-01-01',
+              serialNumber: '0x1F:2E:3D:4C:5B',
+              signatureAlgorithm: 'SHA256withRSA',
+              publicKeyInfo: 'RSA 2048-bit',
+              isIssuerInTrustStore: true,
+            },
+            failureCode: 'ERR_CERT_COMMON_NAME_INVALID',
+            explanationNotes: [
+              'RFC 6125 mandates matching against the SAN list',
+              'Missing subdomains in SAN trigger browser security warning pages',
+            ],
+          },
           hints: [
             {
               level: 1,
@@ -261,6 +296,18 @@ export const NET_13_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'TLS 1.3 establishes shared symmetric encryption in 1-RTT using ECDHE key shares in ClientHello/ServerHello, ensuring Perfect Forward Secrecy.',
+          httpTls: {
+            title: 'TLS 1.3 1-RTT Handshake & Ephemeral Diffie-Hellman Lab',
+            description:
+              'Step through 1-RTT cryptographic parameter negotiation and test Perfect Forward Secrecy resilience.',
+            defaultTab: 'tls13_handshake',
+            activeProtocol: 'http2_tls13',
+            rttMs: 50,
+            explanationNotes: [
+              'TLS 1.3 transmits ECDHE key shares inside ClientHello to establish keys in 1-RTT',
+              'Static RSA is eliminated to guarantee Perfect Forward Secrecy against retroactive decryption',
+            ],
+          },
           hints: [
             {
               level: 1,
@@ -334,6 +381,29 @@ export const NET_13_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'The internal Corporate Root CA certificate is missing from the client operating systems\' trusted root store. Deploying the internal Root CA certificate resolves the error.',
+        httpTls: {
+          title: 'PKI Certificate Authority Chain Forensic Lab',
+          description:
+            'Diagnose SEC_ERROR_UNKNOWN_ISSUER errors caused by enterprise private CAs missing from OS trust stores.',
+          defaultTab: 'pki_certificates',
+          targetDomain: 'wiki.corp.internal',
+          certificate: {
+            subject: 'CN=wiki.corp.internal, O=Internal Corp, C=US',
+            issuer: 'CN=Corporate Internal Private Root CA, O=Internal Corp, C=US',
+            sanList: ['wiki.corp.internal'],
+            validFrom: '2025-01-01',
+            validTo: '2027-01-01',
+            serialNumber: '0x99:88:77:66:55',
+            signatureAlgorithm: 'SHA256withRSA',
+            publicKeyInfo: 'ECDSA 256-bit',
+            isIssuerInTrustStore: false,
+          },
+          failureCode: 'SEC_ERROR_UNKNOWN_ISSUER',
+          explanationNotes: [
+            'Client browsers trust only certificates rooted in the pre-installed trust store',
+            'Private enterprise CAs must be pushed to devices via device management/MDM',
+          ],
+        },
         hints: [
           {
             level: 1,
@@ -382,6 +452,22 @@ export const NET_13_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'HTTP/2 multiplexes multiple requests concurrently across a single TCP connection, eliminating the 6-connection per-domain browser limit and request queuing of HTTP/1.1.',
+        httpTls: {
+          title: 'Web Asset Waterfall & HoL Multiplexing Simulator',
+          description:
+            'Simulate high-concurrency asset loading and investigate packet loss recovery in HTTP/2 TCP vs HTTP/3 QUIC.',
+          defaultTab: 'hol_blocking',
+          activeProtocol: 'http2_tls13',
+          streams: [
+            { id: 1, name: 'product-icon-1.png', sizeBytes: 3200, packetsTotal: 3, status: 'in_flight' },
+            { id: 2, name: 'product-icon-2.png', sizeBytes: 4100, packetsTotal: 3, status: 'in_flight' },
+            { id: 3, name: 'product-icon-3.png', sizeBytes: 2900, packetsTotal: 2, status: 'in_flight' },
+          ],
+          explanationNotes: [
+            'HTTP/2 multiplexes 100+ requests over a single TCP connection, eliminating 6-socket browser limits',
+            'QUIC stream isolation prevents one dropped packet from stalling unaffected streams',
+          ],
+        },
         hints: [
           {
             level: 1,

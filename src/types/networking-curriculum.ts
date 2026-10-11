@@ -346,3 +346,47 @@ export interface TcpLadderTaskContent {
   explanationNotes?: string[];
 }
 
+export interface HttpStreamEntry {
+  id: number;
+  name: string; // e.g. 'index.html', 'styles.css', 'app.js', 'logo.png'
+  sizeBytes: number;
+  packetsTotal: number;
+  status: 'pending' | 'in_flight' | 'delivered' | 'blocked' | 'retransmitting';
+}
+
+export interface TlsHandshakeHop {
+  phase: 'tcp' | 'tls' | 'quic' | 'http';
+  roundTrip: number; // e.g. 1, 2, 3
+  sender: 'client' | 'server';
+  message: string;
+  description: string;
+  encrypted: boolean;
+  cumulativeRtt: number;
+}
+
+export interface X509CertificateInfo {
+  subject: string;
+  issuer: string;
+  sanList: string[];
+  validFrom: string;
+  validTo: string;
+  serialNumber: string;
+  signatureAlgorithm: string;
+  publicKeyInfo: string;
+  isIssuerInTrustStore?: boolean;
+}
+
+export interface HttpTlsTaskContent {
+  title?: string;
+  description?: string;
+  defaultTab?: 'handshake_latency' | 'hol_blocking' | 'tls13_handshake' | 'pki_certificates';
+  rttMs?: number;
+  activeProtocol?: 'http1_tls12' | 'http2_tls13' | 'http3_quic' | 'http3_0rtt';
+  streams?: HttpStreamEntry[];
+  certificate?: X509CertificateInfo;
+  targetDomain?: string;
+  failureCode?: 'SEC_ERROR_UNKNOWN_ISSUER' | 'ERR_CERT_COMMON_NAME_INVALID' | 'SEC_ERROR_EXPIRED_CERTIFICATE' | 'NONE';
+  explanationNotes?: string[];
+}
+
+

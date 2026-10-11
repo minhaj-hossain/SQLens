@@ -58,7 +58,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ net-10 │ DNS & Name Resolution       │ DnsResolutionTreeSim     │ ✅ LIVE (Sprint 4)   │
 │ net-11 │ UDP & TCP Foundations       │ PacketInspector (5-T)    │ ✅ LIVE (Phase 5)    │
 │ net-12 │ TCP Reliability & Teardown  │ TcpSequenceLadderSim     │ ✅ LIVE (Sprint 5)   │
-│ net-13 │ HTTP & TLS/HTTPS            │ HttpTlsHandshakeSim      │ 📋 SPECIFIED (Sprint 6)
+│ net-13 │ HTTP & TLS/HTTPS            │ HttpTlsHandshakeSim      │ ✅ LIVE (Sprint 6)   │
 │ net-14 │ Diagnostics & Triage        │ VirtualTerminalSimulator │ ✅ LIVE (Phase 5)    │
 │ net-15 │ Security, Firewalls & STP   │ FirewallAclRuleSim       │ 📋 SPECIFIED (Sprint 7)
 │ net-16 │ VLANs, Wireless & Routing   │ VlanTrunkDijkstraLab     │ 📋 SPECIFIED (Sprint 8)
@@ -311,14 +311,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 6: Module 13 — HTTP/2, HTTP/3 & TLS 1.3 Handshake Simulator
-- [ ] Build `src/components/learning/networking/HttpTlsHandshakeSimulator.tsx`
-- [ ] Export `HttpTlsHandshakeSimulator` in `src/components/learning/networking/index.ts`
-- [ ] Add `httpTls` property to `PracticeTask` and curriculum types
-- [ ] Wire `HttpTlsHandshakeSimulator` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-13.ts` with multiplexing and TLS scenarios
-- [ ] Author `tests/tracks/networking-sprint6-http-tls.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 6: Module 13 — HTTP/2, HTTP/3 & TLS 1.3 Handshake Simulator (COMPLETED)
+- [x] Build `src/components/learning/networking/HttpTlsHandshakeSimulator.tsx`
+- [x] Export `HttpTlsHandshakeSimulator` in `src/components/learning/networking/index.ts`
+- [x] Add `httpTls` property to `PracticeTask` and curriculum types
+- [x] Wire `HttpTlsHandshakeSimulator` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-13.ts` with multiplexing and TLS scenarios
+- [x] Author `tests/tracks/networking-sprint6-http-tls.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (114 files, 1383 tests)
 
 ---
 
