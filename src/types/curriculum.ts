@@ -26,6 +26,8 @@ import type {
   DnsTaskContent,
   DnsRecordEntry,
   DnsResolutionHop,
+  TcpLadderTaskContent,
+  TcpSegmentEntry,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -51,6 +53,8 @@ export type {
   DnsTaskContent,
   DnsRecordEntry,
   DnsResolutionHop,
+  TcpLadderTaskContent,
+  TcpSegmentEntry,
 };
 
 export type { GradingType, SkillType };
@@ -279,6 +283,11 @@ export interface PracticeTask {
    * Recursive vs iterative tree resolution, TTL caching, records table, and failure diagnostics (SERVFAIL/NXDOMAIN).
    */
   dns?: DnsTaskContent;
+  /**
+   * TCP Sequence & Sliding Window Ladder extension (Sprint 5 / Module 12).
+   * Space-time ladder diagram, sequence/ACK byte math, fast retransmit on 3 dup ACKs, zero window, and 4-way teardown with TIME_WAIT.
+   */
+  tcpLadder?: TcpLadderTaskContent;
 }
 
 export interface SyntaxBlock {

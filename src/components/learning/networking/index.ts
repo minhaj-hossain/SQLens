@@ -49,4 +49,10 @@ export {
   getDnsRcodeExplanation,
   type DnsResolutionTreeSimulatorProps,
 } from './DnsResolutionTreeSimulator';
+export {
+  TcpSequenceLadderSimulator,
+  calculateNextExpectedAck,
+  calculateFastRetransmitTrigger,
+  type TcpSequenceLadderSimulatorProps,
+} from './TcpSequenceLadderSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

@@ -77,6 +77,14 @@ export const NET_12_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Segment 1 has Seq=5000 (bytes 5000-5999). Segment 2 has Seq=6000 (bytes 6000-6999). Segment 3 has Seq=7000 (bytes 7000-7999). Final ACK is 8000.',
+          tcpLadder: {
+            title: 'Byte Offsets & Cumulative Acknowledgments',
+            description:
+              'Calculate sequence offsets across payload segments and observe how cumulative ACKs specify the earliest unreceived byte index.',
+            defaultScenario: 'data_flow',
+            clientIsn: 1000,
+            serverIsn: 5000,
+          },
           hints: [
             {
               level: 1,
@@ -168,6 +176,14 @@ export const NET_12_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'rwnd=0 halts sender data transmission. 3 duplicate ACKs trigger Fast Retransmit without waiting for the RTO timer.',
+          tcpLadder: {
+            title: 'Flow Control (rwnd) & Fast Retransmit',
+            description:
+              'Observe buffer overflow prevention when rwnd drops to 0, and verify how 3 duplicate ACKs trigger immediate Fast Retransmit.',
+            defaultScenario: 'fast_retransmit',
+            clientIsn: 1000,
+            serverIsn: 5000,
+          },
           hints: [
             {
               level: 1,
@@ -260,6 +276,14 @@ export const NET_12_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'TCP teardown uses FIN and ACK flags. The active closer enters TIME_WAIT for 2*MSL to allow delayed packets to drain and ensure the final ACK arrives.',
+          tcpLadder: {
+            title: '4-Way Teardown & TIME_WAIT Semantics',
+            description:
+              'Step through bidirectional connection termination and analyze why the active closer enters TIME_WAIT for 2*MSL (60-120s).',
+            defaultScenario: 'teardown',
+            clientIsn: 20000,
+            serverIsn: 30000,
+          },
           hints: [
             {
               level: 1,
@@ -332,6 +356,15 @@ export const NET_12_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'When Seg 3 arrives, receiver sends ACK 2000. When Seg 4 arrives, receiver sends another ACK 2000. These duplicate ACKs trigger Fast Retransmit of Seg 2.',
+        tcpLadder: {
+          title: 'Packet Loss & Fast Retransmit Accounting',
+          description:
+            'Observe segment 2 loss triggering duplicate ACKs 2000 upon arrival of segments 3 and 4, prompting sender Fast Retransmit.',
+          defaultScenario: 'fast_retransmit',
+          clientIsn: 1000,
+          serverIsn: 5000,
+          simulatedDroppedSegmentId: 'fr-2',
+        },
         hints: [
           {
             level: 1,
@@ -380,6 +413,14 @@ export const NET_12_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'Because the gateway initiates the active close, tens of thousands of sockets linger in TIME_WAIT for 60s, completely exhausting ephemeral source ports. The solution is HTTP keep-alive / connection pooling.',
+        tcpLadder: {
+          title: 'High-Throughput TIME_WAIT Socket Exhaustion',
+          description:
+            'Diagnose thousands of short-lived connections accumulating in TIME_WAIT, exhausting the ephemeral port pool without connection pooling.',
+          defaultScenario: 'teardown',
+          clientIsn: 40000,
+          serverIsn: 80,
+        },
         hints: [
           {
             level: 1,

@@ -14,13 +14,13 @@ If you are resuming this work in a fresh conversation, **read this first before 
 1. **Do NOT re-debate settled topics:** All instructional design ("Third Way" prediction-before-explanation), RFC accuracy rules, and platform contracts are **frozen**. See [`NETWORKING_STATUS_AND_DECISION_RECORD.md`](./NETWORKING_STATUS_AND_DECISION_RECORD.md).
 2. **Current Baseline State:**
    - Git branch: `main`
-   - Test suite: `npm test` runs 112 test files (1,338 tests) with 100% passing.
-   - Track tests: `npx vitest run tests/tracks/` runs 38 test files (510 tests) with 100% passing.
+   - Test suite: `npm test` runs 113 test files (1,359 tests) with 100% passing.
+   - Track tests: `npx vitest run tests/tracks/` runs 39 test files (531 tests) with 100% passing.
    - Typecheck: `npm run lint` (`tsc --noEmit`) passes with 0 errors.
    - **Protected Invariants:** SQL (57 days) and Prisma (14 days) tracks are 100% frozen. Never modify their files.
 3. **Current Curriculum Status:**
    - **All 16 modules** already implement the "Third Way" choose-and-defend judgment gates (136 total questions, zero raw recall MCQs) and RFC technical errata.
-   - **11 modules** already have dedicated interactive widgets:
+   - **12 modules** already have dedicated interactive widgets:
      - `net-01`: `PacketInspector` (L2/L3/L4/L7 progressive disclosure)
      - `net-02`: `EthernetFrameInspector` (framing dissection, 46B padding slider, CRC-32 bit-flip error injector)
      - `net-03`: `SwitchSimulationLab` (interactive port selection & CAM table)
@@ -32,8 +32,9 @@ If you are resuming this work in a fresh conversation, **read this first before 
      - `net-09`: `DhcpDoraSimulator` (4-step DORA state machine, T1/T2 lease countdown, rogue server detection, APIPA fallback)
      - `net-10`: `DnsResolutionTreeSimulator` (iterative namespace tree walk, cache hit vs miss comparison, resource records table, SERVFAIL forensics, TCP 53 truncation)
      - `net-11`: `PacketInspector` (5-tuple socket multiplexing)
+     - `net-12`: `TcpSequenceLadderSimulator` (space-time ladder, sequence/ACK byte offsets, 3-dup-ACK fast retransmit, zero window, 4-way teardown & TIME_WAIT)
      - `net-14`: `VirtualTerminalSimulator` (Windows CLI diagnostics: `ipconfig`, `ping`, `tracert`, `nslookup`, `netstat`)
-   - **5 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
+   - **4 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
 
 ---
 
@@ -56,7 +57,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ net-09 │ DHCP & Auto-Configuration   │ DhcpDoraSimulator        │ ✅ LIVE (Sprint 3)   │
 │ net-10 │ DNS & Name Resolution       │ DnsResolutionTreeSim     │ ✅ LIVE (Sprint 4)   │
 │ net-11 │ UDP & TCP Foundations       │ PacketInspector (5-T)    │ ✅ LIVE (Phase 5)    │
-│ net-12 │ TCP Reliability & Teardown  │ TcpSequenceLadderSim     │ 📋 SPECIFIED (Sprint 5)
+│ net-12 │ TCP Reliability & Teardown  │ TcpSequenceLadderSim     │ ✅ LIVE (Sprint 5)   │
 │ net-13 │ HTTP & TLS/HTTPS            │ HttpTlsHandshakeSim      │ 📋 SPECIFIED (Sprint 6)
 │ net-14 │ Diagnostics & Triage        │ VirtualTerminalSimulator │ ✅ LIVE (Phase 5)    │
 │ net-15 │ Security, Firewalls & STP   │ FirewallAclRuleSim       │ 📋 SPECIFIED (Sprint 7)
@@ -299,14 +300,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 5: Module 12 — TCP Sequence & Sliding Window Ladder
-- [ ] Build `src/components/learning/networking/TcpSequenceLadderSimulator.tsx`
-- [ ] Export `TcpSequenceLadderSimulator` in `src/components/learning/networking/index.ts`
-- [ ] Add `tcpLadder` property to `PracticeTask` and curriculum types
-- [ ] Wire `TcpSequenceLadderSimulator` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-12.ts` with handshake and retransmit scenarios
-- [ ] Author `tests/tracks/networking-sprint5-tcp-ladder.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 5: Module 12 — TCP Sequence & Sliding Window Ladder (COMPLETED)
+- [x] Build `src/components/learning/networking/TcpSequenceLadderSimulator.tsx`
+- [x] Export `TcpSequenceLadderSimulator` in `src/components/learning/networking/index.ts`
+- [x] Add `tcpLadder` property to `PracticeTask` and curriculum types
+- [x] Wire `TcpSequenceLadderSimulator` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-12.ts` with handshake and retransmit scenarios
+- [x] Author `tests/tracks/networking-sprint5-tcp-ladder.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (113 files, 1359 tests)
 
 ---
 

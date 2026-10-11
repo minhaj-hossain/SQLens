@@ -33,6 +33,7 @@ export function isNetworkingTask(task: PracticeTask): boolean {
     task.ipv6Ndp ||
     task.dhcp ||
     task.dns ||
+    task.tcpLadder ||
     task.id?.startsWith('net-') ||
     /^net\d+/i.test(task.id || '') ||
     task.solutionSql === 'NETWORKING_JUDGMENT_TASK' ||

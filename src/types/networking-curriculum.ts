@@ -318,3 +318,31 @@ export interface DnsTaskContent {
   explanationNotes?: string[];
 }
 
+export interface TcpSegmentEntry {
+  id: string;
+  sender: 'client' | 'server';
+  flags: ('SYN' | 'ACK' | 'FIN' | 'RST' | 'PSH')[];
+  seqNumber: number;
+  ackNumber: number;
+  payloadLength: number; // bytes
+  rwnd: number; // advertised receive window in bytes
+  isDropped?: boolean;
+  isRetransmission?: boolean;
+  isDuplicateAck?: boolean;
+  annotation?: string;
+}
+
+export interface TcpLadderTaskContent {
+  title?: string;
+  description?: string;
+  clientHost?: string; // default: 'Client (192.168.1.100)'
+  serverHost?: string; // default: 'Server (93.184.216.34)'
+  clientIsn?: number; // Initial Sequence Number, e.g. 1000
+  serverIsn?: number; // Initial Sequence Number, e.g. 5000
+  defaultScenario?: 'handshake' | 'data_flow' | 'fast_retransmit' | 'zero_window' | 'teardown';
+  segments?: TcpSegmentEntry[];
+  simulatedDroppedSegmentId?: string;
+  activeRwnd?: number;
+  explanationNotes?: string[];
+}
+
