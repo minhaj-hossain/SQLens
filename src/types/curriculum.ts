@@ -4,10 +4,24 @@ import type {
   PrismaTheoryContent,
   SkillType,
 } from './prisma-curriculum';
-import type { NetworkingTaskContent, SubnettingTaskContent, SubnetFieldDef } from './networking-curriculum';
+import type {
+  NetworkingTaskContent,
+  SubnettingTaskContent,
+  SubnetFieldDef,
+  ArpTaskContent,
+  ArpHost,
+  ArpSimulationStep,
+} from './networking-curriculum';
 import type { TrackId } from './track';
 
-export type { NetworkingTaskContent, SubnettingTaskContent, SubnetFieldDef };
+export type {
+  NetworkingTaskContent,
+  SubnettingTaskContent,
+  SubnetFieldDef,
+  ArpTaskContent,
+  ArpHost,
+  ArpSimulationStep,
+};
 
 export type { GradingType, SkillType };
 
@@ -200,6 +214,11 @@ export interface PracticeTask {
    * Defines 5-stage cognitive fading, Bit-Slicer config, and structured fields.
    */
   subnetting?: SubnettingTaskContent;
+  /**
+   * ARP Protocol Pilot extension (Module 5).
+   * Defines 5-stage cognitive fading, ARP packet simulation, hold queue, and structured grading.
+   */
+  arp?: ArpTaskContent;
 }
 
 export interface SyntaxBlock {

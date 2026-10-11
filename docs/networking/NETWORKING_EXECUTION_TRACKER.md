@@ -18,7 +18,7 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
    - Networking tests: `npx vitest run tests/tracks/networking-` runs 7 test files (141 tests) with 100% passing.
    - Typecheck: `npm run lint` (`tsc --noEmit`) passes with 0 errors.
    - Protected tracks: SQL (57 days) and Prisma (14 days) are 100% frozen. Never modify their source files or tests.
-3. **Current Active Phase:** **Phase 1: Technical Errata & Automated Validator Suite**.
+3. **Current Active Phase:** **Phase 4: Component Library Extraction** (Phase 3 Completed).
 4. **Where the approved pilot spec lives:** [`docs/networking/NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/networking/NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md) (v1.2.0).
 
 ---
@@ -39,11 +39,11 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 │ Phase 2 │ Module 4 Subnetting Pilot Implementation   │ DONE    │ Bit-Slicer UI + │
 │         │ (5-stage fading, /22 transfer task)        │         │ Structured Grdr │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 3 │ Module 5 ARP Companion Pilot Spec & Code   │ READY   │ Spec v1.0 +     │
-│         │ (Queued packet state, remote GW transfer)  │ TO RUN  │ Simulator UI    │
+│ Phase 3 │ Module 5 ARP Companion Pilot Spec & Code   │ DONE    │ Spec v1.0 +     │
+│         │ (Queued packet state, remote GW transfer)  │         │ Simulator UI    │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 4 │ Component Library Extraction               │ QUEUED  │ PacketInspector │
-│         │ (PacketInspector.tsx, SubnetBitSlicer.tsx) │         │ shared package  │
+│ Phase 4 │ Component Library Extraction               │ READY   │ PacketInspector │
+│         │ (PacketInspector.tsx, SubnetBitSlicer.tsx) │ TO RUN  │ shared package  │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
 │ Phase 5 │ Curriculum-Wide Rollout (Modules 1-3, 6-16)│ QUEUED  │ All 16 Modules  │
 └─────────┴────────────────────────────────────────────┴─────────┴─────────────────┘
@@ -110,21 +110,29 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 
 ---
 
-## 4. Phase 3 Execution Checklist (QUEUED)
+## 4. Phase 3 Execution Checklist (COMPLETED)
 
 **Goal:** Author and implement the companion Module 5 ARP Protocol Pilot.
 
-- [ ] Write `docs/networking/NETWORKING_MODULE_5_ARP_PILOT_SPEC.md` (v1.0.0):
-  - [ ] 5-stage cognitive fading model for ARP.
-  - [ ] Queued IP packet waiting for resolution state machine.
-  - [ ] Switch Port 1 learning, broadcast flood, non-target inspection, target unicast reply.
-  - [ ] Remote-subnet transfer challenge (resolving Default Gateway MAC).
-- [ ] Implement event-driven ARP stepper in `NetworkingPracticeTaskView.tsx`.
-- [ ] Author unit tests in `tests/tracks/networking-module-5-pilot.test.tsx`.
+- [x] Write `docs/networking/NETWORKING_MODULE_5_ARP_PILOT_SPEC.md` (v1.0.0):
+  - [x] 5-stage cognitive fading model for ARP.
+  - [x] Queued IP packet waiting for resolution state machine.
+  - [x] Switch Port 1 learning, broadcast flood, non-target inspection, target unicast reply.
+  - [x] Remote-subnet transfer challenge (resolving Default Gateway MAC).
+  - [x] Subnet mask mismatch diagnostic isolation.
+- [x] Build `src/components/learning/networking/ArpSimulationLab.tsx`:
+  - [x] FIFO Buffer / Outbound Hold Queue visualization.
+  - [x] 4-Step interactive event-driven stepper with step pills and controls.
+  - [x] 28-Byte ARP packet header and payload decoder.
+  - [x] Real-time switch CAM table and host dynamic ARP cache displays.
+- [x] Wire Stages 1–5 into `NetworkingPracticeTaskView.tsx` for `net-05`.
+- [x] Add Stages 1–5 into `src/content/networking/modules/net-05.ts` while preserving milestone 3 task contracts.
+- [x] Author test suite in `tests/tracks/networking-module-5-pilot.test.tsx` (18/18 tests passing).
+- [x] Pass 100% of full test suite (106 files, 1,253 tests passing).
 
 ---
 
-## 5. Phase 4 & Phase 5 Checklist (QUEUED)
+## 5. Phase 4 & Phase 5 Checklist (READY TO RUN)
 
 - [ ] **Phase 4:** Extract shared components:
   - [ ] `PacketInspector.tsx` (multi-layer before/after hop snapshots with progressive disclosure).

@@ -58,6 +58,65 @@ export interface SubnettingTaskContent {
   };
 }
 
+export interface ArpHost {
+  name: string;
+  ip: string;
+  mac: string;
+  port: number;
+}
+
+export interface ArpPacketHeader {
+  hwType?: string;
+  protoType?: string;
+  hwSize?: number;
+  protoSize?: number;
+  opcode: 1 | 2; // 1 = Request, 2 = Reply
+  senderMac: string;
+  senderIp: string;
+  targetMac: string;
+  targetIp: string;
+}
+
+export interface ArpSimulationStep {
+  stepNumber: number;
+  title: string;
+  description: string;
+  activePacket?: {
+    type: 'ARP_REQUEST' | 'ARP_REPLY' | 'IP_PACKET';
+    sourceHost: string;
+    targetHost?: string;
+    ethernetDst: string;
+    arp?: ArpPacketHeader;
+  };
+  queuedPacket?: {
+    type: string;
+    sourceIp: string;
+    destIp: string;
+    status: 'QUEUED_WAITING_FOR_ARP' | 'DEQUEUED_TRANSMITTING' | 'RESOLVED';
+  };
+  switchCamTable: { port: number; mac: string }[];
+  hostArpTable: { host: string; ip: string; mac: string }[];
+  highlightPort?: number[];
+}
+
+export interface ArpTaskContent {
+  stage: 1 | 2 | 3 | 4 | 5;
+  sourceHost: ArpHost;
+  targetHost: ArpHost;
+  gatewayHost?: ArpHost;
+  allHosts: ArpHost[];
+  queuedPacketDescription?: string;
+  simulationSteps?: ArpSimulationStep[];
+  isInteractive?: boolean;
+  isCollapsed?: boolean;
+  fields?: SubnetFieldDef[];
+  diagnostics?: {
+    arpTableOutput: string;
+    pcapOutput: string;
+    pingOutput: string;
+  };
+}
+
 export interface NetworkingTaskContent {
   topology: HostNode[];
   initialSequence?: FrameTransmission[];
