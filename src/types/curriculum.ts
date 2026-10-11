@@ -20,6 +20,7 @@ import type {
   TerminalScenario,
   EthernetFrameTaskContent,
   EthernetVlanTag,
+  Ipv6NdpTaskContent,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -39,6 +40,7 @@ export type {
   TerminalScenario,
   EthernetFrameTaskContent,
   EthernetVlanTag,
+  Ipv6NdpTaskContent,
 };
 
 export type { GradingType, SkillType };
@@ -252,6 +254,11 @@ export interface PracticeTask {
    * Interactive framing dissection, payload padding slider, and bit-flip CRC-32 integrity checker.
    */
   ethernetFrame?: EthernetFrameTaskContent;
+  /**
+   * IPv6 NDP & EUI-64 Simulator extension (Sprint 2 / Module 6).
+   * Modified EUI-64 transformation, Solicited-Node Multicast derivation, and NS/NA resolution flow.
+   */
+  ipv6Ndp?: Ipv6NdpTaskContent;
 }
 
 export interface SyntaxBlock {

@@ -129,6 +129,13 @@ export const NET_06_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Task 1: 2001:db8::ff00:42:8329. Task 2: Two :: in one address is invalid because parsers cannot determine how many zeros each represents.',
+          ipv6Ndp: {
+            title: 'RFC 5952 Zero Compression & Expansion Lab',
+            description:
+              'Interactive 128-bit IPv6 address dissection. Inspect leading zero omissions and double-colon (::) wildcard compression rules.',
+            targetIpv6: '2001:0db8:0000:0000:0000:ff00:0042:8329',
+            defaultMode: 'compression',
+          },
           hints: [
             { level: 1, text: 'For Task 1: find the longest run of consecutive all-zero groups. Drop leading zeros within each remaining group.' },
             { level: 2, text: 'Task 1: three consecutive 0000 groups → ::. Result: 2001:db8::ff00:42:8329. Task 2: :: can appear at most once per address.' },
@@ -282,6 +289,13 @@ export const NET_06_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'A: Link-local — not forwarded. B: Global Unicast (2001:4860:4860::8888) — routed. C: Loopback — never leaves host. D: Unique-local (fc00::/7) — private, typically not globally routed. E: Solicited-node multicast — not unicast-routed.',
+          ipv6Ndp: {
+            title: 'Solicited-Node Multicast Group Derivation',
+            description:
+              'Examine how solicited-node multicast (ff02::1:ffxx:xxxx) replaces IPv4 broadcast, delivering neighbor discovery packets only to matching hosts.',
+            targetIpv6: '2001:4860:4860::8888',
+            defaultMode: 'ndp_flow',
+          },
           hints: [
             { level: 1, text: 'Scope clues: fe80:: = link-local; 2xxx–3xxx = global unicast; ::1 = loopback; fc/fd = unique-local; ff = multicast.' },
             { level: 2, text: 'Routers forward Global Unicast (2000::/3) and some Unique-Local across site boundaries. Link-local, loopback, and multicast are never unicast-routed.' },
@@ -442,6 +456,15 @@ export const NET_06_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Scenario 1: Alpha sends NS (ICMPv6 Type 135) to ff02::1:ff00:0020 (Beta\'s solicited-node multicast). Beta replies with NA (Type 136) unicast to Alpha, containing its MAC DD:EE:FF:44:55:66. Scenario 2: SLAAC address = 2001:db8:abc:0:123:4567:89ab:cdef/64; Gateway = fe80::1.',
+          ipv6Ndp: {
+            title: 'EUI-64 Stepper & NDP Resolution Exchange',
+            description:
+              'Dissect 48-bit MAC to 64-bit Interface ID conversion (insert FF:FE and invert bit 7). Trace ICMPv6 Type 135 (NS) and Type 136 (NA) resolution.',
+            macAddress: '3C:22:FB:4A:11:80',
+            targetIpv6: '2001:db8:1::20',
+            routerPrefix: '2001:db8:abc::/64',
+            defaultMode: 'eui64',
+          },
           hints: [
             { level: 1, text: 'NDP NS → solicited-node multicast (ff02::1:ff + last 24 bits of target). NA → unicast back to questioner.' },
             { level: 2, text: 'SLAAC: prefix (first 64 bits from RA) + interface ID (last 64 bits self-generated). 0123 drops leading zero → 123.' },

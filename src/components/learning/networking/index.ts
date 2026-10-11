@@ -29,4 +29,13 @@ export {
   computeCrc32,
   type EthernetFrameInspectorProps,
 } from './EthernetFrameInspector';
+export {
+  Ipv6NdpSimulator,
+  macToEui64,
+  toSolicitedNodeMulticast,
+  canonicalizeIpv6,
+  expandIpv6,
+  type Ipv6NdpSimulatorProps,
+  type Eui64Result,
+} from './Ipv6NdpSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

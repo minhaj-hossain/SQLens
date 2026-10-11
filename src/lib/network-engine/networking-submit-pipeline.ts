@@ -30,6 +30,7 @@ export function isNetworkingTask(task: PracticeTask): boolean {
     task.packetInspection ||
     task.terminal ||
     task.ethernetFrame ||
+    task.ipv6Ndp ||
     task.id?.startsWith('net-') ||
     /^net\d+/i.test(task.id || '') ||
     task.solutionSql === 'NETWORKING_JUDGMENT_TASK' ||

@@ -245,3 +245,14 @@ export interface EthernetFrameTaskContent {
   explanationNotes?: string[];
 }
 
+export interface Ipv6NdpTaskContent {
+  title?: string;
+  description?: string;
+  macAddress?: string; // e.g. '3C:22:FB:4A:11:80'
+  targetIpv6?: string; // e.g. '2001:db8:1::20'
+  routerPrefix?: string; // e.g. '2001:db8:abc::/64'
+  defaultMode?: 'eui64' | 'ndp_flow' | 'compression';
+  interactiveStep?: number;
+  explanationNotes?: string[];
+}
+

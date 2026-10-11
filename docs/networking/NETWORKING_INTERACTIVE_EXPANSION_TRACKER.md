@@ -14,23 +14,24 @@ If you are resuming this work in a fresh conversation, **read this first before 
 1. **Do NOT re-debate settled topics:** All instructional design ("Third Way" prediction-before-explanation), RFC accuracy rules, and platform contracts are **frozen**. See [`NETWORKING_STATUS_AND_DECISION_RECORD.md`](./NETWORKING_STATUS_AND_DECISION_RECORD.md).
 2. **Current Baseline State:**
    - Git branch: `main`
-   - Test suite: `npm test` runs 109 test files (1,282 tests) with 100% passing.
-   - Track tests: `npx vitest run tests/tracks/` runs 35 test files (454 tests) with 100% passing.
+   - Test suite: `npm test` runs 110 test files (1,299 tests) with 100% passing.
+   - Track tests: `npx vitest run tests/tracks/` runs 36 test files (471 tests) with 100% passing.
    - Typecheck: `npm run lint` (`tsc --noEmit`) passes with 0 errors.
    - **Protected Invariants:** SQL (57 days) and Prisma (14 days) tracks are 100% frozen. Never modify their files.
 3. **Current Curriculum Status:**
    - **All 16 modules** already implement the "Third Way" choose-and-defend judgment gates (136 total questions, zero raw recall MCQs) and RFC technical errata.
-   - **8 modules** already have dedicated interactive widgets:
+   - **9 modules** already have dedicated interactive widgets:
      - `net-01`: `PacketInspector` (L2/L3/L4/L7 progressive disclosure)
      - `net-02`: `EthernetFrameInspector` (framing dissection, 46B padding slider, CRC-32 bit-flip error injector)
      - `net-03`: `SwitchSimulationLab` (interactive port selection & CAM table)
      - `net-04`: `SubnetBitSlicer` (32-bit CIDR bit slicer + Router-on-a-Stick + active-octet /22 transfer)
      - `net-05`: `ArpSimulationLab` (4-step state machine + outbound hold queue)
+     - `net-06`: `Ipv6NdpSimulator` (Modified EUI-64 transformation, Solicited-Node Multicast flow, RFC 5952 zero compression)
      - `net-07`: `PacketInspector` (Cross-hop MAC rewrites + TTL decrement)
      - `net-08`: `PacketInspector` (NAT/PAT translation table)
      - `net-11`: `PacketInspector` (5-tuple socket multiplexing)
      - `net-14`: `VirtualTerminalSimulator` (Windows CLI diagnostics: `ipconfig`, `ping`, `tracert`, `nslookup`, `netstat`)
-   - **8 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
+   - **7 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
 
 ---
 
@@ -47,7 +48,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ net-03 │ MAC Learning & Forwarding   │ SwitchSimulationLab      │ ✅ LIVE (Milestone 2)│
 │ net-04 │ IPv4 Subnetting Pilot       │ SubnetBitSlicer          │ ✅ LIVE (Phase 2)    │
 │ net-05 │ ARP & Local Delivery        │ ArpSimulationLab         │ ✅ LIVE (Phase 3)    │
-│ net-06 │ IPv6 & NDP                  │ Ipv6NdpSimulator         │ 📋 SPECIFIED (Sprint 2)
+│ net-06 │ IPv6 & NDP                  │ Ipv6NdpSimulator         │ ✅ LIVE (Sprint 2)   │
 │ net-07 │ Gateways & Routing          │ PacketInspector (TTL)    │ ✅ LIVE (Phase 5)    │
 │ net-08 │ NAT & PAT                   │ PacketInspector (NAT)    │ ✅ LIVE (Phase 5)    │
 │ net-09 │ DHCP & Auto-Configuration   │ DhcpDoraSimulator        │ 📋 SPECIFIED (Sprint 3)
@@ -263,14 +264,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 2: Module 6 — IPv6 NDP & EUI-64 Simulator
-- [ ] Build `src/components/learning/networking/Ipv6NdpSimulator.tsx`
-- [ ] Export `Ipv6NdpSimulator` in `src/components/learning/networking/index.ts`
-- [ ] Add `ipv6Ndp` property to `PracticeTask` and curriculum types
-- [ ] Wire `Ipv6NdpSimulator` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-06.ts` with EUI-64 and NDP scenarios
-- [ ] Author `tests/tracks/networking-sprint2-ipv6-ndp.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 2: Module 6 — IPv6 NDP & EUI-64 Simulator (COMPLETED)
+- [x] Build `src/components/learning/networking/Ipv6NdpSimulator.tsx`
+- [x] Export `Ipv6NdpSimulator` in `src/components/learning/networking/index.ts`
+- [x] Add `ipv6Ndp` property to `PracticeTask` and curriculum types
+- [x] Wire `Ipv6NdpSimulator` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-06.ts` with EUI-64 and NDP scenarios
+- [x] Author `tests/tracks/networking-sprint2-ipv6-ndp.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (110 files, 1299 tests)
 
 ---
 
