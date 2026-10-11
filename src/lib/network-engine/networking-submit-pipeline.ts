@@ -28,6 +28,7 @@ export function isNetworkingTask(task: PracticeTask): boolean {
     task.subnetting ||
     task.arp ||
     task.packetInspection ||
+    task.terminal ||
     task.id?.startsWith('net-') ||
     /^net\d+/i.test(task.id || '') ||
     task.solutionSql === 'NETWORKING_JUDGMENT_TASK' ||

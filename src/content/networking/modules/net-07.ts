@@ -99,6 +99,69 @@ export const NET_07_MODULE: ModuleData = {
               text: 'The destination MAC on the first hop must be the Default Gateway. IP addresses do not change in standard routing.',
             },
           ],
+          packetInspection: {
+            title: 'Cross-Hop Header Inspection (Host A ➔ Router R1 ➔ Server Z)',
+            description:
+              'Inspect both hops to observe end-to-end IP invariance, hop-by-hop MAC rewrites, and TTL decrement.',
+            snapshots: [
+              {
+                hopLabel: 'Hop 1: Host A ➔ Router R1 (LAN Link)',
+                deviceType: 'Host',
+                layer2: {
+                  srcMac: 'AA:AA:AA:AA:AA:AA',
+                  dstMac: '00:00:5E:00:53:01',
+                  etherType: '0x0800 (IPv4)',
+                  fcs: '0x5C89F1A0 (Valid)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '192.168.1.10',
+                  dstIp: '198.51.100.50',
+                  ttl: 64,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 49152,
+                  dstPort: 80,
+                  seqNum: 100,
+                  flags: { syn: true },
+                },
+                layer7: {
+                  protocol: 'HTTP',
+                  summary: 'GET /index.html HTTP/1.1 (Host: 198.51.100.50)',
+                },
+              },
+              {
+                hopLabel: 'Hop 2: Router R1 ➔ Server Z (WAN Link)',
+                deviceType: 'Router',
+                layer2: {
+                  srcMac: '00:00:5E:00:53:02',
+                  dstMac: 'ZZ:ZZ:ZZ:ZZ:ZZ:ZZ',
+                  etherType: '0x0800 (IPv4)',
+                  fcs: '0x99A410ED (Valid)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '192.168.1.10',
+                  dstIp: '198.51.100.50',
+                  ttl: 63,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 49152,
+                  dstPort: 80,
+                  seqNum: 100,
+                  flags: { syn: true },
+                },
+                layer7: {
+                  protocol: 'HTTP',
+                  summary: 'GET /index.html HTTP/1.1 (Host: 198.51.100.50)',
+                },
+              },
+            ],
+          },
           validation: {
             judgment: [
               {

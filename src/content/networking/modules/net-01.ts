@@ -256,6 +256,45 @@ export const NET_01_MODULE: ModuleData = {
               text: 'IP addresses belong to Layer 3 (Packets). MAC addresses belong to Layer 2 (Frames).',
             },
           ],
+          packetInspection: {
+            title: 'Protocol Encapsulation Stack (L2 ➔ L3 ➔ L4 ➔ L7)',
+            description: 'Observe how application data is encapsulated into a Segment, Packet, and Frame.',
+            snapshots: [
+              {
+                hopLabel: 'Transmitted Frame (Client NIC)',
+                deviceType: 'Host',
+                layer2: {
+                  srcMac: '3C:22:FB:4A:11:80',
+                  dstMac: '00:1A:2B:3C:4D:5E',
+                  etherType: '0x0800 (IPv4)',
+                  fcs: '0x3F8B1A2C (Valid)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '192.168.1.50',
+                  dstIp: '142.250.190.46',
+                  ttl: 64,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 52140,
+                  dstPort: 443,
+                  seqNum: 1000,
+                  flags: { syn: true },
+                },
+                layer7: {
+                  protocol: 'HTTP',
+                  summary: 'GET /api/v1/resource HTTP/1.1 (Host: api.example.com)',
+                  data: {
+                    method: 'GET',
+                    path: '/api/v1/resource',
+                    host: 'api.example.com',
+                  },
+                },
+              },
+            ],
+          },
           validation: {
             judgment: [
               {

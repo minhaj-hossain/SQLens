@@ -17,6 +17,7 @@ import type {
   Layer3Header,
   Layer4Header,
   Layer7Payload,
+  TerminalScenario,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -33,6 +34,7 @@ export type {
   Layer3Header,
   Layer4Header,
   Layer7Payload,
+  TerminalScenario,
 };
 
 export type { GradingType, SkillType };
@@ -236,6 +238,11 @@ export interface PracticeTask {
    * Multi-layer progressive disclosure (L2/L3/L4/L7) and hop-by-hop before/after comparison.
    */
   packetInspection?: PacketInspectionTaskContent;
+  /**
+   * Virtual Terminal Simulator extension (Phase 5).
+   * Interactive CLI environment (ipconfig, ping, tracert, nslookup).
+   */
+  terminal?: TerminalScenario;
 }
 
 export interface SyntaxBlock {

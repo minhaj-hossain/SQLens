@@ -89,6 +89,67 @@ export const NET_11_MODULE: ModuleData = {
               text: 'The 5-tuple includes both source and destination ports.',
             },
           ],
+          packetInspection: {
+            title: 'Socket Disambiguation: Concurrent 5-Tuple Sockets',
+            description:
+              'Observe two concurrent TLS connections to the same server endpoint differentiated purely by ephemeral source ports.',
+            snapshots: [
+              {
+                hopLabel: 'Socket 1: Browser Tab 1 (Source Port 52001 ➔ 443)',
+                deviceType: 'Host',
+                layer2: {
+                  srcMac: '3C:22:FB:4A:11:80',
+                  dstMac: '00:1A:2B:3C:4D:5E',
+                  etherType: '0x0800 (IPv4)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '192.168.1.100',
+                  dstIp: '140.82.121.4',
+                  ttl: 64,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 52001,
+                  dstPort: 443,
+                  seqNum: 1000,
+                  flags: { ack: true },
+                },
+                layer7: {
+                  protocol: 'HTTPS / TLS 1.3',
+                  summary: 'Encrypted Application Data (Tab 1: Repository View)',
+                },
+              },
+              {
+                hopLabel: 'Socket 2: Browser Tab 2 (Source Port 52002 ➔ 443)',
+                deviceType: 'Host',
+                layer2: {
+                  srcMac: '3C:22:FB:4A:11:80',
+                  dstMac: '00:1A:2B:3C:4D:5E',
+                  etherType: '0x0800 (IPv4)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '192.168.1.100',
+                  dstIp: '140.82.121.4',
+                  ttl: 64,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 52002,
+                  dstPort: 443,
+                  seqNum: 5000,
+                  flags: { ack: true },
+                },
+                layer7: {
+                  protocol: 'HTTPS / TLS 1.3',
+                  summary: 'Encrypted Application Data (Tab 2: Pull Requests)',
+                },
+              },
+            ],
+          },
           validation: {
             judgment: [
               {

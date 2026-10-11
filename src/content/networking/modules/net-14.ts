@@ -89,6 +89,46 @@ export const NET_14_MODULE: ModuleData = {
               text: 'Asterisks in the middle of a working trace mean that specific router refuses to generate ICMP replies.',
             },
           ],
+          terminal: {
+            hostname: 'IT-ADMIN-PC',
+            userPrompt: 'C:\\Users\\admin>',
+            initialLines: [
+              'Microsoft Windows [Version 10.0.19045.3803]',
+              '(c) Microsoft Corporation. All rights reserved.',
+              '',
+              'Type "tracert 93.184.216.34" or "ping 93.184.216.34" to test path metrics.',
+            ],
+            availableCommands: [
+              'tracert 93.184.216.34',
+              'ping 93.184.216.34',
+              'ipconfig /all',
+              'nslookup example.com',
+            ],
+            customResponses: {
+              'tracert 93.184.216.34': [
+                'Tracing route to 93.184.216.34 over a maximum of 30 hops:',
+                '',
+                '  1    <1 ms    <1 ms    <1 ms  192.168.1.1',
+                '  2     3 ms     2 ms     3 ms  10.0.24.1',
+                '  3     8 ms     7 ms     9 ms  198.51.100.1',
+                '  4    12 ms    11 ms    12 ms  93.184.216.34',
+                '',
+                'Trace complete.',
+              ],
+              'ping 93.184.216.34': [
+                'Pinging 93.184.216.34 with 32 bytes of data:',
+                'Reply from 93.184.216.34: bytes=32 time=12ms TTL=56',
+                'Reply from 93.184.216.34: bytes=32 time=11ms TTL=56',
+                'Reply from 93.184.216.34: bytes=32 time=12ms TTL=56',
+                'Reply from 93.184.216.34: bytes=32 time=12ms TTL=56',
+                '',
+                'Ping statistics for 93.184.216.34:',
+                '    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),',
+                'Approximate round trip times in milli-seconds:',
+                '    Minimum = 11ms, Maximum = 12ms, Average = 11ms',
+              ],
+            },
+          },
           validation: {
             judgment: [
               {
@@ -182,6 +222,20 @@ export const NET_14_MODULE: ModuleData = {
               text: 'The -o flag in netstat outputs the PID.',
             },
           ],
+          terminal: {
+            hostname: 'CORP-WS-04',
+            userPrompt: 'C:\\Users\\engineer>',
+            initialLines: [
+              'Windows PowerShell Diagnostics Console',
+              'Ready for diagnostic command execution.',
+            ],
+            availableCommands: [
+              'ipconfig /all',
+              'ipconfig /flushdns',
+              'netstat -ano',
+              'nslookup example.com',
+            ],
+          },
           validation: {
             judgment: [
               {

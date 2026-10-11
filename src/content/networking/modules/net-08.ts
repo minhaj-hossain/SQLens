@@ -97,6 +97,69 @@ export const NET_08_MODULE: ModuleData = {
               text: 'The external server on the public internet is the Outside Global address.',
             },
           ],
+          packetInspection: {
+            title: 'NAT / PAT Translation Inspection (Inside Local ➔ Inside Global)',
+            description:
+              'Compare the packet before and after NAT traversal to observe how private addresses and ports are rewritten to public routable ones.',
+            snapshots: [
+              {
+                hopLabel: 'Segment 1 (Inside LAN): Inside Local Address (10.50.1.25:52140)',
+                deviceType: 'Host',
+                layer2: {
+                  srcMac: 'AA:BB:CC:11:22:33',
+                  dstMac: '00:00:5E:00:53:01',
+                  etherType: '0x0800 (IPv4)',
+                  fcs: '0x22A1E4F9 (Valid)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '10.50.1.25',
+                  dstIp: '198.51.100.4',
+                  ttl: 64,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 52140,
+                  dstPort: 80,
+                  seqNum: 500,
+                  flags: { syn: true },
+                },
+                layer7: {
+                  protocol: 'HTTP',
+                  summary: 'GET /index.html HTTP/1.1 (Host: 198.51.100.4)',
+                },
+              },
+              {
+                hopLabel: 'Segment 2 (Outside WAN): Inside Global Address (203.0.113.10:41000)',
+                deviceType: 'Router',
+                layer2: {
+                  srcMac: '00:00:5E:00:53:02',
+                  dstMac: 'CC:DD:EE:77:88:99',
+                  etherType: '0x0800 (IPv4)',
+                  fcs: '0x8B30C19A (Valid)',
+                },
+                layer3: {
+                  version: 4,
+                  srcIp: '203.0.113.10',
+                  dstIp: '198.51.100.4',
+                  ttl: 63,
+                  protocol: 'TCP (6)',
+                },
+                layer4: {
+                  type: 'TCP',
+                  srcPort: 41000,
+                  dstPort: 80,
+                  seqNum: 500,
+                  flags: { syn: true },
+                },
+                layer7: {
+                  protocol: 'HTTP',
+                  summary: 'GET /index.html HTTP/1.1 (Host: 198.51.100.4)',
+                },
+              },
+            ],
+          },
           validation: {
             judgment: [
               {

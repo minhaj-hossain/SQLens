@@ -20,4 +20,8 @@ export { SwitchingTopologyCanvas, type SwitchingTopologyCanvasProps } from './Sw
 export { PlaybackControls, type PlaybackControlsProps } from './PlaybackControls';
 export { MacTableView, type MacTableViewProps } from './MacTableView';
 export { PredictionGate, type PredictionGateProps } from './PredictionGate';
+export {
+  VirtualTerminalSimulator,
+  type VirtualTerminalSimulatorProps,
+} from './VirtualTerminalSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

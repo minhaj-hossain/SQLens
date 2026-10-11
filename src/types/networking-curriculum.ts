@@ -205,3 +205,19 @@ export interface PacketInspectionTaskContent {
   isComparative?: boolean;
 }
 
+export interface TerminalScenario {
+  hostname?: string;
+  userPrompt?: string;
+  currentIp?: string;
+  subnetMask?: string;
+  gatewayIp?: string;
+  dnsServer?: string;
+  macAddress?: string;
+  initialLines?: string[];
+  initialHistory?: string[];
+  commandResponses?: Record<string, string>;
+  customResponses?: Record<string, string[]>;
+  availableCommands?: string[];
+  suggestedCommands?: string[];
+}
+

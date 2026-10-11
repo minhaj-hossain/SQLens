@@ -8,6 +8,7 @@ import { SwitchSimulationLab } from './SwitchSimulationLab';
 import { SubnetBitSlicer } from './SubnetBitSlicer';
 import { ArpSimulationLab } from './ArpSimulationLab';
 import { PacketInspector } from './PacketInspector';
+import { VirtualTerminalSimulator } from './VirtualTerminalSimulator';
 import { StructuredTaskGrader, type StructuredFieldDef } from './StructuredTaskGrader';
 import { RouterOnAStickDiagram, HostTelemetryTerminal } from './SubnetPilotVisuals';
 import { TaskInstructions } from '../TaskInstructions';
@@ -143,6 +144,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
   const hasSubnetting = Boolean(task.subnetting);
   const hasArp = Boolean(task.arp);
   const hasPacketInspection = Boolean(task.packetInspection);
+  const hasTerminal = Boolean(task.terminal);
 
   // Map SubnetFieldDef to StructuredFieldDef (for both Subnetting and ARP)
   const sourceFields = task.subnetting?.fields ?? task.arp?.fields ?? [];
@@ -391,6 +393,53 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
+        ) : hasTerminal ? (
+          /* LEFT COLUMN: Virtual Terminal Diagnostics Simulator */
+          <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            {task.terminal && (
+              <VirtualTerminalSimulator
+                scenario={task.terminal}
+                title={task.title}
+                description={task.description}
+              />
+            )}
+            {concept ? (
+              <TaskInstructions
+                task={task}
+                taskIndex={taskIndex}
+                totalTasks={totalTasks}
+                concept={concept}
+                isCompleted={taskPassed}
+                onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
+                onViewSolution={() => setViewedSolution(true)}
+              />
+            ) : (
+              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+                <div className="space-y-1.5">
+                  <h3 className="font-mono text-base sm:text-lg font-bold text-text">
+                    {cleanTitle}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
+                    {task.description}
+                  </p>
+                </div>
+                {task.instructions.length > 0 && (
+                  <div className="space-y-2.5 pt-3 border-t border-border-soft">
+                    <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
+                      Instructions &amp; Constraints:
+                    </span>
+                    <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
+                      {task.instructions.map((inst, i) => (
+                        <li key={i} className="leading-relaxed text-text/90">
+                          {inst}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         ) : (
           /* LEFT COLUMN: Scenario Context & Instructions Card */
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
@@ -524,7 +573,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
         {/* ─────────────────────────────────────────────────────────────
             3. RIGHT COLUMN: Questions, Predictions, Options & Action Bar
             ───────────────────────────────────────────────────────────── */}
-        <div className={`${(hasTopology || hasSubnetting || hasArp || hasPacketInspection) ? 'lg:col-span-5 xl:col-span-5' : 'lg:col-span-6 xl:col-span-5'} flex flex-col gap-4 min-w-0 w-full order-2`}>
+        <div className={`${(hasTopology || hasSubnetting || hasArp || hasPacketInspection || hasTerminal) ? 'lg:col-span-5 xl:col-span-5' : 'lg:col-span-6 xl:col-span-5'} flex flex-col gap-4 min-w-0 w-full order-2`}>
           {/* Task Instructions (shown in right column only when topology lab occupies left column) */}
           {hasTopology && concept && (
             <TaskInstructions
