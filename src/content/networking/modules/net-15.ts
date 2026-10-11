@@ -76,6 +76,22 @@ export const NET_15_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'SW2 has the lowest Bridge Priority (4096) and becomes the Root Bridge. Ethernet frames have no TTL, so loops cause infinite broadcast multiplication.',
+          firewall: {
+            title: 'Spanning Tree Protocol (STP) Root Election & Loop Lab',
+            description:
+              'Simulate BPDU exchange, determine Root Bridge election from Bridge ID, and prevent Layer 2 broadcast storms.',
+            defaultTab: 'stp_topology',
+            switches: [
+              { id: 'SW1', name: 'SW1 (Core)', priority: 32768, macAddress: '00:11:22:33:44:01' },
+              { id: 'SW2', name: 'SW2 (Distribution)', priority: 4096, macAddress: '00:11:22:33:44:02' },
+              { id: 'SW3', name: 'SW3 (Access)', priority: 32768, macAddress: '00:11:22:33:44:03' },
+            ],
+            stpEnabled: true,
+            explanationNotes: [
+              'SW2 priority 4096 is lower than 32768, winning the Root Bridge election',
+              'Ethernet frames lack a TTL field; unblocked loops cause infinite broadcast multiplication',
+            ],
+          },
           hints: [
             {
               level: 1,
@@ -167,6 +183,21 @@ export const NET_15_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'ACLs process sequentially; first match wins. Any packet not matching an explicit permit or deny hits the implicit deny any and is dropped.',
+          firewall: {
+            title: 'Stateless ACL First-Match & Implicit Deny Pipeline',
+            description:
+              'Trace sequential packet evaluation through ordered rules and observe first-match termination and implicit deny behavior.',
+            defaultTab: 'acl_pipeline',
+            rules: [
+              { line: 10, action: 'deny', protocol: 'tcp', source: 'any', destination: 'host 10.0.0.5', destPort: 80, comment: 'Block HTTP to sensitive host' },
+              { line: 20, action: 'permit', protocol: 'tcp', source: 'any', destination: 'host 10.0.0.5', destPort: 80, comment: 'Conflicting rule (never reached)' },
+              { line: 30, action: 'permit', protocol: 'tcp', source: 'any', destination: 'any', destPort: 443, comment: 'Allow HTTPS traffic' },
+            ],
+            explanationNotes: [
+              'Line 10 matches first and blocks traffic; Line 20 is never evaluated',
+              'Unmatched DNS query (UDP 53) hits the invisible implicit deny at the end',
+            ],
+          },
           hints: [
             {
               level: 1,
@@ -258,6 +289,20 @@ export const NET_15_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Stateful firewalls classify returning traffic as ESTABLISHED and permit it automatically, while dropping unsolicited external packets classified as NEW.',
+          firewall: {
+            title: 'Stateful Connection Tracking (conntrack) Inspector',
+            description:
+              'Analyze connection tracking tables and contrast automatic ESTABLISHED return allowance with unsolicited NEW packet dropping.',
+            defaultTab: 'stateful_conntrack',
+            conntrackEntries: [
+              { id: 'ct-1', protocol: 'tcp', srcIp: '10.0.0.105', srcPort: 51240, dstIp: '93.184.216.34', dstPort: 443, state: 'ESTABLISHED', timeoutSeconds: 7180 },
+              { id: 'ct-2', protocol: 'tcp', srcIp: '10.0.0.110', srcPort: 49812, dstIp: '142.250.190.46', dstPort: 443, state: 'NEW', timeoutSeconds: 115 },
+            ],
+            explanationNotes: [
+              'Returning SYN-ACK packets match active conntrack entries and are classified as ESTABLISHED',
+              'Unsolicited external SYN packets are classified as NEW and blocked by default perimeter policy',
+            ],
+          },
           hints: [
             {
               level: 1,
@@ -332,6 +377,27 @@ export const NET_15_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'The link between SW-B and SW-C is redundant. One end becomes a Designated Port and the other is placed into Blocking/Discarding state to eliminate the loop.',
+        firewall: {
+          title: 'STP Redundant Topology & Port Role Identification Lab',
+          description:
+            'Trace BPDU root path costs in a redundant switch triangle and identify the blocked port on the inter-switch cross-link.',
+          defaultTab: 'stp_topology',
+          switches: [
+            { id: 'SW-A', name: 'SW-A (Root)', priority: 4096, macAddress: '00:1A:2B:3C:4D:01' },
+            { id: 'SW-B', name: 'SW-B (Uplink)', priority: 32768, macAddress: '00:1A:2B:3C:4D:02' },
+            { id: 'SW-C', name: 'SW-C (Access)', priority: 32768, macAddress: '00:1A:2B:3C:4D:03' },
+          ],
+          links: [
+            { id: 'link-ab', fromSwitch: 'SW-A', fromPort: 'Gi0/1', toSwitch: 'SW-B', toPort: 'Gi0/1', cost: 4, status: 'forwarding' },
+            { id: 'link-ac', fromSwitch: 'SW-A', fromPort: 'Gi0/2', toSwitch: 'SW-C', toPort: 'Gi0/1', cost: 4, status: 'forwarding' },
+            { id: 'link-bc', fromSwitch: 'SW-B', fromPort: 'Gi0/2', toSwitch: 'SW-C', toPort: 'Gi0/2', cost: 4, status: 'blocking' },
+          ],
+          stpEnabled: true,
+          explanationNotes: [
+            'Both SW-B and SW-C select direct links to SW-A as Root Ports',
+            'Cross-link between SW-B and SW-C places one port into Blocking to eliminate the loop',
+          ],
+        },
         hints: [
           {
             level: 1,
@@ -381,6 +447,19 @@ export const NET_15_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'Because the ACL is stateless, the outbound SYN leaves, but returning SYN-ACK packets from web servers are blocked by the inbound implicit deny because there is no matching return permit rule.',
+        firewall: {
+          title: 'Stateless vs Stateful Asymmetric Return Flow Simulator',
+          description:
+            'Diagnose why stateless ACLs drop return web traffic (SYN-ACK) while stateful conntrack permits it automatically.',
+          defaultTab: 'stateful_conntrack',
+          conntrackEntries: [
+            { id: 'ct-web-1', protocol: 'tcp', srcIp: '10.0.0.50', srcPort: 52100, dstIp: '93.184.216.34', dstPort: 80, state: 'NEW', timeoutSeconds: 120 },
+          ],
+          explanationNotes: [
+            'Outbound SYN leaves under permit rule, but returning SYN-ACK hits inbound implicit deny',
+            'Stateful firewalls eliminate this dilemma by tracking active session states',
+          ],
+        },
         hints: [
           {
             level: 1,

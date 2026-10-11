@@ -389,4 +389,56 @@ export interface HttpTlsTaskContent {
   explanationNotes?: string[];
 }
 
+export interface AclRule {
+  line: number;
+  action: 'permit' | 'deny';
+  protocol: 'tcp' | 'udp' | 'icmp' | 'ip';
+  source: string; // e.g. '10.0.0.0/24' or 'any'
+  destination: string; // e.g. 'host 10.0.0.5' or 'any'
+  destPort?: number | string; // e.g. 80, 443, 'any'
+  comment?: string;
+}
+
+export interface ConntrackEntry {
+  id: string;
+  protocol: 'tcp' | 'udp' | 'icmp';
+  srcIp: string;
+  srcPort: number;
+  dstIp: string;
+  dstPort: number;
+  state: 'NEW' | 'ESTABLISHED' | 'RELATED' | 'INVALID';
+  timeoutSeconds: number;
+}
+
+export interface StpSwitchNode {
+  id: string;
+  name: string;
+  priority: number; // e.g. 4096, 32768
+  macAddress: string;
+  isRoot?: boolean;
+}
+
+export interface StpLink {
+  id: string;
+  fromSwitch: string;
+  fromPort: string;
+  toSwitch: string;
+  toPort: string;
+  cost: number;
+  status: 'forwarding' | 'blocking';
+}
+
+export interface FirewallTaskContent {
+  title?: string;
+  description?: string;
+  defaultTab?: 'acl_pipeline' | 'stateful_conntrack' | 'stp_topology';
+  rules?: AclRule[];
+  conntrackEntries?: ConntrackEntry[];
+  switches?: StpSwitchNode[];
+  links?: StpLink[];
+  stpEnabled?: boolean;
+  explanationNotes?: string[];
+}
+
+
 

@@ -68,4 +68,16 @@ export {
   type CertVerificationResult,
   type ForwardSecrecyComparisonResult,
 } from './HttpTlsHandshakeSimulator';
+export {
+  FirewallAclRuleSimulator,
+  evaluateAclRule,
+  evaluateConntrackPacket,
+  calculateStpElection,
+  simulateBroadcastStorm,
+  type FirewallAclRuleSimulatorProps,
+  type PacketProbe,
+  type AclEvaluationResult,
+  type ConntrackEvaluationResult,
+  type StpElectionResult,
+} from './FirewallAclRuleSimulator';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

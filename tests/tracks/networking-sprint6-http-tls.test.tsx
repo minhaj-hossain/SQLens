@@ -325,7 +325,7 @@ describe('Sprint 6 — Test 6: NetworkingPracticeTaskView Integration with net-1
   });
 
   it('renders net13-ch1-tls-certificate-error challenge with unknown issuer diagnostics', () => {
-    const task = NET_13_MODULE.challenge.tasks[0];
+    const task = NET_13_MODULE.challenge!.tasks[0];
 
     const html = renderToStaticMarkup(
       <NetworkingPracticeTaskView
@@ -344,7 +344,7 @@ describe('Sprint 6 — Test 6: NetworkingPracticeTaskView Integration with net-1
   });
 
   it('renders net13-ch2-http2-multiplexing-hol challenge with HoL blocking simulator', () => {
-    const task = NET_13_MODULE.challenge.tasks[1];
+    const task = NET_13_MODULE.challenge!.tasks[1];
 
     const html = renderToStaticMarkup(
       <NetworkingPracticeTaskView
@@ -377,6 +377,8 @@ describe('Sprint 6 — Test 7: Submit Pipeline Recognition & Grading', () => {
       primaryTable: '',
       initialSql: '',
       solutionSql: 'NETWORKING_JUDGMENT_TASK',
+      solutionExplanation: 'Test explanation',
+      successMessage: 'Test success',
       hints: [],
       validation: { judgment: [] },
       httpTls: {
@@ -406,7 +408,7 @@ describe('Sprint 6 — Test 7: Submit Pipeline Recognition & Grading', () => {
   });
 
   it('evaluates judgment submission for net13-ch1 challenge correctly via submitForTask', () => {
-    const task = NET_13_MODULE.challenge.tasks[0];
+    const task = NET_13_MODULE.challenge!.tasks[0];
 
     // Correct answer: option 1 (Internal Corporate Root CA missing from trust store)
     const passOutcome = submitForTask({

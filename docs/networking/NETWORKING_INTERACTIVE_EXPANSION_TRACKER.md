@@ -60,7 +60,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ net-12 │ TCP Reliability & Teardown  │ TcpSequenceLadderSim     │ ✅ LIVE (Sprint 5)   │
 │ net-13 │ HTTP & TLS/HTTPS            │ HttpTlsHandshakeSim      │ ✅ LIVE (Sprint 6)   │
 │ net-14 │ Diagnostics & Triage        │ VirtualTerminalSimulator │ ✅ LIVE (Phase 5)    │
-│ net-15 │ Security, Firewalls & STP   │ FirewallAclRuleSim       │ 📋 SPECIFIED (Sprint 7)
+│ net-15 │ Security, Firewalls & STP   │ FirewallAclRuleSim       │ ✅ LIVE (Sprint 7)   │
 │ net-16 │ VLANs, Wireless & Routing   │ VlanTrunkDijkstraLab     │ 📋 SPECIFIED (Sprint 8)
 └────────┴─────────────────────────────┴──────────────────────────┴──────────────────────┘
 ```
@@ -322,14 +322,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 7: Module 15 — Stateful Firewall & STP Loop Simulator
-- [ ] Build `src/components/learning/networking/FirewallAclRuleSimulator.tsx`
-- [ ] Export `FirewallAclRuleSimulator` in `src/components/learning/networking/index.ts`
-- [ ] Add `firewall` property to `PracticeTask` and curriculum types
-- [ ] Wire `FirewallAclRuleSimulator` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-15.ts` with state table and ACL scenarios
-- [ ] Author `tests/tracks/networking-sprint7-firewall-stp.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 7: Module 15 — Stateful Firewall & STP Loop Simulator
+- [x] Build `src/components/learning/networking/FirewallAclRuleSimulator.tsx`
+- [x] Export `FirewallAclRuleSimulator` in `src/components/learning/networking/index.ts`
+- [x] Add `firewall` property to `PracticeTask` and curriculum types
+- [x] Wire `FirewallAclRuleSimulator` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-15.ts` with state table and ACL scenarios
+- [x] Author `tests/tracks/networking-sprint7-firewall-stp.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (115 files, 1402 tests)
 
 ---
 

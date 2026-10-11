@@ -15,6 +15,7 @@ import { DhcpDoraSimulator } from './DhcpDoraSimulator';
 import { DnsResolutionTreeSimulator } from './DnsResolutionTreeSimulator';
 import { TcpSequenceLadderSimulator } from './TcpSequenceLadderSimulator';
 import { HttpTlsHandshakeSimulator } from './HttpTlsHandshakeSimulator';
+import { FirewallAclRuleSimulator } from './FirewallAclRuleSimulator';
 import { StructuredTaskGrader, type StructuredFieldDef } from './StructuredTaskGrader';
 import { RouterOnAStickDiagram, HostTelemetryTerminal } from './SubnetPilotVisuals';
 import { TaskInstructions } from '../TaskInstructions';
@@ -157,6 +158,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
   const hasDns = Boolean(task.dns);
   const hasTcpLadder = Boolean(task.tcpLadder);
   const hasHttpTls = Boolean(task.httpTls);
+  const hasFirewall = Boolean(task.firewall);
 
   // Map SubnetFieldDef to StructuredFieldDef (for both Subnetting and ARP)
   const sourceFields = task.subnetting?.fields ?? task.arp?.fields ?? [];
@@ -197,7 +199,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] sm:text-[11px] font-bold text-func uppercase tracking-wider">
-                {isChallenge ? 'Mastery Challenge' : hasSubnetting ? 'Subnetting Lab' : hasEthernetFrame ? 'Ethernet Framing Lab' : hasIpv6Ndp ? 'IPv6 & NDP Lab' : hasDhcp ? 'DHCP DORA Lab' : hasDns ? 'DNS Resolution Lab' : hasTcpLadder ? 'TCP Ladder Lab' : hasHttpTls ? 'HTTP & TLS Lab' : 'Networking Practice'}
+                {isChallenge ? 'Mastery Challenge' : hasSubnetting ? 'Subnetting Lab' : hasEthernetFrame ? 'Ethernet Framing Lab' : hasIpv6Ndp ? 'IPv6 & NDP Lab' : hasDhcp ? 'DHCP DORA Lab' : hasDns ? 'DNS Resolution Lab' : hasTcpLadder ? 'TCP Ladder Lab' : hasHttpTls ? 'HTTP & TLS Lab' : hasFirewall ? 'Firewall & STP Lab' : 'Networking Practice'}
               </span>
               <span className="text-text-muted text-xs">•</span>
               <span className="font-mono text-[10.5px] sm:text-[11px] text-text-dim">
@@ -693,6 +695,53 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             {task.httpTls && (
               <HttpTlsHandshakeSimulator
                 taskContent={task.httpTls}
+                title={task.title}
+                description={task.description}
+              />
+            )}
+            {concept ? (
+              <TaskInstructions
+                task={task}
+                taskIndex={taskIndex}
+                totalTasks={totalTasks}
+                concept={concept}
+                isCompleted={taskPassed}
+                onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
+                onViewSolution={() => setViewedSolution(true)}
+              />
+            ) : (
+              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+                <div className="space-y-1.5">
+                  <h3 className="font-mono text-base sm:text-lg font-bold text-text">
+                    {cleanTitle}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
+                    {task.description}
+                  </p>
+                </div>
+                {task.instructions.length > 0 && (
+                  <div className="space-y-2.5 pt-3 border-t border-border-soft">
+                    <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
+                      Instructions &amp; Constraints:
+                    </span>
+                    <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
+                      {task.instructions.map((inst, i) => (
+                        <li key={i} className="leading-relaxed text-text/90">
+                          {inst}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : hasFirewall ? (
+          /* LEFT COLUMN: Stateful Firewall, ACL & STP Topology Simulator */
+          <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            {task.firewall && (
+              <FirewallAclRuleSimulator
+                taskContent={task.firewall}
                 title={task.title}
                 description={task.description}
               />

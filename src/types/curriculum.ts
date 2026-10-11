@@ -32,6 +32,11 @@ import type {
   HttpStreamEntry,
   TlsHandshakeHop,
   X509CertificateInfo,
+  FirewallTaskContent,
+  AclRule,
+  ConntrackEntry,
+  StpSwitchNode,
+  StpLink,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -63,6 +68,11 @@ export type {
   HttpStreamEntry,
   TlsHandshakeHop,
   X509CertificateInfo,
+  FirewallTaskContent,
+  AclRule,
+  ConntrackEntry,
+  StpSwitchNode,
+  StpLink,
 };
 
 export type { GradingType, SkillType };
@@ -301,6 +311,11 @@ export interface PracticeTask {
    * 1-RTT/0-RTT handshake latency waterfall, TCP vs QUIC HoL blocking, ECDHE forward secrecy, and X.509 PKI certificate chain validation.
    */
   httpTls?: HttpTlsTaskContent;
+  /**
+   * Stateful Firewall, ACL & STP Topology Simulator extension (Sprint 7 / Module 15).
+   * Top-down ACL first-match with implicit deny, stateful connection tracking (conntrack), and STP BPDU Root Bridge loop elimination.
+   */
+  firewall?: FirewallTaskContent;
 }
 
 export interface SyntaxBlock {
