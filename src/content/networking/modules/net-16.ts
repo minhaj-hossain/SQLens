@@ -193,7 +193,7 @@ export const NET_16_MODULE: ModuleData = {
                 ],
                 correctIndex: 1,
                 explanation:
-                  'Because each channel is 20 MHz wide and channel centers are spaced only 5 MHz apart, channels 1, 6, and 11 are the only three standard non-overlapping channels in the 2.4 GHz band.',
+                  'Because each channel is 20 MHz wide and channel centers are spaced 5 MHz apart, channels 1, 6, and 11 form the common 3-channel non-overlapping plan in North America (and Europe), providing 25 MHz separation between center frequencies.',
               },
               {
                 kind: 'choose-and-defend',
@@ -234,7 +234,7 @@ export const NET_16_MODULE: ModuleData = {
           'Dynamic protocols adapt to link failures in milliseconds without manual intervention.',
           '',
           '### OSPF (Interior Gateway Protocol)',
-          'Link-state protocol using Dijkstra Shortest Path First based on bandwidth cost. Organized into Areas with Backbone Area 0.',
+          'Link-state protocol using Dijkstra Shortest Path First. The OSPF metric is path Cost (a dimensionless integer derived from interface bandwidth by default, where Cost = Reference Bandwidth / Interface Bandwidth). Organized into Areas with Backbone Area 0.',
           '',
           '### BGP (Exterior Gateway Protocol)',
           'Path-vector protocol connecting Autonomous Systems across the internet based on business policies and AS_PATH.',
@@ -275,7 +275,7 @@ export const NET_16_MODULE: ModuleData = {
               {
                 kind: 'choose-and-defend',
                 prompt:
-                  'Which routing protocol is the standard Interior Gateway Protocol (IGP) used to calculate shortest paths based on bandwidth inside an enterprise corporate network?',
+                  'Which routing protocol is the standard Interior Gateway Protocol (IGP) used to calculate shortest paths based on lowest total cost inside an enterprise corporate network?',
                 options: [
                   'Border Gateway Protocol (BGP)',
                   'Open Shortest Path First (OSPF)',
@@ -284,7 +284,7 @@ export const NET_16_MODULE: ModuleData = {
                 ],
                 correctIndex: 1,
                 explanation:
-                  'OSPF is an open-standard link-state IGP that uses Dijkstra\'s Shortest Path First algorithm to calculate optimal forwarding paths within an enterprise network.',
+                  'OSPF is an open-standard link-state IGP that uses Dijkstra\'s Shortest Path First algorithm to calculate optimal forwarding paths based on lowest total path cost within an enterprise network.',
               },
               {
                 kind: 'choose-and-defend',
@@ -311,9 +311,9 @@ export const NET_16_MODULE: ModuleData = {
 
   challenge: {
     id: 'net16-challenge',
-    title: 'Module 16 Challenge: Enterprise Campus Network Design',
+    title: 'Module 16 Challenge: Enterprise Infrastructure & Wireless Architecture',
     scenario:
-      'Design an enterprise campus infrastructure integrating VLAN trunks, high-density Wi-Fi channel layouts, and redundant routing.',
+      'Audit enterprise campus infrastructure: resolve cross-switch 802.1Q VLAN trunk isolation and eliminate adjacent-channel wireless RF interference.',
     tasks: [
       {
         id: 'net16-ch1-intervlan-trunk-diagnosis',

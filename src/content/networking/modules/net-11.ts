@@ -42,10 +42,10 @@ export const NET_11_MODULE: ModuleData = {
       order: 1,
       title: 'Transport Multiplexing & The 5-Tuple Socket',
       shortDescription:
-        'Understand how an operating system routes incoming packets to the exact right browser tab or application using port numbers and 5-tuple socket bindings.',
+        'Understand how an operating system routes incoming packets to the exact socket connection and application process using port numbers and 5-tuple socket bindings.',
       theory: {
         summary:
-          '16-bit port numbers (0–65,535) enable host process-to-process multiplexing. Every active connection is uniquely bound by its 5-tuple: (Protocol, Source IP, Source Port, Destination IP, Destination Port). Ephemeral source ports allow concurrent tabs to the same server.',
+          '16-bit port numbers (0–65,535) enable host process-to-process multiplexing. Every active connection is uniquely bound by its 5-tuple: (Protocol, Source IP, Source Port, Destination IP, Destination Port). Ephemeral source ports allow distinct concurrent transport sessions to the same server (note: modern protocols like HTTP/2 can multiplex multiple application requests over one connection).',
         explanation: [
           '### The Need for Transport Ports',
           'IP delivers packets host-to-host. Transport ports (Layer 4) deliver data to specific application processes on that host.',
@@ -56,7 +56,7 @@ export const NET_11_MODULE: ModuleData = {
           '- **Ephemeral (49,152–65,535)**: Temporary client outbound ports assigned dynamically by the OS.',
           '',
           '### The 5-Tuple Socket Binding',
-          'A session is identified by (Proto, SrcIP, SrcPort, DstIP, DstPort). Unique ephemeral ports allow multiple connections to the same server simultaneously.',
+          'An individual network connection is identified by (Proto, SrcIP, SrcPort, DstIP, DstPort). Unique ephemeral client ports allow separate connections to the same server simultaneously. Note that while distinct TCP connections get unique ephemeral ports, modern web browsers frequently multiplex multiple requests and tabs across a single shared HTTP/2 connection.',
         ],
         keyTakeaway:
           'Ports multiplex traffic to applications. Outbound connections receive unique ephemeral source ports, creating distinct 5-tuple sockets.',

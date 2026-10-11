@@ -369,10 +369,9 @@ export const NET_15_MODULE: ModuleData = {
         description:
           'Diagnose why internal clients cannot browse the web after an engineer deploys a stateless ACL.',
         instructions: [
-          'A junior network administrator creates an outbound ACL on a perimeter router:',
-          '  `permit tcp 10.0.0.0/24 any eq 80`',
-          '  `permit tcp 10.0.0.0/24 any eq 443`',
-          '  `deny ip any any`',
+          'A junior network administrator configures stateless ACLs on a perimeter router:',
+          '  • Outbound WAN ACL: `permit tcp 10.0.0.0/24 any eq 80`, `permit tcp 10.0.0.0/24 any eq 443`, followed by implicit deny.',
+          '  • Inbound WAN ACL: contains no return permit rules for web ports, concluding with the standard implicit `deny ip any any`.',
           'Users immediately lose all web browsing capabilities.',
           'Explain why the connection fails.',
         ],

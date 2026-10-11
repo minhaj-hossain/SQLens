@@ -120,19 +120,18 @@ export const NET_06_MODULE: ModuleData = {
           description:
             'Apply zero-compression rules to shorten IPv6 addresses, and expand a short form back to its full 128-bit representation.',
           instructions: [
-            'Task A — Compress: 2001:0db8:0000:0000:0000:ff00:0042:8329',
-            'Task B — Expand: ::ffff:192.0.2.1 (IPv4-mapped IPv6 address)',
-            'Task C — Identify the error: 2001:db8::1::2 — why is this invalid?',
+            'Task 1 — Compress: 2001:0db8:0000:0000:0000:ff00:0042:8329',
+            'Task 2 — Identify the syntax error: 2001:db8::1::2 — why is this invalid?',
           ],
           type: 'guided',
           primaryTable: '',
           initialSql: '',
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
-            'A: 2001:db8::ff00:42:8329. B: 0000:0000:0000:0000:0000:ffff:c000:0201. C: Two :: in one address is invalid — the parser cannot determine how many zeros each represents.',
+            'Task 1: 2001:db8::ff00:42:8329. Task 2: Two :: in one address is invalid because parsers cannot determine how many zeros each represents.',
           hints: [
-            { level: 1, text: 'For Task A: find the longest run of consecutive all-zero groups. Drop leading zeros within each remaining group.' },
-            { level: 2, text: 'A: three consecutive 0000 groups → ::. Result: 2001:db8::ff00:42:8329. C: :: can appear exactly once per address.' },
+            { level: 1, text: 'For Task 1: find the longest run of consecutive all-zero groups. Drop leading zeros within each remaining group.' },
+            { level: 2, text: 'Task 1: three consecutive 0000 groups → ::. Result: 2001:db8::ff00:42:8329. Task 2: :: can appear at most once per address.' },
           ],
           validation: {
             judgment: [
@@ -272,7 +271,7 @@ export const NET_06_MODULE: ModuleData = {
           instructions: [
             'Classify each IPv6 address and predict whether a router will forward a packet destined for it:',
             '  A) fe80::1abc:2def',
-            '  B) 2001:db8:1::100',
+            '  B) 2001:4860:4860::8888',
             '  C) ::1',
             '  D) fc00::a:b:c:d',
             '  E) ff02::1:ff34:5678',
@@ -282,7 +281,7 @@ export const NET_06_MODULE: ModuleData = {
           initialSql: '',
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
-            'A: Link-local — not forwarded. B: Global Unicast — routed. C: Loopback — never leaves host. D: Unique-local (fc00::/7) — private, typically not globally routed. E: Solicited-node multicast — not unicast-routed.',
+            'A: Link-local — not forwarded. B: Global Unicast (2001:4860:4860::8888) — routed. C: Loopback — never leaves host. D: Unique-local (fc00::/7) — private, typically not globally routed. E: Solicited-node multicast — not unicast-routed.',
           hints: [
             { level: 1, text: 'Scope clues: fe80:: = link-local; 2xxx–3xxx = global unicast; ::1 = loopback; fc/fd = unique-local; ff = multicast.' },
             { level: 2, text: 'Routers forward Global Unicast (2000::/3) and some Unique-Local across site boundaries. Link-local, loopback, and multicast are never unicast-routed.' },
@@ -294,13 +293,13 @@ export const NET_06_MODULE: ModuleData = {
                 prompt: 'Which of the listed addresses would a standard internet router forward to a remote network?',
                 options: [
                   'fe80::1abc:2def — link-local, auto-generated',
-                  '2001:db8:1::100 — Global Unicast, publicly routable',
+                  '2001:4860:4860::8888 — Global Unicast, publicly routable',
                   '::1 — loopback, host-internal only',
                   'ff02::1:ff34:5678 — solicited-node multicast',
                 ],
                 correctIndex: 1,
                 explanation:
-                  '2001:db8:1::100 uses the 2001:: prefix within the Global Unicast range (2000::/3), making it publicly routable. The others are link-local, loopback, or multicast — none of which routers forward as unicast routes.',
+                  '2001:4860:4860::8888 (Google Public DNS) falls within the Global Unicast range (2000::/3), making it publicly routable across the internet (note: 2001:db8::/32 is reserved under RFC 3849 for documentation only). The others are link-local, loopback, or multicast — none of which routers forward as unicast routes.',
               },
             ],
           },

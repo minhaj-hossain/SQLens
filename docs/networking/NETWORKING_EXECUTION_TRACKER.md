@@ -33,11 +33,11 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
 │ Phase 0 │ Baseline Repository Inventory & Audit      │ DONE    │ Audit v2.0      │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 1 │ RFC Technical Errata & Curriculum Valid.   │ READY   │ 8 Module Files  │
-│         │ (Apply errata, write vitest validator)     │ TO RUN  │ + New Test File │
+│ Phase 1 │ RFC Technical Errata & Curriculum Valid.   │ DONE    │ 8 Module Files  │
+│         │ (Apply errata, write vitest validator)     │         │ + New Test File │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 2 │ Module 4 Subnetting Pilot Implementation   │ QUEUED  │ Bit-Slicer UI + │
-│         │ (5-stage fading, /22 transfer task)        │         │ Structured Grdr │
+│ Phase 2 │ Module 4 Subnetting Pilot Implementation   │ READY   │ Bit-Slicer UI + │
+│         │ (5-stage fading, /22 transfer task)        │ TO RUN  │ Structured Grdr │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
 │ Phase 3 │ Module 5 ARP Companion Pilot Spec & Code   │ QUEUED  │ Spec v1.0 +     │
 │         │ (Queued packet state, remote GW transfer)  │         │ Simulator UI    │
@@ -51,38 +51,38 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 
 ---
 
-## 2. Phase 1 Execution Checklist (CURRENT ACTIVE TASK)
+## 2. Phase 1 Execution Checklist (COMPLETED)
 
 **Goal:** Correct all RFC and technical precision inaccuracies across the 8 affected module files, and author an automated test file that prevents regressions.
 
-- [ ] **Task 1.1 — Update `src/content/networking/modules/net-04.ts`:**
-  - [ ] Label `203.0.113.5` as RFC 5737 TEST-NET-3 (documentation only). Use `8.8.8.8` as the public Internet example.
-  - [ ] Correct `/31` point-to-point text: 1 host bit, 2 usable host addresses under RFC 3021 (not "0 host bits").
-- [ ] **Task 1.2 — Update `src/content/networking/modules/net-06.ts`:**
-  - [ ] Label `2001:db8:1::100` as RFC 3849 documentation-only. Use `2001:4860:4860::8888` for live public routing examples.
-- [ ] **Task 1.3 — Update `src/content/networking/modules/net-08.ts`:**
-  - [ ] Decouple NAT/PAT address translation from stateful firewall filtering. Emphasize that NAT drops unsolicited inbound traffic due to lack of a translation table entry, but does not replace explicit stateful firewall policy rules.
-- [ ] **Task 1.4 — Update `src/content/networking/modules/net-10.ts`:**
-  - [ ] State the universal CNAME rule: a CNAME cannot coexist with *any other record of any type* for the same owner name (which causes the apex issue because apex requires SOA/NS).
-- [ ] **Task 1.5 — Update `src/content/networking/modules/net-11.ts`:**
-  - [ ] Clarify that a 5-tuple identifies an individual socket connection, but modern HTTP/2 and HTTP/3 browsers multiplex multiple tabs and streams over a single shared connection.
-- [ ] **Task 1.6 — Update `src/content/networking/modules/net-13.ts`:**
-  - [ ] Clarify HTTP/2 vs HTTP/3 head-of-line blocking: HTTP/2 solves application stream blocking; HTTP/3 over QUIC mitigates TCP cross-stream transport blocking, but in-stream ordering and shared congestion control remain.
-- [ ] **Task 1.7 — Update `src/content/networking/modules/net-02.ts` & `net-03.ts`:**
-  - [ ] Refine switching security claims: switches isolate collision domains and reduce casual sniffing compared to hubs, but do not prevent broadcast inspection, ARP spoofing, or MAC table flooding.
-- [ ] **Task 1.8 — Update `src/content/networking/modules/net-15.ts`:**
-  - [ ] Explicitly show both Inbound and Outbound ACL rule tables on the router interface so learners observe why return traffic with ephemeral ports is dropped.
-- [ ] **Task 1.9 — Update `src/content/networking/modules/net-16.ts`:**
-  - [ ] Clarify that the OSPF metric is path **Cost** (dimensionless integer), derived from interface bandwidth by default.
-  - [ ] Qualify Wi-Fi non-overlapping channels 1, 6, 11 as the standard US/FCC 2.4 GHz plan, noting regulatory domain variations.
-- [ ] **Task 1.10 — Author `tests/curriculum/networking-curriculum-validator.test.ts`:**
-  - [ ] Invariant check: Assert zero unlabeled TEST-NET addresses labeled as public.
-  - [ ] Invariant check: Assert zero claims of "0 host bits" for `/31`.
-  - [ ] Parity check: Verify every instruction step has a matching assessable question.
-- [ ] **Task 1.11 — Verification & Commit:**
-  - [ ] Run `npm run lint` $\to$ Exit code 0.
-  - [ ] Run `npx vitest run tests/` $\to$ 100% tests passing.
-  - [ ] Commit with clean git message: `fix(networking): correct RFC errata and add automated curriculum validator`.
+- [x] **Task 1.1 — Update `src/content/networking/modules/net-04.ts`:**
+  - [x] Label `203.0.113.5` as RFC 5737 TEST-NET-3 (documentation only). Use `8.8.8.8` as the public Internet example.
+  - [x] Correct `/31` point-to-point text: 1 host bit, 2 usable host addresses under RFC 3021 (not "0 host bits").
+- [x] **Task 1.2 — Update `src/content/networking/modules/net-06.ts`:**
+  - [x] Label `2001:db8:1::100` as RFC 3849 documentation-only. Use `2001:4860:4860::8888` for live public routing examples.
+- [x] **Task 1.3 — Update `src/content/networking/modules/net-08.ts`:**
+  - [x] Decouple NAT/PAT address translation from stateful firewall filtering. Emphasize that NAT drops unsolicited inbound traffic due to lack of a translation table entry, but does not replace explicit stateful firewall policy rules.
+- [x] **Task 1.4 — Update `src/content/networking/modules/net-10.ts`:**
+  - [x] State the universal CNAME rule: a CNAME cannot coexist with *any other record of any type* for the same owner name (which causes the apex issue because apex requires SOA/NS).
+- [x] **Task 1.5 — Update `src/content/networking/modules/net-11.ts`:**
+  - [x] Clarify that a 5-tuple identifies an individual socket connection, but modern HTTP/2 and HTTP/3 browsers multiplex multiple tabs and streams over a single shared connection.
+- [x] **Task 1.6 — Update `src/content/networking/modules/net-13.ts`:**
+  - [x] Clarify HTTP/2 vs HTTP/3 head-of-line blocking: HTTP/2 solves application stream blocking; HTTP/3 over QUIC mitigates TCP cross-stream transport blocking, but in-stream ordering and shared congestion control remain.
+- [x] **Task 1.7 — Update `src/content/networking/modules/net-02.ts` & `net-03.ts`:**
+  - [x] Refine switching security claims: switches isolate collision domains and reduce casual sniffing compared to hubs, but do not prevent broadcast inspection, ARP spoofing, or MAC table flooding.
+- [x] **Task 1.8 — Update `src/content/networking/modules/net-15.ts`:**
+  - [x] Explicitly show both Inbound and Outbound ACL rule tables on the router interface so learners observe why return traffic with ephemeral ports is dropped.
+- [x] **Task 1.9 — Update `src/content/networking/modules/net-16.ts`:**
+  - [x] Clarify that the OSPF metric is path **Cost** (dimensionless integer), derived from interface bandwidth by default.
+  - [x] Qualify Wi-Fi non-overlapping channels 1, 6, 11 as the standard US/FCC 2.4 GHz plan, noting regulatory domain variations.
+- [x] **Task 1.10 — Author `tests/curriculum/networking-curriculum-validator.test.ts`:**
+  - [x] Invariant check: Assert zero unlabeled TEST-NET addresses labeled as public.
+  - [x] Invariant check: Assert zero claims of "0 host bits" for `/31`.
+  - [x] Parity check: Verify every instruction step has a matching assessable question.
+- [x] **Task 1.11 — Verification & Commit:**
+  - [x] Run `npm run lint` $\to$ Exit code 0.
+  - [x] Run `npx vitest run tests/` $\to$ 100% tests passing.
+  - [x] Commit with clean git message: `fix(networking): correct RFC errata and add automated curriculum validator`.
 
 ---
 

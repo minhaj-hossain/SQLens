@@ -34,7 +34,7 @@ export const NET_03_MODULE: ModuleData = {
     'Switches operate at Layer 2, inspecting Ethernet frame headers rather than raw physical bits',
     'Source MAC addresses are dynamically recorded into the CAM table alongside the arrival ingress port',
     'Frames with unknown unicast or broadcast destinations are flooded out all ports except the arrival port',
-    'Frames with known unicast destinations are forwarded specifically to the recorded port, eliminating collisions and eavesdropping',
+    'Frames with known unicast destinations are forwarded specifically to the recorded port, eliminating collisions and reducing casual eavesdropping compared to hubs (though broadcast frames, ARP spoofing, and CAM overflow still require security controls)',
     'Switches adapt dynamically to station migration when a known host reconnects to a different port',
   ],
   concepts: [

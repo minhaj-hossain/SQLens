@@ -30,7 +30,7 @@ export const NET_04_MODULE: ModuleData = {
     'RFC 1918 defines three private address ranges (10.x, 172.16–31.x, 192.168.x) that are never routed on the public internet',
     'A subnet mask isolates the network prefix from the host portion via a bitwise AND operation',
     'CIDR notation (/n) expresses the number of leading 1-bits in the mask; a /24 gives 254 usable host addresses',
-    '/31 links (RFC 3021) use 0 bits for hosts on point-to-point links; /32 addresses identify a single host (loopback, anycast)',
+    '/31 links (RFC 3021) leave 1 host bit (2 addresses, both usable as router endpoints on point-to-point links); /32 addresses identify a single host (loopback, anycast)',
   ],
   concepts: [
     // ─────────────────────────────────────────────────────
@@ -128,7 +128,7 @@ export const NET_04_MODULE: ModuleData = {
           initialSql: '',
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
-            'MAC routing fails due to absence of hierarchy. 172.20.5.1 and 10.42.0.100 are RFC 1918 private; 203.0.113.5 is public (documentation range, effectively public-routable).',
+            'MAC routing fails due to absence of hierarchy. 172.20.5.1 and 10.42.0.100 are RFC 1918 private; 8.8.8.8 is a globally routable public address (note: 203.0.113.0/24 is reserved under RFC 5737 as TEST-NET-3 for documentation only).',
           hints: [
             {
               level: 1,
@@ -159,14 +159,14 @@ export const NET_04_MODULE: ModuleData = {
                 kind: 'choose-and-defend',
                 prompt: 'Which of these IP addresses is in an RFC 1918 private range?',
                 options: [
-                  '203.0.113.5',
+                  '8.8.8.8 (Google Public DNS)',
                   '172.20.5.1',
                   '11.255.0.1',
                   '8.8.4.4',
                 ],
                 correctIndex: 1,
                 explanation:
-                  '172.20.5.1 falls within 172.16.0.0–172.31.255.255, which is the 172.16.0.0/12 RFC 1918 private range. The others are public or outside the private ranges.',
+                  '172.20.5.1 falls within 172.16.0.0–172.31.255.255, which is the 172.16.0.0/12 RFC 1918 private range. 8.8.8.8, 11.255.0.1, and 8.8.4.4 are public addresses. (Note: 203.0.113.0/24 is reserved under RFC 5737 as TEST-NET-3 for documentation only).',
               },
             ],
           },
@@ -262,17 +262,16 @@ export const NET_04_MODULE: ModuleData = {
             'Apply the binary AND subnet mask test to determine local or remote delivery for three different destination scenarios.',
           instructions: [
             'Host configuration: IP = 10.0.1.30, Mask = 255.255.255.0, Gateway = 10.0.1.1',
-            'Evaluate each of the following destination IPs and classify them as local (ARP direct) or remote (send to gateway):',
+            'Evaluate the following destination IPs to classify them as local (ARP direct) or remote (send to gateway):',
             '  A) Destination: 10.0.1.200',
             '  B) Destination: 10.0.2.10',
-            '  C) Destination: 8.8.8.8',
           ],
           type: 'independent',
           primaryTable: '',
           initialSql: '',
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
-            'A is local (10.0.1.0/24 match); B and C are remote (different network prefixes, send to gateway 10.0.1.1).',
+            'A is local (10.0.1.0/24 match); B is remote (different network prefix 10.0.2.0/24, send to gateway 10.0.1.1).',
           hints: [
             {
               level: 1,
@@ -355,8 +354,8 @@ export const NET_04_MODULE: ModuleData = {
           '### C20: The /31 and /32 Exceptions',
           '',
           '**`/31` — Point-to-Point Links (RFC 3021)**:',
-          '- Standard formula gives 2 total addresses − 2 = **0 usable hosts**.',
-          '- RFC 3021 defines an exception: on a /31 point-to-point link between exactly two routers, **both addresses** are usable (there is no network or broadcast address concept).',
+          '- Leaves 1 host bit (2^1 = 2 addresses). Under the standard host formula (2^H - 2), this would yield 0 usable hosts.',
+          '- RFC 3021 establishes that on point-to-point links between two routers, **both addresses** are valid host endpoints without reserved network or broadcast addresses.',
           '- Example: `10.0.0.0/31` → Router A uses `10.0.0.0`, Router B uses `10.0.0.1`.',
           '- Common on ISP and WAN links to conserve IP space.',
           '',

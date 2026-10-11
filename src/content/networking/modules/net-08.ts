@@ -250,12 +250,12 @@ export const NET_08_MODULE: ModuleData = {
     {
       id: 'nat-return-flows-and-security',
       order: 3,
-      title: 'Return Traffic De-NATting & Implicit Perimeter Security',
+      title: 'Return Traffic De-NATting & Inbound Drop Mechanics',
       shortDescription:
         'Trace how return packets are de-translated and why NAT drops unsolicited inbound connection attempts.',
       theory: {
         summary:
-          'When an external server sends return traffic back to the router’s public IP, the router performs De-NATting by looking up the destination port in its translation table. If an unsolicited packet arrives from the internet with no matching state table entry, the router discards it, providing an implicit firewall boundary.',
+          'When an external server sends return traffic back to the router’s public IP, the router performs De-NATting by looking up the destination port in its translation table. If an unsolicited packet arrives from the internet with no matching state table entry, the router discards it because no translation mapping exists (note: this translation drop is distinct from a complete stateful firewall policy).',
         explanation: [
           '### The Return Flow: De-NATting',
           'When the external server responds to an outbound request:',
@@ -270,17 +270,18 @@ export const NET_08_MODULE: ModuleData = {
           '   - Source remains `Server IP:80`',
           '4. The router forwards the frame onto the LAN switch toward Client B.',
           '',
-          '### Why Unsolicited Inbound Traffic Fails (Implicit Firewall)',
-          'Suppose an external hacker on the internet attempts to connect to `Router Public IP:22` (SSH) or `Router Public IP:80` (HTTP) without the inside host having initiated any communication:',
+          '### Why Unsolicited Inbound Traffic Is Dropped',
+          'Suppose an external device on the internet attempts to connect to `Router Public IP:22` (SSH) or `Router Public IP:80` (HTTP) without an inside host having initiated communication:',
           '1. The packet arrives at the router’s WAN interface with destination `203.0.113.1:22`.',
           '2. The router inspects its NAT translation table for `Public Port=22`.',
           '3. **No matching entry exists!** (No inside host initiated a session expecting traffic on port 22).',
           '4. The router has no destination private IP to rewrite the packet to. The packet is **silently discarded**.',
           '',
-          'This unidirectional behavior is why consumer home routers act as basic stateful firewalls: internal devices can initiate connections outward freely, but external devices cannot initiate connections inward unless **Port Forwarding (Destination NAT)** is explicitly configured.',
+          '**Address Translation vs. Stateful Firewalls**:',
+          'While dynamic NAT/PAT restricts unsolicited inbound sessions because no translation mapping exists, NAT itself is NOT an all-encompassing firewall security policy. Stateful packet inspection firewalls (NIST SP 800-41) enforce explicit security policy rules, inspection of connection flags, application-layer protocol validation, and outbound egress filtering independently of address translation.',
         ],
         keyTakeaway:
-          'Return traffic is de-NATted by looking up the incoming destination port in the translation table. Unsolicited inbound traffic is dropped because no state table entry exists.',
+          'Return traffic is de-NATted by looking up the incoming destination port in the translation table. Unsolicited inbound traffic is dropped because no state table entry exists. NAT translates addresses; stateful firewalls enforce security policy.',
         exampleQuery: '',
         exampleQueryExplanation: '',
       },

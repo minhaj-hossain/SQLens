@@ -225,12 +225,12 @@ export const NET_10_MODULE: ModuleData = {
         'Master the core DNS record types (A, AAAA, CNAME, MX, TXT) and understand how Time-To-Live (TTL) governs cache invalidation.',
       theory: {
         summary:
-          'Resource records map names to resources: A (IPv4), AAAA (IPv6), CNAME (canonical alias), MX (mail), and TXT (verification/SPF/DKIM). CNAME cannot coexist at zone apex. TTL defines the second-by-second caching window on external resolvers.',
+          'Resource records map names to resources: A (IPv4), AAAA (IPv6), CNAME (canonical alias), MX (mail), and TXT (verification/SPF/DKIM). Under RFC 1034 §3.6.2, a CNAME cannot coexist with any other record of any type for the same owner name; because a zone apex must contain SOA and NS records, a CNAME cannot be placed at the apex. TTL defines the second-by-second caching window on external resolvers.',
         explanation: [
           '### Essential Record Types',
           '- **A**: Maps hostname to IPv4 address.',
           '- **AAAA**: Maps hostname to 128-bit IPv6 address.',
-          '- **CNAME**: Canonical alias to another domain name (never to an IP directly).',
+          '- **CNAME**: Canonical alias to another domain name (never to an IP directly). Under RFC 1034 §3.6.2, no other record can exist for an owner name that has a CNAME (which prevents placing a CNAME at the zone apex, where SOA and NS are mandatory).',
           '- **MX**: Mail server with numerical priority.',
           '- **TXT**: Text records used for SPF, DKIM, and domain ownership proof.',
           '',
@@ -238,7 +238,7 @@ export const NET_10_MODULE: ModuleData = {
           'Records include TTL in seconds. Resolvers cache answers until TTL decrements to zero before querying authoritative servers again.',
         ],
         keyTakeaway:
-          'CNAME aliases names to names. TTL controls caching duration on resolvers across the globe.',
+          'CNAME aliases names to names and cannot coexist with other records for the same owner name. TTL controls caching duration on resolvers across the globe.',
         exampleQuery: '',
         exampleQueryExplanation: '',
       },
