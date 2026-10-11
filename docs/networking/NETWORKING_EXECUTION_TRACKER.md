@@ -18,7 +18,7 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
    - Networking tests: `npx vitest run tests/tracks/networking-` runs 7 test files (141 tests) with 100% passing.
    - Typecheck: `npm run lint` (`tsc --noEmit`) passes with 0 errors.
    - Protected tracks: SQL (57 days) and Prisma (14 days) are 100% frozen. Never modify their source files or tests.
-3. **Current Active Phase:** **Phase 4: Component Library Extraction** (Phase 3 Completed).
+3. **Current Active Phase:** **Phase 5: Curriculum-Wide Rollout** (Phase 4 Completed).
 4. **Where the approved pilot spec lives:** [`docs/networking/NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/networking/NETWORKING_MODULE_4_SUBNETTING_PILOT_SPEC.md) (v1.2.0).
 
 ---
@@ -42,10 +42,11 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 │ Phase 3 │ Module 5 ARP Companion Pilot Spec & Code   │ DONE    │ Spec v1.0 +     │
 │         │ (Queued packet state, remote GW transfer)  │         │ Simulator UI    │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 4 │ Component Library Extraction               │ READY   │ PacketInspector │
-│         │ (PacketInspector.tsx, SubnetBitSlicer.tsx) │ TO RUN  │ shared package  │
+│ Phase 4 │ Component Library Extraction               │ DONE    │ PacketInspector │
+│         │ (PacketInspector.tsx, SubnetBitSlicer.tsx) │         │ shared package  │
 ├─────────┼────────────────────────────────────────────┼─────────┼─────────────────┤
-│ Phase 5 │ Curriculum-Wide Rollout (Modules 1-3, 6-16)│ QUEUED  │ All 16 Modules  │
+│ Phase 5 │ Curriculum-Wide Rollout (Modules 1-3, 6-16)│ READY   │ All 16 Modules  │
+│         │                                            │ TO RUN  │                 │
 └─────────┴────────────────────────────────────────────┴─────────┴─────────────────┘
 ```
 
@@ -132,19 +133,35 @@ If you are a new AI agent or continuing in a fresh conversation, **read this fir
 
 ---
 
-## 5. Phase 4 & Phase 5 Checklist (READY TO RUN)
+## 5. Phase 4 Component Extraction Checklist (COMPLETED)
 
-- [ ] **Phase 4:** Extract shared components:
-  - [ ] `PacketInspector.tsx` (multi-layer before/after hop snapshots with progressive disclosure).
-  - [ ] `SubnetBitSlicer.tsx`.
-  - [ ] `StructuredTaskGrader.tsx`.
-- [ ] **Phase 5:** Curriculum-wide rollout across remaining modules (`net-01`, `net-02`, `net-06`–`net-16`).
-- [ ] Implement Virtual Terminal Simulator in Module 14 (`ipconfig`, `ping`, `tracert`, `nslookup`).
-- [ ] Re-measure real completion times with novice learners.
+**Goal:** Extract reusable networking interactive widgets and document learning design system.
+
+- [x] **Component Library Extraction:**
+  - [x] Build `src/components/learning/networking/PacketInspector.tsx` (OSI Layer 2–Layer 7 progressive disclosure & hop diff).
+  - [x] Unify library exports in `src/components/learning/networking/index.ts`.
+  - [x] Wire `PacketInspector` into `NetworkingPracticeTaskView.tsx` with responsive layout.
+  - [x] Author comprehensive design documentation in [`docs/networking/NETWORKING_COMPONENT_LIBRARY_AND_DESIGN_SYSTEM.md`](file:///d:/Everything%20Else/Programming%20Hero/google%20ai/sql_learning/docs/networking/NETWORKING_COMPONENT_LIBRARY_AND_DESIGN_SYSTEM.md).
+  - [x] Author test suite in `tests/tracks/networking-phase4-component-library.test.tsx` (5/5 tests passing).
+  - [x] Verify full project typecheck (`npm run lint`) with 0 errors.
 
 ---
 
-## 6. Repository Verification Commands
+## 6. Phase 5 Curriculum-Wide Rollout Checklist (READY TO RUN)
+
+**Goal:** Roll out interactive widgets and structured tasks across all remaining modules.
+
+- [ ] **Curriculum-Wide Rollout:**
+  - [ ] Modules 1–3: Link layer framing, switch collision/broadcast domains, 802.1Q VLANs.
+  - [ ] Modules 6–9: IPv6 SLAAC, routing hop TTL decrements, OSPF Dijkstra, BGP AS-Path.
+  - [ ] Modules 10–13: TCP 3-way handshake & sliding window, UDP, DNS recursion, DHCP DORA.
+  - [ ] Module 14: Virtual Terminal Simulator (`ipconfig`, `ping`, `tracert`, `nslookup`).
+  - [ ] Modules 15–16: Stateful inspection firewalls, TLS 1.3 cryptographic handshakes.
+- [ ] Measure novice learner completion times and benchmark unassisted transfer success.
+
+---
+
+## 7. Repository Verification Commands
 
 Run these commands in PowerShell from the repository root (`d:\Everything Else\Programming Hero\google ai\sql_learning`):
 

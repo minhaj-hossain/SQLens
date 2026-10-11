@@ -3,7 +3,7 @@
 import React from 'react';
 import type { MacTableEntry, SwitchDecision } from '../../../types/networking-curriculum';
 
-interface MacTableViewProps {
+export interface MacTableViewProps {
   entries: MacTableEntry[];
   activeDecision?: SwitchDecision;
   highlightedMac?: string;

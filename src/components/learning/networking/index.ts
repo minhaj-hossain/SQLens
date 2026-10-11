@@ -1,0 +1,23 @@
+/**
+ * Networking Component Library Index — Phase 4 Component Extraction
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Unified export point for interactive networking pedagogy widgets, protocol
+ * decoders, simulators, and structured grading interfaces.
+ */
+
+export { PacketInspector, type PacketInspectorProps } from './PacketInspector';
+export { SubnetBitSlicer, calculateSubnet, type SubnetBitSlicerProps } from './SubnetBitSlicer';
+export { StructuredTaskGrader, type StructuredFieldDef, type StructuredTaskGraderProps } from './StructuredTaskGrader';
+export { ArpSimulationLab, type ArpSimulationLabProps } from './ArpSimulationLab';
+export { SwitchSimulationLab, type SwitchSimulationLabProps } from './SwitchSimulationLab';
+export {
+  RouterOnAStickDiagram,
+  HostTelemetryTerminal,
+  type RouterOnAStickProps,
+  type HostTelemetryTerminalProps,
+} from './SubnetPilotVisuals';
+export { SwitchingTopologyCanvas, type SwitchingTopologyCanvasProps } from './SwitchingTopologyCanvas';
+export { PlaybackControls, type PlaybackControlsProps } from './PlaybackControls';
+export { MacTableView, type MacTableViewProps } from './MacTableView';
+export { PredictionGate, type PredictionGateProps } from './PredictionGate';
+export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

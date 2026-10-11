@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { SimulationStep } from '../../../types/networking-curriculum';
 
-interface PlaybackControlsProps {
+export interface PlaybackControlsProps {
   currentStepIndex: number;
   totalSteps: number;
   currentStep: SimulationStep | null;

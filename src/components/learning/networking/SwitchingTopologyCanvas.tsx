@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import type { HostNode, SimulationStep, PortState } from '../../../types/networking-curriculum';
 
-interface SwitchingTopologyCanvasProps {
+export interface SwitchingTopologyCanvasProps {
   hosts: HostNode[];
   currentStep: SimulationStep | null;
   selectedPorts?: number[];

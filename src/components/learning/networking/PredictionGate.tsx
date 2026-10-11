@@ -11,7 +11,7 @@ export interface PredictionOption {
   misconceptionExplanation?: string;
 }
 
-interface PredictionGateProps {
+export interface PredictionGateProps {
   prompt?: string;
   sourceHostName?: string;
   sourceMac?: string;

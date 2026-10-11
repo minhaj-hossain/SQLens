@@ -11,6 +11,12 @@ import type {
   ArpTaskContent,
   ArpHost,
   ArpSimulationStep,
+  PacketInspectionTaskContent,
+  PacketSnapshot,
+  Layer2Header,
+  Layer3Header,
+  Layer4Header,
+  Layer7Payload,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -21,6 +27,12 @@ export type {
   ArpTaskContent,
   ArpHost,
   ArpSimulationStep,
+  PacketInspectionTaskContent,
+  PacketSnapshot,
+  Layer2Header,
+  Layer3Header,
+  Layer4Header,
+  Layer7Payload,
 };
 
 export type { GradingType, SkillType };
@@ -219,6 +231,11 @@ export interface PracticeTask {
    * Defines 5-stage cognitive fading, ARP packet simulation, hold queue, and structured grading.
    */
   arp?: ArpTaskContent;
+  /**
+   * Packet Inspector component extension (Phase 4).
+   * Multi-layer progressive disclosure (L2/L3/L4/L7) and hop-by-hop before/after comparison.
+   */
+  packetInspection?: PacketInspectionTaskContent;
 }
 
 export interface SyntaxBlock {

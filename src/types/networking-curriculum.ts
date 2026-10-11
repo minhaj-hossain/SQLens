@@ -130,3 +130,78 @@ export interface NetworkingTaskContent {
   misconceptionRemediation?: Record<number, string>;
 }
 
+export interface Layer2Header {
+  srcMac: string;
+  dstMac: string;
+  etherType: string;
+  vlanTag?: {
+    tpid: string;
+    vlanId: number;
+    priority?: number;
+  };
+  fcs?: string;
+}
+
+export interface Layer3Header {
+  version: 4 | 6;
+  srcIp: string;
+  dstIp: string;
+  ttl?: number;
+  protocol: string;
+  tosDscp?: string;
+  totalLength?: number;
+  identification?: string;
+  flags?: string;
+  headerChecksum?: string;
+}
+
+export interface Layer4Header {
+  type: 'TCP' | 'UDP' | 'ICMP';
+  srcPort?: number;
+  dstPort?: number;
+  seqNum?: number;
+  ackNum?: number;
+  flags?: {
+    syn?: boolean;
+    ack?: boolean;
+    fin?: boolean;
+    rst?: boolean;
+    psh?: boolean;
+    urg?: boolean;
+  };
+  windowSize?: number;
+  checksum?: string;
+  icmpType?: string;
+  icmpCode?: number;
+}
+
+export interface Layer7Payload {
+  protocol: string;
+  summary: string;
+  data?: Record<string, string | number | boolean>;
+  rawHex?: string;
+}
+
+export interface PacketSnapshot {
+  hopLabel: string;
+  deviceType?: 'Host' | 'Switch' | 'Router' | 'Firewall';
+  layer2: Layer2Header;
+  layer3: Layer3Header;
+  layer4?: Layer4Header;
+  layer7?: Layer7Payload;
+}
+
+export interface PacketInspectionTaskContent {
+  title?: string;
+  description?: string;
+  snapshots: PacketSnapshot[];
+  highlightedModifications?: {
+    layer: 'L2' | 'L3' | 'L4' | 'L7';
+    field: string;
+    description: string;
+    beforeValue: string;
+    afterValue: string;
+  }[];
+  isComparative?: boolean;
+}
+
