@@ -61,7 +61,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ net-13 │ HTTP & TLS/HTTPS            │ HttpTlsHandshakeSim      │ ✅ LIVE (Sprint 6)   │
 │ net-14 │ Diagnostics & Triage        │ VirtualTerminalSimulator │ ✅ LIVE (Phase 5)    │
 │ net-15 │ Security, Firewalls & STP   │ FirewallAclRuleSim       │ ✅ LIVE (Sprint 7)   │
-│ net-16 │ VLANs, Wireless & Routing   │ VlanTrunkDijkstraLab     │ 📋 SPECIFIED (Sprint 8)
+│ net-16 │ VLANs, Wireless & Routing   │ VlanTrunkDijkstraLab     │ ✅ LIVE (Sprint 8)   │
 └────────┴─────────────────────────────┴──────────────────────────┴──────────────────────┘
 ```
 
@@ -333,14 +333,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 8: Module 16 — 802.1Q VLAN Trunk & OSPF Dijkstra Lab
-- [ ] Build `src/components/learning/networking/VlanTrunkDijkstraLab.tsx`
-- [ ] Export `VlanTrunkDijkstraLab` in `src/components/learning/networking/index.ts`
-- [ ] Add `vlanDijkstra` property to `PracticeTask` and curriculum types
-- [ ] Wire `VlanTrunkDijkstraLab` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-16.ts` with 802.1Q and Dijkstra scenarios
-- [ ] Author `tests/tracks/networking-sprint8-vlan-dijkstra.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 8: Module 16 — 802.1Q VLAN Trunk & OSPF Dijkstra Lab
+- [x] Build `src/components/learning/networking/VlanTrunkDijkstraLab.tsx`
+- [x] Export `VlanTrunkDijkstraLab` in `src/components/learning/networking/index.ts`
+- [x] Add `vlanDijkstra` property to `PracticeTask` and curriculum types
+- [x] Wire `VlanTrunkDijkstraLab` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-16.ts` with 802.1Q and Dijkstra scenarios
+- [x] Author `tests/tracks/networking-sprint8-vlan-dijkstra.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (116 files, 1423 tests)
 
 ---
 

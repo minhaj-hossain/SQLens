@@ -440,5 +440,71 @@ export interface FirewallTaskContent {
   explanationNotes?: string[];
 }
 
+export interface VlanConfig {
+  id: number;
+  name: string;
+  color?: string;
+}
+
+export interface TrunkPortConfig {
+  portName: string;
+  mode: 'access' | 'trunk';
+  accessVlan?: number;
+  allowedVlans?: number[];
+  nativeVlan?: number;
+}
+
+export interface VlanTrunkPacket {
+  id: string;
+  sourceHost: string;
+  destHost: string;
+  sourceIp: string;
+  destIp: string;
+  vlanId: number;
+  isTagged: boolean;
+  priority?: number;
+  dropEligible?: boolean;
+  payload: string;
+}
+
+export interface WifiChannelConfig {
+  apId: string;
+  apName: string;
+  channel: number;
+  powerDbm?: number;
+}
+
+export interface OspfRouterNode {
+  id: string;
+  name: string;
+  routerId: string;
+  area?: number;
+}
+
+export interface OspfLink {
+  id: string;
+  fromRouter: string;
+  toRouter: string;
+  bandwidthMbps: number;
+  cost: number;
+  failed?: boolean;
+}
+
+export interface VlanDijkstraTaskContent {
+  title?: string;
+  description?: string;
+  defaultTab?: 'vlan_trunking' | 'wifi_spectrum' | 'ospf_dijkstra';
+  vlans?: VlanConfig[];
+  trunkPorts?: TrunkPortConfig[];
+  packets?: VlanTrunkPacket[];
+  accessPoints?: WifiChannelConfig[];
+  referenceBandwidthMbps?: number;
+  routers?: OspfRouterNode[];
+  links?: OspfLink[];
+  sourceRouter?: string;
+  explanationNotes?: string[];
+}
+
+
 
 

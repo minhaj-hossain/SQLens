@@ -37,6 +37,13 @@ import type {
   ConntrackEntry,
   StpSwitchNode,
   StpLink,
+  VlanDijkstraTaskContent,
+  VlanConfig,
+  TrunkPortConfig,
+  VlanTrunkPacket,
+  WifiChannelConfig,
+  OspfRouterNode,
+  OspfLink,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -73,6 +80,13 @@ export type {
   ConntrackEntry,
   StpSwitchNode,
   StpLink,
+  VlanDijkstraTaskContent,
+  VlanConfig,
+  TrunkPortConfig,
+  VlanTrunkPacket,
+  WifiChannelConfig,
+  OspfRouterNode,
+  OspfLink,
 };
 
 export type { GradingType, SkillType };
@@ -316,6 +330,11 @@ export interface PracticeTask {
    * Top-down ACL first-match with implicit deny, stateful connection tracking (conntrack), and STP BPDU Root Bridge loop elimination.
    */
   firewall?: FirewallTaskContent;
+  /**
+   * 802.1Q VLAN Trunk & OSPF Dijkstra Lab extension (Sprint 8 / Module 16).
+   * 4-byte 802.1Q tag insertion/inspection, Wi-Fi 2.4 GHz channel overlap spectrum, and Dijkstra link-state shortest path tree calculation.
+   */
+  vlanDijkstra?: VlanDijkstraTaskContent;
 }
 
 export interface SyntaxBlock {

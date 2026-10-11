@@ -36,6 +36,7 @@ export function isNetworkingTask(task: PracticeTask): boolean {
     task.tcpLadder ||
     task.httpTls ||
     task.firewall ||
+    task.vlanDijkstra ||
     task.id?.startsWith('net-') ||
     /^net\d+/i.test(task.id || '') ||
     task.solutionSql === 'NETWORKING_JUDGMENT_TASK' ||

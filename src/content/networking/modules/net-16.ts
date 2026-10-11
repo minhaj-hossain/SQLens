@@ -122,6 +122,25 @@ export const NET_16_MODULE: ModuleData = {
           },
           successMessage:
             'Spot on! Access ports connect to endpoints untagged, trunk links tag frames with 802.1Q, and inter-VLAN traffic requires Layer 3 routing.',
+          vlanDijkstra: {
+            title: '802.1Q VLAN Tagging & Trunk Port Simulator',
+            description:
+              'Simulate 4-byte 802.1Q header insertion (TPID 0x8100, 12-bit VID) and access vs trunk port tag-stripping behavior.',
+            defaultTab: 'vlan_trunking',
+            vlans: [
+              { id: 10, name: 'Engineering', color: '#38bdf8' },
+              { id: 20, name: 'Finance', color: '#34d399' },
+              { id: 30, name: 'Guest / DMZ', color: '#f87171' },
+            ],
+            trunkPorts: [
+              {
+                portName: 'Gi0/1',
+                mode: 'trunk',
+                allowedVlans: [10, 20],
+                nativeVlan: 1,
+              },
+            ],
+          },
         },
       ],
     },
@@ -213,6 +232,16 @@ export const NET_16_MODULE: ModuleData = {
           },
           successMessage:
             'Correct! Channels 1, 6, and 11 prevent 2.4 GHz co-channel interference, and CSMA/CA governs half-duplex RF transmission.',
+          vlanDijkstra: {
+            title: '2.4 GHz RF Spectrum & CSMA/CA Backoff Simulator',
+            description:
+              'Explore 20 MHz channel spacing, calculate RF overlap between channels, and observe binary exponential backoff.',
+            defaultTab: 'wifi_spectrum',
+            accessPoints: [
+              { apId: 'ap-1', apName: 'AP-1 (North Wing)', channel: 1 },
+              { apId: 'ap-2', apName: 'AP-2 (South Wing)', channel: 6 },
+            ],
+          },
         },
       ],
     },
@@ -304,6 +333,14 @@ export const NET_16_MODULE: ModuleData = {
           },
           successMessage:
             'Mastered! You understand OSPF for high-speed internal link-state routing and BGP for inter-AS global internet path routing.',
+          vlanDijkstra: {
+            title: 'OSPF Link-State Dijkstra Shortest Path Lab',
+            description:
+              'Step through Dijkstra SPF algorithm execution, compute cumulative path costs, and inspect loop-free routing tables.',
+            defaultTab: 'ospf_dijkstra',
+            referenceBandwidthMbps: 100,
+            sourceRouter: 'R1',
+          },
         },
       ],
     },
@@ -363,6 +400,20 @@ export const NET_16_MODULE: ModuleData = {
         },
         successMessage:
           'Challenge 1 mastered! You identified trunk allowed VLAN list mismatch as the root cause of cross-switch VLAN isolation.',
+        vlanDijkstra: {
+          title: 'Trunk Allowed VLAN Diagnosis Lab',
+          description:
+            'Inspect Switch A trunk port Gi0/1 where VLAN 30 is pruned from the allowed list, causing tagged frame drops.',
+          defaultTab: 'vlan_trunking',
+          trunkPorts: [
+            {
+              portName: 'Gi0/1',
+              mode: 'trunk',
+              allowedVlans: [10, 20],
+              nativeVlan: 1,
+            },
+          ],
+        },
       },
       {
         id: 'net16-ch2-wifi-channel-planning',
@@ -412,6 +463,16 @@ export const NET_16_MODULE: ModuleData = {
         },
         successMessage:
           'Challenge 2 cleared! You diagnosed 2.4 GHz co-channel interference and applied professional 802.11 channel design.',
+        vlanDijkstra: {
+          title: 'High-Density Wi-Fi Interference Audit',
+          description:
+            'Analyze destructive adjacent-channel overlap between Channel 6 and Channel 7, and reconfigure to non-overlapping Channel 1 or 11.',
+          defaultTab: 'wifi_spectrum',
+          accessPoints: [
+            { apId: 'ap-floor1', apName: 'AP-Conference', channel: 6 },
+            { apId: 'ap-floor2', apName: 'AP-OpenOffice', channel: 7 },
+          ],
+        },
       },
     ],
   },

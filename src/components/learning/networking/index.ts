@@ -80,4 +80,16 @@ export {
   type ConntrackEvaluationResult,
   type StpElectionResult,
 } from './FirewallAclRuleSimulator';
+export {
+  VlanTrunkDijkstraLab,
+  runDijkstraAlgorithm,
+  evaluateVlanTrunkFrame,
+  calculateWifiChannelOverlap,
+  simulateCsmaCaBackoff,
+  type DijkstraResult,
+  type DijkstraStepRecord,
+  type VlanTagEvaluation,
+  type ChannelOverlapAnalysis,
+  type BackoffSimulation,
+} from './VlanTrunkDijkstraLab';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';
