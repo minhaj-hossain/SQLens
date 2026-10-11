@@ -24,4 +24,9 @@ export {
   VirtualTerminalSimulator,
   type VirtualTerminalSimulatorProps,
 } from './VirtualTerminalSimulator';
+export {
+  EthernetFrameInspector,
+  computeCrc32,
+  type EthernetFrameInspectorProps,
+} from './EthernetFrameInspector';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';

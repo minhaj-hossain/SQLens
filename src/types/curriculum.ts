@@ -18,6 +18,8 @@ import type {
   Layer4Header,
   Layer7Payload,
   TerminalScenario,
+  EthernetFrameTaskContent,
+  EthernetVlanTag,
 } from './networking-curriculum';
 import type { TrackId } from './track';
 
@@ -35,6 +37,8 @@ export type {
   Layer4Header,
   Layer7Payload,
   TerminalScenario,
+  EthernetFrameTaskContent,
+  EthernetVlanTag,
 };
 
 export type { GradingType, SkillType };
@@ -243,6 +247,11 @@ export interface PracticeTask {
    * Interactive CLI environment (ipconfig, ping, tracert, nslookup).
    */
   terminal?: TerminalScenario;
+  /**
+   * Ethernet Frame Inspector extension (Sprint 1 / Module 2).
+   * Interactive framing dissection, payload padding slider, and bit-flip CRC-32 integrity checker.
+   */
+  ethernetFrame?: EthernetFrameTaskContent;
 }
 
 export interface SyntaxBlock {

@@ -14,14 +14,15 @@ If you are resuming this work in a fresh conversation, **read this first before 
 1. **Do NOT re-debate settled topics:** All instructional design ("Third Way" prediction-before-explanation), RFC accuracy rules, and platform contracts are **frozen**. See [`NETWORKING_STATUS_AND_DECISION_RECORD.md`](./NETWORKING_STATUS_AND_DECISION_RECORD.md).
 2. **Current Baseline State:**
    - Git branch: `main`
-   - Test suite: `npm test` runs 108 test files (1,269 tests) with 100% passing.
-   - Track tests: `npx vitest run tests/tracks/` runs 34 test files (441 tests) with 100% passing.
+   - Test suite: `npm test` runs 109 test files (1,282 tests) with 100% passing.
+   - Track tests: `npx vitest run tests/tracks/` runs 35 test files (454 tests) with 100% passing.
    - Typecheck: `npm run lint` (`tsc --noEmit`) passes with 0 errors.
    - **Protected Invariants:** SQL (57 days) and Prisma (14 days) tracks are 100% frozen. Never modify their files.
 3. **Current Curriculum Status:**
    - **All 16 modules** already implement the "Third Way" choose-and-defend judgment gates (136 total questions, zero raw recall MCQs) and RFC technical errata.
-   - **7 modules** already have dedicated interactive widgets:
+   - **8 modules** already have dedicated interactive widgets:
      - `net-01`: `PacketInspector` (L2/L3/L4/L7 progressive disclosure)
+     - `net-02`: `EthernetFrameInspector` (framing dissection, 46B padding slider, CRC-32 bit-flip error injector)
      - `net-03`: `SwitchSimulationLab` (interactive port selection & CAM table)
      - `net-04`: `SubnetBitSlicer` (32-bit CIDR bit slicer + Router-on-a-Stick + active-octet /22 transfer)
      - `net-05`: `ArpSimulationLab` (4-step state machine + outbound hold queue)
@@ -29,7 +30,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
      - `net-08`: `PacketInspector` (NAT/PAT translation table)
      - `net-11`: `PacketInspector` (5-tuple socket multiplexing)
      - `net-14`: `VirtualTerminalSimulator` (Windows CLI diagnostics: `ipconfig`, `ping`, `tracert`, `nslookup`, `netstat`)
-   - **9 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
+   - **8 modules** currently use text/code briefing cards and are scheduled for dedicated interactive visualizers in this tracker.
 
 ---
 
@@ -42,7 +43,7 @@ If you are resuming this work in a fresh conversation, **read this first before 
 │ MODULE │ TITLE                       │ INTERACTIVE COMPONENT    │ STATUS               │
 ├────────┼─────────────────────────────┼──────────────────────────┼──────────────────────┤
 │ net-01 │ Communication Journey       │ PacketInspector (L2-7)   │ ✅ LIVE (Phase 5)    │
-│ net-02 │ Links & Ethernet Framing    │ EthernetFrameInspector   │ 📋 SPECIFIED (Sprint 1)
+│ net-02 │ Links & Ethernet Framing    │ EthernetFrameInspector   │ ✅ LIVE (Sprint 1)   │
 │ net-03 │ MAC Learning & Forwarding   │ SwitchSimulationLab      │ ✅ LIVE (Milestone 2)│
 │ net-04 │ IPv4 Subnetting Pilot       │ SubnetBitSlicer          │ ✅ LIVE (Phase 2)    │
 │ net-05 │ ARP & Local Delivery        │ ArpSimulationLab         │ ✅ LIVE (Phase 3)    │
@@ -251,14 +252,14 @@ Track execution across sprints. Each sprint must follow the standard 6-step cycl
 
 ---
 
-### [ ] Sprint 1: Module 2 — Ethernet Framing & FCS Inspector
-- [ ] Build `src/components/learning/networking/EthernetFrameInspector.tsx`
-- [ ] Export `EthernetFrameInspector` in `src/components/learning/networking/index.ts`
-- [ ] Add `ethernetFrame` property to `PracticeTask` and curriculum types
-- [ ] Wire `EthernetFrameInspector` into `NetworkingPracticeTaskView.tsx`
-- [ ] Update `src/content/networking/modules/net-02.ts` with frame inspector scenarios
-- [ ] Author `tests/tracks/networking-sprint1-frame-inspector.test.tsx`
-- [ ] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass
+### [x] Sprint 1: Module 2 — Ethernet Framing & FCS Inspector (COMPLETED)
+- [x] Build `src/components/learning/networking/EthernetFrameInspector.tsx`
+- [x] Export `EthernetFrameInspector` in `src/components/learning/networking/index.ts`
+- [x] Add `ethernetFrame` property to `PracticeTask` and curriculum types
+- [x] Wire `EthernetFrameInspector` into `NetworkingPracticeTaskView.tsx`
+- [x] Update `src/content/networking/modules/net-02.ts` with frame inspector scenarios
+- [x] Author `tests/tracks/networking-sprint1-frame-inspector.test.tsx`
+- [x] Verify `npm run lint` $\to$ 0 errors, `npm test` $\to$ 100% pass (109 files, 1282 tests)
 
 ---
 

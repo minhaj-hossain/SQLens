@@ -221,3 +221,27 @@ export interface TerminalScenario {
   suggestedCommands?: string[];
 }
 
+export interface EthernetVlanTag {
+  tpid: string; // '0x8100'
+  pcp: number; // 0-7 (Priority Code Point)
+  dei: number; // 0 or 1 (Drop Eligible Indicator)
+  vid: number; // 1-4094 (VLAN Identifier)
+}
+
+export interface EthernetFrameTaskContent {
+  title?: string;
+  description?: string;
+  destinationMac?: string;
+  sourceMac?: string;
+  etherType?: string; // e.g. '0x0800', '0x86DD', '0x0806'
+  payloadProtocol?: string; // e.g. 'IPv4 Datagram', 'ARP Request', 'IPv6 Datagram'
+  initialPayloadSize?: number; // bytes (e.g. 1500 or 40)
+  minPayloadSize?: number; // default: 10
+  maxPayloadSize?: number; // default: 1500
+  vlanTag?: EthernetVlanTag;
+  hasVlanTag?: boolean;
+  initialCorrupted?: boolean;
+  corruptedField?: 'dstMac' | 'srcMac' | 'etherType' | 'payload' | 'fcs';
+  explanationNotes?: string[];
+}
+

@@ -274,6 +274,17 @@ export const NET_02_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'EtherType 0x0800 indicates IPv4. A 1500-byte payload combined with 14 bytes of header and 4 bytes of FCS equals 1518 bytes. The receiver checks the FCS CRC; if valid, it decapsulates the IPv4 payload.',
+          ethernetFrame: {
+            title: 'Wireshark Telemetry: Standard IPv4 Ethernet II Frame',
+            description:
+              'Dissect the 14-byte header, 1500-byte payload MTU, and 4-byte FCS trailer. Drag the slider to observe padding insertion when payload is under 46 bytes.',
+            destinationMac: '00:50:56:C0:00:08',
+            sourceMac: '00:0C:29:12:34:56',
+            etherType: '0x0800',
+            payloadProtocol: 'IPv4 Datagram',
+            initialPayloadSize: 1500,
+            hasVlanTag: false,
+          },
           hints: [
             {
               level: 1,
@@ -416,6 +427,17 @@ export const NET_02_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'The 16-port hub creates 1 shared collision domain with high contention. The 16-port switch creates 16 independent collision domains with zero collisions in full-duplex mode. Destination FF:FF:FF:FF:FF:FF is a broadcast frame.',
+          ethernetFrame: {
+            title: 'Ethernet Broadcast Frame: ARP Request Dissection',
+            description:
+              'Inspect a Layer 2 broadcast frame addressed to FF:FF:FF:FF:FF:FF with EtherType 0x0806 (ARP). Note the 28-byte payload requiring 18 bytes of padding to reach the 64-byte minimum legal frame size.',
+            destinationMac: 'FF:FF:FF:FF:FF:FF',
+            sourceMac: '00:1A:2B:3C:4D:5E',
+            etherType: '0x0806',
+            payloadProtocol: 'ARP Request',
+            initialPayloadSize: 28,
+            hasVlanTag: false,
+          },
           hints: [
             {
               level: 1,
@@ -551,6 +573,18 @@ export const NET_02_MODULE: ModuleData = {
         solutionSql: 'NETWORKING_JUDGMENT_TASK',
         solutionExplanation:
           'A 1600-byte IP packet exceeds the standard 1500-byte MTU and must be fragmented or dropped with an ICMP "Fragmentation Needed" error. Frames failing FCS CRC validation are dropped immediately by the receiver without Layer 2 retransmission.',
+        ethernetFrame: {
+          title: 'Elevator EMI Interference: Corrupted Frame Capture',
+          description:
+            'Wireshark trace showing corrupted FCS trailer caused by electrical noise. Notice the CRC MISMATCH resulting in immediate silent NIC discard without Layer 2 retransmission.',
+          destinationMac: '00:1A:2B:3C:4D:5E',
+          sourceMac: '00:11:22:33:44:55',
+          etherType: '0x0800',
+          payloadProtocol: 'IPv4 Datagram',
+          initialPayloadSize: 40,
+          initialCorrupted: true,
+          corruptedField: 'payload',
+        },
         hints: [
           {
             level: 1,
