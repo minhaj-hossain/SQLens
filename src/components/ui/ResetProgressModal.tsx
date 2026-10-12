@@ -36,6 +36,11 @@ export default function ResetProgressModal({
   const { modules, meta } = useTrackCurriculum();
   const totalModules = modules.length;
 
+  const isNetworking = meta.id === 'networking';
+  const unitWord = isNetworking ? 'Module' : 'Day';
+  const unitWordPlural = isNetworking ? 'Modules' : 'Days';
+  const taskWord = isNetworking ? 'interactive simulation tasks' : 'practice queries';
+
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
@@ -95,10 +100,10 @@ export default function ResetProgressModal({
             </div>
             <div className="min-w-0 flex-1">
               <h3 id="reset-modal-title" className="text-base font-bold text-text font-display">
-                Reset Learning Progress
+                Reset {meta.label} Progress
               </h3>
               <p className="text-xs text-text-dim mt-0.5">
-                Choose the scope of progress you would like to reset.
+                Choose the scope of {meta.label} progress you would like to reset.
               </p>
             </div>
             <button
@@ -131,10 +136,10 @@ export default function ResetProgressModal({
                 />
                 <div className="text-xs">
                   <span className="font-semibold text-text block">
-                    Reset Entire Course (Days 1–{totalModules})
+                    Reset Entire Track ({unitWordPlural} 1–{totalModules})
                   </span>
                   <span className="text-text-dim mt-0.5 block leading-relaxed">
-                    Wipes all completed lessons, practice tasks, challenges, and daily unlock records back to Day 1.
+                    Wipes all completed lessons, {isNetworking ? 'simulation labs' : 'practice tasks'}, challenges, and unlock records back to {unitWord} 1.
                   </span>
                 </div>
               </label>
@@ -143,7 +148,9 @@ export default function ResetProgressModal({
                 onClick={() => setResetMode('module')}
                 className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
                   resetMode === 'module'
-                    ? 'border-func/50 bg-func/5 shadow-[0_0_12px_rgba(56,189,248,0.1)]'
+                    ? isNetworking
+                      ? 'border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                      : 'border-func/50 bg-func/5 shadow-[0_0_12px_rgba(244,196,48,0.1)]'
                     : 'border-border/60 bg-surface hover:border-border hover:bg-surface-3/50'
                 }`}
               >
@@ -152,14 +159,14 @@ export default function ResetProgressModal({
                   name="reset-scope"
                   checked={resetMode === 'module'}
                   onChange={() => setResetMode('module')}
-                  className="mt-1 text-func focus:ring-func"
+                  className={`mt-1 ${isNetworking ? 'text-emerald-500 focus:ring-emerald-500' : 'text-func focus:ring-func'}`}
                 />
                 <div className="text-xs">
                   <span className="font-semibold text-text block">
                     Reset Only {moduleLabel} ({currentModule.shortTitle})
                   </span>
                   <span className="text-text-dim mt-0.5 block leading-relaxed">
-                    Clears practice queries and challenge completions for this day only. Other days and unlocks remain untouched.
+                    Clears {taskWord} and challenge completions for this {unitWord.toLowerCase()} only. Other {unitWordPlural.toLowerCase()} and unlocks remain untouched.
                   </span>
                 </div>
               </label>
@@ -169,22 +176,22 @@ export default function ResetProgressModal({
               <span className="text-text font-semibold block mb-1">
                 Full Curriculum Reset
               </span>
-              This will reset all {totalModules} {meta.label} days, task submissions, and unlock times back to Day 1.
+              This will reset all {totalModules} {meta.label} {unitWordPlural.toLowerCase()}, task submissions, and unlock times back to {unitWord} 1.
             </div>
           )}
 
           {/* Warning banner */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border text-[11px] text-text-dim mb-5">
             <Icon name="warning" className="text-warning shrink-0 text-[15px]" />
-            <span>This action cannot be undone. Saved {meta.label} solutions will be cleared.</span>
+            <span>This action cannot be undone. Saved {meta.label} progress and submissions will be cleared.</span>
           </div>
 
           {/* Batch 5: document the reset contract so "old data back" reports
               are diagnosable — cloud tombstone, other-device convergence,
               draft clearing. */}
           <div className="px-3 py-2 rounded-lg bg-surface border border-border/60 text-[11px] text-text-dim mb-5 leading-relaxed">
-            Clears cloud progress + this device (including editor drafts).
-            Other signed-in devices converge to Day 1 on next focus.
+            Clears cloud progress + this device (including {isNetworking ? 'saved simulations' : 'editor drafts'}).
+            Other signed-in devices converge to {unitWord} 1 on next focus.
             Other accounts on this device are untouched.
           </div>
 

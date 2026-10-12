@@ -481,7 +481,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           {/* Left: label — truncates cleanly with line-clamp */}
           <div className="font-mono text-[10.5px] sm:text-[11.5px] text-text-faint min-w-0 flex-1 line-clamp-1">
             <span className="block ">
-              SQL Lesson {conceptIndex + 1}
+              {moduleId.startsWith('net-') ? 'Networking' : moduleId.startsWith('prisma-') ? 'Prisma' : 'SQL'} Lesson {conceptIndex + 1}
               <span className="mx-1 text-border">/</span>
               <b className="text-text-dim font-medium ">{concept.title}</b>
             </span>
@@ -599,7 +599,13 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
         {/* ---------- steps ---------- */}
         {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
           <>
-            <SectionLabel>Step-by-step SQL processing</SectionLabel>
+            <SectionLabel>
+              {moduleId.startsWith('net-')
+                ? 'Step-by-step protocol processing'
+                : moduleId.startsWith('prisma-')
+                ? 'Step-by-step query execution'
+                : 'Step-by-step SQL processing'}
+            </SectionLabel>
             <div className="space-y-4">
               {theory.stepBreakdowns.map((step, sIdx) => (
                 <div key={sIdx} className="space-y-2">
