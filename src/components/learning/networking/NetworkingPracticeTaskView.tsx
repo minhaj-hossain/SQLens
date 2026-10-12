@@ -162,6 +162,22 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
   const hasFirewall = Boolean(task.firewall);
   const hasVlanDijkstra = Boolean(task.vlanDijkstra);
 
+  const hasInteractiveLab = Boolean(
+    hasTopology ||
+    hasSubnetting ||
+    hasArp ||
+    hasPacketInspection ||
+    hasTerminal ||
+    hasEthernetFrame ||
+    hasIpv6Ndp ||
+    hasDhcp ||
+    hasDns ||
+    hasTcpLadder ||
+    hasHttpTls ||
+    hasFirewall ||
+    hasVlanDijkstra,
+  );
+
   // Map SubnetFieldDef to StructuredFieldDef (for both Subnetting and ARP)
   const sourceFields = task.subnetting?.fields ?? task.arp?.fields ?? [];
   const graderFields: StructuredFieldDef[] = sourceFields.map((f) => ({
@@ -242,7 +258,8 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
       {/* ─────────────────────────────────────────────────────────────
           2. SPLIT-PANE RESPONSIVE LAYOUT (Specification §9.2)
           ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full min-w-0">
+      {hasInteractiveLab ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start w-full min-w-0">
         {hasTopology ? (
           /* LEFT COLUMN: Interactive Network Topology Simulator & CAM Table */
           <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
@@ -844,140 +861,12 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
-        ) : (
-          /* LEFT COLUMN: Scenario Context & Instructions Card */
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
-            {concept ? (
-              <TaskInstructions
-                task={task}
-                taskIndex={taskIndex}
-                totalTasks={totalTasks}
-                concept={concept}
-                isCompleted={taskPassed}
-                onUseHint={(lvl) => setHintsUsed((prev) => Math.max(prev, lvl))}
-                onViewSolution={() => setViewedSolution(true)}
-              />
-            ) : (
-              /* Challenge / Independent Briefing Card */
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider flex items-center gap-1.5">
-                      <Terminal className="w-3.5 h-3.5" />
-                      {isChallenge ? 'Module Challenge Task' : 'Network Engineering Task'}
-                    </span>
-                  </div>
-                  <h3 className="font-mono text-base sm:text-lg font-bold text-text">
-                    {cleanTitle}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
-                    {task.description}
-                  </p>
-                </div>
-
-                {task.instructions.length > 0 && (
-                  <div className="space-y-2.5 pt-3 border-t border-border-soft">
-                    <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
-                      Instructions &amp; Constraints:
-                    </span>
-                    <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
-                      {task.instructions.map((inst, i) => (
-                        <li key={i} className="leading-relaxed text-text/90">
-                          {inst}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Challenge Hints Drawer */}
-                {task.hints && task.hints.length > 0 && (
-                  <div className="pt-3 border-t border-border-soft">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsChallengeHelpOpen(!isChallengeHelpOpen);
-                        if (!isChallengeHelpOpen && challengeHintLevel === 0) {
-                          setChallengeHintLevel(1);
-                          setHintsUsed(1);
-                        }
-                      }}
-                      className="flex items-center justify-between w-full text-xs font-body text-text-dim hover:text-text transition py-1 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
-                        <span className="font-medium">Need a hint for this challenge scenario?</span>
-                      </div>
-                      {isChallengeHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    </button>
-
-                    {isChallengeHelpOpen && (
-                      <div className="mt-2.5 space-y-2.5 text-xs font-mono">
-                        {task.hints.slice(0, challengeHintLevel).map((hint, idx) => (
-                          <div
-                            key={idx}
-                            className="p-2.5 rounded-lg bg-surface-2 border border-border-soft text-text text-xs leading-relaxed"
-                          >
-                            <span className="font-bold text-text-dim mr-1.5">Hint {idx + 1}:</span>
-                            <span>{hint.text}</span>
-                          </div>
-                        ))}
-
-                        <div className="flex items-center justify-between pt-1">
-                          {challengeHintLevel < task.hints.length ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const nextLvl = challengeHintLevel + 1;
-                                setChallengeHintLevel(nextLvl);
-                                setHintsUsed((prev) => Math.max(prev, nextLvl));
-                              }}
-                              className="px-2.5 py-1 rounded bg-surface-2 hover:bg-surface-3 text-text-dim border border-border text-[11px] font-semibold transition cursor-pointer"
-                            >
-                              Next Hint ({challengeHintLevel + 1}/{task.hints.length})
-                            </button>
-                          ) : (
-                            <span className="text-[11px] text-text-faint italic">All hints revealed</span>
-                          )}
-
-                          {!showChallengeSolution && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setShowChallengeSolution(true);
-                                setViewedSolution(true);
-                              }}
-                              className="text-[11px] text-text-dim hover:text-text underline underline-offset-2 transition cursor-pointer"
-                            >
-                              View Solution Explanation
-                            </button>
-                          )}
-                        </div>
-
-                        {showChallengeSolution && (
-                          <div className="mt-2 p-3.5 rounded-xl bg-surface-2/95 border border-border text-xs space-y-1.5 font-sans">
-                            <div className="flex items-center gap-1.5 text-func text-[11px] font-bold uppercase tracking-wider font-mono">
-                              <Sparkles className="w-3.5 h-3.5" />
-                              <span>Technical Solution Defense</span>
-                            </div>
-                            <p className="text-text leading-relaxed">
-                              {task.solutionExplanation || 'Review the technical rule governing this scenario.'}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        ) : null}
 
         {/* ─────────────────────────────────────────────────────────────
             3. RIGHT COLUMN: Questions, Predictions, Options & Action Bar
             ───────────────────────────────────────────────────────────── */}
-        <div className={`${(hasTopology || hasSubnetting || hasArp || hasPacketInspection || hasTerminal) ? 'lg:col-span-5 xl:col-span-5' : 'lg:col-span-6 xl:col-span-5'} flex flex-col gap-4 min-w-0 w-full order-2`}>
+        <div className="lg:col-span-5 xl:col-span-5 flex flex-col gap-4 min-w-0 w-full order-2">
           {/* Task Instructions (shown in right column only when topology lab occupies left column) */}
           {hasTopology && concept && (
             <TaskInstructions
@@ -1146,6 +1035,223 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
           </div>
         </div>
       </div>
+    ) : (
+      /* ─────────────────────────────────────────────────────────────
+          3. FOCUSED ERGONOMIC ASSESSMENT LAYOUT (Pure Judgment / MCQ Tasks)
+          Centered single-column layout for reading scenario & answering deductions
+          ───────────────────────────────────────────────────────────── */
+      <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-5 w-full min-w-0">
+        {/* Card 1: Scenario Context & Technical Objectives Briefing */}
+        <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider flex items-center gap-1.5">
+                <Terminal className="w-3.5 h-3.5" />
+                {isChallenge ? 'Module Challenge Task' : 'Network Engineering Task'}
+              </span>
+            </div>
+            <h3 className="font-mono text-base sm:text-lg font-bold text-text">
+              {cleanTitle}
+            </h3>
+            {task.description && (
+              <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-sans">
+                {task.description}
+              </p>
+            )}
+          </div>
+
+          {task.instructions && task.instructions.length > 0 && (
+            <div className="space-y-2.5 pt-3 border-t border-border-soft">
+              <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
+                Scenario Context &amp; Objectives:
+              </span>
+              <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
+                {task.instructions.map((inst, i) => (
+                  <li key={i} className="leading-relaxed text-text/90">
+                    {inst}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Progressive Hints & Technical Defense Drawer */}
+          {task.hints && task.hints.length > 0 && (
+            <div className="pt-3 border-t border-border-soft">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsChallengeHelpOpen(!isChallengeHelpOpen);
+                  if (!isChallengeHelpOpen && challengeHintLevel === 0) {
+                    setChallengeHintLevel(1);
+                    setHintsUsed(1);
+                  }
+                }}
+                className="flex items-center justify-between w-full text-xs font-body text-text-dim hover:text-text transition py-1 cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
+                  <span className="font-medium">Need a hint for this network scenario?</span>
+                </div>
+                {isChallengeHelpOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+
+              {isChallengeHelpOpen && (
+                <div className="mt-2.5 space-y-2.5 text-xs font-mono">
+                  {task.hints.slice(0, challengeHintLevel).map((hint, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2.5 rounded-lg bg-surface-2 border border-border-soft text-text text-xs leading-relaxed"
+                    >
+                      <span className="font-bold text-text-dim mr-1.5">Hint {idx + 1}:</span>
+                      <span>{hint.text}</span>
+                    </div>
+                  ))}
+
+                  <div className="flex items-center justify-between pt-1">
+                    {challengeHintLevel < task.hints.length ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextLvl = challengeHintLevel + 1;
+                          setChallengeHintLevel(nextLvl);
+                          setHintsUsed((prev) => Math.max(prev, nextLvl));
+                        }}
+                        className="px-2.5 py-1 rounded bg-surface-2 hover:bg-surface-3 text-text-dim border border-border text-[11px] font-semibold transition cursor-pointer"
+                      >
+                        Next Hint ({challengeHintLevel + 1}/{task.hints.length})
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-text-faint italic">All hints revealed</span>
+                    )}
+
+                    {!showChallengeSolution && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowChallengeSolution(true);
+                          setViewedSolution(true);
+                        }}
+                        className="text-[11px] text-text-dim hover:text-text underline underline-offset-2 transition cursor-pointer"
+                      >
+                        View Solution Explanation
+                      </button>
+                    )}
+                  </div>
+
+                  {showChallengeSolution && (
+                    <div className="mt-2 p-3.5 rounded-xl bg-surface-2/95 border border-border text-xs space-y-1.5 font-sans">
+                      <div className="flex items-center gap-1.5 text-func text-[11px] font-bold uppercase tracking-wider font-mono">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Technical Solution Defense</span>
+                      </div>
+                      <p className="text-text leading-relaxed">
+                        {task.solutionExplanation || 'Review the technical rule governing this scenario.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Card 2: Interactive Assessment (JudgmentBlock) */}
+        {(task.validation.judgment?.length ?? 0) > 0 && (
+          <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4">
+            <div className="flex items-center justify-between border-b border-border-soft pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-func" />
+                <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-text">
+                  Prediction &amp; Causal Defense
+                </h4>
+              </div>
+              <span className="font-mono text-[10.5px] px-2.5 py-1 rounded-md bg-surface-2 text-text-dim border border-border-soft">
+                Interactive Assessment
+              </span>
+            </div>
+
+            <JudgmentBlock
+              exercises={task.validation.judgment!}
+              answers={judgmentAnswers}
+              onChange={(qi, oi) => {
+                setJudgmentAnswers((prev) => {
+                  const next = [...prev];
+                  next[qi] = oi;
+                  return next;
+                });
+                setValidationMessage(null);
+              }}
+              disabled={taskPassed}
+            />
+          </div>
+        )}
+
+        {/* Card 3: Validation Message Banner */}
+        <AnimatePresence>
+          {validationMessage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 shadow-lg ${
+                taskPassed
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                  : 'border-red-500/40 bg-red-500/10 text-red-300'
+              }`}
+              data-testid="task-validation-message"
+            >
+              {taskPassed ? (
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 shrink-0 text-red-400 mt-0.5" />
+              )}
+              <div className="space-y-1 font-sans">
+                <p className="font-bold">
+                  {taskPassed ? 'Task Completed!' : 'Incorrect Prediction:'}
+                </p>
+                <p className="leading-relaxed opacity-95">{validationMessage}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Card 4: Action Bar */}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-text-dim hover:text-text hover:bg-surface-2 transition cursor-pointer"
+            >
+              {backLabel || 'Back'}
+            </button>
+          )}
+
+          <div className="flex items-center gap-2 ml-auto">
+            {!taskPassed ? (
+              <button
+                onClick={handleCheckSubmission}
+                data-testid="check-prediction-button"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-func text-ink font-bold text-xs sm:text-sm hover:brightness-110 active:scale-98 transition cursor-pointer shadow-lg shadow-func/20"
+              >
+                <span>Check Prediction</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={onNextTask}
+                data-testid="next-task-button"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 text-ink font-bold text-xs sm:text-sm hover:bg-emerald-400 active:scale-98 transition cursor-pointer shadow-lg shadow-emerald-500/20"
+              >
+                <span>{nextActionLabel}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
     </motion.div>
   );
 };

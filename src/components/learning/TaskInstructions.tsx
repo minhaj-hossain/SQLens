@@ -109,10 +109,32 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
       </div>
 
 
-      {/* Meta strip — Prisma-native metadata for Prisma tasks; SQL metadata for SQL tasks */}
+      {/* Meta strip — Prisma-native metadata for Prisma tasks; Networking scenario for networking; SQL metadata for SQL tasks */}
       {isPrismaTask(task) ? (
         <PrismaTaskHeaderMeta task={task} concept={concept} />
-      ) : (
+      ) : isNetworkingTask(task) ? (
+        <div className="mt-3 sm:mt-4 space-y-3 min-w-0 font-sans">
+          {task.description && (
+            <p className="text-xs sm:text-sm text-text-dim leading-relaxed">
+              {task.description}
+            </p>
+          )}
+          {task.instructions && task.instructions.length > 0 && (
+            <div className="space-y-2 pt-2.5 border-t border-border-soft">
+              <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
+                Scenario Context &amp; Objectives:
+              </span>
+              <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
+                {task.instructions.map((inst, i) => (
+                  <li key={i} className="leading-relaxed text-text/90">
+                    <StepText text={inst} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      ) : task.primaryTable ? (
         <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 font-mono text-xs bg-surface-2 border border-border-soft rounded-lg p-2.5 sm:px-4 sm:py-2.5 min-w-0">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
             <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">TABLE</span>
@@ -144,7 +166,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* Single Unified "Need Help?" Progressive Disclosure Section */}
       <div className="mt-4 pt-3.5 border-t border-border-soft">
