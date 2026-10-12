@@ -198,6 +198,9 @@ export const Prisma_10_MODULE: ModuleData = {
           solutionSql: 'SELECT id, name FROM users WHERE id = 1;',
           why: 'Atomic increment rewrites to login_count = login_count + 1 in SQL so concurrent updates cannot collide.',
           cols: ['id', 'name'],
+          select: ['id', 'loginCount'],
+          method: 'update',
+          workspaceMode: 'query',
           rows: 1,
           setupSql:
             'CREATE TABLE users (id INTEGER, name TEXT, email TEXT, loginCount INTEGER); ' +
@@ -209,7 +212,7 @@ export const Prisma_10_MODULE: ModuleData = {
             'export async function bumpUserLoginCount(id: number) {\n  // Anti-pattern: hardcoding the value or reading then writing causes lost updates\n  return await prisma.user.update({\n    where: { id },\n    data: { loginCount: 2 },\n    select: { id: true, loginCount: true },\n  });\n}',
           code1:
             'export async function bumpUserLoginCount(id: number) {\n  return await prisma.user.update({\n    where: { id },\n    data: { loginCount: { increment: 1 } },\n    select: { id: true, loginCount: true },\n  });\n}',
-          need: ['prisma.user.update', 'loginCount: { increment: 1 }'],
+          need: ['prisma.user.update', 'increment: 1'],
           rtype: '{ id: number; loginCount: number }',
         }),
       ],

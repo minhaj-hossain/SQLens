@@ -102,8 +102,13 @@ export function canonicalizeCli(text: string): string {
  * and double quotes unified to single quotes.
  */
 export function canonicalizeNonCliSnippet(text: string): string {
-  return canonicalizeObjectKeys(text)
+  const step1 = canonicalizeObjectKeys(text)
     .replace(/\s+/g, ' ')
+    .replace(/(?<![@/:])\b([A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*(?!\/)/g, '$1: ')
+    .replace(/([{,(]\s*)([A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*\2(?=[\s,}])/g, '$1$2')
+    .replace(/,\s*([}\]])/g, '$1')
+    .replace(/\{\s*/g, '{ ')
+    .replace(/\s*\}/g, ' }')
     .replace(/\{\s*\}/g, '{}')
     .replace(/\s*,\s*/g, ', ')
     .replace(/\(\s+/g, '(')
@@ -112,7 +117,15 @@ export function canonicalizeNonCliSnippet(text: string): string {
     .replace(/\s+\]/g, ']')
     .replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, "'$1'")
     .replace(/\b(?:error|e)\.code\b/g, 'err.code')
-    .replace(/\bnext\s*\(\s*(?:error|e)\s*\)/g, 'next(err)')
+    .replace(/\bnext\s*\(\s*(?:error|e)\s*\)/g, 'next(err)');
+
+  return step1
+    .replace(/\{([^{}[\]()]+)\}/g, (_match, inner) => {
+      const parts = inner.split(',').map((p: string) => p.trim()).filter(Boolean);
+      if (parts.length <= 1) return `{ ${inner.trim()} }`;
+      parts.sort();
+      return `{ ${parts.join(', ')} }`;
+    })
     .trim();
 }
 

@@ -173,12 +173,14 @@ export const Prisma_09_MODULE: ModuleData = {
           solutionSql: "SELECT id, name, email FROM users WHERE email = 'mina@prisma.io';",
           why: 'The profile record is created with optional attributes intact.',
           cols: ['id', 'name', 'email'],
+          select: ['id', 'name', 'email'],
+          method: 'create',
           rows: 1,
           code0:
             'export async function createMember(name: string, email: string, bio: string) {\n  // Create member with bio:\n\n}',
           code1:
             'export async function createMember(name: string, email: string, bio: string) {\n  return await prisma.user.create({\n    data: { name, email, bio },\n    select: { id: true, name: true, email: true },\n  });\n}',
-          need: ['prisma.user.create', 'bio', 'select: { id: true, name: true, email: true }'],
+          need: ['prisma.user.create', 'bio'],
           demoVariables: { name: 'Mina', email: 'mina@prisma.io', bio: 'Database architect' },
         }),
       ],
@@ -446,12 +448,14 @@ export const Prisma_09_MODULE: ModuleData = {
           solutionSql: "SELECT id, email FROM users WHERE email = 'alex@prisma.io';",
           why: 'Nested create ties parent and child records together in one atomic transaction.',
           cols: ['id', 'email'],
+          select: ['id', 'email'],
+          method: 'create',
           rows: 1,
           code0:
             'export async function registerWithPost(name: string, email: string, title: string) {\n  // Create user and nested post:\n\n}',
           code1:
             'export async function registerWithPost(name: string, email: string, title: string) {\n  return await prisma.user.create({\n    data: {\n      name,\n      email,\n      posts: { create: [{ title }] },\n    },\n    select: { id: true, email: true },\n  });\n}',
-          need: ['prisma.user.create', 'posts: { create:', 'select: { id: true, email: true }'],
+          need: ['prisma.user.create', 'posts: { create:'],
           demoVariables: { name: 'Alex', email: 'alex@prisma.io', title: 'Hello Prisma' },
         }),
         prismaSnippetTask({
