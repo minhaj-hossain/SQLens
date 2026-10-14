@@ -1,5 +1,5 @@
 import type { ModuleData } from '../../../types/curriculum';
-import type { HostNode } from '../../../types/networking-curriculum';
+import type { HostNode, MentorScript } from '../../../types/networking-curriculum';
 
 const STANDARD_4_HOSTS: HostNode[] = [
   { id: 'host-a', name: 'Host A', mac: 'AA:AA:AA:AA:AA:AA', port: 1 },
@@ -15,6 +15,271 @@ const FIVE_PORT_TRANSFER_HOSTS: HostNode[] = [
   { id: 'node-4', name: 'Node 4', mac: '00:11:22:33:44:88', port: 4 },
   { id: 'node-5', name: 'Node 5', mac: '00:11:22:33:44:99', port: 5 },
 ];
+
+export const NET_03_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-03',
+  conceptId: 'mac-table-and-forwarding',
+  tier: 'shadow',
+  allowedTerms: ['switch', 'mac', 'port', 'cam-table', 'flooding'],
+  revealLadder: {
+    'step-0': ['hosts', 'host-mac'],
+    'step-1': ['hosts', 'host-mac', 'switch', 'ports'],
+    'step-2': ['hosts', 'host-mac', 'switch', 'ports', 'controls'],
+    'step-3': ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table'],
+    'step-4': ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table', 'egress-ports'],
+  },
+  terms: {
+    mac: { label: 'MAC Address', part: 'host-mac', explanation: 'A 48-bit unique hardware identifier burnt into each host network card.' },
+    switch: { label: 'Switch', part: 'switch', explanation: 'A Layer 2 multiport bridge that forwards frames based on MAC addresses.' },
+    port: { label: 'Switch Port', part: 'ports', explanation: 'A physical RJ-45 interface on the switch dedicated to an individual host.' },
+    'cam-table': { label: 'MAC Table (CAM)', part: 'mac-table', explanation: 'Content Addressable Memory table mapping learned MACs to physical port numbers.' },
+    flooding: { label: 'Flooding', part: 'egress-ports', explanation: 'Forwarding a frame out all active ports except the arrival ingress port.' },
+  },
+  beats: [
+    {
+      id: 'net03-beat-1',
+      stage: { stageNumber: 1, title: 'Observe: Physical Endpoints' },
+      kind: 'say',
+      text: 'Four computers sit in our lab. Each has a unique 48-bit hardware {{term:mac}} address.',
+      say: ['Four computers sit in our lab. Each has a unique 48-bit hardware {{term:mac}} address.'],
+      reveal: ['hosts', 'host-mac'],
+      revealedParts: ['hosts', 'host-mac'],
+      spotlight: 'hosts',
+    },
+    {
+      id: 'net03-beat-2',
+      stage: { stageNumber: 1, title: 'Observe: Switch Ports' },
+      kind: 'point',
+      text: 'Each computer connects to a numbered physical {{term:port}} on the central {{term:switch}}.',
+      say: ['Each computer connects to a numbered physical {{term:port}} on the central {{term:switch}}.'],
+      reveal: ['switch', 'ports'],
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports'],
+      spotlight: 'ports',
+    },
+    {
+      id: 'net03-beat-3',
+      stage: { stageNumber: 1, stepIndex: 0, title: 'Observe: Ingress Transmission' },
+      kind: 'do',
+      text: 'Host A needs to send a frame to Host B. Click Transmit to launch the frame across Port 1.',
+      say: ['Host A needs to send a frame to Host B. Click Transmit to launch the frame across Port 1.'],
+      actionPrompt: 'Launch Frame from Host A',
+      reveal: ['controls'],
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls'],
+      spotlight: 'controls',
+      expect: 'transmit',
+    },
+    {
+      id: 'net03-beat-4',
+      stage: { stageNumber: 1, stepIndex: 0, title: 'Observe: Ingress Learning' },
+      kind: 'point',
+      text: 'Frame arrived on Port 1! The switch immediately inspects the source MAC and records it in its {{term:cam-table}}: Port 1 = Host A.',
+      say: ['Frame arrived on Port 1! The switch immediately inspects the source MAC and records it in its {{term:cam-table}}: Port 1 = Host A.'],
+      reveal: ['mac-table'],
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table'],
+      spotlight: 'mac-table',
+    },
+    {
+      id: 'net03-beat-5',
+      stage: { stageNumber: 1, stepIndex: 0, title: 'Observe: Unknown Unicast Prediction' },
+      kind: 'predict',
+      text: 'Host B is not in the table yet. Where must the switch forward this frame?',
+      say: ['Host B is not in the table yet. Where must the switch forward this frame?'],
+      spotlight: 'ports',
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table'],
+      options: [
+        {
+          id: 'opt-port2',
+          label: 'Out Port 2 only',
+          isCorrect: false,
+          feedback: 'The switch has no record of Host B yet. It cannot guess which cable leads to Host B.',
+        },
+        {
+          id: 'opt-flood',
+          label: 'Out Ports 2, 3, and 4 (floods all ports except arrival Port 1)',
+          isCorrect: true,
+          feedback: 'Exactly right! When the destination is unknown, the switch floods out all other ports.',
+          egressPorts: [2, 3, 4],
+        },
+        {
+          id: 'opt-drop',
+          label: 'Drops the frame immediately',
+          isCorrect: false,
+          feedback: 'Switches never drop frames just because the destination is unlearned.',
+        },
+      ],
+      whyPrompt: 'Why does the switch forward out all other ports?',
+      whyOptions: [
+        {
+          id: 'why-flood',
+          label: 'Flooding guarantees the frame reaches Host B without needing prior knowledge',
+          isCorrect: true,
+          feedback: 'Correct causal defense: flooding guarantees delivery when the location is unknown.',
+        },
+        {
+          id: 'why-short',
+          label: 'Because Port 1 has an electrical short circuit',
+          isCorrect: false,
+          feedback: 'Port 1 received the frame normally.',
+        },
+      ],
+      reactions: {
+        correct: ['Boom! Exactly right. An unknown destination triggers an immediate unknown unicast flood.'],
+        wrong: {
+          0: ['Check the table first: Is Host B recorded in it?'],
+          2: ['Switches do not discard frames when the destination is missing; they flood.'],
+        },
+        fallback: ['Think about what choice an ignorant switch has to deliver the data.'],
+        hintAfter: 2,
+      },
+    },
+    {
+      id: 'net03-beat-6',
+      stage: { stageNumber: 1, stepIndex: 1, title: 'Observe: Unknown Unicast Flood' },
+      kind: 'point',
+      text: 'Watch the flood execute: Ports 2, 3, and 4 illuminate. Hosts C and D discard it, while Host B accepts it. That is {{term:flooding}}.',
+      say: ['Watch the flood execute: Ports 2, 3, and 4 illuminate. Hosts C and D discard it, while Host B accepts it. That is {{term:flooding}}.'],
+      reveal: ['egress-ports'],
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table', 'egress-ports'],
+      spotlight: 'egress-ports',
+    },
+    {
+      id: 'net03-beat-7',
+      stage: { stageNumber: 2, stepIndex: 2, title: 'Stage 2: Complete the Reply' },
+      kind: 'do',
+      text: 'Now Host B replies back to Host A (Dest: Host A). Click Step to watch the reply enter Port 2.',
+      say: ['Now Host B replies back to Host A (Dest: Host A). Click Step to watch the reply enter Port 2.'],
+      actionPrompt: 'Step Host B Reply into Port 2',
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table', 'egress-ports'],
+      spotlight: 'controls',
+      expect: 'step',
+    },
+    {
+      id: 'net03-beat-8',
+      stage: { stageNumber: 3, stepIndex: 2, title: 'Stage 3: Known Unicast Forwarding' },
+      kind: 'predict',
+      text: 'Look at the table now: the switch learned Host B on Port 2. Where does this reply to Host A go?',
+      say: ['Look at the table now: the switch learned Host B on Port 2. Where does this reply to Host A go?'],
+      spotlight: 'mac-table',
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table', 'egress-ports'],
+      options: [
+        {
+          id: 'opt-r-flood',
+          label: 'Floods out Ports 1, 3, and 4',
+          isCorrect: false,
+          feedback: 'Host A was already learned on Port 1 during Step 0. No flood is necessary.',
+        },
+        {
+          id: 'opt-r-port1',
+          label: 'Out Port 1 only',
+          isCorrect: true,
+          feedback: 'Correct! Host A is recorded on Port 1, so the switch forwards directly to Port 1.',
+          egressPorts: [1],
+        },
+        {
+          id: 'opt-r-port2',
+          label: 'Reflects back out Port 2',
+          isCorrect: false,
+          feedback: 'Port 2 is the ingress port where the reply came from.',
+        },
+      ],
+      whyPrompt: 'Why is there zero traffic on Ports 3 and 4?',
+      whyOptions: [
+        {
+          id: 'why-microsegment',
+          label: 'Because Host A is a known unicast in the CAM table, eliminating unnecessary broadcast traffic',
+          isCorrect: true,
+          feedback: 'Spot on! That is how switches eliminate collisions and microsegment network traffic.',
+        },
+        {
+          id: 'why-ports-off',
+          label: 'Because Ports 3 and 4 were administratively disabled',
+          isCorrect: false,
+          feedback: 'Ports 3 and 4 remain fully active.',
+        },
+      ],
+      reactions: {
+        correct: ['Spot on! Known unicast forwarding delivers directly to Port 1.'],
+        wrong: {
+          0: ['Check the table: Host A is already learned on Port 1.'],
+          2: ['Port 2 is the arrival port.'],
+        },
+        fallback: ['Check which port Host A lives on in the table.'],
+      },
+    },
+    {
+      id: 'net03-beat-9',
+      stage: { stageNumber: 4, stepIndex: 3, title: 'Stage 4: Zero Flooding' },
+      kind: 'point',
+      text: 'Only Port 1 illuminates! Hosts C and D hear absolute silence. Collisions are eliminated.',
+      say: ['Only Port 1 illuminates! Hosts C and D hear absolute silence. Collisions are eliminated.'],
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table', 'egress-ports'],
+      spotlight: 'egress-ports',
+    },
+    {
+      id: 'net03-beat-10',
+      stage: { stageNumber: 5, stepIndex: 3, title: 'Stage 5: Live Diagnosis' },
+      kind: 'point',
+      text: 'A station migration ticket has arrived: Host C was moved to spare Port 5, but Host A cannot reach it. Investigate Ticket #103 below.',
+      say: ['A station migration ticket has arrived: Host C was moved to spare Port 5, but Host A cannot reach it. Investigate Ticket #103 below.'],
+      revealedParts: ['hosts', 'host-mac', 'switch', 'ports', 'controls', 'mac-table', 'egress-ports'],
+      spotlight: 'mac-table',
+    },
+  ],
+  ticketScene: {
+    ticketId: '103',
+    title: 'Ticket #103: The Moved Desk: Station Migration',
+    symptom: 'Host C was moved from Port 3 to spare Port 5. Host A attempts to send data to Host C, but Host C receives nothing.',
+    telemetry: [
+      'Switch CAM Table Status:',
+      '  Port 1: Host A (Active, Aging: 298s)',
+      '  Port 3: Host C (Stale, Aging: 240s remaining)',
+      '  Port 5: Empty (Link Active)',
+    ],
+    options: [
+      {
+        id: 'opt-nic-bad',
+        label: 'Host C network card is incompatible with Port 5.',
+        isCorrect: false,
+        feedback: 'Port 5 link LED is green and auto-negotiation succeeded.',
+      },
+      {
+        id: 'opt-stale-cam',
+        label: 'The switch CAM table has a stale entry mapping Host C to Port 3, causing unicast frames to be forwarded down the wrong cable until Host C transmits.',
+        isCorrect: true,
+        feedback: 'Spot on! Switches learn on source MAC. Because Host C has not transmitted on Port 5 yet, the switch continues forwarding traffic to Port 3.',
+      },
+      {
+        id: 'opt-port5-trunk',
+        label: 'Port 5 is an uplink trunk and cannot accept access workstations.',
+        isCorrect: false,
+        feedback: 'Port 5 is configured as an access port on VLAN 1.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-transmit',
+        label: 'Have Host C transmit a frame on Port 5 to trigger immediate dynamic source MAC migration',
+        isCorrect: true,
+        patch: { action: 'transmit-frame', target: 'host-c', value: 'data-frame' },
+      },
+      {
+        id: 'fix-ups',
+        label: 'Power cycle the central building UPS',
+        isCorrect: false,
+        patch: { action: 'power-cycle', target: 'building-ups', value: 'all' },
+      },
+      {
+        id: 'fix-nic',
+        label: 'Replace Host C network card with a new MAC',
+        isCorrect: false,
+        patch: { action: 'replace-nic', target: 'host-c', value: 'new-nic' },
+      },
+    ],
+  },
+};
+
 
 export const NET_03_MODULE: ModuleData = {
   id: 'net-03',
@@ -92,6 +357,7 @@ export const NET_03_MODULE: ModuleData = {
           'Golden Rule of Switching: Switches LEARN from the Ingress SOURCE MAC, and FORWARD or FLOOD based on the DESTINATION MAC.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mentorScript: NET_03_MENTOR_SCRIPT,
       },
       tasks: [
         {

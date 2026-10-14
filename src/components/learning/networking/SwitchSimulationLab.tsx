@@ -13,6 +13,8 @@ import { PlaybackControls } from './PlaybackControls';
 import { PredictionGate } from './PredictionGate';
 import { Info, Sparkles, BookOpen } from 'lucide-react';
 
+import type { MentorControllable } from '../../../types/networking-curriculum';
+
 const DEFAULT_4_HOSTS: HostNode[] = [
   { id: 'host-a', name: 'Host A', mac: 'AA:AA:AA:AA:AA:AA', port: 1 },
   { id: 'host-b', name: 'Host B', mac: 'BB:BB:BB:BB:BB:BB', port: 2 },
@@ -27,7 +29,7 @@ const DEFAULT_SEQUENCE: FrameTransmission[] = [
   { srcMac: 'BB:BB:BB:BB:BB:BB', dstMac: 'AA:AA:AA:AA:AA:AA', ingressPort: 2 },
 ];
 
-export interface SwitchSimulationLabProps {
+export interface SwitchSimulationLabProps extends Partial<MentorControllable> {
   hosts?: HostNode[];
   sequence?: FrameTransmission[];
   enablePredictionGate?: boolean;
@@ -51,13 +53,27 @@ export const SwitchSimulationLab: React.FC<SwitchSimulationLabProps> = ({
   title,
   subtitle,
   className = '',
+  visibleParts,
+  spotlight,
+  controlledStepIndex,
+  onAction,
 }) => {
   // Pre-generate deterministic simulation steps
   const steps = useMemo(() => {
     return generateSwitchSimulation(hosts, sequence);
   }, [hosts, sequence]);
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [internalStepIndex, setInternalStepIndex] = useState(0);
+  const currentStepIndex = controlledStepIndex !== undefined ? controlledStepIndex : internalStepIndex;
+  const setCurrentStepIndex = (val: number | ((prev: number) => number)) => {
+    if (controlledStepIndex !== undefined) {
+      const nextVal = typeof val === 'function' ? val(currentStepIndex) : val;
+      onAction?.({ type: 'step', payload: { stepIndex: nextVal } });
+    } else {
+      setInternalStepIndex(val);
+    }
+  };
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [predictionUnlocked, setPredictionUnlocked] = useState(!enablePredictionGate);
@@ -146,6 +162,9 @@ export const SwitchSimulationLab: React.FC<SwitchSimulationLabProps> = ({
     setPredictionUnlocked(true);
   };
 
+  const showMacTable = !visibleParts || visibleParts.has('mac-table');
+  const showControls = !visibleParts || visibleParts.has('controls');
+
   return (
     <div
       className={`space-y-4 w-full select-none ${className}`}
@@ -164,30 +183,35 @@ export const SwitchSimulationLab: React.FC<SwitchSimulationLabProps> = ({
 
       {/* Main Visualizer: Topology Canvas on Top/Left, CAM Table on Bottom/Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Topology View (8 cols on desktop) */}
-        <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3 min-w-0">
+        {/* Topology View */}
+        <div className={showMacTable ? "lg:col-span-7 xl:col-span-8 flex flex-col gap-3 min-w-0" : "lg:col-span-12 flex flex-col gap-3 min-w-0"}>
           <SwitchingTopologyCanvas
             hosts={hosts}
             currentStep={currentStep}
             selectedPorts={selectedPorts}
-            onTogglePort={onTogglePort}
+            onTogglePort={(port) => {
+              onTogglePort?.(port);
+              onAction?.({ type: 'select-port', payload: { port } });
+            }}
             interactivePortSelection={interactivePortSelection}
           />
         </div>
 
-        {/* Live CAM Table (5 cols on desktop) */}
-        <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-3 min-w-0">
-          <MacTableView
-            entries={currentStep?.macTableSnapshot ?? []}
-            activeDecision={currentStep?.decision}
-            highlightedPort={currentStep?.highlightedPort}
-            highlightedMac={currentStep?.activeFrame?.srcMac}
-          />
-        </div>
+        {/* Live CAM Table (Rendered only when revealed) */}
+        {showMacTable && (
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-3 min-w-0 animate-in fade-in duration-300">
+            <MacTableView
+              entries={currentStep?.macTableSnapshot ?? []}
+              activeDecision={currentStep?.decision}
+              highlightedPort={currentStep?.highlightedPort}
+              highlightedMac={currentStep?.activeFrame?.srcMac}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Step Explanation Card */}
-      {currentStep && (
+      {/* Step Explanation Card (Rendered only when not in controlled mentor mode) */}
+      {!controlledStepIndex && currentStep && (
         <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 shadow-md space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft pb-2">
             <div className="flex items-center gap-2">
@@ -213,20 +237,28 @@ export const SwitchSimulationLab: React.FC<SwitchSimulationLabProps> = ({
         </div>
       )}
 
-      {/* Playback Controls */}
-      <PlaybackControls
-        currentStepIndex={currentStepIndex}
-        totalSteps={steps.length}
-        currentStep={currentStep}
-        isPlaying={isPlaying}
-        speed={speed}
-        isBlockedByPrediction={isAtPredictionPause}
-        onPlayToggle={handlePlayToggle}
-        onStepForward={handleStepForward}
-        onStepBack={handleStepBack}
-        onReset={handleReset}
-        onSpeedChange={setSpeed}
-      />
+      {/* Playback Controls (Rendered only when revealed) */}
+      {showControls && (
+        <PlaybackControls
+          currentStepIndex={currentStepIndex}
+          totalSteps={steps.length}
+          currentStep={currentStep}
+          isPlaying={isPlaying}
+          speed={speed}
+          isBlockedByPrediction={isAtPredictionPause}
+          onPlayToggle={() => {
+            onAction?.({ type: 'transmit' });
+            handlePlayToggle();
+          }}
+          onStepForward={() => {
+            onAction?.({ type: 'step' });
+            handleStepForward();
+          }}
+          onStepBack={handleStepBack}
+          onReset={handleReset}
+          onSpeedChange={setSpeed}
+        />
+      )}
 
       {/* Mandatory Prediction Gate (Visible when pause point reached) */}
       {isAtPredictionPause && (

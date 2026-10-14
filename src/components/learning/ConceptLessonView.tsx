@@ -33,6 +33,7 @@ import { SqlLensPanel } from './SqlLensPanel';
 import { JsonViewer } from './JsonViewer';
 import { executePrismaDemo, type PrismaDemoRunResult } from '../../lib/prisma-engine/prisma-demo-runner';
 import { RotateCcw } from 'lucide-react';
+import { MentorLessonStage } from './networking/mentor';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
 
@@ -526,38 +527,53 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           <p className="text-sm text-text-dim mt-1.5 font-sans">{concept.shortDescription}</p>
         )}
 
-        {/* summary */}
-        {theory.summary && (
-          <p className="text-sm sm:text-[14.5px] leading-relaxed text-text-dim mt-5 max-w-[620px] font-sans">
-            <InlineContent text={theory.summary} />
-          </p>
-        )}
-
-        {/* Adaptive Concept Mental Model Visualizer
-             For diagram-driven archetypes (Days 6, 9, 14–17, 21–32, 35+),
-             replace the forced introTable with a purpose-built interactive
-             visualization. For tabular-projection concepts (Days 1–5, 34),
-             the actual introTable is shown below as before. */}
-        <ConceptMentalModel moduleId={moduleId} concept={concept} />
-
-        {/* intro table — only shown for tabular-projection archetypes */}
-        {theory.introTable && !shouldSuppressTopIntroTable(moduleId, concept) && (
-          <div className="mt-4">
-            <DataTable
-              tableName={theory.introTable.tableName}
-              description={theory.introTable.description}
-              columns={theory.introTable.columns}
-              rows={theory.introTable.rows}
+        {/* Mentor Mode Studio (Networking Track) or Classic Theory View */}
+        {theory.mentorScript ? (
+          <div className="mt-5">
+            <MentorLessonStage
+              moduleId={moduleId}
+              concept={concept}
+              script={theory.mentorScript}
+              onComplete={onStartPractice}
             />
           </div>
+        ) : (
+          <>
+            {/* summary */}
+            {theory.summary && (
+              <p className="text-sm sm:text-[14.5px] leading-relaxed text-text-dim mt-5 max-w-[620px] font-sans">
+                <InlineContent text={theory.summary} />
+              </p>
+            )}
+
+            {/* Adaptive Concept Mental Model Visualizer
+                 For diagram-driven archetypes (Days 6, 9, 14–17, 21–32, 35+),
+                 replace the forced introTable with a purpose-built interactive
+                 visualization. For tabular-projection concepts (Days 1–5, 34),
+                 the actual introTable is shown below as before. */}
+            <ConceptMentalModel moduleId={moduleId} concept={concept} />
+
+            {/* intro table — only shown for tabular-projection archetypes */}
+            {theory.introTable && !shouldSuppressTopIntroTable(moduleId, concept) && (
+              <div className="mt-4">
+                <DataTable
+                  tableName={theory.introTable.tableName}
+                  description={theory.introTable.description}
+                  columns={theory.introTable.columns}
+                  rows={theory.introTable.rows}
+                />
+              </div>
+            )}
+
+            {/* explanation */}
+            {theory.explanation && theory.explanation.length > 0 && (
+              <div className="mt-4">
+                <FormattedExplanation content={theory.explanation} />
+              </div>
+            )}
+          </>
         )}
 
-        {/* explanation */}
-        {theory.explanation && theory.explanation.length > 0 && (
-          <div className="mt-4">
-            <FormattedExplanation content={theory.explanation} />
-          </div>
-        )}
 
         {/* P2.1 — Prisma hero call: shown above the generated-SQL target card */}
         <PrismaTheoryHero theory={theory} />

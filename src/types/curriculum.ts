@@ -404,6 +404,11 @@ export interface ConceptTheory {
    * mirrors `liveDemoSql` for the TypeScript editor.
    */
   prisma?: PrismaTheoryContent;
+  /**
+   * Networking track Mentor Mode extension (optional).
+   * When present, ConceptLessonView mounts the MentorLessonStage studio.
+   */
+  mentorScript?: import('./networking-curriculum').MentorScript;
   commonMistakes?: string[];
   understandingChecks?: { question: string; answer?: string }[];
   debuggingExercise?: { brokenSql: string; bugs: string[]; fixDescription: string };

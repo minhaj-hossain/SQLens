@@ -1,4 +1,310 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_05_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-05',
+  conceptId: 'arp-request-reply',
+  revealLadder: {
+    'step-0': ['host-a'],
+    'step-1': ['host-a', 'fifo-queue'],
+    'step-2': ['host-a', 'fifo-queue', 'arp-request'],
+    'step-3': ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c'],
+    'step-4': ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply'],
+    'step-5': ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+  },
+  terms: {
+    arp: {
+      label: 'ARP',
+      part: 'arp-request',
+      explanation: 'Address Resolution Protocol maps a known Layer 3 IP address to a Layer 2 MAC address on the local physical segment.',
+    },
+    'hold-queue': {
+      label: 'FIFO Hold Queue',
+      part: 'fifo-queue',
+      explanation: 'Operating system buffer holding outbound packets while waiting for address resolution.',
+    },
+    'broadcast-request': {
+      label: 'Broadcast Request',
+      part: 'arp-request',
+      explanation: 'An ARP request with destination MAC FF:FF:FF:FF:FF:FF flooded out all local switch ports except the ingress port.',
+    },
+    'arp-cache': {
+      label: 'ARP Cache',
+      part: 'arp-cache',
+      explanation: 'A host-local table mapping IP addresses to resolved MAC addresses with dynamic aging timers.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The Hold Queue' },
+      kind: 'say',
+      text: 'Host A (192.168.1.10) wants to send an ICMP Echo Request to Host B (192.168.1.20). But Host A has just booted and its ARP cache is empty. Watch how the OS handles this.',
+      spotlight: 'host-a',
+      revealedParts: ['host-a'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Observe: Packet Buffering' },
+      kind: 'do',
+      text: 'Click Initiate Transmission to watch the operating system stack buffer the outbound IP packet.',
+      actionPrompt: 'Queue Outbound ICMP Packet',
+      actionTargetPart: 'fifo-queue',
+      revealedParts: ['host-a', 'fifo-queue'],
+      spotlight: 'fifo-queue',
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Observe: ARP Request Frame' },
+      kind: 'point',
+      text: 'Because Host A lacks the destination MAC, it buffers the ping in the {{term:hold-queue}} and crafts an {{term:arp}} request: "Who has 192.168.1.20? Tell 192.168.1.10" with target MAC 00:00:00:00:00:00.',
+      spotlight: 'arp-request',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request'],
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Observe: Switch Ingress & Flood' },
+      kind: 'do',
+      text: 'Click Step Flood to watch Switch SW1 receive the broadcast and flood it across all access ports.',
+      actionPrompt: 'Flood ARP Request Across Ports',
+      actionTargetPart: 'switch-sw1',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c'],
+      spotlight: 'switch-sw1',
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Observe: Non-Target Discard' },
+      kind: 'point',
+      text: 'Switch SW1 learned Host A on Port 1 and flooded the frame. Host C (192.168.1.30) inspects the target IP (192.168.1.20). Because it is not the target, Host C silently drops the frame without generating noise.',
+      spotlight: 'host-c',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c'],
+    },
+    {
+      id: 'beat-6',
+      stage: { stageNumber: 1, title: 'Observe: Unicast ARP Reply' },
+      kind: 'point',
+      text: 'Host B matches the target IP! It learns Host A\'s MAC, and immediately constructs a unicast ARP Reply (Opcode 2) sent directly back to Host A\'s MAC.',
+      spotlight: 'arp-reply',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply'],
+    },
+    {
+      id: 'beat-7',
+      stage: { stageNumber: 1, title: 'Observe: Dequeue and Transmit' },
+      kind: 'do',
+      text: 'Click Process Reply to update Host A\'s ARP table and release the queued packet.',
+      actionPrompt: 'Update ARP Table & Dequeue Packet',
+      actionTargetPart: 'arp-cache',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+      spotlight: 'arp-cache',
+    },
+    {
+      id: 'beat-8',
+      stage: { stageNumber: 1, title: 'Observe: Transmission Complete' },
+      kind: 'point',
+      text: 'Host A saves 192.168.1.20 -> 00:00:5E:00:53:02 in its {{term:arp-cache}}. The hold queue empties and the ICMP Echo Request is transmitted immediately with 0% loss.',
+      spotlight: 'arp-cache',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+    },
+    {
+      id: 'beat-9',
+      stage: { stageNumber: 2, title: 'Stage 2: Complete the Header' },
+      kind: 'predict',
+      text: 'What Target Hardware Address (MAC) did Host A place in the payload of the initial {{term:broadcast-request}}?',
+      spotlight: 'arp-request',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+      options: [
+        {
+          id: 'opt-mac-broadcast',
+          label: 'FF:FF:FF:FF:FF:FF (Ethernet Broadcast MAC)',
+          isCorrect: false,
+          feedback: 'FF:FF:FF:FF:FF:FF is the Layer 2 Ethernet destination address, not the inner ARP payload target MAC.',
+        },
+        {
+          id: 'opt-mac-zeros',
+          label: '00:00:00:00:00:00 (All Zeros Placeholder)',
+          isCorrect: true,
+          feedback: 'Correct! Because Host A is querying for the unknown MAC, it populates the target MAC field with all zeros.',
+        },
+        {
+          id: 'opt-mac-hostb',
+          label: '00:00:5E:00:53:02 (Host B\'s Known MAC)',
+          isCorrect: false,
+          feedback: 'If Host A already knew Host B\'s MAC, it would not have needed to send an ARP request.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-zeros',
+          label: 'The sender does not yet know the target MAC, so the protocol standard specifies all zeros as the placeholder.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-broadcast',
+          label: 'Target MAC must always match the outer Ethernet destination MAC.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-hardware',
+          label: 'Switches erase target MAC addresses during ingress.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-10',
+      stage: { stageNumber: 3, title: 'Stage 3: Perform Independent Prediction' },
+      kind: 'predict',
+      text: 'Host A sends a second ping to Host B 5 seconds later. What happens on the wire?',
+      spotlight: 'arp-cache',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+      options: [
+        {
+          id: 'opt-no-arp',
+          label: 'Host A transmits the ICMP Echo Request directly using its cached MAC entry without sending an ARP request.',
+          isCorrect: true,
+          feedback: 'Correct! The operating system retains resolved IP-to-MAC entries in the ARP cache, eliminating redundant broadcasts.',
+        },
+        {
+          id: 'opt-rebroadcast',
+          label: 'Host A broadcasts a new ARP request for every outgoing IP packet.',
+          isCorrect: false,
+          feedback: 'ARP requests create network broadcast overhead. Entries are cached to prevent repeated requests.',
+        },
+        {
+          id: 'opt-switch-drops',
+          label: 'Switch SW1 drops the frame until Host B sends a heartbeat.',
+          isCorrect: false,
+          feedback: 'Switch SW1 forwards frames based on MAC destination address; it does not require heartbeats.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-cache',
+          label: 'Operating systems cache resolved IP-to-MAC mappings with an aging timer (typically 20–120 seconds).',
+          isCorrect: true,
+        },
+        {
+          id: 'why-always-arp',
+          label: 'Ethernet protocol requires fresh ARP resolution every 10 packets.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-switch-rules',
+          label: 'Switches reject repeated ARP requests.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-11',
+      stage: { stageNumber: 4, title: 'Stage 4: Transfer to Default Gateway' },
+      kind: 'predict',
+      text: 'Host A (192.168.1.10, Gateway 192.168.1.1) pings public DNS server 8.8.8.8. What Target IP address does Host A place in its ARP Request?',
+      spotlight: 'host-a',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+      options: [
+        {
+          id: 'opt-target-dns',
+          label: '8.8.8.8 (The Remote Destination IP)',
+          isCorrect: false,
+          feedback: 'Classic misconception! Layer 2 ARP broadcasts cannot cross routers into the public Internet.',
+        },
+        {
+          id: 'opt-target-gw',
+          label: '192.168.1.1 (The Default Gateway Router IP)',
+          isCorrect: true,
+          feedback: 'Excellent! Host A evaluates 8.8.8.8 as off-link, so it must resolve the local MAC of its gateway to deliver the frame.',
+        },
+        {
+          id: 'opt-target-bcast',
+          label: '192.168.1.255 (The Local Subnet Broadcast IP)',
+          isCorrect: false,
+          feedback: 'Host A needs the unicast MAC address of the gateway router, not the broadcast IP.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-offlink-gw',
+          label: 'Because 8.8.8.8 is off-link, Host A must encapsulate the packet in an Ethernet frame addressed to the local Default Gateway\'s MAC.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-dns-arp',
+          label: 'DNS servers do not support Ethernet frames.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-internet-broadcast',
+          label: 'ARP broadcasts traverse all internet routers automatically.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-12',
+      stage: { stageNumber: 5, title: 'Stage 5: Live Diagnosis' },
+      kind: 'point',
+      text: 'A high-priority incident has just arrived on your desk: Host A can ping local servers, but reports 100% loss pinging Host B. Investigate the ticket below.',
+      spotlight: 'arp-cache',
+      revealedParts: ['host-a', 'fifo-queue', 'arp-request', 'switch-sw1', 'host-b', 'host-c', 'arp-reply', 'arp-cache'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '105',
+    title: 'Ticket #105: The Asymmetric Ping Failure',
+    symptom: 'Host A (192.168.1.10/24) pings Host B (192.168.1.200) with 100% loss, despite Host A showing Host B\'s MAC resolved in its ARP table.',
+    telemetry: [
+      'Host A ARP Table: 192.168.1.200 -> 00:00:5E:00:53:02 (State: RESOLVED)',
+      'Host A Ping Statistics: 4 packets transmitted, 0 received, 100% packet loss (Request timed out)',
+      'Host B Packet Capture: 4 ICMP Echo Requests received from 192.168.1.10',
+      'Host B Interface Config: IP 192.168.1.200 / Subnet Mask 255.255.255.128 (/25)',
+      'Host B Routing Evaluation: Target 192.168.1.10 is OFF-LINK (Subnet is .128-.255)',
+      'Host B Route Drop: Packet dropped — No Default Gateway configured for off-link reply',
+    ],
+    options: [
+      {
+        id: 'opt-switch-rate',
+        label: 'Switch SW1 dropped the return ICMP packets due to an unknown unicast flood rate limit.',
+        isCorrect: false,
+        feedback: 'Switch SW1 learned Host A on Port 1 and Host B on Port 2; it forwards unicast frames directly without flooding.',
+      },
+      {
+        id: 'opt-asymmetric-mask',
+        label: 'Host B has an asymmetric /25 subnet mask (.128-.255), causing it to classify Host A (.10) as off-link and drop the Echo Reply due to lack of a gateway.',
+        isCorrect: true,
+        feedback: 'Spot on! Host A (/24) correctly viewed Host B as local on-link, but Host B (/25) treated Host A as remote off-link and had no gateway to reach it.',
+      },
+      {
+        id: 'opt-fcs-error',
+        label: 'Host A\'s ARP request was dropped due to a 32-bit CRC frame check error.',
+        isCorrect: false,
+        feedback: 'Telemetry shows Host A resolved Host B\'s MAC address into its ARP cache; ARP completed successfully.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-mask',
+        label: 'Reconfigure Host B subnet mask to 255.255.255.0 (/24) matching Host A',
+        isCorrect: true,
+        patch: { action: 'reconfigure-interface', target: 'host-b', value: { mask: '255.255.255.0' } },
+      },
+      {
+        id: 'fix-clear-arp',
+        label: 'Clear the ARP cache on Switch SW1',
+        isCorrect: false,
+        patch: { action: 'clear-arp', target: 'switch-sw1', value: 'all' },
+      },
+      {
+        id: 'fix-hosta-mask',
+        label: 'Change Host A subnet mask to 255.255.255.128 (/25)',
+        isCorrect: false,
+        patch: { action: 'reconfigure-interface', target: 'host-a', value: { mask: '255.255.255.128' } },
+      },
+    ],
+  },
+};
 
 /**
  * net-05: Address Resolution Protocol (ARP) & Local Delivery
@@ -41,8 +347,10 @@ export const NET_05_MODULE: ModuleData = {
       shortDescription:
         'Trace the two-message ARP exchange that maps an IP address to a MAC address on the local link.',
       theory: {
+        mentorScript: NET_05_MENTOR_SCRIPT,
         summary:
           'When a host knows the destination IP but not its MAC address, it sends an ARP Request broadcast. The target host responds with a unicast ARP Reply containing its MAC address.',
+
         explanation: [
           '### C21: ARP — Local IP-to-MAC Resolution',
           'In Module 4, we learned that a host performing local delivery must ARP for the destination IP. **Why?**',

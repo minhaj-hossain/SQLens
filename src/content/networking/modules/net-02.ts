@@ -1,4 +1,289 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_02_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-02',
+  conceptId: 'shared-medium-collisions',
+  revealLadder: {
+    'step-0': ['nic-hardware'],
+    'step-1': ['nic-hardware', 'os-stack'],
+    'step-2': ['nic-hardware', 'os-stack', 'frame-slicer'],
+    'step-3': ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer'],
+    'step-4': ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer', 'jumbo-frame'],
+    'step-5': ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer', 'jumbo-frame', 'ticket-desk'],
+  },
+  terms: {
+    'mac-address': {
+      label: 'MAC Address',
+      part: 'nic-hardware',
+      explanation: 'A 48-bit hardware identifier burnt into network interface cards or randomized by the OS for privacy.',
+    },
+    mtu: {
+      label: 'MTU',
+      part: 'frame-slicer',
+      explanation: 'Maximum Transmission Unit: the maximum payload size (typically 1500 bytes) an interface can transmit without fragmentation.',
+    },
+    'fcs-check': {
+      label: 'FCS CRC-32',
+      part: 'fcs-trailer',
+      explanation: 'Frame Check Sequence: a 4-byte 32-bit Cyclic Redundancy Check verifying frame integrity across physical media.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Stage 1: Interface Hardware & MAC' },
+      kind: 'point',
+      text: 'Every network interface card (NIC) possesses a 48-bit {{term:mac-address}} (e.g. 00:00:5E:00:53:01). Manufacturers burn a unique identifier into chip hardware, though modern operating systems can randomize it for privacy.',
+      spotlight: 'nic-hardware',
+      revealedParts: ['nic-hardware'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Stage 1: OS Network Stack Slicing' },
+      kind: 'do',
+      text: 'Click Pass 3,500-Byte Payload to OS Network Stack to observe payload segmentation.',
+      actionPrompt: 'Pass 3500-Byte Stream to OS Stack',
+      actionTargetPart: 'os-stack',
+      revealedParts: ['nic-hardware', 'os-stack'],
+      spotlight: 'os-stack',
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Stage 1: The 1500-Byte MTU Limit' },
+      kind: 'point',
+      text: 'Notice that raw Ethernet hardware does not slice the data: the sender\'s OS network stack slices the 3,500-byte stream so no frame payload exceeds the 1500-byte {{term:mtu}} (Frame 1: 1500B, Frame 2: 1500B, Frame 3: 500B).',
+      spotlight: 'frame-slicer',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer'],
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Stage 1: Transmit with Noise Burst' },
+      kind: 'do',
+      text: 'Click Transmit Frame with Noise to inject electrical interference on the wire.',
+      actionPrompt: 'Transmit Frame with Noise Burst',
+      actionTargetPart: 'nic-hardware',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer'],
+      spotlight: 'nic-hardware',
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Stage 1: 32-Bit CRC Integrity Check' },
+      kind: 'point',
+      text: 'An electrical burst inverted bit 240. The receiving NIC recalculates the 32-bit CRC {{term:fcs-check}}. Calculated CRC (0x1B824A10) differs from received FCS (0x9E30A1F4). Result: Silent hardware drop with zero retry.',
+      spotlight: 'fcs-trailer',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer'],
+    },
+    {
+      id: 'beat-6',
+      stage: { stageNumber: 2, title: 'Stage 2: Complete the Frame Anatomy' },
+      kind: 'predict',
+      text: 'What is the maximum total on-the-wire size of an untagged standard Ethernet II frame carrying a full 1500-byte payload?',
+      spotlight: 'frame-slicer',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer'],
+      options: [
+        {
+          id: 'opt-1500',
+          label: '1500 bytes',
+          isCorrect: false,
+          feedback: '1500 bytes is the Layer 3 payload (MTU), not the complete on-the-wire frame including headers.',
+        },
+        {
+          id: 'opt-1518',
+          label: '1518 bytes',
+          isCorrect: true,
+          feedback: 'Correct! 14-byte Ethernet header (6 Dst + 6 Src + 2 EtherType) + 1500-byte payload + 4-byte CRC-32 FCS trailer = 1518 bytes.',
+        },
+        {
+          id: 'opt-9000',
+          label: '9000 bytes',
+          isCorrect: false,
+          feedback: '9000 bytes represents Jumbo Frames, not standard untagged Ethernet II.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-1518-math',
+          label: 'The Ethernet II framing overhead is 18 bytes (14 bytes header + 4 bytes FCS trailer) added to the 1500-byte payload.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-cable-limit',
+          label: 'Copper cables cannot conduct more than 1518 pulses per second.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-ip-fixed',
+          label: 'IPv4 headers require exactly 18 bytes in all network types.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-7',
+      stage: { stageNumber: 3, title: 'Stage 3: Perform CRC Forensics' },
+      kind: 'predict',
+      text: 'What does an Ethernet switch or NIC do when an incoming frame fails 32-bit CRC FCS verification?',
+      spotlight: 'fcs-trailer',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer'],
+      options: [
+        {
+          id: 'opt-silent-drop',
+          label: 'Silently discards the frame immediately in hardware without sending a retransmission request at Layer 2.',
+          isCorrect: true,
+          feedback: 'Spot on! Ethernet is an unacknowledged best-effort link layer. Error recovery is delegated to upper layers like TCP.',
+        },
+        {
+          id: 'opt-send-nack',
+          label: 'Transmits an Ethernet NACK frame back to the sender demanding an immediate retransmit.',
+          isCorrect: false,
+          feedback: 'Ethernet II has no negative acknowledgement or retransmission mechanism at Layer 2.',
+        },
+        {
+          id: 'opt-ecc-repair',
+          label: 'Automatically repairs the inverted bits using the preamble.',
+          isCorrect: false,
+          feedback: 'The preamble is 8 bytes of alternating 10101010 for clock synchronization; it contains no error-correcting codes.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-best-effort',
+          label: 'Ethernet is best-effort and unacknowledged at Layer 2; corruption triggers a silent drop, leaving retransmissions to Layer 4 TCP.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-switch-buffer',
+          label: 'Switches do not inspect FCS trailers.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-crc-16',
+          label: 'CRC-32 can only detect errors if the frame is re-sent three times.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-8',
+      stage: { stageNumber: 4, title: 'Stage 4: Transfer to Jumbo Frames' },
+      kind: 'point',
+      text: 'Workstation A is configured with MTU 9000 (Jumbo Frames) for storage transfers, but connects to an access switch configured for standard MTU 1500.',
+      spotlight: 'jumbo-frame',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer', 'jumbo-frame'],
+    },
+    {
+      id: 'beat-9',
+      stage: { stageNumber: 4, title: 'Stage 4: Jumbo Frame Mismatch Prediction' },
+      kind: 'predict',
+      text: 'What happens when Workstation A transmits a 9000-byte jumbo frame to the 1500-byte access switch port?',
+      spotlight: 'jumbo-frame',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer', 'jumbo-frame'],
+      options: [
+        {
+          id: 'opt-switch-fragments',
+          label: 'The switch automatically fragments the frame into six 1500-byte frames.',
+          isCorrect: false,
+          feedback: 'Classic misconception! Layer 2 Ethernet switches do not perform fragmentation on transit frames.',
+        },
+        {
+          id: 'opt-giant-drop',
+          label: 'The switch port drops the frame immediately as an oversized / Giant frame error.',
+          isCorrect: true,
+          feedback: 'Correct! Any frame exceeding the switch port\'s maximum frame size (1518 bytes) is discarded by the port hardware.',
+        },
+        {
+          id: 'opt-compress',
+          label: 'The switch compresses the payload down to 1500 bytes.',
+          isCorrect: false,
+          feedback: 'Switches do not modify or compress frame payloads.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-l2-no-frag',
+          label: 'Layer 2 switches cannot fragment frames; frames exceeding the ingress port MTU are discarded as Giant frame errors.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-cable-burn',
+          label: 'Frames above 1500 bytes cause electrical overheating on copper cables.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-broadcast-only',
+          label: 'Jumbo frames can only be transmitted as broadcasts.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-10',
+      stage: { stageNumber: 5, title: 'Stage 5: Live Diagnosis' },
+      kind: 'point',
+      text: 'An emergency ticket has arrived: Workstation A can connect to Storage Server B for small commands, but large file transfers drop completely. Investigate the ticket below.',
+      spotlight: 'ticket-desk',
+      revealedParts: ['nic-hardware', 'os-stack', 'frame-slicer', 'fcs-trailer', 'jumbo-frame', 'ticket-desk'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '102',
+    title: 'Ticket #102: The Jumbo Frame Drop',
+    symptom: 'Workstation A connects to Storage Server B. Small command packets pass, but large block storage transfers fail completely with connection resets.',
+    telemetry: [
+      'Switch Port 1 Interface Statistics:',
+      '  RX Packets: 1,420',
+      '  RX Giants / Oversized (>1518 bytes): 840 (DROPPED)',
+      '  CRC-32 Alignment Errors: 0',
+      '  Interface MTU Setting: 1500 bytes',
+      'Workstation A NIC Configuration:',
+      '  Hardware: 10GbE PCIe NIC',
+      '  MTU: 9000 bytes (Jumbo Frames Enabled)',
+    ],
+    options: [
+      {
+        id: 'opt-cable-damage',
+        label: 'The copper cable is damaged causing CRC bitflips on large packets.',
+        isCorrect: false,
+        feedback: 'Switch telemetry indicates 0 CRC errors; the physical signal is clean.',
+      },
+      {
+        id: 'opt-mtu-mismatch',
+        label: 'Workstation A has MTU 9000 enabled, but Switch Port 1 has MTU 1500. Large frames are dropped as Giants by switch hardware.',
+        isCorrect: true,
+        feedback: 'Spot on! The switch port drops frames exceeding 1518 wire bytes as Giants. Reducing host MTU or enabling jumbo on the switch resolves it.',
+      },
+      {
+        id: 'opt-mac-blocked',
+        label: 'The switch MAC address table is full and rejecting new addresses.',
+        isCorrect: false,
+        feedback: 'Small frames pass reliably; unicast forwarding is working.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-host-mtu',
+        label: 'Reconfigure Workstation A NIC MTU to 1500 bytes',
+        isCorrect: true,
+        patch: { action: 'set-mtu', target: 'workstation-a-nic', value: 1500 },
+      },
+      {
+        id: 'fix-replace-cable',
+        label: 'Replace Cat6 copper cable with fiber optic patch cord',
+        isCorrect: false,
+        patch: { action: 'replace-cable', target: 'port-1', value: 'fiber-om4' },
+      },
+      {
+        id: 'fix-promisc',
+        label: 'Enable promiscuous mode on Workstation A NIC',
+        isCorrect: false,
+        patch: { action: 'set-promiscuous', target: 'workstation-a-nic', value: true },
+      },
+    ],
+  },
+};
 
 /**
  * net-02: Links, Interfaces & Ethernet Framing
@@ -43,8 +328,10 @@ export const NET_02_MODULE: ModuleData = {
       shortDescription:
         'Understand copper vs fiber media, transceivers, interface link states, and LED diagnostics.',
       theory: {
+        mentorScript: NET_02_MENTOR_SCRIPT,
         summary:
           'Before any digital frame can be exchanged, a physical connection must be established. Network interfaces connect via twisted-pair copper or fiber-optic media, exchanging physical carrier pulses to negotiate link state, speed, and duplex.',
+
         explanation: [
           '### C06: Physical Media & Interface Link States',
           'All network communication relies on physical signals transmitted through a medium:',

@@ -1,4 +1,283 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_04_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-04',
+  conceptId: 'why-ip-addresses-exist',
+  revealLadder: {
+    'step-0': ['ipv4-octets'],
+    'step-1': ['ipv4-octets', 'slicer-blade'],
+    'step-2': ['ipv4-octets', 'slicer-blade', 'active-octet'],
+    'step-3': ['ipv4-octets', 'slicer-blade', 'active-octet', 'router-trunk'],
+    'step-4': ['ipv4-octets', 'slicer-blade', 'active-octet', 'router-trunk', 'ticket-desk'],
+  },
+  terms: {
+    'active-octet': {
+      label: 'Active Octet',
+      part: 'active-octet',
+      explanation: 'The specific 8-bit octet where the prefix length divider splits network bits from host bits.',
+    },
+    'block-increment': {
+      label: 'Block Increment',
+      part: 'slicer-blade',
+      explanation: '2^(remaining host bits in the active octet), determining the numerical spacing between consecutive subnet blocks.',
+    },
+    'network-id': {
+      label: 'Network ID',
+      part: 'ipv4-octets',
+      explanation: 'The base address of a subnet with all host bits set to 0, identifying the subnet itself on routing tables.',
+    },
+    'broadcast-ip': {
+      label: 'Broadcast Address',
+      part: 'ipv4-octets',
+      explanation: 'The final address in a subnet range with all host bits set to 1, used to address all hosts on the link.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Stage 1: The 32-Bit Dotted Quad' },
+      kind: 'point',
+      text: 'Every IPv4 address is a 32-bit integer formatted into four 8-bit octets. Watch 192.168.10.130 broken down: octets 1–3 are network prefixes, and octet 4 holds 130 (binary 10000010).',
+      spotlight: 'ipv4-octets',
+      revealedParts: ['ipv4-octets'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Stage 1: Position Netmask Blade' },
+      kind: 'do',
+      text: 'Click Position Netmask Blade at /26 to divide the network bits from the host bits.',
+      actionPrompt: 'Position Netmask Blade at /26',
+      actionTargetPart: 'slicer-blade',
+      revealedParts: ['ipv4-octets', 'slicer-blade'],
+      spotlight: 'slicer-blade',
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Stage 1: The Active Octet Rule' },
+      kind: 'point',
+      text: 'Because /26 is between /25 and /32, Octet 4 is the {{term:active-octet}}. It has 2 network bits (prefix 26 - 24 = 2) and 6 host bits (8 - 2 = 6). The {{term:block-increment}} is 2^6 = 64. Subnet blocks start at 0, 64, 128, 192.',
+      spotlight: 'active-octet',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet'],
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Stage 1: Identify Subnet Block' },
+      kind: 'do',
+      text: 'Click Highlight Block .128 to lock in the subnet containing host IP .130.',
+      actionPrompt: 'Highlight Subnet Block .128',
+      actionTargetPart: 'ipv4-octets',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet'],
+      spotlight: 'ipv4-octets',
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 2, title: 'Stage 2: Complete the /26 Calculation' },
+      kind: 'predict',
+      text: 'For host IP 192.168.10.65/26, what is the {{term:network-id}} and usable host range?',
+      spotlight: 'ipv4-octets',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet'],
+      options: [
+        {
+          id: 'opt-net-0',
+          label: 'Network ID: 192.168.10.0, Usable: .1 to .62',
+          isCorrect: false,
+          feedback: 'Value .65 exceeds block 0 (which ends at .63); it belongs to the second block.',
+        },
+        {
+          id: 'opt-net-64',
+          label: 'Network ID: 192.168.10.64, Usable: .65 to .126',
+          isCorrect: true,
+          feedback: 'Correct! Increment is 64; .65 falls into block [64..127]. .64 is the Network ID, .127 is the Broadcast, leaving .65–.126 usable.',
+        },
+        {
+          id: 'opt-net-65',
+          label: 'Network ID: 192.168.10.65, Usable: .66 to .128',
+          isCorrect: false,
+          feedback: 'Host IPs can never be the Network ID itself.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-block-64',
+          label: 'The block increment is 64, so block 2 spans 64 to 127. First is Network ID, last is Broadcast, interior addresses are usable hosts.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-subnets-odd',
+          label: 'Network IDs must always be even numbers.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-class-c',
+          label: 'All 192.168 addresses have 254 usable hosts regardless of mask.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-6',
+      stage: { stageNumber: 3, title: 'Stage 3: Perform /27 Subnet Sizing' },
+      kind: 'predict',
+      text: 'A remote branch office assigns 172.16.20.100/27. How many usable host addresses does this subnet support, and what is the {{term:broadcast-ip}}?',
+      spotlight: 'ipv4-octets',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet'],
+      options: [
+        {
+          id: 'opt-27-valid',
+          label: '30 usable hosts, Broadcast Address: 172.16.20.127',
+          isCorrect: true,
+          feedback: 'Spot on! /27 leaves 5 host bits: 2^5 = 32 addresses, minus 2 = 30 usable hosts. 100 falls in block [96..127].',
+        },
+        {
+          id: 'opt-27-62',
+          label: '62 usable hosts, Broadcast Address: 172.16.20.128',
+          isCorrect: false,
+          feedback: '62 usable hosts corresponds to a /26 mask, not /27.',
+        },
+        {
+          id: 'opt-27-14',
+          label: '14 usable hosts, Broadcast Address: 172.16.20.111',
+          isCorrect: false,
+          feedback: '14 usable hosts corresponds to a /28 mask.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-27-math',
+          label: '32 total bits - 27 prefix bits = 5 host bits. Capacity is 2^5 - 2 = 30 usable hosts.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-broadcast-always-255',
+          label: 'Broadcast addresses must always end in .255.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-27-fixed',
+          label: 'Subnets in 172.16.x are hardcoded by RFC standards to 16 hosts.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-7',
+      stage: { stageNumber: 4, title: 'Stage 4: Transfer to 3rd-Octet Prefix' },
+      kind: 'point',
+      text: 'Now test the Active Octet Rule beyond the 4th octet: examine 10.50.14.73/22. Prefixes /17 to /24 have their boundary in Octet 3!',
+      spotlight: 'router-trunk',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet', 'router-trunk'],
+    },
+    {
+      id: 'beat-8',
+      stage: { stageNumber: 4, title: 'Stage 4: /22 Calculation & Routing' },
+      kind: 'predict',
+      text: 'For 10.50.14.73/22, which octet is the {{term:active-octet}}, and what is the Network ID?',
+      spotlight: 'router-trunk',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet', 'router-trunk'],
+      options: [
+        {
+          id: 'opt-octet-4',
+          label: 'Active Octet is 4; Network ID is 10.50.14.0',
+          isCorrect: false,
+          feedback: 'Don\'t fall into the 4th-octet shortcut! /22 has 22 network bits: 8 in octet 1, 8 in octet 2, and 6 in octet 3.',
+        },
+        {
+          id: 'opt-octet-3',
+          label: 'Active Octet is 3; Network ID is 10.50.12.0',
+          isCorrect: true,
+          feedback: 'Brilliant! Octet 3 has 6 network bits and 2 host bits. Increment is 2^2 = 4 (blocks: 0, 4, 8, 12, 16...). 14 falls in block 12 (10.50.12.0/22).',
+        },
+        {
+          id: 'opt-octet-2',
+          label: 'Active Octet is 2; Network ID is 10.50.0.0',
+          isCorrect: false,
+          feedback: 'Octet 2 would only be active for prefixes between /9 and /16.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-active-3',
+          label: 'Prefix /22 leaves 2 host bits in the 3rd octet (increment 4), so the block spans 10.50.12.0 to 10.50.15.255.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-always-octet4',
+          label: 'Subnetting only applies to the last octet of an IPv4 address.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-class-a',
+          label: '10.x.x.x addresses must always use 255.0.0.0 masks.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-9',
+      stage: { stageNumber: 5, title: 'Stage 5: Live Diagnosis' },
+      kind: 'point',
+      text: 'A critical connectivity ticket has just escalated: Workstation B cannot reach external services or its default gateway. Investigate the ticket below.',
+      spotlight: 'ticket-desk',
+      revealedParts: ['ipv4-octets', 'slicer-blade', 'active-octet', 'router-trunk', 'ticket-desk'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '104',
+    title: 'Ticket #104: The Off-Link Default Gateway',
+    symptom: 'Workstation B (192.168.1.120) cannot access internet services or its configured default gateway (192.168.1.129).',
+    telemetry: [
+      'C:\\> ipconfig',
+      'IPv4 Address. . . . . . . . . . : 192.168.1.120',
+      'Subnet Mask . . . . . . . . . . : 255.255.255.128  (/25)',
+      'Default Gateway . . . . . . . . : 192.168.1.129',
+      'C:\\> ping 192.168.1.129',
+      'PING 192.168.1.129: Destination host unreachable',
+    ],
+    options: [
+      {
+        id: 'opt-cable',
+        label: 'Switch Port 2 cable is unplugged.',
+        isCorrect: false,
+        feedback: 'Link LEDs are solid green; local loopback and link-layer are functional.',
+      },
+      {
+        id: 'opt-offlink-gw',
+        label: 'Workstation B (.120/25) belongs to subnet 192.168.1.0–127, while Gateway (.129) is in subnet 192.168.1.128–255. Because the gateway is off-link, the host cannot ARP for it.',
+        isCorrect: true,
+        feedback: 'Spot on! A host cannot route through a gateway that is not in its own local subnet. The host drops the packets internally.',
+      },
+      {
+        id: 'opt-too-many-hosts',
+        label: 'Subnet mask /25 has exceeded its maximum capacity of 64 hosts.',
+        isCorrect: false,
+        feedback: 'A /25 supports 126 usable hosts; address exhaustion is not the cause.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-reconfigure-gw',
+        label: 'Reconfigure Workstation B default gateway to 192.168.1.1 (within subnet .0-.127)',
+        isCorrect: true,
+        patch: { action: 'reconfigure-interface', target: 'workstation-b', value: { gateway: '192.168.1.1' } },
+      },
+      {
+        id: 'fix-ip-254',
+        label: 'Change Workstation B IP address to 192.168.1.254',
+        isCorrect: false,
+        patch: { action: 'reconfigure-interface', target: 'workstation-b', value: { ip: '192.168.1.254' } },
+      },
+      {
+        id: 'fix-reboot-sw',
+        label: 'Reboot the access switch',
+        isCorrect: false,
+        patch: { action: 'reboot', target: 'switch', value: 'all' },
+      },
+    ],
+  },
+};
 
 /**
  * net-04: Network Layer & IPv4 Addressing
@@ -43,8 +322,10 @@ export const NET_04_MODULE: ModuleData = {
       shortDescription:
         'Understand the fundamental limitation of MAC-only addressing and how IPv4 dotted-decimal and RFC 1918 private ranges solve it.',
       theory: {
+        mentorScript: NET_04_MENTOR_SCRIPT,
         summary:
           'MAC addresses are flat, unstructured identifiers with no hierarchy. They cannot tell a router "which direction" to send a packet. IP addresses add a hierarchical, routable layer on top of the flat link layer.',
+
         explanation: [
           '### C15: Why IP Addresses Are Needed Beyond Flat MACs',
           'When Host A sends a frame to Host B on the **same Ethernet segment**, MAC addressing works perfectly — the switch uses the destination MAC to forward the frame to the correct port.',

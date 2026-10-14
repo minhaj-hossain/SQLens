@@ -1,4 +1,289 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_01_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-01',
+  conceptId: 'direct-link-mac',
+  revealLadder: {
+    'step-0': ['host-a'],
+    'step-1': ['host-a', 'server-z'],
+    'step-2': ['host-a', 'server-z', 'switch-sw1', 'router-r1'],
+    'step-3': ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
+    'step-4': ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link'],
+    'step-5': ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link', 'ticket-desk'],
+  },
+  terms: {
+    endpoints: {
+      label: 'Endpoints',
+      part: 'host-a',
+      explanation: 'Devices where network traffic originates or terminates (e.g. workstations, web servers, smartphones).',
+    },
+    intermediaries: {
+      label: 'Intermediaries',
+      part: 'switch-sw1',
+      explanation: 'Network infrastructure devices (switches, routers) that forward and manage traffic without creating payloads.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Stage 1: Meet the Endpoints' },
+      kind: 'point',
+      text: 'Meet Host A (192.168.1.10). It runs user applications that generate and consume data. Devices that originate or terminate network traffic are {{term:endpoints}}.',
+      spotlight: 'host-a',
+      revealedParts: ['host-a'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Stage 1: The Remote Destination' },
+      kind: 'point',
+      text: 'Across the network sits Server Z (10.0.0.50). It hosts web applications and returns HTTP responses. It is also an endpoint.',
+      spotlight: 'server-z',
+      revealedParts: ['host-a', 'server-z'],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Stage 1: Select Payload' },
+      kind: 'do',
+      text: 'Click Select Payload to generate an HTTP GET /index.html request at Host A.',
+      actionPrompt: 'Select Payload: HTTP GET /index.html',
+      actionTargetPart: 'host-a',
+      revealedParts: ['host-a', 'server-z'],
+      spotlight: 'host-a',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Stage 1: Intermediary Infrastructure' },
+      kind: 'point',
+      text: 'Connecting the endpoints are Switch SW1 and Router R1. They do not generate business data—they forward and steer it across links. They are {{term:intermediaries}}.',
+      spotlight: 'switch-sw1',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1'],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Stage 1: The Encapsulation Journey' },
+      kind: 'do',
+      text: 'Click Package Data to observe the multi-layer encapsulation hierarchy.',
+      actionPrompt: 'Package Data: Encapsulate',
+      actionTargetPart: 'encap-stepper',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
+      spotlight: 'encap-stepper',
+    },
+    {
+      id: 'beat-6',
+      stage: { stageNumber: 2, title: 'Stage 2: Guided Hop Traversal' },
+      kind: 'do',
+      text: 'Click Step Hop to advance the frame from Host A through Switch SW1 to Router R1.',
+      actionPrompt: 'Step Hop: Host A -> Switch SW1 -> Router R1',
+      actionTargetPart: 'router-r1',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
+      spotlight: 'router-r1',
+    },
+    {
+      id: 'beat-7',
+      stage: { stageNumber: 2, title: 'Stage 2: Layer 2 vs Layer 3 Traversal' },
+      kind: 'predict',
+      text: 'As the frame crosses Router R1 toward Server Z, how do the headers change?',
+      spotlight: 'router-r1',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
+      options: [
+        {
+          id: 'opt-ip-changes',
+          label: 'The Source and Destination IP addresses change on every hop.',
+          isCorrect: false,
+          feedback: 'IP addresses designate end-to-end endpoints and remain intact across standard routing hops.',
+        },
+        {
+          id: 'opt-mac-rewritten',
+          label: 'Layer 2 MAC addresses are rewritten for the next link, while Layer 3 IP addresses remain intact.',
+          isCorrect: true,
+          feedback: 'Correct! Layer 2 MACs provide hop-by-hop delivery across individual links, while Layer 3 IPs provide end-to-end addressing.',
+        },
+        {
+          id: 'opt-tcp-stripped',
+          label: 'The router strips the TCP port numbers before forwarding.',
+          isCorrect: false,
+          feedback: 'Routers operate at Layer 3; they do not alter or strip Layer 4 TCP port numbers.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-l2-l3-roles',
+          label: 'Layer 3 IP represents end-to-end destination, while Layer 2 MAC represents hop-by-hop physical link delivery.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-router-no-ip',
+          label: 'Routers cannot read IP addresses.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-cable-distance',
+          label: 'Ethernet cables require IP addresses to change every 10 meters.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-8',
+      stage: { stageNumber: 3, title: 'Stage 3: Perform Role Classification' },
+      kind: 'predict',
+      text: 'In an enterprise datacenter topology, which device functions as an Intermediary rather than an Endpoint?',
+      spotlight: 'switch-sw1',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
+      options: [
+        {
+          id: 'opt-access-switch',
+          label: '24-Port Access Switch forwarding Ethernet frames between server racks',
+          isCorrect: true,
+          feedback: 'Spot on! Access switches forward frames between ports without originating or terminating user payloads.',
+        },
+        {
+          id: 'opt-postgres-server',
+          label: 'PostgreSQL Database Server hosting customer account records',
+          isCorrect: false,
+          feedback: 'Database servers run applications and store data; they are Endpoints.',
+        },
+        {
+          id: 'opt-web-frontend',
+          label: 'Web application frontend running in a Linux container',
+          isCorrect: false,
+          feedback: 'Application containers terminate HTTP sockets; they are Endpoints.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-forwarding-only',
+          label: 'Intermediaries forward and manage traffic across the network without generating or consuming application payloads.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-hardware-cost',
+          label: 'Intermediaries must always cost more than servers.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-power-supply',
+          label: 'Endpoints do not require power supplies.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-9',
+      stage: { stageNumber: 4, title: 'Stage 4: Transfer to Remote Delivery' },
+      kind: 'point',
+      text: 'Now observe the boundary: Host A sends traffic to Local Host B (192.168.1.20) on the same switch vs Remote Server Z (10.0.0.50) across Router R1.',
+      spotlight: 'wan-link',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link'],
+    },
+    {
+      id: 'beat-10',
+      stage: { stageNumber: 4, title: 'Stage 4: Remote MAC Target Prediction' },
+      kind: 'predict',
+      text: 'What Destination MAC must Host A place on the Ethernet frame when transmitting to remote Server Z (10.0.0.50)?',
+      spotlight: 'wan-link',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link'],
+      options: [
+        {
+          id: 'opt-server-mac',
+          label: 'Server Z\'s MAC address',
+          isCorrect: false,
+          feedback: 'Classic misconception! Layer 2 broadcast frames cannot cross routers. Host A cannot address Server Z\'s MAC directly.',
+        },
+        {
+          id: 'opt-gateway-mac',
+          label: 'Default Gateway Router R1\'s MAC address',
+          isCorrect: true,
+          feedback: 'Brilliant! For off-link destinations, the frame is delivered to the local gateway router at Layer 2.',
+        },
+        {
+          id: 'opt-broadcast-mac',
+          label: 'The Broadcast MAC FF:FF:FF:FF:FF:FF',
+          isCorrect: false,
+          feedback: 'Broadcast frames are dropped at the router boundary and will not reach Server Z.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-gateway-l2',
+          label: 'Local Layer 2 frames terminate at the router boundary; the router must receive the frame to route the inner IP packet.',
+          isCorrect: true,
+        },
+        {
+          id: 'why-server-hidden',
+          label: 'Remote servers do not have MAC addresses.',
+          isCorrect: false,
+        },
+        {
+          id: 'why-router-switch',
+          label: 'Switches erase destination MAC addresses when entering a router.',
+          isCorrect: false,
+        },
+      ],
+    },
+    {
+      id: 'beat-11',
+      stage: { stageNumber: 5, title: 'Stage 5: Live Discovery Ticket' },
+      kind: 'point',
+      text: 'A workstation report has come in: Host A cannot communicate with any local or remote device. Investigate Discovery Ticket #101 below.',
+      spotlight: 'ticket-desk',
+      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link', 'ticket-desk'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '101',
+    title: 'Discovery Ticket #101: The Silent Link',
+    symptom: 'Host A cannot transmit packets or receive traffic. All local pings time out immediately.',
+    telemetry: [
+      'Host A Network Interface Status: eth0 DOWN (NO-CARRIER)',
+      'Switch SW1 Port 1 Status: Link LED OFF, Carrier Detect: Inactive',
+      'Physical Cable Inspection: RJ-45 unlatched and disconnected from Port 1',
+    ],
+    options: [
+      {
+        id: 'opt-reboot-os',
+        label: 'Reboot Host A operating system to reset network sockets.',
+        isCorrect: false,
+        feedback: 'Operating system reboot will not resolve an unlatched physical cable.',
+      },
+      {
+        id: 'opt-reconnect-cable',
+        label: 'Switch Port 1 physical cable is disconnected, preventing physical carrier detection.',
+        isCorrect: true,
+        feedback: 'Spot on! Without a physical link carrier, Layer 2 Ethernet cannot transmit pulses.',
+      },
+      {
+        id: 'opt-dns-down',
+        label: 'DNS root servers are offline.',
+        isCorrect: false,
+        feedback: 'DNS is an application layer protocol; failure here is at physical Layer 1.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-reconnect',
+        label: 'Plug Ethernet cable securely into Switch SW1 Port 1',
+        isCorrect: true,
+        patch: { action: 'set-link', target: 'port-1', value: 'connected' },
+      },
+      {
+        id: 'fix-reconfigure-ip',
+        label: 'Change Host A IP address to 192.168.1.99',
+        isCorrect: false,
+        patch: { action: 'reconfigure-interface', target: 'host-a', value: { ip: '192.168.1.99' } },
+      },
+      {
+        id: 'fix-flush-dns',
+        label: 'Flush local DNS cache',
+        isCorrect: false,
+        patch: { action: 'flush-dns', target: 'host-a', value: 'all' },
+      },
+    ],
+  },
+};
 
 /**
  * net-01: The End-to-End Communication Journey
@@ -42,8 +327,10 @@ export const NET_01_MODULE: ModuleData = {
       shortDescription:
         'Understand the purpose of computer networks and distinguish between devices that produce data and devices that forward it.',
       theory: {
+        mentorScript: NET_01_MENTOR_SCRIPT,
         summary:
           'Networks exist to allow independent computing systems to exchange data and share resources. Every device on a network belongs to one of two fundamental categories: Endpoints (hosts that create or consume data) or Intermediaries (infrastructure nodes that forward and manage traffic).',
+
         explanation: [
           '### C01: Why Networks Exist',
           'An isolated computer can only compute on its own local data. To coordinate work, share files, stream media, and access cloud databases, computers must transmit electrical, optical, or radio signals across a transmission medium.',

@@ -268,15 +268,30 @@ export class SwitchSimulationEngine {
   }
 }
 
+export const DEFAULT_SWITCH_HOSTS: HostNode[] = [
+  { id: 'host-a', name: 'Host A', mac: 'AA:AA:AA:AA:AA:AA', port: 1 },
+  { id: 'host-b', name: 'Host B', mac: 'BB:BB:BB:BB:BB:BB', port: 2 },
+  { id: 'host-c', name: 'Host C', mac: 'CC:CC:CC:CC:CC:CC', port: 3 },
+  { id: 'host-d', name: 'Host D', mac: 'DD:DD:DD:DD:DD:DD', port: 4 },
+];
+
+export const DEFAULT_FRAME_SEQUENCE: FrameTransmission[] = [
+  // Frame 1: Host A sends to Host B (cold start flood)
+  { srcMac: 'AA:AA:AA:AA:AA:AA', dstMac: 'BB:BB:BB:BB:BB:BB', ingressPort: 1 },
+  // Frame 2: Host B replies to Host A (learned unicast)
+  { srcMac: 'BB:BB:BB:BB:BB:BB', dstMac: 'AA:AA:AA:AA:AA:AA', ingressPort: 2 },
+];
+
 /**
  * Pure deterministic function producing granular step-by-step playback states.
  * Guarantees zero side effects and complete replayability.
  */
 export function generateSwitchSimulation(
-  hosts: HostNode[],
-  sequence: FrameTransmission[],
+  hosts: HostNode[] = DEFAULT_SWITCH_HOSTS,
+  sequence: FrameTransmission[] = DEFAULT_FRAME_SEQUENCE,
   options?: SwitchSimulationOptions
 ): SimulationStep[] {
   const engine = new SwitchSimulationEngine(hosts, options);
   return engine.processSequence(sequence);
 }
+

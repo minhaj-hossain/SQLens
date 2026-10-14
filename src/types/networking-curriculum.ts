@@ -505,6 +505,140 @@ export interface VlanDijkstraTaskContent {
   explanationNotes?: string[];
 }
 
+// ─────────────────────────────────────────────────────────────
+// Mentor Mode ("Trainer & Disciple") Runtime Architecture Types
+// ─────────────────────────────────────────────────────────────
+
+export type MentorPartId = string;
+
+export interface MentorReactions {
+  correct?: string[];
+  wrong?: Record<string | number, string[]>;
+  fallback?: string[];
+  hintAfter?: number;
+}
+
+export interface MentorBeatBase {
+  id: string;
+  say?: string[];              // <= 2 bubbles, ~35 words each, may contain {{term:x}}
+  text?: string;               // Unified beat dialogue text
+  reveal?: MentorPartId[];     // Parts added to stage in this beat
+  revealedParts?: MentorPartId[]; // Cumulative parts visible up to this beat
+  spotlight?: MentorPartId;    // Spotlight ring target, or omit
+  actionPrompt?: string;       // Interactive CTA button label
+  actionTargetPart?: string;   // Element targeted by action
+  stage?: { stageNumber?: number; stepIndex?: number; title?: string };
+}
+
+export type MentorBeat =
+  | (MentorBeatBase & { kind: 'say' | 'point' | 'debrief' })
+  | (MentorBeatBase & { 
+      kind: 'do'; 
+      expect?: 'transmit' | 'step' | 'select-port' | 'toggle-device' | string;
+    })
+  | (MentorBeatBase & {
+      kind: 'predict';
+      options: Array<{
+        id: string;
+        label: string;
+        isCorrect: boolean;
+        feedback: string;
+        egressPorts?: number[];
+      }>;
+      whyPrompt?: string;
+      whyOptions?: Array<{
+        id: string;
+        label: string;
+        isCorrect: boolean;
+        feedback?: string;
+      }>;
+      reactions?: MentorReactions;
+    })
+  | (MentorBeatBase & {
+      kind: 'fill';
+      fields: Array<{
+        id: string;
+        label: string;
+        expected: string;
+        helperText?: string;
+      }>;
+      reactions?: MentorReactions;
+    })
+  | (MentorBeatBase & {
+      kind: 'ticket';
+      sceneId: string;
+    });
+
+export interface MentorScript {
+  version?: string;
+  track?: string;
+  moduleId: string;
+  conceptId: string;
+  tier?: 'shadow' | 'call-the-shots' | 'urgent-ticket';
+  allowedTerms?: string[];
+  revealLadder?: Record<string, string[]>;
+  terms: Record<string, { label: string; part: MentorPartId; explanation?: string }>;
+  beats: MentorBeat[];
+  ticketScene?: {
+    ticketId: string;
+    title: string;
+    symptom: string;
+    telemetry: string[];
+    options: Array<{ id: string; label: string; isCorrect: boolean; feedback: string }>;
+    repairActions: Array<{
+      id: string;
+      label: string;
+      isCorrect: boolean;
+      patch?: DeclarativePatch;
+    }>;
+  };
+}
+
+export interface MentorControllable {
+  /** Visible stage elements. When undefined, renders full canvas. */
+  visibleParts?: ReadonlySet<string>;
+  /** Element ID to highlight; all other elements receive spotlight dimming. */
+  spotlight?: string;
+  /** Explicit step index for external stepper control. */
+  controlledStepIndex?: number;
+  /** Callback fired upward when learner triggers a physical control. */
+  onAction?: (action: { type: string; payload?: unknown }) => void;
+  /** Declarative state overrides for ticket diagnostics. */
+  stateOverrides?: Record<string, unknown>;
+}
+
+export interface DeclarativePatch<TState = unknown> {
+  action: 'set-link' | 'set-mtu' | 'reconfigure-interface' | 'transmit-frame' | string;
+  target: string;
+  value: unknown;
+}
+
+export interface TicketScene<TState = unknown> {
+  id: string;
+  title: string;
+  symptom: string;
+  initialState: TState;
+  inspectableComponents: Array<{ id: string; label: string; data: unknown }>;
+  diagnosticQuestion: {
+    prompt: string;
+    options: Array<{ id: string; label: string; isCorrect: boolean; feedback: string }>;
+  };
+  allowedFixActions: Array<{
+    id: string;
+    label: string;
+    patch: DeclarativePatch<TState>;
+    feedbackOnWrong?: string;
+  }>;
+  isFixed: (state: TState) => boolean;
+  verifyTelemetry: (state: TState) => {
+    success: boolean;
+    pingOutput: string;
+    packetLossPercent: number;
+    explanation: string;
+  };
+}
+
+
 
 
 
