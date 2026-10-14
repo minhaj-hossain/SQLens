@@ -102,11 +102,14 @@ export const DataGrid: React.FC<DataGridProps> = ({
   // Column → display type, resolved once per dataset.
   const types = useMemo(() => {
     const schema = schemaName ? DATABASE_SCHEMAS[schemaName.toLowerCase()] : undefined;
+    // Sample at most 25 rows for type inference to avoid massive array allocations on large queries
+    const sampleRows = rows.length > 25 ? rows.slice(0, 25) : rows;
     return columns.map((col, ci) => {
-      const values = rows.map((r) => cellAt(r, ci, col));
       const schemaCol = schema?.columns.find(
         (c) => c.name.toLowerCase() === col.toLowerCase(),
       );
+      // Skip row value mapping when schema type is known
+      const values = schemaCol?.type ? [] : sampleRows.map((r) => cellAt(r, ci, col));
       return resolveCellType(col, values, {
         schemaType: schemaCol?.type,
         explicit: columnTypes?.[col],
@@ -135,7 +138,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
     <div
       className={`w-full min-w-0 ${bare ? '' : 'border border-border rounded-lg overflow-hidden bg-surface'} ${className}`}
     >
-      <div className={`w-full min-w-0 overflow-x-auto scrollbar-thin ${maxHeight}`}>
+      <div className={`w-full min-w-0 overflow-x-auto scrollbar-thin overscroll-contain ${maxHeight}`}>
         <table className="w-full min-w-full border-collapse font-mono text-[12px] sm:text-[13px]">
           <thead className="sticky top-0 z-10">
             <tr>

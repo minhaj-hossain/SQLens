@@ -365,7 +365,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             return (
               <div
                 key={milestone.id}
-                className={`relative ${mIdx < ROADMAP_MILESTONES.length - 1 ? 'mb-16' : ''}`}
+                className={`relative ${mIdx < ROADMAP_MILESTONES.length - 1 ? 'mb-16' : ''} ${mIdx > 0 ? 'roadmap-milestone-stage' : ''}`}
               >
                 {/* stage node */}
                 <div

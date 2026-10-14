@@ -209,7 +209,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
       {/* ─────────────────────────────────────────────────────────────
           1. TOP STATUS & NAVIGATION STEPPER BAR
           ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-surface-1/90 border border-border shadow-md backdrop-blur-md">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-surface border border-border shadow-md">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-func/15 border border-func/30 flex items-center justify-center shrink-0 text-func">
             {isChallenge ? <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" /> : <Network className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -306,7 +306,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -353,7 +353,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -400,7 +400,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -447,7 +447,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -494,7 +494,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -541,7 +541,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -588,7 +588,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -635,7 +635,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -682,7 +682,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -729,7 +729,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <h3 className="font-mono text-base sm:text-lg font-bold text-text">
                     {cleanTitle}
@@ -776,7 +776,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider flex items-center gap-1.5">
@@ -829,7 +829,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 onViewSolution={() => setViewedSolution(true)}
               />
             ) : (
-              <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+              <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider flex items-center gap-1.5">
@@ -909,7 +909,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
 
           {/* Reasoning / Prediction Judgment Questions Card */}
           {(task.validation.judgment?.length ?? 0) > 0 && (
-            <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 sm:p-5 shadow-lg space-y-3.5">
+            <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-lg space-y-3.5">
               <div className="flex items-center justify-between border-b border-border-soft pb-2.5">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-func" />
@@ -940,7 +940,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
 
           {/* Direct Port Selection Helper (when active topology ports exist) */}
           {hasTopology && (topology ?? []).length > 0 && (
-            <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-4 shadow-md space-y-2">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-md space-y-2">
               <span className="font-mono text-xs font-semibold text-text-dim uppercase tracking-wider block">
                 Direct Port Inspection &amp; Selection:
               </span>
@@ -1042,7 +1042,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
           ───────────────────────────────────────────────────────────── */
       <div className="max-w-4xl mx-auto flex flex-col gap-4 sm:gap-5 w-full min-w-0">
         {/* Card 1: Scenario Context & Technical Objectives Briefing */}
-        <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4 text-text">
+        <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 text-text">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-semibold text-func uppercase tracking-wider flex items-center gap-1.5">
@@ -1158,7 +1158,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
 
         {/* Card 2: Interactive Assessment (JudgmentBlock) */}
         {(task.validation.judgment?.length ?? 0) > 0 && (
-          <div className="rounded-2xl border border-border bg-surface-1/90 backdrop-blur-md p-5 sm:p-6 shadow-lg space-y-4">
+          <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4">
             <div className="flex items-center justify-between border-b border-border-soft pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-func" />

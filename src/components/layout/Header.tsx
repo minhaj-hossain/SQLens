@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
   const progressPct = Math.round((completedCount / totalModules) * 100);
 
   return (
-    <header className={`sticky top-0 w-full z-50 backdrop-blur-md pt-safe border-b transition-colors ${isMinimal ? 'bg-[#060b16]/90 border-[#121d33]' : 'bg-ink/90 border-border-soft'}`}>
+    <header className={`sticky top-0 w-full z-50 pt-safe border-b transition-colors ${isMinimal ? 'bg-[#060b16]/95 border-[#121d33]' : 'bg-ink/95 border-border-soft'}`}>
       <div className={`flex items-center justify-between mx-auto w-full ${isMinimal ? 'h-16 px-4 sm:px-6 max-w-[1120px] gap-3' : 'h-14 px-3 sm:px-6 max-w-5xl gap-2 sm:gap-4'}`}>
 
         {/* Left: brand dot + wordmark + current-route label (links home) */}
@@ -148,16 +148,14 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-expanded={userMenuOpen}
                   className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none ${isMinimal ? 'bg-[#0d1526] border border-[#38bdf8]' : 'bg-surface-2 border border-border'}`}
                 >
-                {/* Rotating conic ring - grayscale (matches border system) */}
-                <motion.span
+                {/* Rotating conic ring - GPU-composited CSS animation (zero JS overhead) */}
+                <span
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-full"
+                  className="absolute inset-0 rounded-full animate-conic-spin"
                   style={{
                     background:
                       'conic-gradient(from 140deg, var(--border), var(--border-strong), var(--border), var(--border-soft), var(--border))',
                   }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, ease: 'linear', repeat: Infinity }}
                 />
                 {/* Soft gap between ring and disc */}
                 <span className="absolute inset-[2px] rounded-full bg-ink" />
@@ -167,12 +165,10 @@ export const Header: React.FC<HeaderProps> = ({
                     {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
                   </span>
                 </span>
-                {/* Gentle breathing glow */}
-                <motion.span
+                {/* Gentle breathing glow - GPU-composited CSS animation */}
+                <span
                   aria-hidden="true"
-                  className="absolute -inset-0.5 rounded-full bg-func/15 blur-[5px]"
-                  animate={{ opacity: [0.35, 0.65, 0.35] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -inset-0.5 rounded-full bg-func/15 blur-[5px] animate-glow-pulse"
                 />
               </button>
               {/* Profile popover — opens on hover/tap */}

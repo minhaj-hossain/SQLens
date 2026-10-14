@@ -28,7 +28,7 @@ export default function AdminShell({ adminName, children }: { adminName: string;
   return (
     <main className="min-h-screen bg-ink">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-ink/90 backdrop-blur-md border-b border-border-soft">
+      <header className="sticky top-0 z-40 bg-ink/95 border-b border-border-soft">
         <div className="max-w-5xl mx-auto h-14 px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-display font-bold text-sm sm:text-base text-text whitespace-nowrap">

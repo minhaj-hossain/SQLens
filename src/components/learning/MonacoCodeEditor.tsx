@@ -591,7 +591,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
 
     return (
       <div
-        className={`w-full relative overflow-hidden rounded-b-xl border-t border-border-soft ${className}`}
+        className={`w-full relative overflow-hidden rounded-b-xl border-t border-border-soft overscroll-contain ${className}`}
         style={{ minHeight: effectiveHeight, height: effectiveHeight }}
         onClick={() => {
           if (editorInstanceRef.current) {
@@ -623,6 +623,11 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
             tabSize: 2,
             suggestOnTriggerCharacters: true,
             quickSuggestions: true,
+            scrollbar: {
+              verticalScrollbarSize: 6,
+              horizontalScrollbarSize: 6,
+              alwaysConsumeMouseWheel: false,
+            },
           }}
         />
       </div>
