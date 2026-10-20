@@ -251,7 +251,7 @@ export const PrismaStepBreakdownCard: React.FC<PrismaStepBreakdownCardProps> = (
                   Step {activeStepIndex + 1}
                 </span>
                 <span className="text-text-faint text-xs">•</span>
-                <span className="font-mono text-[12px] font-semibold text-text truncate">
+                <span className="font-sans text-[13px] font-semibold text-text truncate">
                   {currentStep.stepTitle.replace(/^Step\s*\d*:\s*/i, '')}
                 </span>
               </div>
@@ -357,7 +357,7 @@ export const PrismaStepBreakdownCard: React.FC<PrismaStepBreakdownCardProps> = (
                     <span className="w-5 h-5 rounded-full bg-surface-3 text-text-dim flex items-center justify-center font-mono text-[10px] font-semibold shrink-0">
                       {step.stepNumber}
                     </span>
-                    <span className="font-mono text-[12px] font-semibold text-text truncate">
+                    <span className="font-sans text-[13px] font-semibold text-text truncate">
                       {step.stepTitle.replace(/^Step\s*\d*:\s*/i, '')}
                     </span>
                   </div>

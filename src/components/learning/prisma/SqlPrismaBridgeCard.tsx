@@ -35,7 +35,7 @@ export const SqlPrismaBridgeCard: React.FC<SqlPrismaBridgeCardProps> = ({ bridge
 
       {/* Comparison Grid */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse min-w-[500px]">
           <thead>
             <tr className="border-b border-border-soft bg-surface-3/30 font-mono text-[10.5px] uppercase tracking-wider text-text-faint">
               <th className="py-2.5 px-4 w-1/2">

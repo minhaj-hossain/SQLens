@@ -463,8 +463,9 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
         i < conceptIndex ? 'done' : i === conceptIndex ? 'current' : 'todo');
 
   const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="font-mono text-[11px] text-text-faint tracking-[0.07em] uppercase mb-3.5 mt-7 first:mt-0">
-      {children}
+    <div className="flex items-center gap-2 font-mono text-[11px] font-semibold text-text-faint tracking-[0.1em] uppercase mb-3 mt-8 first:mt-0">
+      <span className="w-1.5 h-1.5 rounded-full bg-func/60" aria-hidden="true" />
+      <span>{children}</span>
     </div>
   );
   return (
@@ -520,7 +521,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
         </div>
 
         {/* heading */}
-        <h1 className="font-mono text-[24px] sm:text-[28px] font-bold leading-tight tracking-tight text-text">
+        <h1 className="font-sans text-[26px] sm:text-[32px] font-bold leading-tight tracking-tight text-text">
           {concept.title}
         </h1>
         {concept.shortDescription && (
@@ -995,7 +996,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           </div>
           <button
             onClick={onStartPractice}
-            className="inline-flex items-center gap-2 bg-func text-ink font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:brightness-110 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-func text-ink font-bold text-sm px-6 py-2.5 rounded-xl shadow-md shadow-func/10 hover:shadow-func/20 hover:scale-[1.02] active:scale-[0.99] transition-all cursor-pointer"
           >
             {concept.tasks.length === 0 ? 'Complete Concept & Continue' : 'Continue to Practice'}{' '}
             <Icon name="arrow_forward" className="text-[15px]" />

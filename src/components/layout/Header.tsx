@@ -60,6 +60,24 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </Link>
 
+        {/* Center: Homepage Quick Nav */}
+        {isMinimal && (
+          <nav aria-label="Homepage navigation" className="hidden sm:flex items-center gap-6 text-sm text-[#8a9bbd]">
+            <a href="#tracks" className="hover:text-[#e8eefb] transition-colors font-medium">
+              Tracks
+            </a>
+            <Link
+              href={pathname ? `/playground?from=${encodeURIComponent(pathname)}` : '/playground?from=/'}
+              className="hover:text-[#e8eefb] transition-colors font-medium flex items-center gap-1.5"
+            >
+              <span>Playground</span>
+              <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-[#38bdf8]/15 text-[#38bdf8] border border-[#38bdf8]/30">
+                Live
+              </span>
+            </Link>
+          </nav>
+        )}
+
         {/* Right: Streak Pill + Icon Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
@@ -93,10 +111,11 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Playground — real route since Phase 1; track-routed since P0.3 */}
           {!isMinimal && (
             <Link
+              id="header-playground-btn"
               href={
                 track === 'prisma'
-                  ? `/playground?mode=prisma${pathname && pathname !== '/' ? `&from=${encodeURIComponent(pathname)}` : ''}`
-                  : `/playground${pathname && pathname !== '/' ? `?from=${encodeURIComponent(pathname)}` : ''}`
+                  ? `/playground?mode=prisma${pathname ? `&from=${encodeURIComponent(pathname)}` : ''}`
+                  : `/playground${pathname ? `?from=${encodeURIComponent(pathname)}` : ''}`
               }
               title={`Open ${meta.label} Playground`}
               aria-label={`Open ${meta.label} Playground`}

@@ -186,8 +186,10 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
             <span className="font-medium">
               {isNetworkingTask(task)
                 ? 'Need a hint for this network scenario?'
-                : isPrismaSurface
-                ? 'Need help with this code?'
+                : isPrismaTask(task)
+                ? reveal.language === 'prisma'
+                  ? 'Need help with this schema?'
+                  : 'Need help with this code?'
                 : 'Need help with this query?'}
             </span>
           </div>

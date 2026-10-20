@@ -51,25 +51,25 @@ export const PrismaTaskHeaderMeta: React.FC<PrismaTaskHeaderMetaProps> = ({ task
         : 'Practice';
 
   return (
-    <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 font-mono text-xs bg-surface-2 border border-border-soft rounded-lg p-2.5 sm:px-4 sm:py-2.5 min-w-0">
+    <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 font-mono text-xs bg-surface-2/80 border border-border-soft rounded-lg p-2 sm:p-2.5 min-w-0">
       {/* Model: Shown in Query mode. Hidden in Schema and CLI modes to reduce noise */}
       {!isSchemaMode && !isCliMode && (
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
-          <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">MODEL</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface border border-border-soft shrink-0">
+          <span className="text-text-faint text-[10px] tracking-wider uppercase font-semibold">MODEL</span>
           <span className="text-text font-semibold text-[11px] sm:text-xs">{modelName}</span>
         </div>
       )}
 
       {/* Surface / Editor Tab */}
-      <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
-        <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">TARGET</span>
-        <span className="text-text font-semibold text-[11px] sm:text-xs">{surface}</span>
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface border border-border-soft shrink-0">
+        <span className="text-text-faint text-[10px] tracking-wider uppercase font-semibold">TARGET</span>
+        <span className="text-func font-medium text-[11px] sm:text-xs">{surface}</span>
       </div>
 
       {/* Contract / Focus */}
       {targetFocus && (
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border min-w-0 max-w-full">
-          <span className="text-text-faint text-[10px] sm:text-xs tracking-wider shrink-0">FOCUS</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface border border-border-soft min-w-0 max-w-full">
+          <span className="text-text-faint text-[10px] tracking-wider uppercase font-semibold shrink-0">FOCUS</span>
           <span className="text-text font-semibold text-[11px] sm:text-xs truncate">
             {targetFocus}
           </span>
@@ -77,8 +77,8 @@ export const PrismaTaskHeaderMeta: React.FC<PrismaTaskHeaderMetaProps> = ({ task
       )}
 
       {/* Role / Stage */}
-      <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 shrink-0">
-        <span className="text-text-faint text-[10px] sm:text-xs tracking-wider">STAGE</span>
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface border border-border-soft shrink-0">
+        <span className="text-text-faint text-[10px] tracking-wider uppercase font-semibold">STAGE</span>
         <span className="text-text font-semibold text-[11px] sm:text-xs">{roleLabel}</span>
       </div>
     </div>

@@ -259,11 +259,11 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             <div className="font-mono text-xs text-text-faint tracking-[0.06em] uppercase mb-5">
               {track === 'prisma' ? 'PRISMA' : 'SQL'} <span className="text-func">/</span> CURRICULUM ROADMAP
             </div>
-            <h1 className="font-mono font-bold text-[32px] md:text-[42px] leading-[1.14] tracking-tight text-text">
+            <h1 className="font-sans font-bold text-[34px] md:text-[44px] leading-[1.12] tracking-tight text-text text-balance">
               {track === 'prisma' ? (
-                <>Go from <span className="text-func">prisma.findMany()</span> to production.</>
+                <>Go from <code className="font-mono text-func font-semibold">prisma.findMany()</code> to production.</>
               ) : (
-                <>Go from <span className="text-func">SELECT *</span> to shipped.</>
+                <>Go from <code className="font-mono text-func font-semibold">SELECT *</code> to shipped.</>
               )}
             </h1>
             <p className="mt-4 text-[15.5px] text-text-dim max-w-[480px] leading-[1.65]">
@@ -276,7 +276,12 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 onClick={handleContinue}
                 className="font-semibold text-[14.5px] bg-func text-ink px-[22px] py-[13px] rounded-lg inline-flex items-center gap-2 hover:-translate-y-px transition-transform cursor-pointer"
               >
-                Continue where you left off <span aria-hidden="true">→</span>
+                {completedCount === 0
+                  ? track === 'prisma'
+                    ? 'Start Day 1: Schema Modeling'
+                    : 'Start Day 1: Find a Table'
+                  : 'Continue where you left off'}{' '}
+                <span aria-hidden="true">→</span>
               </button>
               <button
                 onClick={handleViewPlan}
@@ -390,7 +395,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   >
                     STAGE {milestone.number} · {stageState === 'active' ? 'ACTIVE' : stageState === 'done' ? 'COMPLETE' : 'LOCKED'}
                   </div>
-                  <div className="font-mono font-semibold text-[15px] text-text leading-snug">
+                  <div className="font-sans font-semibold text-[15.5px] text-text leading-snug tracking-tight">
                     {milestone.subtitle}
                   </div>
                   <div className="text-[11.5px] text-text-dim mt-[5px]">{milestone.daysRange}</div>
@@ -457,8 +462,8 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
 
                 {/* callout — hangs off the active stage, shows the current module */}
                 {isActiveStage && activeModuleInStage && (
-                  <div className={`max-w-[480px] mx-auto mt-[26px] bg-surface-2 border ${
-                    track === 'networking' ? 'border-emerald-500/40' : 'border-(--accent-line)'
+                  <div className={`max-w-[680px] mx-auto mt-[26px] bg-surface-2 border ${
+                    track === 'networking' ? 'border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.06)]' : 'border-(--accent-line) shadow-[0_0_24px_rgba(244,196,48,0.06)]'
                   } rounded-xl p-[18px] px-5 relative`}>
                     <div
                       className={`absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t ${
@@ -467,10 +472,10 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                       aria-hidden="true"
                     />
                     <div className="flex items-center justify-between mb-3 gap-2">
-                      <div className="font-mono text-[13.5px] font-semibold text-text truncate">
+                      <div className="font-sans text-[14px] font-bold text-text truncate">
                         {getModuleDisplayLabel(currentModule)} — {currentModule.shortTitle}
                       </div>
-                      <div className={`font-mono text-[11px] ${track === 'networking' ? 'text-emerald-400' : 'text-func'} shrink-0`}>
+                      <div className={`font-mono text-[11px] font-semibold ${track === 'networking' ? 'text-emerald-400' : 'text-func'} shrink-0`}>
                         {activeTaskPct}% done
                       </div>
                     </div>
@@ -518,14 +523,14 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                       ? `${concept.title} (locked — complete earlier concepts first)`
                                       : concept.title
                                   }
-                                  className={`flex items-center gap-2 text-xs px-2.5 py-2 rounded-[7px] text-left transition-all ${
+                                  className={`flex items-center gap-2.5 text-xs px-3 py-2.5 rounded-[8px] text-left transition-all ${
                                     isConceptLocked
                                       ? 'bg-surface/50 border border-border-soft/60 text-text-faint opacity-60 cursor-not-allowed'
-                                      : 'bg-surface border border-border-soft text-text-dim hover:bg-surface-2 hover:-translate-y-px cursor-pointer'
+                                      : 'bg-surface border border-border-soft text-text-dim hover:bg-surface-3 hover:border-border hover:text-text hover:-translate-y-px cursor-pointer'
                                   }`}
                                 >
                                   <span
-                                    className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] shrink-0 font-bold ${
+                                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] shrink-0 font-bold ${
                                       conceptDone
                                         ? track === 'networking'
                                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
@@ -546,15 +551,12 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                     )}
                                   </span>
                                   <span
-                                    className={`truncate ${
-                                      conceptDone ? 'text-text' : isConceptLocked ? 'text-text-faint' : 'text-text-dim'
+                                    className={`truncate flex-1 font-medium ${
+                                      conceptDone ? 'text-text' : isConceptLocked ? 'text-text-faint' : 'text-text'
                                     }`}
                                   >
-                                    {concept.shortDescription || concept.title}
+                                    {concept.title}
                                   </span>
-                                  {isConceptLocked && (
-                                    <Icon name="lock" className="ml-auto text-[13px] text-text-faint shrink-0" />
-                                  )}
                                 </button>
                               );
                             })}

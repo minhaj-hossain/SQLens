@@ -87,8 +87,8 @@ describe('Header — minimal mode (homepage /)', () => {
     // Streak pill only renders when !isMinimal
     expect(html).not.toContain('days completed');
     expect(html).not.toContain('header-schema-btn');
-    // Playground link only appears in full track mode
-    expect(html).not.toContain('/playground');
+    // Playground icon button control only appears in full track mode
+    expect(html).not.toContain('header-playground-btn');
   });
 });
 

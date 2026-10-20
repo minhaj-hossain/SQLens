@@ -22,11 +22,28 @@ function PlaygroundInner() {
       router.push(fromParam);
       return;
     }
-    // Return to the respective track roadmap instead of kicking to root
+    // If the learner arrived from a page on the same origin (e.g. project homepage), return there
+    if (typeof window !== 'undefined' && document.referrer) {
+      try {
+        const refUrl = new URL(document.referrer);
+        if (refUrl.origin === window.location.origin) {
+          const path = refUrl.pathname + refUrl.search + refUrl.hash;
+          if (path.startsWith('/') && !path.startsWith('//')) {
+            router.push(path);
+            return;
+          }
+        }
+      } catch {
+        /* fallback below */
+      }
+    }
+    // Return to the respective track roadmap or project homepage instead of defaulting to /sql
     if (mode === 'prisma') {
       router.push('/prisma');
-    } else {
+    } else if (mode === 'sql') {
       router.push('/sql');
+    } else {
+      router.push('/');
     }
   };
 

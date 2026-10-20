@@ -32,35 +32,56 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
         {/* Navigation links columns */}
         <div className="flex flex-wrap gap-x-16 gap-y-10">
           <div className="flex min-w-[120px] flex-col gap-3">
-            <span className="font-mono text-[11px] tracking-[0.14em] text-[#7b8db0] uppercase">
+            <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#7b8db0] uppercase">
               TRACKS
             </span>
-            <Link href="/sql" className="flink text-sm">
-              SQL
+            <Link href="/sql" className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors">
+              SQL (57 Days)
             </Link>
-            <Link href="/prisma" className="flink text-sm">
-              Prisma
+            <Link href="/prisma" className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors">
+              Prisma (14 Days)
+            </Link>
+            <Link href="/playground?from=/" className="text-sm text-[#38bdf8] hover:text-[#38bdf8]/80 transition-colors flex items-center gap-1">
+              <span>Playground</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30 font-mono">Live</span>
             </Link>
           </div>
 
           <div className="flex min-w-[120px] flex-col gap-3">
-            <span className="font-mono text-[11px] tracking-[0.14em] text-[#7b8db0] uppercase">
+            <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#7b8db0] uppercase">
               PROJECT
             </span>
-            <Link href="#about" className="flink text-sm">
-              About
+            <Link href="/sql/learn/day-01" className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors">
+              Curriculum Roadmap
             </Link>
-            <Link href="#feedback" className="flink text-sm">
-              Feedback
-            </Link>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors"
+            >
+              GitHub Repository
+            </a>
+            <a
+              href="mailto:support@click-sql.dev"
+              className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors"
+            >
+              Feedback & Issues
+            </a>
           </div>
         </div>
       </div>
 
       {/* Bottom copyright divider */}
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-8">
-        <div className="border-t border-[#121d33] pt-5 text-center text-[13px] text-[#7b8db0]">
-          © 2026 Click
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#121d33] pt-6 text-[13px] text-[#7b8db0]">
+          <span>© 2026 Click. Hands-on database learning runtime.</span>
+          <div className="flex items-center gap-4 text-xs">
+            <span className="inline-flex items-center gap-1.5 text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              SQLite WASM & Prisma Engine Ready
+            </span>
+          </div>
         </div>
       </div>
     </footer>

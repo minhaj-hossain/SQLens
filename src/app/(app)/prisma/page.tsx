@@ -25,9 +25,7 @@ export default async function PrismaRoadmapPage({
 
   return (
     <RoadmapPage
-      highlightDayId={
-        typeof params.highlight === 'string' ? params.highlight : TRACK_META.prisma.initialModuleId
-      }
+      highlightDayId={typeof params.highlight === 'string' ? params.highlight : undefined}
     />
   );
 }
