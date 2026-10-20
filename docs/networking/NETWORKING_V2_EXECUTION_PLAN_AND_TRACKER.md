@@ -26,8 +26,8 @@
 |---|---|---|---|---|
 | **Phase 0** | **Homepage & Story Reel Architecture** | Homepage | UI / Hero / Reel | **✅ COMPLETE** |
 | **Phase 1** | **Milestone 1: Local Link & Layer 2 Switching** | Mod 01–03 | 11 Concepts | **✅ COMPLETE** |
-| **Phase 2** | **Milestone 2: Addressing, Subnetting & ARP** | Mod 04–07 | 14 Concepts | **🟡 NEXT UP** |
-| **Phase 3** | **Milestone 3: Internetwork Routing & Gateways** | Mod 08–10 | 9 Concepts | ⚪ Queued |
+| **Phase 2** | **Milestone 2: Addressing, Subnetting & ARP** | Mod 04–07 | 14 Concepts | **✅ COMPLETE** |
+| **Phase 3** | **Milestone 3: Internetwork Routing & Gateways** | Mod 08–10 | 9 Concepts | **🟡 NEXT UP** |
 | **Phase 4** | **Milestones 4 & 5: Services & Transport Security** | Mod 11–15 | 17 Concepts | ⚪ Queued |
 | **Phase 5** | **Milestone 6 & Capstone: VLANs, STP & 5-Layer Exam** | Mod 16–19 | 11 Concepts | ⚪ Queued |
 
@@ -75,30 +75,31 @@
 
 ---
 
-### Phase 2: Milestone 2 — Addressing, Subnetting & ARP (Modules 4–7)
-- [ ] **Task 2.1: Author Module 4 Content (`net-04.ts`)**
-  - [ ] Concept 4.1: The 100k-Device Scaling Crisis (Why flat MACs can't route).
-  - [ ] Concept 4.2: Hardware vs Software Address (MAC in silicon vs IP in OS memory).
-  - [ ] Concept 4.3: IPv4 Octets & Hierarchy (Network ID vs Host ID).
-  - [ ] Ticket #104: Static IP assignment and duplicate IP conflict resolution.
-- [ ] **Task 2.2: Author Module 5 Content (`net-05.ts`)**
-  * [ ] Concept 5.1: The Street & House Decimal Analogy.
-  * [ ] Concept 5.2: 32-Bit Binary Subnet Mask & Contiguity Rule.
-  * [ ] Concept 5.3: Bitwise AND Decision Engine (`(Local IP & Mask) === (Dest IP & Mask)`).
-  * [ ] Concept 5.4: CIDR Slash Notation (`/24`, `/16`, `/8`) & The Minus-2 Rule.
-  * [ ] Ticket #105: Fix `/24` vs `/16` subnet mismatch with `SubnetBitSlicer`.
-- [ ] **Task 2.3: Author Module 6 Content (`net-06.ts`)**
-  - [ ] Concept 6.1: The IP-to-MAC Disconnect.
-  - [ ] Concept 6.2: The ARP Request (Broadcast) & Reply (Unicast).
-  - [ ] Concept 6.3: ARP Cache Management & Poisoning Vulnerability.
-  - [ ] Ticket #106: `arp -a` inspection and cache flush (`arp -d *` / `ip neigh flush all`).
-- [ ] **Task 2.4: Author Module 7 Content (`net-07.ts`)**
-  - [ ] Concept 7.1: IPv4 Exhaustion Reality.
-  - [ ] Concept 7.2: 128-Bit IPv6 Hexadecimal & Double-Colon Zero Compression.
-  - [ ] Concept 7.3: Killing Broadcast: Neighbor Discovery Protocol (NDP).
-  - [ ] Ticket #107: Ping Link-Local `fe80::1` and inspect IPv6 global unicast.
-- [ ] **Task 2.5: Verification Suite**
-  - [ ] Add `tests/tracks/networking-milestone-2-rollout.test.tsx`.
+### Phase 2: Milestone 2 — Addressing, Subnetting & ARP (COMPLETED ✅)
+- [x] **Task 2.1: Author Module 4 Content (`net-04.ts`)**
+  - [x] Concept 4.1: The 100k-Device Scaling Crisis (Why flat MACs can't route, CAM overflow, broadcast storms).
+  - [x] Concept 4.2: Hardware vs Software Address (MAC in silicon vs IP in OS memory).
+  - [x] Concept 4.3: IPv4 Octets & Hierarchy (Network ID vs Host ID, RFC 1918 private spaces).
+  - [x] Ticket #104: Static IP assignment and conflict triage with dual Windows (`netsh`) & Linux (`ip -4 addr`).
+- [x] **Task 2.2: Author Module 5 Content (`net-05.ts`)**
+  * [x] Concept 5.1: The Street & House Decimal Analogy.
+  * [x] Concept 5.2: 32-Bit Binary Subnet Mask & Contiguity Rule.
+  * [x] Concept 5.3: Bitwise AND Decision Engine (`(Local IP & Mask) === (Dest IP & Mask)`).
+  * [x] Concept 5.4: CIDR Slash Notation (`/24`, `/16`, `/8`) & The Minus-2 Rule.
+  * [x] Ticket #105: Fix `/24` vs `/16` subnet mismatch with dual Windows (`ipconfig`) & Linux (`ip addr`, `ip route`).
+- [x] **Task 2.3: Author Module 6 Content (`net-06.ts`)**
+  - [x] Concept 6.1: The IP-to-MAC Disconnect & ARP Hold Queue.
+  - [x] Concept 6.2: The ARP Request (Broadcast) & Reply (Unicast).
+  - [x] Concept 6.3: ARP Cache Management & Gratuitous ARP (GARP).
+  - [x] Ticket #106: ARP table inspection and cache flush (`arp -a` / `ip neigh`).
+- [x] **Task 2.4: Author Module 7 Content / IPv6 NDP (`net-06.ts` / `net-07.ts`)**
+  - [x] Concept 7.1: IPv4 Exhaustion Reality & 128-bit hex addressing.
+  - [x] Concept 7.2: IPv6 RFC 5952 Zero Compression (`::`) & Scope Classification.
+  - [x] Concept 7.3: Killing Broadcast: Neighbor Discovery Protocol (NDP) & SLAAC autoconfiguration.
+  - [x] Ticket #107: Ping Link-Local `fe80::1` and inspect IPv6 global unicast (`ipconfig` vs `ip -6 addr`).
+- [x] **Task 2.5: Verification Suite**
+  - [x] Created `tests/tracks/networking-milestone-2-rollout.test.tsx` (10/10 tests green).
+  - [x] Full networking test suite passing 100%: 28/28 test files, 444/444 tests green.
 
 ---
 
@@ -151,5 +152,5 @@
 ---
 
 ## 💾 Current Session State (Where We Are Right Now)
-* **Active Milestone:** Milestone 2 (Addressing, Subnetting & ARP — Modules 4–7).
-* **Next Immediate Task:** **Task 2.1 — Author Module 4 Content (`net-04.ts`)** (The 100k-Device Scaling Crisis, Hardware vs Software Address, IPv4 Octets & Hierarchy, and Ticket #104).
+* **Active Milestone:** Milestone 3 (Internetwork Routing & Gateways — Modules 8–10).
+* **Next Immediate Task:** **Task 3.1 — Author Module 8 Content (`net-08.ts`)** (Leaving the Subnet Dilemma, Default Gateway as the Physical Door, Hop-by-Hop L2 Rewrite, Ticket #108).

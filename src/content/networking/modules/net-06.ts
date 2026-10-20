@@ -300,6 +300,25 @@ export const NET_06_MODULE: ModuleData = {
             { level: 1, text: 'Scope clues: fe80:: = link-local; 2xxx–3xxx = global unicast; ::1 = loopback; fc/fd = unique-local; ff = multicast.' },
             { level: 2, text: 'Routers forward Global Unicast (2000::/3) and some Unique-Local across site boundaries. Link-local, loopback, and multicast are never unicast-routed.' },
           ],
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #107 (Dual OS)',
+            description:
+              'Verify IPv6 link-local and global unicast addresses and ping link-local gateway on Windows and Linux.',
+            availableCommands: [
+              'ipconfig',
+              'ping -6 fe80::1%12',
+              'ip -6 addr show',
+              'ip -6 neigh show',
+              'ping6 -c 2 fe80::1%eth0',
+            ],
+            commandResponses: {
+              'ipconfig': `Windows IP Configuration\n\nEthernet adapter Ethernet0:\n   Connection-specific DNS Suffix  . : corp.acme.com\n   IPv6 Address. . . . . . . . . . . : 2001:db8:1::50\n   Link-local IPv6 Address . . . . . : fe80::1abc:2def%12\n   IPv4 Address. . . . . . . . . . . : 192.168.1.50\n   Default Gateway . . . . . . . . . : fe80::1%12\n                                       192.168.1.1`,
+              'ping -6 fe80::1%12': `Pinging fe80::1%12 with 32 bytes of data:\nReply from fe80::1%12: time<1ms\nReply from fe80::1%12: time<1ms\n\nPing statistics for fe80::1%12:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss)`,
+              'ip -6 addr show': `2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 state UP qlen 1000\n    inet6 2001:db8:1::50/64 scope global dynamic mngtmpaddr\n       valid_lft 2591990sec preferred_lft 604790sec\n    inet6 fe80::1abc:2def/64 scope link\n       valid_lft forever preferred_lft forever`,
+              'ip -6 neigh show': `fe80::1 dev eth0 lladdr 00:1a:2b:3c:4d:01 router REACHABLE`,
+              'ping6 -c 2 fe80::1%eth0': `PING fe80::1%eth0(fe80::1%eth0) 56 data bytes\n64 bytes from fe80::1%eth0: icmp_seq=1 ttl=64 time=0.412 ms\n64 bytes from fe80::1%eth0: icmp_seq=2 ttl=64 time=0.389 ms\n\n--- fe80::1%eth0 ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss, time 1002ms`,
+            },
+          },
           validation: {
             judgment: [
               {

@@ -487,9 +487,16 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
-        ) : hasTerminal ? (
-          /* LEFT COLUMN: Virtual Terminal Diagnostics Simulator */
+        ) : hasIpv6Ndp ? (
+          /* LEFT COLUMN: IPv6 NDP & Modified EUI-64 Simulator */
           <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            {task.ipv6Ndp && (
+              <Ipv6NdpSimulator
+                taskContent={task.ipv6Ndp}
+                title={task.title}
+                description={task.description}
+              />
+            )}
             {task.terminal && (
               <VirtualTerminalSimulator
                 scenario={task.terminal}
@@ -534,12 +541,12 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
-        ) : hasIpv6Ndp ? (
-          /* LEFT COLUMN: IPv6 NDP & Modified EUI-64 Simulator */
+        ) : hasTerminal ? (
+          /* LEFT COLUMN: Virtual Terminal Diagnostics Simulator */
           <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
-            {task.ipv6Ndp && (
-              <Ipv6NdpSimulator
-                taskContent={task.ipv6Ndp}
+            {task.terminal && (
+              <VirtualTerminalSimulator
+                scenario={task.terminal}
                 title={task.title}
                 description={task.description}
               />

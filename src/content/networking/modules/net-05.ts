@@ -1159,6 +1159,23 @@ export const NET_05_MODULE: ModuleData = {
             { level: 1, text: 'Apply each host\'s OWN mask to the destination IP, then compare to the host\'s OWN network address.' },
             { level: 2, text: 'Since both Alpha and Beta are on the same physical segment, ARP broadcasts can reach both regardless of mask differences. The failure mode is worse when the hosts are on different segments.' },
           ],
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #105 (Dual OS)',
+            description:
+              'Diagnose subnet mask boundaries and prefix lengths on Windows and Linux workstations.',
+            availableCommands: [
+              'ipconfig',
+              'ip addr show eth0',
+              'ip route show table local',
+              'ping 10.0.1.100',
+            ],
+            commandResponses: {
+              'ipconfig': `Windows IP Configuration\n\nEthernet adapter Ethernet0:\n   Connection-specific DNS Suffix  . : corp.acme.com\n   IPv4 Address. . . . . . . . . . . : 10.0.1.5\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 10.0.1.1`,
+              'ip addr show eth0': `2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000\n    link/ether 00:50:56:b3:12:01 brd ff:ff:ff:ff:ff:ff\n    inet 10.0.1.100/16 brd 10.0.255.255 scope global eth0\n       valid_lft forever preferred_lft forever`,
+              'ip route show table local': `local 10.0.1.100 dev eth0 proto kernel scope host src 10.0.1.100\nbroadcast 10.0.255.255 dev eth0 proto kernel scope link src 10.0.1.100`,
+              'ping 10.0.1.100': `Pinging 10.0.1.100 with 32 bytes of data:\nReply from 10.0.1.100: bytes=32 time<1ms TTL=64\nReply from 10.0.1.100: bytes=32 time<1ms TTL=64\n\nPing statistics for 10.0.1.100:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss)`,
+            },
+          },
           validation: {
             judgment: [
               {
