@@ -11,6 +11,7 @@ import { useTrackCurriculum } from '@/components/learn/use-track';
 import { trackLearnUrl } from '@/lib/track-routes';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
+import { NetworkingCockpitView } from '@/components/learning/networking/cockpit';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -51,6 +52,17 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
       router.replace(trackLearnUrl(track, mod.id, 'theory', firstIncomplete.id));
     }
     return null;
+  }
+
+  // Networking Track Day 1: Dedicated NOC IT Support Cockpit Workbench
+  if (track === 'networking' && mod.id === 'net-01' && concept.theory.mentorScript) {
+    return (
+      <NetworkingCockpitView
+        module={mod}
+        concept={concept}
+        onComplete={() => nav.startPractice(mod.id, concept.id)}
+      />
+    );
   }
 
   return (

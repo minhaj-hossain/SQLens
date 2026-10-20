@@ -8,21 +8,22 @@ import {
 describe('Networking Track — Module 1 (net-01) Full Authoring & Verification', () => {
   const mod = getNetworkingModuleById('net-01');
 
-  it('net-01 is registered with 3 concepts, estimated minutes, and metadata', () => {
+  it('net-01 is registered with 4 concepts, estimated minutes, and metadata', () => {
     expect(mod).toBeDefined();
     expect(mod!.id).toBe('net-01');
-    expect(mod!.title).toBe('Module 1: The End-to-End Communication Journey');
+    expect(mod!.title).toBe('Module 1: The First Link & Hardware Identity');
     expect(mod!.displayLabel).toBe('Module 1');
     expect(mod!.milestoneId).toBe('net-milestone-1');
-    expect(mod!.concepts).toHaveLength(3);
+    expect(mod!.concepts).toHaveLength(4);
     expect(mod!.concepts.map((c) => c.id)).toEqual([
       'direct-link-mac',
+      'copper-strands-full-duplex',
+      'nic-permanent-mac-address',
       'encapsulation-segment-packet-frame',
-      'local-vs-remote-and-network-models',
     ]);
   });
 
-  it('all 3 concepts have explanations, takeaways, MCQs, and guided/independent tasks', () => {
+  it('all 4 concepts have explanations, takeaways, MCQs, and guided/independent tasks', () => {
     for (const c of mod!.concepts) {
       expect(c.theory.summary.length).toBeGreaterThan(20);
       expect(c.theory.explanation.length).toBeGreaterThan(0);
@@ -76,7 +77,7 @@ describe('Networking Track — Module 2 (net-02) Full Authoring & Verification',
   it('net-02 is registered with 3 concepts, estimated minutes, and metadata', () => {
     expect(mod).toBeDefined();
     expect(mod!.id).toBe('net-02');
-    expect(mod!.title).toBe('Module 2: Links, Interfaces & Ethernet Framing');
+    expect(mod!.title).toBe('Module 2: Expanding the Room — The Shared Wire & Collisions');
     expect(mod!.displayLabel).toBe('Module 2');
     expect(mod!.milestoneId).toBe('net-milestone-1');
     expect(mod!.concepts).toHaveLength(3);

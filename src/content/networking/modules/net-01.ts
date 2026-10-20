@@ -6,13 +6,14 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
   track: 'networking',
   moduleId: 'net-01',
   conceptId: 'direct-link-mac',
+  tier: 'shadow',
   revealLadder: {
     'step-0': ['host-a'],
-    'step-1': ['host-a', 'server-z'],
-    'step-2': ['host-a', 'server-z', 'switch-sw1', 'router-r1'],
-    'step-3': ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
-    'step-4': ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link'],
-    'step-5': ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link', 'ticket-desk'],
+    'step-1': ['host-a', 'cable'],
+    'step-2': ['host-a', 'cable', 'switch-sw1', 'router-r1'],
+    'step-3': ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
+    'step-4': ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal', 'arp-table'],
+    'step-5': ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal', 'arp-table', 'frame-inspector'],
   },
   terms: {
     endpoints: {
@@ -20,240 +21,292 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       part: 'host-a',
       explanation: 'Devices where network traffic originates or terminates (e.g. workstations, web servers, smartphones).',
     },
-    intermediaries: {
-      label: 'Intermediaries',
+    media: {
+      label: 'Media',
+      part: 'cable',
+      explanation: 'The physical transmission medium (copper cable, optical fiber, radio waves) carrying electrical signals.',
+    },
+    layer1: {
+      label: 'Layer 1 Physical',
+      part: 'cable',
+      explanation: 'The hardware layer responsible for physical connectors, cable continuity, and bit-level electrical signals.',
+    },
+    switch: {
+      label: 'Access Switch',
       part: 'switch-sw1',
-      explanation: 'Network infrastructure devices (switches, routers) that forward and manage traffic without creating payloads.',
+      explanation: 'An intermediary device connecting office PCs together and forwarding traffic between local ports.',
+    },
+    arp: {
+      label: 'ARP Table',
+      part: 'arp-table',
+      explanation: 'The operating system address book cache mapping local IPv4 addresses to physical MAC hardware addresses.',
+    },
+    mac: {
+      label: 'MAC Address',
+      part: 'host-a',
+      explanation: 'A unique 48-bit physical hardware identifier burned into each network interface controller card.',
+    },
+    envelope: {
+      label: 'Ethernet Frame',
+      part: 'frame-inspector',
+      explanation: 'The Layer 2 outer packaging stamped with destination and source MAC addresses enclosing the IP packet.',
     },
   },
   beats: [
     {
       id: 'beat-1',
-      stage: { stageNumber: 1, title: 'Stage 1: Meet the Endpoints' },
-      kind: 'point',
-      text: 'Meet Host A (192.168.1.10). It runs user applications that generate and consume data. Devices that originate or terminate network traffic are {{term:endpoints}}.',
-      spotlight: 'host-a',
-      revealedParts: ['host-a'],
+      stage: { stageNumber: 1, stepIndex: 0, title: 'Stage 1: Shadow the Master' },
+      kind: 'do',
+      say: [
+        "We are at Workstation-01. Our user reports they cannot connect to the office router at 192.168.1.1. Let's test the connection.",
+        "Type `ping 192.168.1.1` and press Enter. (Tap the suggestion chip below to insert it).",
+      ],
+      actionPrompt: 'ping 192.168.1.1',
+      actionTargetPart: 'terminal',
+      expect: 'ping',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
+      spotlight: 'terminal',
     },
     {
       id: 'beat-2',
-      stage: { stageNumber: 1, title: 'Stage 1: The Remote Destination' },
-      kind: 'point',
-      text: 'Across the network sits Server Z (10.0.0.50). It hosts web applications and returns HTTP responses. It is also an endpoint.',
-      spotlight: 'server-z',
-      revealedParts: ['host-a', 'server-z'],
+      stage: { stageNumber: 1, stepIndex: 1, title: 'Stage 1: Shadow the Master' },
+      kind: 'predict',
+      say: [
+        "Notice it said `transmit failed. General failure.` Our computer couldn't even launch the knock out the door! Something is stopping the signal on our own PC.",
+        "Look at that line: `Media State . . . : Media disconnected`. In computer hardware, what does 'Media' refer to?",
+      ],
+      spotlight: 'cable',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
+      options: [
+        {
+          id: 'opt-media-cable',
+          label: 'The physical network cable, connector, or electrical link path',
+          isCorrect: true,
+          feedback:
+            "Right! 'Media' is the physical transmission medium (copper, fiber, or radio waves). 'Disconnected' means our network card senses no electrical link pulse. Our cable is unplugged!",
+        },
+        {
+          id: 'opt-media-software',
+          label: 'Software applications installed on Windows',
+          isCorrect: false,
+          feedback: "Software is applications; 'media' refers to the physical transmission path.",
+        },
+        {
+          id: 'opt-media-router',
+          label: 'The remote router in the server room',
+          isCorrect: false,
+          feedback: "The router is a node; 'media' is the physical path that connects us to it.",
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-l1-carrier',
+          label:
+            'Network interface cards require an electrical or optical carrier signal on the wire to transmit frames.',
+          isCorrect: true,
+          feedback:
+            'Correct! Without physical continuity, the network interface card driver cannot transmit electrical signals.',
+        },
+        {
+          id: 'why-l1-software',
+          label: 'Media refers only to audio and video files stored on disk.',
+          isCorrect: false,
+          feedback:
+            'In computer networking, transmission media refers to the physical layer carrier.',
+        },
+      ],
     },
     {
       id: 'beat-3',
-      stage: { stageNumber: 1, title: 'Stage 1: Select Payload' },
+      stage: { stageNumber: 1, stepIndex: 2, title: 'Stage 1: Shadow the Master' },
       kind: 'do',
-      text: 'Click Select Payload to generate an HTTP GET /index.html request at Host A.',
-      actionPrompt: 'Select Payload: HTTP GET /index.html',
-      actionTargetPart: 'host-a',
-      revealedParts: ['host-a', 'server-z'],
-      spotlight: 'host-a',
+      say: [
+        'Look behind Workstation-01. The Ethernet cable is completely unplugged.',
+        "Click the cable (or press Enter on it) to plug it into the PC's port.",
+      ],
+      actionPrompt: 'Seat Ethernet Cable',
+      actionTargetPart: 'cable',
+      expect: 'seat-cable',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
+      spotlight: 'cable',
     },
     {
       id: 'beat-4',
-      stage: { stageNumber: 1, title: 'Stage 1: Intermediary Infrastructure' },
-      kind: 'point',
-      text: 'Connecting the endpoints are Switch SW1 and Router R1. They do not generate business data—they forward and steer it across links. They are {{term:intermediaries}}.',
-      spotlight: 'switch-sw1',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1'],
+      stage: { stageNumber: 1, stepIndex: 3, title: 'Stage 1: Shadow the Master' },
+      kind: 'predict',
+      say: [
+        'Now that the wire is connected, `ipconfig` shows our PC is `192.168.1.10` with mask `255.255.255.0`.',
+        'If we wanted to reach `192.168.2.5`, is it on our local street or outside?',
+      ],
+      spotlight: 'terminal',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
+      options: [
+        {
+          id: 'opt-diff-subnet',
+          label: 'It is on a different street because the third number is 2, not 1',
+          isCorrect: true,
+          feedback:
+            'Exactly right! Because the third number is different, 192.168.2.5 is outside our local street. But 192.168.1.1 shares 192.168.1, so it is on-link (a direct neighbor).',
+        },
+        {
+          id: 'opt-same-subnet',
+          label: 'It is on our local street because both start with 192.168',
+          isCorrect: false,
+          feedback:
+            'Under mask 255.255.255.0, all three numbers must match for local on-link delivery!',
+        },
+        {
+          id: 'opt-unknown-subnet',
+          label: 'Subnet masks only apply to public Internet servers',
+          isCorrect: false,
+          feedback:
+            'Subnet masks apply to every IPv4 interface to determine whether destinations are local or remote.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-mask-boundary',
+          label:
+            'The 255.255.255.0 mask designates the first three octets as the network prefix boundary.',
+          isCorrect: true,
+          feedback:
+            'Precise! The 255.255.255.0 subnet mask locks the first 24 bits as the local network identifier.',
+        },
+        {
+          id: 'why-all-192-local',
+          label: 'All IP addresses starting with 192 are on the exact same physical wire.',
+          isCorrect: false,
+          feedback:
+            'Only IP addresses matching the complete network mask portion share the same subnet.',
+        },
+      ],
     },
     {
       id: 'beat-5',
-      stage: { stageNumber: 1, title: 'Stage 1: The Encapsulation Journey' },
+      stage: { stageNumber: 2, stepIndex: 4, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
-      text: 'Click Package Data to observe the multi-layer encapsulation hierarchy.',
-      actionPrompt: 'Package Data: Encapsulate',
-      actionTargetPart: 'encap-stepper',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
-      spotlight: 'encap-stepper',
+      say: [
+        "Before sending another ping, let's see which local devices this PC already knows about.",
+        'Type `arp -a` and press Enter.',
+      ],
+      actionPrompt: 'arp -a',
+      actionTargetPart: 'terminal',
+      expect: 'arp',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal', 'arp-table'],
+      spotlight: 'arp-table',
     },
     {
       id: 'beat-6',
-      stage: { stageNumber: 2, title: 'Stage 2: Guided Hop Traversal' },
+      stage: { stageNumber: 2, stepIndex: 5, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
-      text: 'Click Step Hop to advance the frame from Host A through Switch SW1 to Router R1.',
-      actionPrompt: 'Step Hop: Host A -> Switch SW1 -> Router R1',
-      actionTargetPart: 'router-r1',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
-      spotlight: 'router-r1',
+      say: [
+        'Watch what happens when we ping now. The simulator will pause in flight so you can see each step.',
+        'Type `ping 192.168.1.1` and press Enter.',
+      ],
+      actionPrompt: 'ping 192.168.1.1 (Slow-Motion)',
+      actionTargetPart: 'terminal',
+      expect: 'ping-slow',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal', 'arp-table'],
+      spotlight: 'terminal',
     },
     {
       id: 'beat-7',
-      stage: { stageNumber: 2, title: 'Stage 2: Layer 2 vs Layer 3 Traversal' },
-      kind: 'predict',
-      text: 'As the frame crosses Router R1 toward Server Z, how do the headers change?',
-      spotlight: 'router-r1',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
-      options: [
-        {
-          id: 'opt-ip-changes',
-          label: 'The Source and Destination IP addresses change on every hop.',
-          isCorrect: false,
-          feedback: 'IP addresses designate end-to-end endpoints and remain intact across standard routing hops.',
-        },
-        {
-          id: 'opt-mac-rewritten',
-          label: 'Layer 2 MAC addresses are rewritten for the next link, while Layer 3 IP addresses remain intact.',
-          isCorrect: true,
-          feedback: 'Correct! Layer 2 MACs provide hop-by-hop delivery across individual links, while Layer 3 IPs provide end-to-end addressing.',
-        },
-        {
-          id: 'opt-tcp-stripped',
-          label: 'The router strips the TCP port numbers before forwarding.',
-          isCorrect: false,
-          feedback: 'Routers operate at Layer 3; they do not alter or strip Layer 4 TCP port numbers.',
-        },
+      stage: { stageNumber: 2, stepIndex: 6, title: 'Stage 2: Guided Hop Traversal' },
+      kind: 'do',
+      say: [
+        "Now that communication succeeded, let's verify what our PC recorded in its address book.",
+        'Type `arp -a` and press Enter.',
       ],
-      whyOptions: [
-        {
-          id: 'why-l2-l3-roles',
-          label: 'Layer 3 IP represents end-to-end destination, while Layer 2 MAC represents hop-by-hop physical link delivery.',
-          isCorrect: true,
-        },
-        {
-          id: 'why-router-no-ip',
-          label: 'Routers cannot read IP addresses.',
-          isCorrect: false,
-        },
-        {
-          id: 'why-cable-distance',
-          label: 'Ethernet cables require IP addresses to change every 10 meters.',
-          isCorrect: false,
-        },
-      ],
+      actionPrompt: 'arp -a',
+      actionTargetPart: 'terminal',
+      expect: 'arp',
+      revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal', 'arp-table'],
+      spotlight: 'arp-table',
     },
     {
       id: 'beat-8',
-      stage: { stageNumber: 3, title: 'Stage 3: Perform Role Classification' },
+      stage: { stageNumber: 3, stepIndex: 7, title: 'Stage 3: Inspect Outer Packaging' },
       kind: 'predict',
-      text: 'In an enterprise datacenter topology, which device functions as an Intermediary rather than an Endpoint?',
-      spotlight: 'switch-sw1',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper'],
+      say: [
+        'Look at the Destination MAC on the envelope (`00-1A-2B-3C-4D-01`).',
+        'Where did our PC get this physical hardware address?',
+      ],
+      spotlight: 'frame-inspector',
+      revealedParts: [
+        'host-a',
+        'cable',
+        'switch-sw1',
+        'router-r1',
+        'terminal',
+        'arp-table',
+        'frame-inspector',
+      ],
       options: [
         {
-          id: 'opt-access-switch',
-          label: '24-Port Access Switch forwarding Ethernet frames between server racks',
+          id: 'opt-mac-from-arp',
+          label: 'From the dynamic ARP address book entry we verified in Beat 7',
           isCorrect: true,
-          feedback: 'Spot on! Access switches forward frames between ports without originating or terminating user payloads.',
+          feedback:
+            'Brilliant! Even though ping targeted IP 192.168.1.1, the network card stamped the outer Ethernet envelope with Router R1 hardware MAC address learned dynamically via ARP!',
         },
         {
-          id: 'opt-postgres-server',
-          label: 'PostgreSQL Database Server hosting customer account records',
+          id: 'opt-mac-guessed',
+          label: 'It guessed it randomly by translating the IP numbers',
           isCorrect: false,
-          feedback: 'Database servers run applications and store data; they are Endpoints.',
+          feedback:
+            'IP addresses do not reveal hardware MACs; ARP had to discover it dynamically!',
         },
         {
-          id: 'opt-web-frontend',
-          label: 'Web application frontend running in a Linux container',
+          id: 'opt-mac-hardcoded',
+          label: 'Windows comes pre-installed with every office MAC address',
           isCorrect: false,
-          feedback: 'Application containers terminate HTTP sockets; they are Endpoints.',
+          feedback: 'MAC addresses are discovered dynamically through local network broadcasts.',
         },
       ],
       whyOptions: [
         {
-          id: 'why-forwarding-only',
-          label: 'Intermediaries forward and manage traffic across the network without generating or consuming application payloads.',
+          id: 'why-arp-cache-mapping',
+          label:
+            'Host A queries its ARP cache to map destination IPv4 addresses to Layer 2 physical MAC addresses for wire transmission.',
           isCorrect: true,
+          feedback:
+            'Exactly! Layer 3 IP packets must be packaged inside Layer 2 Ethernet frames addressed to the neighbor hardware MAC address.',
         },
         {
-          id: 'why-hardware-cost',
-          label: 'Intermediaries must always cost more than servers.',
+          id: 'why-mac-random',
+          label: 'MAC addresses change randomly every second.',
           isCorrect: false,
-        },
-        {
-          id: 'why-power-supply',
-          label: 'Endpoints do not require power supplies.',
-          isCorrect: false,
+          feedback:
+            'Physical MAC addresses are fixed hardware identifiers assigned to the network interface card.',
         },
       ],
-    },
-    {
-      id: 'beat-9',
-      stage: { stageNumber: 4, title: 'Stage 4: Transfer to Remote Delivery' },
-      kind: 'point',
-      text: 'Now observe the boundary: Host A sends traffic to Local Host B (192.168.1.20) on the same switch vs Remote Server Z (10.0.0.50) across Router R1.',
-      spotlight: 'wan-link',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link'],
-    },
-    {
-      id: 'beat-10',
-      stage: { stageNumber: 4, title: 'Stage 4: Remote MAC Target Prediction' },
-      kind: 'predict',
-      text: 'What Destination MAC must Host A place on the Ethernet frame when transmitting to remote Server Z (10.0.0.50)?',
-      spotlight: 'wan-link',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link'],
-      options: [
-        {
-          id: 'opt-server-mac',
-          label: 'Server Z\'s MAC address',
-          isCorrect: false,
-          feedback: 'Classic misconception! Layer 2 broadcast frames cannot cross routers. Host A cannot address Server Z\'s MAC directly.',
-        },
-        {
-          id: 'opt-gateway-mac',
-          label: 'Default Gateway Router R1\'s MAC address',
-          isCorrect: true,
-          feedback: 'Brilliant! For off-link destinations, the frame is delivered to the local gateway router at Layer 2.',
-        },
-        {
-          id: 'opt-broadcast-mac',
-          label: 'The Broadcast MAC FF:FF:FF:FF:FF:FF',
-          isCorrect: false,
-          feedback: 'Broadcast frames are dropped at the router boundary and will not reach Server Z.',
-        },
-      ],
-      whyOptions: [
-        {
-          id: 'why-gateway-l2',
-          label: 'Local Layer 2 frames terminate at the router boundary; the router must receive the frame to route the inner IP packet.',
-          isCorrect: true,
-        },
-        {
-          id: 'why-server-hidden',
-          label: 'Remote servers do not have MAC addresses.',
-          isCorrect: false,
-        },
-        {
-          id: 'why-router-switch',
-          label: 'Switches erase destination MAC addresses when entering a router.',
-          isCorrect: false,
-        },
-      ],
-    },
-    {
-      id: 'beat-11',
-      stage: { stageNumber: 5, title: 'Stage 5: Live Discovery Ticket' },
-      kind: 'point',
-      text: 'A workstation report has come in: Host A cannot communicate with any local or remote device. Investigate Discovery Ticket #101 below.',
-      spotlight: 'ticket-desk',
-      revealedParts: ['host-a', 'server-z', 'switch-sw1', 'router-r1', 'encap-stepper', 'wan-link', 'ticket-desk'],
     },
   ],
   ticketScene: {
     ticketId: '101',
     title: 'Discovery Ticket #101: The Silent Link',
-    symptom: 'Host A cannot transmit packets or receive traffic. All local pings time out immediately.',
+    symptom:
+      'Acme-PC-02 cannot transmit packets or reach the office router. All local pings report transmit failed. General failure.',
     telemetry: [
-      'Host A Network Interface Status: eth0 DOWN (NO-CARRIER)',
-      'Switch SW1 Port 1 Status: Link LED OFF, Carrier Detect: Inactive',
-      'Physical Cable Inspection: RJ-45 unlatched and disconnected from Port 1',
+      'Workstation: Acme-PC-02',
+      'Ethernet adapter Ethernet0: Media disconnected',
+      'Port eth0 Link LED: OFF',
+      'Static IP configured in registry: 192.168.1.15 / 255.255.255.0',
     ],
     options: [
       {
         id: 'opt-reboot-os',
-        label: 'Reboot Host A operating system to reset network sockets.',
+        label: 'Reboot Acme-PC-02 operating system to reset network sockets.',
         isCorrect: false,
         feedback: 'Operating system reboot will not resolve an unlatched physical cable.',
       },
       {
         id: 'opt-reconnect-cable',
-        label: 'Switch Port 1 physical cable is disconnected, preventing physical carrier detection.',
+        label:
+          'Physical Layer 1 issue: Cat6 patch cable disconnected or unlatched from the RJ-45 jack.',
         isCorrect: true,
-        feedback: 'Spot on! Without a physical link carrier, Layer 2 Ethernet cannot transmit pulses.',
+        feedback:
+          'Spot on! Without a physical link carrier, Layer 2 Ethernet cannot transmit electrical pulses.',
       },
       {
         id: 'opt-dns-down',
@@ -265,7 +318,7 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
     repairActions: [
       {
         id: 'fix-reconnect',
-        label: 'Plug Ethernet cable securely into Switch SW1 Port 1',
+        label: 'Inspect physical cable behind desk and plug firmly into RJ-45 port',
         isCorrect: true,
         patch: { action: 'set-link', target: 'port-1', value: 'connected' },
       },
@@ -273,7 +326,11 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
         id: 'fix-reconfigure-ip',
         label: 'Change Host A IP address to 192.168.1.99',
         isCorrect: false,
-        patch: { action: 'reconfigure-interface', target: 'host-a', value: { ip: '192.168.1.99' } },
+        patch: {
+          action: 'reconfigure-interface',
+          target: 'host-a',
+          value: { ip: '192.168.1.99' },
+        },
       },
       {
         id: 'fix-flush-dns',
@@ -297,110 +354,267 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
 
 export const NET_01_MODULE: ModuleData = {
   id: 'net-01',
-  slug: 'end-to-end-communication-journey',
+  slug: 'the-first-link-and-hardware-identity',
   day: 1,
-  title: 'Module 1: The End-to-End Communication Journey',
-  shortTitle: 'Communication Journey',
+  title: 'Module 1: The First Link & Hardware Identity',
+  shortTitle: 'The First Link',
   type: 'module',
   track: 'networking',
   milestoneId: 'net-milestone-1',
   description:
-    'Trace how data travels across modern networks: why networks exist, endpoints vs intermediary devices, parcel encapsulation (Segment → Packet → Frame), and the OSI vs TCP/IP models.',
+    'Master the physical layer foundations: the Trapped Data Dilemma, 8-strand Cat6 full-duplex channels, permanent 48-bit silicon MAC addresses, and Ethernet II framing with CRC-32 error detection.',
   estimatedMinutes: 25,
   curriculumOrder: 1,
   displayLabel: 'Module 1',
   completionLearnings: [
-    'Networks connect independent computing systems to share resources, exchange messages, and distribute workloads',
-    'Endpoints (hosts, servers, mobile devices) generate and consume data; intermediary devices (switches, routers) forward and direct it',
-    'Data encapsulation wraps payload data in successive protocol headers: Segment (Transport) → Packet (Network) → Frame (Data Link)',
-    'Local delivery occurs within the same broadcast domain using MAC addresses; remote delivery requires routing across gateways using IP addresses',
-    'The 7-layer OSI model provides conceptual reference; practical engineering maps directly to the pragmatic 4-layer TCP/IP suite',
+    'Computers cannot transmit data beyond motherboard silicon without an active physical transmission medium and carrier pulse',
+    'Cat6 8-strand copper cables provide dedicated Transmit (TX) and Receive (RX) pairs, enabling Full-Duplex communication with zero collisions on direct links',
+    'Every Network Interface Card (NIC) is permanently identified by a 48-bit MAC address burned into hardware ROM (24-bit OUI + 24-bit device serial)',
+    'Ethernet II frames wrap Layer 3 packets in a 14-byte header and a 4-byte CRC-32 Frame Check Sequence (FCS) trailer to detect electrical bit-flips',
+    'Corrupted frames that fail CRC verification are silently discarded by NIC silicon at Layer 2 without interrupting host operating system CPU cycles',
   ],
   concepts: [
     // ─────────────────────────────────────────────────────
-    // Concept 1: Why Networks Exist & Endpoints vs Intermediaries (C01 + C02)
+    // Concept 1.1: The Trapped Data Dilemma (direct-link-mac)
     // ─────────────────────────────────────────────────────
     {
       id: 'direct-link-mac',
       order: 1,
-      title: 'Why Networks Exist & Endpoints vs Intermediaries',
+      title: 'The Trapped Data Dilemma & Physical Carrier',
       shortDescription:
-        'Understand the purpose of computer networks and distinguish between devices that produce data and devices that forward it.',
+        'Discover why data cannot leave a motherboard without a physical medium and how the operating system detects a physical link carrier.',
       theory: {
         mentorScript: NET_01_MENTOR_SCRIPT,
         summary:
-          'Networks exist to allow independent computing systems to exchange data and share resources. Every device on a network belongs to one of two fundamental categories: Endpoints (hosts that create or consume data) or Intermediaries (infrastructure nodes that forward and manage traffic).',
-
+          'Data stored in CPU registers and RAM cannot escape an isolated computer without an electrical, optical, or radio transmission medium. When the physical link carrier pulse is absent, network transmission fails immediately at Layer 1 before any packet can be placed on the wire.',
         explanation: [
-          '### C01: Why Networks Exist',
-          'An isolated computer can only compute on its own local data. To coordinate work, share files, stream media, and access cloud databases, computers must transmit electrical, optical, or radio signals across a transmission medium.',
+          '### Beat 1: The Physical Dilemma — The Trapped Data Dilemma',
+          'Imagine a high-powered workstation sitting in an office. Its CPU can perform billions of operations per second, and its SSD holds gigabytes of databases. Yet, if an application attempts to send a single bit to another computer, the attempt fails immediately with:',
           '',
-          'A **computer network** is an interconnected collection of autonomous computing devices that exchange information using standardized communication protocols.',
+          '```',
+          'PING: transmit failed. General failure.',
+          'Media State . . . . . . . . . . . : Media disconnected',
+          '```',
           '',
-          '### C02: Endpoints vs Intermediaries',
-          'Every node in a network topology performs one of two distinct roles:',
+          'Why does this occur? Because computer logic inside silicon chips operates on microscopic voltage levels (0.8V to 1.2V) constrained to printed circuit board traces. To cross the room or the continent, that data must be converted into physical signals (electrical voltages across copper, light flashes in glass fiber, or electromagnetic radio waves).',
           '',
-          '1. **Endpoints (Hosts)**:',
-          '- Devices where network traffic originates or terminates.',
-          '- Examples: Laptops, database servers, smartphones, IoT sensors, network-attached storage (NAS).',
-          '- Endpoints run user-space applications (browsers, database daemons, APIs) and manage socket connections.',
+          '### Beat 2: The Diagnostic Tool\'s Purpose',
+          'Before an operating system wastes memory constructing network packets, the Network Interface Card (NIC) physical layer hardware (PHY) constantly senses the physical medium for a **link pulse** (carrier signal).',
           '',
-          '2. **Intermediary Devices**:',
-          '- Infrastructure hardware positioned between endpoints to route, filter, amplify, and switch traffic.',
-          '- Examples: Ethernet switches, IP routers, wireless access points (APs), firewalls.',
-          '- Intermediary devices inspect protocol headers to make forwarding decisions without modifying application payload data.',
+          'We inspect this hardware carrier state using standard diagnostic commands:',
+          '- **Windows:** `ipconfig /all` asks the OS driver: *"Is the physical media connected or disconnected?"*',
+          '- **Linux:** `ip link show` or `ethtool eth0` asks the kernel: *"Is the carrier detected and the interface state UP or DOWN?"*',
           '',
-          '| Device Category | Primary Role | Examples |',
-          '|---|---|---|',
-          '| **Endpoint** | Generates or consumes data | Web browser, SQL database server, smartphone |',
-          '| **Intermediary** | Moves data across the network | Switch (Layer 2), Router (Layer 3), Firewall |',
+          '### Beat 3: The Observable Result',
+          'When the Cat6 patch cable is firmly seated into the RJ-45 jack, the PHY chip detects the electrical carrier. The green Link LED illuminates solid, and the diagnostic output transitions:',
+          '- Windows displays: `Media State . . . : [Active / Connected]`',
+          '- Linux displays: `state UP ... carrier detected: yes`',
         ],
         keyTakeaway:
-          'Endpoints produce and consume data at the application layer; intermediary devices forward traffic across physical and logical boundaries.',
+          'Layer 1 Rule: No physical carrier signal means zero packets leave the host. Always verify the physical link status before debugging IP or DNS configurations.',
         exampleQuery: '',
         exampleQueryExplanation: '',
         mcqs: [
           {
-            id: 'net01-mcq-endpoint-vs-intermediary',
+            id: 'net01-mcq-media-disconnected',
             question:
-              'A PostgreSQL database server and an office Ethernet switch are connected on the same LAN. What are their respective roles?',
+              'A user types "ping 192.168.1.1" on Windows and receives "PING: transmit failed. General failure. Media State: Media disconnected". What layer is failing?',
             options: [
-              'Both are intermediary devices because both have network interface cards',
-              'The PostgreSQL server is an endpoint; the Ethernet switch is an intermediary device',
-              'The Ethernet switch is an endpoint; the PostgreSQL server is an intermediary device',
-              'Both are endpoints because both process electrical signals',
+              'Layer 7 Application Layer because the DNS server is offline',
+              'Layer 3 Network Layer because the IP address has a subnet mask typo',
+              'Layer 1 Physical Layer because the network card senses no physical electrical link carrier on the wire',
+              'Layer 4 Transport Layer because the TCP handshake timed out',
             ],
-            correctIndex: 1,
+            correctIndex: 2,
             explanation:
-              'The database server runs application software and terminates user queries (endpoint), while the switch forwards Layer 2 Ethernet frames between network ports (intermediary device).',
+              '"Media disconnected" is reported directly by the NIC driver at Layer 1 when physical continuity or electrical carrier pulses are not detected on the physical port.',
           },
         ],
       },
       tasks: [
         {
-          id: 'net01-p1-endpoint-intermediary-triage',
-          title: 'Guided Practice: Endpoint vs Intermediary Classification',
+          id: 'net01-p1-carrier-and-link-triage',
+          title: 'Workplace Lab (Ticket #101): The Silent Link Carrier Triage',
           description:
-            'Classify nodes in an enterprise network topology as endpoints or intermediary devices and defend your choices.',
+            'Use dual-OS command diagnostics to inspect an uncommunicative workstation, identify the root cause of the connection failure, and verify hardware identity.',
           instructions: [
-            'An engineer audits an office network consisting of a MacBook Pro, a 24-port Ethernet switch, an enterprise edge router, and a Redis caching server.',
-            'Identify which nodes originate/terminate application data and which nodes exist solely to forward traffic.',
-            'Defend why an enterprise router is classified as an intermediary device even though it runs an internal operating system.',
+            'Workstation Acme-PC-02 in the accounting department cannot communicate with the local router or access file shares.',
+            'Execute diagnostic commands in the virtual terminal simulator (support for both Windows "ipconfig /all" and Linux "ip link show").',
+            'Inspect the reported Media State, Link LED carrier status, and Physical Address (MAC).',
+            'Defend the exact layer and root cause of the outage to resolve Discovery Ticket #101.',
           ],
           type: 'guided',
           primaryTable: '',
           initialSql: '',
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
-            'The MacBook Pro and Redis server are endpoints (data producers/consumers). The switch and router are intermediaries whose primary purpose is forwarding and routing traffic across network boundaries.',
+            'Both ipconfig /all and ip link show confirm that the network adapter has no physical carrier (Media disconnected / state DOWN). The Cat6 cable is unseated at Layer 1. The Physical Address 00-1A-2B-3C-4D-10 represents the factory-burned Layer 2 hardware MAC.',
           hints: [
             {
               level: 1,
-              text: 'Ask: does this device run the user application generating the payload, or does it exist to forward packets between cables?',
+              text: 'Check the "Media State" or "state" field in the terminal output. Is the interface carrier active or disconnected?',
             },
             {
               level: 2,
-              text: 'Switches and routers are intermediary devices because their core purpose is transit forwarding.',
+              text: 'Before software protocols can route or resolve names, the physical NIC requires an active electrical link on the copper wire.',
+            },
+          ],
+          terminal: {
+            hostname: 'Acme-PC-02',
+            userPrompt: 'C:\\Users\\admin>',
+            initialLines: [
+              'Microsoft Windows [Version 10.0.19045.3803]',
+              '(c) Microsoft Corporation. All rights reserved.',
+              '',
+              'Acme-PC-02 Diagnostics Terminal. Run diagnostic commands to triage Ticket #101.',
+            ],
+            availableCommands: [
+              'ipconfig /all',
+              'ip link show',
+              'ethtool eth0',
+              'ping 192.168.1.1',
+            ],
+            commandResponses: {
+              'ipconfig /all': `Windows IP Configuration\n\n   Host Name . . . . . . . . . . . . : Acme-PC-02\n   Primary Dns Suffix  . . . . . . . : corp.acme.com\n   Node Type . . . . . . . . . . . . : Hybrid\n   IP Routing Enabled. . . . . . . . : No\n   WINS Proxy Enabled. . . . . . . . : No\n\nEthernet adapter Ethernet0:\n   Media State . . . . . . . . . . . : Media disconnected\n   Connection-specific DNS Suffix  . : \n   Description . . . . . . . . . . . : Intel(R) I219-LM Gigabit Network Connection\n   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-10\n   DHCP Enabled. . . . . . . . . . . : Yes\n   Autoconfiguration Enabled . . . . : Yes`,
+              'ip link show': `1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n2: eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN mode DEFAULT group default qlen 1000\n    link/ether 00:1a:2b:3c:4d:10 brd ff:ff:ff:ff:ff:ff`,
+              'ethtool eth0': `Settings for eth0:\n\tSupported ports: [ TP ]\n\tSupported link modes:   10baseT/Half 10baseT/Full\n\t                        100baseT/Half 100baseT/Full\n\t                        1000baseT/Full\n\tSpeed: Unknown!\n\tDuplex: Unknown!\n\tPort: Twisted Pair\n\tPHYAD: 1\n\tTransceiver: internal\n\tAuto-negotiation: on\n\tLink detected: no`,
+              'ping 192.168.1.1': `Pinging 192.168.1.1 with 32 bytes of data:\nPING: transmit failed. General failure.\nPING: transmit failed. General failure.\n\nPing statistics for 192.168.1.1:\n    Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)`,
+            },
+          },
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'You run "ipconfig /all" (or "ip link show") on Acme-PC-02. What exact observable line in the output isolates the failure to Layer 1?',
+                options: [
+                  'DHCP Enabled . . . : Yes',
+                  'Media State . . . . . : Media disconnected (or state DOWN / Link detected: no)',
+                  'Host Name . . . . . . : Acme-PC-02',
+                  'Description . . . . . : Intel(R) I219-LM Gigabit Network Connection',
+                ],
+                correctIndex: 1,
+                explanation:
+                  '"Media disconnected" (and Linux "state DOWN / NO-CARRIER") indicates that the physical network adapter detects no carrier frequency or electrical continuity on the wire.',
+              },
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'What physical action must be performed first to resolve Discovery Ticket #101?',
+                options: [
+                  'Reboot the Windows operating system to clear transient socket errors',
+                  'Verify the Cat6 patch cord is firmly plugged and latched into the workstation RJ-45 jack and wall port',
+                  'Change the static IP address to 192.168.1.99',
+                  'Flush the DNS resolver cache',
+                ],
+                correctIndex: 1,
+                explanation:
+                  'When the physical link carrier is disconnected, software fixes cannot help. The physical patch cable must be plugged in and latched until the Link LED lights up green.',
+              },
+            ],
+          },
+          successMessage:
+            'Ticket #101 Resolved! You correctly identified the physical Layer 1 media disconnect and verified link carrier requirements.',
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // Concept 1.2: Copper Strands & Full-Duplex Channels
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'copper-strands-full-duplex',
+      order: 2,
+      title: 'Copper Strands & Full-Duplex Channels',
+      shortDescription:
+        'Explore Cat6 twisted-pair pinouts and understand why direct copper connections operate in Full-Duplex with zero collisions.',
+      theory: {
+        summary:
+          'Category 6 (Cat6) Ethernet cables contain 8 color-coded copper strands arranged in 4 twisted pairs. In modern point-to-point Ethernet links, dedicated Transmit (TX) and Receive (RX) pairs enable simultaneous two-way communication (Full-Duplex) with zero electrical collisions.',
+        explanation: [
+          '### Beat 1: The Physical Dilemma — How Do Signals Cross the Span?',
+          'If two people talk through a single tin can and string, only one person can speak at a time. If both shout simultaneously, their sound waves interfere and neither message is understood.',
+          '',
+          'In early networking, computers faced this exact dilemma on coaxial cables. To solve this physically, twisted-pair cabling was introduced.',
+          '',
+          '### The Anatomy of Cat6 Twisted Pair',
+          'A standard unshielded twisted pair (UTP) Cat6 cable contains **8 solid copper conductors** grouped into **4 tightly twisted pairs**:',
+          '- Pair 1: Blue / White-Blue',
+          '- Pair 2: Orange / White-Orange',
+          '- Pair 3: Green / White-Green',
+          '- Pair 4: Brown / White-Brown',
+          '',
+          'The twists cancel electromagnetic interference (crosstalk) from adjacent pairs and external noise.',
+          '',
+          '### Pinout Modes: Fast Ethernet vs Gigabit Ethernet',
+          '| Standard | Speed | Active Pairs | Roles |',
+          '|---|---|---|---|',
+          '| **100BASE-TX (Fast Ethernet)** | 100 Mbps | 2 Pairs (4 wires) | Pins 1 & 2 = Transmit (TX)<br>Pins 3 & 6 = Receive (RX) |',
+          '| **1000BASE-T (Gigabit Ethernet)** | 1 Gbps | All 4 Pairs (8 wires) | All 4 pairs operate simultaneously in full-duplex with digital signal processing (DSP) |',
+          '',
+          '### The Full-Duplex Guarantee (No Collisions!)',
+          'Because the transmission wire has dedicated, physically isolated lanes for outgoing signals and incoming signals:',
+          '- Computer A can transmit at full wire speed on the TX pair.',
+          '- Simultaneously, Computer B can transmit at full wire speed on the RX pair.',
+          '',
+          '**Critical Rule:** On a direct, point-to-point copper Ethernet link running Full-Duplex, **collisions are physically impossible**. Collisions ONLY occur when multiple computers share the same electrical wire simultaneously (e.g., legacy Half-Duplex hubs).',
+        ],
+        keyTakeaway:
+          'Dedicated TX and RX wire pairs allow simultaneous bidirectional communication (Full-Duplex). Direct point-to-point copper connections have ZERO collisions.',
+        exampleQuery: '',
+        exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net01-mcq-full-duplex-collision',
+            question:
+              'Why do two modern computers connected directly via a Cat6 cable running Full-Duplex never experience data collisions?',
+            options: [
+              'Because the operating system limits transmission to one packet per second',
+              'Because transmission and reception travel across physically separate twisted wire pairs (dedicated TX and RX channels)',
+              'Because Ethernet switches delete collisions before they reach the computer',
+              'Because copper cables only permit electricity to flow in one direction',
+            ],
+            correctIndex: 1,
+            explanation:
+              'In Full-Duplex mode, transmission (TX) and reception (RX) utilize dedicated wire channels, allowing both nodes to send and receive simultaneously without signal interference.',
+          },
+          {
+            id: 'net01-mcq-gigabit-pairs',
+            question:
+              'How many twisted pairs does Gigabit Ethernet (1000BASE-T) utilize over Cat6 cabling to achieve 1 Gbps throughput?',
+            options: [
+              'Only 1 pair',
+              '2 pairs (4 wires)',
+              'All 4 pairs (8 wires)',
+              '8 pairs (16 wires)',
+            ],
+            correctIndex: 2,
+            explanation:
+              'Gigabit Ethernet (1000BASE-T) utilizes all 4 twisted pairs (8 wires) simultaneously, with each pair carrying 250 Mbps in full duplex.',
+          },
+        ],
+      },
+      tasks: [
+        {
+          id: 'net01-p2-duplex-channel-verification',
+          title: 'Guided Practice: Full-Duplex Physical Channel Verification',
+          description:
+            'Analyze physical cable pinouts and identify the conditions required for collision-free Full-Duplex transmission.',
+          instructions: [
+            'Review the physical pinout configuration of an office workstation connected to an access switch via Cat6 cabling.',
+            'Identify which pins transmit data and which receive data in 100BASE-TX mode.',
+            'Defend why point-to-point full-duplex links eliminate the need for collision detection.',
+          ],
+          type: 'guided',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'In full-duplex point-to-point links, dedicated TX and RX wire pairs physically prevent signal collision, achieving bidirectional wire-speed throughput.',
+          hints: [
+            {
+              level: 1,
+              text: 'Are outgoing and incoming signals sharing the same copper wire, or traveling on separate pairs?',
             },
           ],
           validation: {
@@ -408,48 +622,170 @@ export const NET_01_MODULE: ModuleData = {
               {
                 kind: 'choose-and-defend',
                 prompt:
-                  'Which of the following devices is correctly classified as an ENDPOINT?',
+                  'In a 100BASE-TX Fast Ethernet connection, which RJ-45 pin pairs are assigned to transmit and receive?',
                 options: [
-                  'A 48-port Layer 2 Ethernet switch in the server rack',
-                  'An edge router performing BGP routing to an Internet Service Provider',
-                  'A Redis cache server responding to application queries',
-                  'A wireless access point bridging 802.11 Wi-Fi frames to copper Ethernet',
+                  'Pins 1 & 2 for Transmit (TX), Pins 3 & 6 for Receive (RX)',
+                  'Pins 4 & 5 for Transmit, Pins 7 & 8 for Receive',
+                  'Pins 1, 2, 3, and 4 all transmit simultaneously in half-duplex',
+                  'All pins are shared randomly based on cable length',
                 ],
-                correctIndex: 2,
+                correctIndex: 0,
                 explanation:
-                  'A Redis cache server is an endpoint because it hosts application state and terminates network connections from clients.',
+                  'Standard 100BASE-TX pinout allocates Pins 1 & 2 for Transmit (TX) and Pins 3 & 6 for Receive (RX), leaving pins 4, 5, 7, and 8 unused.',
               },
               {
                 kind: 'choose-and-defend',
                 prompt:
-                  'Why is an enterprise router classified as an INTERMEDIARY device even though it possesses an IP address and management console?',
+                  'Under what condition would an Ethernet link fall back to Half-Duplex and risk collisions?',
                 options: [
-                  'Because routers do not have physical network interface cards',
-                  'Because its primary function in the data path is forwarding transit packets between network interfaces',
-                  'Because routers can only operate at the physical Layer 1 layer',
-                  'Because routers modify the application payload data of every packet they handle',
+                  'When the Cat6 cable is longer than 5 meters',
+                  'When connected to a legacy multi-port repeater Hub or when duplex auto-negotiation fails to a forced half-duplex setting',
+                  'Whenever the network carries IPv6 traffic instead of IPv4',
+                  'When the workstation transmits more than 1500 bytes per second',
                 ],
                 correctIndex: 1,
                 explanation:
-                  'Intermediary devices exist to forward and route transit traffic between different network segments. Management interfaces do not change its core forwarding role.',
+                  'Half-duplex is required only when connected to a shared-medium multi-port hub or when duplex auto-negotiation fails, forcing nodes to share a single collision domain.',
               },
             ],
           },
           successMessage:
-            'Correct! Endpoints run applications and originate/terminate data; intermediary devices forward traffic across network hops.',
+            'Physical channel mastery confirmed! You clearly distinguish between dedicated TX/RX pairs in Full-Duplex and shared-medium Half-Duplex.',
         },
       ],
     },
 
     // ─────────────────────────────────────────────────────
-    // Concept 2: Encapsulation: Segment, Packet, Frame (C03)
+    // Concept 3: Local vs Remote Delivery & Network Models (C04 + C05)
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'nic-permanent-mac-address',
+      order: 3,
+      title: 'Physical NIC Chip & Permanent MAC Address',
+      shortDescription:
+        'Understand the role of the Network Interface Card and the 48-bit hardware serial number burned into silicon by the manufacturer.',
+      theory: {
+        summary:
+          'Every computer requires a Network Interface Card (NIC) to serialize digital bytes into physical signals. The NIC is permanently identified by a 48-bit Media Access Control (MAC) address burned into its ROM silicon, consisting of a 24-bit IEEE Organizationally Unique Identifier (OUI) and a 24-bit device serial number.',
+        explanation: [
+          '### Beat 1: The Physical Dilemma — Who Is Talking on the Wire?',
+          'Once electrons are pulsing across the copper wire, a fundamental question arises:',
+          '*When a burst of electrical voltage reaches a network card, how does that card know whether this message was meant for this computer or another machine? And how does it know who sent it?*',
+          '',
+          'To solve this at the hardware level, the IEEE established the **Media Access Control (MAC)** address.',
+          '',
+          '### The Burned-In Address (BIA)',
+          'A MAC address is a **48-bit binary number**, represented as 12 hexadecimal characters separated by colons or hyphens (e.g., `00-1A-2B-3C-4D-10` or `00:1a:2b:3c:4d:10`).',
+          '',
+          '```',
+          '┌───────────────────────────┬───────────────────────────┐',
+          '│   24 Bits: IEEE OUI       │   24 Bits: Device Serial  │',
+          '│   (Manufacturer Vendor ID)│   (Factory Burned-In ROM) │',
+          '├───────────────────────────┼───────────────────────────┤',
+          '│         00 : 1A : 2B      │        3C : 4D : 10       │',
+          '└───────────────────────────┴───────────────────────────┘',
+          '```',
+          '',
+          '- **First 24 Bits (OUI)**: The Organizationally Unique Identifier assigned by IEEE to the hardware manufacturer (e.g., Intel, Apple, Cisco, Realtek).',
+          '- **Last 24 Bits (NIC Serial)**: Assigned by the vendor during chip fabrication to ensure global uniqueness.',
+          '',
+          '### Layer 2 Hardware Filtering',
+          'The physical NIC hardware filters incoming frames before disturbing the main computer CPU:',
+          '1. If Destination MAC matches the NIC\'s burned-in MAC → Accept and interrupt CPU.',
+          '2. If Destination MAC is the Broadcast address (`FF:FF:FF:FF:FF:FF`) → Accept and pass to OS.',
+          '3. If Destination MAC belongs to someone else → The NIC hardware drops the frame instantly without consuming CPU or memory.',
+        ],
+        keyTakeaway:
+          'MAC is a permanent Layer 2 hardware serial number burned into NIC silicon. The NIC inspects the destination MAC in hardware and drops irrelevant frames with zero CPU overhead.',
+        exampleQuery: '',
+        exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net01-mcq-mac-structure',
+            question:
+              'In the MAC address "00-1A-2B-3C-4D-10", what do the first 24 bits (00-1A-2B) represent?',
+            options: [
+              'The IP subnet identifier of the local office network',
+              'The Organizationally Unique Identifier (OUI) assigned to the NIC manufacturer by the IEEE',
+              'The physical switch port number where the computer is connected',
+              'The dynamic DHCP lease expiration timestamp',
+            ],
+            correctIndex: 1,
+            explanation:
+              'The first 3 bytes (24 bits) of an Ethernet MAC address are the OUI, identifying the registered hardware manufacturer (such as Intel, Apple, or Cisco).',
+          },
+          {
+            id: 'net01-mcq-hardware-filtering',
+            question:
+              'What does a workstation\'s Network Interface Card do when it receives a unicast Ethernet frame addressed to a different MAC address?',
+            options: [
+              'It forwards the frame to the office default gateway router',
+              'It drops the frame immediately in NIC hardware without interrupting the host CPU',
+              'It logs an error in the Windows Event Viewer and crashes the application',
+              'It broadcasts the frame out all other ports',
+            ],
+            correctIndex: 1,
+            explanation:
+              'In normal (non-promiscuous) mode, the NIC hardware filters out frames that do not match its own MAC or the broadcast address, discarding them with zero CPU overhead.',
+          },
+        ],
+      },
+      tasks: [
+        {
+          id: 'net01-p3-mac-identity-forensics',
+          title: 'Guided Practice: MAC Address Structure & Hardware Identity',
+          description:
+            'Examine MAC address formatting, identify vendor OUIs, and understand hardware-level filtering.',
+          instructions: [
+            'Audit three network adapters found in an enterprise datacenter rack.',
+            'Distinguish between the 24-bit OUI and the 24-bit vendor-assigned serial number.',
+            'Explain why MAC addresses cannot be used for global routing across the public internet.',
+          ],
+          type: 'guided',
+          primaryTable: '',
+          initialSql: '',
+          solutionSql: 'NETWORKING_JUDGMENT_TASK',
+          solutionExplanation:
+            'MAC addresses are flat 48-bit hardware serial numbers without hierarchical structure. They identify local hardware interfaces on a single physical link or switch, but cannot scale for global routing.',
+          hints: [
+            {
+              level: 1,
+              text: 'Does a MAC address contain country codes or network boundaries like postal codes, or is it a flat serial number?',
+            },
+          ],
+          validation: {
+            judgment: [
+              {
+                kind: 'choose-and-defend',
+                prompt:
+                  'Why can\'t routers use flat Layer 2 MAC addresses to route packets across the global internet?',
+                options: [
+                  'Because MAC addresses change every time a computer restarts',
+                  'Because MAC addresses have no geographical or hierarchical structure; routers would need to store billions of unaggregated entries',
+                  'Because MAC addresses can only be transmitted over wireless radio frequencies',
+                  'Because internet routers only understand ASCII text strings',
+                ],
+                correctIndex: 1,
+                explanation:
+                  'Flat MAC addresses lack hierarchy. Unlike telephone numbers or IP addresses (which group devices by area/network), every router on earth would need to know the specific port for every individual laptop.',
+              },
+            ],
+          },
+          successMessage:
+            'Hardware identity confirmed! You understand 48-bit MAC anatomy, IEEE OUIs, and the boundary between Layer 2 hardware serials and Layer 3 routing.',
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // Concept 1.4: Ethernet II Packaging Envelope & CRC Checksum
     // ─────────────────────────────────────────────────────
     {
       id: 'encapsulation-segment-packet-frame',
-      order: 2,
-      title: 'Encapsulation: Frames, Packets, Segments & PDUs',
+      order: 4,
+      title: 'Ethernet II Packaging Envelope & CRC Checksum',
       shortDescription:
-        'Trace the parcel encapsulation hierarchy as application data is wrapped in Transport, Network, and Link headers.',
+        'Trace the Ethernet II frame layout and discover how the 32-bit CRC Frame Check Sequence detects bit corruption in hardware.',
       theory: {
         summary:
           'Data moves down the protocol stack by encapsulation: each layer wraps the payload from the layer above in its own header (and optional trailer), producing a distinct Protocol Data Unit (PDU). At the receiver, decapsulation strips each header in reverse order.',
@@ -616,150 +952,6 @@ export const NET_01_MODULE: ModuleData = {
           },
           successMessage:
             'Excellent! You mastered encapsulation: Layer 4 Segments carry ports, Layer 3 Packets carry IPs, and Layer 2 Frames carry MACs and trailers.',
-        },
-      ],
-    },
-
-    // ─────────────────────────────────────────────────────
-    // Concept 3: Local vs Remote Delivery & Network Models (C04 + C05)
-    // ─────────────────────────────────────────────────────
-    {
-      id: 'local-vs-remote-and-network-models',
-      order: 3,
-      title: 'Local vs Remote Delivery & The OSI vs TCP/IP Models',
-      shortDescription:
-        'Distinguish between same-subnet local delivery and routed remote delivery, and map the OSI 7-layer model to TCP/IP.',
-      theory: {
-        summary:
-          'Traffic delivered within the same local network (broadcast domain) uses direct Layer 2 frame forwarding. Traffic addressed to remote networks must be routed through a default gateway. Network architectures are modeled conceptually using the 7-layer OSI model, but implemented in practice using the pragmatic 4-layer TCP/IP stack.',
-        explanation: [
-          '### C04: Local Delivery vs Remote Network Delivery',
-          'Before transmitting a packet, the sender must make a critical architectural decision:',
-          '',
-          '1. **Local Delivery (Same Subnet)**:',
-          '- The destination computer is attached to the **same local network / broadcast domain**.',
-          '- The sender encapsulates the packet into an Ethernet frame addressed **directly to the destination host\'s MAC address**.',
-          '- Ethernet switches forward the frame directly to the recipient port without involving a router.',
-          '',
-          '2. **Remote Delivery (Different Subnet / Internet)**:',
-          '- The destination IP address resides on an external network or across the internet.',
-          '- The sender **cannot** send directly to the destination host\'s MAC address because Layer 2 frames do not cross router boundaries.',
-          '- The sender encapsulates the packet into a frame addressed to the MAC address of its **Default Gateway** (the local router).',
-          '- The router inspects the Layer 3 destination IP and forwards the packet toward the next hop.',
-          '',
-          '### C05: OSI 7-Layer vs TCP/IP 4-Layer Models',
-          'Networking theory uses two major reference models:',
-          '',
-          '| OSI 7-Layer Model | TCP/IP 4-Layer Model | Core Protocol Examples | Primary PDU |',
-          '|---|---|---|---|',
-          '| 7. Application | **Application** | HTTP, DNS, SSH, DHCP | Application Data |',
-          '| 6. Presentation | *(absorbed into Application)* | TLS/SSL, ASCII, JSON | Data |',
-          '| 5. Session | *(absorbed into Application)* | Sockets, RPC sessions | Data |',
-          '| 4. Transport | **Transport** | TCP, UDP | Segment / Datagram |',
-          '| 3. Network | **Internet** | IPv4, IPv6, ICMP | Packet |',
-          '| 2. Data Link | **Network Access (Link)** | Ethernet (802.3), Wi-Fi (802.11) | Frame |',
-          '| 1. Physical | *(combined with Link)* | Cat6 copper, Fiber, Radios | Bits / Signals |',
-          '',
-          '**Why the TCP/IP Model Rules Practice**:',
-          'The OSI model is a theoretical architectural framework created by committee. The TCP/IP model was built directly into operating system kernels (starting with BSD UNIX) and represents how internet software is actually constructed.',
-        ],
-        keyTakeaway:
-          'Local delivery sends frames directly to the destination MAC; remote delivery sends frames to the default gateway MAC. Pragmatic engineering maps OSI layers 1–7 to the 4-layer TCP/IP suite.',
-        exampleQuery: '',
-        exampleQueryExplanation: '',
-        mcqs: [
-          {
-            id: 'net01-mcq-local-vs-remote-gateway',
-            question:
-              'A computer in an office wants to communicate with a web server in another country. How does the sender address the Layer 2 Ethernet frame?',
-            options: [
-              'With the web server\'s MAC address as the destination MAC',
-              'With the broadcast MAC address (FF:FF:FF:FF:FF:FF)',
-              'With the Default Gateway\'s (local router\'s) MAC address as the destination MAC',
-              'Frames are omitted completely when communicating across the internet',
-            ],
-            correctIndex: 2,
-            explanation:
-              'Layer 2 frames cannot cross routers. For remote delivery, the sender frames the packet to the MAC address of its local default gateway, keeping the destination IP set to the web server.',
-          },
-          {
-            id: 'net01-mcq-osi-tcpip-layer-count',
-            question:
-              'Which layer of the 4-layer TCP/IP model corresponds to both the Data Link and Physical layers of the 7-layer OSI model?',
-            options: [
-              'Internet Layer',
-              'Transport Layer',
-              'Network Access (or Link) Layer',
-              'Application Layer',
-            ],
-            correctIndex: 2,
-            explanation:
-              'The TCP/IP Network Access (Link) layer encompasses both the Physical transmission medium (OSI Layer 1) and Data Link framing/addressing (OSI Layer 2).',
-          },
-        ],
-      },
-      tasks: [
-        {
-          id: 'net01-p3-local-remote-decision',
-          title: 'Independent Practice: Local vs Remote Delivery Evaluation',
-          description:
-            'Determine whether given communication scenarios represent local or remote delivery and identify the appropriate next hop.',
-          instructions: [
-            'Analyze two transmission scenarios in an enterprise office:',
-            'Scenario A: Laptop A printing a PDF to an office network printer on the same Ethernet switch subnet.',
-            'Scenario B: Laptop A pulling code from a GitHub repository hosted in a remote cloud region.',
-            'Identify which scenario uses direct MAC delivery and which requires routing via the default gateway.',
-          ],
-          type: 'independent',
-          primaryTable: '',
-          initialSql: '',
-          solutionSql: 'NETWORKING_JUDGMENT_TASK',
-          solutionExplanation:
-            'Scenario A is local delivery (same subnet, frames sent directly to printer MAC). Scenario B is remote delivery (different subnet, frames sent to the router default gateway MAC).',
-          hints: [
-            {
-              level: 1,
-              text: 'Are the two devices in the same physical broadcast domain, or does traffic need to traverse a router to leave the local network?',
-            },
-            {
-              level: 2,
-              text: 'When communicating outside the local subnet, the destination MAC on the local wire is always the default gateway.',
-            },
-          ],
-          validation: {
-            judgment: [
-              {
-                kind: 'choose-and-defend',
-                prompt:
-                  'In Scenario A (Laptop A printing to a local printer on the same switch), how is the Ethernet frame forwarded?',
-                options: [
-                  'The switch forwards the frame directly to the printer port based on the printer\'s destination MAC address',
-                  'The frame must first pass through the office internet gateway router before reaching the printer',
-                  'The laptop floods the printer data out every port of the building router',
-                  'The communication uses DNS without creating any Layer 2 frames',
-                ],
-                correctIndex: 0,
-                explanation:
-                  'On the same local subnet, the switch performs direct Layer 2 forwarding using the printer\'s destination MAC address without involving any router.',
-              },
-              {
-                kind: 'choose-and-defend',
-                prompt:
-                  'In Scenario B (Laptop A accessing GitHub cloud servers), why must the destination MAC in Laptop A\'s frame be the router\'s MAC?',
-                options: [
-                  'Because GitHub servers do not have MAC addresses',
-                  'Because Layer 2 Ethernet frames cannot cross router boundaries; the local router must receive and route the packet',
-                  'Because the switch blocks all packets that have external IP addresses',
-                  'Because GitHub requires all clients to use the same shared MAC address',
-                ],
-                correctIndex: 1,
-                explanation:
-                  'Layer 2 broadcast domains terminate at the router interface. To reach any remote destination, the sender must transmit the frame to the default gateway router.',
-              },
-            ],
-          },
-          successMessage:
-            'Mastery confirmed! You clearly distinguish between local Layer 2 frame forwarding and remote Layer 3 default gateway routing.',
         },
       ],
     },

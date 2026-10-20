@@ -297,25 +297,24 @@ export const NET_02_MENTOR_SCRIPT: MentorScript = {
 
 export const NET_02_MODULE: ModuleData = {
   id: 'net-02',
-  slug: 'links-interfaces-and-ethernet-framing',
+  slug: 'expanding-the-room-shared-wire-and-collisions',
   day: 2,
-  title: 'Module 2: Links, Interfaces & Ethernet Framing',
-  shortTitle: 'Links & Ethernet Framing',
+  title: 'Module 2: Expanding the Room — The Shared Wire & Collisions',
+  shortTitle: 'Shared Wire & Collisions',
   type: 'module',
   track: 'networking',
   milestoneId: 'net-milestone-1',
   description:
-    'Explore the physical and data-link layers: cable types, link-light diagnostics, Ethernet II framing, the 1500-byte MTU boundary, FCS CRC error detection, 48-bit MAC addresses, and collision domains.',
+    'Understand why connecting 3+ nodes created the multi-node dilemma, how dumb Layer 1 Hubs cause electrical collisions and half-duplex bottlenecks, and how CSMA/CD exponential backoff arbitrates the wire.',
   estimatedMinutes: 30,
   curriculumOrder: 2,
   displayLabel: 'Module 2',
   completionLearnings: [
-    'Physical media include twisted-pair copper (100m distance limit) and fiber optics (single-mode vs multi-mode, immune to EMI)',
-    'Interface link state indicates physical carrier detection; link/speed LEDs diagnose cable connectivity and auto-negotiation',
-    'Ethernet II frames contain a 14-byte header (Dst MAC, Src MAC, EtherType), a variable payload, and a 4-byte FCS trailer',
-    'The standard 1500-byte MTU defines the Layer 3 payload limit, producing a maximum untagged on-the-wire frame of 1518 bytes',
-    'The Frame Check Sequence (FCS) uses CRC-32 to detect transmission corruption; corrupted frames are silently discarded without Layer 2 retransmission',
-    '48-bit MAC addresses provide flat hardware identification; switches eliminate hub collisions via dedicated microsegmented links',
+    'Connecting more than two computers requires an intermediary device; early networks used Layer 1 Hubs (dumb multi-port repeaters)',
+    'A Hub repeats incoming electrical voltages out all other ports with zero memory, zero MAC table, and zero filtering',
+    'When two devices transmit simultaneously on a shared medium, constructive voltage addition (+2V + +2V = +4V) creates an electrical collision that corrupts frames',
+    'Shared-medium networks operate in Half-Duplex, creating a single shared Collision Domain where only one host may transmit at a time',
+    'CSMA/CD senses carrier before transmitting, detects collisions via voltage spikes, broadcasts a 32-bit jam signal, and calculates a random exponential backoff delay',
   ],
   concepts: [
     // ─────────────────────────────────────────────────────
@@ -732,9 +731,30 @@ export const NET_02_MODULE: ModuleData = {
             },
             {
               level: 2,
-              text: 'FF:FF:FF:FF:FF:FF is received by all hosts in the broadcast domain.',
+              text: 'A destination MAC address of FF:FF:FF:FF:FF:FF is a broadcast frame forwarded out all ports in the broadcast domain except the ingress port.',
             },
           ],
+          terminal: {
+            hostname: 'ACME-CORE-SW01',
+            userPrompt: 'Switch#',
+            initialLines: [
+              'Cisco IOS Software, C2960 Software (C2960-LANBASEK9-M)',
+              'Incident Ticket #102: Port Fa0/12 High Latency & Collision Investigation.',
+            ],
+            availableCommands: [
+              'show interfaces status',
+              'show interfaces fastEthernet 0/12',
+              'ethtool -S eth0',
+            ],
+            commandResponses: {
+              'show interfaces status':
+                'Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1     Uplink-R1          connected    1          a-full  a-100 10/100BaseTX\nFa0/12    Legacy-Hub-Uplink  connected    1          a-half  a-100 10/100BaseTX\nFa0/24    Admin-PC           connected    1          a-full  a-100 10/100BaseTX',
+              'show interfaces fastEthernet 0/12':
+                'FastEthernet0/12 is up, line protocol is up (connected)\n  Hardware is Fast Ethernet, address is 001a.2b3c.4d12\n  Half-duplex, 100Mb/s, media type is 10/100BaseTX\n  542918 packets input, 41289128 bytes\n  14812 collisions, 9210 late collisions, 412 deferred',
+              'ethtool -S eth0':
+                'NIC statistics:\n     rx_packets: 412890\n     tx_packets: 391204\n     rx_crc_errors: 0\n     collision_errors: 14812\n     late_collision_errors: 9210',
+            },
+          },
           validation: {
             judgment: [
               {
@@ -920,3 +940,5 @@ export const NET_02_MODULE: ModuleData = {
     ],
   },
 };
+
+

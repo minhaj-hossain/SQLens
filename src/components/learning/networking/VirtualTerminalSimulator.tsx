@@ -21,6 +21,7 @@ export interface VirtualTerminalSimulatorProps {
   commandResponses?: Record<string, string>;
   customResponses?: Record<string, string[]>;
   availableCommands?: string[];
+  suggestedCommands?: string[];
   currentIp?: string;
   subnetMask?: string;
   gatewayIp?: string;
@@ -28,7 +29,9 @@ export interface VirtualTerminalSimulatorProps {
   macAddress?: string;
   title?: string;
   description?: string;
+  history?: CommandHistoryItem[];
   onCommandRun?: (command: string, output: string) => void;
+  onExecute?: (command: string) => void;
 }
 
 interface CommandHistoryItem {
@@ -44,6 +47,7 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
   commandResponses: propCommandResponses,
   customResponses: propCustomResponses,
   availableCommands: propAvailableCommands,
+  suggestedCommands: propSuggestedCommands,
   currentIp: propCurrentIp,
   subnetMask: propSubnetMask,
   gatewayIp: propGatewayIp,
@@ -51,38 +55,46 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
   macAddress: propMacAddress,
   title = 'Interactive Command-Line Diagnostics Lab',
   description = 'Execute real diagnostic commands to troubleshoot network reachability, DNS resolution, and interface configuration.',
+  history: controlledHistory,
   onCommandRun,
+  onExecute,
 }) => {
-  const hostname = scenario?.hostname || propHostname || 'WORKSTATION-PC';
+  const hostname = scenario?.hostname || propHostname || 'Acme-PC-01';
   const userPrompt = scenario?.userPrompt || propUserPrompt || 'C:\\Users\\admin>';
-  const currentIp = scenario?.currentIp || propCurrentIp || '192.168.1.105';
+  const currentIp = scenario?.currentIp || propCurrentIp || '192.168.1.10';
   const subnetMask = scenario?.subnetMask || propSubnetMask || '255.255.255.0';
   const gatewayIp = scenario?.gatewayIp || propGatewayIp || '192.168.1.1';
   const dnsServer = scenario?.dnsServer || propDnsServer || '192.168.1.1';
-  const macAddress = scenario?.macAddress || propMacAddress || 'B4-2E-99-4A-12-88';
+  const macAddress = scenario?.macAddress || propMacAddress || '00-1A-2B-3C-4D-10';
 
   const initialLines = scenario?.initialLines || propInitialLines;
   const defaultHistory: CommandHistoryItem[] = initialLines && initialLines.length > 0
     ? initialLines.map((line: string) => ({ command: '', output: line }))
-    : [
-        {
-          command: 'ipconfig',
-          output: `Windows IP Configuration\n\nEthernet adapter Local Area Connection:\n   Connection-specific DNS Suffix  . : localdomain\n   Link-local IPv6 Address . . . . . : fe80::512b:1198:4e4a:71d9%12\n   IPv4 Address. . . . . . . . . . . : ${currentIp}\n   Subnet Mask . . . . . . . . . . . : ${subnetMask}\n   Default Gateway . . . . . . . . . : ${gatewayIp}`,
-        },
-      ];
+    : [];
 
-  const [history, setHistory] = useState<CommandHistoryItem[]>(defaultHistory);
+  const [internalHistory, setInternalHistory] = useState<CommandHistoryItem[]>(defaultHistory);
+  const [osMode, setOsMode] = useState<'windows' | 'linux'>('windows');
+  const activeHistory = controlledHistory ?? internalHistory;
   const [inputVal, setInputVal] = useState('');
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const terminalEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const effectivePrompt = propUserPrompt || (osMode === 'windows' ? 'C:\\Users\\admin>' : 'admin@acme-pc01:~$');
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [history]);
+  }, [activeHistory]);
 
   const executeCommand = (cmdText: string) => {
     const raw = cmdText.trim();
     if (!raw) return;
+
+    if (onExecute) {
+      onExecute(raw);
+      setInputVal('');
+      return;
+    }
 
     const lower = raw.toLowerCase();
     let output = '';
@@ -102,33 +114,43 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
     }
     // 2. Built-in command simulator
     else if (lower === 'cls' || lower === 'clear') {
-      setHistory([]);
+      setInternalHistory([]);
       setInputVal('');
       return;
     } else if (lower === 'help') {
-      output = `Supported Diagnostics Commands:\n  ipconfig          - View IPv4 address, subnet mask, and gateway\n  ipconfig /all     - View detailed adapter info (MAC, DHCP, DNS)\n  ipconfig /flushdns- Purge OS DNS resolver cache\n  ping <ip/host>    - Test Layer 3 reachability using ICMP Echo\n  tracert <ip/host> - Trace router hops using TTL decrement\n  nslookup <domain> - Query DNS records directly\n  netstat -ano      - Display active TCP/UDP ports and PIDs\n  clear / cls       - Clear terminal screen`;
+      output = `Supported Diagnostics Commands:\n  Windows: ipconfig, ipconfig /all, ipconfig /flushdns, ping, tracert, nslookup, netstat -ano\n  Linux/Cisco: ip link show, ip addr show, ip route, ip neigh, show mac address-table, ss -tulpn, dig\n  System: clear, cls`;
     } else if (lower === 'ipconfig') {
       output = `Windows IP Configuration\n\nEthernet adapter Local Area Connection:\n   Connection-specific DNS Suffix  . : corp.internal\n   IPv4 Address. . . . . . . . . . . : ${currentIp}\n   Subnet Mask . . . . . . . . . . . : ${subnetMask}\n   Default Gateway . . . . . . . . . : ${gatewayIp}`;
     } else if (lower === 'ipconfig /all') {
       output = `Windows IP Configuration\n\n   Host Name . . . . . . . . . . . . : ${hostname}\n   Primary Dns Suffix  . . . . . . . : corp.internal\n   Node Type . . . . . . . . . . . . : Hybrid\n   IP Routing Enabled. . . . . . . . : No\n   WINS Proxy Enabled. . . . . . . . : No\n\nEthernet adapter Local Area Connection:\n   Connection-specific DNS Suffix  . : corp.internal\n   Description . . . . . . . . . . . : Intel(R) Ethernet Connection I219-LM\n   Physical Address. . . . . . . . . : ${macAddress}\n   DHCP Enabled. . . . . . . . . . . : Yes\n   Autoconfiguration Enabled . . . . : Yes\n   IPv4 Address. . . . . . . . . . . : ${currentIp}(Preferred)\n   Subnet Mask . . . . . . . . . . . : ${subnetMask}\n   Default Gateway . . . . . . . . . : ${gatewayIp}\n   DHCP Server . . . . . . . . . . . : ${gatewayIp}\n   DNS Servers . . . . . . . . . . . : ${dnsServer}\n                                       8.8.8.8`;
     } else if (lower === 'ipconfig /flushdns') {
       output = `Windows IP Configuration\n\nSuccessfully flushed the DNS Resolver Cache.`;
+    } else if (lower === 'ip link show' || lower === 'ip link' || lower === 'ip l') {
+      output = `1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000\n    link/ether ${macAddress.toLowerCase().replace(/-/g, ':')} brd ff:ff:ff:ff:ff:ff`;
+    } else if (lower === 'ip addr show' || lower === 'ip addr' || lower === 'ip a') {
+      output = `1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    inet 127.0.0.1/8 scope host lo\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000\n    link/ether ${macAddress.toLowerCase().replace(/-/g, ':')} brd ff:ff:ff:ff:ff:ff\n    inet ${currentIp}/24 brd 192.168.1.255 scope global eth0`;
+    } else if (lower === 'ip route show' || lower === 'ip route' || lower === 'ip r' || lower === 'route print') {
+      output = `default via ${gatewayIp} dev eth0 proto static\n192.168.1.0/24 dev eth0 proto kernel scope link src ${currentIp}`;
+    } else if (lower === 'ip neigh show' || lower === 'ip neigh' || lower === 'ip n' || lower.startsWith('arp -a')) {
+      output = `${gatewayIp} dev eth0 lladdr 00:1a:2b:3c:4d:01 REACHABLE`;
+    } else if (lower.includes('show mac address-table') || lower.includes('show mac-address-table') || lower.includes('bridge fdb show')) {
+      output = `Mac Address Table\n-------------------------------------------\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n   1    ${macAddress.toLowerCase().replace(/-/g, '').match(/.{1,4}/g)?.join('.') ?? '001a.2b3c.4d10'}    DYNAMIC     Fa0/1\n   1    001a.2b3c.4d01    DYNAMIC     Gi0/1\nTotal Mac Addresses for this criterion: 2`;
     } else if (lower.startsWith('ping')) {
       const target = raw.slice(4).trim() || '8.8.8.8';
       output = `Pinging ${target} with 32 bytes of data:\nReply from ${target}: bytes=32 time=12ms TTL=118\nReply from ${target}: bytes=32 time=11ms TTL=118\nReply from ${target}: bytes=32 time=13ms TTL=118\nReply from ${target}: bytes=32 time=11ms TTL=118\n\nPing statistics for ${target}:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 11ms, Maximum = 13ms, Average = 11ms`;
     } else if (lower.startsWith('tracert') || lower.startsWith('traceroute')) {
       const target = raw.replace(/^(tracert|traceroute)/i, '').trim() || '93.184.216.34';
       output = `Tracing route to ${target} over a maximum of 30 hops:\n\n  1     1 ms     1 ms     1 ms  ${gatewayIp} [Default Gateway]\n  2     8 ms     7 ms     8 ms  10.240.0.1 [ISP Aggregation Node]\n  3    14 ms    13 ms    14 ms  72.14.215.82 [Core Backbone]\n  4    15 ms    14 ms    15 ms  ${target} [Destination Reached]\n\nTrace complete.`;
-    } else if (lower.startsWith('nslookup')) {
-      const domain = raw.slice(8).trim() || 'example.com';
+    } else if (lower.startsWith('nslookup') || lower.startsWith('dig')) {
+      const domain = raw.replace(/^(nslookup|dig)/i, '').trim() || 'example.com';
       output = `Server:  resolver.corp.internal\nAddress:  ${dnsServer}\n\nNon-authoritative answer:\nName:    ${domain}\nAddresses:  93.184.216.34\n          2606:2800:220:1:248:1893:25c8:1946`;
-    } else if (lower.startsWith('netstat')) {
+    } else if (lower.startsWith('netstat') || lower.startsWith('ss')) {
       output = `Active Connections\n\n  Proto  Local Address          Foreign Address        State           PID\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       940\n  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4\n  TCP    ${currentIp}:52140    93.184.216.34:443      ESTABLISHED     4812\n  TCP    ${currentIp}:52141    142.250.190.46:443     ESTABLISHED     4812\n  UDP    0.0.0.0:5353           *:*                                    2104`;
     } else {
       output = `'${raw}' is not recognized as an internal or external command,\noperable program or batch file. Type 'help' for supported commands.`;
     }
 
-    setHistory((prev) => [...prev, { command: raw, output }]);
+    setInternalHistory((prev) => [...prev, { command: raw, output }]);
     setInputVal('');
     if (onCommandRun) {
       onCommandRun(raw, output);
@@ -142,14 +164,16 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
     }
   };
 
-  const quickPills = scenario?.availableCommands || propAvailableCommands || scenario?.suggestedCommands || [
-    'ipconfig',
-    'ipconfig /all',
-    'ping 8.8.8.8',
-    'tracert 93.184.216.34',
-    'nslookup example.com',
-    'ipconfig /flushdns',
-  ];
+  const defaultPills = osMode === 'windows'
+    ? ['ipconfig', 'ipconfig /all', 'ping 192.168.1.1', 'arp -a']
+    : ['ip link show', 'ip addr show', 'ip route', 'show mac address-table'];
+
+  const quickPills =
+    propAvailableCommands ||
+    propSuggestedCommands ||
+    scenario?.availableCommands ||
+    scenario?.suggestedCommands ||
+    defaultPills;
 
   return (
     <div
@@ -168,19 +192,38 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Dual OS Switcher */}
+          <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px]">
+            <button
+              type="button"
+              onClick={() => setOsMode('windows')}
+              className={`px-2 py-0.5 rounded transition ${
+                osMode === 'windows' ? 'bg-slate-800 text-cyan-300 font-bold' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Windows
+            </button>
+            <button
+              type="button"
+              onClick={() => setOsMode('linux')}
+              className={`px-2 py-0.5 rounded transition ${
+                osMode === 'linux' ? 'bg-slate-800 text-emerald-300 font-bold' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Linux / Cisco
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => setHistory([])}
-            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition cursor-pointer"
+            onClick={() => {
+              if (onExecute) onExecute('cls');
+              else setInternalHistory([]);
+            }}
+            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition cursor-pointer ml-1"
             title="Reset Terminal Screen"
           >
             <RotateCcw className="w-3 h-3" /> Clear
           </button>
-          <div className="flex items-center gap-1.5 ml-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
-          </div>
         </div>
       </div>
 
@@ -190,7 +233,7 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
         </p>
       )}
 
-      {/* 2. Quick Action Command Pills */}
+      {/* 2. Quick Action Command Pills (Fill input without auto-running) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5">
         <span className="text-[10px] text-slate-400 uppercase font-bold shrink-0">
           Quick Commands:
@@ -199,7 +242,11 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
           <button
             key={cmd}
             type="button"
-            onClick={() => executeCommand(cmd)}
+            onClick={() => {
+              setInputVal(cmd);
+              inputRef.current?.focus();
+            }}
+            title="Click to fill into terminal"
             className="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-[11px] text-emerald-400 font-mono transition cursor-pointer shrink-0"
           >
             {cmd}
@@ -211,12 +258,15 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
       <div
         className="p-3 sm:p-4 rounded-xl bg-black/90 border border-slate-800/80 min-h-[220px] max-h-[360px] overflow-y-auto space-y-3 font-mono text-xs leading-relaxed text-slate-300"
         data-testid="terminal-viewport"
+        role="region"
+        aria-live="polite"
+        aria-label="Terminal command output"
       >
-        {history.map((item, idx) => (
+        {activeHistory.map((item, idx) => (
           <div key={idx} className="space-y-1">
             {item.command ? (
               <div className="flex items-center justify-between text-emerald-400 font-bold">
-                <span>{userPrompt} {item.command}</span>
+                <span>{effectivePrompt} {item.command}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -248,14 +298,15 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
         {/* Active Command Prompt Input */}
         <div className="flex items-center gap-2 pt-1">
           <span className="text-emerald-400 font-bold shrink-0">
-            {userPrompt}&nbsp;
+            {effectivePrompt}&nbsp;
           </span>
           <input
+            ref={inputRef}
             type="text"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type diagnostic command (e.g. ipconfig /all, ping, tracert)..."
+            placeholder="Type diagnostic command (e.g. ping 192.168.1.1, ipconfig)..."
             className="flex-1 bg-transparent border-none outline-none text-slate-200 text-xs font-mono placeholder:text-slate-600 focus:ring-0"
             autoComplete="off"
             spellCheck={false}

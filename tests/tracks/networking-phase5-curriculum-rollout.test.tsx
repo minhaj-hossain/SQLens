@@ -137,9 +137,9 @@ describe('Phase 5 — Module net-14 Terminal Diagnostics', () => {
 
 describe('Phase 5 — Interactive Packet Inspection Across Curriculum Modules', () => {
   it('verifies net-01 encapsulation trace task has complete L2-L7 packet inspection', () => {
-    const task = NET_01_MODULE.concepts[1].tasks.find(
-      (t) => t.id === 'net01-p2-encapsulation-trace'
-    );
+    const task = NET_01_MODULE.concepts
+      .flatMap((c) => c.tasks)
+      .find((t) => t.id === 'net01-p2-encapsulation-trace');
     expect(task).toBeDefined();
     expect(task!.packetInspection).toBeDefined();
 

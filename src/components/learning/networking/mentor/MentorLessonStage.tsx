@@ -14,6 +14,18 @@ import { EthernetFrameInspector } from '../EthernetFrameInspector';
 import { PacketInspector } from '../PacketInspector';
 import type { ArpTaskContent, PacketInspectionTaskContent } from '../../../../types/curriculum';
 
+import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
+import { VirtualTerminalSimulator } from '../VirtualTerminalSimulator';
+import type { SimulationState, LearnerActionEvent } from '../../../../lib/network-engine/types';
+import {
+  reduceSimulationState,
+  reduceActionLog,
+  saveEngineSession,
+  loadEngineSession,
+} from '../../../../lib/network-engine/reducer';
+import { createInitialAcmeOfficeState } from '../../../../lib/network-engine/fixtures/acme-office-m1';
+import { isPingCommand, normalizeCommand } from '../../../../lib/network-engine/commands';
+
 const DEFAULT_NET05_ARP: ArpTaskContent = {
   stage: 1,
   sourceHost: { name: 'Host A', ip: '192.168.1.10', mac: '00:00:5E:00:53:01', port: 1 },
@@ -26,57 +38,26 @@ const DEFAULT_NET05_ARP: ArpTaskContent = {
 };
 
 const DEFAULT_NET01_PACKET: PacketInspectionTaskContent = {
-  title: 'End-to-End Packet Encapsulation: Host A -> Router R1 -> Server Z',
-  description: 'Observe multi-layer parcel encapsulation from Layer 7 application data to Layer 2 Ethernet frame.',
+  title: 'Ethernet II Envelope & Dynamic MAC Matching',
+  description:
+    'Inspect the Layer 2 Ethernet outer packaging stamped with Router R1 discovered MAC address.',
   snapshots: [
     {
-      hopLabel: 'Hop 1: Host A -> Switch SW1 -> Router R1',
+      hopLabel: 'Acme-PC-01 ➔ Acme-SW-01 ➔ Acme-RTR-01',
       deviceType: 'Host',
       layer2: {
-        srcMac: '00:00:5E:00:53:01',
-        dstMac: '00:00:5E:00:53:FE',
+        srcMac: '00-1A-2B-3C-4D-10',
+        dstMac: '00-1A-2B-3C-4D-01',
         etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
       },
       layer3: {
         version: 4,
         srcIp: '192.168.1.10',
-        dstIp: '10.0.0.50',
+        dstIp: '192.168.1.1',
         ttl: 64,
-        protocol: 'TCP (6)',
-      },
-      layer4: {
-        type: 'TCP',
-        srcPort: 49152,
-        dstPort: 80,
-      },
-      layer7: {
-        protocol: 'HTTP',
-        summary: 'GET /index.html HTTP/1.1',
-      },
-    },
-    {
-      hopLabel: 'Hop 2: Router R1 -> Server Z (WAN Link)',
-      deviceType: 'Router',
-      layer2: {
-        srcMac: '00:00:5E:00:53:FF',
-        dstMac: '00:00:5E:00:53:50',
-        etherType: '0x0800 (IPv4)',
-      },
-      layer3: {
-        version: 4,
-        srcIp: '192.168.1.10',
-        dstIp: '10.0.0.50',
-        ttl: 63,
-        protocol: 'TCP (6)',
-      },
-      layer4: {
-        type: 'TCP',
-        srcPort: 49152,
-        dstPort: 80,
-      },
-      layer7: {
-        protocol: 'HTTP',
-        summary: 'GET /index.html HTTP/1.1',
+        protocol: 'ICMP (1)',
+        totalLength: 60,
       },
     },
   ],
@@ -106,8 +87,19 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
     handleReplay,
   } = useMentorScript(script);
 
+  const [simState, setSimState] = useState<SimulationState>(() => {
+    if (typeof window !== 'undefined' && moduleId === 'net-01') {
+      const saved = loadEngineSession();
+      if (saved && saved.actionLog.length > 0) {
+        return reduceActionLog(createInitialAcmeOfficeState(), saved.actionLog);
+      }
+    }
+    return createInitialAcmeOfficeState();
+  });
+
   const [activeSpotlightOverride, setActiveSpotlightOverride] = useState<string | null>(null);
   const [showTextFallback, setShowTextFallback] = useState(false);
+  const [slowMotionPhase, setSlowMotionPhase] = useState<number>(0);
 
   // Active spotlight is either overridden by clicking a Term chip, or the beat's defined spotlight
   const effectiveSpotlight = activeSpotlightOverride ?? state.currentSpotlight;
@@ -118,6 +110,60 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
       onComplete?.();
     }
     handleNext();
+  };
+
+  const dispatchSimulationAction = (action: LearnerActionEvent) => {
+    setSimState((prev) => {
+      const next = reduceSimulationState(prev, action);
+      if (moduleId === 'net-01') {
+        saveEngineSession({
+          engineSchemaVersion: 1,
+          scriptVersion: '1.0.0',
+          actionLog: next.actionLog,
+        });
+      }
+      return next;
+    });
+  };
+
+  const handleRunCommand = (rawCommand: string) => {
+    const action: LearnerActionEvent = {
+      id: `act-${simState.logicalClock + 1}`,
+      logicalTick: simState.logicalClock + 1,
+      type: 'RUN_COMMAND',
+      command: rawCommand,
+    };
+    dispatchSimulationAction(action);
+
+    // Sync with mentor gating predicates
+    const norm = normalizeCommand(rawCommand);
+    if (isPingCommand(norm, '192.168.1.1')) {
+      if (state.beatIndex === 0) {
+        handleActionDone({ type: 'ping' });
+      } else if (state.beatIndex === 5) {
+        handleActionDone({ type: 'ping-slow' });
+        setSlowMotionPhase(3);
+      }
+    } else if (norm === 'arp -a' || norm === 'arp') {
+      if (state.beatIndex === 4 || state.beatIndex === 6) {
+        handleActionDone({ type: 'arp' });
+      }
+    }
+  };
+
+  const handleToggleCable = () => {
+    const isSeated = simState.links['cable-hostA-sw1']?.endpointA.isSeated;
+    const action: LearnerActionEvent = {
+      id: `act-${simState.logicalClock + 1}`,
+      logicalTick: simState.logicalClock + 1,
+      type: isSeated ? 'UNSEAT_CABLE' : 'SEAT_CABLE',
+      linkId: 'cable-hostA-sw1',
+    };
+    dispatchSimulationAction(action);
+
+    if (!isSeated && state.beatIndex === 2) {
+      handleActionDone({ type: 'seat-cable' });
+    }
   };
 
   /**
@@ -174,15 +220,101 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
     }
 
     if (moduleId === 'net-01') {
+      const isCableSeated = simState.links['cable-hostA-sw1']?.status === 'carrier-active';
+      const showPhysicalCanvas = state.beatIndex >= 2 && state.beatIndex < 7;
+      const showPacketInspector = state.beatIndex >= 7;
+
+      let suggestedCommands = ['ping 192.168.1.1'];
+      if (state.beatIndex === 1 || state.beatIndex === 3) {
+        suggestedCommands = ['ipconfig', 'ipconfig /all'];
+      } else if (state.beatIndex === 4 || state.beatIndex === 6) {
+        suggestedCommands = ['arp -a'];
+      } else if (state.beatIndex === 5) {
+        suggestedCommands = ['ping 192.168.1.1'];
+      }
+
       const taskContent =
         concept.tasks?.find((t) => t.packetInspection)?.packetInspection || DEFAULT_NET01_PACKET;
+
       return (
-        <div data-testid="packet-inspector-stage" className="w-full">
-          <PacketInspector
-            taskContent={taskContent}
-            title="End-to-End Packet & Frame Inspector"
-            description="Multi-layer parcel encapsulation from Layer 7 to Layer 2."
-          />
+        <div data-testid="packet-inspector-stage" className="w-full space-y-4">
+          {/* Progressive Stage 1-7: Physical Canvas + Terminal */}
+          {!showPacketInspector && (
+            <div className="space-y-3.5">
+              {showPhysicalCanvas && (
+                <PhysicalConnectionCanvas
+                  isCableSeated={isCableSeated}
+                  onToggleCable={handleToggleCable}
+                  className="animate-in fade-in duration-300"
+                />
+              )}
+
+              {/* Slow-Motion Stepper Banner in Beat 6 */}
+              {state.beatIndex === 5 && (
+                <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/40 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-cyan-300">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                    <span className="font-bold">Dual-Protocol Slow-Motion Trace</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        slowMotionPhase >= 1
+                          ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                      }`}
+                    >
+                      Step 1: ARP Broadcast
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        slowMotionPhase >= 2
+                          ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                      }`}
+                    >
+                      Step 2: ARP Reply
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        slowMotionPhase >= 3
+                          ? 'bg-emerald-500/30 border-emerald-400 text-emerald-100 font-bold'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                      }`}
+                    >
+                      Step 3: ICMP Echo
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <VirtualTerminalSimulator
+                title="Acme-PC-01 Command Prompt"
+                hostname="Acme-PC-01"
+                userPrompt="C:\Users\admin>"
+                history={simState.terminalHistory}
+                suggestedCommands={suggestedCommands}
+                onExecute={handleRunCommand}
+                currentIp="192.168.1.10"
+                subnetMask="255.255.255.0"
+                gatewayIp="192.168.1.1"
+                macAddress="00-1A-2B-3C-4D-10"
+              />
+            </div>
+          )}
+
+          {/* Beat 8: Ethernet Envelope & MAC Matching Inspector */}
+          {showPacketInspector && (
+            <div className="animate-in fade-in duration-300">
+              <PacketInspector
+                taskContent={taskContent}
+                title="Ethernet II Envelope & Dynamic MAC Matching"
+                description="Inspect the Layer 2 outer Ethernet packaging stamped with Router R1's MAC address learned via ARP."
+                visibleLayers={['L2', 'L3']}
+                spotlightMac="00-1A-2B-3C-4D-01"
+              />
+            </div>
+          )}
         </div>
       );
     }

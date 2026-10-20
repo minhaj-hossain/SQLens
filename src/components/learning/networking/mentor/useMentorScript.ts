@@ -45,6 +45,13 @@ export function buildCumulativeReveals(beats: MentorBeat[], upToIndex: number): 
   return parts;
 }
 
+export function getBeatBubbles(beat?: MentorBeat): string[] {
+  if (!beat) return [];
+  if (beat.say && beat.say.length > 0) return beat.say;
+  if (beat.text) return [beat.text];
+  return [];
+}
+
 export function initMentorState(script: MentorScript): MentorState {
   const firstBeat = script.beats[0];
   if (!firstBeat) {
@@ -73,7 +80,7 @@ export function initMentorState(script: MentorScript): MentorState {
     beatIndex: 0,
     revealedParts: revealed,
     currentSpotlight: firstBeat.spotlight ?? null,
-    bubbles: firstBeat.say ?? [],
+    bubbles: getBeatBubbles(firstBeat),
     reactionBubbles: [],
     isWaitingForAction: firstBeat.kind === 'do',
     isPredictionResolved: firstBeat.kind !== 'predict',
@@ -130,7 +137,7 @@ export function mentorScriptReducer(
         beatIndex: nextIndex,
         revealedParts: nextRevealed,
         currentSpotlight: nextBeat.spotlight ?? null,
-        bubbles: nextBeat.say ?? [],
+        bubbles: getBeatBubbles(nextBeat),
         reactionBubbles: [],
         isWaitingForAction: nextBeat.kind === 'do',
         isPredictionResolved: nextBeat.kind !== 'predict',
@@ -262,7 +269,7 @@ export function mentorScriptReducer(
         ...state,
         revealedParts: nextRevealed,
         currentSpotlight: currentBeat.spotlight ?? null,
-        bubbles: currentBeat.say ?? [],
+        bubbles: getBeatBubbles(currentBeat),
         reactionBubbles: [],
         isWaitingForAction: currentBeat.kind === 'do',
         isPredictionResolved: currentBeat.kind !== 'predict',

@@ -144,7 +144,9 @@ export const MentorDialoguePanel: React.FC<MentorDialoguePanelProps> = ({
                   ? 'Stage 1: Shadow the Master'
                   : script.tier === 'call-the-shots'
                     ? 'Stage 3: Call the Shots'
-                    : 'Stage 5: Urgent Ticket'}
+                    : script.tier === 'urgent-ticket'
+                      ? 'Stage 5: Urgent Ticket'
+                      : currentBeat.stage?.title || 'Stage 1: Shadow the Master'}
               </span>
             </div>
             <p className="text-xs font-semibold text-text truncate">

@@ -273,6 +273,13 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               title={task.title}
               subtitle={task.description}
             />
+            {task.terminal && (
+              <VirtualTerminalSimulator
+                scenario={task.terminal}
+                title={task.title}
+                description={task.description}
+              />
+            )}
           </div>
         ) : hasSubnetting ? (
           /* LEFT COLUMN: Subnet Bit-Slicer & Visuals Lab */
@@ -426,9 +433,16 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
-        ) : hasTerminal ? (
-          /* LEFT COLUMN: Virtual Terminal Diagnostics Simulator */
+        ) : hasEthernetFrame ? (
+          /* LEFT COLUMN: Ethernet Frame Inspector & Bit-Flip FCS Lab */
           <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
+            {task.ethernetFrame && (
+              <EthernetFrameInspector
+                taskContent={task.ethernetFrame}
+                title={task.title}
+                description={task.description}
+              />
+            )}
             {task.terminal && (
               <VirtualTerminalSimulator
                 scenario={task.terminal}
@@ -473,12 +487,12 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
-        ) : hasEthernetFrame ? (
-          /* LEFT COLUMN: Ethernet Frame Inspector & Bit-Flip FCS Lab */
+        ) : hasTerminal ? (
+          /* LEFT COLUMN: Virtual Terminal Diagnostics Simulator */
           <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
-            {task.ethernetFrame && (
-              <EthernetFrameInspector
-                taskContent={task.ethernetFrame}
+            {task.terminal && (
+              <VirtualTerminalSimulator
+                scenario={task.terminal}
                 title={task.title}
                 description={task.description}
               />
