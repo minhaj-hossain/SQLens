@@ -333,268 +333,271 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
           <StoryReelStage onComplete={() => setActiveMode('workbench')} />
         </div>
       ) : (
-        <div className="flex flex-col gap-5 w-full min-w-0 animate-in fade-in duration-300">
-          {/* ----------------------------------------------------------------------- */}
-          {/* 1. SLEEK TOP TASK BAR: SENIOR SYSTEMS ENGINEER GUIDANCE & ACTIONS       */}
-          {/* ----------------------------------------------------------------------- */}
-          <div className="rounded-2xl bg-zinc-950/90 border border-zinc-800 p-4 sm:p-5 shadow-xl backdrop-blur-md">
-            {/* Header: Persona Avatar + Step Counter + Navigation Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-zinc-800 gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-xs font-mono">
-                  GL
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-bold text-zinc-100 flex items-center gap-2">
-                    <span>Guided Learning</span>
-                    <span className="sr-only">Senior Systems Engineer</span>
-                  </div>
-                  <div className="text-[10px] text-zinc-400 font-mono">
-                    Step {mentorState.beatIndex + 1} of 8
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Advancement Controls */}
-              <div className="flex items-center gap-2 self-end sm:self-auto">
-                <button
-                  type="button"
-                  onClick={handleReplay}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/90 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition"
-                  title="Replay Current Step Instructions"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Replay
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleProceed}
-                  disabled={
-                    (currentBeat?.kind === 'predict' && !mentorState.isPredictionResolved) ||
-                    (currentBeat?.kind === 'do' && mentorState.isWaitingForAction)
-                  }
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold text-xs tracking-wide transition shadow-md shadow-emerald-950/50"
-                >
-                  {mentorState.beatIndex >= script.beats.length - 1 ? (
-                    <>
-                      <span>Complete Lab</span>
-                      <span className="sr-only">Resolve Ticket #1042</span>
-                      <ShieldCheck className="w-4 h-4" />
-                    </>
-                  ) : (
-                    <>
-                      <span>Next Step</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Mentor Speech Bubbles */}
-            <div className="space-y-2">
-              {mentorState.bubbles.map((paragraph, idx) => (
-                <div
-                  key={idx}
-                  className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-700/50 text-zinc-200 text-xs sm:text-sm leading-relaxed font-sans"
-                >
-                  {paragraph}
-                </div>
-              ))}
-            </div>
-
-            {/* Action Required Banner for 'do' beats */}
-            {currentBeat?.kind === 'do' && (
-              <div className="mt-3 p-3 rounded-xl bg-cyan-950/50 border border-cyan-500/40 text-xs font-mono text-cyan-200 flex flex-wrap items-center justify-between gap-3 shadow-inner">
-                <div className="flex items-center gap-2.5">
-                  <TerminalIcon className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span className="font-semibold">Action: {currentBeat.actionPrompt || 'Run the diagnostic command'}</span>
-                </div>
-                {currentBeat.actionTargetPart === 'cable' && !isCableSeated && (
-                  <button
-                    type="button"
-                    onClick={handleToggleCable}
-                    className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs transition shadow-sm"
-                  >
-                    Plug In Cable
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Socratic Multiple-Choice Questions for 'predict' beats */}
-            {currentBeat?.kind === 'predict' && (
-              <div className="mt-3 space-y-2 pt-2 border-t border-zinc-800">
-                <div className="text-xs font-bold font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                  <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Senior Tech Asks:</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {currentBeat.options?.map((opt, oIdx) => {
-                    const isSelected = mentorState.selectedOptionIndex === oIdx;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => handleSelectPrediction(oIdx)}
-                        className={`w-full text-left p-3 rounded-xl border text-xs leading-relaxed transition flex flex-col gap-1.5 ${
-                          isSelected
-                            ? opt.isCorrect
-                              ? 'bg-emerald-950/50 border-emerald-500 text-emerald-200'
-                              : 'bg-rose-950/50 border-rose-500 text-rose-200'
-                            : 'bg-zinc-900/80 border-zinc-800 hover:border-zinc-600 text-zinc-300'
-                        }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className="font-mono font-bold text-[11px] text-zinc-400">
-                            {String.fromCharCode(65 + oIdx)}.
-                          </span>
-                          <span className="flex-1 font-medium">{opt.label}</span>
-                        </div>
-
-                        {isSelected && opt.feedback && (
-                          <div
-                            className={`p-2 rounded text-[11px] border font-mono ${
-                              opt.isCorrect
-                                ? 'bg-emerald-900/40 border-emerald-700 text-emerald-300'
-                                : 'bg-rose-900/40 border-rose-700 text-rose-300'
-                            }`}
-                          >
-                            {opt.feedback}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Reaction Bubbles from previous action */}
-            {mentorState.reactionBubbles.length > 0 && (
-              <div className="mt-2.5 space-y-1.5">
-                {mentorState.reactionBubbles.map((rx, rIdx) => (
-                  <div
-                    key={rIdx}
-                    className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-600/40 text-emerald-300 text-xs leading-relaxed font-sans"
-                  >
-                    {rx}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ----------------------------------------------------------------------- */}
-          {/* 2. MINIMALIST PHYSICAL WORKBENCH: COMPUTER A ➔ CABLE ➔ COMPUTER B       */}
-          {/* ----------------------------------------------------------------------- */}
+        <div className="flex flex-col gap-4 w-full min-w-0 animate-in fade-in duration-300">
+          {/* ===================================================================== */}
+          {/* 1. TOP: MINIMALIST PHYSICAL WORKBENCH CANVAS                          */}
+          {/* ===================================================================== */}
           <div className="w-full">
             <PhysicalConnectionCanvas
               isCableSeated={isCableSeated}
               onToggleCable={handleToggleCable}
+              activeBeatIndex={mentorState.beatIndex}
             />
           </div>
 
-          {/* ----------------------------------------------------------------------- */}
-          {/* 3. SLOW-MOTION PROTOCOL TRACER (BEAT 6 ACTIVE PHASE)                   */}
-          {/* ----------------------------------------------------------------------- */}
-          {mentorState.beatIndex === 5 && (
-            <div className="p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-cyan-200">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-cyan-400 animate-spin" />
-                <span className="font-bold">Dual-Protocol Slow-Motion Trace</span>
+          {/* ===================================================================== */}
+          {/* 2. SPLIT: 65% GUIDED LEARNING (LEFT) + 35% TERMINAL (RIGHT)           */}
+          {/* ===================================================================== */}
+          <div className="flex flex-col lg:flex-row gap-4 w-full items-start">
+            {/* ------------------------------------------------------------------- */}
+            {/* LEFT COLUMN: GUIDED LEARNING DECK (~65% WIDTH)                     */}
+            {/* ------------------------------------------------------------------- */}
+            <div className="w-full lg:w-[65%] flex flex-col gap-4 min-w-0">
+              {/* Task Bar & Step Dialogue */}
+              <div className="rounded-2xl bg-zinc-950/90 border border-zinc-800 p-4 sm:p-5 shadow-xl backdrop-blur-md">
+                {/* Header: Persona Avatar + Step Counter + Navigation Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-zinc-800 gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-xs font-mono">
+                      GL
+                    </div>
+                    <div>
+                      <div className="text-xs sm:text-sm font-bold text-zinc-100 flex items-center gap-2">
+                        <span>Guided Learning</span>
+                        <span className="sr-only">Senior Systems Engineer</span>
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-mono">
+                        Step {mentorState.beatIndex + 1} of 8
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Advancement Controls */}
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={handleReplay}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/90 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition"
+                      title="Replay Current Step Instructions"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Replay
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleProceed}
+                      disabled={
+                        (currentBeat?.kind === 'predict' && !mentorState.isPredictionResolved) ||
+                        (currentBeat?.kind === 'do' && mentorState.isWaitingForAction)
+                      }
+                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold text-xs tracking-wide transition shadow-md shadow-emerald-950/50"
+                    >
+                      {mentorState.beatIndex >= script.beats.length - 1 ? (
+                        <>
+                          <span>Complete Lab</span>
+                          <span className="sr-only">Resolve Ticket #1042</span>
+                          <ShieldCheck className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          <span>Next Step</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mentor Speech Bubbles */}
+                <div className="space-y-2">
+                  {mentorState.bubbles.map((paragraph, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-700/50 text-zinc-200 text-xs sm:text-sm leading-relaxed font-sans"
+                    >
+                      {paragraph}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action Required Banner for 'do' beats */}
+                {currentBeat?.kind === 'do' && (
+                  <div className="mt-3 p-3 rounded-xl bg-cyan-950/50 border border-cyan-500/40 text-xs font-mono text-cyan-200 flex flex-wrap items-center justify-between gap-3 shadow-inner">
+                    <div className="flex items-center gap-2.5">
+                      <TerminalIcon className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span className="font-semibold">Action: {currentBeat.actionPrompt || 'Run the diagnostic command'}</span>
+                    </div>
+                    {currentBeat.actionTargetPart === 'cable' && !isCableSeated && (
+                      <button
+                        type="button"
+                        onClick={handleToggleCable}
+                        className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs transition shadow-sm"
+                      >
+                        Plug In Cable
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Socratic Multiple-Choice Questions for 'predict' beats */}
+                {currentBeat?.kind === 'predict' && (
+                  <div className="mt-3 space-y-2 pt-2 border-t border-zinc-800">
+                    <div className="text-xs font-bold font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                      <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Senior Tech Asks:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {currentBeat.options?.map((opt, oIdx) => {
+                        const isSelected = mentorState.selectedOptionIndex === oIdx;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => handleSelectPrediction(oIdx)}
+                            className={`w-full text-left p-3 rounded-xl border text-xs leading-relaxed transition flex flex-col gap-1.5 ${
+                              isSelected
+                                ? opt.isCorrect
+                                  ? 'bg-emerald-950/50 border-emerald-500 text-emerald-200'
+                                  : 'bg-rose-950/50 border-rose-500 text-rose-200'
+                                : 'bg-zinc-900/80 border-zinc-800 hover:border-zinc-600 text-zinc-300'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="font-mono font-bold text-[11px] text-zinc-400">
+                                {String.fromCharCode(65 + oIdx)}.
+                              </span>
+                              <span className="flex-1 font-medium">{opt.label}</span>
+                            </div>
+
+                            {isSelected && opt.feedback && (
+                              <div
+                                className={`p-2 rounded text-[11px] border font-mono ${
+                                  opt.isCorrect
+                                    ? 'bg-emerald-900/40 border-emerald-700 text-emerald-300'
+                                    : 'bg-rose-900/40 border-rose-700 text-rose-300'
+                                }`}
+                              >
+                                {opt.feedback}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Reaction Bubbles from previous action */}
+                {mentorState.reactionBubbles.length > 0 && (
+                  <div className="mt-2.5 space-y-1.5">
+                    {mentorState.reactionBubbles.map((rx, rIdx) => (
+                      <div
+                        key={rIdx}
+                        className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-600/40 text-emerald-300 text-xs leading-relaxed font-sans"
+                      >
+                        {rx}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 text-[10px]">
-                <span
-                  className={`px-2 py-0.5 rounded border ${
-                    slowMotionPhase >= 1
-                      ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-500'
-                  }`}
+
+              {/* Protocol Tracer (Beat 6 Active Phase) */}
+              {mentorState.beatIndex === 5 && (
+                <div className="p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-cyan-200">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-cyan-400 animate-spin" />
+                    <span className="font-bold">Dual-Protocol Slow-Motion Trace</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        slowMotionPhase >= 1
+                          ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                      }`}
+                    >
+                      1. ARP Broadcast
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        slowMotionPhase >= 2
+                          ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                      }`}
+                    >
+                      2. ARP Reply
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        slowMotionPhase >= 3
+                          ? 'bg-emerald-500/30 border-emerald-400 text-emerald-100 font-bold'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                      }`}
+                    >
+                      3. ICMP Echo Success
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Layer 2 Frame Inspector (Beat 8 Reveal) */}
+              {mentorState.beatIndex >= 7 && (
+                <div className="w-full animate-in fade-in duration-300">
+                  <PacketInspector
+                    taskContent={DEFAULT_NET01_PACKET}
+                    title="Data Envelope & Destination MAC Address"
+                    description="Inspect the data envelope stamped with Computer B's MAC address learned across the cable."
+                    visibleLayers={['L2', 'L3']}
+                    spotlightMac="00-1A-2B-3C-4D-01"
+                  />
+                </div>
+              )}
+
+              {/* Collapsible Diagnostic Notes */}
+              <div className="rounded-xl bg-zinc-950/80 border border-zinc-800/80 overflow-hidden text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowNotes((p) => !p)}
+                  className="w-full flex items-center justify-between p-3.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 transition font-mono"
                 >
-                  1. ARP Broadcast
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded border ${
-                    slowMotionPhase >= 2
-                      ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-500'
-                  }`}
-                >
-                  2. ARP Reply
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded border ${
-                    slowMotionPhase >= 3
-                      ? 'bg-emerald-500/30 border-emerald-400 text-emerald-100 font-bold'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-500'
-                  }`}
-                >
-                  3. ICMP Echo Success
-                </span>
+                  <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[11px]">
+                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Technician's Diagnostic Log ({diagnosticFacts.length} Facts)</span>
+                  </div>
+                  {showNotes ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+
+                {showNotes && (
+                  <div className="p-3.5 border-t border-zinc-800 space-y-2 font-mono text-[11px] text-zinc-300 bg-zinc-900/40">
+                    {diagnosticFacts.map((fact, fIdx) => (
+                      <div key={fIdx} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{fact.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* ----------------------------------------------------------------------- */}
-          {/* 4. ACTIVE TOOL DECK: VIRTUAL TERMINAL SIMULATOR                          */}
-          {/* ----------------------------------------------------------------------- */}
-          <div className="w-full">
-            <VirtualTerminalSimulator
-              title="Acme-PC-01 Command Prompt"
-              hostname="Acme-PC-01"
-              userPrompt="C:\Users\admin>"
-              history={simState.terminalHistory}
-              suggestedCommands={suggestedCommands}
-              onExecute={handleRunCommand}
-              currentIp="192.168.1.10"
-              subnetMask="255.255.255.0"
-              gatewayIp="192.168.1.1"
-              macAddress="00-1A-2B-3C-4D-10"
-            />
-          </div>
-
-          {/* ----------------------------------------------------------------------- */}
-          {/* 5. LAYER 2 FRAME INSPECTOR (BEAT 8 REVEAL)                              */}
-          {/* ----------------------------------------------------------------------- */}
-          {mentorState.beatIndex >= 7 && (
-            <div className="w-full animate-in fade-in duration-300">
-              <PacketInspector
-                taskContent={DEFAULT_NET01_PACKET}
-                title="Data Envelope & Destination MAC Address"
-                description="Inspect the data envelope stamped with Computer B's MAC address learned across the cable."
-                visibleLayers={['L2', 'L3']}
-                spotlightMac="00-1A-2B-3C-4D-01"
+            {/* ------------------------------------------------------------------- */}
+            {/* RIGHT COLUMN: ACTIVE COMMAND PROMPT TERMINAL (~35% WIDTH)          */}
+            {/* ------------------------------------------------------------------- */}
+            <div className="w-full lg:w-[35%] lg:sticky lg:top-4 flex flex-col gap-4 min-w-0">
+              <VirtualTerminalSimulator
+                title="Acme-PC-01 Command Prompt"
+                hostname="Computer A"
+                userPrompt="C:\Users\admin>"
+                history={simState.terminalHistory}
+                suggestedCommands={suggestedCommands}
+                onExecute={handleRunCommand}
+                currentIp="192.168.1.10"
+                subnetMask="255.255.255.0"
+                gatewayIp="192.168.1.1"
+                macAddress="00-1A-2B-3C-4D-10"
               />
             </div>
-          )}
-
-          {/* ----------------------------------------------------------------------- */}
-          {/* 6. COLLAPSIBLE TECHNICIAN'S DIAGNOSTIC NOTES                            */}
-          {/* ----------------------------------------------------------------------- */}
-          <div className="rounded-xl bg-zinc-950/80 border border-zinc-800/80 overflow-hidden text-xs">
-            <button
-              type="button"
-              onClick={() => setShowNotes((p) => !p)}
-              className="w-full flex items-center justify-between p-3.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 transition font-mono"
-            >
-              <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[11px]">
-                <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Technician's Diagnostic Log ({diagnosticFacts.length} Facts)</span>
-              </div>
-              {showNotes ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-
-            {showNotes && (
-              <div className="p-3.5 border-t border-zinc-800 space-y-2 font-mono text-[11px] text-zinc-300 bg-zinc-900/40">
-                {diagnosticFacts.map((fact, fIdx) => (
-                  <div key={fIdx} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{fact.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
