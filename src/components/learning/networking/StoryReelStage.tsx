@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { soundFx } from '../../../lib/networking/audio-fx';
 
 export interface StoryReelScene {
@@ -11,7 +11,8 @@ export interface StoryReelScene {
   subtitle: string;
   explanation: string;
   activeFocus: 'host-a' | 'wire' | 'chip' | 'packet';
-  callout: {
+  text: string[];
+  callout?: {
     heading: string;
     text: string;
     keyTakeaway: string;
@@ -26,11 +27,9 @@ export const NET_01_STORY_SCENES: StoryReelScene[] = [
     subtitle: 'Zero Jargon Baseline',
     explanation: 'A computer in isolation has nowhere to send information.',
     activeFocus: 'host-a',
-    callout: {
-      heading: 'The Trapped Data Dilemma',
-      text: 'Imagine Computer A wants to send a document to a coworker. With no physical connection to anything else, data cannot move. Networking begins with the absolute simplest requirement: a physical path.',
-      keyTakeaway: 'Data requires a physical medium to travel beyond the local motherboard.',
-    },
+    text: [
+      'Computer A wants to send a document to Computer B. But the two computers are not connected. So, Computer A has no way to send the document to Computer B.',
+    ],
   },
   {
     id: 'scene-2',
@@ -39,11 +38,10 @@ export const NET_01_STORY_SCENES: StoryReelScene[] = [
     subtitle: 'From Isolation to Physical Medium',
     explanation: 'A copper cable carries electrical pulses, but raw electricity has no meaning by itself.',
     activeFocus: 'wire',
-    callout: {
-      heading: 'Raw Voltage Arrives',
-      text: 'We connect Computer A to Computer B with a copper twisted-pair cable. Computer A sends electrical pulses (voltage changes). Computer B receives electricity—but how does it know where the message starts or who sent it?',
-      keyTakeaway: 'Physical cables carry raw voltage pulses. They do not know who is talking or what the signal means.',
-    },
+    text: [
+      'We connect Computer A and Computer B using a copper network cable. When Computer A sends data, the cable carries electrical signals to Computer B.',
+      'But receiving these signals is not enough. Computer B still needs a way to identify the sender and understand the data.',
+    ],
   },
   {
     id: 'scene-3',
@@ -52,11 +50,10 @@ export const NET_01_STORY_SCENES: StoryReelScene[] = [
     subtitle: 'The Network Interface Card (NIC)',
     explanation: 'Every physical network chip is stamped at the factory with a globally unique hardware identity.',
     activeFocus: 'chip',
-    callout: {
-      heading: 'The Physical Hardware Fingerprint (MAC)',
-      text: 'Just like every motor vehicle has a unique Vehicle Identification Number (VIN) stamped onto its metal frame at the factory, every network chip on Earth has a permanent 48-bit serial number burned into its silicon.',
-      keyTakeaway: 'The Physical Address (MAC) is a permanent factory-burned identity stamped into the hardware chip.',
-    },
+    text: [
+      'Every network interface has a MAC address. A network interface is the part of a computer that connects it to a network.',
+      'A MAC address is usually a 48-bit address assigned to a network interface. It helps identify that interface on the local network.',
+    ],
   },
 ];
 
@@ -171,7 +168,7 @@ export const StoryReelStage: React.FC<StoryReelStageProps> = ({
         </div>
       </div>
 
-      {/* 2. Unobstructed Visual Animation Viewport (Clean, Never Covered!) */}
+      {/* 2. Unobstructed Visual Animation Viewport */}
       <div className="relative h-[250px] sm:h-[280px] flex items-center justify-center overflow-hidden bg-radial-at-c from-[#0d1627] to-[#060912] border-b border-white/5">
         {/* Subtle grid pattern */}
         <div
@@ -257,62 +254,53 @@ export const StoryReelStage: React.FC<StoryReelStageProps> = ({
         )}
       </div>
 
-      {/* 3. Dedicated Teachable Moment Dialogue Panel (Separated Below — Never Covers the Visual!) */}
-      <div className="p-4 sm:p-5 bg-[#0a1120] flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="space-y-1.5 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                <Sparkles className="w-3 h-3 text-amber-400" />
-                TEACHABLE MOMENT
-              </span>
-              <span className="text-xs font-mono font-bold text-white">
-                {scene.callout.heading}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
-              {scene.callout.text}
+      {/* 3. Clean Narrative Panel (Distilled, Zero Clutter) */}
+      <div className="p-5 sm:p-6 bg-[#0a1120] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="space-y-2.5 flex-1 max-w-2xl">
+          {scene.text.map((paragraph, pIdx) => (
+            <p
+              key={pIdx}
+              className="text-sm sm:text-base text-zinc-200 leading-relaxed font-sans"
+            >
+              {paragraph}
             </p>
-            <div className="text-[11px] font-mono text-cyan-300 bg-cyan-950/40 border border-cyan-500/20 rounded-lg px-3 py-1.5">
-              💡 <strong>Takeaway:</strong> {scene.callout.keyTakeaway}
-            </div>
-          </div>
+          ))}
+        </div>
 
-          {/* Clean Bidirectional Navigation Controls */}
-          <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
-            {/* PREVIOUS BUTTON */}
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={currentSceneIdx === 0}
-              aria-label="Previous Scene (Left Arrow or Backspace)"
-              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
-                currentSceneIdx > 0
-                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 cursor-pointer active:scale-95'
-                  : 'bg-zinc-900/50 text-zinc-600 border border-zinc-800/40 cursor-not-allowed opacity-40'
-              }`}
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>← Back</span>
-            </button>
+        {/* Clean Bidirectional Navigation Controls */}
+        <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+          {/* PREVIOUS BUTTON */}
+          <button
+            type="button"
+            onClick={handlePrev}
+            disabled={currentSceneIdx === 0}
+            aria-label="Previous Scene (Left Arrow or Backspace)"
+            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
+              currentSceneIdx > 0
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 cursor-pointer active:scale-95'
+                : 'bg-zinc-900/50 text-zinc-600 border border-zinc-800/40 cursor-not-allowed opacity-40'
+            }`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>← Back</span>
+          </button>
 
-            {/* NEXT / ENTER LAB BUTTON */}
-            <button
-              type="button"
-              onClick={handleNext}
-              aria-label={
-                currentSceneIdx < NET_01_STORY_SCENES.length - 1
-                  ? 'Next Scene (Space or Right Arrow)'
-                  : 'Enter Workplace Lab'
-              }
-              className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5"
-            >
-              <span>
-                {currentSceneIdx < NET_01_STORY_SCENES.length - 1 ? 'Space →' : 'Enter Workplace Lab ➔'}
-              </span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {/* NEXT / ENTER LAB BUTTON */}
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label={
+              currentSceneIdx < NET_01_STORY_SCENES.length - 1
+                ? 'Next Scene (Space or Right Arrow)'
+                : 'Enter Workplace Lab'
+            }
+            className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5"
+          >
+            <span>
+              {currentSceneIdx < NET_01_STORY_SCENES.length - 1 ? 'Space →' : 'Enter Workplace Lab ➔'}
+            </span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>
