@@ -21,6 +21,7 @@ import { VlanTrunkDijkstraLab } from '../VlanTrunkDijkstraLab';
 import type { ArpTaskContent, PacketInspectionTaskContent } from '../../../../types/curriculum';
 
 import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
+import { NetworkingThemeProvider } from '../hardware/NetworkingThemeContext';
 import { VirtualTerminalSimulator } from '../VirtualTerminalSimulator';
 import type { SimulationState, LearnerActionEvent } from '../../../../lib/network-engine/types';
 import {
@@ -704,75 +705,77 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
   };
 
   return (
-    <div
-      className="w-full max-w-[1440px] mx-auto space-y-4 px-0 sm:px-4 min-w-0"
-      data-testid="mentor-lesson-stage"
-    >
-      {/* 2-Pane Split Studio Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 min-w-0 items-start">
-        {/* LEFT / BOTTOM (Mobile): Mentor Dialogue Panel (5 cols on desktop) */}
-        <div className="order-2 lg:order-1 lg:col-span-5 h-[480px] lg:h-[620px] flex flex-col min-w-0">
-          <MentorDialoguePanel
-            script={script}
-            currentBeat={currentBeat}
-            state={state}
-            onNext={handleNextWithCompletion}
-            onSelectPrediction={handleSelectPrediction}
-            onSelectWhy={handleSelectWhy}
-            onSubmitFill={handleSubmitFill}
-            onReplay={handleReplay}
-            onHoverTerm={(partId) => setActiveSpotlightOverride(partId)}
-            onClickTerm={(partId) =>
-              setActiveSpotlightOverride((prev) => (prev === partId ? null : partId))
-            }
-            activeSpotlight={effectiveSpotlight}
-          />
-        </div>
-
-        {/* RIGHT / TOP (Mobile Sticky): Interactive Simulator Stage (7 cols on desktop) */}
-        <div className="order-1 lg:order-2 lg:col-span-7 sticky top-2 z-10 lg:static min-w-0">
-          <div className="bg-surface border border-border rounded-2xl p-3 sm:p-4 shadow-md overflow-hidden min-h-[380px] lg:min-h-[620px] flex flex-col justify-center">
-            <SpotlightLayer
-              spotlight={effectiveSpotlight}
-              activeLabel={activeTermLabel}
-              onClearSpotlight={() => setActiveSpotlightOverride(null)}
-            >
-              {renderSimulatorStage()}
-            </SpotlightLayer>
+    <NetworkingThemeProvider>
+      <div
+        className="w-full max-w-[1440px] mx-auto space-y-4 px-0 sm:px-4 min-w-0"
+        data-testid="mentor-lesson-stage"
+      >
+        {/* 2-Pane Split Studio Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 min-w-0 items-start">
+          {/* LEFT / BOTTOM (Mobile): Mentor Dialogue Panel (5 cols on desktop) */}
+          <div className="order-2 lg:order-1 lg:col-span-5 h-[480px] lg:h-[620px] flex flex-col min-w-0">
+            <MentorDialoguePanel
+              script={script}
+              currentBeat={currentBeat}
+              state={state}
+              onNext={handleNextWithCompletion}
+              onSelectPrediction={handleSelectPrediction}
+              onSelectWhy={handleSelectWhy}
+              onSubmitFill={handleSubmitFill}
+              onReplay={handleReplay}
+              onHoverTerm={(partId) => setActiveSpotlightOverride(partId)}
+              onClickTerm={(partId) =>
+                setActiveSpotlightOverride((prev) => (prev === partId ? null : partId))
+              }
+              activeSpotlight={effectiveSpotlight}
+            />
           </div>
-        </div>
-      </div>
 
-      {/* Accessible "Read as Text" Fallback Disclosure */}
-      <div className="rounded-xl border border-border bg-surface-2/40 overflow-hidden text-xs">
-        <button
-          type="button"
-          onClick={() => setShowTextFallback((prev) => !prev)}
-          className="w-full flex items-center justify-between px-4 py-2.5 text-text-dim hover:text-text hover:bg-surface-3/50 transition-colors focus:outline-none"
-        >
-          <span className="flex items-center gap-2 font-mono font-medium">
-            <BookOpen className="w-3.5 h-3.5 text-func" />
-            <span>Read lesson summary as standard text</span>
-          </span>
-          {showTextFallback ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
-
-        {showTextFallback && (
-          <div className="p-4 border-t border-border/60 bg-surface space-y-3 font-sans text-text-dim leading-relaxed animate-in fade-in duration-200">
-            <p className="font-semibold text-text">{concept.theory.summary}</p>
-            {concept.theory.explanation.map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
-            <div className="p-3 rounded-lg bg-func/10 border border-func/30 text-func font-medium font-mono text-[11px]">
-              Key Takeaway: {concept.theory.keyTakeaway}
+          {/* RIGHT / TOP (Mobile Sticky): Interactive Simulator Stage (7 cols on desktop) */}
+          <div className="order-1 lg:order-2 lg:col-span-7 sticky top-2 z-10 lg:static min-w-0">
+            <div className="bg-surface border border-border rounded-2xl p-3 sm:p-4 shadow-md overflow-hidden min-h-[380px] lg:min-h-[620px] flex flex-col justify-center">
+              <SpotlightLayer
+                spotlight={effectiveSpotlight}
+                activeLabel={activeTermLabel}
+                onClearSpotlight={() => setActiveSpotlightOverride(null)}
+              >
+                {renderSimulatorStage()}
+              </SpotlightLayer>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Accessible "Read as Text" Fallback Disclosure */}
+        <div className="rounded-xl border border-border bg-surface-2/40 overflow-hidden text-xs">
+          <button
+            type="button"
+            onClick={() => setShowTextFallback((prev) => !prev)}
+            className="w-full flex items-center justify-between px-4 py-2.5 text-text-dim hover:text-text hover:bg-surface-3/50 transition-colors focus:outline-none"
+          >
+            <span className="flex items-center gap-2 font-mono font-medium">
+              <BookOpen className="w-3.5 h-3.5 text-func" />
+              <span>Read lesson summary as standard text</span>
+            </span>
+            {showTextFallback ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+
+          {showTextFallback && (
+            <div className="p-4 border-t border-border/60 bg-surface space-y-3 font-sans text-text-dim leading-relaxed animate-in fade-in duration-200">
+              <p className="font-semibold text-text">{concept.theory.summary}</p>
+              {concept.theory.explanation.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+              <div className="p-3 rounded-lg bg-func/10 border border-func/30 text-func font-medium font-mono text-[11px]">
+                Key Takeaway: {concept.theory.keyTakeaway}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </NetworkingThemeProvider>
   );
 };
