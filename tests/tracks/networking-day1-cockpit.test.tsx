@@ -95,11 +95,24 @@ describe('NetworkingCockpitView & Routing Integration', () => {
     expect(html).toContain('ETH0: NO CARRIER');
   });
 
-  it('renders the Senior Systems Engineer console with Beat 1 instructions', () => {
+  it('defaults to Concept Story Reel mode with unobstructed stage and interactive controls', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
         concept={concept}
+      />,
+    );
+
+    expect(html).toContain('data-testid="story-reel-stage"');
+    expect(html).toContain('INTERACTIVE STORY REEL');
+  });
+
+  it('renders the Senior Systems Engineer console with Beat 1 instructions in workbench mode', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingCockpitView
+        module={NET_01_MODULE}
+        concept={concept}
+        defaultMode="workbench"
       />,
     );
 
@@ -110,11 +123,12 @@ describe('NetworkingCockpitView & Routing Integration', () => {
     expect(html).toContain('Action: ping 192.168.1.1');
   });
 
-  it('renders the Physical Layer 1 Topology Canvas and Windows Command Prompt', () => {
+  it('renders the Physical Layer 1 Topology Canvas and Windows Command Prompt in workbench mode', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
         concept={concept}
+        defaultMode="workbench"
       />,
     );
 
@@ -128,11 +142,12 @@ describe('NetworkingCockpitView & Routing Integration', () => {
     expect(html).toContain('C:\\Users\\admin&gt;');
   });
 
-  it('renders the collapsible Technician Diagnostic Log with verified facts', () => {
+  it('renders the collapsible Technician Diagnostic Log with verified facts in workbench mode', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
         concept={concept}
+        defaultMode="workbench"
       />,
     );
 

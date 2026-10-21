@@ -77,7 +77,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
   module,
   concept,
   onComplete,
-  defaultMode = 'workbench',
+  defaultMode = 'reel',
 }) => {
   const script: MentorScript = concept.theory.mentorScript!;
   const { markConceptComplete, markModuleComplete } = useLearning();

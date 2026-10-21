@@ -122,13 +122,17 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         >
           {/* Hardware Header & Zoom Button */}
           <div className="w-full flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5">
-            <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase">
-              Client Host
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🖥️</span>
+                <span>Workstation PC</span>
+              </span>
+              <span className="text-[9px] font-mono text-zinc-400">Endpoint Client (Host A)</span>
+            </div>
             <button
               type="button"
               onClick={() => setIsNicModalOpen(true)}
-              className="flex items-center gap-1 text-[9px] font-mono text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/80 px-1.5 py-0.5 rounded border border-cyan-500/40 transition-colors"
+              className="flex items-center gap-1 text-[9px] font-mono text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/80 px-2 py-0.5 rounded border border-cyan-500/40 transition-colors shadow-sm"
             >
               <ZoomIn className="w-3 h-3" />
               <span>Zoom NIC Chip</span>
@@ -168,6 +172,21 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
 
         {/* Cable Connection 1 (Host A -> SW1) */}
         <div className="md:col-span-1 flex flex-col items-center justify-center py-2 relative">
+          <div className="flex flex-col items-center mb-1 text-center">
+            <span className="text-[10px] font-mono font-bold text-cyan-300 flex items-center gap-1">
+              <span>🔌</span>
+              <span>Cat6 Cable</span>
+            </span>
+            <span
+              className={`text-[8px] font-mono px-1 py-0.2 rounded border ${
+                isCableSeated
+                  ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/30'
+                  : 'text-amber-400 bg-amber-950/60 border-amber-500/30'
+              }`}
+            >
+              {isCableSeated ? 'Seated' : 'Unplugged'}
+            </span>
+          </div>
           <RealisticRj45Cable
             isPlugged={isCableSeated}
             onToggle={handleToggle}
@@ -190,7 +209,16 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         </div>
 
         {/* Node 2: Acme-SW-01 (Access Switch) */}
-        <div className="md:col-span-3 flex flex-col items-center">
+        <div className="md:col-span-3 flex flex-col items-center w-full">
+          <div className="w-full flex items-center justify-between px-2 pb-1 text-[11px] font-mono">
+            <span className="font-bold text-amber-300 flex items-center gap-1.5">
+              <span>🎛️</span>
+              <span>Network Switch</span>
+            </span>
+            <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900/80 px-1.5 py-0.5 rounded border border-zinc-700/50">
+              Layer 2 Forwarder
+            </span>
+          </div>
           <RealisticSwitchChassis
             title="Acme-SW-01"
             model="Access Switch (L2)"
@@ -224,6 +252,15 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
 
         {/* Link 2: Switch to Router (Permanent Office Backbone with Flowing Packets) */}
         <div className="md:col-span-1 flex flex-col items-center justify-center py-2">
+          <div className="flex flex-col items-center mb-1 text-center">
+            <span className="text-[10px] font-mono font-bold text-emerald-300 flex items-center gap-1">
+              <span>⚡</span>
+              <span>Backbone</span>
+            </span>
+            <span className="text-[8px] font-mono text-zinc-400">
+              Gigabit Trunk
+            </span>
+          </div>
           <RealisticWireBus
             isConnected={isCableSeated}
             isTransmitting={isCableSeated}
@@ -238,9 +275,13 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
           className={`md:col-span-3 flex flex-col items-center ${cardClass} rounded-xl p-3 relative`}
         >
           <div className="w-full flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5">
-            <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase">
-              Default Gateway
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-mono font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🌐</span>
+                <span>Gateway Router</span>
+              </span>
+              <span className="text-[9px] font-mono text-zinc-400">Subnet Exit (Layer 3)</span>
+            </div>
             <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-[9px] font-mono text-emerald-300">
               Dual-NIC L3
             </span>

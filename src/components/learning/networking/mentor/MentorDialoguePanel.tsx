@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowRight,
+  ChevronLeft,
   RotateCcw,
   CheckCircle2,
   AlertCircle,
@@ -22,6 +23,8 @@ interface MentorDialoguePanelProps {
   currentBeat: MentorBeat | null;
   state: MentorState;
   onNext: () => void;
+  onPrev?: () => void;
+  onGotoBeat?: (index: number) => void;
   onSelectPrediction: (index: number) => void;
   onSelectWhy?: (index: number) => void;
   onSubmitFill?: (values: Record<string, string>) => void;
@@ -36,6 +39,8 @@ export const MentorDialoguePanel: React.FC<MentorDialoguePanelProps> = ({
   currentBeat,
   state,
   onNext,
+  onPrev,
+  onGotoBeat,
   onSelectPrediction,
   onSelectWhy,
   onSubmitFill,
@@ -51,10 +56,13 @@ export const MentorDialoguePanel: React.FC<MentorDialoguePanelProps> = ({
     setFillInputs({});
   }, [state.beatIndex]);
 
-  // Keyboard shortcut: Enter advances NEXT if allowed
+  // Keyboard shortcut: Enter/Space/ArrowRight advances NEXT, ArrowLeft/Backspace goes PREV
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+
+      if ((e.key === 'Enter' || e.code === 'Space' || e.key === 'ArrowRight') && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         // If on predict and resolved, or on say/point/debrief
         if (
           currentBeat &&
@@ -68,11 +76,16 @@ export const MentorDialoguePanel: React.FC<MentorDialoguePanelProps> = ({
           e.preventDefault();
           onNext();
         }
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        if (state.beatIndex > 0 && onPrev) {
+          e.preventDefault();
+          onPrev();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentBeat, state.isPredictionResolved, state.isWhyResolved, state.isWaitingForAction, state.isFillResolved, onNext]);
+  }, [currentBeat, state.beatIndex, state.isPredictionResolved, state.isWhyResolved, state.isWaitingForAction, state.isFillResolved, onNext, onPrev]);
 
   if (!currentBeat) return null;
 
@@ -350,17 +363,36 @@ export const MentorDialoguePanel: React.FC<MentorDialoguePanelProps> = ({
           </div>
         )}
 
-        {/* ADVANCE BUTTON: Next Step */}
-        <div className="flex items-center justify-between pt-1">
+        {/* NAVIGATION CONTROLS: Previous / Step Dots / Next */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/40 gap-2">
+          {/* PREVIOUS BUTTON */}
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={state.beatIndex <= 0}
+            aria-label="Previous Beat (Left Arrow or Backspace)"
+            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all ${
+              state.beatIndex > 0
+                ? 'bg-surface-2 hover:bg-surface-3 text-text border border-border cursor-pointer active:scale-95'
+                : 'bg-surface-2/40 text-text-muted border border-border/40 cursor-not-allowed opacity-40'
+            }`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Prev</span>
+          </button>
+
+          {/* Clickable Beat Dots */}
           <div className="flex items-center gap-1.5">
             {script.beats.map((_, idx) => (
-              <div
+              <button
                 key={idx}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
+                type="button"
+                onClick={() => onGotoBeat?.(idx)}
+                className={`h-1.5 rounded-full transition-all duration-200 focus:outline-none ${
                   idx === state.beatIndex
                     ? 'w-5 bg-func shadow-sm'
                     : idx < state.beatIndex
-                      ? 'w-2 bg-emerald-500'
+                      ? 'w-2 bg-emerald-500 hover:bg-emerald-400 cursor-pointer'
                       : 'w-1.5 bg-surface-3'
                 }`}
                 title={`Beat ${idx + 1}`}
@@ -368,6 +400,7 @@ export const MentorDialoguePanel: React.FC<MentorDialoguePanelProps> = ({
             ))}
           </div>
 
+          {/* NEXT BUTTON */}
           <button
             type="button"
             onClick={onNext}

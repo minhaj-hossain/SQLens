@@ -318,7 +318,18 @@ export const SwitchingTopologyCanvas: React.FC<SwitchingTopologyCanvasProps> = (
             {/* Switch Title & Status */}
             <text
               x={switchBox.x + switchBox.w / 2}
-              y={switchBox.y + 32}
+              y={switchBox.y + 26}
+              textAnchor="middle"
+              fill="#38bdf8"
+              fontSize="9"
+              fontWeight="bold"
+              fontFamily="monospace"
+            >
+              NETWORK SWITCH
+            </text>
+            <text
+              x={switchBox.x + switchBox.w / 2}
+              y={switchBox.y + 42}
               textAnchor="middle"
               fill="#f8fafc"
               fontSize="13"
@@ -329,10 +340,10 @@ export const SwitchingTopologyCanvas: React.FC<SwitchingTopologyCanvasProps> = (
             </text>
             <text
               x={switchBox.x + switchBox.w / 2}
-              y={switchBox.y + 48}
+              y={switchBox.y + 56}
               textAnchor="middle"
               fill="#94a3b8"
-              fontSize="9.5"
+              fontSize="8.5"
               fontFamily="monospace"
             >
               Layer 2 Bridge
@@ -470,11 +481,11 @@ export const SwitchingTopologyCanvas: React.FC<SwitchingTopologyCanvasProps> = (
                   x={pos.x - 55}
                   y={pos.y - 12}
                   fill="#f1f5f9"
-                  fontSize="12"
+                  fontSize="11"
                   fontWeight="bold"
                   fontFamily="sans-serif"
                 >
-                  {host.name}
+                  🖥️ {host.name}
                 </text>
                 <rect
                   x={pos.x + 18}

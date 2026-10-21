@@ -299,6 +299,8 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
     state,
     currentBeat,
     handleNext,
+    handlePrev,
+    handleGotoBeat,
     handleActionDone,
     handleSelectPrediction,
     handleSelectWhy,
@@ -719,6 +721,8 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
               currentBeat={currentBeat}
               state={state}
               onNext={handleNextWithCompletion}
+              onPrev={handlePrev}
+              onGotoBeat={handleGotoBeat}
               onSelectPrediction={handleSelectPrediction}
               onSelectWhy={handleSelectWhy}
               onSubmitFill={handleSubmitFill}

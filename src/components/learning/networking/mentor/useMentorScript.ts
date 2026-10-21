@@ -25,6 +25,8 @@ export interface MentorState {
 
 export type MentorEvent =
   | { type: 'NEXT' }
+  | { type: 'PREV' }
+  | { type: 'GOTO_BEAT'; index: number }
   | { type: 'ACTION_DONE'; action: { type: string; payload?: unknown } }
   | { type: 'SELECT_PREDICTION'; optionIndex: number }
   | { type: 'SELECT_WHY'; whyIndex: number }
@@ -148,6 +150,60 @@ export function mentorScriptReducer(
         isFillResolved: nextBeat.kind !== 'fill',
         attempts: 0,
         hintVisible: false,
+      };
+    }
+
+    case 'PREV': {
+      if (state.beatIndex <= 0) return state;
+      const prevIndex = state.beatIndex - 1;
+      const prevBeat = script.beats[prevIndex];
+      const prevRevealed = buildCumulativeReveals(script.beats, prevIndex);
+
+      return {
+        ...state,
+        beatIndex: prevIndex,
+        revealedParts: prevRevealed,
+        currentSpotlight: prevBeat.spotlight ?? null,
+        bubbles: getBeatBubbles(prevBeat),
+        reactionBubbles: [],
+        isWaitingForAction: false,
+        isPredictionResolved: true,
+        isWhyResolved: true,
+        selectedOptionIndex: null,
+        selectedWhyIndex: null,
+        fillValues: {},
+        isFillResolved: true,
+        attempts: 0,
+        hintVisible: false,
+        isCompleted: false,
+      };
+    }
+
+    case 'GOTO_BEAT': {
+      const targetIndex = Math.max(0, Math.min(event.index, script.beats.length - 1));
+      const targetBeat = script.beats[targetIndex];
+      const targetRevealed = buildCumulativeReveals(script.beats, targetIndex);
+
+      return {
+        ...state,
+        beatIndex: targetIndex,
+        revealedParts: targetRevealed,
+        currentSpotlight: targetBeat.spotlight ?? null,
+        bubbles: getBeatBubbles(targetBeat),
+        reactionBubbles: [],
+        isWaitingForAction: targetIndex < state.beatIndex ? false : targetBeat.kind === 'do',
+        isPredictionResolved: targetIndex < state.beatIndex ? true : targetBeat.kind !== 'predict',
+        isWhyResolved:
+          targetIndex < state.beatIndex
+            ? true
+            : !(targetBeat.kind === 'predict' && 'whyPrompt' in targetBeat && targetBeat.whyPrompt),
+        selectedOptionIndex: null,
+        selectedWhyIndex: null,
+        fillValues: {},
+        isFillResolved: targetIndex < state.beatIndex ? true : targetBeat.kind !== 'fill',
+        attempts: 0,
+        hintVisible: false,
+        isCompleted: false,
       };
     }
 
@@ -298,6 +354,8 @@ export function useMentorScript(script: MentorScript) {
   const currentBeat = useMemo(() => script.beats[state.beatIndex] ?? null, [script, state.beatIndex]);
 
   const handleNext = useCallback(() => dispatch({ type: 'NEXT' }), []);
+  const handlePrev = useCallback(() => dispatch({ type: 'PREV' }), []);
+  const handleGotoBeat = useCallback((index: number) => dispatch({ type: 'GOTO_BEAT', index }), []);
   const handleActionDone = useCallback(
     (action: { type: string; payload?: unknown }) => dispatch({ type: 'ACTION_DONE', action }),
     [],
@@ -321,6 +379,8 @@ export function useMentorScript(script: MentorScript) {
     state,
     currentBeat,
     handleNext,
+    handlePrev,
+    handleGotoBeat,
     handleActionDone,
     handleSelectPrediction,
     handleSelectWhy,
