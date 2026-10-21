@@ -58,7 +58,7 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 0, title: 'Stage 1: Shadow the Master' },
       kind: 'do',
       say: [
-        "In the Concept Story Reel, we saw that a solitary computer is isolated without a physical wire. Here at Acme-PC-01, our user cannot reach the network. Let's test the connection.",
+        "In the Concept Story Reel, we saw that a solitary computer is isolated without a physical wire, and every NIC has a permanent factory MAC address (00-1A-2B-3C-4D-10). Here at Acme-PC-01, our user cannot reach the network. Let's test the connection.",
         "Type `ping 192.168.1.1` and press Enter. (Tap the suggestion chip below to insert it).",
       ],
       actionPrompt: 'ping 192.168.1.1',

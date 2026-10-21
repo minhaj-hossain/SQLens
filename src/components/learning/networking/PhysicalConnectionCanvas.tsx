@@ -123,7 +123,9 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
 
           <span className="font-mono text-xs font-bold text-zinc-100">Acme-PC-01</span>
           <span className="text-[10px] text-zinc-400 font-mono mt-0.5">192.168.1.10</span>
-          <span className="text-[9px] text-zinc-500 font-mono">00-1A-2B-3C-4D-10</span>
+          <div className="mt-1 px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-[10px] text-cyan-300 font-mono font-bold tracking-wider" title="Hardware MAC Address burned into NIC silicon">
+            MAC: 00-1A-2B-3C-4D-10
+          </div>
 
           {/* PC NIC Port & LED */}
           <div className="mt-2.5 w-full pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono px-0.5">

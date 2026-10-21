@@ -195,46 +195,19 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Dual OS Switcher */}
-          <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px]">
-            <button
-              type="button"
-              onClick={() => setOsMode('windows')}
-              className={`px-2 py-0.5 rounded transition ${
-                osMode === 'windows' ? 'bg-slate-800 text-cyan-300 font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Windows
-            </button>
-            <button
-              type="button"
-              onClick={() => setOsMode('linux')}
-              className={`px-2 py-0.5 rounded transition ${
-                osMode === 'linux' ? 'bg-slate-800 text-emerald-300 font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Linux / Cisco
-            </button>
-          </div>
           <button
             type="button"
             onClick={() => {
               if (onExecute) onExecute('cls');
               else setInternalHistory([]);
             }}
-            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-200 transition cursor-pointer ml-1"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-400 hover:text-slate-200 transition cursor-pointer"
             title="Reset Terminal Screen"
           >
-            <RotateCcw className="w-3 h-3" /> Clear
+            <RotateCcw className="w-3 h-3" /> Clear Screen
           </button>
         </div>
       </div>
-
-      {description && (
-        <p className="text-slate-400 text-xs font-sans leading-relaxed">
-          {description}
-        </p>
-      )}
 
       {/* 2. Quick Action Command Pills (Fill input without auto-running) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5">
