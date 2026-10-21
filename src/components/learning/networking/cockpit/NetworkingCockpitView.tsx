@@ -41,25 +41,25 @@ import { useLearning } from '../../../providers/LearningProgressProvider';
 import { useLearningNavigation } from '../../../learn/use-learning-navigation';
 
 const DEFAULT_NET01_PACKET: PacketInspectionTaskContent = {
-  title: 'Ethernet II Envelope & Dynamic MAC Matching',
+  title: 'Data Envelope (Sender & Receiver)',
   description:
-    'Inspect the Layer 2 outer Ethernet packaging stamped with Router R1 discovered MAC address.',
+    "Inspect the outer envelope stamped by Computer A. It uses Computer B's hardware MAC address learned across the cable.",
   snapshots: [
     {
-      hopLabel: 'Acme-PC-01 ➔ Acme-SW-01 ➔ Acme-RTR-01',
+      hopLabel: 'Computer A ➔ Computer B',
       deviceType: 'Host',
       layer2: {
-        srcMac: '00-1A-2B-3C-4D-10',
-        dstMac: '00-1A-2B-3C-4D-01',
-        etherType: '0x0800 (IPv4)',
-        fcs: 'CRC-32 (Valid)',
+        srcMac: '00-1A-2B-3C-4D-10 (Computer A)',
+        dstMac: '00-1A-2B-3C-4D-01 (Computer B)',
+        etherType: 'Data (IPv4)',
+        fcs: 'Verified (Valid)',
       },
       layer3: {
         version: 4,
-        srcIp: '192.168.1.10',
-        dstIp: '192.168.1.1',
+        srcIp: '192.168.1.10 (Computer A)',
+        dstIp: '192.168.1.1 (Computer B)',
         ttl: 64,
-        protocol: 'ICMP (1)',
+        protocol: 'Ping Request (ICMP)',
         totalLength: 60,
       },
     },
@@ -81,7 +81,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
 }) => {
   const script: MentorScript = concept.theory.mentorScript!;
   const { markConceptComplete, markModuleComplete } = useLearning();
-  const { backToRoadmap } = useLearningNavigation();
+  const { backToRoadmap, continueNextDay } = useLearningNavigation();
 
   // Mentor Script Engine
   const {
@@ -261,14 +261,14 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
       {/* ========================================================================= */}
       {/* ZONE 1: HELP DESK INCIDENT & WORKSTATION TELEMETRY BAR                   */}
       {/* ========================================================================= */}
-      <header className="rounded-xl bg-zinc-950/90 border border-zinc-800 p-3 sm:p-4 shadow-xl backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <header className="rounded-xl bg-zinc-950 border border-zinc-800/80 p-3 sm:p-4 shadow-lg backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-cyan-950/40 border border-cyan-800/60 text-cyan-300 font-mono text-[11px] font-bold tracking-wider uppercase">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] font-medium tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
             Lab 1
           </div>
           <div className="flex flex-col">
-            <h1 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-1.5">
+            <h1 className="text-sm sm:text-base font-semibold text-zinc-100 flex items-center gap-1.5">
               <span>Connecting Computer A to Computer B</span>
             </h1>
             <span className="text-[11px] text-zinc-400">
@@ -288,37 +288,27 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
           }
           aria-label="Workstation Hardware Telemetry"
         >
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700/60">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
             <Monitor className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-zinc-300">Computer A</span>
+            <span>Computer A</span>
             <span className="sr-only">Acme-PC-01 192.168.1.10/24</span>
           </div>
 
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
-              isCableSeated
-                ? 'bg-emerald-950/50 border-emerald-600/70 text-emerald-300'
-                : 'bg-rose-950/50 border-rose-600/70 text-rose-300'
-            }`}
-          >
-            {isCableSeated ? (
-              <>
-                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="font-bold">Cable: Connected</span>
-                <span className="sr-only">ETH0: 1000M UP</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-                <span className="font-bold">Cable: Disconnected</span>
-                <span className="sr-only">ETH0: NO CARRIER</span>
-              </>
-            )}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isCableSeated ? 'bg-emerald-400' : 'bg-zinc-500'
+              }`}
+            />
+            <span className="font-medium">
+              {isCableSeated ? 'Cable: Connected' : 'Cable: Disconnected'}
+            </span>
+            <span className="sr-only">{isCableSeated ? 'ETH0: 1000M UP' : 'ETH0: NO CARRIER'}</span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700/60 text-zinc-300">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
             <span className="text-zinc-500">Step:</span>
-            <span className="font-bold text-emerald-400">
+            <span className="font-semibold text-zinc-200">
               {mentorState.beatIndex + 1} / {script.beats.length}
             </span>
           </div>
@@ -354,19 +344,19 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             {/* ------------------------------------------------------------------- */}
             <div className="w-full lg:w-[65%] flex flex-col gap-4 min-w-0">
               {/* Task Bar & Step Dialogue */}
-              <div className="rounded-2xl bg-zinc-950/90 border border-zinc-800 p-4 sm:p-5 shadow-xl backdrop-blur-md">
+              <div className="rounded-2xl bg-zinc-950 border border-zinc-800/80 p-4 sm:p-5 shadow-xl">
                 {/* Header: Persona Avatar + Step Counter + Navigation Controls */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-zinc-800 gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-zinc-800/80 gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-xs font-mono">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 font-semibold text-xs font-mono">
                       GL
                     </div>
                     <div>
-                      <div className="text-xs sm:text-sm font-bold text-zinc-100 flex items-center gap-2">
+                      <div className="text-xs sm:text-sm font-semibold text-zinc-100 flex items-center gap-2">
                         <span>Guided Learning</span>
                         <span className="sr-only">Senior Systems Engineer</span>
                       </div>
-                      <div className="text-[10px] text-zinc-400 font-mono">
+                      <div className="text-[10px] text-zinc-500 font-mono">
                         Step {mentorState.beatIndex + 1} of 8
                       </div>
                     </div>
@@ -377,7 +367,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                     <button
                       type="button"
                       onClick={handleReplay}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/90 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition cursor-pointer"
                       title="Replay Current Step Instructions"
                     >
                       <RotateCcw className="w-3.5 h-3.5" /> Replay
@@ -390,7 +380,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                         (currentBeat?.kind === 'predict' && !mentorState.isPredictionResolved) ||
                         (currentBeat?.kind === 'do' && mentorState.isWaitingForAction)
                       }
-                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold text-xs tracking-wide transition shadow-md shadow-emerald-950/50"
+                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-semibold text-xs tracking-wide transition shadow-sm cursor-pointer"
                     >
                       {mentorState.beatIndex >= script.beats.length - 1 ? (
                         <>
@@ -413,7 +403,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                   {mentorState.bubbles.map((paragraph, idx) => (
                     <div
                       key={idx}
-                      className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-700/50 text-zinc-200 text-xs sm:text-sm leading-relaxed font-sans"
+                      className="p-3.5 rounded-xl bg-zinc-900/50 border border-zinc-800/60 text-zinc-200 text-xs sm:text-sm leading-relaxed font-sans"
                     >
                       {paragraph}
                     </div>
@@ -422,16 +412,16 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
 
                 {/* Action Required Banner for 'do' beats */}
                 {currentBeat?.kind === 'do' && (
-                  <div className="mt-3 p-3 rounded-xl bg-cyan-950/50 border border-cyan-500/40 text-xs font-mono text-cyan-200 flex flex-wrap items-center justify-between gap-3 shadow-inner">
+                  <div className="mt-3 p-3 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs font-mono text-zinc-200 flex flex-wrap items-center justify-between gap-3 shadow-inner">
                     <div className="flex items-center gap-2.5">
-                      <TerminalIcon className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <TerminalIcon className="w-4 h-4 text-zinc-400 shrink-0" />
                       <span className="font-semibold">Action: {currentBeat.actionPrompt || 'Run the diagnostic command'}</span>
                     </div>
                     {currentBeat.actionTargetPart === 'cable' && !isCableSeated && (
                       <button
                         type="button"
                         onClick={handleToggleCable}
-                        className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-xs transition shadow-sm"
+                        className="px-3 py-1 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition shadow-sm cursor-pointer"
                       >
                         Plug In Cable
                       </button>
@@ -487,8 +477,8 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                   </div>
                 )}
 
-                {/* Reaction Bubbles from previous action */}
-                {mentorState.reactionBubbles.length > 0 && (
+                {/* Reaction Bubbles from previous action (hidden during predict to prevent duplicate feedback) */}
+                {mentorState.reactionBubbles.length > 0 && currentBeat?.kind !== 'predict' && (
                   <div className="mt-2.5 space-y-1.5">
                     {mentorState.reactionBubbles.map((rx, rIdx) => (
                       <div
@@ -504,17 +494,17 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
 
               {/* Protocol Tracer (Beat 6 Active Phase) */}
               {mentorState.beatIndex === 5 && (
-                <div className="p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/40 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-cyan-200">
+                <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-zinc-300">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-cyan-400 animate-spin" />
-                    <span className="font-bold">Dual-Protocol Slow-Motion Trace</span>
+                    <Activity className="w-4 h-4 text-zinc-400 animate-spin" />
+                    <span className="font-semibold">Dual-Protocol Slow-Motion Trace</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px]">
                     <span
                       className={`px-2 py-0.5 rounded border ${
                         slowMotionPhase >= 1
-                          ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                          ? 'bg-zinc-800 border-zinc-700 text-zinc-100 font-semibold'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-500'
                       }`}
                     >
                       1. ARP Broadcast
@@ -522,8 +512,8 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                     <span
                       className={`px-2 py-0.5 rounded border ${
                         slowMotionPhase >= 2
-                          ? 'bg-cyan-500/30 border-cyan-400 text-cyan-100 font-bold'
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                          ? 'bg-zinc-800 border-zinc-700 text-zinc-100 font-semibold'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-500'
                       }`}
                     >
                       2. ARP Reply
@@ -531,8 +521,8 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                     <span
                       className={`px-2 py-0.5 rounded border ${
                         slowMotionPhase >= 3
-                          ? 'bg-emerald-500/30 border-emerald-400 text-emerald-100 font-bold'
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                          ? 'bg-emerald-950/60 border-emerald-600/50 text-emerald-300 font-semibold'
+                          : 'bg-zinc-950 border-zinc-800 text-zinc-500'
                       }`}
                     >
                       3. ICMP Echo Success
@@ -585,8 +575,9 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             {/* RIGHT COLUMN: ACTIVE COMMAND PROMPT TERMINAL (~35% WIDTH)          */}
             {/* ------------------------------------------------------------------- */}
             <div className="w-full lg:w-[35%] lg:sticky lg:top-4 flex flex-col gap-4 min-w-0">
+              <span className="sr-only">Acme-PC-01 Command Prompt</span>
               <VirtualTerminalSimulator
-                title="Acme-PC-01 Command Prompt"
+                title="Computer A - Command Prompt"
                 hostname="Computer A"
                 userPrompt="C:\Users\admin>"
                 history={simState.terminalHistory}
@@ -622,28 +613,53 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
 
             <div className="w-full p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left text-xs space-y-2 text-zinc-300">
               <div className="text-[11px] text-zinc-500 uppercase tracking-wider font-bold">
-                What You Mastered:
+                What You Learned:
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Physical Connection: Computers need a cable plugged in to exchange electrical signals</span>
+                <span>Physical cable connection</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Testing Reachability: Using ping to test if another computer responds over the wire</span>
+                <span>Reachability testing with ping</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Hardware MAC Address: Identifying Computer B so messages reach the right device</span>
+                <span>Local IP street numbers</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Hardware MAC address identity</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Address book with ARP</span>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full pt-2">
+            <div className="flex flex-col gap-2 w-full pt-2">
               <button
-                onClick={() => backToRoadmap(module.id)}
-                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition"
+                type="button"
+                onClick={() => {
+                  markConceptComplete(module.id, concept.id);
+                  markModuleComplete(module);
+                  continueNextDay(module.id);
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950/50 cursor-pointer"
               >
-                Return to Roadmap (Day 2 Unlocked)
+                <span>Unlock Day 2 &amp; Continue</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  markConceptComplete(module.id, concept.id);
+                  markModuleComplete(module);
+                  backToRoadmap(module.id);
+                }}
+                className="w-full py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-medium text-xs border border-zinc-800 transition cursor-pointer"
+              >
+                Return to Roadmap
               </button>
             </div>
           </div>

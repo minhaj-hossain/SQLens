@@ -59,7 +59,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       kind: 'do',
       say: [
         "In the Story Reel, we saw that two computers cannot communicate without a physical connection.",
-        "To check if one computer can reach another, we use a command called `ping`. It sends a small test message and checks whether a reply returns.",
+        "Every computer on a network has an IP address made of 4 numbers separated by dots. Computer A is `192.168.1.10` and Computer B is `192.168.1.1`.",
+        "To check if one computer can reach another, we use a command called `ping`. It sends a test knock and waits for a reply.",
         "Let's test the connection from Computer A to Computer B. Type `ping 192.168.1.1` and press Enter.",
       ],
       actionPrompt: 'ping 192.168.1.1',
@@ -137,7 +138,9 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       kind: 'predict',
       say: [
         "The cable is plugged in, and the port LED turned green: `[LINK: 1Gbps UP]`!",
-        "Computer A is `192.168.1.10` and Computer B is `192.168.1.1` (they both share the `192.168.1` local network). If Computer A tried to reach `192.168.2.5`, is it on our local street or outside?",
+        "Every computer has an IP address made of 4 numbers separated by dots (like `192.168.1.10`). Think of the first 3 numbers (`192.168.1`) as the neighborhood street name, and the last number (`.10` or `.1`) as the house number.",
+        "Computer A is `192.168.1.10` and Computer B is `192.168.1.1`. Because both share `192.168.1`, they live on the same local street and can talk directly across our wire.",
+        "If Computer A tries to reach `192.168.2.5`, is it on our local street or outside?",
       ],
       spotlight: 'terminal',
       revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
@@ -147,21 +150,21 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
           label: 'It is on a different street because the third number is 2, not 1',
           isCorrect: true,
           feedback:
-            'Exactly right! Because the third number is different, 192.168.2.5 is outside our local street. But 192.168.1.1 shares 192.168.1, so it is our direct neighbor on the same wire.',
+            'Exactly right! Because the third number is different (2 instead of 1), 192.168.2.5 is outside our local street. But 192.168.1.1 shares 192.168.1, so it is our direct neighbor on the same wire.',
         },
         {
           id: 'opt-same-subnet',
           label: 'It is on our local street because both start with 192.168',
           isCorrect: false,
           feedback:
-            'For local delivery, all three prefix numbers (192.168.1) must match!',
+            'Not quite! On this local network, all three prefix numbers (192.168.1) must match to be on the same local street.',
         },
         {
           id: 'opt-unknown-subnet',
           label: 'Subnet numbers only apply to public Internet servers',
           isCorrect: false,
           feedback:
-            'Subnet numbers apply to every computer to determine whether destinations are local or remote.',
+            'IP street numbers apply to every computer, helping it know if a destination is a direct local neighbor or far away.',
         },
       ],
       whyOptions: [
@@ -187,8 +190,9 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 2, stepIndex: 4, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
       say: [
-        "Before we ping again, remember Scene 3: to send data, Computer A needs to know Computer B's hardware MAC address.",
-        "Let's see if Computer A already has Computer B in its local address book. Type `arp -a` and press Enter.",
+        "Even though we know Computer B's IP address (192.168.1.1), the copper wire can only deliver signals using physical hardware MAC addresses.",
+        "Computer A keeps a local address book in memory (called an ARP table) that maps IP addresses to physical MAC addresses.",
+        "Let's check if Computer A already has Computer B in its address book. Type `arp -a` and press Enter.",
       ],
       actionPrompt: 'arp -a',
       actionTargetPart: 'terminal',
@@ -201,7 +205,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 2, stepIndex: 5, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
       say: [
-        "The address book is empty! Now watch what happens when we ping: Computer A will send test signals across the copper wire to Computer B.",
+        "The address book is empty! Computer A does not know Computer B's physical MAC address yet.",
+        "When we ping, Computer A will ask across the wire to find Computer B and test the connection.",
         "Type `ping 192.168.1.1` and press Enter.",
       ],
       actionPrompt: 'ping 192.168.1.1 (Slow-Motion)',
@@ -216,7 +221,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       kind: 'do',
       say: [
         "The ping succeeded! 4 packets sent, 4 received (0% loss) across the physical cable.",
-        "Now let's check Computer A's address book again to see what it learned during the ping. Type `arp -a` and press Enter.",
+        "During the ping, Computer B answered with its hardware MAC address (`00-1A-2B-3C-4D-01`). Computer A saved it into its address book!",
+        "Let's see the new entry Computer A learned. Type `arp -a` and press Enter.",
       ],
       actionPrompt: 'arp -a',
       actionTargetPart: 'terminal',
@@ -229,7 +235,7 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 3, stepIndex: 7, title: 'Stage 3: Inspect Outer Packaging' },
       kind: 'predict',
       say: [
-        "Look at the Frame Inspector below! Computer A stamped the outer envelope with Computer B's Destination MAC: `00-1A-2B-3C-4D-01`.",
+        "Look at the Data Envelope below! Computer A stamped the outer envelope with Computer B's Destination MAC address: `00-1A-2B-3C-4D-01`.",
         "Where did Computer A get this physical hardware MAC address?",
       ],
       spotlight: 'frame-inspector',
@@ -245,10 +251,10 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       options: [
         {
           id: 'opt-mac-from-arp',
-          label: 'From the dynamic ARP address book entry we verified in Beat 7',
+          label: 'From the dynamic ARP address book entry it learned over the wire',
           isCorrect: true,
           feedback:
-            "Brilliant! Even though ping targeted IP 192.168.1.1, Computer A wrapped the message in an Ethernet envelope addressed to Computer B's hardware MAC address (00-1A-2B-3C-4D-01)!",
+            "Brilliant! Even though ping targeted IP 192.168.1.1, Computer A wrapped the message in an envelope addressed to Computer B's hardware MAC address (00-1A-2B-3C-4D-01)!",
         },
         {
           id: 'opt-mac-guessed',
@@ -363,56 +369,49 @@ export const NET_01_MODULE: ModuleData = {
   track: 'networking',
   milestoneId: 'net-milestone-1',
   description:
-    'Master the physical layer foundations: the Trapped Data Dilemma, 8-strand Cat6 full-duplex channels, permanent 48-bit silicon MAC addresses, and Ethernet II framing with CRC-32 error detection.',
+    'Master the foundations of networking: physical wire connections, testing reachability with ping, understanding local IP street numbers, and discovering hardware MAC addresses.',
   estimatedMinutes: 25,
   curriculumOrder: 1,
   displayLabel: 'Module 1',
   completionLearnings: [
-    'Computers cannot transmit data beyond motherboard silicon without an active physical transmission medium and carrier pulse',
-    'Cat6 8-strand copper cables provide dedicated Transmit (TX) and Receive (RX) pairs, enabling Full-Duplex communication with zero collisions on direct links',
-    'Every Network Interface Card (NIC) is permanently identified by a 48-bit MAC address burned into hardware ROM (24-bit OUI + 24-bit device serial)',
-    'Ethernet II frames wrap Layer 3 packets in a 14-byte header and a 4-byte CRC-32 Frame Check Sequence (FCS) trailer to detect electrical bit-flips',
-    'Corrupted frames that fail CRC verification are silently discarded by NIC silicon at Layer 2 without interrupting host operating system CPU cycles',
+    'Physical cable connection',
+    'Reachability testing with ping',
+    'Local IP street numbers',
+    'Hardware MAC address identity',
+    'Address book with ARP',
   ],
   concepts: [
     // ─────────────────────────────────────────────────────
-    // Concept 1.1: The Trapped Data Dilemma (direct-link-mac)
+    // Concept 1.1: Connecting Two Computers & Hardware MAC (direct-link-mac)
     // ─────────────────────────────────────────────────────
     {
       id: 'direct-link-mac',
       order: 1,
-      title: 'The Trapped Data Dilemma & Physical Carrier',
+      title: 'Connecting Two Computers & Discovering Hardware MAC',
       shortDescription:
-        'Discover why data cannot leave a motherboard without a physical medium and how the operating system detects a physical link carrier.',
+        'Learn how computers connect through a wire, test reachability with ping, and use local IP street numbers and MAC addresses to communicate.',
       theory: {
         mentorScript: NET_01_MENTOR_SCRIPT,
         summary:
-          'Data stored in CPU registers and RAM cannot escape an isolated computer without an electrical, optical, or radio transmission medium. When the physical link carrier pulse is absent, network transmission fails immediately at Layer 1 before any packet can be placed on the wire.',
+          'Computers need a physical connection (like a copper cable) to send signals. Every computer has an IP address where the first 3 numbers represent the local neighborhood street and the last number is the computer. When two computers live on the same street, they can talk directly once they discover each other\'s physical hardware MAC address.',
         explanation: [
-          '### Beat 1: The Physical Dilemma — The Trapped Data Dilemma',
-          'Imagine a high-powered workstation sitting in an office. Its CPU can perform billions of operations per second, and its SSD holds gigabytes of databases. Yet, if an application attempts to send a single bit to another computer, the attempt fails immediately with:',
+          '### 1. Physical Connection First',
+          'Computers cannot send messages through thin air without a physical link. When a cable is unplugged, electrical signals cannot travel, resulting in `transmit failed`.',
           '',
-          '```',
-          'PING: transmit failed. General failure.',
-          'Media State . . . . . . . . . . . : Media disconnected',
-          '```',
+          '### 2. Testing Reachability with Ping',
+          'The `ping` command sends a small test knock across the wire to another computer and waits for a reply.',
           '',
-          'Why does this occur? Because computer logic inside silicon chips operates on microscopic voltage levels (0.8V to 1.2V) constrained to printed circuit board traces. To cross the room or the continent, that data must be converted into physical signals (electrical voltages across copper, light flashes in glass fiber, or electromagnetic radio waves).',
+          '### 3. The IP Address Street Analogy',
+          'An IP address has 4 numbers separated by dots (e.g. `192.168.1.10`).',
+          '- The first 3 numbers (`192.168.1`) represent the neighborhood street.',
+          '- The last number (`.10` or `.1`) is the house number.',
+          'Because Computer A (`192.168.1.10`) and Computer B (`192.168.1.1`) share `192.168.1`, they are direct neighbors on the same wire and can talk directly without an outside gateway.',
           '',
-          '### Beat 2: The Diagnostic Tool\'s Purpose',
-          'Before an operating system wastes memory constructing network packets, the Network Interface Card (NIC) physical layer hardware (PHY) constantly senses the physical medium for a **link pulse** (carrier signal).',
-          '',
-          'We inspect this hardware carrier state using standard diagnostic commands:',
-          '- **Windows:** `ipconfig /all` asks the OS driver: *"Is the physical media connected or disconnected?"*',
-          '- **Linux:** `ip link show` or `ethtool eth0` asks the kernel: *"Is the carrier detected and the interface state UP or DOWN?"*',
-          '',
-          '### Beat 3: The Observable Result',
-          'When the Cat6 patch cable is firmly seated into the RJ-45 jack, the PHY chip detects the electrical carrier. The green Link LED illuminates solid, and the diagnostic output transitions:',
-          '- Windows displays: `Media State . . . : [Active / Connected]`',
-          '- Linux displays: `state UP ... carrier detected: yes`',
+          '### 4. Hardware MAC Addresses & Address Book',
+          'The physical wire delivers signals using hardware MAC addresses burned in at the factory. Computer A uses its local address book (`arp -a`) to match IP addresses to MAC addresses so each message is stamped for the right recipient.',
         ],
         keyTakeaway:
-          'Layer 1 Rule: No physical carrier signal means zero packets leave the host. Always verify the physical link status before debugging IP or DNS configurations.',
+          'Computers sharing the same IP street prefix talk directly across a physical wire using hardware MAC addresses stored in their address book.',
         exampleQuery: '',
         exampleQueryExplanation: '',
         mcqs: [

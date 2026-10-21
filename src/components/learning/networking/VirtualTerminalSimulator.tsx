@@ -232,7 +232,7 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
 
       {/* 3. Terminal Viewport */}
       <div
-        className="p-3 sm:p-4 rounded-xl bg-black/90 border border-slate-800/80 min-h-[220px] max-h-[360px] overflow-y-auto space-y-3 font-mono text-xs leading-relaxed text-slate-300"
+        className="p-3 sm:p-4 rounded-xl bg-black/90 border border-slate-800/80 min-h-[220px] max-h-[360px] overflow-y-auto overflow-x-auto space-y-3 font-mono text-xs leading-relaxed text-slate-300"
         data-testid="terminal-viewport"
         role="region"
         aria-live="polite"
@@ -265,7 +265,7 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
                 </button>
               </div>
             ) : null}
-            <pre className="text-slate-300 whitespace-pre-wrap font-mono text-[11px] pl-2 border-l border-slate-800">
+            <pre className="text-slate-300 whitespace-pre overflow-x-auto font-mono text-[11px] pl-2 border-l border-slate-800">
               {item.output}
             </pre>
           </div>
