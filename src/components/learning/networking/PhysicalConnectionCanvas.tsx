@@ -259,6 +259,19 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         </div>
       </div>
 
+      {/* Visual Neighborhood Street Baseline Band */}
+      <div className="relative z-10 mt-2.5 pt-2 border-t border-zinc-900 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-3 py-1 rounded-full">
+          <span>🏡</span>
+          <span>Shared Local Street: <strong className="text-emerald-300">192.168.1</strong>.x</span>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-400">
+          <span>Host A: <span className="text-zinc-200 font-semibold">.10</span></span>
+          <span className="text-zinc-600">⟷</span>
+          <span>Host B: <span className="text-zinc-200 font-semibold">.1</span></span>
+        </div>
+      </div>
+
       {/* ========================================================================= */}
       {/* MODAL DIALOG: COMPUTER DETAILS (Dismiss via X, backdrop click, or Escape) */}
       {/* ========================================================================= */}

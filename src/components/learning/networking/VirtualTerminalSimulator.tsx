@@ -195,6 +195,34 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Dual-OS Diagnostic Switcher */}
+          <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono">
+            <button
+              type="button"
+              onClick={() => setOsMode('windows')}
+              className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                osMode === 'windows'
+                  ? 'bg-slate-800 text-emerald-400 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Switch to Windows CMD (ipconfig, ping)"
+            >
+              🪟 Windows
+            </button>
+            <button
+              type="button"
+              onClick={() => setOsMode('linux')}
+              className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                osMode === 'linux'
+                  ? 'bg-slate-800 text-emerald-400 font-bold shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Switch to Linux Bash (ip a, ping -c 4)"
+            >
+              🐧 Linux
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => {

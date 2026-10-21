@@ -336,6 +336,54 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
           </div>
 
           {/* ===================================================================== */}
+          {/* TROUBLESHOOTING DEPENDENCY ORDER CHECKLIST STRIP                      */}
+          {/* ===================================================================== */}
+          <div className="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono shadow-sm">
+            <span className="text-zinc-400 text-[11px] font-semibold tracking-wider uppercase flex items-center gap-1.5">
+              <span>🛠️</span>
+              <span>Troubleshooting Order:</span>
+            </span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px]">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition ${
+                isCableSeated
+                  ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300 font-medium'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+              }`}>
+                <span>①</span>
+                <span>Light ON?</span>
+                <span className={isCableSeated ? 'text-emerald-400 font-bold' : 'text-zinc-500'}>
+                  {isCableSeated ? '✔' : '❌'}
+                </span>
+              </span>
+
+              <span className="text-zinc-600">➔</span>
+
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition ${
+                mentorState.beatIndex >= 3
+                  ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300 font-medium'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+              }`}>
+                <span>②</span>
+                <span>Address Right?</span>
+                <span className="text-[10px] text-zinc-500">(192.168.1.x)</span>
+                {mentorState.beatIndex >= 3 && <span className="text-emerald-400 font-bold">✔</span>}
+              </span>
+
+              <span className="text-zinc-600">➔</span>
+
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition ${
+                mentorState.beatIndex >= 6
+                  ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300 font-medium'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+              }`}>
+                <span>③</span>
+                <span>Ping Replies?</span>
+                {mentorState.beatIndex >= 6 && <span className="text-emerald-400 font-bold">✔</span>}
+              </span>
+            </div>
+          </div>
+
+          {/* ===================================================================== */}
           {/* 2. SPLIT: 65% GUIDED LEARNING (LEFT) + 35% TERMINAL (RIGHT)           */}
           {/* ===================================================================== */}
           <div className="flex flex-col lg:flex-row gap-4 w-full items-start">
@@ -642,12 +690,11 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                 type="button"
                 onClick={() => {
                   markConceptComplete(module.id, concept.id);
-                  markModuleComplete(module);
-                  continueNextDay(module.id);
+                  onComplete?.();
                 }}
                 className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950/50 cursor-pointer"
               >
-                <span>Unlock Day 2 &amp; Continue</span>
+                <span>Continue to Workplace Lab (Ticket #101)</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <button
