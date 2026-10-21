@@ -47,21 +47,62 @@ export const NET_11_MODULE: ModuleData = {
         summary:
           '16-bit port numbers (0–65,535) enable host process-to-process multiplexing. Every active connection is uniquely bound by its 5-tuple: (Protocol, Source IP, Source Port, Destination IP, Destination Port). Ephemeral source ports allow distinct concurrent transport sessions to the same server (note: modern protocols like HTTP/2 can multiplex multiple application requests over one connection).',
         explanation: [
-          '### The Need for Transport Ports',
-          'IP delivers packets host-to-host. Transport ports (Layer 4) deliver data to specific application processes on that host.',
+          '### Beat 1: Direct Physical Reality — The Multiplexing Dilemma',
+          'At any given second, a single laptop network card is receiving millions of raw electrical and optical pulses representing a video conference, music stream, five open browser tabs, an SSH terminal, and background cloud syncing.',
+          'The Layer 3 Internet Protocol delivers packets from host IP to host IP, but IP has **no mechanism to determine which running software process owns which packet**.',
+          'Without Layer 4 transport multiplexing, the operating system kernel would have no way to distinguish a Zoom audio packet from a banking web page.',
           '',
-          '### Port Ranges',
-          '- **Well-Known (0–1023)**: HTTP 80, HTTPS 443, SSH 22, DNS 53.',
-          '- **Registered (1024–49,151)**: Databases and vendor daemons (MySQL 3306, Postgres 5432).',
-          '- **Ephemeral (49,152–65,535)**: Temporary client outbound ports assigned dynamically by the OS.',
+          '### Beat 2: The Core Mechanism — Port Numbers & The 5-Tuple Socket',
+          'The transport layer solves this by introducing **16-bit Port Numbers** ($2^{16} = 65,536$ unique ports, 0 to 65,535):',
+          '- **Well-Known Ports (0–1023)**: Reserved for privileged system daemons (HTTP 80, HTTPS 443, SSH 22, DNS 53, DHCP 67/68). Bound only by administrator/root privileges.',
+          '- **Registered Ports (1024–49,151)**: Vendor and database services (MySQL 3306, PostgreSQL 5432, Redis 6379, RDP 3389).',
+          '- **Dynamic / Ephemeral Ports (49,152–65,535)**: Temporary source ports assigned automatically by the OS kernel to outbound client connections.',
           '',
-          '### The 5-Tuple Socket Binding',
-          'An individual network connection is identified by (Proto, SrcIP, SrcPort, DstIP, DstPort). Unique ephemeral client ports allow separate connections to the same server simultaneously. Note that while distinct TCP connections get unique ephemeral ports, modern web browsers frequently multiplex multiple requests and tabs across a single shared HTTP/2 connection.',
+          '### The 5-Tuple Socket Identifier',
+          'An active network connection is not defined by IP address alone. The kernel indexes every open socket by its unique **5-tuple**:',
+          '$$\\text{5-Tuple} = \\langle \\text{Protocol, Source IP, Source Port, Destination IP, Destination Port} \\rangle$$',
+          'When you open three concurrent tabs to `github.com` (`140.82.121.4:443`), each connection receives a distinct ephemeral source port (e.g. `52001`, `52002`, `52003`). Even though Protocol (TCP), Source IP, Destination IP, and Destination Port are identical across all three tabs, the **unique source port makes each 5-tuple distinct in OS memory**.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #113)',
+          'Common enterprise socket and port issues:',
+          '- **Port Binding Conflicts (`EADDRINUSE`)**: Occurs when a developer starts a local server (e.g. Node.js on port 3000) while another background process is already bound to that port.',
+          '- **Ephemeral Port Exhaustion**: High-volume microservices or database connection pools opening thousands of connections per second without connection reuse can deplete ports 49152–65535, causing connection timeouts.',
+          '- **Socket Diagnostics**: Inspect listening services and active sockets using Windows PowerShell (`netstat -ano -p tcp`, `Get-NetTCPConnection`) vs Linux (`ss -tulpn`).',
         ],
         keyTakeaway:
           'Ports multiplex traffic to applications. Outbound connections receive unique ephemeral source ports, creating distinct 5-tuple sockets.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net11-mcq-port-ranges',
+            question:
+              'Which port range is designated by IANA as Ephemeral / Dynamic ports commonly assigned to client sockets?',
+            options: [
+              '0 to 1023',
+              '1024 to 49151',
+              '49152 to 65535',
+              '65536 to 99999',
+            ],
+            correctIndex: 2,
+            explanation:
+              'Ports 49152 through 65535 are designated as dynamic/private/ephemeral ports by IANA for temporary client-side connections.',
+          },
+          {
+            id: 'net11-mcq-5tuple-uniqueness',
+            question:
+              'A computer opens two simultaneous tabs to the same HTTPS web server at 140.82.121.4:443. How does the operating system ensure returning data reaches the correct tab?',
+            options: [
+              'It embeds the browser tab name into the IP header Options field',
+              'It assigns a unique ephemeral source port (e.g. 50412 and 50413) to each connection, creating two distinct 5-tuples',
+              'It asks the server to send responses to different MAC addresses',
+              'It alternates packets one-by-one between tabs',
+            ],
+            correctIndex: 1,
+            explanation:
+              'By choosing a different client source port for each connection, the resulting 5-tuple is unique. When the server replies, the destination port matches the corresponding socket.',
+          },
+        ],
       },
       tasks: [
         {
@@ -72,6 +113,7 @@ export const NET_11_MODULE: ModuleData = {
           instructions: [
             'A developer opens two simultaneous browser tabs to `https://github.com` (IP `140.82.121.4`).',
             'Answer the judgment questions on socket disambiguation and port ranges.',
+            'Inspect live 5-tuple socket bindings, listening ports, and owning process IDs using Windows (`netstat -ano`) and Linux (`ss -tulpn`).',
           ],
           type: 'guided',
           primaryTable: '',
@@ -79,6 +121,79 @@ export const NET_11_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'The OS assigns unique ephemeral source ports (e.g. 52001 and 52002), making each 5-tuple completely unique even though destination IP and destination port are identical.',
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #113 (Dual OS)',
+            description:
+              'Inspect active 5-tuple socket connections, established states, listening ports, and owning process IDs on Windows and Linux workstations.',
+            prompt: 'admin@bastion:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #113: 5-TUPLE SOCKET & PROCESS PORT AUDIT',
+              '====================================================================',
+              'Inspecting active TCP connections, established states, and process IDs.',
+              'Supported commands:',
+              '  - Windows: netstat -ano -p tcp',
+              '             Get-NetTCPConnection',
+              '             Get-NetTCPConnection -State Established',
+              '  - Linux:   ss -tulpn',
+              '             ss -t state established',
+            ].join('\n'),
+            availableCommands: [
+              'netstat -ano -p tcp',
+              'Get-NetTCPConnection',
+              'Get-NetTCPConnection -State Established',
+              'ss -tulpn',
+              'ss -t state established',
+            ],
+            commands: {
+              'netstat -ano -p tcp': `Active Connections
+
+  Proto  Local Address          Foreign Address        State           PID
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       840
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+  TCP    192.168.1.100:52001    140.82.121.4:443       ESTABLISHED     4812
+  TCP    192.168.1.100:52002    140.82.121.4:443       ESTABLISHED     4812
+  TCP    192.168.1.100:52110    198.51.100.20:443      TIME_WAIT       0`,
+              'Get-NetTCPConnection': `LocalAddress   LocalPort RemoteAddress   RemotePort State       AppliedSetting OwningProcess
+------------   --------- -------------   ---------- -----       -------------- -------------
+192.168.1.100  52001     140.82.121.4    443        Established Internet       4812
+192.168.1.100  52002     140.82.121.4    443        Established Internet       4812`,
+              'Get-NetTCPConnection -State Established': `LocalAddress   LocalPort RemoteAddress   RemotePort State       AppliedSetting OwningProcess
+------------   --------- -------------   ---------- -----       -------------- -------------
+192.168.1.100  52001     140.82.121.4    443        Established Internet       4812
+192.168.1.100  52002     140.82.121.4    443        Established Internet       4812`,
+              'ss -tulpn': `Netid State      Recv-Q Send-Q   Local Address:Port    Peer Address:Port Process                               
+tcp   LISTEN     0      128            0.0.0.0:22           0.0.0.0:*     users:(("sshd",pid=712,fd=3))         
+tcp   LISTEN     0      511          127.0.0.1:3000         0.0.0.0:*     users:(("node",pid=3412,fd=19))       
+tcp   ESTAB      0      0        192.168.1.100:52001   140.82.121.4:443   users:(("chrome",pid=4812,fd=42))     
+tcp   ESTAB      0      0        192.168.1.100:52002   140.82.121.4:443   users:(("chrome",pid=4812,fd=45))`,
+              'ss -t state established': `Recv-Q Send-Q   Local Address:Port    Peer Address:Port
+0      0        192.168.1.100:52001   140.82.121.4:https
+0      0        192.168.1.100:52002   140.82.121.4:https`,
+            },
+            commandResponses: {
+              'netstat -ano -p tcp': `Active Connections
+
+  Proto  Local Address          Foreign Address        State           PID
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       840
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+  TCP    192.168.1.100:52001    140.82.121.4:443       ESTABLISHED     4812
+  TCP    192.168.1.100:52002    140.82.121.4:443       ESTABLISHED     4812
+  TCP    192.168.1.100:52110    198.51.100.20:443      TIME_WAIT       0`,
+              'Get-NetTCPConnection -State Established': `LocalAddress   LocalPort RemoteAddress   RemotePort State       AppliedSetting OwningProcess
+------------   --------- -------------   ---------- -----       -------------- -------------
+192.168.1.100  52001     140.82.121.4    443        Established Internet       4812
+192.168.1.100  52002     140.82.121.4    443        Established Internet       4812`,
+              'ss -tulpn': `Netid State      Recv-Q Send-Q   Local Address:Port    Peer Address:Port Process                               
+tcp   LISTEN     0      128            0.0.0.0:22           0.0.0.0:*     users:(("sshd",pid=712,fd=3))         
+tcp   LISTEN     0      511          127.0.0.1:3000         0.0.0.0:*     users:(("node",pid=3412,fd=19))       
+tcp   ESTAB      0      0        192.168.1.100:52001   140.82.121.4:443   users:(("chrome",pid=4812,fd=42))     
+tcp   ESTAB      0      0        192.168.1.100:52002   140.82.121.4:443   users:(("chrome",pid=4812,fd=45))`,
+              'ss -t state established': `Recv-Q Send-Q   Local Address:Port    Peer Address:Port
+0      0        192.168.1.100:52001   140.82.121.4:https
+0      0        192.168.1.100:52002   140.82.121.4:https`,
+            },
+          },
           hints: [
             {
               level: 1,
@@ -201,21 +316,63 @@ export const NET_11_MODULE: ModuleData = {
         summary:
           'UDP is connectionless and lightweight. Its 8-byte header contains Source Port, Destination Port, Length, and Checksum. It does not perform handshakes or retransmissions, making it ideal for DNS, VoIP, gaming, and HTTP/3 QUIC.',
         explanation: [
-          '### UDP: Minimalist Transport',
-          'UDP transmits without prior handshake or connection state. There are no acknowledgments or retransmissions.',
+          '### Beat 1: Direct Physical Reality — The Burden of Reliability',
+          'TCP guarantees that every single byte transmitted will arrive in perfect order, without duplication, retransmitting missing segments until acknowledged.',
+          'While essential for file transfers and web code, this guarantee introduces a fatal flaw for real-time media: **latency and jitter**.',
+          'In a live voice call (VoIP) or fast-paced online game, if a packet is lost at millisecond 100, retransmitting it at millisecond 350 is useless — the speaker has already spoken, and the player has already moved. Delaying the entire stream to wait for late bytes ruins the real-time experience.',
           '',
-          '### The 8-Byte Header',
-          'Four 16-bit fields: Source Port (2B), Destination Port (2B), Length (2B), Checksum (2B).',
+          '### Beat 2: The Core Mechanism — The 8-Byte UDP Header',
+          'RFC 768 defines the User Datagram Protocol (UDP) as a connectionless, best-effort delivery mechanism.',
+          'The UDP header is exactly **8 bytes (64 bits)**, consisting of just four 16-bit fields:',
+          '1. **Source Port (16 bits)**: Sender port number.',
+          '2. **Destination Port (16 bits)**: Target service port number.',
+          '3. **Length (16 bits)**: Total byte length of the UDP header plus payload.',
+          '4. **Checksum (16 bits)**: One’s complement checksum covering the pseudo-IP header, UDP header, and payload. (Provides error detection; if the checksum fails, the receiver **silently drops** the packet without retransmission).',
           '',
-          '### Why Use UDP?',
-          '- **Real-Time Audio/Video**: Dropping a frame is better than freezing to wait for a late retransmission.',
-          '- **Lightweight Transactions**: DNS and DHCP require single-packet exchanges without handshake overhead.',
-          '- **HTTP/3 (QUIC)**: Userspace reliability protocol layered over UDP.',
+          '### Core UDP Protocol Characteristics',
+          '- **Connectionless**: No 3-way handshake. Applications transmit immediately.',
+          '- **No Acknowledgments or Retransmissions**: The sender does not wait for ACKs.',
+          '- **No Flow or Congestion Control**: Senders transmit as fast as the application generates data.',
+          '- **Unordered Delivery**: Datagrams may arrive out of order; applications must sort them if required.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **UDP Buffer Overflows**: Because UDP has no flow control (no receive window signaling), an aggressive sender can easily overflow the receiver’s OS socket buffer, causing silent packet drops.',
+          '- **Amplification Attacks**: Because UDP lacks connection state and allows source IP spoofing, attackers abuse public NTP/DNS/SNMP servers to bounce massive responses to victim IPs (DDoS amplification).',
         ],
         keyTakeaway:
           'UDP has an 8-byte header and zero handshake overhead. Checksum failures result in silent drops without retransmission.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net11-mcq-udp-overhead',
+            question:
+              'What is the total size of the UDP header, and what fields does it contain?',
+            options: [
+              '20 bytes: Source Port, Dest Port, Sequence Number, ACK Number',
+              '8 bytes: Source Port (2B), Destination Port (2B), Length (2B), and Checksum (2B)',
+              '14 bytes: Preamble, EtherType, Payload, and FCS',
+              '4 bytes: Source Port and Destination Port only',
+            ],
+            correctIndex: 1,
+            explanation:
+              'The UDP header is exactly 8 bytes (64 bits), consisting of four 16-bit fields: Source Port, Destination Port, Length, and Checksum.',
+          },
+          {
+            id: 'net11-mcq-udp-usecases',
+            question:
+              'Why do live voice calls (VoIP) and online multiplayer games choose UDP over TCP?',
+            options: [
+              'Because UDP encrypts all voice data with hardware acceleration',
+              'Because waiting for TCP to retransmit lost packets causes stream freezes; real-time protocols prefer dropping a lost packet to maintain zero-latency playback',
+              'Because UDP is the only protocol permitted on Wi-Fi networks',
+              'Because UDP guarantees 100% packet delivery across WAN links',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Real-time audio and gaming require immediate low-latency delivery. Waiting for TCP retransmissions creates intolerable audio jitter and lag.',
+          },
+        ],
       },
       tasks: [
         {
@@ -294,21 +451,73 @@ export const NET_11_MODULE: ModuleData = {
         summary:
           'TCP guarantees reliable, ordered byte delivery. It uses 1-bit control flags (SYN, ACK, FIN, RST). The 3-Way Handshake (SYN -> SYN-ACK -> ACK) synchronizes Initial Sequence Numbers before application data transmission begins. Inactive ports return TCP RST.',
         explanation: [
-          '### TCP Control Flags',
-          'SYN initiates and synchronizes ISNs. ACK acknowledges received bytes. FIN initiates graceful teardown. RST resets aborted sessions or rejects closed ports.',
+          '### Beat 1: Direct Physical Reality — Synchronizing Across an Unreliable Mesh',
+          'Two computers thousands of miles apart across the global internet mesh want to exchange a critical file or financial transaction.',
+          'Packets can be delayed, duplicated, re-routed, or lost entirely by transit routers.',
+          'Before transferring a single byte of application data, both machines must agree on starting sequence numbers, allocate buffer memory in OS kernel space, and confirm bidirectional path viability.',
           '',
-          '### The 3-Way Handshake Walk',
-          '1. Client -> SYN (Seq = X)',
-          '2. Server -> SYN-ACK (Seq = Y, Ack = X + 1)',
-          '3. Client -> ACK (Seq = X + 1, Ack = Y + 1)',
+          '### Beat 2: The Core Mechanism — Control Flags & The 3-Way Handshake',
+          'The 20-byte base TCP header contains six 1-bit control flags: **SYN, ACK, FIN, RST, PSH, URG**.',
           '',
-          '### Closed Port RST Response',
-          'If a host receives a SYN on a port with no listening service, it replies immediately with TCP RST/ACK ("Connection Refused").',
+          'Connection establishment executes via the **3-Way Handshake**:',
+          '1. **Step 1: Client ➔ Server (SYN)**:',
+          '   - Client chooses a pseudo-random **Initial Sequence Number (ISN)** $X$ (e.g. $1000$).',
+          '   - Sends TCP segment with **`SYN=1, ACK=0`**, `Seq = 1000`.',
+          '   - Client enters state `SYN_SENT`.',
+          '2. **Step 2: Server ➔ Client (SYN-ACK)**:',
+          '   - Server receives the SYN, allocates a transmission control block (TCB) buffer in kernel RAM.',
+          '   - Server chooses its own random ISN $Y$ (e.g. $5000$).',
+          '   - Server acknowledges the client’s SYN by setting **`Ack = X + 1`** ($1001$). (The SYN bit consumes 1 sequence number!).',
+          '   - Sends TCP segment with **`SYN=1, ACK=1`**, `Seq = 5000`, `Ack = 1001`.',
+          '   - Server enters state `SYN_RECEIVED`.',
+          '3. **Step 3: Client ➔ Server (ACK)**:',
+          '   - Client acknowledges server’s SYN by setting **`Ack = Y + 1`** ($5001$).',
+          '   - Sends TCP segment with **`SYN=0, ACK=1`**, `Seq = 1001`, `Ack = 5001`.',
+          '   - Both endpoints enter state **`ESTABLISHED`**. Data transfer may now proceed!',
+          '',
+          '### Closed Port Rejection: The TCP RST Flag',
+          'If a client sends a SYN packet to a server port where **no application service is actively listening** (and no stateful firewall intercepts it):',
+          '- The operating system kernel immediately generates a packet with the **RST (Reset)** flag set to 1 (`RST=1, ACK=1`).',
+          '- This instantly informs the client application that the connection was refused, terminating the socket attempt without waiting for timeouts.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **SYN Flood Denial of Service (DoS)**: An attacker floods millions of SYN packets with forged source IPs. The server allocates buffer memory for each and waits in `SYN_RECEIVED`, exhausting kernel memory. Mitigated via **SYN Cookies** (encoding connection state into the server’s ISN instead of allocating memory).',
+          '- **Connection Refused vs. Connection Timed Out**: "Connection Refused" means the host was reached and emitted an explicit TCP RST. "Connection Timed Out" means packets were silently dropped along the path by a firewall or dead router.',
         ],
         keyTakeaway:
           'The 3-way handshake synchronizes sequence numbers before data transfer. Closed ports emit an immediate TCP RST.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net11-mcq-syn-ack-flags',
+            question:
+              'A client sends a SYN packet with Sequence Number = 1000. What are the Sequence and Acknowledgment numbers in the server\'s SYN-ACK response if the server chooses ISN = 5000?',
+            options: [
+              'Sequence Number = 5000, Acknowledgment Number = 1001',
+              'Sequence Number = 1001, Acknowledgment Number = 5000',
+              'Sequence Number = 5001, Acknowledgment Number = 1000',
+              'Sequence Number = 1000, Acknowledgment Number = 5000',
+            ],
+            correctIndex: 0,
+            explanation:
+              'The server introduces its own ISN (Seq = 5000) and acknowledges the client\'s SYN by adding 1 to the client\'s sequence number (Ack = 1001).',
+          },
+          {
+            id: 'net11-mcq-closed-port-rst',
+            question:
+              'What packet does an operating system return when it receives a TCP SYN for a port on which no service is listening?',
+            options: [
+              'An ICMP Echo Reply',
+              'A TCP segment with the RST (Reset) flag set to 1',
+              'A TCP FIN-ACK segment',
+              'It drops the packet silently without sending any response',
+            ],
+            correctIndex: 1,
+            explanation:
+              'RFC 793 dictates that if a SYN arrives at an inactive TCP port and no firewall is silently blocking it, the operating system responds with a TCP RST segment, signaling "Connection Refused".',
+          },
+        ],
       },
       tasks: [
         {

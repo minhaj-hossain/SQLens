@@ -47,19 +47,64 @@ export const NET_12_MODULE: ModuleData = {
         summary:
           'TCP is a stream of bytes. Sequence numbers track the byte offset of payload bytes. Acknowledgments are cumulative: ACK N indicates that all bytes through N-1 were received and byte N is expected next. Gaps cause repeated duplicate ACKs.',
         explanation: [
-          '### Byte Counting vs Packet Counting',
-          'TCP treats payload as a continuous stream of bytes. Sequence number is the stream index of the first byte in the payload.',
+          '### Beat 1: Direct Physical Reality — Streams of Bytes vs. Discrete Packets',
+          'Application developers write code that sends streams of unstructured data: a 5-megabyte PDF, a high-resolution image, or an ongoing database dump.',
+          'Underneath, the network card must slice this continuous stream into discrete physical Ethernet frames governed by the Maximum Transmission Unit (MTU, typically 1,500 bytes).',
+          'Unlike UDP (which treats each datagram as an independent message), **TCP does not count packets** — it counts **individual bytes** in a continuous numbered byte stream.',
           '',
-          '### Cumulative ACKs',
-          'The ACK number announces the next expected byte. If byte 1000 is received with 500 bytes of data (1000–1499), the receiver replies with ACK 1500.',
+          '### Beat 2: The Core Mechanism — Sequence Numbers & Cumulative ACKs',
+          'Every TCP segment carries two fundamental 32-bit accounting fields:',
+          '1. **Sequence Number (Seq)**: Represents the byte stream offset of the **very first data byte** contained in that segment’s payload.',
+          '   - Example: If the sender transmits 1,460 bytes starting at byte offset 10,000, `Seq = 10,000`. The segment carries bytes 10,000 through 11,459.',
+          '2. **Acknowledgment Number (Ack)**: Informs the remote sender of the **next expected byte index** ($N$).',
+          '   - When the receiver safely accepts bytes 10,000 through 11,459, it replies with **`Ack = 11,460`**.',
+          '   - **The Cumulative Rule**: An ACK of 11,460 confirms that ALL bytes from 0 through 11,459 were received without a single missing gap. It does not just acknowledge the most recent segment; it cumulatively validates everything prior.',
           '',
-          '### Handling Gaps',
-          'If a segment is lost, out-of-order packets trigger duplicate ACKs repeating the earliest unreceived byte index.',
+          '### Handling Missing Gaps & Duplicate ACKs',
+          'Suppose the sender transmits three segments: Segment 1 (bytes 1–1000), Segment 2 (bytes 1001–2000), and Segment 3 (bytes 2001–3000).',
+          'If Segment 2 is dropped by an intermediate router, but Segment 3 arrives safely:',
+          '- The receiver CANNOT send `Ack = 3001` because it never received bytes 1001–2000.',
+          '- The receiver immediately sends another **`Ack = 1001`** (a **Duplicate ACK**).',
+          '- Every subsequent out-of-order segment that arrives will force the receiver to repeat `Ack = 1001`, signaling to the sender exactly where the hole in the stream begins.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **Spurious Retransmissions**: If a network path has high jitter, delayed ACKs may arrive after the sender timer expired, causing the sender to retransmit data that was already received.',
+          '- **Selective Acknowledgment (SACK, RFC 2018)**: Standard TCP cumulative ACKs only report the earliest gap. SACK TCP options allow the receiver to report non-contiguous blocks of received data (e.g. "I got 2001–3000"), preventing the sender from having to retransmit segments the receiver already has.',
         ],
         keyTakeaway:
           'Sequence numbers track byte offsets; ACK numbers request the next expected byte. Gaps generate duplicate ACKs.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net12-mcq-seq-accounting',
+            question:
+              'A sender transmits a TCP segment with Sequence Number = 10,000 carrying 1,460 bytes of payload. What is the Acknowledgment Number in the receiver\'s reply?',
+            options: [
+              '10,001',
+              '11,460',
+              '11,459',
+              '10,000',
+            ],
+            correctIndex: 1,
+            explanation:
+              'The payload covers bytes 10,000 through 11,459 (1,460 bytes). The receiver confirms receipt by asking for the next expected byte index: 10,000 + 1,460 = 11,460.',
+          },
+          {
+            id: 'net12-mcq-cumulative-gap',
+            question:
+              'A receiver receives bytes 1–1000 (Seq 1), misses bytes 1001–2000, but receives bytes 2001–3000. What ACK number does it emit when bytes 2001–3000 arrive?',
+            options: [
+              'ACK 3001, confirming all arrived data',
+              'ACK 1001, because TCP ACKs are cumulative and cannot advance past missing gaps',
+              'ACK 2001, skipping the missing segment',
+              'ACK 0, terminating the socket connection',
+            ],
+            correctIndex: 1,
+            explanation:
+              'TCP acknowledgments are strictly cumulative. Because bytes 1001–2000 are missing, the receiver repeats ACK 1001 (a duplicate ACK) to indicate the exact byte where the stream stalled.',
+          },
+        ],
       },
       tasks: [
         {
@@ -146,19 +191,59 @@ export const NET_12_MODULE: ModuleData = {
         summary:
           'Flow control uses rwnd to limit unacknowledged in-flight bytes based on available receiver memory. rwnd=0 halts sender data transmission. Receiving 3 duplicate ACKs triggers Fast Retransmit without waiting for the slow RTO timer.',
         explanation: [
-          '### Receive Window (`rwnd`) Flow Control',
-          'The receiver advertises its free buffer space via rwnd. The sender is forbidden from transmitting more unacknowledged bytes than rwnd.',
+          '### Beat 1: Direct Physical Reality — Protecting the Receiver Buffer',
+          'Consider a high-performance server in a gigabit data center streaming an uncompressed 4K video file to a budget smartphone connected over Wi-Fi.',
+          'The server’s hardware NIC is capable of transmitting 125 megabytes per second. However, the smartphone’s operating system only allocates 2 megabytes of RAM buffer for that socket, and its video decoding app processes data at 2 megabytes per second.',
+          'If the server transmitted at full wire speed, the smartphone’s socket buffer would overflow within 16 milliseconds, resulting in massive packet drops inside the phone’s OS kernel. Flow control exists to prevent **fast senders from overwhelming slow receivers**.',
           '',
-          '### Zero Window & Persist Timer',
-          'When rwnd drops to 0, transmission halts. The sender sends periodic 1-byte probes until window space reopens.',
+          '### Beat 2: The Core Mechanism — Receive Window (`rwnd`) & Fast Retransmit',
+          'Flow control is governed by the **Receive Window (`rwnd`)** field in every TCP header:',
+          '1. In every ACK segment, the receiver advertises how much free memory space remains in its socket receive buffer (`Window Size = rwnd`).',
+          '2. The sender is strictly forbidden from transmitting more unacknowledged in-flight bytes than `rwnd` (`InFlightBytes <= rwnd`).',
+          '3. **Zero Window Condition (`rwnd = 0`)**: If the receiver application falls behind and the buffer fills completely, it sends an ACK with `rwnd = 0`. The sender **immediately halts data transmission** and starts a **Persist Timer**, sending periodic 1-byte Zero Window Probes until buffer memory reopens.',
           '',
-          '### Fast Retransmit',
-          'Rather than waiting for the Retransmission Timeout (RTO) timer, receiving 3 duplicate ACKs triggers immediate retransmission of the missing segment.',
+          '### Loss Recovery: RTO vs. Fast Retransmit',
+          '- **Retransmission Timeout (RTO)**: If a packet is lost, the sender eventually retransmits when its RTO timer expires. However, RTO is conservative (often 200ms to 1000ms), causing noticeable latency stalls.',
+          '- **Fast Retransmit (RFC 5681)**: If a single segment is lost in flight, subsequent segments arrive at the receiver, each triggering a duplicate ACK. Upon receiving **3 Duplicate ACKs** (4 identical ACKs in total), the sender concludes that a segment was lost in transit and **immediately retransmits the missing segment** without waiting for the slow RTO timer to expire.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **Bufferbloat vs. Zero Window**: Zero window indicates end-host receiver application lag. High round-trip times with growing latency (bufferbloat) indicate oversized queues inside intermediate ISP routers.',
+          '- **Silly Window Syndrome**: Occurs when a receiver advertises tiny window updates (e.g. 5 bytes at a time) or a sender transmits tiny segments, wasting bandwidth on 40-byte IP/TCP headers. Prevented via David Clark’s algorithm and Nagle’s algorithm.',
         ],
         keyTakeaway:
           'rwnd prevents receiver buffer overrun. 3 duplicate ACKs trigger Fast Retransmit before RTO timer expiry.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net12-mcq-rwnd-zero',
+            question:
+              'What does a TCP receiver signal when it sets the Window Size (rwnd) field to 0 in an ACK segment?',
+            options: [
+              'It requests the sender to increase its transmission speed by 2x',
+              'Its local application receive buffer is completely full, and the sender must cease sending new data until buffer space becomes available',
+              'The connection has experienced a hardware disconnect and must terminate',
+              'The server has run out of IP addresses',
+            ],
+            correctIndex: 1,
+            explanation:
+              'rwnd indicates available buffer space on the receiver. rwnd = 0 (Zero Window) halts transmission to prevent packet drops caused by buffer overrun.',
+          },
+          {
+            id: 'net12-mcq-fast-retransmit',
+            question:
+              'What condition triggers TCP Fast Retransmit rather than waiting for the Retransmission Timeout (RTO) timer?',
+            options: [
+              'The arrival of 3 duplicate ACKs for the same sequence number',
+              'The link latency dropping below 5 milliseconds',
+              'The receiver sending an ICMP Echo Reply',
+              'The sender reaching maximum MTU size',
+            ],
+            correctIndex: 0,
+            explanation:
+              'RFC 5681 defines Fast Retransmit: upon receiving 3 duplicate ACKs (indicating 3 subsequent segments arrived safely while one is missing), the sender immediately retransmits the missing segment.',
+          },
+        ],
       },
       tasks: [
         {
@@ -245,20 +330,63 @@ export const NET_12_MODULE: ModuleData = {
         summary:
           'Because TCP is full-duplex, terminating a connection requires 4 packets (FIN -> ACK, then reverse FIN -> ACK). The side initiating close lingers in TIME_WAIT for 2*MSL (60-120s) to absorb wandering duplicate packets and guarantee delivery of the final ACK.',
         explanation: [
-          '### The 4-Way Teardown Handshake',
-          '1. Initiator -> FIN',
-          '2. Responder -> ACK (Connection is now Half-Closed)',
-          '3. Responder -> FIN',
-          '4. Initiator -> ACK',
+          '### Beat 1: Direct Physical Reality — The Full-Duplex Closing Problem',
+          'TCP connections are **full-duplex**: two independent byte streams flow concurrently in opposite directions (Client ➔ Server and Server ➔ Client).',
+          'When a web browser finishes sending an HTTP request, it has no more data to transmit. However, the server may still have 50 megabytes of response data to stream back!',
+          'Therefore, closing a connection cannot be a single instantaneous event. Each direction must be terminated gracefully and independently without interrupting reverse traffic.',
           '',
-          '### The Critical Role of TIME_WAIT (2*MSL)',
-          '- **Guarantees Final ACK Delivery**: If the final ACK is dropped, the responder retransmits FIN. The closer in TIME_WAIT can resend the ACK.',
-          '- **Drains Wandering Segments**: Prevents delayed duplicates from an old session corrupting a newly opened connection reusing the same 5-tuple.',
+          '### Beat 2: The Core Mechanism — The 4-Way Teardown & TIME_WAIT',
+          'Connection termination executes across four distinct steps:',
+          '1. **Step 1: Active Closer ➔ Passive Closer (FIN)**: Client finishes sending data, emits a segment with `FIN=1`, and enters state `FIN_WAIT_1`.',
+          '2. **Step 2: Passive Closer ➔ Active Closer (ACK)**: Server acknowledges the FIN with `ACK`. Client enters `FIN_WAIT_2`. The connection is now **Half-Closed** (server enters `CLOSE_WAIT` and can still send data; client can only receive).',
+          '3. **Step 3: Passive Closer ➔ Active Closer (FIN)**: Server finishes sending remaining data, emits its own `FIN=1`, and enters `LAST_ACK`.',
+          '4. **Step 4: Active Closer ➔ Passive Closer (ACK)**: Client transmits the final `ACK`. The server receives it and transitions to `CLOSED`.',
+          '',
+          '### The Critical Role of the TIME_WAIT State ($2 \\times \\text{MSL}$)',
+          'After sending the final ACK in Step 4, the endpoint that initiated the close (the Active Closer) **does NOT immediately close the socket**. Instead, it enters **`TIME_WAIT`** and remains there for **$2 \\times \\text{MSL}$** (Maximum Segment Lifetime, typically 60 to 120 seconds):',
+          '- **Guaranteeing Final ACK Delivery**: If the client’s final ACK in Step 4 is lost in transit, the server will time out and retransmit its FIN. If the client had closed immediately, it would reply with TCP RST, causing the server to report an unclean connection abort. Lingering in `TIME_WAIT` allows the client to re-send the final ACK.',
+          '- **Draining Wandering Duplicate Packets**: Packets can bounce around routing loops before arriving late. If the client immediately reopened a new connection reusing the exact same 5-tuple, an old wandering packet from the previous session could arrive and corrupt the new stream. $2 \\times \\text{MSL}$ guarantees that all delayed segments expire and disappear from the network wire.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #114)',
+          'High-throughput microservices and reverse proxies often suffer from **TIME_WAIT Accumulation**:',
+          '- If a proxy opens and closes thousands of short-lived TCP connections per second to backend servers, thousands of sockets accumulate in `TIME_WAIT`.',
+          '- This can exhaust ephemeral source ports (`49152–65535`), causing outgoing connection failures (`Cannot assign requested address`).',
+          '- Diagnostic verification: On Windows, run `netstat -s -p tcp` and `Get-NetTCPConnection -State TimeWait`. On Linux, run `ss -s` and `ss -tan state time-wait`.',
         ],
         keyTakeaway:
           'Full-duplex teardown requires 4 packets. The active closer holds TIME_WAIT for 2*MSL to drain lingering packets.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net12-mcq-fin-ack-halfclose',
+            question:
+              'Why does TCP require 4 packets to terminate a connection gracefully instead of 2?',
+            options: [
+              'Because the 4 packets re-authenticate the user with the DNS server',
+              'Because TCP is full-duplex, and each direction of communication must be closed independently with its own FIN and ACK',
+              'Because routers drop connections that close in fewer than 4 packets',
+              'To ensure both sides reset their sequence numbers back to 0',
+            ],
+            correctIndex: 1,
+            explanation:
+              'TCP is full-duplex. Closing data transfer from A to B does not automatically close data transfer from B to A, so each direction requires its own FIN and ACK.',
+          },
+          {
+            id: 'net12-mcq-timewait-2msl',
+            question:
+              'What is the primary danger if an operating system immediately reopened a socket rather than holding it in TIME_WAIT for 2*MSL?',
+            options: [
+              'The switch MAC address table would erase all port entries',
+              'Old delayed duplicate segments from the previous connection could arrive and be mistakenly accepted by the new connection sharing the same 5-tuple, causing data corruption',
+              'The default gateway would run out of IP addresses',
+              'The client would be banned from the domain registrar',
+            ],
+            correctIndex: 1,
+            explanation:
+              'The primary purpose of TIME_WAIT is to let all delayed, wandering duplicate segments from the old incarnation drain from the network so they do not corrupt a new connection reusing the same port tuple.',
+          },
+        ],
       },
       tasks: [
         {
@@ -269,6 +397,7 @@ export const NET_12_MODULE: ModuleData = {
           instructions: [
             'A client terminates an active HTTP session with a web server.',
             'Answer the judgment questions on 4-way teardown and the role of TIME_WAIT.',
+            'Inspect socket connection states and cumulative TCP statistics using Windows (`netstat -s`) and Linux (`ss -s`) diagnostic tools.',
           ],
           type: 'guided',
           primaryTable: '',
@@ -283,6 +412,84 @@ export const NET_12_MODULE: ModuleData = {
             defaultScenario: 'teardown',
             clientIsn: 20000,
             serverIsn: 30000,
+          },
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #114 (Dual OS)',
+            description:
+              'Diagnose TCP socket state lifecycles, cumulative connection statistics, and inspect TIME_WAIT sockets on Windows and Linux systems.',
+            prompt: 'admin@prod-bastion:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #114: TCP RETRANSMISSION & TIME_WAIT AUDIT',
+              '====================================================================',
+              'Diagnosing TCP socket state lifecycles, cumulative connection stats,',
+              'and inspecting active TIME_WAIT sockets under heavy microservice traffic.',
+              'Supported commands:',
+              '  - Windows: netstat -s -p tcp',
+              '             Get-NetTCPConnection -State TimeWait',
+              '  - Linux:   ss -s',
+              '             ss -tan state time-wait',
+            ].join('\n'),
+            availableCommands: [
+              'netstat -s -p tcp',
+              'Get-NetTCPConnection -State TimeWait',
+              'ss -s',
+              'ss -tan state time-wait',
+            ],
+            commands: {
+              'netstat -s -p tcp': `TCP Statistics for IPv4
+
+  Active Opens                        = 14820
+  Passive Opens                       = 2314
+  Failed Connection Attempts          = 42
+  Reset Connections                   = 118
+  Current Connections                 = 12
+  Segments Received                   = 842190
+  Segments Sent                       = 912440
+  Segments Retransmitted              = 341`,
+              'Get-NetTCPConnection -State TimeWait': `LocalAddress   LocalPort RemoteAddress   RemotePort State    AppliedSetting OwningProcess
+------------   --------- -------------   ---------- -----    -------------- -------------
+192.168.1.100  52110     198.51.100.20   443        TimeWait Internet       0
+192.168.1.100  52111     198.51.100.20   443        TimeWait Internet       0`,
+              'ss -s': `Total: 842 (kernel 1024)
+TCP:   18 (estab 12, closed 4, orphaned 0, timewait 2)
+
+Transport Total     IP        IPv6
+RAW       1         0         1   
+UDP       4         3         1   
+TCP       14        10        4   
+INET      19        13        6`,
+              'ss -tan state time-wait': `Recv-Q Send-Q   Local Address:Port    Peer Address:Port
+0      0        192.168.1.100:52110   198.51.100.20:443
+0      0        192.168.1.100:52111   198.51.100.20:443`,
+            },
+            commandResponses: {
+              'netstat -s -p tcp': `TCP Statistics for IPv4
+
+  Active Opens                        = 14820
+  Passive Opens                       = 2314
+  Failed Connection Attempts          = 42
+  Reset Connections                   = 118
+  Current Connections                 = 12
+  Segments Received                   = 842190
+  Segments Sent                       = 912440
+  Segments Retransmitted              = 341`,
+              'Get-NetTCPConnection -State TimeWait': `LocalAddress   LocalPort RemoteAddress   RemotePort State    AppliedSetting OwningProcess
+------------   --------- -------------   ---------- -----    -------------- -------------
+192.168.1.100  52110     198.51.100.20   443        TimeWait Internet       0
+192.168.1.100  52111     198.51.100.20   443        TimeWait Internet       0`,
+              'ss -s': `Total: 842 (kernel 1024)
+TCP:   18 (estab 12, closed 4, orphaned 0, timewait 2)
+
+Transport Total     IP        IPv6
+RAW       1         0         1   
+UDP       4         3         1   
+TCP       14        10        4   
+INET      19        13        6`,
+              'ss -tan state time-wait': `Recv-Q Send-Q   Local Address:Port    Peer Address:Port
+0      0        192.168.1.100:52110   198.51.100.20:443
+0      0        192.168.1.100:52111   198.51.100.20:443`,
+            },
           },
           hints: [
             {

@@ -125,14 +125,15 @@
 
 ---
 
-### Phase 4: Milestones 4 & 5 — Services, Transport & Security (Modules 11–15)
-- [ ] **Task 4.1: Author Module 11 (DHCP)**: DORA exchange, APIPA (`169.254.x.x`), lease renew. Ticket #111.
-- [ ] **Task 4.2: Author Module 12 (DNS)**: Hierarchy, A/CNAME records, resolver cache flush. Ticket #112.
-- [ ] **Task 4.3: Author Module 13 (Ports & Sockets)**: 5-tuple sockets, `netstat -ano` / `ss -tulpn`. Ticket #113.
-- [ ] **Task 4.4: Author Module 14 (TCP vs UDP)**: 3-Way Handshake, Sequence numbers, `TIME_WAIT`. Ticket #114.
-- [ ] **Task 4.5: Author Module 15 (TLS 1.3 & HTTPS)**: Cleartext sniffing danger, CA certificate validation, 1-RTT. Ticket #115.
-- [ ] **Task 4.6: Verification Suite**
-  - [ ] Add `tests/tracks/networking-milestones-4-5-rollout.test.tsx`.
+### Phase 4: Milestones 4 & 5 — Services, Transport & Security (Modules 11–15 / `net-09.ts` to `net-13.ts`)
+- [x] **Task 4.1: Author Module 11 (DHCP)**: DORA exchange, APIPA (`169.254.x.x`), lease renew. Ticket #111 (`net-09.ts`).
+- [x] **Task 4.2: Author Module 12 (DNS)**: Hierarchy, A/CNAME records, resolver cache flush. Ticket #112 (`net-10.ts`).
+- [x] **Task 4.3: Author Module 13 (Ports & Sockets)**: 5-tuple sockets, `netstat -ano` / `ss -tulpn`. Ticket #113 (`net-11.ts`).
+- [x] **Task 4.4: Author Module 14 (TCP vs UDP)**: 3-Way Handshake, Sequence numbers, `TIME_WAIT`. Ticket #114 (`net-12.ts`).
+- [x] **Task 4.5: Author Module 15 (TLS 1.3 & HTTPS)**: Cleartext sniffing danger, CA certificate validation, 1-RTT. Ticket #115 (`net-13.ts`).
+- [x] **Task 4.6: Verification Suite**
+  - [x] Added `tests/tracks/networking-milestones-4-5-rollout.test.tsx` (9/9 tests green).
+  - [x] Full networking test suite passing 100%: 30/30 test files, 463/463 tests green.
 
 ---
 
@@ -153,6 +154,6 @@
 ---
 
 ## 💾 Current Session State (Where We Are Right Now)
-* **Active Milestone:** Milestone 4 & 5 (Services, Transport & Security — Modules 11–15).
-* **Next Immediate Task:** **Task 4.1 — Author Module 11 (DHCP)** (DORA exchange, APIPA `169.254.x.x`, lease renew, Ticket #111).
+* **Active Milestone:** Milestone 6 & Capstone Exam (Modules 16–19).
+* **Next Immediate Task:** **Task 5.1 — Author Module 16 (VLANs & 802.1Q)** (`net-14.ts`: flat broadcast isolation, 802.1Q tags, access vs trunk ports, Ticket #116).
 

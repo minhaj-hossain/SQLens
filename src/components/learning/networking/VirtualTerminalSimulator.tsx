@@ -60,14 +60,17 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
   onExecute,
 }) => {
   const hostname = scenario?.hostname || propHostname || 'Acme-PC-01';
-  const userPrompt = scenario?.userPrompt || propUserPrompt || 'C:\\Users\\admin>';
+  const userPrompt = scenario?.prompt || scenario?.userPrompt || propUserPrompt || 'C:\\Users\\admin>';
   const currentIp = scenario?.currentIp || propCurrentIp || '192.168.1.10';
   const subnetMask = scenario?.subnetMask || propSubnetMask || '255.255.255.0';
   const gatewayIp = scenario?.gatewayIp || propGatewayIp || '192.168.1.1';
   const dnsServer = scenario?.dnsServer || propDnsServer || '192.168.1.1';
   const macAddress = scenario?.macAddress || propMacAddress || '00-1A-2B-3C-4D-10';
 
-  const initialLines = scenario?.initialLines || propInitialLines;
+  const rawInitial = scenario?.initialLines || scenario?.initialOutput || propInitialLines;
+  const initialLines: string[] | undefined = typeof rawInitial === 'string'
+    ? rawInitial.split('\n')
+    : rawInitial;
   const defaultHistory: CommandHistoryItem[] = initialLines && initialLines.length > 0
     ? initialLines.map((line: string) => ({ command: '', output: line }))
     : [];
@@ -80,7 +83,7 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const effectivePrompt = propUserPrompt || (osMode === 'windows' ? 'C:\\Users\\admin>' : 'admin@acme-pc01:~$');
+  const effectivePrompt = scenario?.prompt || propUserPrompt || (osMode === 'windows' ? 'C:\\Users\\admin>' : 'admin@acme-pc01:~$');
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,7 +102,7 @@ export const VirtualTerminalSimulator: React.FC<VirtualTerminalSimulatorProps> =
     const lower = raw.toLowerCase();
     let output = '';
 
-    const cmdResponses = scenario?.commandResponses || propCommandResponses;
+    const cmdResponses = scenario?.commandResponses || scenario?.commands || propCommandResponses;
     const custResponses = scenario?.customResponses || propCustomResponses;
 
     // 1. Check custom scenario command response override

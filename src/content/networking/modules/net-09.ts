@@ -46,25 +46,62 @@ export const NET_09_MODULE: ModuleData = {
         summary:
           'When booting up, an unconfigured host has no IP, subnet mask, or gateway. It sends a UDP bootstrap datagram from 0.0.0.0:68 to 255.255.255.255:67 with MAC FF:FF:FF:FF:FF:FF and a random 32-bit transaction ID (XID) so servers can address replies.',
         explanation: [
-          '### The Bootstrap Paradox',
-          'When a newly booted laptop connects to a network, it possesses no IP address, no mask, and no gateway.',
-          'How can it send an IP packet if it lacks an IP address?',
+          '### Beat 1: Direct Physical Reality — The Unconfigured Endpoint',
+          'When an unconfigured machine boots up or plugs an Ethernet cable into a switchport, its network interface card (NIC) possesses a burnt-in 48-bit MAC address in ROM, but its operating system IP stack has **zero Layer 3 configuration**.',
+          'It has no assigned IPv4 address, no subnet mask, no default gateway IP, and no DNS server addresses.',
+          'Yet according to the rules of TCP/IP, a host cannot transmit a standard unicast IP packet without having a valid source IP address in the packet header. This creates the classic **Bootstrap Paradox**: How does an unconfigured host ask for an IP address before it has one?',
           '',
-          '### The Solution: Broadcast over UDP 67/68',
-          'DHCP (RFC 2131) runs over UDP:',
-          '- **Source IP**: `0.0.0.0` ("This host on this network")',
-          '- **Destination IP**: `255.255.255.255` (Limited broadcast)',
-          '- **Source UDP Port**: `68` (DHCP Client)',
-          '- **Destination UDP Port**: `67` (DHCP Server)',
-          '- **Destination MAC**: `FF:FF:FF:FF:FF:FF` (Layer 2 broadcast)',
+          '### Beat 2: The Core Mechanism — The UDP Broadcast Bootstrap',
+          'RFC 2131 solves this bootstrap dilemma through a specialized broadcast encapsulation protocol operating over UDP:',
+          '- **Source IP**: `0.0.0.0` (Defined in RFC 791 as "this host on this network", indicating the sender has no assigned address).',
+          '- **Destination IP**: `255.255.255.255` (Limited broadcast address, instructing all Layer 3 hosts on the local physical link to process the packet).',
+          '- **Source UDP Port**: `68` (Standard DHCP client port).',
+          '- **Destination UDP Port**: `67` (Standard DHCP server daemon port).',
+          '- **Destination MAC**: `FF:FF:FF:FF:FF:FF` (Layer 2 broadcast, ensuring the switch floods the frame out all ports in the broadcast domain).',
           '',
-          '### The Transaction ID (XID)',
-          'To correlate responses when multiple clients boot concurrently, the client generates a random 32-bit XID matched by server replies.',
+          '### The 32-Bit Transaction ID (XID)',
+          'In a large enterprise or university campus, dozens of laptops may connect to the same switch simultaneously. If every client sends from `0.0.0.0` to `255.255.255.255`, how does a client identify which server response belongs to it?',
+          'The client generates a **random 32-bit Transaction ID (XID)** and places its own **Client Hardware Address (CHADDR)** in the DHCP payload. Any responding server echoes this exact XID and CHADDR back in its offer.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          'Common bootstrap failure scenarios:',
+          '- **Rogue DHCP Servers**: If an employee connects an unmanaged consumer Wi-Fi router to the office LAN, its built-in DHCP server may answer Discover broadcasts faster than the corporate server, leasing wrong default gateways and hijacking network traffic.',
+          '- **DHCP Starvation Attacks**: An attacker floods thousands of DHCP Discovers with spoofed MAC addresses, exhausting all available addresses in the server pool. Modern switches mitigate this using **DHCP Snooping** (trusting only authorized server switchports).',
         ],
         keyTakeaway:
           'An unconfigured client uses 0.0.0.0:68 to 255.255.255.255:67 with MAC FF:FF:FF:FF:FF:FF and a random XID to discover local DHCP servers.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net09-mcq-bootstrap-source',
+            question:
+              'Why does an unconfigured host set its Source IP to 0.0.0.0 when sending a DHCP Discover datagram?',
+            options: [
+              'Because 0.0.0.0 is the loopback address used for local machine testing',
+              'Because RFC 791/2131 designates 0.0.0.0 as "this host on this network" when an endpoint has not yet been assigned a valid IP',
+              'Because 0.0.0.0 instructs the router to bypass all firewall inspection rules',
+              'Because 0.0.0.0 is the private IP address of the switch management engine',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Under RFC 791 and RFC 2131, 0.0.0.0 represents an unknown or unassigned host address during the initial bootstrap sequence.',
+          },
+          {
+            id: 'net09-mcq-xid-correlation',
+            question:
+              'How does a client distinguish its own DHCP Offer from offers intended for other clients booting simultaneously on the same LAN?',
+            options: [
+              'By inspecting the unique 32-bit Transaction ID (XID) and Client Hardware Address (CHADDR) echoed in the server payload',
+              'By checking the color of the Ethernet patch cable',
+              'By comparing the server IP with its local HOSTS file',
+              'By waiting 60 seconds before accepting any server response',
+            ],
+            correctIndex: 0,
+            explanation:
+              'The client generates a random 32-bit transaction ID (XID) and includes its MAC address in the CHADDR field. Responding servers echo these identifiers, allowing clients to ignore offers meant for other devices.',
+          },
+        ],
       },
       tasks: [
         {
@@ -152,23 +189,63 @@ export const NET_09_MODULE: ModuleData = {
         summary:
           'DORA encompasses Discover, Offer, Request, and ACK. The client broadcasts Request to notify competing servers their offers were declined. Leases renew at T1 (50% via unicast) and rebind at T2 (87.5% via broadcast).',
         explanation: [
-          '### The DORA 4-Way Handshake',
-          '1. **Discover (Broadcast)**: Client looks for any DHCP server.',
-          '2. **Offer (Unicast/Broadcast)**: Server reserves an IP and offers configuration.',
-          '3. **Request (Broadcast)**: Client announces acceptance of chosen offer.',
-          '4. **ACK (Unicast/Broadcast)**: Server confirms lease with IP, mask, gateway, DNS.',
+          '### Beat 1: Direct Physical Reality — Multi-Server Competition',
+          'In resilient enterprise networks, two or more DHCP servers (e.g., Primary at `192.168.1.1` and Secondary at `192.168.1.2`) share the broadcast domain for redundancy.',
+          'When a client broadcasts a single DHCP Discover, **both servers receive it and both prepare an IP address offer**.',
+          'The client must select one offer and decline the other without creating address leaks in the unselected server’s pool.',
           '',
-          '### Why Request is Broadcast',
-          'When multiple servers offer IPs, broadcasting the Request lets unselected servers return their offered IPs to the available pool.',
+          '### Beat 2: The Core Mechanism — The 4-Step DORA State Machine',
+          'The DHCP protocol lifecycle executes across four distinct operational steps (D-O-R-A):',
+          '1. **Discover (Client ➔ Broadcast)**: Unconfigured client broadcasts to discover active DHCP servers.',
+          '2. **Offer (Server ➔ Client)**: Server reserves an unallocated IP from its scope and transmits an Offer containing offered IP, subnet mask, default gateway, DNS servers, and lease duration.',
+          '3. **Request (Client ➔ Broadcast)**: Client selects one offer (typically the first received) and broadcasts a DHCP Request naming the chosen server in Option 54 (Server Identifier).',
+          '   **Why broadcast the Request?** Broadcasting informs all competing DHCP servers simultaneously. The chosen server confirms the lease, while non-chosen servers release their temporarily reserved IPs back to their available pools immediately.',
+          '4. **ACK (Server ➔ Client)**: The selected server confirms lease parameters with an Acknowledgment (ACK). The client configures its network interface and begins normal operation.',
           '',
-          '### Timers T1 and T2',
-          '- **T1 (50% of lease)**: Unicast Request directly to original server.',
-          '- **T2 (87.5% of lease)**: Broadcast Request to any available server if T1 timed out.',
+          '### Lease Renewal Lifecycle: Timers T1 & T2',
+          'DHCP addresses are not owned; they are **leased** for a defined duration (e.g., 8 hours = 28,800 seconds):',
+          '- **Timer T1 (Renewal at 50% = 4 hours)**: The client attempts to renew its lease by transmitting a **unicast DHCP Request** directly to the server that granted the original lease. Because it is unicast, network overhead is zero.',
+          '- **Timer T2 (Rebind at 87.5% = 7 hours)**: If the original server crashed or is unreachable at T1, the client waits until T2. At 87.5% of lease time, the client switches to **broadcast DHCP Request** to seek a lease renewal from ANY active DHCP server on the link.',
+          '- **Lease Expiration (100% = 8 hours)**: If no server responds before timer expiry, the client must immediately release the IP address and halt all IP traffic.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **Lease Exhaustion**: High-turnover guest Wi-Fi networks (e.g. coffee shops) with long lease times (e.g. 24 hours) run out of IP addresses. Best practice is setting short leases (e.g. 30–60 minutes).',
+          '- **DHCP NAK (Negative Acknowledgment)**: If a laptop moves to a different physical building and requests its old IP on a new subnet, the server returns a DHCP NAK forcing the client to release its configuration and restart from Discover.',
         ],
         keyTakeaway:
           'The DORA exchange configures the host. Broadcasting the Request releases unselected offers. T1 renews at 50% via unicast; T2 rebinds at 87.5% via broadcast.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net09-mcq-dora-broadcast-req',
+            question:
+              'Why is the DHCP Request message sent as a Layer 3 broadcast even though the client has already chosen a specific server offer?',
+            options: [
+              'Because the operating system kernel disables unicast transmission until the final ACK is processed, and to let competing servers immediately release unchosen offered IPs',
+              'Because routers require broadcast packets to calculate shortest path first trees',
+              'Because the client needs to alert web servers on the internet that it is online',
+              'Because Layer 2 switches do not support unicast frames on UDP port 67',
+            ],
+            correctIndex: 0,
+            explanation:
+              'Broadcasting the Request notifies all competing DHCP servers on the subnet simultaneously that their offers were not chosen, allowing them to return offered IPs to their available pools.',
+          },
+          {
+            id: 'net09-mcq-lease-timers',
+            question:
+              'What happens when a client reaches Timer T1 (50% of lease time) without a network interruption?',
+            options: [
+              'It immediately drops its IP address and sends an ARP probe to the default gateway',
+              'It sends a unicast DHCP Request directly to the server that issued the lease to extend the lease duration',
+              'It broadcasts a DHCP Discover to find a faster DHCP server',
+              'It switches to a self-assigned APIPA address (169.254.x.x)',
+            ],
+            correctIndex: 1,
+            explanation:
+              'At Timer T1 (50% of lease duration), the client quietly transmits a unicast DHCP Request directly to the leasing server to renew the lease without broadcasting.',
+          },
+        ],
       },
       tasks: [
         {
@@ -276,19 +353,63 @@ export const NET_09_MODULE: ModuleData = {
         summary:
           'Routers drop broadcast packets by default. A DHCP Relay Agent bridges cross-subnet requests by unicasting them with the incoming interface IP in giaddr. If no DHCP server answers, clients fall back to APIPA (169.254.0.0/16).',
         explanation: [
-          '### The Router Broadcast Barrier',
-          'Routers define broadcast boundaries and drop 255.255.255.255 packets by default.',
+          '### Beat 1: Direct Physical Reality — The Router Broadcast Barrier',
+          'Layer 3 routers do not forward `255.255.255.255` broadcast frames across interfaces. By design, routers terminate broadcast domains to prevent global broadcast storms.',
+          'However, enterprise networks cannot deploy a dedicated physical DHCP server on every individual departmental floor or branch subnet. A central cluster of DHCP servers in the data center must service hundreds of disparate subnets.',
           '',
-          '### The DHCP Relay Agent (`giaddr`)',
-          'A router interface configured with a relay agent (e.g. ip helper-address) intercepts the client broadcast, populates the `giaddr` field with its own interface IP, and unicasts it to the central server across WAN links.',
+          '### Beat 2: The Core Mechanism — DHCP Relay Agents & `giaddr`',
+          'To bridge DHCP across router boundaries, network engineers configure a **DHCP Relay Agent** (e.g. Cisco `ip helper-address <DHCP-Server-IP>` or Linux `dhcrelay`):',
+          '1. The client broadcasts DHCP Discover on the local LAN.',
+          '2. The local router interface intercepts the UDP port 67 broadcast.',
+          '3. The router populates the **`giaddr` (Gateway IP Address)** field in the DHCP payload with its own local interface IP address (e.g. `192.168.10.1`).',
+          '4. The router converts the broadcast into a standard **unicast packet** and sends it across corporate WAN or MPLS links to the centralized DHCP server.',
+          '5. **How does the server know which subnet to assign?** The DHCP server inspects the `giaddr` field. Seeing `192.168.10.1`, it allocates an available IP from the matching `192.168.10.0/24` scope!',
           '',
-          '### APIPA: Automatic Private IP Addressing',
-          'If DHCP discovery times out, Windows/macOS assign a Link-Local address in 169.254.0.0/16 (RFC 3927). This allows local ad-hoc communication but cannot route to the internet.',
+          '### APIPA: Automatic Private IP Addressing (`169.254.0.0/16`)',
+          'If a client broadcasts DHCP Discovers and receives zero replies after multiple retries (due to a dead DHCP server, unplugged relay, or VLAN mismatch):',
+          '- Operating systems (Windows and macOS) activate **APIPA (RFC 3927 Link-Local Addressing)**.',
+          '- The client automatically assigns itself an address in the reserved block **`169.254.1.0` through `169.254.254.255`** with subnet mask `255.255.0.0` (/16).',
+          '- **Workplace Rule**: An APIPA address proves that the client NIC, cable, and driver are physically operational, but **DHCP communication failed completely**. Because APIPA assigns no default gateway, the machine cannot reach internet services.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #111)',
+          'Diagnosing DHCP failure and APIPA fallback in production:',
+          '- On Windows: Run `ipconfig /all` to confirm APIPA `169.254.x.x`. Run `ipconfig /release` followed by `ipconfig /renew` to force a new DORA handshake.',
+          '- On Linux: Run `ip addr show eth0`, followed by `sudo dhclient -r eth0` (release) and `sudo dhclient -v eth0` (verbose renew).',
         ],
         keyTakeaway:
           'DHCP Relays cross router boundaries using giaddr. An address in 169.254.0.0/16 (APIPA) diagnoses that the physical link is up but DHCP discovery failed.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net09-mcq-apipa-range',
+            question:
+              'A user machine displays IP 169.254.55.90 with subnet mask 255.255.0.0 and no default gateway. What does this indicate?',
+            options: [
+              'The machine successfully obtained a public IP from a cloud DHCP service',
+              'The physical NIC is working, but DHCP negotiation failed or timed out, causing the OS to assign an APIPA link-local address',
+              'The user is infected with malware that disabled the network card hardware',
+              'The machine is connected to a Gigabit switch that requires IPv6 exclusively',
+            ],
+            correctIndex: 1,
+            explanation:
+              'APIPA (169.254.0.0/16) is a self-assigned fallback address generated by the operating system when DHCP discovery fails to receive an answer.',
+          },
+          {
+            id: 'net09-mcq-relay-giaddr',
+            question:
+              'When a router configured with a DHCP Relay Agent receives a client broadcast, how does the centralized server know which subnet pool to draw from?',
+            options: [
+              'The server inspects the giaddr (Gateway IP Address) field, which the router populated with its local interface IP address',
+              'The server uses DNS to look up the client hostname',
+              'The server sends an ICMP Echo probe to all devices on the network',
+              'The router forwards the client MAC address directly to the ISP',
+            ],
+            correctIndex: 0,
+            explanation:
+              'The DHCP relay agent populates the giaddr field with its own interface IP on the client subnet, directing the central DHCP server to allocate an address from that specific scope.',
+          },
+        ],
       },
       tasks: [
         {
@@ -299,6 +420,7 @@ export const NET_09_MODULE: ModuleData = {
           instructions: [
             'An office workstation runs `ipconfig` and displays IPv4 Address: `169.254.44.120`.',
             'Analyze why this occurred and how cross-subnet DHCP configuration functions.',
+            'Use the workplace diagnostic terminal to inspect APIPA status, release the stale configuration, and renew a valid DHCP lease.',
           ],
           type: 'guided',
           primaryTable: '',
@@ -313,6 +435,125 @@ export const NET_09_MODULE: ModuleData = {
             clientMac: '00:1A:2B:3C:4D:5E',
             scenarioMode: 'apipa_timeout',
             initialStep: 1,
+          },
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #111 (Dual OS)',
+            description:
+              'Triage APIPA 169.254.x.x address fallback, release stale IP configurations, and trigger DHCP lease renewal on Windows and Linux.',
+            prompt: 'admin@corp-pc:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #111: DHCP FAILURE & APIPA FALLBACK TRIAGE',
+              '====================================================================',
+              'Investigating workstation self-assigned 169.254.x.x link-local IP.',
+              'Supported commands:',
+              '  - Windows: ipconfig /all',
+              '             ipconfig /release',
+              '             ipconfig /renew',
+              '  - Linux:   ip addr show eth0',
+              '             dhclient -r eth0',
+              '             dhclient -v eth0',
+            ].join('\n'),
+            availableCommands: [
+              'ipconfig /all',
+              'ipconfig /release',
+              'ipconfig /renew',
+              'ip addr show eth0',
+              'dhclient -r eth0',
+              'dhclient -v eth0',
+            ],
+            commands: {
+              'ipconfig /all': `Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : DESKTOP-CORP-91
+   Primary Dns Suffix  . . . . . . . : corp.acme.com
+   Node Type . . . . . . . . . . . . : Hybrid
+   IP Routing Enabled. . . . . . . . : No
+
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix  . : 
+   Description . . . . . . . . . . . : Intel(R) Ethernet Connection I219-LM
+   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E
+   DHCP Enabled. . . . . . . . . . . : Yes
+   Autoconfiguration Enabled . . . . : Yes
+   Autoconfiguration IPv4 Address. . : 169.254.44.120(Preferred)
+   Subnet Mask . . . . . . . . . . . : 255.255.0.0
+   Default Gateway . . . . . . . . . : 
+   NetBIOS over Tcpip. . . . . . . . : Enabled`,
+              'ipconfig /release': `Windows IP Configuration
+
+No operation can be performed on Ethernet0 while it has its media disconnected or configuration cleared.
+IP address has been released for adapter Ethernet0.`,
+              'ipconfig /renew': `Windows IP Configuration
+
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix  . : corp.acme.com
+   IPv4 Address. . . . . . . . . . . : 192.168.1.105
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.1.1`,
+              'ip addr show eth0': `2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:1a:2b:3c:4d:5e brd ff:ff:ff:ff:ff:ff
+    inet 169.254.44.120/16 brd 169.254.255.255 scope link eth0
+       valid_lft forever preferred_lft forever`,
+              'dhclient -r eth0': `Killed old client process
+Internet Systems Consortium DHCP Client 4.4.1
+Released lease for eth0.`,
+              'dhclient -v eth0': `Internet Systems Consortium DHCP Client 4.4.1
+Listening on LPF/eth0/00:1a:2b:3c:4d:5e
+Sending on   LPF/eth0/00:1a:2b:3c:4d:5e
+Sending on   Socket/fallback
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3 (xid=0x39a2f1b0)
+DHCPOFFER of 192.168.1.105 from 192.168.1.1
+DHCPREQUEST for 192.168.1.105 on eth0 to 255.255.255.255 port 67 (xid=0x39a2f1b0)
+DHCPACK of 192.168.1.105 from 192.168.1.1 (xid=0x39a2f1b0)
+bound to 192.168.1.105 -- renewal in 14400 seconds.`,
+            },
+            commandResponses: {
+              'ipconfig /all': `Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : DESKTOP-CORP-91
+   Primary Dns Suffix  . . . . . . . : corp.acme.com
+   Node Type . . . . . . . . . . . . : Hybrid
+   IP Routing Enabled. . . . . . . . : No
+
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix  . : 
+   Description . . . . . . . . . . . : Intel(R) Ethernet Connection I219-LM
+   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E
+   DHCP Enabled. . . . . . . . . . . : Yes
+   Autoconfiguration Enabled . . . . : Yes
+   Autoconfiguration IPv4 Address. . : 169.254.44.120(Preferred)
+   Subnet Mask . . . . . . . . . . . : 255.255.0.0
+   Default Gateway . . . . . . . . . : 
+   NetBIOS over Tcpip. . . . . . . . : Enabled`,
+              'ipconfig /release': `Windows IP Configuration
+
+No operation can be performed on Ethernet0 while it has its media disconnected or configuration cleared.
+IP address has been released for adapter Ethernet0.`,
+              'ipconfig /renew': `Windows IP Configuration
+
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix  . : corp.acme.com
+   IPv4 Address. . . . . . . . . . . : 192.168.1.105
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.1.1`,
+              'ip addr show eth0': `2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:1a:2b:3c:4d:5e brd ff:ff:ff:ff:ff:ff
+    inet 169.254.44.120/16 brd 169.254.255.255 scope link eth0
+       valid_lft forever preferred_lft forever`,
+              'dhclient -r eth0': `Killed old client process
+Internet Systems Consortium DHCP Client 4.4.1
+Released lease for eth0.`,
+              'dhclient -v eth0': `Internet Systems Consortium DHCP Client 4.4.1
+Listening on LPF/eth0/00:1a:2b:3c:4d:5e
+Sending on   LPF/eth0/00:1a:2b:3c:4d:5e
+Sending on   Socket/fallback
+DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3 (xid=0x39a2f1b0)
+DHCPOFFER of 192.168.1.105 from 192.168.1.1
+DHCPREQUEST for 192.168.1.105 on eth0 to 255.255.255.255 port 67 (xid=0x39a2f1b0)
+DHCPACK of 192.168.1.105 from 192.168.1.1 (xid=0x39a2f1b0)
+bound to 192.168.1.105 -- renewal in 14400 seconds.`,
+            },
           },
           hints: [
             {

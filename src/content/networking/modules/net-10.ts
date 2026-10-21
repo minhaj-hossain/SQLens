@@ -46,19 +46,60 @@ export const NET_10_MODULE: ModuleData = {
         summary:
           'DNS is structured as an inverted tree beginning at the Root Zone (.), which delegates to Top-Level Domains (.com, .org), which in turn delegate to authoritative name servers holding the master zone records.',
         explanation: [
-          '### The Inverted Tree',
-          'DNS replaced static HOSTS files with a hierarchical, distributed database:',
-          '- **Root Zone (.)**: 13 root clusters anycast across thousands of global sites.',
-          '- **Top-Level Domains (TLDs)**: Generic (.com, .org, .net) and country-code (.uk, .jp).',
-          '- **Second-Level Domains**: example.com, google.com.',
+          '### Beat 1: Direct Physical Reality — The Scaling Death of Flat HOSTS Files',
+          'In the early ARPANET of the 1970s and 1980s, network hostname resolution was managed by a single centralized text file called `HOSTS.TXT`, maintained by SRI and downloaded via FTP by every computer on the network.',
+          'As thousands of universities and businesses joined, this centralized architecture collapsed: file download bandwidth exploded, name collisions multiplied, and updates took days to propagate.',
+          'Paul Mockapetris designed the **Domain Name System (RFC 1034 / RFC 1035)** in 1983 to replace flat files with a globally distributed, hierarchical database.',
           '',
-          '### Authoritative Delegation',
-          'Root servers do not know individual host IPs. They refer queries to the appropriate TLD servers, which refer to Authoritative servers holding the actual zone data.',
+          '### Beat 2: The Core Mechanism — The Inverted Domain Tree',
+          'The DNS namespace forms an inverted tree branching downward from a single invisible root:',
+          '1. **The Root Zone (`.`)**: Managed by 13 root server IP identities (`a.root-servers.net` through `m.root-servers.net`), distributed across more than 1,500 physical locations globally using BGP Anycast. The root server does NOT store individual website IPs; it stores pointers (delegation records) to TLD servers.',
+          '2. **Top-Level Domains (TLDs)**: Generic TLDs (`.com`, `.org`, `.net`, `.edu`) and country-code TLDs (`.uk`, `.de`, `.jp`). Registry operators (such as Verisign for `.com`) manage these zones and delegate authority to second-level domains.',
+          '3. **Second-Level Domains**: `company.com`, `wikipedia.org`. The domain owner configures their own **Authoritative Name Servers** to manage records.',
+          '4. **Subdomains & Hosts**: `app.company.com`, `mail.company.com`.',
+          '',
+          '### Zone Delegation & Glue Records',
+          'Delegation occurs via **Name Server (NS) records**. When the `.com` TLD receives a query for `company.com`, it replies with NS records pointing to `ns1.company.com`.',
+          'If the name server sits inside the domain it serves (`ns1.company.com` within `company.com`), the parent zone must also provide a **Glue Record** (the A/AAAA IP address of `ns1`) to avoid an unresolvable chicken-and-egg dependency.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **Dangling Delegation / Subdomain Takeover**: If an NS or CNAME record points to an expired external cloud service (e.g. AWS S3, GitHub Pages), an attacker can register the cloud resource and hijack the domain.',
+          '- **Lame Delegation**: Occurs when parent zone NS records point to a server that has not been configured to be authoritative for the child zone, returning REFUSED or SERVFAIL.',
         ],
         keyTakeaway:
           'Root servers provide referrals to TLD servers; Authoritative servers hold the official records for a specific domain.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net10-mcq-root-referrals',
+            question:
+              'What information does a DNS Root server return when asked for the IP address of app.example.com?',
+            options: [
+              'The final IPv4 address of app.example.com',
+              'A referral pointing to the authoritative name servers responsible for the .com Top-Level Domain (TLD)',
+              'An HTTP 301 redirect to https://example.com',
+              'A TCP RST packet resetting the connection',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Root servers do not store individual host records. They return referrals pointing to the appropriate TLD name servers (.com, .org, etc.).',
+          },
+          {
+            id: 'net10-mcq-auth-servers',
+            question:
+              'What is an "Authoritative Name Server" for a domain in DNS architecture?',
+            options: [
+              'A server that caches previous web searches on a home router',
+              'The designated name server configured by the domain owner that holds the official, master DNS records for that specific zone',
+              'The ISP router that assigns IP addresses via DHCP',
+              'A firewall that blocks port 53 traffic',
+            ],
+            correctIndex: 1,
+            explanation:
+              'An Authoritative Name Server is the definitive source of truth for a domain zone, storing and answering with the actual resource records configured by the domain owner.',
+          },
+        ],
       },
       tasks: [
         {
@@ -145,18 +186,66 @@ export const NET_10_MODULE: ModuleData = {
         summary:
           'Stub resolvers on client endpoints send recursive queries to caching resolvers. Resolvers walk the hierarchy using iterative queries over UDP 53, falling back to TCP 53 when responses exceed buffer limits (TC=1) or during zone transfers.',
         explanation: [
-          '### The Two Query Types',
-          '1. **Recursive Query**: Sent by client stub resolver asking a caching resolver to find the complete answer.',
-          '2. **Iterative Query**: Sent by the recursive resolver to Root, TLD, and Auth servers receiving referrals until reaching the answer.',
+          '### Beat 1: Direct Physical Reality — Why Endpoints Delegate Resolution',
+          'A modern mobile phone or office laptop queries thousands of domain names every hour.',
+          'If every single client device had to directly contact root servers, then TLD servers, and then authoritative servers for every domain lookup, global internet root servers would collapse under petabytes of redundant traffic, and page loads would suffer hundreds of milliseconds of latency.',
           '',
-          '### UDP 53 vs TCP 53',
-          '- **UDP Port 53**: Fast, lightweight single datagram exchange.',
-          '- **TCP Port 53**: Required when response > 512 bytes with TC (Truncated) flag set, or during zone transfers (AXFR).',
+          '### Beat 2: The Core Mechanism — Recursive vs. Iterative Query Flow',
+          'DNS splits the work between two distinct query modes:',
+          '1. **Recursive Query (Client ➔ Recursive Resolver)**: ',
+          '   - The client endpoint runs a lightweight **Stub Resolver**.',
+          '   - It issues a single recursive query to its configured **Recursive Resolver** (e.g. corporate resolver, ISP DNS, or public resolvers like `8.8.8.8` or `1.1.1.1`).',
+          '   - "Recursive" means: *You do the work and return the final answer (or error) to me.*',
+          '2. **Iterative Queries (Recursive Resolver ➔ Namespace Tree)**:',
+          '   - The recursive resolver checks its local cache. If cold, it performs iterative lookups:',
+          '   - Iteration 1: Queries Root server (`.`) ➔ Receives referral to `.com` TLD servers.',
+          '   - Iteration 2: Queries `.com` TLD server ➔ Receives referral to `company.com` auth servers.',
+          '   - Iteration 3: Queries `company.com` auth server ➔ Receives the authoritative answer.',
+          '   - The resolver caches the answer according to its TTL and returns it to the client.',
+          '',
+          '### Transport Rules: UDP 53 vs. TCP 53',
+          '- **UDP Port 53**: The primary transport for DNS queries. Fast, lightweight single-datagram request/reply with zero connection handshake latency.',
+          '- **The 512-Byte Limit & EDNS0**: Classic DNS payloads over UDP were capped at 512 bytes to avoid IPv4 fragmentation. EDNS0 (RFC 6891) allows clients to advertise larger UDP buffer sizes (typically 1232 or 4096 bytes).',
+          '- **TCP Port 53 & The TC (Truncated) Bit**: If a response exceeds the allowed UDP buffer, the server sets the **TC (Truncated) flag** in the DNS header. The client resolver must immediately discard the partial payload and re-issue the query over **TCP port 53**.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          '- **Port 53 TCP Blockage**: Overly restrictive firewalls often permit UDP 53 but mistakenly block TCP 53. When large DNS responses (e.g. DNSSEC records or large TXT records) trigger truncation, clients fail to resolve.',
+          '- **Kaminsky DNS Cache Poisoning**: In 2008, Dan Kaminsky demonstrated how attackers could forge UDP DNS replies by guessing the 16-bit Transaction ID. Modern resolvers mitigate this using **Source Port Randomization** (UDP ports 1024–65535) and cryptographic DNSSEC validation.',
         ],
         keyTakeaway:
           'Clients make recursive queries to resolvers; resolvers make iterative queries down the tree. If responses are truncated (TC=1), clients retry over TCP 53.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net10-mcq-iterative-lookup',
+            question:
+              'What is the fundamental difference between a recursive DNS query and an iterative DNS query?',
+            options: [
+              'Recursive queries use TCP while iterative queries use UDP',
+              'In a recursive query, the contacted server must find the complete final answer; in an iterative query, the contacted server returns referrals to the next best authority without doing the recursion itself',
+              'Recursive queries are only used for reverse IP lookups (PTR)',
+              'Iterative queries can only be resolved inside the local operating system kernel',
+            ],
+            correctIndex: 1,
+            explanation:
+              'A recursive query tasks the receiving server with finding the full answer. An iterative query expects the queried server to either answer with the record or refer the inquirer down the delegation tree.',
+          },
+          {
+            id: 'net10-mcq-dns-transport-port',
+            question:
+              'A DNS client receives a response over UDP port 53 with the TC (Truncated) bit set to 1. How does the client respond?',
+            options: [
+              'It discards the query and reports a DNS resolution error to the browser',
+              'It immediately establishes a TCP connection to port 53 on the same server to fetch the complete response',
+              'It broadcasts an ARP request for the root name server',
+              'It changes its default gateway IP to 8.8.8.8',
+            ],
+            correctIndex: 1,
+            explanation:
+              'RFC 1035 specifies that when a response is truncated (TC=1) due to UDP message size constraints, the resolver must re-issue the query over TCP port 53.',
+          },
+        ],
       },
       tasks: [
         {
@@ -244,20 +333,66 @@ export const NET_10_MODULE: ModuleData = {
         summary:
           'Resource records map names to resources: A (IPv4), AAAA (IPv6), CNAME (canonical alias), MX (mail), and TXT (verification/SPF/DKIM). Under RFC 1034 §3.6.2, a CNAME cannot coexist with any other record of any type for the same owner name; because a zone apex must contain SOA and NS records, a CNAME cannot be placed at the apex. TTL defines the second-by-second caching window on external resolvers.',
         explanation: [
-          '### Essential Record Types',
-          '- **A**: Maps hostname to IPv4 address.',
-          '- **AAAA**: Maps hostname to 128-bit IPv6 address.',
-          '- **CNAME**: Canonical alias to another domain name (never to an IP directly). Under RFC 1034 §3.6.2, no other record can exist for an owner name that has a CNAME (which prevents placing a CNAME at the zone apex, where SOA and NS are mandatory).',
-          '- **MX**: Mail server with numerical priority.',
-          '- **TXT**: Text records used for SPF, DKIM, and domain ownership proof.',
+          '### Beat 1: Direct Physical Reality — Separating Services Under One Name',
+          'A single enterprise domain (e.g. `company.com`) delivers dozens of distinct network services: web traffic over IPv4, modern web traffic over IPv6, enterprise email servers, and email authentication systems (SPF/DKIM).',
+          'DNS separates these functional endpoints through typed **Resource Records (RRs)**.',
           '',
-          '### Time-To-Live (TTL)',
-          'Records include TTL in seconds. Resolvers cache answers until TTL decrements to zero before querying authoritative servers again.',
+          '### Beat 2: The Core Mechanism — Standard Resource Records & The CNAME Rule',
+          'Essential record types include:',
+          '- **A Record**: Maps a hostname to a 32-bit IPv4 address (e.g., `app.company.com ➔ 198.51.100.45`).',
+          '- **AAAA Record (Quad-A)**: Maps a hostname to a 128-bit IPv6 address (e.g., `2001:db8::45`).',
+          '- **CNAME Record (Canonical Name)**: Maps an alias hostname to another canonical domain name (e.g., `www.company.com CNAME company.com`).',
+          '  **The Golden CNAME Rule (RFC 1034 §3.6.2)**: If a CNAME record exists for a name, NO OTHER RECORD of any type can exist for that same name. Because a domain root (zone apex `company.com`) requires Start of Authority (SOA) and NS records, **a CNAME can NEVER be placed at the zone apex**.',
+          '- **MX Record (Mail Exchanger)**: Specifies mail servers with priority preference integers (e.g., `10 mail1.company.com`, `20 mail2.company.com`).',
+          '- **TXT Record**: Arbitrary text strings used for cryptographic email verification (SPF, DKIM, DMARC) and domain ownership verification.',
+          '',
+          '### Time-To-Live (TTL) & Cache Invalidation',
+          'Every DNS record includes an integer **Time-To-Live (TTL)** in seconds:',
+          '- When a recursive resolver fetches a record, it stores it in memory.',
+          '- With every second that passes, the resolver decrements the record’s TTL countdown timer.',
+          '- As long as `TTL > 0`, the resolver answers subsequent client requests immediately from memory without querying the authoritative server.',
+          '- Once `TTL == 0`, the cached entry expires and must be re-fetched.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #112)',
+          'Operational DNS troubleshooting scenarios:',
+          '- **Stale Cache Lockout During Migrations**: If an administrator moves servers while the record has a 24-hour TTL (86,400s), global internet users will continue visiting the dead old server for up to 24 hours. **Best practice**: Lower TTL to 300 seconds (5 minutes) at least 48 hours prior to migration.',
+          '- **Negative Caching (NXDOMAIN Caching)**: RFC 2308 mandates that negative responses (domain does not exist) are also cached, determined by the SOA record’s MINIMUM field.',
+          '- **Flushing Local Resolver Caches**: On Windows, run `ipconfig /displaydns` and `ipconfig /flushdns`. On Linux, run `resolvectl flush-caches` and test queries using `dig +noall +answer <domain>`.',
         ],
         keyTakeaway:
           'CNAME aliases names to names and cannot coexist with other records for the same owner name. TTL controls caching duration on resolvers across the globe.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net10-mcq-cname-apex',
+            question:
+              'Why cannot an administrator configure a CNAME record for the root apex of a domain (e.g. company.com CNAME cdn.provider.net)?',
+            options: [
+              'Because CNAME records can only be created by internet service providers',
+              'Because RFC 1034 §3.6.2 dictates no other record can coexist with a CNAME for the same owner name, and the apex must contain mandatory SOA and NS records',
+              'Because web browsers do not support HTTPS over CNAME records',
+              'Because the zone apex is restricted strictly to TXT records',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Under RFC 1034, a CNAME cannot coexist with any other record for the same owner name. Since a zone apex must have SOA and NS records, placing a CNAME at the apex violates DNS specifications.',
+          },
+          {
+            id: 'net10-mcq-ttl-expiration',
+            question:
+              'A company updates its web server IP address. The previous DNS record had a TTL of 86400 seconds (24 hours). Why do users still reach the old server after 2 hours?',
+            options: [
+              'Because recursive resolvers around the world cache the previous record and will not query the authoritative server again until the 24-hour TTL expires',
+              'Because the root servers permanently blackhole updated records for 7 days',
+              'Because the browser cache stores the IP address inside the local BIOS chip',
+              'Because the web server TCP connection is permanently locked',
+            ],
+            correctIndex: 0,
+            explanation:
+              'Resolvers cache records for the full duration specified by the authoritative TTL. Before the 24-hour timer reaches zero, resolvers serve the cached record without querying authoritative servers.',
+          },
+        ],
       },
       tasks: [
         {
@@ -268,6 +403,7 @@ export const NET_10_MODULE: ModuleData = {
           instructions: [
             'A domain administrator updates their server configuration from an old IP to a new IP.',
             'Answer the judgment questions on record semantics and caching behavior.',
+            'Inspect cached DNS entries and flush stale resolver caches using dual Windows (`ipconfig /flushdns`) and Linux (`resolvectl flush-caches`) diagnostic tools.',
           ],
           type: 'guided',
           primaryTable: '',
@@ -284,6 +420,98 @@ export const NET_10_MODULE: ModuleData = {
             defaultView: 'cache_comparison',
             cacheTtlRemaining: 86400,
             isCached: true,
+          },
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #112 (Dual OS)',
+            description:
+              'Inspect local resolver DNS cache, execute cache flushes, and query authoritative/public resolvers using Windows nslookup and Linux dig.',
+            prompt: 'admin@dns-resolver:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #112: DNS RESOLVER CACHE & PROPAGATION AUDIT',
+              '====================================================================',
+              'Investigating stale DNS records and verifying authoritative TTL caching.',
+              'Supported commands:',
+              '  - Windows: ipconfig /displaydns',
+              '             ipconfig /flushdns',
+              '             nslookup blog.company.com 8.8.8.8',
+              '  - Linux:   resolvectl statistics',
+              '             resolvectl flush-caches',
+              '             dig +noall +answer blog.company.com @8.8.8.8',
+            ].join('\n'),
+            availableCommands: [
+              'ipconfig /displaydns',
+              'ipconfig /flushdns',
+              'nslookup blog.company.com 8.8.8.8',
+              'resolvectl statistics',
+              'resolvectl flush-caches',
+              'dig +noall +answer blog.company.com @8.8.8.8',
+            ],
+            commands: {
+              'ipconfig /displaydns': `Windows IP Configuration
+
+    blog.company.com
+    ----------------------------------------
+    Record Name . . . . . : blog.company.com
+    Record Type . . . . . : 1 (A)
+    Time To Live  . . . . : 82400
+    Data Length . . . . . : 4
+    Section . . . . . . . : Answer
+    A (IPv4) Record . . . : 198.51.100.45`,
+              'ipconfig /flushdns': `Windows IP Configuration
+
+Successfully flushed the DNS Resolver Cache.`,
+              'nslookup blog.company.com 8.8.8.8': `Server:  dns.google
+Address:  8.8.8.8
+
+Non-authoritative answer:
+Name:    blog.company.com
+Address:  198.51.100.45`,
+              'nslookup blog.company.com': `Server:  dns.google
+Address:  8.8.8.8
+
+Non-authoritative answer:
+Name:    blog.company.com
+Address:  198.51.100.45`,
+              'resolvectl statistics': `DNSSEC supported by cache: yes
+Current Cache:
+  Cache Transactions: 1420
+  Cache Hits: 890
+  Cache Misses: 530
+Cache Size: 180 entries`,
+              'resolvectl flush-caches': `Flushed all local DNS caches.`,
+              'dig +noall +answer blog.company.com @8.8.8.8': `blog.company.com.    82400   IN      A       198.51.100.45`,
+              'dig +noall +answer blog.company.com': `blog.company.com.    82400   IN      A       198.51.100.45`,
+            },
+            commandResponses: {
+              'ipconfig /displaydns': `Windows IP Configuration
+
+    blog.company.com
+    ----------------------------------------
+    Record Name . . . . . : blog.company.com
+    Record Type . . . . . : 1 (A)
+    Time To Live  . . . . : 82400
+    Data Length . . . . . : 4
+    Section . . . . . . . : Answer
+    A (IPv4) Record . . . : 198.51.100.45`,
+              'ipconfig /flushdns': `Windows IP Configuration
+
+Successfully flushed the DNS Resolver Cache.`,
+              'nslookup blog.company.com 8.8.8.8': `Server:  dns.google
+Address:  8.8.8.8
+
+Non-authoritative answer:
+Name:    blog.company.com
+Address:  198.51.100.45`,
+              'resolvectl statistics': `DNSSEC supported by cache: yes
+Current Cache:
+  Cache Transactions: 1420
+  Cache Hits: 890
+  Cache Misses: 530
+Cache Size: 180 entries`,
+              'resolvectl flush-caches': `Flushed all caches.`,
+              'dig +noall +answer blog.company.com @8.8.8.8': `blog.company.com.    82400   IN      A       198.51.100.45`,
+            },
           },
           hints: [
             {

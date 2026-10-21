@@ -208,14 +208,19 @@ export interface PacketInspectionTaskContent {
 export interface TerminalScenario {
   hostname?: string;
   userPrompt?: string;
+  prompt?: string;
+  title?: string;
+  description?: string;
   currentIp?: string;
   subnetMask?: string;
   gatewayIp?: string;
   dnsServer?: string;
   macAddress?: string;
   initialLines?: string[];
+  initialOutput?: string | string[];
   initialHistory?: string[];
   commandResponses?: Record<string, string>;
+  commands?: Record<string, string>;
   customResponses?: Record<string, string[]>;
   availableCommands?: string[];
   suggestedCommands?: string[];

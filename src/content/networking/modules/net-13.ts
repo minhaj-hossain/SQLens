@@ -45,23 +45,64 @@ export const NET_13_MODULE: ModuleData = {
         'Explore HTTP request/response architecture, status code families, and the generational leap from HTTP/1.1 to HTTP/2 and HTTP/3.',
       theory: {
         summary:
-          'HTTP methods define actions (GET, POST, PUT, DELETE). Status code families categorize responses (2xx success, 3xx redirect, 4xx client error, 5xx server error). HTTP/2 uses binary framing to multiplex concurrent streams on one TCP stream, while HTTP/3 runs over UDP/QUIC.',
+          'HTTP methods define actions (GET, POST, PUT, DELETE). Status code families categorize responses (2xx success, 3xx redirect, 4xx client error, 5xx server error). HTTP/2 uses binary framing to multiplex concurrent streams on one TCP stream, while HTTP/3 runs over UDP/QUIC to isolate packet drops.',
         explanation: [
-          '### HTTP Methods & Status Codes',
-          '- 2xx: 200 OK, 201 Created.',
-          '- 3xx: 301 Moved Permanently, 304 Not Modified.',
-          '- 4xx: 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found.',
-          '- 5xx: 500 Internal Server Error, 502 Bad Gateway, 503 Unavailable.',
+          '### Beat 1: Direct Physical Reality — The Plaintext Request/Response Cycle',
+          'At the physical socket level, an HTTP/1.1 transaction consists of raw ASCII text lines pushed into a stream-oriented TCP buffer.',
+          'For example: `GET /index.html HTTP/1.1\\r\\nHost: example.com\\r\\n\\r\\n`. The remote server reads until the double CRLF (`\\r\\n\\r\\n`), parses the headers, and sends back ASCII status lines followed by data.',
+          'However, HTTP/1.1 suffers from severe physical concurrency limits: because responses arrive serially on a connection, browsers open up to 6 parallel TCP connections per origin. When a page requests 100 assets, requests must wait in queues behind slower requests, causing **Application Head-of-Line (HoL) Blocking**.',
           '',
-          '### Protocol Generations',
-          '- **HTTP/1.1**: Persistent connections, but Head-of-Line blocking limits request concurrency on a single connection.',
-          '- **HTTP/2**: Multiplexes concurrent streams over 1 TCP connection, eliminating application-level stream blocking, but remains subject to TCP transport-layer Head-of-Line blocking if a packet drops.',
-          '- **HTTP/3**: Operates over UDP/QUIC with independent streams, mitigating TCP cross-stream transport blocking (though byte ordering within an individual stream and shared congestion control remain).',
+          '### Beat 2: The Core Mechanism — Status Code Families & Stream Multiplexing',
+          'HTTP responses are categorized into 5 standardized status code families:',
+          '- **2xx (Success)**: `200 OK` (standard response), `201 Created` (resource generated via POST), `204 No Content`.',
+          '- **3xx (Redirection)**: `301 Moved Permanently` (browser caches target URL), `304 Not Modified` (conditional GET using ETag/Last-Modified).',
+          '- **4xx (Client Error)**: `400 Bad Request` (malformed syntax), `401 Unauthorized` (missing credentials), `403 Forbidden` (authenticated but permission denied), `404 Not Found` (endpoint does not exist).',
+          '- **5xx (Server/Infrastructure Error)**: `500 Internal Server Error` (backend crashed/unhandled exception), `502 Bad Gateway` (reverse proxy like NGINX failed to receive response from upstream backend), `503 Service Unavailable` (server overloaded or in maintenance), `504 Gateway Timeout` (upstream failed to respond before proxy timer expired).',
+          '',
+          '### The Generational Evolution: HTTP/1.1 vs HTTP/2 vs HTTP/3',
+          '1. **HTTP/1.1**: Plaintext ASCII headers, persistent TCP Keep-Alive, but requests must finish serially on each socket.',
+          '2. **HTTP/2**: Splits communication into binary frames (`HEADERS`, `DATA`, `SETTINGS`) tagged with numeric stream IDs. Multiple requests and responses interleave concurrently over a single TCP connection, eliminating application-level HoL blocking.',
+          '3. **HTTP/3 (QUIC)**: Replaces TCP with UDP-based QUIC. Each stream has independent packet delivery and recovery. If a single packet drops, only the affected stream pauses for retransmission, while other concurrent streams continue uninterrupted, mitigating transport-layer HoL blocking.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          'In production web deployments, diagnosing 4xx vs 5xx errors determines operational ownership:',
+          '- If a client sees `403 Forbidden` or `404 Not Found`, the issue is in client routing or authorization policies.',
+          '- If a client sees `502 Bad Gateway`, the reverse proxy (e.g. NGINX on port 443) is working, but the upstream application daemon (e.g. Node.js on port 3000 or PHP-FPM) has crashed or socket file permissions are blocked.',
         ],
         keyTakeaway:
-          'HTTP/2 multiplexes streams over 1 TCP connection; HTTP/3 runs over UDP/QUIC to isolate packet drops to individual streams.',
+          'HTTP status families distinguish client (4xx) from server (5xx) issues; HTTP/2 multiplexes streams over 1 TCP connection while HTTP/3 isolates packet drops over QUIC.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net13-mcq-status-codes',
+            question:
+              'An NGINX reverse proxy attempts to forward an incoming request to an internal backend service, but the backend process is dead and refuses the connection. What status code does NGINX return to the client?',
+            options: [
+              '404 Not Found',
+              '502 Bad Gateway',
+              '401 Unauthorized',
+              '304 Not Modified',
+            ],
+            correctIndex: 1,
+            explanation:
+              '502 Bad Gateway indicates that an intermediate proxy or gateway server received an invalid or failed response (such as a connection refused) from the upstream application server.',
+          },
+          {
+            id: 'net13-mcq-http2-multiplexing',
+            question:
+              'How does HTTP/2 achieve concurrent asset loading without opening multiple parallel TCP connections?',
+            options: [
+              'By encoding all web assets into DNS TXT records',
+              'By breaking requests into binary frames with stream IDs and multiplexing them concurrently over a single TCP connection',
+              'By disabling TLS encryption to speed up frame delivery',
+              'By converting all HTTP requests into UDP broadcasts',
+            ],
+            correctIndex: 1,
+            explanation:
+              'HTTP/2 introduces binary framing, allowing multiple logical streams to be interleaved and transmitted simultaneously across a single shared TCP socket.',
+          },
+        ],
       },
       tasks: [
         {
@@ -152,19 +193,58 @@ export const NET_13_MODULE: ModuleData = {
         summary:
           'PKI pairs public and private keys. Servers present an X.509 certificate containing their public key and Subject Alternative Names (SAN), digitally signed by a Certificate Authority (CA). Browsers validate the signature chain up to pre-installed trusted root CAs.',
         explanation: [
-          '### Asymmetric Cryptography',
-          'The private key stays strictly confidential on the server. The public key is shared inside the digital certificate. Anyone can encrypt for the server, but only the private key can decrypt.',
+          '### Beat 1: Direct Physical Reality — Cleartext Sniffing & The Man-in-the-Middle Danger',
+          'When packets travel over cleartext HTTP (port 80), every intermediate device along the physical route—Wi-Fi access points, ISP routers, transit switches, and packet capture taps—can inspect and alter the raw payload.',
+          'Attackers running Wireshark or `tcpdump` can capture session cookies, passwords, and banking data in plaintext, or inject malicious JavaScript directly into HTTP responses.',
+          'Securing web traffic requires solving two distinct physical problems: **Confidentiality** (encrypting data so eavesdroppers see only random noise) and **Authenticity** (proving you are genuinely talking to your bank and not an imposter router).',
           '',
-          '### Certificate Authorities (CAs)',
-          'CAs cryptographically sign the server certificate. Client operating systems possess a Root CA Store. The browser traces the signature chain to verify authenticity.',
+          '### Beat 2: The Core Mechanism — Asymmetric Cryptography & X.509 Trust Chains',
+          'Public Key Infrastructure (PKI) solves authentication and key establishment through asymmetric math:',
+          '1. **Key Pairs**: The server generates two mathematically linked keys: a **Private Key** (kept strictly confidential on the server) and a **Public Key** (distributed openly inside an X.509 digital certificate).',
+          '2. **Digital Signatures**: To prove ownership of a domain, the server generates a Certificate Signing Request (CSR). A trusted **Certificate Authority (CA)** (e.g. Let’s Encrypt, DigiCert) verifies domain control and cryptographically signs the server certificate using the CA’s own private key.',
+          '3. **Root CA Trust Store**: Client operating systems (Windows, Linux, macOS, iOS) ship with a pre-installed repository of trusted **Root CA certificates**. When your browser connects to an HTTPS website, it traces the signature chain backwards from the server certificate, through intermediate CAs, until it reaches a trusted Root CA in the local trust store.',
+          '4. **Subject Alternative Name (SAN)**: RFC 6125 mandates that the browser verify that the exact Fully Qualified Domain Name (FQDN) in the URL matches one of the entries in the certificate’s Subject Alternative Name (`X509v3 Subject Alternative Name`) field.',
           '',
-          '### Subject Alternative Names (SAN)',
-          'The SAN field enumerates authorized domain hostnames. Mismatching hostnames trigger security warnings.',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          'Common PKI failures encountered in engineering environments include:',
+          '- **`ERR_CERT_COMMON_NAME_INVALID`**: The server certificate is valid and signed by a trusted CA, but its SAN only lists `example.com` and `www.example.com` while the user visited `admin.example.com`.',
+          '- **`SEC_ERROR_UNKNOWN_ISSUER`**: The certificate was signed by a private internal enterprise CA that has not been deployed to the client workstation\'s Root CA store.',
+          '- **`CERT_DATE_INVALID`**: The certificate’s `Not After` expiration timestamp has lapsed, or the client workstation’s system clock is skewed.',
         ],
         keyTakeaway:
-          'Trust is anchored in the client Root CA Store. The browser verifies CA digital signatures and checks that the URL matches the certificate SAN.',
+          'Trust is anchored in the client Root CA Store; browsers verify CA digital signatures and ensure the requested URL matches the certificate SAN.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net13-mcq-pki-keys',
+            question:
+              'In Public Key Infrastructure (PKI) used for HTTPS, which key is openly shared with clients and which key must never leave the server?',
+            options: [
+              'Both keys are shared publicly in DNS records',
+              'The public key is shared inside the X.509 certificate; the private key remains strictly confidential on the server',
+              'The private key is shared with clients; the public key is kept confidential on the server',
+              'Both keys are discarded after the TCP 3-way handshake',
+            ],
+            correctIndex: 1,
+            explanation:
+              'In asymmetric PKI, the public key is openly distributed inside the digital certificate so clients can verify signatures and encrypt data, while the private key is guarded on the server.',
+          },
+          {
+            id: 'net13-mcq-ca-trust',
+            question:
+              'Why does a client web browser accept and trust the authenticity of an X.509 digital certificate presented by a remote web server?',
+            options: [
+              'Because the web server sends a signed letter via physical mail',
+              'Because the certificate signature chain terminates at a trusted Root CA pre-installed in the client OS or browser trust store',
+              'Because the switch ports are configured with 802.1Q tagging',
+              'Because UDP checksum verification guarantees identity',
+            ],
+            correctIndex: 1,
+            explanation:
+              'The client verifies cryptographic signatures hierarchically up to an anchor in its local Root CA store, which is maintained by the operating system or browser vendor.',
+          },
+        ],
       },
       tasks: [
         {
@@ -266,19 +346,56 @@ export const NET_13_MODULE: ModuleData = {
         summary:
           'TLS 1.3 eliminates static RSA key exchange in favor of Ephemeral Diffie-Hellman (ECDHE) for Perfect Forward Secrecy. Key shares are included in the initial ClientHello and ServerHello, establishing encrypted communication in just 1 round trip (1-RTT).',
         explanation: [
-          '### Eliminating Static RSA',
-          'Static RSA allows future attackers who obtain the server private key to retroactively decrypt historical traffic captures.',
+          '### Beat 1: Direct Physical Reality — The Static RSA Vulnerability & 2-RTT Latency',
+          'In legacy TLS 1.2 and earlier implementations, the client frequently encrypted a pre-master secret using the server’s static RSA public key.',
+          'This created a devastating physical security vulnerability: an intelligence agency or network attacker could record all encrypted wire traffic flowing into a data center and store it indefinitely. If the server\'s private key was ever leaked, stolen, or subpoenaed years later, the attacker could retroactively decrypt every single historical session recorded in the past!',
+          'Furthermore, TLS 1.2 required two full round trips (2-RTT) of back-and-forth negotiation before any encrypted HTTP data could be transmitted, adding 100–200ms of initial page load latency.',
           '',
-          '### Perfect Forward Secrecy (PFS)',
-          'With ECDHE, temporary key pairs are generated for each session and discarded immediately. Future private key leaks cannot decrypt past sessions.',
+          '### Beat 2: The Core Mechanism — The 1-RTT Handshake & Ephemeral Diffie-Hellman',
+          'TLS 1.3 (RFC 8446) modernized internet cryptography through fundamental architectural redesigns:',
+          '1. **Mandatory Perfect Forward Secrecy (PFS)**: Static RSA and insecure legacy ciphers (RC4, 3DES, CBC mode) were completely banned. TLS 1.3 mandates **Ephemeral Diffie-Hellman (ECDHE)**: client and server generate temporary, single-use key pairs for every individual session and destroy them immediately after session teardown.',
+          '2. **1-RTT Handshake Architecture**: Instead of exchanging cipher suites first and key shares second, the client speculates on the key group (e.g. X25519) and transmits its ephemeral Diffie-Hellman public key share directly inside the initial **ClientHello**.',
+          '3. **Instant Key Derivation**: The server selects the cipher suite, responds with its own matching **ServerHello** containing its ephemeral key share, and immediately derives the symmetric AEAD (Authenticated Encryption with Associated Data, e.g. AES-GCM or ChaCha20-Poly1305) session keys. Encrypted application traffic begins in just **1 round trip (1-RTT)**.',
           '',
-          '### 1-RTT Handshake',
-          'The client includes its Diffie-Hellman key share directly in ClientHello. The server responds with its share, enabling symmetric AEAD encryption in 1 round trip.',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #115)',
+          'When diagnosing HTTPS negotiation failures, certificate errors, or cipher mismatches in production, engineers rely on dual-platform command-line tools:',
+          '- **Windows PowerShell / curl.exe**: Execute `curl.exe -Iv https://example.com` to inspect the TLS handshake stages, negotiated protocol version (`TLSv1.3`), ALPN negotiation (`h2`), and certificate chain.',
+          '- **Linux CLI / OpenSSL**: Run `openssl s_client -connect example.com:443 -tls1_3` to view the raw cryptographic parameters, cipher suite (`TLS_AES_256_GCM_SHA384`), peer certificate details, and session verification return codes.',
         ],
         keyTakeaway:
-          'TLS 1.3 provides 1-RTT handshakes and mandates Perfect Forward Secrecy via Ephemeral Diffie-Hellman key shares.',
+          'TLS 1.3 establishes symmetric keys in 1-RTT using ECDHE key shares in ClientHello/ServerHello, guaranteeing Perfect Forward Secrecy.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net13-mcq-tls13-1rtt',
+            question:
+              'How does TLS 1.3 reduce handshake latency to a single round trip (1-RTT) compared to TLS 1.2?',
+            options: [
+              'By disabling server certificate validation',
+              'The client speculatively includes its ephemeral Diffie-Hellman key share directly inside the initial ClientHello message',
+              'By sending plaintext HTTP passwords in the TCP SYN packet',
+              'By transmitting all web traffic over ICMP Echo packets',
+            ],
+            correctIndex: 1,
+            explanation:
+              'In TLS 1.3, the client includes its ECDHE key share directly in ClientHello. The server pairs it with its own share in ServerHello, allowing symmetric encryption to begin in 1 round trip.',
+          },
+          {
+            id: 'net13-mcq-forward-secrecy',
+            question:
+              'Why does Ephemeral Diffie-Hellman (ECDHE) provide Perfect Forward Secrecy while static RSA key exchange does not?',
+            options: [
+              'Because ECDHE keys are stored permanently in the server BIOS',
+              'Because ephemeral keys are generated uniquely per session and discarded immediately; future compromise of the server private key cannot decrypt past recorded sessions',
+              'Because static RSA encrypts only the TCP header',
+              'Because ECDHE uses 4-byte IPv4 addresses as encryption keys',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Perfect Forward Secrecy ensures that because ephemeral session keys are destroyed after connection termination, past captured ciphertext remains undecryptable even if the server private key is leaked later.',
+          },
+        ],
       },
       tasks: [
         {
@@ -307,6 +424,102 @@ export const NET_13_MODULE: ModuleData = {
               'TLS 1.3 transmits ECDHE key shares inside ClientHello to establish keys in 1-RTT',
               'Static RSA is eliminated to guarantee Perfect Forward Secrecy against retroactive decryption',
             ],
+          },
+          terminal: {
+            prompt: 'admin@prod-bastion:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #115: TLS 1.3 HANDSHAKE & CERTIFICATE AUDIT',
+              '====================================================================',
+              'Auditing external web endpoint https://example.com for TLS 1.3 cipher',
+              'negotiation, 1-RTT latency, and X.509 certificate trust validation.',
+              'Supported commands:',
+              '  - Windows: curl.exe -Iv https://example.com',
+              '  - Linux:   curl -Iv https://example.com',
+              '             openssl s_client -connect example.com:443 -tls1_3',
+            ].join('\n'),
+            commands: {
+              'curl.exe -Iv https://example.com': `*   Trying 93.184.216.34:443...
+* Connected to example.com (93.184.216.34) port 443
+* ALPN: offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / RSASSA-PSS
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=example.com
+*  start date: Jan 15 00:00:00 2026 GMT
+*  expire date: Jan 15 23:59:59 2027 GMT
+*  subjectAltName: host "example.com" matched cert's "example.com"
+*  issuer: C=US, O=DigiCert Inc, CN=DigiCert Global Root G2
+*  SSL certificate verify ok.
+> GET / HTTP/2
+> Host: example.com
+> User-Agent: curl/8.4.0
+< HTTP/2 200 
+< content-type: text/html; charset=UTF-8
+< server: ECS (iad/182A)`,
+              'curl -Iv https://example.com': `*   Trying 93.184.216.34:443...
+* Connected to example.com (93.184.216.34) port 443
+* ALPN: offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / RSASSA-PSS
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: CN=example.com
+*  start date: Jan 15 00:00:00 2026 GMT
+*  expire date: Jan 15 23:59:59 2027 GMT
+*  subjectAltName: host "example.com" matched cert's "example.com"
+*  issuer: C=US, O=DigiCert Inc, CN=DigiCert Global Root G2
+*  SSL certificate verify ok.
+> GET / HTTP/2
+> Host: example.com
+> User-Agent: curl/8.5.0
+< HTTP/2 200 
+< content-type: text/html; charset=UTF-8
+< server: ECS (iad/182A)`,
+              'openssl s_client -connect example.com:443 -tls1_3': `CONNECTED(00000003)
+---
+Certificate chain
+ 0 s:CN = example.com
+   i:C = US, O = DigiCert Inc, CN = DigiCert Global Root G2
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIFazCCA1OgAwIBAgIQD6oU4vS5bVpL8Xq4rWn8JzANBgkqhkiG9w0BAQsFADBL
+... [X.509 PEM Certificate Data Truncated] ...
+-----END CERTIFICATE-----
+subject=CN = example.com
+issuer=C = US, O = DigiCert Inc, CN = DigiCert Global Root G2
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 3142 bytes and written 384 bytes
+Verification: OK
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Server public key is 2048 bit
+Secure Renegotiation IS NOT supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 0 (ok)`,
+            },
           },
           hints: [
             {
