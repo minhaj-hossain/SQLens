@@ -73,8 +73,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 1, title: 'Stage 1: Shadow the Master' },
       kind: 'predict',
       say: [
-        "Notice it said `transmit failed. General failure.` Our computer couldn't even launch the knock out the door! Something is stopping the signal on our own PC.",
-        "Look at that line: `Media State . . . : Media disconnected`. In computer hardware, what does 'Media' refer to?",
+        "Notice the terminal output: `PING: transmit failed. General failure.` with 100% packet loss! The test message couldn't even leave Computer A.",
+        "In networking, data requires a physical path (called 'media') to travel. What does 'Media' refer to?",
       ],
       spotlight: 'cable',
       revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
@@ -84,7 +84,7 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
           label: 'The physical network cable, connector, or electrical link path',
           isCorrect: true,
           feedback:
-            "Right! 'Media' is the physical transmission medium (copper, fiber, or radio waves). 'Disconnected' means our network card senses no electrical link pulse. Our cable is unplugged!",
+            "Right! 'Media' is the physical transmission path (like copper wire). Because no cable is connected, the network card has nowhere to send electrical signals!",
         },
         {
           id: 'opt-media-software',
@@ -94,9 +94,9 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
         },
         {
           id: 'opt-media-router',
-          label: 'The remote router in the server room',
+          label: 'A remote server on the Internet',
           isCorrect: false,
-          feedback: "The router is a node; 'media' is the physical path that connects us to it.",
+          feedback: "Servers are destinations; 'media' is the physical path that connects us.",
         },
       ],
       whyOptions: [
@@ -136,8 +136,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 3, title: 'Stage 1: Shadow the Master' },
       kind: 'predict',
       say: [
-        'Now that the wire is connected, `ipconfig` shows our PC is `192.168.1.10` with mask `255.255.255.0`.',
-        'If we wanted to reach `192.168.2.5`, is it on our local street or outside?',
+        "The cable is plugged in, and the port LED turned green: `[LINK: 1Gbps UP]`!",
+        "Computer A is `192.168.1.10` and Computer B is `192.168.1.1` (they both share the `192.168.1` local network). If Computer A tried to reach `192.168.2.5`, is it on our local street or outside?",
       ],
       spotlight: 'terminal',
       revealedParts: ['host-a', 'cable', 'switch-sw1', 'router-r1', 'terminal'],
@@ -147,21 +147,21 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
           label: 'It is on a different street because the third number is 2, not 1',
           isCorrect: true,
           feedback:
-            'Exactly right! Because the third number is different, 192.168.2.5 is outside our local street. But 192.168.1.1 shares 192.168.1, so it is on-link (a direct neighbor).',
+            'Exactly right! Because the third number is different, 192.168.2.5 is outside our local street. But 192.168.1.1 shares 192.168.1, so it is our direct neighbor on the same wire.',
         },
         {
           id: 'opt-same-subnet',
           label: 'It is on our local street because both start with 192.168',
           isCorrect: false,
           feedback:
-            'Under mask 255.255.255.0, all three numbers must match for local on-link delivery!',
+            'For local delivery, all three prefix numbers (192.168.1) must match!',
         },
         {
           id: 'opt-unknown-subnet',
-          label: 'Subnet masks only apply to public Internet servers',
+          label: 'Subnet numbers only apply to public Internet servers',
           isCorrect: false,
           feedback:
-            'Subnet masks apply to every IPv4 interface to determine whether destinations are local or remote.',
+            'Subnet numbers apply to every computer to determine whether destinations are local or remote.',
         },
       ],
       whyOptions: [
@@ -187,8 +187,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 2, stepIndex: 4, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
       say: [
-        "Before sending another ping, let's see which local devices this PC already knows about.",
-        'Type `arp -a` and press Enter.',
+        "Before we ping again, remember Scene 3: to send data, Computer A needs to know Computer B's hardware MAC address.",
+        "Let's see if Computer A already has Computer B in its local address book. Type `arp -a` and press Enter.",
       ],
       actionPrompt: 'arp -a',
       actionTargetPart: 'terminal',
@@ -201,8 +201,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 2, stepIndex: 5, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
       say: [
-        'Watch what happens when we ping now. The simulator will pause in flight so you can see each step.',
-        'Type `ping 192.168.1.1` and press Enter.',
+        "The address book is empty! Now watch what happens when we ping: Computer A will send test signals across the copper wire to Computer B.",
+        "Type `ping 192.168.1.1` and press Enter.",
       ],
       actionPrompt: 'ping 192.168.1.1 (Slow-Motion)',
       actionTargetPart: 'terminal',
@@ -215,8 +215,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 2, stepIndex: 6, title: 'Stage 2: Guided Hop Traversal' },
       kind: 'do',
       say: [
-        "Now that communication succeeded, let's verify what our PC recorded in its address book.",
-        'Type `arp -a` and press Enter.',
+        "The ping succeeded! 4 packets sent, 4 received (0% loss) across the physical cable.",
+        "Now let's check Computer A's address book again to see what it learned during the ping. Type `arp -a` and press Enter.",
       ],
       actionPrompt: 'arp -a',
       actionTargetPart: 'terminal',
@@ -229,8 +229,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 3, stepIndex: 7, title: 'Stage 3: Inspect Outer Packaging' },
       kind: 'predict',
       say: [
-        'Look at the Destination MAC on the envelope (`00-1A-2B-3C-4D-01`).',
-        'Where did our PC get this physical hardware address?',
+        "Look at the Frame Inspector below! Computer A stamped the outer envelope with Computer B's Destination MAC: `00-1A-2B-3C-4D-01`.",
+        "Where did Computer A get this physical hardware MAC address?",
       ],
       spotlight: 'frame-inspector',
       revealedParts: [
@@ -248,20 +248,20 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
           label: 'From the dynamic ARP address book entry we verified in Beat 7',
           isCorrect: true,
           feedback:
-            'Brilliant! Even though ping targeted IP 192.168.1.1, the network card stamped the outer Ethernet envelope with Router R1 hardware MAC address learned dynamically via ARP!',
+            "Brilliant! Even though ping targeted IP 192.168.1.1, Computer A wrapped the message in an Ethernet envelope addressed to Computer B's hardware MAC address (00-1A-2B-3C-4D-01)!",
         },
         {
           id: 'opt-mac-guessed',
           label: 'It guessed it randomly by translating the IP numbers',
           isCorrect: false,
           feedback:
-            'IP addresses do not reveal hardware MACs; ARP had to discover it dynamically!',
+            'IP addresses do not reveal hardware MACs; the network card had to discover it automatically over the wire!',
         },
         {
           id: 'opt-mac-hardcoded',
           label: 'Windows comes pre-installed with every office MAC address',
           isCorrect: false,
-          feedback: 'MAC addresses are discovered dynamically through local network broadcasts.',
+          feedback: 'MAC addresses are discovered dynamically over the local wire, not pre-installed.',
         },
       ],
       whyOptions: [
@@ -419,7 +419,7 @@ export const NET_01_MODULE: ModuleData = {
           {
             id: 'net01-mcq-media-disconnected',
             question:
-              'A user types "ping 192.168.1.1" on Windows and receives "PING: transmit failed. General failure. Media State: Media disconnected". What layer is failing?',
+              'A user types "ping 192.168.1.1" on Windows and receives "PING: transmit failed. General failure." with 100% packet loss because the cable is unplugged. What layer is failing?',
             options: [
               'Layer 7 Application Layer because the DNS server is offline',
               'Layer 3 Network Layer because the IP address has a subnet mask typo',
@@ -428,7 +428,7 @@ export const NET_01_MODULE: ModuleData = {
             ],
             correctIndex: 2,
             explanation:
-              '"Media disconnected" is reported directly by the NIC driver at Layer 1 when physical continuity or electrical carrier pulses are not detected on the physical port.',
+              'When the physical cable is unplugged, the network card senses no electrical link carrier at Layer 1 (Physical Layer), so it cannot transmit signals onto the wire.',
           },
         ],
       },
