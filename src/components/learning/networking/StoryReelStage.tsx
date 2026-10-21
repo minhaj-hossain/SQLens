@@ -185,11 +185,14 @@ export const StoryReelStage: React.FC<StoryReelStageProps> = ({
         {/* SCENE 1: Isolated Computer */}
         {scene.id === 'scene-1' && (
           <div className="relative flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
-            <div className="relative p-5 rounded-2xl bg-zinc-900/90 border-2 border-cyan-400/60 shadow-[0_0_35px_rgba(6,182,212,0.25)]">
+            {/* Clean status badge positioned directly above the device */}
+            <div className="mb-3 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-[11px] font-mono text-rose-300 flex items-center gap-1.5 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+              <span>No Physical Link</span>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-zinc-900/90 border-2 border-cyan-400/60 shadow-[0_0_35px_rgba(6,182,212,0.25)]">
               <span className="text-5xl">💻</span>
-              <div className="absolute -top-3 -right-3 px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-[10px] font-mono text-rose-300 animate-pulse">
-                No Physical Link
-              </div>
             </div>
             <span className="mt-3 font-mono text-xs font-bold text-zinc-200">Computer A (Isolated)</span>
             <span className="text-[11px] font-mono text-zinc-500 mt-0.5">Physical Link: Disconnected</span>
@@ -275,50 +278,40 @@ export const StoryReelStage: React.FC<StoryReelStageProps> = ({
             </div>
           </div>
 
-          {/* Bidirectional Navigation Controls */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-            <div className="flex items-center gap-2">
-              {/* PREVIOUS BUTTON */}
-              <button
-                type="button"
-                onClick={handlePrev}
-                disabled={currentSceneIdx === 0}
-                aria-label="Previous Scene (Left Arrow or Backspace)"
-                className={`px-3 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
-                  currentSceneIdx > 0
-                    ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 cursor-pointer active:scale-95'
-                    : 'bg-zinc-900 text-zinc-600 border border-zinc-800/60 cursor-not-allowed opacity-50'
-                }`}
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                <span>Back</span>
-                <span className="text-[9px] text-zinc-500 hidden md:inline">←</span>
-              </button>
+          {/* Clean Bidirectional Navigation Controls */}
+          <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+            {/* PREVIOUS BUTTON */}
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={currentSceneIdx === 0}
+              aria-label="Previous Scene (Left Arrow or Backspace)"
+              className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
+                currentSceneIdx > 0
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 cursor-pointer active:scale-95'
+                  : 'bg-zinc-900/50 text-zinc-600 border border-zinc-800/40 cursor-not-allowed opacity-40'
+              }`}
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>← Back</span>
+            </button>
 
-              {/* NEXT / ENTER LAB BUTTON */}
-              <button
-                type="button"
-                onClick={handleNext}
-                aria-label={
-                  currentSceneIdx < NET_01_STORY_SCENES.length - 1
-                    ? 'Next Scene (Space or Right Arrow)'
-                    : 'Enter Workplace Lab'
-                }
-                className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5"
-              >
-                <span>
-                  {currentSceneIdx < NET_01_STORY_SCENES.length - 1 ? 'Continue' : 'Enter Workplace Lab'}
-                </span>
-                <span className="text-[9px] bg-black/20 px-1.5 py-0.5 rounded text-zinc-900 font-bold hidden sm:inline">
-                  Space ➔
-                </span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <span className="text-[10px] font-mono text-zinc-400">
-              Navigation: <kbd className="px-1 rounded bg-zinc-800 text-zinc-300">← Back</kbd> / <kbd className="px-1 rounded bg-zinc-800 text-zinc-300">Space →</kbd>
-            </span>
+            {/* NEXT / ENTER LAB BUTTON */}
+            <button
+              type="button"
+              onClick={handleNext}
+              aria-label={
+                currentSceneIdx < NET_01_STORY_SCENES.length - 1
+                  ? 'Next Scene (Space or Right Arrow)'
+                  : 'Enter Workplace Lab'
+              }
+              className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            >
+              <span>
+                {currentSceneIdx < NET_01_STORY_SCENES.length - 1 ? 'Space →' : 'Enter Workplace Lab ➔'}
+              </span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>

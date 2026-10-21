@@ -271,8 +271,15 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
           </div>
         </div>
 
-        {/* Live Hardware Telemetry Pills */}
-        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+        {/* Hardware Telemetry: Visible only in Workplace Lab mode; kept accessible (sr-only) in Story Reel mode */}
+        <div
+          className={
+            activeMode === 'workbench'
+              ? 'flex flex-wrap items-center gap-2 font-mono text-xs'
+              : 'sr-only'
+          }
+          aria-label="Workstation Hardware Telemetry"
+        >
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700/60">
             <Monitor className="w-3.5 h-3.5 text-zinc-400" />
             <span className="text-zinc-300">Acme-PC-01</span>
@@ -305,32 +312,6 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               {mentorState.beatIndex + 1} / {script.beats.length}
             </span>
           </div>
-
-          {/* Mode Selector Tabs: Story Reel vs Workplace Lab */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono ml-auto">
-            <button
-              onClick={() => setActiveMode('reel')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
-                activeMode === 'reel'
-                  ? 'bg-cyan-500 text-black font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <span>🎬</span>
-              <span>Story Reel</span>
-            </button>
-            <button
-              onClick={() => setActiveMode('workbench')}
-              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
-                activeMode === 'workbench'
-                  ? 'bg-emerald-500 text-black font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <span>💻</span>
-              <span>Workplace Lab</span>
-            </button>
-          </div>
         </div>
       </header>
 
@@ -340,16 +321,6 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
       {activeMode === 'reel' ? (
         <div className="space-y-4">
           <StoryReelStage onComplete={() => setActiveMode('workbench')} />
-          <div className="flex justify-between items-center px-2 text-xs font-mono text-zinc-400">
-            <span>Concept Discovery: Machine Isolation ➔ Copper Medium ➔ Factory MAC</span>
-            <button
-              onClick={() => setActiveMode('workbench')}
-              className="text-cyan-400 hover:underline flex items-center gap-1"
-            >
-              <span>Jump to Workplace Lab</span>
-              <span>➔</span>
-            </button>
-          </div>
         </div>
       ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start min-w-0">
