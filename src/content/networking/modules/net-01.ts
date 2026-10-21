@@ -58,8 +58,9 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 0, title: 'Stage 1: Shadow the Master' },
       kind: 'do',
       say: [
-        "In the Concept Story Reel, we saw that a solitary computer is isolated without a physical wire, and every NIC has a permanent factory MAC address (00-1A-2B-3C-4D-10). Here at Acme-PC-01, our user cannot reach the network. Let's test the connection.",
-        "Type `ping 192.168.1.1` and press Enter. (Tap the suggestion chip below to insert it).",
+        "Welcome to your first workplace mission! As an IT technician responding to Ticket #1042, our coworker at Computer A (`Acme-PC-01`) reports they cannot connect to Computer B (`192.168.1.1`).",
+        "In IT, our first step is always to verify the issue using `ping`. This command sends a small test message across the network to check whether the target computer can respond.",
+        "Let's test the connection from Computer A to Computer B. Type `ping 192.168.1.1` and press Enter.",
       ],
       actionPrompt: 'ping 192.168.1.1',
       actionTargetPart: 'terminal',
@@ -121,8 +122,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 2, title: 'Stage 1: Shadow the Master' },
       kind: 'do',
       say: [
-        'Look behind Workstation-01. The Ethernet cable is completely unplugged.',
-        "Click the cable (or press Enter on it) to plug it into the PC's port.",
+        'Look at the workbench above: the Cat6 cable between Computer A and Computer B is completely unplugged on the floor!',
+        "Click the RJ-45 plug to seat the cable into Computer A's network port.",
       ],
       actionPrompt: 'Seat Ethernet Cable',
       actionTargetPart: 'cable',
