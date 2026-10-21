@@ -266,7 +266,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <span>Host A Cannot Reach Default Gateway (192.168.1.1)</span>
             </h1>
             <span className="text-[11px] text-zinc-400 font-mono">
-              Reported by: Engineering Dept • Priority: High • Assigned: Junior NOC Tech (You)
+              Workplace Lab: Apply Story Reel Concepts to Restore Physical Link &amp; Verify Hardware MAC
             </span>
           </div>
         </div>

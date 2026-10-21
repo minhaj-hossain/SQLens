@@ -60,67 +60,52 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         style={{ backgroundImage: `url('/networking/rack-datacenter.jpg')` }}
       />
 
-      {/* Top Telemetry Header & Theme / Sound Controls */}
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-white/10 gap-2">
-        <div className="flex items-center gap-2">
+      {/* Top Telemetry Header & Sound Controls */}
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-3 border-b border-white/10 gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div
-            className={`w-2.5 h-2.5 rounded-full ${
+            className={`w-2 h-2 rounded-full ${
               isCableSeated
-                ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]'
-                : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-pulse'
+                ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] animate-pulse'
             }`}
           />
           <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-zinc-100 flex items-center gap-2">
             Acme Office • Physical Layer 1 Canvas
-            <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-sans font-normal bg-white/5 border border-white/10 text-zinc-300">
-              Interactive Hardware Simulator
-            </span>
           </h3>
-        </div>
-
-        {/* Quick Toolbar: Theme & Sound Toggles + Subnet Info */}
-        <div className="flex items-center gap-2 text-[11px] font-mono">
-          {/* Subnet Badge */}
-          <span className="px-2 py-0.5 rounded bg-zinc-900/90 border border-zinc-700/60 text-zinc-200">
-            192.168.1.0/24
+          <span
+            className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+              isCableSeated
+                ? 'bg-emerald-950/60 border-emerald-500/30 text-emerald-300'
+                : 'bg-rose-950/60 border-rose-500/30 text-rose-300'
+            }`}
+          >
+            {isCableSeated ? 'Link Carrier: UP' : 'Link Carrier: OFF (Unplugged)'}
           </span>
-
-          {/* Theme Mode Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            title={`Switch to ${isCyber ? 'Midnight Minimalist' : 'Frosted Cyber-Glass'}`}
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 transition-colors"
-          >
-            <Palette className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-[10px] hidden md:inline">
-              {isCyber ? 'Cyber-Glass' : 'Midnight Minimal'}
-            </span>
-          </button>
-
-          {/* Audio Synthesizer Mute Toggle */}
-          <button
-            type="button"
-            onClick={toggleSound}
-            title={soundEnabled ? 'Mute Mechanical Sounds' : 'Enable Mechanical Sounds'}
-            className="p-1 rounded bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 transition-colors"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-            ) : (
-              <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
-            )}
-          </button>
         </div>
+
+        {/* Audio Synthesizer Mute Toggle */}
+        <button
+          type="button"
+          onClick={toggleSound}
+          title={soundEnabled ? 'Mute Mechanical Audio FX' : 'Enable Mechanical Audio FX'}
+          className="self-end sm:self-auto p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 transition-colors"
+        >
+          {soundEnabled ? (
+            <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+          ) : (
+            <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
+          )}
+        </button>
       </div>
 
-      {/* Main 3-Node Physical Flow */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-11 items-center gap-3 py-2">
+      {/* Main 3-Node Physical Flow (Clean, Fluid Flex Row that never collides) */}
+      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-3 py-2 w-full">
         {/* Node 1: Acme-PC-01 (Host A Workstation) */}
         <div
-          className={`md:col-span-3 flex flex-col items-center ${cardClass} rounded-xl p-3 relative group`}
+          className={`flex-1 w-full md:w-auto min-w-[130px] max-w-full md:max-w-[200px] flex flex-col items-center ${cardClass} rounded-xl p-3 relative group`}
         >
-          {/* Hardware Header & Zoom Button */}
+          {/* Hardware Header */}
           <div className="w-full flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5">
             <div className="flex flex-col">
               <span className="text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -129,19 +114,11 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               </span>
               <span className="text-[9px] font-mono text-zinc-400">Endpoint Client (Host A)</span>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsNicModalOpen(true)}
-              className="flex items-center gap-1 text-[9px] font-mono text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/80 px-2 py-0.5 rounded border border-cyan-500/40 transition-colors shadow-sm"
-            >
-              <ZoomIn className="w-3 h-3" />
-              <span>Zoom NIC Chip</span>
-            </button>
           </div>
 
           {/* Workstation PC Avatar with Glass Icon */}
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-2 shadow-inner group-hover:scale-105 transition-transform">
-            <Monitor className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-2 shadow-inner group-hover:scale-105 transition-transform">
+            <Monitor className="w-5 h-5" />
           </div>
 
           <span className="font-mono text-xs font-bold text-zinc-100">Acme-PC-01</span>
@@ -149,7 +126,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
           <span className="text-[9px] text-zinc-500 font-mono">00-1A-2B-3C-4D-10</span>
 
           {/* PC NIC Port & LED */}
-          <div className="mt-3 w-full pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono px-1">
+          <div className="mt-2.5 w-full pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono px-0.5">
             <span className="text-zinc-400">Port eth0:</span>
             <div className="flex items-center gap-1.5">
               <span
@@ -168,25 +145,23 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               </span>
             </div>
           </div>
+
+          {/* Zoom NIC Chip Button */}
+          <button
+            type="button"
+            onClick={() => setIsNicModalOpen(true)}
+            className="mt-2 w-full flex items-center justify-center gap-1 text-[9px] font-mono text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/60 py-1 rounded border border-cyan-500/30 transition-colors shadow-sm"
+          >
+            <ZoomIn className="w-3 h-3" />
+            <span>Zoom NIC Chip</span>
+          </button>
         </div>
 
         {/* Cable Connection 1 (Host A -> SW1) */}
-        <div className="md:col-span-1 flex flex-col items-center justify-center py-2 relative">
-          <div className="flex flex-col items-center mb-1 text-center">
-            <span className="text-[10px] font-mono font-bold text-cyan-300 flex items-center gap-1">
-              <span>🔌</span>
-              <span>Cat6 Cable</span>
-            </span>
-            <span
-              className={`text-[8px] font-mono px-1 py-0.2 rounded border ${
-                isCableSeated
-                  ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/30'
-                  : 'text-amber-400 bg-amber-950/60 border-amber-500/30'
-              }`}
-            >
-              {isCableSeated ? 'Seated' : 'Unplugged'}
-            </span>
-          </div>
+        <div className="shrink-0 flex flex-col items-center justify-center py-1">
+          <span className="text-[9px] font-mono font-bold text-cyan-300 mb-1">
+            🔌 Cat6 Cable
+          </span>
           <RealisticRj45Cable
             isPlugged={isCableSeated}
             onToggle={handleToggle}
@@ -209,14 +184,14 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         </div>
 
         {/* Node 2: Acme-SW-01 (Access Switch) */}
-        <div className="md:col-span-3 flex flex-col items-center w-full">
-          <div className="w-full flex items-center justify-between px-2 pb-1 text-[11px] font-mono">
-            <span className="font-bold text-amber-300 flex items-center gap-1.5">
+        <div className="flex-1 w-full md:w-auto min-w-[140px] max-w-full md:max-w-[210px] flex flex-col items-center">
+          <div className="w-full flex items-center justify-between px-1 pb-1 text-[10px] font-mono">
+            <span className="font-bold text-amber-300 flex items-center gap-1">
               <span>🎛️</span>
               <span>Network Switch</span>
             </span>
-            <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900/80 px-1.5 py-0.5 rounded border border-zinc-700/50">
-              Layer 2 Forwarder
+            <span className="text-[9px] font-mono text-zinc-400">
+              Layer 2
             </span>
           </div>
           <RealisticSwitchChassis
@@ -251,16 +226,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         </div>
 
         {/* Link 2: Switch to Router (Permanent Office Backbone with Flowing Packets) */}
-        <div className="md:col-span-1 flex flex-col items-center justify-center py-2">
-          <div className="flex flex-col items-center mb-1 text-center">
-            <span className="text-[10px] font-mono font-bold text-emerald-300 flex items-center gap-1">
-              <span>⚡</span>
-              <span>Backbone</span>
-            </span>
-            <span className="text-[8px] font-mono text-zinc-400">
-              Gigabit Trunk
-            </span>
-          </div>
+        <div className="shrink-0 w-12 flex flex-col items-center justify-center py-1">
+          <span className="text-[9px] font-mono font-bold text-emerald-300 mb-1">
+            ⚡ Backbone
+          </span>
           <RealisticWireBus
             isConnected={isCableSeated}
             isTransmitting={isCableSeated}
@@ -272,23 +241,17 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
 
         {/* Node 3: Acme-RTR-01 (Gateway Router) */}
         <div
-          className={`md:col-span-3 flex flex-col items-center ${cardClass} rounded-xl p-3 relative`}
+          className={`flex-1 w-full md:w-auto min-w-[130px] max-w-full md:max-w-[200px] flex flex-col items-center ${cardClass} rounded-xl p-3 relative`}
         >
           <div className="w-full flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-mono font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                <span>🌐</span>
-                <span>Gateway Router</span>
-              </span>
-              <span className="text-[9px] font-mono text-zinc-400">Subnet Exit (Layer 3)</span>
-            </div>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-[9px] font-mono text-emerald-300">
-              Dual-NIC L3
+            <span className="text-[11px] font-mono font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+              <span>🌐</span>
+              <span>Gateway Router</span>
             </span>
           </div>
 
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2 shadow-inner">
-            <Server className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-2 shadow-inner">
+            <Server className="w-5 h-5" />
           </div>
 
           <span className="font-mono text-xs font-bold text-zinc-100">Acme-RTR-01</span>
@@ -296,7 +259,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
           <span className="text-[9px] text-zinc-500 font-mono">00-1A-2B-3C-4D-01</span>
 
           {/* Router Port */}
-          <div className="mt-3 w-full pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono px-1">
+          <div className="mt-2.5 w-full pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono px-0.5">
             <span className="text-zinc-400">Port gi0/0:</span>
             <span className="text-emerald-400 font-bold">[LINK: 1Gbps UP]</span>
           </div>

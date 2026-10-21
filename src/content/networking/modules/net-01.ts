@@ -58,7 +58,7 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 0, title: 'Stage 1: Shadow the Master' },
       kind: 'do',
       say: [
-        "We are at Workstation-01. Our user reports they cannot connect to the office router at 192.168.1.1. Let's test the connection.",
+        "In the Concept Story Reel, we saw that a solitary computer is isolated without a physical wire. Here at Acme-PC-01, our user cannot reach the network. Let's test the connection.",
         "Type `ping 192.168.1.1` and press Enter. (Tap the suggestion chip below to insert it).",
       ],
       actionPrompt: 'ping 192.168.1.1',

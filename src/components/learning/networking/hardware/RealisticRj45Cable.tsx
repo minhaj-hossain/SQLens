@@ -45,13 +45,13 @@ export const RealisticRj45Cable: React.FC<RealisticRj45CableProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         aria-label={`${label}. Status: ${isPlugged ? 'Seated in socket' : 'Unplugged'}. Click to ${isPlugged ? 'unplug' : 'plug into socket'}.`}
-        className={`relative p-2 rounded-xl border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+        className={`relative p-2 rounded-xl border transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 flex flex-col items-center gap-1 ${
           isPlugged
-            ? 'bg-emerald-950/20 border-emerald-500/40 hover:bg-emerald-900/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-            : 'bg-amber-950/20 border-amber-500/50 hover:bg-amber-900/30 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+            ? 'bg-emerald-950/30 border-emerald-500/50 hover:bg-emerald-900/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+            : 'bg-amber-950/30 border-amber-500/60 hover:bg-amber-900/40 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.25)]'
         } ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer active:scale-95'}`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-1">
           {/* SVG RJ-45 Modular Connector (Photorealistic Vector) */}
           <svg
             width="56"
@@ -185,32 +185,27 @@ export const RealisticRj45Cable: React.FC<RealisticRj45CableProps> = ({
           </svg>
 
           {/* Connection Text Status */}
-          <div className="flex flex-col text-left">
-            <span className="text-[11px] font-mono font-bold text-zinc-100 flex items-center gap-1.5">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isPlugged
-                    ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
-                    : 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)] animate-ping'
-                }`}
-              />
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isPlugged
+                  ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]'
+                  : 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)] animate-ping'
+              }`}
+            />
+            <span
+              className={`text-[9px] font-mono font-bold tracking-tight ${
+                isPlugged ? 'text-emerald-300' : 'text-amber-300'
+              }`}
+            >
               {isPlugged ? 'LINK 1Gbps SEATED' : 'DISCONNECTED'}
-            </span>
-            <span className="text-[9px] font-mono text-zinc-400">
-              {isPlugged ? 'Click to Unplug Cat6' : 'Click to Plug RJ-45'}
             </span>
           </div>
         </div>
-      </button>
 
-      {/* Wire Pin Spec Tooltip */}
-      <div className="mt-1 flex items-center gap-1.5 text-[9px] font-mono text-zinc-400">
-        <span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">
-          8P8C T568B
-        </span>
-        <span className="text-zinc-500">•</span>
-        <span className="text-zinc-400">1000BASE-T Full Duplex</span>
-      </div>
+        {/* Screen Reader & Test Parity Tag */}
+        <span className="sr-only">8P8C T568B 1000BASE-T Full Duplex</span>
+      </button>
     </div>
   );
 };
