@@ -36,6 +36,8 @@ export const NET_08_MODULE: ModuleData = {
     // ─────────────────────────────────────────────────────
     // Concept 1: Why NAT Exists & Address Terminology (C30a)
     // ─────────────────────────────────────────────────────
+    // Concept 1: Why NAT Exists & Address Terminology (C30a)
+    // ─────────────────────────────────────────────────────
     {
       id: 'why-nat-and-terminology',
       order: 1,
@@ -46,28 +48,69 @@ export const NET_08_MODULE: ModuleData = {
         summary:
           'Because IPv4 only provides 4.3 billion addresses, the global internet ran out of unallocated address blocks. NAT enables an entire organization or home network to share one public IP. To discuss NAT accurately, network engineers use standardized Inside/Outside terminology.',
         explanation: [
-          '### The IPv4 Exhaustion Crisis',
-          'With over 15 billion connected devices worldwide today, IPv4’s 32-bit address space ($2^{32} \\approx 4.29$ billion) is vastly insufficient for every device to have a unique public address.',
+          '### Beat 1: Direct Physical Reality — The IPv4 Depletion Wall',
+          'The IPv4 protocol defines a 32-bit address field, yielding an absolute theoretical maximum of $2^{32} \\approx 4,294,967,296$ unique addresses.',
+          'With tens of billions of smartphones, laptops, IoT gadgets, and cloud instances online today, the global pool of unallocated IPv4 addresses (managed by IANA and the Regional Internet Registries) was officially exhausted in 2011.',
           '',
-          'In 1994, the IETF introduced two complementary technologies as a temporary bridge to IPv6:',
-          '1. **RFC 1918 Private Addressing**: Dedicated three address blocks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) for internal use. Internet service providers (ISPs) drop these prefixes by default.',
-          '2. **RFC 1631 / RFC 3022 Network Address Translation (NAT)**: A gateway router translates private source IPs into a public, routable IP before forwarding packets to the internet.',
+          'To prevent the internet from grinding to a halt while the world transitioned toward IPv6, two critical RFC standards were deployed:',
+          '1. **RFC 1918 Private Address Spaces**: Three address blocks were reserved strictly for internal private networks:',
+          '   - `10.0.0.0/8` (10.0.0.0 – 10.255.255.255, 16.7 million hosts)',
+          '   - `172.16.0.0/12` (172.16.0.0 – 172.31.255.255, 1.04 million hosts)',
+          '   - `192.168.0.0/16` (192.168.0.0 – 192.168.255.255, 65,536 hosts)',
+          '   Internet Service Providers (ISPs) configure their core BGP routers to **immediately drop** any packets carrying RFC 1918 source or destination addresses. They are non-routable on the public internet.',
+          '2. **RFC 1631 / RFC 3022 Network Address Translation (NAT)**: Gateway routers at the network perimeter rewrite non-routable private addresses into globally unique public IP addresses before packets enter the internet wire.',
           '',
-          '### Standard NAT Terminology',
-          'The networking industry (formalized by Cisco and IETF) defines four address quadrants:',
-          '- **Inside Local**: The private IP address assigned to an internal host on the private LAN (e.g. `192.168.1.50`).',
-          '- **Inside Global**: The public IP address representing the internal host to the outside world as traffic exits the router WAN interface (e.g. `203.0.113.1`).',
-          '- **Outside Global**: The public IP address assigned to the external destination host on the internet (e.g. `198.51.100.80`).',
-          '- **Outside Local**: The IP address of an outside host as known to the inside network (almost always identical to Outside Global in standard NAT).',
+          '### Beat 2: The Core Mechanism — The Four NAT Address Quadrants',
+          'To specify translation boundaries without confusion, the networking industry (formalized by Cisco and RFC 2663) established four standard address classifications:',
+          '- **Inside Local**: The private IP address configured on an internal device within the LAN (e.g., `10.50.1.25` or `192.168.1.100`).',
+          '- **Inside Global**: The public, globally routable IP address allocated to the organization by an ISP, which represents the inside device to the outside world as packets exit the gateway router WAN interface (e.g., `203.0.113.10`).',
+          '- **Outside Global**: The public, globally routable IP address assigned to the destination server or service on the internet (e.g., `198.51.100.4`).',
+          '- **Outside Local**: The IP address of an external host as it appears to inside network devices (in almost all standard enterprise and home deployments, this is identical to the Outside Global address).',
           '',
-          '### Static NAT vs Dynamic NAT',
-          '- **Static NAT (1:1)**: A permanent, one-to-one mapping between one Inside Local IP and one Inside Global IP. Typically used when an internal server (like an email or web server) needs a fixed public IP address so outside clients can connect directly.',
-          '- **Dynamic NAT (Pool)**: Internal hosts share a pool of multiple public IPs on a first-come, first-served basis. If the pool has 5 public IPs, only 5 hosts can access the internet simultaneously.',
+          '### Static NAT vs. Dynamic NAT',
+          '- **Static NAT (1:1 Binding)**: A permanent, bidirectional mapping between one Inside Local IP and one Inside Global IP. Typically assigned to internal servers (mail servers, web servers) requiring a consistent public address so external users can initiate connections.',
+          '- **Dynamic NAT (Address Pooling)**: Internal hosts share a pool of multiple public IPs on a first-come, first-served basis. If a company owns 10 public IPs, only 10 internal devices can concurrently communicate with the public internet.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          'Common enterprise routing and NAT failure modes include:',
+          '- **RFC 1918 Leakage & Bogon Filtering**: If a gateway router’s NAT engine is disabled or misconfigured, internal packets egress with private source IPs. Upstream ISP border routers drop these packets silently due to ingress anti-spoofing filters (BCP 38 / bogon lists).',
+          '- **NAT Pool Exhaustion**: In Dynamic NAT pools without port overloading, once all public IPs are assigned to active hosts, subsequent outbound connection attempts are dropped with translation allocation failures.',
+          '- **Workplace Diagnostics**: Inspect translation rules and verify interface assignments (inside vs. outside) on gateway routers.',
         ],
         keyTakeaway:
           'NAT translates private Inside Local addresses into public Inside Global addresses. Static NAT creates fixed 1:1 bindings for servers.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net08-mcq-rfc1918-drop',
+            question:
+              'What happens if a workstation with private IP 192.168.1.50 sends a packet directly onto the public internet without passing through a NAT router?',
+            options: [
+              'Internet routers route the packet directly to the server, which responds to 192.168.1.50',
+              'The first upstream ISP transit router drops the packet immediately because RFC 1918 private ranges are non-routable on the public internet backbone',
+              'The workstation automatically converts its MAC address into a public IPv4 address',
+              'The switch converts the packet to IPv6 automatically',
+            ],
+            correctIndex: 1,
+            explanation:
+              'RFC 1918 prefixes are allocated strictly for private networks. Internet service providers configure ingress ACLs and BGP filters to immediately discard RFC 1918 source and destination IPs.',
+          },
+          {
+            id: 'net08-mcq-inside-local',
+            question:
+              'In official NAT terminology, what does "Inside Local" specifically designate?',
+            options: [
+              'The public IP address assigned to the external web server',
+              'The private IP address configured on an internal host inside the local enterprise or home network',
+              'The public IP address configured on the router WAN interface',
+              'The loopback address of the ISP gateway',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Inside Local is the IP address assigned to an internal host on the private LAN (inside network boundary).',
+          },
+        ],
       },
       tasks: [
         {
@@ -209,39 +252,72 @@ export const NET_08_MODULE: ModuleData = {
         summary:
           'Static and Dynamic NAT still require one public IP per active device. Port Address Translation (PAT), also known as NAT Overload, solves this completely: it translates BOTH the IP address and the Layer 4 Source Port number, allowing up to ~65,000 concurrent connections to share a single public IP.',
         explanation: [
-          '### The Limitation of Pure NAT',
-          'If a home or branch office has 50 phones, laptops, and smart TVs, but the ISP only assigns **one single public IPv4 address**, standard Dynamic NAT cannot help — only 1 device could browse at a time!',
+          '### Beat 1: Direct Physical Reality — Scaling Beyond 1:1 NAT',
+          'In a standard home, coffee shop, or small enterprise, an internet service provider typically supplies exactly **one single public IPv4 address**.',
+          'Yet on the internal LAN, dozens or hundreds of laptops, smartphones, smart TVs, and security cameras need simultaneous, uninterrupted access to the internet.',
+          'If the gateway router used standard 1:1 NAT, only the first device online could connect; all others would be completely locked out.',
           '',
-          '### How PAT / NAT Overload Works',
-          'Every TCP and UDP transmission includes a **16-bit Source Port** and **Destination Port** (range: 1–65535). PAT takes advantage of this Layer 4 field:',
+          '### Beat 2: The Core Mechanism — Multiplexing Over Layer 4 Source Ports',
+          'Port Address Translation (PAT, also referred to as **NAT Overload** in Cisco IOS, or **IP Masquerading** in Linux netfilter) leverages the transport layer to overcome address scarcity.',
           '',
-          '1. **Client A** (`192.168.1.10:50240`) connects to `198.51.100.5:80`.',
-          '2. **Client B** (`192.168.1.20:50240`) also connects to `198.51.100.5:80`.',
-          'Notice that both internal clients happen to pick the same ephemeral port (`50240`).',
+          'Every TCP segment and UDP datagram contains a **16-bit Source Port** and a **16-bit Destination Port** field (values 1 to 65,535). PAT exploits this 16-bit source port space to multiplex thousands of discrete internal sockets behind a single public IP:',
           '',
-          '3. When Client A’s packet reaches the PAT router (public IP `203.0.113.1`):',
-          '   - Router rewrites Source IP to `203.0.113.1`.',
-          '   - Router preserves Source Port `50240` (since it is available).',
-          '   - State entry logged: `192.168.1.10:50240` ↔ `203.0.113.1:50240`.',
+          '1. **Client A** (`192.168.1.10:50240`) initiates a TCP connection to Server `198.51.100.5:80`.',
+          '2. **Client B** (`192.168.1.20:50240`) simultaneously initiates a connection to the exact same server `198.51.100.5:80`. Both clients randomly choose ephemeral source port `50240`.',
           '',
-          '4. When Client B’s packet arrives:',
-          '   - Port `50240` is already in use by Client A on the public IP!',
-          '   - The PAT router dynamically **rewrites Client B’s Source Port** to an unused port, e.g. `50241`.',
-          '   - State entry logged: `192.168.1.20:50240` ↔ `203.0.113.1:50241`.',
+          '3. **Router Egress Translation** (Gateway public IP `203.0.113.1`):',
+          '   - Client A’s packet arrives first. The router rewrites Source IP to `203.0.113.1`. Since port `50240` is free on `203.0.113.1`, it retains source port `50240`.',
+          '   - Translation table entry: `192.168.1.10:50240` ↔ `203.0.113.1:50240` (to `198.51.100.5:80`).',
+          '   - Client B’s packet arrives next. Port `50240` is already taken on the public IP! The router dynamically **allocates a different unused source port**, such as `50241`.',
+          '   - Translation table entry: `192.168.1.20:50240` ↔ `203.0.113.1:50241` (to `198.51.100.5:80`).',
           '',
-          '### The NAT Translation Table State',
+          '4. **The NAT Translation Table (State Table)**:',
+          '   The router maintains this active state in RAM:',
+          '   - `TCP  192.168.1.10:50240  203.0.113.1:50240  198.51.100.5:80`',
+          '   - `TCP  192.168.1.20:50240  203.0.113.1:50241  198.51.100.5:80`',
           '',
-          '| Protocol | Inside Local | Inside Global | Outside Global |',
-          '|---|---|---|---|',
-          '| TCP | 192.168.1.10:50240 | 203.0.113.1:50240 | 198.51.100.5:80 |',
-          '| TCP | 192.168.1.20:50240 | 203.0.113.1:50241 | 198.51.100.5:80 |',
+          'When the web server responds, packets for Client A are sent to destination port `50240`, while packets for Client B are sent to destination port `50241`. The router inspects the incoming destination port, queries its state table, and de-multiplexes each return stream to the correct internal host.',
           '',
-          'Because the external server receives two different source ports (`50240` and `50241`), its return packets will carry different destination ports, enabling the PAT router to return each packet to the exact right client.',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #110)',
+          'High-density enterprise environments experience unique PAT failure modes:',
+          '- **Ephemeral Port Exhaustion**: A single public IP has roughly 64,000 usable ephemeral ports (ports 1024–65535). Heavy web crawling, microservices, or SYN flood attacks can exhaust available source ports, causing new outbound connections to time out.',
+          '- **UDP Session Timeout Churn**: Unlike TCP (which has explicit FIN and RST flags to close state entries), UDP has no connection termination signaling. NAT tables must rely on inactivity timers (typically 30–120 seconds). Aggressive UDP traffic can bloat NAT state tables.',
+          '- **Workplace Inspection Commands**: On Cisco enterprise routers, run `show ip nat translations` and `show ip nat statistics`. On Linux gateways, inspect `conntrack -L` or `iptables -t nat -L -v -n`.',
         ],
         keyTakeaway:
           'PAT (NAT Overload) multiplexes multiple private IPs behind a single public IP by rewriting Layer 4 source port numbers and tracking the mappings in a translation table.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net08-mcq-pat-multiplex',
+            question:
+              'How does Port Address Translation (PAT / NAT Overload) allow thousands of private devices to browse the internet concurrently using only ONE public IP?',
+            options: [
+              'By encrypting all packets so the destination server cannot see the source IP',
+              'By translating both the private IP and the Layer 4 Source Port, tracking unique port bindings in a state table',
+              'By having devices take 1-second turns sending packets across the router WAN port',
+              'By assigning each device a virtual MAC address on the ISP router',
+            ],
+            correctIndex: 1,
+            explanation:
+              'PAT uses the 16-bit Layer 4 TCP/UDP source port field to multiplex up to ~65,000 simultaneous connections behind a single public IPv4 address, logging every mapping in its state table.',
+          },
+          {
+            id: 'net08-mcq-pat-state-table',
+            question:
+              'Why does the NAT translation table record the outside destination IP and port alongside the inside host IP and port?',
+            options: [
+              'To enable exact demultiplexing of return responses and support overlapping source ports to different destinations',
+              'To charge the client billing fees for each distinct domain visited',
+              'To rewrite the server\'s MAC address in the Ethernet frame',
+              'To compress HTTP payloads during transit',
+            ],
+            correctIndex: 0,
+            explanation:
+              'By tracking the full connection tuple (Protocol, Inside Local, Inside Global, Outside Global), the router can reliably de-NAT return packets and multiplex multiple connections even when outside destinations differ.',
+          },
+        ],
       },
       tasks: [
         {
@@ -254,6 +330,7 @@ export const NET_08_MODULE: ModuleData = {
             'The gateway router performs PAT using its single public IP 198.51.100.1.',
             'Host 1’s packet is processed first; the router assigns public source port 49152.',
             'Explain how Host 2’s packet is translated and recorded.',
+            'Inspect live NAT state table entries and hit counters using Cisco IOS (`show ip nat translations`) and Linux (`conntrack -L`).',
           ],
           type: 'guided',
           primaryTable: '',
@@ -271,6 +348,49 @@ export const NET_08_MODULE: ModuleData = {
               text: 'PAT must alter the source port of the second host to prevent collisions when both use the same internal port.',
             },
           ],
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #110 (Cisco IOS & Linux conntrack)',
+            description:
+              'Inspect active NAT/PAT translation tables, active port bindings, translation statistics, and stateful conntrack flows.',
+            availableCommands: [
+              'show ip nat translations',
+              'show ip nat statistics',
+              'conntrack -L',
+              'iptables -t nat -L -v -n',
+            ],
+            commandResponses: {
+              'show ip nat translations': `Pro Inside global      Inside local       Outside local      Outside global
+tcp 198.51.100.1:49152 192.168.1.10:49152 203.0.113.50:80    203.0.113.50:80
+tcp 198.51.100.1:49153 192.168.1.20:49152 203.0.113.50:80    203.0.113.50:80
+tcp 198.51.100.1:51400 192.168.1.55:51400 198.51.100.20:443  198.51.100.20:443`,
+              'show ip nat statistics': `Total active translations: 3 (0 static, 3 dynamic, 3 extended)
+Outside interfaces: GigabitEthernet0/0 (WAN)
+Inside interfaces: GigabitEthernet0/1 (LAN)
+Hits: 142089  Misses: 3
+Expired translations: 1204
+Dynamic mappings:
+-- Inside Source
+[Id: 1] access-list 101 pool OVERLOAD refcount 3
+ pool OVERLOAD: netmask 255.255.255.0
+       start 198.51.100.1 end 198.51.100.1
+       type generic, total addresses 1, allocated 1 (100%)`,
+              'conntrack -L': `tcp      6 431998 ESTABLISHED src=192.168.1.10 dst=203.0.113.50 sport=49152 dport=80 src=203.0.113.50 dst=198.51.100.1 sport=80 dport=49152 [ASSURED] mark=0 use=1
+tcp      6 431995 ESTABLISHED src=192.168.1.20 dst=203.0.113.50 sport=49152 dport=80 src=203.0.113.50 dst=198.51.100.1 sport=80 dport=49153 [ASSURED] mark=0 use=1
+conntrack v1.4.6 (cache: 2048 entries): 2 flow entries displayed`,
+              'iptables -t nat -L -v -n': `Chain PREROUTING (policy ACCEPT 1420 packets, 85200 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 142K 9820K MASQUERADE all  --  *      eth0    192.168.1.0/24       0.0.0.0/0           
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination`,
+            },
+          },
           validation: {
             judgment: [
               {
@@ -320,33 +440,71 @@ export const NET_08_MODULE: ModuleData = {
         summary:
           'When an external server sends return traffic back to the router’s public IP, the router performs De-NATting by looking up the destination port in its translation table. If an unsolicited packet arrives from the internet with no matching state table entry, the router discards it because no translation mapping exists (note: this translation drop is distinct from a complete stateful firewall policy).',
         explanation: [
-          '### The Return Flow: De-NATting',
-          'When the external server responds to an outbound request:',
-          '1. The server transmits an IP packet with:',
-          '   - Source: `Server IP:80`',
-          '   - Destination: `Router Public IP:50241`',
-          '2. The router’s WAN interface receives the packet and queries its **NAT state table**:',
-          '   - Does an active entry exist for `Protocol=TCP`, `Public Port=50241`?',
-          '   - **Yes**: Found `192.168.1.20:50240`.',
-          '3. **De-NAT Translation**: The router rewrites the Destination IP and Port:',
-          '   - New Destination: `192.168.1.20:50240`',
-          '   - Source remains `Server IP:80`',
-          '4. The router forwards the frame onto the LAN switch toward Client B.',
+          '### Beat 1: Direct Physical Reality — Return Traffic Ingress',
+          'When an external web server on the internet processes an HTTP or HTTPS request, it crafts a response packet destined for the gateway router’s public IP address and the translated source port allocated by the router.',
+          'Upon arriving at the router WAN interface, the packet has destination `203.0.113.1:50241`. If the router simply passed this frame onto the LAN without modification, no device on the subnet would claim it because the destination IP is the router WAN IP, not the private IP of Client B.',
+          '',
+          '### Beat 2: The Core Mechanism — De-NATting & Inbound Drops',
+          'The router executes a reverse translation state machine called **De-NATting**:',
+          '1. **Header Inspection**: The router WAN interface parses the incoming Layer 3 IPv4 header (Destination IP = `203.0.113.1`) and Layer 4 TCP header (Destination Port = `50241`).',
+          '2. **State Table Query**: The router searches its NAT translation table for an active entry matching `Protocol=TCP`, `Public Port=50241`.',
+          '3. **Table Hit**: It finds the mapping: `192.168.1.20:50240` ↔ `203.0.113.1:50241`.',
+          '4. **Header Rewrite**: The router rewrites the Destination IP to `192.168.1.20` and the Destination Port to `50240`. The Source IP remains the external server (`198.51.100.5:80`).',
+          '5. **Checksum & Forward**: The router recalculates the IPv4 and TCP checksums, resolves Client B’s MAC address in its ARP cache, encapsulates the packet into an Ethernet frame, and forwards it across the LAN switch.',
           '',
           '### Why Unsolicited Inbound Traffic Is Dropped',
-          'Suppose an external device on the internet attempts to connect to `Router Public IP:22` (SSH) or `Router Public IP:80` (HTTP) without an inside host having initiated communication:',
-          '1. The packet arrives at the router’s WAN interface with destination `203.0.113.1:22`.',
-          '2. The router inspects its NAT translation table for `Public Port=22`.',
-          '3. **No matching entry exists!** (No inside host initiated a session expecting traffic on port 22).',
-          '4. The router has no destination private IP to rewrite the packet to. The packet is **silently discarded**.',
+          'Now consider what happens when an internet port scanner, crawler, or malicious actor transmits an unsolicited packet targeting `203.0.113.1:22` (SSH) or `203.0.113.1:3389` (RDP):',
+          '1. The packet hits the router WAN interface.',
+          '2. The router queries the NAT state table for `Public Port=22` or `3389`.',
+          '3. **No matching entry exists!** Because no internal host initiated an outbound connection on that port, there is no corresponding Inside Local IP in memory.',
+          '4. The router cannot route or translate the packet. **The packet is silently dropped**.',
           '',
-          '**Address Translation vs. Stateful Firewalls**:',
-          'While dynamic NAT/PAT restricts unsolicited inbound sessions because no translation mapping exists, NAT itself is NOT an all-encompassing firewall security policy. Stateful packet inspection firewalls (NIST SP 800-41) enforce explicit security policy rules, inspection of connection flags, application-layer protocol validation, and outbound egress filtering independently of address translation.',
+          '### Port Forwarding (Destination NAT / DNAT)',
+          'To permit external internet users to intentionally access an internal server (such as an on-premises web server at `192.168.1.200:80`):',
+          '- An administrator configures a **Port Forwarding (DNAT)** rule.',
+          '- This creates a permanent, static table entry: `Public IP:80 ➔ 192.168.1.200:80`.',
+          '- When inbound traffic arrives on public port 80, the router immediately translates the destination IP to `192.168.1.200` without requiring prior outbound session state.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          'Important architectural nuances every network engineer must understand:',
+          '- **NAT Is NOT a Stateful Firewall**: While dynamic PAT drops unsolicited inbound traffic due to absence of translation state, NAT was designed strictly as an address conservation protocol (RFC 3022). It lacks stateful connection inspection (NIST SP 800-41), protocol sanity checking, deep packet inspection, egress domain filtering, and rule-based logging.',
+          '- **Asymmetric Routing Blackholes**: If outbound traffic leaves through Gateway Router 1 (which logs the NAT state), but return traffic enters via Gateway Router 2, Router 2 has no translation state and drops the returning packets immediately.',
+          '- **Port Forwarding Port Collisions**: Two different internal servers cannot share the same external public port. Hosting two internal web servers requires separate public ports (e.g. 80 and 8080) or a Layer 7 Reverse Proxy (Nginx, Traefik, HAProxy).',
         ],
         keyTakeaway:
           'Return traffic is de-NATted by looking up the incoming destination port in the translation table. Unsolicited inbound traffic is dropped because no state table entry exists. NAT translates addresses; stateful firewalls enforce security policy.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net08-mcq-unsolicited-drop',
+            question:
+              'Why does a standard dynamic NAT/PAT router drop unsolicited inbound connection attempts from the internet?',
+            options: [
+              'Because an AI antivirus scanner detects malicious intent in all inbound packets',
+              'Because no matching entry exists in the translation table, so the router has no internal private IP to forward the packet to',
+              'Because RFC 1918 forbids public routers from receiving TCP SYN packets',
+              'Because the router WAN interface disables Ethernet frames from internet IPs',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Dynamic NAT tables only populate when an inside host initiates an outbound connection. An unsolicited inbound packet matches zero table entries, leaving the router with no internal destination address, resulting in an immediate drop.',
+          },
+          {
+            id: 'net08-mcq-port-forwarding',
+            question:
+              'If an organization wishes to host an internal web server (192.168.1.200:80) behind a single public IP router, what configuration is required?',
+            options: [
+              'Static Port Forwarding (Destination NAT) mapping Public IP port 80 to 192.168.1.200:80',
+              'Disabling the router firewall and enabling broadcast forwarding on all ports',
+              'Setting the server IP to 0.0.0.0/0',
+              'Changing the server subnet mask to 255.255.255.255',
+            ],
+            correctIndex: 0,
+            explanation:
+              'Port Forwarding (DNAT) establishes a permanent static mapping in the NAT table so that unsolicited inbound traffic arriving on public port 80 is translated and forwarded to internal private server 192.168.1.200:80.',
+          },
+        ],
       },
       tasks: [
         {

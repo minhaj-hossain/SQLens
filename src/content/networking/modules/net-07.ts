@@ -45,43 +45,82 @@ export const NET_07_MODULE: ModuleData = {
         summary:
           'When sending to an IP outside the local subnet, the host cannot ARP for the remote IP directly. Instead, it sends the frame to its Default Gateway (the local router interface). Across each router hop, the source and destination MACs are rewritten, but the source and destination IPs remain preserved from end to end.',
         explanation: [
-          '### C25: The Local vs Remote Decision & Default Gateway',
-          'Before sending any packet, a host compares the destination IP against its own subnet mask:',
-          '- **Local Destination**: If `(Dest IP & Mask) == (Host IP & Mask)`, destination is on the local link. The host ARPs for the destination IP directly.',
-          '- **Remote Destination**: If `(Dest IP & Mask) != (Host IP & Mask)`, destination is on a remote network. The host cannot send directly to the remote device because Layer 2 broadcast domains do not span routers.',
+          '### Beat 1: The Physical Dilemma — The "Leaving the Building" Dilemma',
+          'Suppose Host A (`192.168.1.10/24`) wants to send an HTTP request or ping to Google DNS (`8.8.8.8`).',
+          'Before sending, the host checks its subnet mask:',
+          '- `8.8.8.8 AND 255.255.255.0 = 8.8.8.0`',
+          '- `192.168.1.10 AND 255.255.255.0 = 192.168.1.0`',
+          '- Result: **Different network prefixes**. Destination is **remote (off-link)**.',
           '',
-          'To reach a remote destination, the host sends the packet to its **Default Gateway** (the local interface of its first-hop router):',
-          '1. The host looks up the Default Gateway IP configured on its interface (e.g. `192.168.1.1`).',
-          '2. The host checks its ARP cache for `192.168.1.1` (or transmits an ARP Request if absent).',
-          '3. The host encapsulates the IP packet inside an Ethernet frame with the **Gateway’s MAC** as the destination MAC.',
+          'Now the physical dilemma strikes: Host A cannot send an ARP request asking *"Who has 8.8.8.8?"* because ARP broadcasts (`FF:FF:FF:FF:FF:FF`) are strictly confined to the local switch! If no Default Gateway is configured, the operating system drops the packet immediately before it even touches the network cable (`Network is unreachable`).',
           '',
-          '### C26: The Golden Rule of Internetworking',
-          'Consider Host A (`192.168.1.10`) communicating with Web Server B (`203.0.113.80`) across Router R1:',
+          '### Beat 2: The Tool\'s Purpose — The Gateway as the Physical Door & The Golden Rule',
+          'To leave the building, the host must hand the parcel to an intermediary device that physically connects to both the inside room and the outside street: the **Default Gateway** (router).',
           '',
+          'The router has at least two network interface cards:',
+          '1. **Inside LAN Interface** (e.g. `192.168.1.1`): Resides on the local subnet and listens to local Ethernet broadcasts.',
+          '2. **Outside WAN Interface** (e.g. `198.51.100.1`): Resides on the upstream provider or Internet link.',
+          '',
+          '**The Golden Rule of Internetworking**:',
           '| Segment | Source MAC | Destination MAC | Source IP | Destination IP |',
           '|---|---|---|---|---|',
-          '| **Host A → R1 (LAN)** | Host A MAC | R1 LAN MAC | 192.168.1.10 | 203.0.113.80 |',
-          '| **R1 → Server B (WAN)** | R1 WAN MAC | Server B MAC | 192.168.1.10 | 203.0.113.80 |',
+          '| **Hop 1: Host A → R1 (LAN)** | Host A MAC | R1 LAN MAC | 192.168.1.10 | 198.51.100.50 |',
+          '| **Hop 2: R1 → Server Z (WAN)** | R1 WAN MAC | Server Z MAC | 192.168.1.10 | 198.51.100.50 |',
           '',
-          '**Key Principles**:',
-          '- **End-to-End Invariance**: Source IP and Destination IP **NEVER change** across hops (in standard routing without NAT). They represent the true sender and ultimate recipient.',
-          '- **Hop-by-Hop Ephemerality**: Layer 2 MAC addresses **change at every single hop**. The destination MAC always identifies the next immediate physical receiver on the current link.',
+          '- **Layer 3 IPs Stay Constant**: The Source and Destination IP addresses represent the true endpoints. They remain preserved end-to-end across all hops.',
+          '- **Layer 2 MACs Change at Every Hop**: Layer 2 frames only survive a single physical cable segment. At every router boundary, the old MAC header is stripped and discarded, and a brand-new MAC header is stamped for the next immediate physical receiver.',
+          '',
+          '### Beat 3: The Observable Result — Ticket #108 Gateway Route Verification',
+          'When a computer loses its default gateway route, terminal telemetry displays:',
+          '```',
+          'PING 8.8.8.8: Destination host unreachable (or PING: transmit failed. General failure.)',
+          '```',
+          'Inspecting the routing table via Windows `route print` or Linux `ip route show default` proves whether the `0.0.0.0/0` default gateway route is present.',
         ],
         keyTakeaway:
-          'Layer 3 IP addresses are preserved end-to-end; Layer 2 MAC addresses are stripped and rewritten at every router boundary.',
+          'Layer 3 IP addresses are preserved end-to-end; Layer 2 MAC addresses are stripped and rewritten at every router boundary. Without a local default gateway, off-link transmission fails.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net07-mcq-gateway-role',
+            question:
+              'Why does a host need a Default Gateway configured to communicate with an IP address on another subnet?',
+            options: [
+              'Because Layer 2 switches reject frames if the gateway IP is not stamped in the Ethernet trailer',
+              'Because ARP broadcasts cannot cross router boundaries; the host must address the Layer 2 frame to its local gateway router to forward traffic beyond the subnet',
+              'Because default gateways assign temporary MAC addresses to public packets',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Switches only forward within a broadcast domain. To reach a remote subnet, the host must send the packet to the local MAC address of its default gateway router, which routes it across network boundaries.',
+          },
+          {
+            id: 'net07-mcq-golden-rule',
+            question:
+              'According to the Golden Rule of Routing, how do packet headers change when a router forwards an IP packet across an egress interface?',
+            options: [
+              'The Source and Destination IP addresses are rewritten; the MAC addresses remain unchanged',
+              'Layer 2 MAC addresses are rewritten for the next link; Layer 3 IP addresses remain constant end-to-end',
+              'Both MAC addresses and IP addresses are completely replaced at every hop',
+            ],
+            correctIndex: 1,
+            explanation:
+              'In standard routing, Layer 3 IP addresses identify the original sender and final destination and remain preserved. Layer 2 MAC addresses only have meaning on a local link and are rewritten at every hop.',
+          },
+        ],
       },
       tasks: [
         {
           id: 'net07-p1-remote-gateway-arp',
-          title: 'Guided Practice: Remote Delivery & Header Invariance',
+          title: 'Ticket #108 Workplace Lab: Default Gateway Route Restoration',
           description:
-            'Trace how Layer 2 and Layer 3 headers are populated when communicating with a remote server across a gateway.',
+            'Trace how Layer 2 and Layer 3 headers are populated when communicating across a gateway and restore default routing across dual-OS environments.',
           instructions: [
             'Host A (IP: 192.168.1.10/24, MAC: AA:AA:AA:AA:AA:AA, Gateway: 192.168.1.1) wants to send an HTTP request to Server Z (IP: 198.51.100.50/24, MAC: ZZ:ZZ:ZZ:ZZ:ZZ:ZZ).',
             'Router R1 has LAN interface IP 192.168.1.1 (MAC: R1:LAN:R1:LAN) and WAN interface IP 198.51.100.1 (MAC: R1:WAN:R1:WAN).',
-            'Determine which MAC address Host A puts on the wire and which headers change when Router R1 forwards the packet.',
+            'Inspect workstation routing tables using dual Windows (`route print`) and Linux (`ip route show default`) commands.',
+            'Determine which MAC address Host A puts on the wire and verify header invariance.',
           ],
           type: 'guided',
           primaryTable: '',
@@ -99,6 +138,52 @@ export const NET_07_MODULE: ModuleData = {
               text: 'The destination MAC on the first hop must be the Default Gateway. IP addresses do not change in standard routing.',
             },
           ],
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #108 (Dual OS)',
+            description:
+              'Diagnose missing default gateway and inspect routing tables on Windows and Linux workstations.',
+            availableCommands: [
+              'route print',
+              'ipconfig',
+              'ip route show default',
+              'ip route show',
+              'ping 192.168.1.1',
+            ],
+            commandResponses: {
+              'route print': `===========================================================================
+Interface List
+ 12...00 1a 2b 3c 4d 10 ......Intel(R) Ethernet Connection
+===========================================================================
+IPv4 Route Table
+===========================================================================
+Active Routes:
+Network Destination        Netmask          Gateway       Interface  Metric
+          0.0.0.0          0.0.0.0      192.168.1.1     192.168.1.10      25
+        127.0.0.0        255.0.0.0         On-link         127.0.0.1     331
+      192.168.1.0    255.255.255.0         On-link      192.168.1.10     281
+     192.168.1.10  255.255.255.255         On-link      192.168.1.10     281
+    192.168.1.255  255.255.255.255         On-link      192.168.1.10     281
+        224.0.0.0        240.0.0.0         On-link         127.0.0.1     331
+  255.255.255.255  255.255.255.255         On-link      192.168.1.10     281
+===========================================================================`,
+              'ipconfig': `Windows IP Configuration
+
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix  . : corp.acme.com
+   IPv4 Address. . . . . . . . . . . : 192.168.1.10
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.1.1`,
+              'ip route show default': `default via 192.168.1.1 dev eth0 proto dhcp metric 100`,
+              'ip route show': `default via 192.168.1.1 dev eth0 proto dhcp metric 100
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.10 metric 100`,
+              'ping 192.168.1.1': `Pinging 192.168.1.1 with 32 bytes of data:
+Reply from 192.168.1.1: bytes=32 time<1ms TTL=64
+Reply from 192.168.1.1: bytes=32 time<1ms TTL=64
+
+Ping statistics for 192.168.1.1:
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss)`,
+            },
+          },
           packetInspection: {
             title: 'Cross-Hop Header Inspection (Host A ➔ Router R1 ➔ Server Z)',
             description:
@@ -209,37 +294,78 @@ export const NET_07_MODULE: ModuleData = {
         'Learn how routers inspect destination IPs against their routing table and select the most specific route.',
       theory: {
         summary:
-          'Routers maintain a routing table that maps network prefixes to next-hop IPs or egress interfaces. When a packet matches multiple prefix entries, the router strictly picks the route with the longest prefix mask length (Longest Prefix Match). If no specific route matches, it falls back to the default route (0.0.0.0/0).',
+          'Routers maintain a routing table (FIB) in memory mapping network prefixes to next-hop IPs or egress interfaces. When a packet matches multiple prefix entries, the router strictly picks the route with the longest prefix mask length (Longest Prefix Match). If no specific route matches, it falls back to the default route (0.0.0.0/0).',
         explanation: [
-          '### C27: Anatomy of a Router Routing Table',
-          'Unlike a Layer 2 switch CAM table (which maps flat MACs to ports), a Layer 3 routing table contains hierarchical prefix entries:',
-          '- **Destination Network Prefix**: The network range (e.g. `10.0.0.0/8`, `192.168.1.0/24`).',
-          '- **Next-Hop IP**: The IP address of the adjacent router interface that can forward toward the destination.',
-          '- **Egress Interface**: The physical or logical interface through which the packet must depart (e.g. `eth0`, `GigabitEthernet0/1`).',
-          '- **Metric / Administrative Distance**: Cost and priority values used to compare competing route sources.',
+          '### Beat 1: Direct Physical Reality — Forwarding Information Base (FIB)',
+          'Inside enterprise routers and core internet switches, routing decisions occur millions of times per second in high-speed hardware memory called **Ternary Content-Addressable Memory (TCAM)** or the kernel **Forwarding Information Base (FIB)**.',
           '',
-          '### C28: Longest Prefix Match (LPM) Rule',
-          'In modern CIDR routing, address blocks are often subdivided. Consider a router with these routes:',
-          '1. `10.0.0.0/8` via `Interface A` (covers 10.0.0.0 – 10.255.255.255)',
-          '2. `10.20.0.0/16` via `Interface B` (covers 10.20.0.0 – 10.20.255.255)',
-          '3. `10.20.30.0/24` via `Interface C` (covers 10.20.30.0 – 10.20.30.255)',
-          '4. `0.0.0.0/0` via `Interface D` (Default Route / Gateway of Last Resort)',
+          'Unlike a Layer 2 switch CAM table (which maps flat 48-bit MAC addresses to single physical switchports), a Layer 3 routing table contains hierarchical prefix entries:',
+          '- **Destination Network Prefix & Mask**: The IP network boundary (e.g., `10.0.0.0/8`, `172.20.0.0/16`, `172.20.5.0/24`).',
+          '- **Next-Hop IP Address**: The Layer 3 address of the adjacent router interface on the shared link that will handle forwarding toward the destination.',
+          '- **Egress Interface**: The physical or logical interface through which the packet must physically exit the router chassis (e.g., `eth0`, `GigabitEthernet0/1`).',
+          '- **Metric & Administrative Distance**: Priority weights used by dynamic routing protocols (OSPF, BGP) to select the best path into the FIB.',
           '',
-          'When a packet arrives for `10.20.30.50`:',
-          '- It matches route 1 (/8 = 8 matching bits)',
-          '- It matches route 2 (/16 = 16 matching bits)',
-          '- It matches route 3 (/24 = 24 matching bits)',
-          '- It matches route 4 (/0 = 0 matching bits)',
+          '### Beat 2: The Core Mechanism — The Longest Prefix Match (LPM) Rule',
+          'Because modern IPv4 networks use Classless Inter-Domain Routing (CIDR), network address blocks are routinely subnetted into smaller, overlapping segments.',
           '',
-          '**Decision**: The router selects **`10.20.30.0/24` via Interface C** because `/24` has the longest (most specific) network mask. More specific routes always override broader ones.',
+          'Consider a core router whose FIB contains the following four routes:',
+          '1. `10.0.0.0/8` via `Interface A` (covers `10.0.0.0` – `10.255.255.255`, 8 fixed prefix bits)',
+          '2. `10.20.0.0/16` via `Interface B` (covers `10.20.0.0` – `10.20.255.255`, 16 fixed prefix bits)',
+          '3. `10.20.30.0/24` via `Interface C` (covers `10.20.30.0` – `10.20.30.255`, 24 fixed prefix bits)',
+          '4. `0.0.0.0/0` via `Interface D` (Default Route / Gateway of Last Resort, 0 fixed prefix bits)',
           '',
-          '### The Default Route (0.0.0.0/0)',
-          'A mask of `/0` matches zero required bits, which means it technically matches *every possible IPv4 address*. Because it has the shortest possible prefix length (0 bits), it will only be used if NO other specific entry in the table matches.',
+          'When an incoming packet arrives with destination IP **`10.20.30.50`**:',
+          '- Binary bitwise comparison matches Route 1 (/8 = 8 matching prefix bits).',
+          '- Binary bitwise comparison matches Route 2 (/16 = 16 matching prefix bits).',
+          '- Binary bitwise comparison matches Route 3 (/24 = 24 matching prefix bits).',
+          '- Binary bitwise comparison matches Route 4 (/0 = 0 matching prefix bits).',
+          '',
+          '**The Golden Rule of LPM**: The router ALWAYS selects the route with the **longest prefix length (most specific subnet mask)**. Here, **`10.20.30.0/24` via Interface C** wins because 24 matching bits is strictly more specific than 16, 8, or 0 bits. Routing table line order or entry insertion time is completely ignored.',
+          '',
+          '### The Gateway of Last Resort (`0.0.0.0/0`)',
+          'The prefix `0.0.0.0` with subnet mask `0.0.0.0` (CIDR `/0`) requires 0 bits to match. Therefore, **every valid IPv4 address matches `0.0.0.0/0`**.',
+          'Because its prefix length is 0 (the shortest possible), it will only be selected if **no more specific route** matches the destination IP. If a router has no default route and receives a packet with no matching prefix, it must discard the packet and transmit an **ICMP Destination Net Unreachable** (Type 3, Code 0) back to the sender.',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics',
+          'In production environments, route flapping, route aggregation errors, and unintended summary routes cause traffic blackholing:',
+          '- **Blackholing (Null0 Route)**: If a destination prefix points to `Null0` or `discard`, the router quietly drops matching packets without generating ICMP replies.',
+          '- **Order-of-Operation Confusion**: Technicians often assume the first route listed in a config file executes first. In reality, LPM compiles into a radix tree or hardware TCAM where mask length alone determines precedence.',
+          '- **Workplace Verification**: Use `route print` on Windows or `ip route show` on Linux to inspect active routes, prefix masks, interface metrics, and gateway IPs.',
         ],
         keyTakeaway:
           'Longest Prefix Match (LPM) ensures the most specific prefix entry in the routing table always wins. The default route (0.0.0.0/0) is the fallback when no specific entry matches.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net07-mcq-lpm-rule',
+            question:
+              'A router FIB has routes for 172.16.0.0/12, 172.16.10.0/24, and 0.0.0.0/0. A packet arrives for 172.16.10.25. Which route is chosen?',
+            options: [
+              '172.16.0.0/12 because it has the largest address block coverage',
+              '172.16.10.0/24 because it has the longest matching prefix length (/24 > /12 > /0)',
+              '0.0.0.0/0 because the default route always overrides static routes',
+              'The router loads balances equally across all three routes',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Under Longest Prefix Match (LPM), routers pick the most specific route (longest mask length). /24 has 24 matching bits, which beats /12 and /0.',
+          },
+          {
+            id: 'net07-mcq-default-route',
+            question:
+              'What happens if a packet arrives for destination 198.51.100.8 and the router has no matching specific prefix and no 0.0.0.0/0 route?',
+            options: [
+              'The router floods the packet out all physical ports like a switch',
+              'The router discards the packet and returns an ICMP Destination Net Unreachable (Type 3, Code 0) to the sender',
+              'The router broadcasts an ARP request across the entire WAN link',
+              'The router stores the packet in a permanent retry buffer indefinitely',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Without a matching specific route or a default route (0.0.0.0/0), a router cannot forward the packet. RFC 792 dictates it drops the packet and sends an ICMP Destination Unreachable message back to the source.',
+          },
+        ],
       },
       tasks: [
         {
@@ -320,29 +446,70 @@ export const NET_07_MODULE: ModuleData = {
         summary:
           'If two routers have misconfigured, circular routing entries, packets could bounce back and forth indefinitely. The IPv4 Time-to-Live (TTL) field mitigates this: every router decrements TTL by 1 before forwarding. When TTL hits 0, the packet is discarded and an ICMP Time Exceeded message is returned to the sender.',
         explanation: [
-          '### C29: The Problem of Routing Loops',
-          'Suppose Router A has a route sending `192.168.50.0/24` to Router B, but Router B’s routing table has a typo sending `192.168.50.0/24` back to Router A.',
+          '### Beat 1: Direct Physical Reality — The Threat of Endless Routing Loops',
+          'Suppose Router A has a misconfigured route directing traffic for `192.168.50.0/24` to Router B, while Router B has a route directing `192.168.50.0/24` back to Router A.',
           '',
-          'In Ethernet switching (Layer 2), there is no TTL in the frame header — a switching loop circulates forever at wire speed until a link fails or equipment crashes.',
+          'In Ethernet switching (Layer 2), there is no hop counter or TTL field in the 802.3 frame header — an unmitigated switching loop circulates forever at wire speed, saturating multi-gigabit fiber backbones and crashing switch processors within seconds.',
           '',
-          'In Internet Protocol (Layer 3), the IPv4 header includes an **8-bit Time-to-Live (TTL)** field (0–255) specifically designed to prevent persistent loops:',
-          '1. The originating sender sets an initial TTL (commonly 64 on Linux/macOS, 128 on Windows, or 255 on network gear).',
-          '2. When an IP packet arrives at a transit router, the router decrements the TTL by 1 (`TTL = TTL - 1`).',
-          '3. **If `TTL > 0`**: The router recalculates the IPv4 header checksum and forwards the packet toward the next hop.',
-          '4. **If `TTL == 0`**: The router **DISCARDS the packet** immediately. It does not forward it.',
+          'In Internet Protocol (Layer 3), packets must traverse complex, multi-vendor global meshes. To prevent loops from permanently consuming router memory buffers and link bandwidth, RFC 791 defines an **8-bit Time-to-Live (TTL)** field (integer value 0–255) in every IPv4 packet header.',
           '',
-          '### ICMP Time Exceeded & Traceroute Mechanics',
-          'When a router discards an expired packet (TTL = 0), RFC 792 mandates that it notify the sender by transmitting an **ICMP Time Exceeded** message (Type 11, Code 0) back to the packet’s Source IP.',
+          '### Beat 2: The Core Mechanism — Hop Decrement & ICMP Time Exceeded',
+          'The TTL lifecycle follows a strict protocol state machine:',
+          '1. **Initial TTL Value**: The originating host sets an initial TTL value in its IP stack (commonly **64** on Linux/macOS/iOS, **128** on Microsoft Windows, or **255** on network equipment and Cisco IOS).',
+          '2. **Transit Decrement**: Whenever an intermediate Layer 3 router receives a packet, before writing it to an outbound interface buffer, the router **decrements TTL by exactly 1** (`TTL = TTL - 1`).',
+          '3. **Checksum Recalculation**: Because the TTL field changed, the router recalculates the 16-bit **IPv4 Header Checksum** field.',
+          '4. **Forward or Discard**: ',
+          '   - **If `TTL > 0`**: The router looks up the next hop in its FIB, rewrites the Layer 2 Ethernet frame, and forwards the packet.',
+          '   - **If `TTL == 0`**: The router **IMMEDIATELY DISCARDS THE PACKET**. The packet is permanently dead.',
           '',
-          'The diagnostic tool `traceroute` (or `tracert` on Windows) exploits this mechanism deliberately:',
-          '- Probes with **`TTL = 1`**: The first router decrements TTL to 0, drops the packet, and returns an ICMP Time Exceeded containing its own IP address. Hop 1 identified!',
-          '- Probes with **`TTL = 2`**: Router 1 decrements to 1; Router 2 decrements to 0 and replies. Hop 2 identified!',
-          '- The probe TTL increments until the ultimate destination is reached (which replies with an ICMP Echo Reply or TCP/UDP response).',
+          '### How Traceroute Dissects Internetwork Paths',
+          'When a router discards an expired packet (`TTL == 0`), RFC 792 mandates that it notify the sender by generating an **ICMP Time Exceeded** message (**Type 11, Code 0**) addressed back to the original source IP.',
+          '',
+          'The diagnostic tools **`tracert` (Windows)** and **`traceroute` (Linux/UNIX)** exploit this behavior systematically:',
+          '- **Probe 1 (TTL = 1)**: Transmits a probe with TTL=1. Router 1 decrements TTL to 0, drops the probe, and replies with ICMP Time Exceeded. The sender logs Router 1’s IP address and round-trip time (RTT).',
+          '- **Probe 2 (TTL = 2)**: Transmits with TTL=2. Router 1 decrements to 1 and forwards; Router 2 decrements to 0, drops the packet, and replies. Hop 2 discovered!',
+          '- **Incremental Sequence**: The client increments TTL sequentially (1, 2, 3, 4...) until the packet reaches the target server, which replies with an ICMP Echo Reply (Windows) or UDP/TCP port unreachable (Linux).',
+          '',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #109)',
+          'When troubleshooting path latency or unreachable services in production:',
+          '- **`Time to live exceeded in transit`**: If `ping` returns this error repeatedly from the same pair of router IPs, a circular routing loop is actively bouncing the packet until TTL reaches zero.',
+          '- **Asterisk Output (`* * * Request timed out`)**: Indicates a transit router has disabled ICMP generation (RFC 1812 rate limiting), drops ICMP probes in its control plane (CoPP), or a stateful firewall blocked the probe.',
+          '- **Diagnostic Commands**: On Windows, run `tracert -d <target>` (`-d` suppresses slow DNS reverse lookups). On Linux, run `traceroute -n <target>` (`-n` prevents DNS latency).',
         ],
         keyTakeaway:
           'TTL decrements by 1 at every transit router hop. If it reaches 0, the packet is dropped and an ICMP Time Exceeded (Type 11) is returned, preventing endless loops and enabling traceroute.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net07-mcq-ttl-loop',
+            question:
+              'Why does Layer 3 (IP) have an 8-bit TTL field while standard Layer 2 (Ethernet) has no hop limit?',
+            options: [
+              'Because Ethernet switches are fast enough to handle infinite loops without crashing',
+              'Ethernet relied on Spanning Tree Protocol (STP) to break loops physically, whereas IP is an unconstrained global mesh requiring per-packet hop expiration to prevent link saturation',
+              'Because MAC addresses change every second so loops terminate automatically',
+              'Because IPv4 packets are encrypted and cannot be retransmitted',
+            ],
+            correctIndex: 1,
+            explanation:
+              'Layer 2 frames have no TTL and will loop endlessly unless STP disables redundant ports. Layer 3 packets traverse complex multi-path meshes where transient routing loops would consume all bandwidth without a decremented hop counter.',
+          },
+          {
+            id: 'net07-mcq-traceroute-icmp',
+            question:
+              'When running traceroute to discover Hop 3 on a path, what initial TTL does the utility set on the probe packet, and what ICMP response is received?',
+            options: [
+              'Initial TTL = 3; receives ICMP Time Exceeded (Type 11, Code 0) from the third router',
+              'Initial TTL = 128; receives ICMP Echo Reply from the third router',
+              'Initial TTL = 0; receives ICMP Redirect (Type 5) from the gateway',
+              'Initial TTL = 255; receives ICMP Port Unreachable from the default gateway',
+            ],
+            correctIndex: 0,
+            explanation:
+              'Traceroute sets TTL = 3. Routers 1 and 2 decrement to 2 and 1; Router 3 decrements to 0, discards the packet, and sends back ICMP Time Exceeded (Type 11, Code 0) revealing its IP address.',
+          },
+        ],
       },
       tasks: [
         {
@@ -354,6 +521,7 @@ export const NET_07_MODULE: ModuleData = {
             'A Windows client (default initial TTL = 128) sends a packet across 4 routers (R1, R2, R3, R4) to reach a cloud server.',
             'Calculate the TTL value of the packet as it arrives at each transit hop and when it reaches the server.',
             'Explain what occurs if a routing loop exists between R2 and R3.',
+            'Inspect path discovery commands on Windows (`tracert -d`) and Linux (`traceroute -n`) using the workplace diagnostic terminal.',
           ],
           type: 'guided',
           primaryTable: '',
@@ -371,6 +539,47 @@ export const NET_07_MODULE: ModuleData = {
               text: 'If a packet enters a loop, TTL will decrement by 1 each time it visits a router until it hits 0.',
             },
           ],
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #109 (Dual OS)',
+            description:
+              'Diagnose routing loops, inspect hop-by-hop latency, and probe path TTL expiration using Windows tracert and Linux traceroute.',
+            availableCommands: [
+              'tracert -d 8.8.8.8',
+              'ping -i 1 8.8.8.8',
+              'traceroute -n 8.8.8.8',
+              'ping -c 2 -t 1 8.8.8.8',
+              'ip route get 8.8.8.8',
+            ],
+            commandResponses: {
+              'tracert -d 8.8.8.8': `Tracing route to 8.8.8.8 over a maximum of 30 hops
+
+  1    <1 ms    <1 ms    <1 ms  192.168.1.1
+  2     4 ms     3 ms     3 ms  10.240.0.1
+  3    12 ms    11 ms    11 ms  198.51.100.254
+  4    15 ms    14 ms    14 ms  8.8.8.8
+
+Trace complete.`,
+              'ping -i 1 8.8.8.8': `Pinging 8.8.8.8 with 32 bytes of data:
+Reply from 192.168.1.1: TTL expired in transit.
+Reply from 192.168.1.1: TTL expired in transit.
+
+Ping statistics for 8.8.8.8:
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss)`,
+              'traceroute -n 8.8.8.8': `traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets
+ 1  192.168.1.1  0.428 ms  0.395 ms  0.370 ms
+ 2  10.240.0.1  3.125 ms  3.080 ms  3.045 ms
+ 3  198.51.100.254  11.450 ms  11.380 ms  11.310 ms
+ 4  8.8.8.8  14.820 ms  14.750 ms  14.690 ms`,
+              'ping -c 2 -t 1 8.8.8.8': `PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
+From 192.168.1.1 icmp_seq=1 Time to live exceeded
+From 192.168.1.1 icmp_seq=2 Time to live exceeded
+
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1002ms`,
+              'ip route get 8.8.8.8': `8.8.8.8 via 192.168.1.1 dev eth0 src 192.168.1.10 uid 1000
+    cache`,
+            },
+          },
           validation: {
             judgment: [
               {

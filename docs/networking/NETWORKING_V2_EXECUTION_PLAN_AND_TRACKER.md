@@ -103,24 +103,25 @@
 
 ---
 
-### Phase 3: Milestone 3 — Routing & Gateways (Modules 8–10)
-- [ ] **Task 3.1: Author Module 8 Content (`net-08.ts`)**
-  - [ ] Concept 8.1: Leaving the Subnet Dilemma.
-  - [ ] Concept 8.2: Default Gateway as the Physical Door (Router dual-NICs).
-  - [ ] Concept 8.3: The Hop-by-Hop L2 Rewrite (IP stays constant; MAC changes at every hop).
-  - [ ] Ticket #108: Missing gateway restoration (`route print` / `ip route`).
-- [ ] **Task 3.2: Author Module 9 Content (`net-09.ts`)**
-  - [ ] Concept 9.1: Longest Prefix Match (Most specific prefix wins).
-  - [ ] Concept 9.2: Gateway of Last Resort (`0.0.0.0/0`).
-  - [ ] Concept 9.3: Loop Prevention via TTL (Traceroute hop inspection).
-  - [ ] Ticket #109: Multi-hop path trace & TTL triage (`tracert` / `traceroute`).
-- [ ] **Task 3.3: Author Module 10 Content (`net-10.ts`)**
-  - [ ] Concept 10.1: RFC 1918 Private Ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
-  - [ ] Concept 10.2: Port Address Translation (PAT / NAT Overload).
-  - [ ] Concept 10.3: Inbound Port Forwarding (DNAT).
-  - [ ] Ticket #110: Inspect NAT state table (`show ip nat translations`).
-- [ ] **Task 3.4: Verification Suite**
-  - [ ] Add `tests/tracks/networking-milestone-3-rollout.test.tsx`.
+### Phase 3: Milestone 3 — Routing & Gateways (Modules 8–10 / `net-07.ts` & `net-08.ts`)
+- [x] **Task 3.1: Author Content for Default Gateways & Hop-by-Hop L2 Rewrite (`net-07.ts` Concept 1)**
+  - [x] Concept 8.1: Leaving the Subnet Dilemma.
+  - [x] Concept 8.2: Default Gateway as the Physical Door (Router dual-NICs).
+  - [x] Concept 8.3: The Hop-by-Hop L2 Rewrite (IP stays constant; MAC changes at every hop).
+  - [x] Ticket #108: Missing gateway restoration with dual Windows (`route print`) & Linux (`ip route show default`).
+- [x] **Task 3.2: Author Content for Longest Prefix Match & Loop Mitigation (`net-07.ts` Concepts 2 & 3)**
+  - [x] Concept 9.1: Longest Prefix Match (Most specific prefix wins).
+  - [x] Concept 9.2: Gateway of Last Resort (`0.0.0.0/0`).
+  - [x] Concept 9.3: Loop Prevention via TTL (Traceroute hop inspection).
+  - [x] Ticket #109: Multi-hop path trace & TTL triage with dual Windows (`tracert -d`) & Linux (`traceroute -n`).
+- [x] **Task 3.3: Author Content for NAT & PAT (`net-08.ts` Concepts 1, 2 & 3)**
+  - [x] Concept 10.1: RFC 1918 Private Ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) & Address Quadrants (Inside/Outside Local/Global).
+  - [x] Concept 10.2: Port Address Translation (PAT / NAT Overload) & Dynamic Source Port Disambiguation.
+  - [x] Concept 10.3: Inbound Port Forwarding (DNAT) & Return Flow De-NATting.
+  - [x] Ticket #110: Inspect NAT state table with Cisco IOS (`show ip nat translations`) & Linux conntrack (`conntrack -L`).
+- [x] **Task 3.4: Verification Suite**
+  - [x] Added `tests/tracks/networking-milestone-3-rollout.test.tsx` (10/10 tests green).
+  - [x] Full networking test suite passing 100%: 29/29 test files, 454/454 tests green.
 
 ---
 
@@ -152,5 +153,6 @@
 ---
 
 ## 💾 Current Session State (Where We Are Right Now)
-* **Active Milestone:** Milestone 3 (Internetwork Routing & Gateways — Modules 8–10).
-* **Next Immediate Task:** **Task 3.1 — Author Module 8 Content (`net-08.ts`)** (Leaving the Subnet Dilemma, Default Gateway as the Physical Door, Hop-by-Hop L2 Rewrite, Ticket #108).
+* **Active Milestone:** Milestone 4 & 5 (Services, Transport & Security — Modules 11–15).
+* **Next Immediate Task:** **Task 4.1 — Author Module 11 (DHCP)** (DORA exchange, APIPA `169.254.x.x`, lease renew, Ticket #111).
+
