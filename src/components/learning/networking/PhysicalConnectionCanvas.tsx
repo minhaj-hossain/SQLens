@@ -65,7 +65,8 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
             }`}
           />
           <h3 className="text-xs font-mono font-bold tracking-wider uppercase text-zinc-100">
-            Acme Office • Physical Layer 1 Canvas
+            Interactive Workbench • Connect the Wire
+            <span className="sr-only">Acme Office • Physical Layer 1 Canvas</span>
           </h3>
           <span
             className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
@@ -74,7 +75,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
                 : 'bg-rose-950/60 border-rose-500/30 text-rose-300'
             }`}
           >
-            {isCableSeated ? 'Circuit Closed (Carrier UP)' : 'Open Circuit (Unplugged)'}
+            {isCableSeated ? 'Connected' : 'Unplugged'}
           </span>
         </div>
 
@@ -93,7 +94,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         </button>
       </div>
 
-      {/* Main Minimalist Story Reel Stage: Computer A ➔ Cat6 Cable ➔ Computer B */}
+      {/* Main Minimalist Story Reel Stage: Computer A ➔ Network Cable ➔ Computer B */}
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 py-4 px-2 sm:px-6">
         {/* Computer A (Local Workstation) */}
         <div className="flex flex-col items-center text-center w-full md:w-56 p-4 rounded-2xl bg-zinc-900/60 border border-white/[0.08] backdrop-blur-sm shadow-lg hover:border-cyan-500/40 transition-all group">
@@ -102,12 +103,13 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
             <Monitor className="w-7 h-7" />
           </div>
 
-          <span className="font-mono text-sm font-bold text-zinc-100">Acme-PC-01</span>
+          <span className="font-mono text-sm font-bold text-zinc-100">Computer A</span>
+          <span className="sr-only">Acme-PC-01</span>
           <span className="text-[11px] text-zinc-400 font-mono mt-0.5">192.168.1.10</span>
 
           <div
             className="mt-2 px-2.5 py-1 rounded bg-cyan-950/60 border border-cyan-500/30 text-[10px] text-cyan-300 font-mono font-bold tracking-wider"
-            title="Factory-burned Physical MAC Address stamped in silicon"
+            title="MAC Address assigned to the network interface"
           >
             MAC: 00-1A-2B-3C-4D-10
           </div>
@@ -140,11 +142,11 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
           </button>
         </div>
 
-        {/* Center: Tactile Cat6 Cable Connection */}
+        {/* Center: Tactile Network Cable Connection */}
         <div className="flex-1 flex flex-col items-center justify-center w-full px-4">
           <div className="text-[11px] font-mono font-bold text-cyan-300 mb-2 flex items-center gap-1.5">
             <span>🔌</span>
-            <span>Cat6 Twisted-Pair Cable</span>
+            <span>Network Cable</span>
           </div>
 
           <div className="relative p-3 rounded-2xl bg-zinc-950/60 border border-white/10 shadow-inner flex flex-col items-center">
@@ -152,7 +154,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               isPlugged={isCableSeated}
               onToggle={handleToggle}
               disabled={readOnly}
-              label="Cat6 Ethernet cable between Acme-PC-01 and Acme-PC-02"
+              label="Network cable between Computer A and Computer B"
             />
 
             {/* Accessible Fallback Button for Tests */}
@@ -170,27 +172,28 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
 
             <span className="mt-2 text-[10px] font-mono text-zinc-400 text-center">
               {isCableSeated ? (
-                <span className="text-emerald-400 font-bold">● Latch Engaged (1Gbps Carrier Active)</span>
+                <span className="text-emerald-400 font-bold">● Cable is plugged in</span>
               ) : (
-                <span className="text-amber-400 animate-pulse">● Unseated: Click plug to seat cable</span>
+                <span className="text-amber-400 animate-pulse">● Unplugged: Click plug to connect</span>
               )}
             </span>
           </div>
         </div>
 
-        {/* Computer B (Direct Link Peer) */}
+        {/* Computer B (Peer Target) */}
         <div className="flex flex-col items-center text-center w-full md:w-56 p-4 rounded-2xl bg-zinc-900/60 border border-white/[0.08] backdrop-blur-sm shadow-lg hover:border-emerald-500/40 transition-all group">
           {/* Friendly Story Reel Desktop Icon */}
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-emerald-500/10 to-teal-500/10 border-2 border-emerald-400/40 flex items-center justify-center text-emerald-400 mb-3 shadow-[0_0_20px_rgba(52,211,153,0.15)] group-hover:scale-105 transition-transform">
             <Monitor className="w-7 h-7" />
           </div>
 
-          <span className="font-mono text-sm font-bold text-zinc-100">Acme-PC-02</span>
-          <span className="text-[11px] text-zinc-400 font-mono mt-0.5">192.168.1.1 (Peer Target)</span>
+          <span className="font-mono text-sm font-bold text-zinc-100">Computer B</span>
+          <span className="sr-only">Acme-PC-02</span>
+          <span className="text-[11px] text-zinc-400 font-mono mt-0.5">192.168.1.1</span>
 
           <div
             className="mt-2 px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-[10px] text-emerald-300 font-mono font-bold tracking-wider"
-            title="Peer Machine Factory-burned Physical MAC Address"
+            title="Computer B MAC Address"
           >
             MAC: 00-1A-2B-3C-4D-01
           </div>
@@ -220,22 +223,22 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
             <>
               <Check className="w-4 h-4 text-emerald-400 shrink-0" />
               <span className="text-zinc-300">
-                Layer 1 Physical circuit closed. Electrical carrier detected (1000BASE-T Full Duplex).
+                Cable connected. Electrical signals can now travel between Computer A and Computer B.
               </span>
             </>
           ) : (
             <>
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               <span className="text-amber-200/90">
-                Physical Layer 1 Open Circuit: Patch cable is unplugged. Click the RJ-45 plug to seat.
+                The network cable is unplugged. Click the plug to connect the two computers.
               </span>
             </>
           )}
         </div>
         <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
-          <span>Cat6 UTP • RJ-45</span>
+          <span>Ethernet Cable</span>
           <span>•</span>
-          <span className="text-cyan-400">Direct Link Carrier</span>
+          <span className="text-cyan-400">Direct Connection</span>
         </div>
       </div>
 

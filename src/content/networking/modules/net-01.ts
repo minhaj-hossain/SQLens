@@ -58,8 +58,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       stage: { stageNumber: 1, stepIndex: 0, title: 'Stage 1: Shadow the Master' },
       kind: 'do',
       say: [
-        "Welcome to your first workplace mission! As an IT technician responding to Ticket #1042, our coworker at Computer A (`Acme-PC-01`) reports they cannot connect to Computer B (`192.168.1.1`).",
-        "In IT, our first step is always to verify the issue using `ping`. This command sends a small test message across the network to check whether the target computer can respond.",
+        "In the Story Reel, we saw that two computers cannot communicate without a physical connection.",
+        "To check if one computer can reach another, we use a command called `ping`. It sends a small test message and checks whether a reply returns.",
         "Let's test the connection from Computer A to Computer B. Type `ping 192.168.1.1` and press Enter.",
       ],
       actionPrompt: 'ping 192.168.1.1',
@@ -285,47 +285,47 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
   ],
   ticketScene: {
     ticketId: '101',
-    title: 'Discovery Ticket #101: The Silent Link',
+    title: 'Hands-On Problem: Unconnected Computers',
     symptom:
-      'Acme-PC-02 cannot transmit packets or reach the office router. All local pings report transmit failed. General failure.',
+      'Computer A cannot send messages to Computer B. All ping tests report transmit failed because no signal can travel.',
     telemetry: [
-      'Workstation: Acme-PC-02',
-      'Ethernet adapter Ethernet0: Media disconnected',
-      'Port eth0 Link LED: OFF',
-      'Static IP configured in registry: 192.168.1.15 / 255.255.255.0',
+      'Device: Computer A',
+      'Port eth0: Cable unplugged',
+      'Configured IP: 192.168.1.10',
+      'Target IP: 192.168.1.1 (Computer B)',
     ],
     options: [
       {
         id: 'opt-reboot-os',
-        label: 'Reboot Acme-PC-02 operating system to reset network sockets.',
+        label: 'Restart Computer A operating system.',
         isCorrect: false,
-        feedback: 'Operating system reboot will not resolve an unlatched physical cable.',
+        feedback: 'Restarting software will not fix an unplugged physical cable.',
       },
       {
         id: 'opt-reconnect-cable',
         label:
-          'Physical Layer 1 issue: Cat6 patch cable disconnected or unlatched from the RJ-45 jack.',
+          'Physical connection issue: The network cable is unplugged, so electrical signals cannot travel.',
         isCorrect: true,
         feedback:
-          'Spot on! Without a physical link carrier, Layer 2 Ethernet cannot transmit electrical pulses.',
+          'Spot on! Without a physical cable connecting the two devices, data cannot travel as electrical signals.',
       },
       {
         id: 'opt-dns-down',
-        label: 'DNS root servers are offline.',
+        label: 'Internet search servers are down.',
         isCorrect: false,
-        feedback: 'DNS is an application layer protocol; failure here is at physical Layer 1.',
+        feedback: 'We are testing direct communication on a local cable, not remote search engines.',
       },
     ],
     repairActions: [
       {
         id: 'fix-reconnect',
-        label: 'Inspect physical cable behind desk and plug firmly into RJ-45 port',
+        label: 'Plug the network cable firmly into the network port',
         isCorrect: true,
         patch: { action: 'set-link', target: 'port-1', value: 'connected' },
       },
       {
         id: 'fix-reconfigure-ip',
-        label: 'Change Host A IP address to 192.168.1.99',
+        label: 'Change Computer A IP address to 192.168.1.99',
         isCorrect: false,
         patch: {
           action: 'reconfigure-interface',
