@@ -541,7 +541,7 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
               </div>
             )}
           </div>
-        ) : (hasTerminal && !hasHttpTls && !hasTcpLadder && !hasDns && !hasDhcp) ? (
+        ) : (hasTerminal && !hasHttpTls && !hasTcpLadder && !hasDns && !hasDhcp && !hasFirewall && !hasVlanDijkstra) ? (
           /* LEFT COLUMN: Virtual Terminal Diagnostics Simulator */
           <div className="lg:col-span-7 xl:col-span-7 flex flex-col gap-4 min-w-0 w-full order-1">
             {task.terminal && (
@@ -814,6 +814,13 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
                 description={task.description}
               />
             )}
+            {task.terminal && (
+              <VirtualTerminalSimulator
+                scenario={task.terminal}
+                title={task.title}
+                description={task.description}
+              />
+            )}
             {concept ? (
               <TaskInstructions
                 task={task}
@@ -863,6 +870,13 @@ export const NetworkingPracticeTaskView: React.FC<NetworkingPracticeTaskViewProp
             {task.vlanDijkstra && (
               <VlanTrunkDijkstraLab
                 taskContent={task.vlanDijkstra}
+                title={task.title}
+                description={task.description}
+              />
+            )}
+            {task.terminal && (
+              <VirtualTerminalSimulator
+                scenario={task.terminal}
                 title={task.title}
                 description={task.description}
               />

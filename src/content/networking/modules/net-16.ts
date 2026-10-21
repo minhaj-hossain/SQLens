@@ -47,20 +47,60 @@ export const NET_16_MODULE: ModuleData = {
         summary:
           'VLANs partition switches into isolated broadcast domains. Access ports carry untagged traffic for a single VLAN. Trunk ports carry multiple VLANs across switches using 4-byte IEEE 802.1Q tags with a 12-bit VLAN ID (VID 1–4094). Cross-VLAN traffic requires Layer 3 routing.',
         explanation: [
-          '### Logical Broadcast Segmentation',
-          'VLANs split a switch into logical isolated switches. Broadcasts on VLAN 10 never reach VLAN 20.',
+          '### Beat 1: Direct Physical Reality — The Flat Broadcast Domain Dilemma',
+          'When hundreds of employee computers plug into a single physical switch topology without segmentation, they all share one flat **Layer 2 broadcast domain**.',
+          'Every single ARP request, DHCP discover, and NetBIOS announcement floods out of every active switch port. As the network scales past 200 devices, constant broadcast chatter interrupts NIC controllers and consumes CPU cycles on every workstation.',
+          'Furthermore, flat networks lack security boundaries: an intern in Marketing running Wireshark can capture unencrypted payroll packets or database credentials transmitted by the Finance department across the hall.',
           '',
-          '### Access vs Trunk Ports (IEEE 802.1Q)',
-          '- **Access Port**: Single VLAN, untagged for endpoint devices.',
-          '- **Trunk Port**: Multiple VLANs, tagged with 4-byte 802.1Q header across switch interconnects.',
+          '### Beat 2: The Core Mechanism — IEEE 802.1Q Trunk Tagging & Port Roles',
+          'Virtual LANs (VLANs, IEEE 802.1Q) solve both scalability and security by partitioning a physical switch into multiple isolated logical switches:',
+          '1. **Access Ports (Untagged)**: Switch ports connected to end-user workstations, printers, or IP phones. The switch assigns the port a specific VLAN ID (e.g. VLAN 10). When the PC sends a standard Ethernet frame, the switch accepts it and guarantees it will only be delivered to other ports in VLAN 10. The frame exiting an access port is **never tagged**—endpoint network cards do not see 802.1Q headers.',
+          '2. **Trunk Ports (Tagged)**: High-speed uplinks connecting switches together or connecting a switch to a router. A trunk carries frames for dozens of different VLANs simultaneously across a single physical cable.',
+          '3. **The 4-Byte IEEE 802.1Q Header**: To distinguish which VLAN a frame belongs to across a trunk link, the transmitting switch inserts a 4-byte tag between the Source MAC and EtherType fields:',
+          '   - **TPID (Tag Protocol Identifier)**: Set to `0x8100` to indicate an 802.1Q tagged frame.',
+          '   - **TCI (Tag Control Information)**: Contains 3-bit Priority Code Point (PCP for QoS), 1-bit Drop Eligible Indicator (DEI), and a **12-bit VLAN Identifier (VID)** supporting $2^{12} - 2 = 4,094$ distinct VLANs.',
+          '4. **Inter-VLAN Routing**: Because VLANs enforce absolute Layer 2 isolation, traffic cannot cross from VLAN 10 to VLAN 20 without a Layer 3 routing process (a **Router-on-a-Stick** with subinterfaces like `Gi0/0.10`, or a Layer 3 switch with Switched Virtual Interfaces / SVIs).',
           '',
-          '### Inter-VLAN Routing',
-          'Because VLANs are separate Layer 2 domains, communicating between them requires a Layer 3 router (Router-on-a-Stick) or Layer 3 switch SVI.',
+          '### Beat 3: Failure Modes & Workplace Diagnostics (Ticket #116)',
+          'VLAN misconfigurations cause silent connectivity blackouts during campus switch deployments:',
+          '- **Access Port VLAN Mismatch**: Workstation is plugged into an access port assigned to VLAN 20, but the host is statically configured for the VLAN 10 subnet, preventing default gateway reachability.',
+          '- **Trunk Pruning / Allowed List Omission**: An administrator forgets to add `allowed vlan add 30` to the trunk link, dropping cross-switch engineering traffic.',
+          '- **Dual-Platform Diagnostics**: Inspect VLAN assignments with Cisco IOS (`show vlan brief`, `show interfaces trunk`) or Linux bridging (`bridge vlan show`, `ip link add link eth0 name eth0.10 type vlan id 10`).',
         ],
         keyTakeaway:
           'Access ports connect to endpoints untagged. Trunk ports insert 4-byte 802.1Q tags to multiplex VLANs across switches.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net16-mcq-trunk-tagging',
+            question:
+              'What modification does an enterprise switch make to an Ethernet frame before transmitting it across an IEEE 802.1Q trunk link?',
+            options: [
+              'It encrypts the payload using AES-256',
+              'It inserts a 4-byte 802.1Q tag containing TPID 0x8100 and the 12-bit VLAN ID',
+              'It rewrites the source MAC address to FF:FF:FF:FF:FF:FF',
+              'It compresses the frame into an ICMP Echo packet',
+            ],
+            correctIndex: 1,
+            explanation:
+              'IEEE 802.1Q inserts a 4-byte tag into the Ethernet header on trunk links so receiving switches know which logical broadcast domain the frame belongs to.',
+          },
+          {
+            id: 'net16-mcq-inter-vlan',
+            question:
+              'Can a computer on VLAN 10 directly communicate with a server on VLAN 20 plugged into the same physical switch without Layer 3 routing?',
+            options: [
+              'Yes, if both computers use the same DNS server',
+              'No; VLANs create completely isolated Layer 2 broadcast domains, and communication between different VLANs strictly requires a Layer 3 router or Layer 3 switch',
+              'Yes, by sending a broadcast ARP frame',
+              'Yes, if the physical switch is powered by PoE',
+            ],
+            correctIndex: 1,
+            explanation:
+              'VLANs enforce Layer 2 separation. Even on the same physical switch hardware, frames cannot cross between different VLAN IDs without a Layer 3 routing process.',
+          },
+        ],
       },
       tasks: [
         {
@@ -71,6 +111,7 @@ export const NET_16_MODULE: ModuleData = {
           instructions: [
             'PC 1 on Switch A (VLAN 10) sends a packet to PC 2 on Switch B (VLAN 10) across an inter-switch trunk link.',
             'Answer the judgment questions on 802.1Q tagging behavior and port classifications.',
+            'Use the workplace diagnostic terminal to inspect switch trunk states and Linux subinterface VLAN bindings.',
           ],
           type: 'guided',
           primaryTable: '',
@@ -88,6 +129,83 @@ export const NET_16_MODULE: ModuleData = {
               text: 'The 802.1Q tag is inserted on trunk links between switches.',
             },
           ],
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #116 (Dual Platform)',
+            description:
+              'Audit switch VLAN memberships and trunk allowed lists on Cisco IOS and Linux bridge interfaces.',
+            prompt: 'admin@dist-switch:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #116: VLAN SEGMENTATION & TRUNK AUDIT',
+              '====================================================================',
+              'Inspecting VLAN assignments, 802.1Q trunk allowed lists, and subinterfaces.',
+              'Supported commands:',
+              '  - Cisco IOS: show vlan brief',
+              '               show interfaces trunk',
+              '  - Linux:     bridge vlan show',
+              '               ip link add link eth0 name eth0.10 type vlan id 10',
+              '               ip addr show eth0.10',
+            ].join('\n'),
+            availableCommands: [
+              'show vlan brief',
+              'show interfaces trunk',
+              'bridge vlan show',
+              'ip link add link eth0 name eth0.10 type vlan id 10',
+              'ip addr show eth0.10',
+            ],
+            commands: {
+              'show vlan brief': `VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/4, Gi0/5
+10   Engineering                      active    Gi0/1, Gi0/2
+20   Finance                          active    Gi0/3
+30   Management                       active    
+1002 fddi-default                     act/unsup 
+1003 token-ring-default               act/unsup`,
+              'show interfaces trunk': `Port        Mode             Encapsulation  Status        Native vlan
+Gi0/24      on               802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Gi0/24      1-4094
+
+Port        Vlans allowed and active in management domain
+Gi0/24      1,10,20,30
+
+Port        Vlans in spanning tree forwarding state and not pruned
+Gi0/24      1,10,20,30`,
+              'bridge vlan show': `port              vlan-id
+eth0              1 PVID Egress Untagged
+                  10
+                  20
+eth1              10 PVID Egress Untagged
+eth2              20 PVID Egress Untagged`,
+              'ip link add link eth0 name eth0.10 type vlan id 10': `[OK] Created VLAN subinterface eth0.10 with 802.1Q tag 10 on parent eth0.`,
+              'ip addr show eth0.10': `3: eth0.10@eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 00:1a:2b:3c:4d:01 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.10.1/24 brd 192.168.10.255 scope global eth0.10
+       valid_lft forever preferred_lft forever`,
+            },
+            commandResponses: {
+              'show vlan brief': `VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Gi0/4, Gi0/5
+10   Engineering                      active    Gi0/1, Gi0/2
+20   Finance                          active    Gi0/3
+30   Management                       active`,
+              'show interfaces trunk': `Port        Mode             Encapsulation  Status        Native vlan
+Gi0/24      on               802.1q         trunking      1
+
+Port        Vlans allowed on trunk
+Gi0/24      1-4094`,
+              'bridge vlan show': `port              vlan-id
+eth0              1 PVID Egress Untagged
+                  10
+                  20`,
+              'ip link add link eth0 name eth0.10 type vlan id 10': `[OK] Created VLAN subinterface eth0.10 with 802.1Q tag 10 on parent eth0.`,
+              'ip addr show eth0.10': `3: eth0.10@eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    inet 192.168.10.1/24 brd 192.168.10.255 scope global eth0.10`,
+            },
+          },
           validation: {
             judgment: [
               {
@@ -156,21 +274,53 @@ export const NET_16_MODULE: ModuleData = {
         'Explore the physics and protocol rules of Wi-Fi: half-duplex RF medium, 2.4 GHz vs 5 GHz channels, and CSMA/CA collision avoidance.',
       theory: {
         summary:
-          'Wi-Fi operates on a shared half-duplex radio medium. In 2.4 GHz, channels are 20 MHz wide with only 3 non-overlapping choices: 1, 6, and 11. Because radios cannot detect collisions while transmitting, Wi-Fi uses CSMA/CA with random backoff and Layer 2 ACKs.',
+          'Wi-Fi operates on an unguided, half-duplex RF radio medium. In 2.4 GHz, 20 MHz wide channels are spaced just 5 MHz apart, meaning adjacent channels overlap destructively; only channels 1, 6, and 11 provide spectral isolation. Because a transmitter\'s own RF signal obliterates its receiver, radios cannot detect collisions on the air (CSMA/CD is physically impossible) and must use CSMA/CA with random backoff and Layer 2 ACKs.',
         explanation: [
-          '### Half-Duplex Radio Physics',
-          'Only one radio can transmit on a channel at a time. Colliding transmissions destroy frames.',
+          '### Beat 1: The Physical Cause — Half-Duplex RF Medium & Overlapping Channels',
+          'Unlike full-duplex twisted pair copper cables where separate wire pairs handle transmit (Tx) and receive (Rx) simultaneously, Wi-Fi operates in open unguided RF space on shared frequencies (2.4 GHz and 5 GHz). In the 2.4 GHz ISM band, the spectrum ranges from 2.401 GHz to 2.473 GHz. Each standard Wi-Fi channel is 20 MHz wide (or 22 MHz in 802.11b), but channel center frequencies are spaced a mere 5 MHz apart (Channel 1 is 2412 MHz, Channel 2 is 2417 MHz, etc.). This geometric reality means adjacent channels overlap extensively. Only channels 1 (2412 MHz), 6 (2437 MHz), and 11 (2462 MHz) have 25 MHz center-to-center spacing, providing zero spectral overlap in North American regulatory domains.',
           '',
-          '### 2.4 GHz Channels: 1, 6, 11',
-          'Spacing is only 5 MHz, so adjacent channels overlap. Channels 1, 6, and 11 provide complete spectral isolation.',
+          '### Beat 2: The Wire / System Consequence — Transmit Overwhelm & CSMA/CA Backoff',
+          'When an 802.11 transceiver energizes its antenna to broadcast RF waveforms, the local transmit power (typically +15 to +20 dBm) completely saturates and deafens its own internal receiver circuitry compared to incoming signals from distant stations (which arrive attenuated at -60 to -85 dBm). Consequently, a wireless station cannot physically listen while talking: Ethernet\'s wired Collision Detection (CSMA/CD) is fundamentally impossible over radio waves. If two Wi-Fi stations transmit simultaneously on overlapping frequencies, their RF waveforms collide constructively and destructively in the air, corrupting both frames at the receiving access point. To avoid catastrophic packet loss, 802.11 implements Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA). Stations listen before transmitting (Clear Channel Assessment / Physical Carrier Sense) and examine the Network Allocation Vector (Virtual Carrier Sense). If the medium is busy, stations defer transmission and execute a randomized binary exponential backoff timer. Furthermore, because collisions cannot be detected during transmission, every unicast frame requires an explicit Layer 2 acknowledgment (ACK) frame from the receiver; missing ACKs trigger retransmissions.',
           '',
-          '### CSMA/CA vs CSMA/CD',
-          'Wired Ethernet uses Collision Detection (CD). Radios cannot detect incoming collisions during transmission and must use Collision Avoidance (CA) with random backoff and RTS/CTS.',
+          '### Beat 3: The Diagnostic / Operational Fix — Spectrum Planning & Dual-Band Offload',
+          'In enterprise deployments, adjacent access points must be engineered onto non-overlapping channels (1, 6, 11 in 2.4 GHz) with careful RF power tuning to prevent co-channel interference (CCI) and adjacent-channel interference (ACI). Furthermore, high-density networks migrate voice, video, and corporate traffic to the 5 GHz (UNII-1, UNII-2, UNII-3) and 6 GHz (Wi-Fi 6E) bands, where dozens of non-overlapping 20 MHz or bonded 40/80 MHz channels are available, dramatically reducing channel contention domains and eliminating 2.4 GHz congestion.',
         ],
         keyTakeaway:
-          'Wi-Fi is a shared half-duplex medium. Use non-overlapping channels (1, 6, 11 in 2.4 GHz) and CSMA/CA to minimize collision loss.',
+          'Wi-Fi is a shared half-duplex radio medium. Radios cannot detect collisions while transmitting and must use CSMA/CA with backoff and Layer 2 ACKs. In 2.4 GHz, always deploy non-overlapping channels 1, 6, and 11.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net16-mcq-wifi-channels',
+            question:
+              'In the 2.4 GHz Wi-Fi spectrum, why are channels 1, 6, and 11 universally standard for multi-access-point enterprise deployments?',
+            options: [
+              'They are the only channels licensed by the FCC for commercial networking',
+              'Because channels are 20 MHz wide with centers spaced 5 MHz apart, channels 1, 6, and 11 provide the necessary 25 MHz separation to prevent destructive spectral overlap',
+              'Channels 1, 6, and 11 utilize laser signals instead of radio frequency waves',
+              'Those channels automatically disable encryption to boost throughput',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'Each 2.4 GHz channel occupies 20 MHz of bandwidth, but channel numbers are separated by only 5 MHz. Only channels 1 (2412 MHz), 6 (2437 MHz), and 11 (2462 MHz) have 25 MHz separation, allowing adjacent APs to transmit simultaneously without interfering.',
+          },
+          {
+            id: 'net16-mcq-csmaca',
+            question:
+              'Why does 802.11 Wi-Fi rely on CSMA/CA (Collision Avoidance) rather than 802.3 Ethernet\'s CSMA/CD (Collision Detection)?',
+            options: [
+              'Wi-Fi frames lack source and destination MAC addresses',
+              'Wi-Fi routers lack hardware processors capable of calculating frame checksums',
+              'A transmitting radio\'s high local power overwhelms its own receiver, making it physically impossible to detect a simultaneous incoming collision on the shared RF medium',
+              'Collision detection is strictly prohibited by IEEE 802 wireless regulatory standards',
+            ],
+            correctIndex: 2,
+            correctAnswerIndex: 2,
+            explanation:
+              'Because a radio transmitter emits power thousands of times greater than the incoming faint signal from a remote station, it cannot detect collisions while transmitting. Therefore, stations must avoid collisions using carrier sensing, random backoff timers, and explicit Layer 2 ACKs.',
+          },
+        ],
       },
       tasks: [
         {
@@ -257,21 +407,53 @@ export const NET_16_MODULE: ModuleData = {
         'Contrast Interior Gateway Protocols (OSPF) with Exterior Gateway Protocols (BGP), understand link-state Dijkstra algorithms and autonomous systems.',
       theory: {
         summary:
-          'Dynamic routing automates path calculation during network topology changes. OSPF is an Interior Gateway Protocol (IGP) running Dijkstra SPF on link-state databases within an enterprise. BGP is an Exterior Gateway Protocol (EGP) exchanging path-vector reachability between Autonomous Systems (ASNs) across the global internet.',
+          'Dynamic routing protocols automatically construct and update routing tables as physical link states fluctuate. OSPF is an interior link-state protocol that floods Link-State Advertisements (LSAs) and runs Dijkstra\'s Shortest Path First (SPF) algorithm to calculate loop-free lowest-cost paths within an autonomous domain. BGP is the exterior path-vector protocol that glues the global internet together, exchanging network prefixes and AS-Path attributes between distinct Autonomous Systems based on commercial transit and peering policies.',
         explanation: [
-          '### Dynamic Routing Automation',
-          'Dynamic protocols adapt to link failures in milliseconds without manual intervention.',
+          '### Beat 1: The Physical Cause — Link Degradation, Scale & Autonomous Boundaries',
+          'Physical network topologies are dynamic: underground fiber cuts occur, undersea cables suffer pressure damage, transceivers burn out, and interface bandwidths vary from 1 Gbps access links to 100 Gbps core backbones. Furthermore, no single organization owns or manages the entire worldwide internet; the global network is segmented into thousands of independently administered domains known as Autonomous Systems (ASNs), each governed by its own commercial peering agreements, transit fees, and administrative policies.',
           '',
-          '### OSPF (Interior Gateway Protocol)',
-          'Link-state protocol using Dijkstra Shortest Path First. The OSPF metric is path Cost (a dimensionless integer derived from interface bandwidth by default, where Cost = Reference Bandwidth / Interface Bandwidth). Organized into Areas with Backbone Area 0.',
+          '### Beat 2: The Wire / System Consequence — Link-State Dijkstra vs Path-Vector Attributes',
+          'Within an enterprise, manual static routing fails because it cannot detect remote physical outages or dynamically route around congested links. OSPF (Open Shortest Path First) solves internal routing by forming neighbor adjacencies via Hello packets, synchronizing a comprehensive Link-State Database (LSDB) across the area, and executing Dijkstra\'s algorithm to compute the shortest path tree rooted at itself. OSPF defines path metric as Cost = Reference Bandwidth / Interface Bandwidth (e.g. 100 Mbps / 10 Gbps = 1), ensuring high-capacity links are strictly preferred. However, flooding complete link-state topologies does not scale to millions of internet routers and ignores business agreements. For inter-domain routing, BGP (Border Gateway Protocol) operates as a path-vector protocol over reliable TCP port 179 sessions. Instead of raw link speeds, BGP advertises IP prefixes adorned with rich Path Attributes, foremost among them the AS_PATH list. As an update traverses each Autonomous System, the exporting border router prepends its own ASN to the AS_PATH. If a router receives an update containing its own ASN in the AS_PATH, it immediately drops the route, mathematically preventing inter-domain routing loops across the globe.',
           '',
-          '### BGP (Exterior Gateway Protocol)',
-          'Path-vector protocol connecting Autonomous Systems across the internet based on business policies and AS_PATH.',
+          '### Beat 3: The Diagnostic / Operational Fix — Tiered Hierarchy & Route Filtering',
+          'Enterprise networks deploy a two-tiered routing architecture: OSPF acts as the Interior Gateway Protocol (IGP) in Area 0 (Backbone) to provide lightning-fast, millisecond reconvergence over internal redundant fiber meshes. At the campus or datacenter edge, border routers run Exterior BGP (eBGP) with upstream transit ISPs, advertising provider-independent IP allocations, enforcing inbound/outbound route-maps, and filtering bogus prefix advertisements to maintain deterministic global reachability.',
         ],
         keyTakeaway:
-          'OSPF routes internally within an organization using Dijkstra SPF; BGP routes externally across the global internet between Autonomous Systems.',
+          'OSPF routes internally within an organization using Dijkstra SPF based on link cost; BGP routes externally across the global internet between Autonomous Systems using AS_PATH and policy attributes.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net16-mcq-ospf-dijkstra',
+            question:
+              'How does OSPF calculate the optimal route to a destination subnet, and what metric does it use by default?',
+            options: [
+              'It counts the number of router hops and picks the route with fewer than 15 hops',
+              'It floods link-state advertisements (LSAs), builds a synchronized topology database, and runs Dijkstra\'s Shortest Path First algorithm using link cost (inversely proportional to bandwidth)',
+              'It queries a central DNS server for the fastest IP route',
+              'It selects paths randomly to achieve equal load balancing across all physical interfaces',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'OSPF is a link-state IGP. Every router in an OSPF area maintains an identical Link-State Database (LSDB) and computes the shortest loop-free tree to all destinations using Dijkstra\'s SPF algorithm, where link cost is calculated from interface bandwidth (Reference Bandwidth / Interface Bandwidth).',
+          },
+          {
+            id: 'net16-mcq-bgp-aspath',
+            question:
+              'In Border Gateway Protocol (BGP), what is the primary role of the AS_PATH attribute?',
+            options: [
+              'To measure physical cable length in kilometers between routers',
+              'To encrypt packet payloads crossing public internet backbones',
+              'To list the sequence of Autonomous System Numbers (ASNs) a prefix has traversed, enabling policy-based path selection and preventing routing loops',
+              'To assign private RFC 1918 IP addresses to customer endpoints',
+            ],
+            correctIndex: 2,
+            correctAnswerIndex: 2,
+            explanation:
+              'BGP is a path-vector protocol. As an update crosses AS boundaries, each AS prepends its ASN to the AS_PATH. Routers use this attribute to choose the shortest AS-level path and reject any route that already contains their own ASN, preventing inter-domain loops.',
+          },
+        ],
       },
       tasks: [
         {

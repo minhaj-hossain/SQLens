@@ -137,23 +137,24 @@
 
 ---
 
-### Phase 5: Milestone 6 & Capstone Exam (Modules 16–19)
-- [ ] **Task 5.1: Author Module 16 (VLANs & 802.1Q)**: Flat broadcast isolation, access vs trunk ports. Ticket #116.
-- [ ] **Task 5.2: Author Module 17 (Firewalls & ACLs)**: Stateless 5-tuple vs Stateful conntrack. Ticket #117.
-- [ ] **Task 5.3: Author Module 18 (Spanning Tree Protocol)**: Redundant loops, broadcast storms, root bridge election. Ticket #118.
-- [ ] **Task 5.4: Author Module 19 (Capstone 5-Layer Triage Exam)**:
-  - [ ] Step 1: Layer 1 Cable check.
-  - [ ] Step 2: Layer 2 Duplex/STP check.
-  - [ ] Step 3: Layer 3 Gateway conflict check.
-  - [ ] Step 4: DHCP APIPA recovery.
-  - [ ] Step 5: DNS resolver cache fix.
-- [ ] **Task 5.5: Track Registry Sync & Full Regression Suite**
-  - [ ] Update `src/content/networking/networking-roadmap.ts` and `src/tracks/registry.ts`.
-  - [ ] Run full project test suite.
+### Phase 5: Milestone 6 & Capstone Exam (Modules 14–16 / `net-14.ts` to `net-16.ts`)
+- [x] **Task 5.1: Author Module 16 (VLANs & 802.1Q)**: Flat broadcast isolation, access vs trunk ports. Ticket #116 (`net-16.ts`), 802.11 Wi-Fi CSMA/CA, OSPF vs BGP.
+- [x] **Task 5.2: Author Module 15 (Firewalls & ACLs)**: Stateless 5-tuple vs Stateful conntrack. Ticket #117 (`net-15.ts`).
+- [x] **Task 5.3: Author Module 15 (Spanning Tree Protocol)**: Redundant loops, broadcast storms, root bridge election. Ticket #118 (`net-15.ts`).
+- [x] **Task 5.4: Author Module 14 (Capstone 5-Layer Triage Exam)**:
+  - [x] Step 1: Layer 1 Cable check.
+  - [x] Step 2: Layer 2 Duplex/STP check.
+  - [x] Step 3: Layer 3 Gateway conflict check.
+  - [x] Step 4: DHCP APIPA recovery.
+  - [x] Step 5: DNS resolver cache fix.
+  - [x] Capstone exam diagnostic terminal with 5-layer systematic triage.
+- [x] **Task 5.5: Track Registry Sync & Full Regression Suite**
+  - [x] Created `tests/tracks/networking-milestones-6-7-rollout.test.tsx` (8/8 tests green).
+  - [x] Full networking test suite passing 100%: 31/31 test files, 471/471 tests green.
 
 ---
 
 ## 💾 Current Session State (Where We Are Right Now)
-* **Active Milestone:** Milestone 6 & Capstone Exam (Modules 16–19).
-* **Next Immediate Task:** **Task 5.1 — Author Module 16 (VLANs & 802.1Q)** (`net-14.ts`: flat broadcast isolation, 802.1Q tags, access vs trunk ports, Ticket #116).
+* **Active Milestone:** Completed Phase 5 (Milestones 6 & 7: Modules 14, 15, 16).
+* **Next Immediate Task:** Commit Phase 5 changes and summarize milestone achievements.
 

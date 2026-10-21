@@ -44,18 +44,53 @@ export const NET_15_MODULE: ModuleData = {
         'Understand why redundant switch links cause catastrophic broadcast storms and how STP breaks physical loops into logical trees.',
       theory: {
         summary:
-          'Because Ethernet lacks a TTL field, physical switch loops cause infinite broadcast storms. STP elects a Root Bridge (lowest Bridge ID: Priority + MAC) via BPDUs and places redundant ports into a Blocking/Discarding state, breaking loops while preserving failover paths.',
+          'Because standard Ethernet frames lack a Time-To-Live (TTL) field, redundant physical links between switches cause infinite broadcast multiplication, frame duplication, and MAC address table thrashing that collapse networks in seconds. IEEE 802.1D Spanning Tree Protocol (STP) and 802.1w Rapid STP prevent loops by exchanging Bridge Protocol Data Units (BPDUs), electing a single Root Bridge based on lowest Bridge ID (Priority + MAC), and blocking redundant ports while keeping them ready for instant failover.',
         explanation: [
-          '### The Broadcast Storm Threat',
-          'Ethernet frames have no TTL. A broadcast frame in a physical loop multiplies exponentially, consuming 100% of bandwidth and freezing switch CPUs.',
+          '### Beat 1: The Physical Cause — Physical Cabling Redundancy & Missing Frame TTL',
+          'Enterprise networks require high availability: if a single copper patch cable or fiber uplink is severed, business operations must not halt. Network engineers therefore cable redundant links between switches (e.g. triangle or ring meshes). However, unlike Layer 3 IPv4/IPv6 headers which possess a Time-To-Live (TTL) or Hop Limit counter decremented at each router hop to discard runaway packets, the IEEE 802.3 Ethernet frame header contains only Source MAC, Destination MAC, EtherType, Payload, and CRC. There is no TTL field. When a switch receives a broadcast frame (such as an ARP request for FF:FF:FF:FF:FF:FF) or an unknown unicast frame, physical switch hardware is required by the IEEE standard to flood that frame out of every active port except the ingress port.',
           '',
-          '### STP Loop Prevention',
-          'Switches exchange BPDUs every 2s. The switch with lowest Priority + MAC becomes the Root Bridge. Ports are assigned roles: Root Port, Designated Port, and Blocking Port (blocks user frames, listens for BPDUs).',
+          '### Beat 2: The Wire / System Consequence — Infinite Broadcast Storms & MAC Thrashing',
+          'In a redundant triangle topology without loop prevention, Switch A receives an ARP broadcast from PC-1 on port 1 and floods it across its uplinks to Switch B and Switch C. Switch B floods the frame across its cross-link to Switch C; Switch C simultaneously floods its copy to Switch B. Both switches then flood the duplicate copies back to Switch A. Because there is no TTL counter to expire the frames, the broadcast copies multiply exponentially with every transit. Within 500 milliseconds, millions of looping frames saturate 100% of physical wire bandwidth. Simultaneously, switches experience MAC table thrashing: the switches continually overwrite their Forwarding Information Base (CAM table), recording the source MAC as arriving from port 1, then port 2, then port 3 in rapid succession. Switch CPU utilization hits 100%, management access drops, and the entire local network crashes.',
+          '',
+          '### Beat 3: The Diagnostic / Operational Fix — BPDU Exchange, Root Election & Port Blocking',
+          'IEEE 802.1D Spanning Tree Protocol (and modern 802.1w RSTP) resolves this physical reality without sacrificing redundant cabling. Every 2 seconds, switches broadcast Bridge Protocol Data Units (BPDUs). Switches elect a single Root Bridge—the switch with the lowest Bridge ID (composed of a configurable 2-byte Priority, default 32768, followed by the switch\'s 6-byte base MAC address). Every non-root switch determines its single lowest-cost path to the Root Bridge (its Root Port) and designates forwarding ports towards downstream segments. All other redundant paths are placed into a Blocking (or Discarding) state. A blocked port drops all regular user data frames and stops MAC learning, but continues listening to BPDUs. If a primary cable is cut, STP detects the loss of BPDUs and transitions the blocked port into Forwarding, restoring connectivity automatically.',
         ],
         keyTakeaway:
-          'Ethernet has no TTL. STP prevents catastrophic broadcast storms by placing redundant ports into Blocking state.',
+          'Ethernet lacks a TTL field. Unmanaged redundant links cause fatal broadcast storms and MAC thrashing. STP elects a Root Bridge (lowest Priority + MAC) and blocks redundant ports to guarantee a loop-free logical tree.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net15-mcq-stp-broadcast-storm',
+            question:
+              'Why does an accidental physical cable loop crash an unmanaged Layer 2 switch network, while a routing loop at Layer 3 does not immediately freeze the entire enterprise?',
+            options: [
+              'Layer 2 switches run at much higher electric voltages than routers',
+              'Ethernet frames lack a Time-To-Live (TTL) field; without a hop limit, broadcast frames circulate and multiply indefinitely until physical link bandwidth and switch buffers are 100% exhausted',
+              'ARP requests are chemically corrosive to twisted-pair copper wire',
+              'Layer 2 switches automatically shut off power whenever two switches are connected',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'IPv4 headers contain a TTL field decremented by routers until it reaches 0 and is dropped with an ICMP Time Exceeded. Layer 2 Ethernet headers have no TTL or hop counter, so looped broadcast frames circulate forever, multiplying exponentially until the network collapses.',
+          },
+          {
+            id: 'net15-mcq-root-bridge-election',
+            question:
+              'In IEEE 802.1D Spanning Tree Protocol, how do switches elect the Root Bridge among all participating bridges?',
+            options: [
+              'The switch with the highest IP address is automatically elected',
+              'The switch with the lowest Bridge ID (configured Bridge Priority, with lowest MAC address as tie-breaker) is elected',
+              'The switch with the greatest number of physical ports is elected',
+              'All switches take turns acting as the Root Bridge every 60 seconds',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'The Bridge ID consists of a 2-byte Priority (default 32768) and a 6-byte MAC address. The switch advertising the lowest numerical Bridge ID wins the Root Bridge election. Administrators explicitly set the primary core switch priority to 4096 or 0 to guarantee root status.',
+          },
+        ],
       },
       tasks: [
         {
@@ -76,6 +111,86 @@ export const NET_15_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'SW2 has the lowest Bridge Priority (4096) and becomes the Root Bridge. Ethernet frames have no TTL, so loops cause infinite broadcast multiplication.',
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #118 (Dual Platform)',
+            description:
+              'Inspect Spanning Tree Protocol topologies, Root Bridge election parameters, and blocked port states across Cisco IOS and Linux bridge interfaces.',
+            prompt: 'admin@dist-sw01:~$',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #118: SPANNING TREE PROTOCOL & LOOP AUDIT',
+              '====================================================================',
+              'Inspecting BPDU exchanges, Root Bridge election status, and redundant port states.',
+              'Supported commands:',
+              '  - Cisco IOS: show spanning-tree',
+              '               show spanning-tree root',
+              '  - Linux:     brctl showstp br0',
+            ].join('\n'),
+            availableCommands: [
+              'show spanning-tree',
+              'show spanning-tree root',
+              'brctl showstp br0',
+            ],
+            commands: {
+              'show spanning-tree': `VLAN0001
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4096
+             Address     0011.2233.4402
+             Cost        4
+             Port        1 (GigabitEthernet0/1)
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32768  (priority 32768 sys-id-ext 0)
+             Address     0011.2233.4401
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Gi0/1               Root FWD 4         128.1    P2p 
+Gi0/2               Altn BLK 4         128.2    P2p (Blocked to eliminate loop)`,
+              'show spanning-tree root': `                                        Root  Hello Max Fwd
+Vlan                   Root ID          Cost  Time  Age Dly  Root Port
+---------------- -------------------- ------ ----- --- ---  ----------------
+VLAN0001          4096 0011.2233.4402      4     2   20  15  Gi0/1`,
+              'brctl showstp br0': `br0
+ bridge id              8000.001122334401
+ designated root        1000.001122334402
+ root path cost                  4              root port                       1
+ max age                        20.00           bridge max age                 20.00
+ hello time                      2.00           bridge hello time               2.00
+ forward delay                  15.00           bridge forward delay           15.00
+ ageing time                   300.00
+ hello timer                     0.00           tcn timer                       0.00
+ topology change timer           0.00           gc timer                        0.00
+ flags
+
+eth0 (1)
+ port id                8001                    state                forwarding
+ designated root        1000.001122334402       path cost                     4
+ designated bridge      8000.001122334401       message age timer             0.00
+ designated port        8001                    forward delay timer           0.00
+ designated cost                 0              hold timer                    0.00
+ flags
+
+eth1 (2)
+ port id                8002                    state                  blocking
+ designated root        1000.001122334402       path cost                     4
+ designated bridge      8000.001122334403       message age timer             1.82
+ designated port        8002                    forward delay timer           0.00`,
+            },
+            commandResponses: {
+              'show spanning-tree': `VLAN0001
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    4096
+             Address     0011.2233.4402
+  Bridge ID  Priority    32768
+Interface           Role Sts Cost      Prio.Nbr Type
+Gi0/1               Root FWD 4         128.1    P2p 
+Gi0/2               Altn BLK 4         128.2    P2p`,
+              'show spanning-tree root': `VLAN0001          4096 0011.2233.4402      4     2   20  15  Gi0/1`,
+              'brctl showstp br0': `br0: designated root 1000.001122334402, root port 1 (eth0), eth1 state: blocking`,
+            },
+          },
           firewall: {
             title: 'Spanning Tree Protocol (STP) Root Election & Loop Lab',
             description:
@@ -151,21 +266,53 @@ export const NET_15_MODULE: ModuleData = {
         'Examine stateless packet filtering, top-down sequential evaluation, the implicit deny rule, and the return traffic dilemma.',
       theory: {
         summary:
-          'Stateless ACLs evaluate each packet in isolation against an ordered list of 5-tuple rules. Processing is sequential and stops at first match. All ACLs end with an invisible implicit deny. Because they cannot track state, permitting return traffic requires opening broad high ports.',
+          'Stateless Access Control Lists (ACLs) inspect every network packet in total isolation against an ordered, top-down sequence of 5-tuple filtering rules (Source IP, Destination IP, Protocol, Source Port, Destination Port). Processing halts upon the very first matching rule, and every ACL concludes with an invisible implicit deny. Because stateless filters possess zero memory of previous packets, permitting outbound client connections forces administrators to open tens of thousands of high ephemeral ports to the public internet.',
         explanation: [
-          '### First-Match Processing',
-          'Packets are checked line-by-line. As soon as a rule matches, the action is taken and subsequent rules are skipped.',
+          '### Beat 1: The Physical Cause — Header Field Inspection Without Memory',
+          'Routers and Layer 3 switches forward millions of packets per second using hardware ASICs. Stateless packet filtering was engineered to evaluate packets at line rate by inspecting only the Layer 3 (IPv4/IPv6) and Layer 4 (TCP/UDP/ICMP) headers of the instantaneous packet currently in transit. The router extracts the standard 5-tuple: Source IP, Destination IP, Protocol (TCP 6, UDP 17, ICMP 1), Source Port, and Destination Port. It compares these fields against a numbered, ordered list of Access Control List (ACL) entries.',
           '',
-          '### Implicit Deny All',
-          'Any packet that fails to match an explicit permit rule hits the implicit deny any and is dropped.',
+          '### Beat 2: The Wire / System Consequence — Top-Down First Match & The Return Dilemma',
+          'ACL processing follows two immutable rules: first-match evaluation and implicit deny. The router tests the packet against Rule 1; if it matches, the permit or deny action is immediately executed and all subsequent rules are skipped. If no explicitly configured rule matches, the packet falls through to the invisible, unwritten rule at the bottom: `deny ip any any` (Implicit Deny All). However, this creates a catastrophic dilemma for bidirectional client-server traffic (such as TCP web browsing). When an internal PC (10.0.0.5) sends an HTTP request from ephemeral port 51240 to an external web server (93.184.216.34:80), the outbound packet matches a permit rule. But when the web server transmits the SYN-ACK or HTTP response back to 10.0.0.5:51240, the inbound router interface evaluates the return packet. Because stateless ACLs have no connection memory, the router does not know this incoming packet is a legitimate response. It hits the inbound implicit deny and is silently discarded.',
           '',
-          '### The Return Traffic Dilemma',
-          'Stateless filters cannot know that an inbound packet is a response to an allowed outbound request, requiring dangerous open ports for return flows.',
+          '### Beat 3: The Diagnostic / Operational Fix — The Flawed High-Port Hack & Stateful Transition',
+          'To make stateless ACLs work for clients, legacy administrators were forced to insert inbound rules permitting all incoming TCP traffic destined for ports >1023 (e.g. `permit tcp any 10.0.0.0/24 gt 1023 established`). While checking the ACK bit prevented raw incoming SYN packets, it left a massive attack surface open to any external attacker sending crafted non-SYN packets. This fundamental architectural limitation proved that perimeter security requires stateful connection tracking firewalls.',
         ],
         keyTakeaway:
-          'ACLs evaluate top-down on first-match and conclude with an implicit deny all. They cannot track return connection state.',
+          'Stateless ACLs evaluate top-down, halt on the first matching rule, and end with an implicit deny all. They cannot track connection state, making safe return traffic filtering impossible.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net15-mcq-acl-first-match',
+            question:
+              'A network administrator configures an ACL: Line 10: "deny tcp any host 10.0.0.5 eq 80", Line 20: "permit tcp any host 10.0.0.5 eq 80". What happens when a user attempts to browse http://10.0.0.5?',
+            options: [
+              'The connection is permitted because Line 20 explicitly allows it',
+              'The connection is blocked because ACLs are evaluated sequentially top-down and halt on the very first matching rule (Line 10)',
+              'The router averages the two rules and drops 50% of the packets',
+              'The router reboots due to a syntax conflict error',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'ACLs execute top-down first-match semantics. As soon as Line 10 matches the destination IP and port, the deny action is enforced immediately, and all lower lines (including Line 20) are ignored.',
+          },
+          {
+            id: 'net15-mcq-acl-implicit-deny',
+            question:
+              'What happens to an inbound DNS query packet (UDP port 53) if an ACL contains only rules permitting HTTP (TCP port 80) and HTTPS (TCP port 443)?',
+            options: [
+              'It is allowed because DNS is critical infrastructure exempt from ACL filtering',
+              'It is discarded by the invisible "Implicit Deny All" rule present at the end of every ACL',
+              'It is redirected to the router\'s local loopback interface',
+              'The router converts the UDP packet into a TCP packet automatically',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'All standard ACLs terminate with an invisible `deny ip any any` rule. If a packet fails to match any explicitly defined permit rule above it, it is dropped.',
+          },
+        ],
       },
       tasks: [
         {
@@ -257,21 +404,57 @@ export const NET_15_MODULE: ModuleData = {
         'Contrast stateless filters with stateful inspection: connection tracking state tables (NEW, ESTABLISHED, RELATED) and automatic return traffic authorization.',
       theory: {
         summary:
-          'Stateful Packet Inspection maintains a dynamic connection state table (conntrack). Packets are classified as NEW, ESTABLISHED, RELATED, or INVALID. When an outbound session is permitted, returning responses are classified as ESTABLISHED and allowed through automatically while blocking unsolicited external attacks.',
+          'Stateful Packet Inspection (SPI) firewalls maintain a dynamic connection state table in memory (such as Linux conntrack) tracking the Layer 4 state and sequence numbers of every ongoing session. Packets are categorized into four states: NEW, ESTABLISHED, RELATED, and INVALID. When an internal host initiates an outbound connection, the firewall records the 5-tuple and state; when the external server responds, the firewall recognizes the return traffic as ESTABLISHED and automatically permits it without opening high ports.',
         explanation: [
-          '### The Connection Tracking Model',
-          '- **NEW**: Unsolicited packet attempting to establish a connection.',
-          '- **ESTABLISHED**: Packet belonging to an existing bidirectional session.',
-          '- **RELATED**: Packet related to an active session (e.g. ICMP error or FTP data).',
-          '- **INVALID**: Corrupt or out-of-order packet.',
+          '### Beat 1: The Physical Cause — Ephemeral Ports & The Inbound Dilemma',
+          'Whenever an endpoint applications initiates network communication (such as an HTTPS web request to a remote server on port 443), the operating system kernel dynamically binds a random ephemeral port (e.g. 52140). Because client operating systems allocate ephemeral ports unpredictably across the range 1024–65535, a boundary firewall cannot predict which destination port the external server\'s response will be sent to. In a purely stateless architecture, this requires either blocking return traffic (breaking the internet) or opening all ports >1023 (breaking security).',
           '',
-          '### Return Traffic Solution',
-          'By permitting outbound NEW and inbound ESTABLISHED/RELATED, internal endpoints communicate freely while external unsolicited attempts are dropped.',
+          '### Beat 2: The Wire / System Consequence — Dynamic Conntrack State Tables',
+          'Stateful Packet Inspection (SPI) firewalls solve this dilemma by allocating kernel memory for a dynamic connection tracking table (conntrack). Every packet passing through the firewall is parsed and classified into one of four fundamental states:',
+          '- **NEW**: The packet is initiating a new connection (e.g. a TCP SYN packet). If the perimeter security policy permits outbound connections, the firewall creates a new entry in its conntrack table recording `[Source IP:Port, Dest IP:Port, Protocol, State]`.',
+          '- **ESTABLISHED**: The packet is part of an already approved bidirectional conversation (e.g. TCP SYN-ACK, ACK, or subsequent data payload). When an external server replies to the client\'s ephemeral port, the firewall matches the incoming packet\'s reverse 5-tuple against the active table entry and immediately allows it through.',
+          '- **RELATED**: The packet initiates a new connection but is cryptographically or functionally tied to an existing session (e.g. FTP data channel port negotiation or ICMP Destination Unreachable / Time Exceeded error messages caused by an active TCP stream).',
+          '- **INVALID**: The packet does not match any known connection and has illegal TCP flag combinations (e.g. SYN-FIN or corrupted sequence numbers) and is immediately dropped.',
+          '',
+          '### Beat 3: The Diagnostic / Operational Fix — Default-Deny Perimeter Architecture',
+          'With connection tracking enabled, enterprise perimeter security achieves the gold standard of defense: the default policy is set to drop all unsolicited inbound traffic (`Chain INPUT (policy DROP)` / `Chain FORWARD (policy DROP)`). A single high-performance rule at the top of the chain permits all traffic with state `ESTABLISHED,RELATED` (`iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT`). Outbound client traffic is permitted with state `NEW`, allowing employees full internet access while blocking 100% of external port scans, unsolicited connection probes, and zero-day intrusion attempts.',
         ],
         keyTakeaway:
-          'Stateful firewalls dynamically track active sessions, automatically permitting returning ESTABLISHED traffic without broad open ports.',
+          'Stateful firewalls maintain a dynamic memory table (conntrack) that classifies packets as NEW, ESTABLISHED, RELATED, or INVALID. Return traffic is automatically authorized without opening broad listening ports.',
         exampleQuery: '',
         exampleQueryExplanation: '',
+        mcqs: [
+          {
+            id: 'net15-mcq-conntrack-states',
+            question:
+              'In a stateful firewall\'s connection tracking system (such as Linux conntrack), how is an unsolicited TCP SYN packet arriving from an unknown internet IP address classified?',
+            options: [
+              'ESTABLISHED',
+              'NEW',
+              'RELATED',
+              'LOOPBACK',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'A TCP SYN packet that does not match any existing session in the conntrack memory table is categorized as NEW. If the perimeter policy denies unsolicited inbound connections, the packet is discarded immediately.',
+          },
+          {
+            id: 'net15-mcq-stateful-return-traffic',
+            question:
+              'How does a stateful firewall permit web servers to reply to internal office laptops without requiring the administrator to open all incoming TCP ports above 1023?',
+            options: [
+              'It decrypts all traffic and executes malware scans on the fly',
+              'It tracks the outbound 5-tuple in its kernel state table; when the remote server sends a SYN-ACK back to the laptop\'s ephemeral port, the firewall recognizes it as ESTABLISHED and admits it automatically',
+              'It assigns every internal laptop a public IP address during web browsing',
+              'It translates TCP packets into UDP datagrams before delivery',
+            ],
+            correctIndex: 1,
+            correctAnswerIndex: 1,
+            explanation:
+              'Because the firewall tracks the connection state in memory, incoming replies match the inverted 5-tuple of the outbound session, qualifying as ESTABLISHED traffic. This allows return packets while keeping the perimeter locked to unsolicited incoming traffic.',
+          },
+        ],
       },
       tasks: [
         {
@@ -289,6 +472,70 @@ export const NET_15_MODULE: ModuleData = {
           solutionSql: 'NETWORKING_JUDGMENT_TASK',
           solutionExplanation:
             'Stateful firewalls classify returning traffic as ESTABLISHED and permit it automatically, while dropping unsolicited external packets classified as NEW.',
+          terminal: {
+            title: 'Workplace Diagnostic Terminal — Ticket #117 (Dual Platform)',
+            description:
+              'Inspect stateful firewall filter rules, connection tracking state tables, and host firewall rules on Linux Netfilter and Windows PowerShell.',
+            prompt: 'root@firewall-gw:~#',
+            initialOutput: [
+              '====================================================================',
+              '  WORKPLACE TICKET #117: STATEFUL FIREWALL & CONNTRACK AUDIT',
+              '====================================================================',
+              'Auditing stateful connection tracking table and rule chains.',
+              'Supported commands:',
+              '  - Linux:   iptables -L -v -n',
+              '             conntrack -L',
+              '  - Windows: Get-NetFirewallRule',
+            ].join('\n'),
+            availableCommands: [
+              'iptables -L -v -n',
+              'conntrack -L',
+              'Get-NetFirewallRule',
+            ],
+            commands: {
+              'iptables -L -v -n': `Chain INPUT (policy DROP 124 packets, 7440 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 482K  312M ACCEPT     all  --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+ 1420 85200 ACCEPT     tcp  --  eth0   *       0.0.0.0/0            192.168.1.1          tcp dpt:22 ctstate NEW
+
+Chain FORWARD (policy DROP 42 packets, 2520 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+ 1.2M  890M ACCEPT     all  --  eth1   eth0    10.0.0.0/24          0.0.0.0/0            ctstate NEW,RELATED,ESTABLISHED
+ 980K  720M ACCEPT     all  --  eth0   eth1    0.0.0.0/0            10.0.0.0/24          ctstate RELATED,ESTABLISHED
+
+Chain OUTPUT (policy ACCEPT 512K packets, 410M bytes)`,
+              'conntrack -L': `tcp      6 431999 ESTABLISHED src=10.0.0.105 dst=93.184.216.34 sport=51240 dport=443 src=93.184.216.34 dst=10.0.0.105 sport=443 dport=51240 [ASSURED] mark=0 use=1
+tcp      6 118 SYN_SENT src=10.0.0.110 dst=142.250.190.46 sport=49812 dport=443 [UNREPLIED] src=142.250.190.46 dst=10.0.0.110 sport=443 dport=49812 mark=0 use=1
+conntrack v1.4.6 (conntrack-tools): 2 flow entries have been shown.`,
+              'Get-NetFirewallRule': `Name                  : Block-Unsolicited-Inbound
+DisplayName           : Block Unsolicited Inbound Network Traffic
+Description           : Enforces stateful boundary drop for unsolicited inbound connections
+DisplayGroup          : Core Networking
+Enabled               : True
+Profile               : Domain, Private, Public
+Platform              : {}
+Direction             : Inbound
+Action                : Block
+EdgeTraversalPolicy   : Block
+LooseSourceMapping    : False
+LocalOnlyMapping      : False
+Owner                 : SYSTEM
+PrimaryStatus         : OK
+EnforcementStatus     : NotApplicable
+PolicyStoreSource     : PersistentStore
+PolicyStoreSourceType : Local`,
+            },
+            commandResponses: {
+              'iptables -L -v -n': `Chain INPUT (policy DROP)
+ 482K ACCEPT all -- * * 0.0.0.0/0 0.0.0.0/0 ctstate RELATED,ESTABLISHED
+Chain FORWARD (policy DROP)
+ 1.2M ACCEPT all -- eth1 eth0 10.0.0.0/24 0.0.0.0/0 ctstate NEW,RELATED,ESTABLISHED
+ 980K ACCEPT all -- eth0 eth1 0.0.0.0/0 10.0.0.0/24 ctstate RELATED,ESTABLISHED`,
+              'conntrack -L': `tcp 6 431999 ESTABLISHED src=10.0.0.105 dst=93.184.216.34 sport=51240 dport=443 [ASSURED]
+tcp 6 118 SYN_SENT src=10.0.0.110 dst=142.250.190.46 sport=49812 dport=443 [UNREPLIED]`,
+              'Get-NetFirewallRule': `Name: Block-Unsolicited-Inbound, Direction: Inbound, Action: Block, Enabled: True`,
+            },
+          },
           firewall: {
             title: 'Stateful Connection Tracking (conntrack) Inspector',
             description:
