@@ -210,7 +210,16 @@ export function mentorScriptReducer(
     case 'ACTION_DONE': {
       if (currentBeat.kind !== 'do') return state;
       const expected = currentBeat.expect;
-      if (!expected || event.action.type === expected || expected === '*') {
+      const act = (event.action.type || '').toLowerCase().replace(/[-_]/g, '');
+      const exp = (expected || '').toLowerCase().replace(/[-_]/g, '');
+      const isMatch =
+        !expected ||
+        expected === '*' ||
+        act === exp ||
+        act.startsWith(exp) ||
+        exp.startsWith(act);
+
+      if (isMatch) {
         return {
           ...state,
           isWaitingForAction: false,

@@ -165,8 +165,11 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
     };
     dispatchSimulationAction(action);
 
-    if (!isCurrentlySeated && mentorState.beatIndex === 3) {
-      handleActionDone({ type: 'SEAT_CABLE' });
+    if (!isCurrentlySeated && currentBeat?.kind === 'do' && (currentBeat.expect || '').includes('cable')) {
+      handleActionDone({ type: currentBeat.expect || 'seat-cable' });
+      setTimeout(() => {
+        handleNext();
+      }, 700);
     }
   };
 
@@ -181,19 +184,22 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
 
     // Sync with mentor gating predicates
     const norm = normalizeCommand(rawCommand);
-    if (isPingCommand(norm, '192.168.1.1')) {
-      if (mentorState.beatIndex === 0) {
-        handleActionDone({ type: 'PING' });
-      } else if (mentorState.beatIndex === 5) {
-        handleActionDone({ type: 'PING' });
-      }
-    } else if (norm.startsWith('ipconfig')) {
-      if (mentorState.beatIndex === 2) {
-        handleActionDone({ type: 'IPCONFIG' });
-      }
-    } else if (norm.startsWith('arp')) {
-      if (mentorState.beatIndex === 4 || mentorState.beatIndex === 6) {
-        handleActionDone({ type: 'ARP' });
+    const isPing = isPingCommand(norm, '192.168.1.1');
+    const isArp = norm.startsWith('arp');
+    const isIpconfig = norm.startsWith('ipconfig');
+
+    if (currentBeat?.kind === 'do') {
+      const exp = (currentBeat.expect || '').toLowerCase();
+      let matched = false;
+      if (isPing && exp.includes('ping')) matched = true;
+      if (isArp && exp.includes('arp')) matched = true;
+      if (isIpconfig && exp.includes('ipconfig')) matched = true;
+
+      if (matched) {
+        handleActionDone({ type: currentBeat.expect || 'done' });
+        setTimeout(() => {
+          handleNext();
+        }, 800);
       }
     }
   };
