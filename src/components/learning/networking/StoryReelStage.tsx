@@ -51,8 +51,8 @@ export const NET_01_STORY_SCENES: StoryReelScene[] = [
     explanation: 'Every physical network chip is stamped at the factory with a globally unique hardware identity.',
     activeFocus: 'chip',
     text: [
-      'Every network interface has a MAC address. A network interface is the part of a computer that connects it to a network.',
-      'A MAC address is usually a 48-bit address assigned to a network interface. It helps identify that interface on the local network.',
+      'Just like humans have fingerprints, every computer has a Network Interface Card (NIC) with a permanent hardware identity called a MAC address burned into its silicon chip.',
+      'When electrical pulses cross the wire, Computer B uses this hardware MAC address to check: "Is this message stamped with my physical address, or should I ignore it?"',
     ],
   },
 ];

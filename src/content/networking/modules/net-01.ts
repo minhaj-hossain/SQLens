@@ -221,7 +221,8 @@ export const NET_01_MENTOR_SCRIPT: MentorScript = {
       kind: 'do',
       say: [
         "The ping succeeded! 4 packets sent, 4 received (0% loss) across the physical cable.",
-        "During the ping, Computer B answered with its hardware MAC address (`00-1A-2B-3C-4D-01`). Computer A saved it into its address book!",
+        "Here is what happened behind the scenes: before ping could send its knock, Computer A asked across the wire: 'Who has IP 192.168.1.1? Tell 192.168.1.10!'",
+        "Computer B answered: 'That's me! My physical MAC is `00-1A-2B-3C-4D-01`.' Computer A saved it into its address book!",
         "Let's see the new entry Computer A learned. Type `arp -a` and press Enter.",
       ],
       actionPrompt: 'arp -a',
@@ -409,6 +410,12 @@ export const NET_01_MODULE: ModuleData = {
           '',
           '### 4. Hardware MAC Addresses & Address Book',
           'The physical wire delivers signals using hardware MAC addresses burned in at the factory. Computer A uses its local address book (`arp -a`) to match IP addresses to MAC addresses so each message is stamped for the right recipient.',
+          '',
+          '### 5. Why Do Computers Need BOTH an IP and a MAC Address?',
+          'A beginner might ask: *If every computer has a permanent MAC address, why do we need IP addresses at all?*',
+          '- **MAC Address = Your National ID or Fingerprint**: It identifies **who** you are permanently, but tells no one where in the world you are located.',
+          '- **IP Address = Your Postal Mailing Address**: It tells the network **where** you live (Neighborhood Street `192.168.1`, House `.10`) so messages can navigate to your door.',
+          '- **ARP = The Phone Directory**: Maps the local street address (IP) to the resident\'s physical identity (MAC).',
         ],
         keyTakeaway:
           'Computers sharing the same IP street prefix talk directly across a physical wire using hardware MAC addresses stored in their address book.',
@@ -535,9 +542,11 @@ export const NET_01_MODULE: ModuleData = {
           '### Beat 1: The Physical Dilemma — How Do Signals Cross the Span?',
           'If two people talk through a single tin can and string, only one person can speak at a time. If both shout simultaneously, their sound waves interfere and neither message is understood.',
           '',
-          'In early networking, computers faced this exact dilemma on coaxial cables. To solve this physically, twisted-pair cabling was introduced.',
+          '### The Mental Model: Walkie-Talkie vs Two-Way Telephone',
+          '- **Half-Duplex (The Walkie-Talkie)**: Devices share a single electrical lane. Only one device can transmit at a time. If both transmit simultaneously, the signals smash into each other (**Collision**).',
+          '- **Full-Duplex (The Divided Two-Way Highway)**: Modern Cat6 cabling provides dedicated, physically separate transmit (TX) and receive (RX) copper lanes. Computer A and Computer B can both transmit at full speed simultaneously with **ZERO collisions**.',
           '',
-          '### The Anatomy of Cat6 Twisted Pair',
+          '### Reference: The Anatomy of Cat6 Twisted Pair',
           'A standard unshielded twisted pair (UTP) Cat6 cable contains **8 solid copper conductors** grouped into **4 tightly twisted pairs**:',
           '- Pair 1: Blue / White-Blue',
           '- Pair 2: Orange / White-Orange',
@@ -546,7 +555,7 @@ export const NET_01_MODULE: ModuleData = {
           '',
           'The twists cancel electromagnetic interference (crosstalk) from adjacent pairs and external noise.',
           '',
-          '### Pinout Modes: Fast Ethernet vs Gigabit Ethernet',
+          '### Pinout Modes: Fast Ethernet vs Gigabit Ethernet (Reference)',
           '| Standard | Speed | Active Pairs | Roles |',
           '|---|---|---|---|',
           '| **100BASE-TX (Fast Ethernet)** | 100 Mbps | 2 Pairs (4 wires) | Pins 1 & 2 = Transmit (TX)<br>Pins 3 & 6 = Receive (RX) |',
@@ -614,7 +623,7 @@ export const NET_01_MODULE: ModuleData = {
           hints: [
             {
               level: 1,
-              text: 'Are outgoing and incoming signals sharing the same copper wire, or traveling on separate pairs?',
+              text: 'Are outgoing and incoming signals sharing the same copper wire, or traveling on separate pairs like a divided highway?',
             },
           ],
           validation: {
@@ -622,16 +631,16 @@ export const NET_01_MODULE: ModuleData = {
               {
                 kind: 'choose-and-defend',
                 prompt:
-                  'In a 100BASE-TX Fast Ethernet connection, which RJ-45 pin pairs are assigned to transmit and receive?',
+                  'How does modern Full-Duplex Ethernet physically prevent electrical collisions when Computer A and Computer B transmit at the exact same moment?',
                 options: [
-                  'Pins 1 & 2 for Transmit (TX), Pins 3 & 6 for Receive (RX)',
-                  'Pins 4 & 5 for Transmit, Pins 7 & 8 for Receive',
-                  'Pins 1, 2, 3, and 4 all transmit simultaneously in half-duplex',
-                  'All pins are shared randomly based on cable length',
+                  'By using dedicated, physically separate transmit (TX) and receive (RX) wire pairs (like a two-way divided highway)',
+                  'By requiring computers to take turns like a half-duplex walkie-talkie',
+                  'By buffering all signals until an operating system timer reaches zero',
+                  'By sending electricity in one direction only',
                 ],
                 correctIndex: 0,
                 explanation:
-                  'Standard 100BASE-TX pinout allocates Pins 1 & 2 for Transmit (TX) and Pins 3 & 6 for Receive (RX), leaving pins 4, 5, 7, and 8 unused.',
+                  'Full-Duplex provides dedicated, isolated copper channels for outgoing (TX) and incoming (RX) traffic. Because signals travel on separate wire pairs, both nodes can send and receive simultaneously with zero collision.',
               },
               {
                 kind: 'choose-and-defend',
@@ -790,8 +799,13 @@ export const NET_01_MODULE: ModuleData = {
         summary:
           'Data moves down the protocol stack by encapsulation: each layer wraps the payload from the layer above in its own header (and optional trailer), producing a distinct Protocol Data Unit (PDU). At the receiver, decapsulation strips each header in reverse order.',
         explanation: [
-          '### C03: The Parcel Metaphor & Protocol Data Units (PDUs)',
-          'When an application sends a message (e.g. an HTTP GET request), the raw message cannot be placed directly onto a physical wire. It must be prepared for delivery step by step, like a letter placed in an envelope, placed in a shipping parcel, and loaded into a delivery truck.',
+          '### The Russian Nesting Dolls & Postal Envelope Metaphors',
+          'When an application sends a message, it cannot be dumped raw onto a copper wire. It must be packaged layer-by-layer like Russian nesting dolls or postal mail:',
+          '1. **The Letter (Data)**: The raw message or ping test knock.',
+          '2. **The Inner Envelope (Layer 4 Segment)**: Adds port numbers so the computer knows which specific program or tab gets the message.',
+          '3. **The Shipping Box (Layer 3 Packet)**: Stamped with logical street IP addresses (Source IP and Destination IP) to navigate through networks.',
+          '4. **The Armored Delivery Crate (Layer 2 Frame)**: Stamped with physical hardware MAC addresses (Source MAC and Destination MAC) and sealed with a Frame Check Sequence (FCS) checksum to catch corrupted bits.',
+          '5. **The Road (Layer 1 Bits)**: The physical copper wire or optical fiber converting the entire package into electrical voltages or light flashes.',
           '',
           'Each layer produces a uniquely named **Protocol Data Unit (PDU)**:',
           '',
