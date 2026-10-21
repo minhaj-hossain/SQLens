@@ -12,6 +12,12 @@ import { ArpSimulationLab } from '../ArpSimulationLab';
 import { SubnetBitSlicer } from '../SubnetBitSlicer';
 import { EthernetFrameInspector } from '../EthernetFrameInspector';
 import { PacketInspector } from '../PacketInspector';
+import { DhcpDoraSimulator } from '../DhcpDoraSimulator';
+import { DnsResolutionTreeSimulator } from '../DnsResolutionTreeSimulator';
+import { TcpSequenceLadderSimulator } from '../TcpSequenceLadderSimulator';
+import { HttpTlsHandshakeSimulator } from '../HttpTlsHandshakeSimulator';
+import { FirewallAclRuleSimulator } from '../FirewallAclRuleSimulator';
+import { VlanTrunkDijkstraLab } from '../VlanTrunkDijkstraLab';
 import type { ArpTaskContent, PacketInspectionTaskContent } from '../../../../types/curriculum';
 
 import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
@@ -58,6 +64,218 @@ const DEFAULT_NET01_PACKET: PacketInspectionTaskContent = {
         ttl: 64,
         protocol: 'ICMP (1)',
         totalLength: 60,
+      },
+    },
+  ],
+};
+
+const DEFAULT_NET06_PACKET: PacketInspectionTaskContent = {
+  title: 'IPv6 Solicited-Node Multicast & Neighbor Discovery (NDP)',
+  description: 'Inspect the Layer 2 Multicast MAC and ICMPv6 Neighbor Solicitation payload.',
+  snapshots: [
+    {
+      hopLabel: 'Acme-PC-01 ➔ Local Segment Multicast',
+      deviceType: 'Host',
+      layer2: {
+        srcMac: '00-1A-2B-3C-4D-10',
+        dstMac: '33-33-FF-00-00-02',
+        etherType: '0x86DD (IPv6)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 6,
+        srcIp: 'fe80::10',
+        dstIp: 'ff02::1:ff00:2',
+        ttl: 255,
+        protocol: 'ICMPv6 (58)',
+        totalLength: 72,
+      },
+    },
+  ],
+};
+
+const DEFAULT_NET07_PACKET: PacketInspectionTaskContent = {
+  title: 'Multi-Hop Routing: Hop-by-Hop L2 Rewrite & Constant L3 IP',
+  description: 'Compare Hop 1 (Inside LAN) vs Hop 2 (Outside WAN) to observe the Golden Rule in action.',
+  snapshots: [
+    {
+      hopLabel: 'Hop 1: Host A ➔ Router R1 (Inside LAN)',
+      deviceType: 'Host',
+      layer2: {
+        srcMac: '00-1A-2B-3C-4D-10',
+        dstMac: '00-1A-2B-3C-4D-01',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '192.168.1.10',
+        dstIp: '8.8.8.8',
+        ttl: 64,
+        protocol: 'ICMP (1)',
+        totalLength: 60,
+      },
+    },
+    {
+      hopLabel: 'Hop 2: Router R1 ➔ ISP Gateway (Outside WAN)',
+      deviceType: 'Router',
+      layer2: {
+        srcMac: '70-B3-D5-11-22-33',
+        dstMac: '00-50-56-EA-1A-02',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '192.168.1.10',
+        dstIp: '8.8.8.8',
+        ttl: 63,
+        protocol: 'ICMP (1)',
+        totalLength: 60,
+      },
+    },
+  ],
+};
+
+const DEFAULT_NET08_PACKET: PacketInspectionTaskContent = {
+  title: 'Network Address & Port Translation (PAT / NAT Overload)',
+  description: 'Trace private client egress, public WAN translation, and return flow de-NATting.',
+  snapshots: [
+    {
+      hopLabel: 'Phase 1: Inside LAN Egress (Before NAT)',
+      deviceType: 'Host',
+      layer2: {
+        srcMac: '00-1A-2B-3C-4D-10',
+        dstMac: '00-1A-2B-3C-4D-01',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '192.168.1.100',
+        dstIp: '198.51.100.4',
+        ttl: 64,
+        protocol: 'TCP (6)',
+        totalLength: 60,
+      },
+      layer4: {
+        protocol: 'TCP',
+        srcPort: 52410,
+        dstPort: 80,
+        flags: ['SYN'],
+        windowSize: 64240,
+        checksum: 'Valid',
+      },
+    },
+    {
+      hopLabel: 'Phase 2: Outside WAN Egress (PAT Translated: Port 40001)',
+      deviceType: 'Router',
+      layer2: {
+        srcMac: '70-B3-D5-11-22-33',
+        dstMac: '00-50-56-EA-1A-02',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '203.0.113.1',
+        dstIp: '198.51.100.4',
+        ttl: 63,
+        protocol: 'TCP (6)',
+        totalLength: 60,
+      },
+      layer4: {
+        protocol: 'TCP',
+        srcPort: 40001,
+        dstPort: 80,
+        flags: ['SYN'],
+        windowSize: 64240,
+        checksum: 'Valid',
+      },
+    },
+    {
+      hopLabel: 'Phase 3: Inbound Return Response (De-NATted to Host A)',
+      deviceType: 'Host',
+      layer2: {
+        srcMac: '00-1A-2B-3C-4D-01',
+        dstMac: '00-1A-2B-3C-4D-10',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '198.51.100.4',
+        dstIp: '192.168.1.100',
+        ttl: 58,
+        protocol: 'TCP (6)',
+        totalLength: 60,
+      },
+      layer4: {
+        protocol: 'TCP',
+        srcPort: 80,
+        dstPort: 52410,
+        flags: ['SYN', 'ACK'],
+        windowSize: 65535,
+        checksum: 'Valid',
+      },
+    },
+  ],
+};
+
+const DEFAULT_NET11_PACKET: PacketInspectionTaskContent = {
+  title: 'Transport Layer Multiplexing: UDP vs TCP Handshake',
+  description: 'Inspect L4 port numbers, 5-tuple bindings, and protocol headers.',
+  snapshots: [
+    {
+      hopLabel: 'TCP SYN Handshake Packet (Port 443)',
+      deviceType: 'Host',
+      layer2: {
+        srcMac: '00-1A-2B-3C-4D-10',
+        dstMac: '00-1A-2B-3C-4D-01',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '192.168.1.10',
+        dstIp: '198.51.100.4',
+        ttl: 64,
+        protocol: 'TCP (6)',
+        totalLength: 60,
+      },
+      layer4: {
+        protocol: 'TCP',
+        srcPort: 52144,
+        dstPort: 443,
+        flags: ['SYN'],
+        windowSize: 64240,
+        checksum: 'Valid',
+      },
+    },
+    {
+      hopLabel: 'UDP Lightweight Datagram (Port 53 DNS)',
+      deviceType: 'Host',
+      layer2: {
+        srcMac: '00-1A-2B-3C-4D-10',
+        dstMac: '00-1A-2B-3C-4D-01',
+        etherType: '0x0800 (IPv4)',
+        fcs: 'CRC-32 (Valid)',
+      },
+      layer3: {
+        version: 4,
+        srcIp: '192.168.1.10',
+        dstIp: '8.8.8.8',
+        ttl: 64,
+        protocol: 'UDP (17)',
+        totalLength: 48,
+      },
+      layer4: {
+        protocol: 'UDP',
+        srcPort: 53120,
+        dstPort: 53,
+        flags: [],
+        windowSize: 0,
+        checksum: 'Valid',
       },
     },
   ],
@@ -315,6 +533,159 @@ export const MentorLessonStage: React.FC<MentorLessonStageProps> = ({
               />
             </div>
           )}
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-06') {
+      const taskContent =
+        concept.tasks?.find((t) => t.packetInspection)?.packetInspection || DEFAULT_NET06_PACKET;
+      return (
+        <div data-testid="packet-inspector-stage-net06" className="w-full">
+          <PacketInspector
+            taskContent={taskContent}
+            title={taskContent.title || 'IPv6 Solicited-Node Multicast & Neighbor Discovery (NDP)'}
+            description={taskContent.description}
+            visibleLayers={['L2', 'L3']}
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-07') {
+      const taskContent =
+        concept.tasks?.find((t) => t.packetInspection)?.packetInspection || DEFAULT_NET07_PACKET;
+      return (
+        <div data-testid="packet-inspector-stage-net07" className="w-full">
+          <PacketInspector
+            taskContent={taskContent}
+            title={taskContent.title || 'Multi-Hop Routing: Hop-by-Hop L2 Rewrite'}
+            description={taskContent.description}
+            visibleLayers={['L2', 'L3']}
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-08') {
+      const taskContent =
+        concept.tasks?.find((t) => t.packetInspection)?.packetInspection || DEFAULT_NET08_PACKET;
+      return (
+        <div data-testid="packet-inspector-stage-net08" className="w-full">
+          <PacketInspector
+            taskContent={taskContent}
+            title={taskContent.title || 'Network Address & Port Translation (PAT / NAT Overload)'}
+            description={taskContent.description}
+            visibleLayers={['L2', 'L3', 'L4']}
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-09') {
+      const taskContent = concept.tasks?.find((t) => t.dhcp)?.dhcp;
+      return (
+        <div data-testid="dhcp-dora-stage" className="w-full">
+          <DhcpDoraSimulator
+            taskContent={taskContent}
+            title={concept.title}
+            description="Interactive 4-Step DORA Handshake & Lease Timers"
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-10') {
+      const taskContent = concept.tasks?.find((t) => t.dns)?.dns;
+      return (
+        <div data-testid="dns-tree-stage" className="w-full">
+          <DnsResolutionTreeSimulator
+            taskContent={taskContent}
+            title={concept.title}
+            description="Hierarchical Inverted Tree & Iterative Resolution"
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-11') {
+      const taskContent =
+        concept.tasks?.find((t) => t.packetInspection)?.packetInspection || DEFAULT_NET11_PACKET;
+      return (
+        <div data-testid="packet-inspector-stage-net11" className="w-full">
+          <PacketInspector
+            taskContent={taskContent}
+            title={taskContent.title || 'Transport Multiplexing & 5-Tuple Sockets'}
+            description={taskContent.description}
+            visibleLayers={['L2', 'L3', 'L4']}
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-12') {
+      const taskContent = concept.tasks?.find((t) => t.tcpLadder)?.tcpLadder;
+      return (
+        <div data-testid="tcp-ladder-stage" className="w-full">
+          <TcpSequenceLadderSimulator
+            taskContent={taskContent}
+            title={concept.title}
+            description="TCP Byte-Stream Accounting & Fast Retransmit"
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-13') {
+      const taskContent = concept.tasks?.find((t) => t.httpTls)?.httpTls;
+      return (
+        <div data-testid="http-tls-stage" className="w-full">
+          <HttpTlsHandshakeSimulator
+            taskContent={taskContent}
+            title={concept.title}
+            description="TLS 1.3 1-RTT Handshake & Stream Multiplexing"
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-14') {
+      const taskContent = concept.tasks?.find((t) => t.terminal)?.terminal;
+      return (
+        <div data-testid="virtual-terminal-stage" className="w-full">
+          <VirtualTerminalSimulator
+            scenario={taskContent}
+            title={concept.title}
+            description="Diagnostic Terminal & 5-Layer Outage Triage Lab"
+            userPrompt="C:\Users\admin>"
+            hostname="IT-ADMIN-PC"
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-15') {
+      const taskContent = concept.tasks?.find((t) => t.firewall)?.firewall || { defaultTab: 'stp_topology' as const };
+      return (
+        <div data-testid="firewall-stp-stage" className="w-full">
+          <FirewallAclRuleSimulator
+            taskContent={taskContent}
+            title={concept.title}
+            description="Spanning Tree BPDU Root Election & Boundary Firewalls"
+          />
+        </div>
+      );
+    }
+
+    if (moduleId === 'net-16') {
+      const taskContent = concept.tasks?.find((t) => t.vlanDijkstra)?.vlanDijkstra || { defaultTab: 'vlan_trunking' as const };
+      return (
+        <div data-testid="vlan-dijkstra-stage" className="w-full">
+          <VlanTrunkDijkstraLab
+            taskContent={taskContent}
+            title={concept.title}
+            description="802.1Q VLAN Trunking & Dijkstra Shortest Path Lab"
+          />
         </div>
       );
     }

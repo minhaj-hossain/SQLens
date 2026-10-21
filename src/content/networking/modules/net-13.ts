@@ -1,4 +1,207 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_13_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-13',
+  conceptId: 'net13-c1-http-evolution',
+  revealLadder: {
+    'step-0': ['browser-client'],
+    'step-1': ['browser-client', 'plaintext-wire'],
+    'step-2': ['browser-client', 'plaintext-wire', 'tls-padlock'],
+    'step-3': ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert'],
+    'step-4': ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert', 'ecdh-exchange'],
+    'step-5': ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert', 'ecdh-exchange', 'encrypted-stream', 'http2-multiplex'],
+  },
+  terms: {
+    sniffing: {
+      label: 'Cleartext Sniffing',
+      part: 'plaintext-wire',
+      explanation: 'Unencrypted HTTP traffic can be inspected, intercepted, and modified by anyone on the physical path or public Wi-Fi.',
+    },
+    x509: {
+      label: 'X.509 Certificate & CA Chain',
+      part: 'ca-cert',
+      explanation: 'A cryptographic identity signed by a trusted Certificate Authority binding a domain to its public key.',
+    },
+    tls13: {
+      label: 'TLS 1.3 1-RTT Handshake',
+      part: 'ecdh-exchange',
+      explanation: 'ECDHE ephemeral key exchange negotiating symmetric AES-GCM session keys in a single round trip.',
+    },
+    forwardsecrecy: {
+      label: 'Forward Secrecy',
+      part: 'encrypted-stream',
+      explanation: 'Generates disposable ephemeral keys so that compromising a server private key in the future cannot decrypt past recorded sessions.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The Cleartext Wire Dilemma' },
+      kind: 'say',
+      text: 'In legacy HTTP, passwords and credit card numbers travel across the copper wire in plain ASCII text. Anyone at a coffee shop running Wireshark can read every single byte!',
+      spotlight: 'plaintext-wire',
+      revealedParts: ['browser-client', 'plaintext-wire'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: The Man-in-the-Middle Trap' },
+      kind: 'predict',
+      text: 'Suppose an attacker intercepts your connection and says: "Hello, I am bank.com, here is my public encryption key." How does your browser know if that key actually belongs to your bank?',
+      spotlight: 'ca-cert',
+      revealedParts: ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert'],
+      options: [
+        {
+          id: 'opt-ca-chain',
+          label: 'The server presents an X.509 Certificate digitally signed by a trusted Certificate Authority (CA) in the OS Root Store.',
+          isCorrect: true,
+          feedback: 'Correct! Browsers trust root CAs (like DigiCert or Let\'s Encrypt). If the mathematical cryptographic signature validates, the domain identity is genuine.',
+        },
+        {
+          id: 'opt-ip-reputation',
+          label: 'The browser checks if the server IP address is listed in Google search results.',
+          isCorrect: false,
+          feedback: 'Search engines do not validate cryptographic key authenticity on transport sockets.',
+        },
+        {
+          id: 'opt-arp-trust',
+          label: 'The local switch confirms the MAC address is friendly.',
+          isCorrect: false,
+          feedback: 'Switches know nothing about cryptographic certificates; public keys are verified by Public Key Infrastructure (PKI).',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-pki-hierarchy',
+          label: 'Asymmetric public key cryptography allows trusted CAs to sign domain certificates without ever sharing the domain\'s private key.',
+          isCorrect: true,
+          feedback: 'Spot on! The browser uses the CA\'s pre-installed public key to verify the mathematical signature.',
+        },
+        {
+          id: 'why-symmetric-secret',
+          label: 'All websites in the world share the exact same secret password.',
+          isCorrect: false,
+          feedback: 'Sharing symmetric secrets globally would completely destroy web security.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: 1-RTT TLS 1.3 Key Exchange' },
+      kind: 'do',
+      text: 'Click Execute ECDHE Handshake to watch the client and server exchange Diffie-Hellman key shares in a single round trip.',
+      actionPrompt: 'Execute TLS 1.3 Handshake (1-RTT)',
+      actionTargetPart: 'ecdh-exchange',
+      revealedParts: ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert', 'ecdh-exchange'],
+      spotlight: 'ecdh-exchange',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Predict: Ephemeral Keys & Forward Secrecy' },
+      kind: 'predict',
+      text: 'Why does TLS 1.3 generate disposable ephemeral keys for every single session instead of using the server\'s static private key to encrypt data?',
+      spotlight: 'encrypted-stream',
+      revealedParts: ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert', 'ecdh-exchange', 'encrypted-stream'],
+      options: [
+        {
+          id: 'opt-forward-secrecy',
+          label: 'To provide Forward Secrecy: if the server\'s private key is stolen 5 years from now, previously recorded encrypted traffic can NEVER be decrypted.',
+          isCorrect: true,
+          feedback: 'Brilliant! Ephemeral keys are wiped from memory as soon as the session closes. Historical wire captures remain permanently uncrackable.',
+        },
+        {
+          id: 'opt-reduce-cpu',
+          label: 'Because generating new keys uses 0% CPU power.',
+          isCorrect: false,
+          feedback: 'Diffie-Hellman requires elliptic-curve mathematical operations, but the security guarantee is worth the microsecond calculation.',
+        },
+        {
+          id: 'opt-allow-passwords',
+          label: 'To allow users to log in without needing a password.',
+          isCorrect: false,
+          feedback: 'TLS secures the transport channel; user credentials are handled at the application layer.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-ephemeral-erasure',
+          label: 'Discarding the ephemeral session keys immediately after communication leaves no cryptographic mathematical residue for attackers.',
+          isCorrect: true,
+          feedback: 'Correct! This is why legacy static RSA key exchange was completely abolished in TLS 1.3.',
+        },
+        {
+          id: 'why-static-faster',
+          label: 'Static keys allow anyone on the internet to decrypt all customer credit cards.',
+          isCorrect: false,
+          feedback: 'Static key exposure was a catastrophic vulnerability in legacy TLS 1.2 and earlier.',
+        },
+      ],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Observe: Encrypted Streams & HTTP/2 Multiplexing' },
+      kind: 'point',
+      text: 'The tunnel is locked! All application data flows through AES-256-GCM authenticated encryption. Combined with HTTP/2 binary framing, dozens of concurrent requests stream through a single encrypted socket with zero head-of-line blocking!',
+      spotlight: 'http2-multiplex',
+      revealedParts: ['browser-client', 'plaintext-wire', 'tls-padlock', 'ca-cert', 'ecdh-exchange', 'encrypted-stream', 'http2-multiplex'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '113',
+    title: 'Ticket #113: Expired SSL/TLS Certificate Outage',
+    symptom: 'All external customers seeing browser security warnings: `NET::ERR_CERT_DATE_INVALID` when visiting https://shop.click.dev.',
+    telemetry: [
+      'Browser Security Error: NET::ERR_CERT_DATE_INVALID',
+      'OpenSSL Handshake Verification (`openssl s_client -connect shop.click.dev:443`):',
+      '  depth=0 CN = shop.click.dev',
+      '  notAfter=Oct 20 23:59:59 2026 GMT (EXPIRED)',
+      '  verify error:num=10:certificate has expired',
+      'Reverse Proxy: NGINX edge terminating TLS on old wildcard cert.',
+    ],
+    options: [
+      {
+        id: 'opt-cert-expired',
+        label: 'The server TLS certificate validity period expired on Oct 20 2026, causing browser Root CA trust chain verification to reject the connection.',
+        isCorrect: true,
+        feedback: 'Correct! Browsers verify certificate validity timestamps against the local system clock. An expired certificate triggers an immediate security blockade.',
+      },
+      {
+        id: 'opt-ddos-flood',
+        label: 'A volumetric SYN flood overwhelmed the edge router.',
+        isCorrect: false,
+        feedback: 'The TLS handshake initiates normally and delivers the certificate; the failure is strictly a cryptographic certificate date rejection.',
+      },
+      {
+        id: 'opt-gateway-mac',
+        label: 'The default gateway MAC address was changed by ARP poisoning.',
+        isCorrect: false,
+        feedback: 'Network connectivity is 100% functional; the issue is cryptographic validation in the application layer.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-renew-cert',
+        label: 'Deploy renewed Let\'s Encrypt certificate: `certbot renew --nginx` and reload reverse proxy',
+        isCorrect: true,
+        patch: { action: 'renew-certificate', target: 'reverse-proxy', value: { domain: 'shop.click.dev' } },
+      },
+      {
+        id: 'fix-flush-switch',
+        label: 'Flush the core switch MAC table',
+        isCorrect: false,
+        patch: { action: 'flush-cam', target: 'switch-sw1', value: 'all' },
+      },
+      {
+        id: 'fix-change-ip',
+        label: 'Change the web server IP address to a new private IP',
+        isCorrect: false,
+        patch: { action: 'reconfigure-ip', target: 'reverse-proxy', value: '10.0.0.99' },
+      },
+    ],
+  },
+};
 
 /**
  * net-13: Application Protocols: HTTP & TLS/HTTPS
@@ -44,6 +247,7 @@ export const NET_13_MODULE: ModuleData = {
       shortDescription:
         'Explore HTTP request/response architecture, status code families, and the generational leap from HTTP/1.1 to HTTP/2 and HTTP/3.',
       theory: {
+        mentorScript: NET_13_MENTOR_SCRIPT,
         summary:
           'HTTP methods define actions (GET, POST, PUT, DELETE). Status code families categorize responses (2xx success, 3xx redirect, 4xx client error, 5xx server error). HTTP/2 uses binary framing to multiplex concurrent streams on one TCP stream, while HTTP/3 runs over UDP/QUIC to isolate packet drops.',
         explanation: [

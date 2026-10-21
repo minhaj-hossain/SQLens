@@ -1,4 +1,141 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_14_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  moduleId: 'net-14',
+  stageTitle: '5-Layer Office Outage Triage Lab',
+  stageSubtitle: 'Step-by-step diagnostic isolation from physical copper link to DNS and transit hops',
+  initialStageState: {
+    spotlight: 'terminal',
+    highlightedField: 'link',
+  },
+  revealLadder: {
+    'step-link': ['diag-link'],
+    'step-ip': ['diag-link', 'diag-ip'],
+    'step-gateway': ['diag-link', 'diag-ip', 'diag-gateway'],
+    'step-dns': ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns'],
+    'step-trace': ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns', 'diag-trace'],
+  },
+  terms: {
+    'icmp-echo': {
+      term: 'ICMP Echo',
+      definition: 'Layer 3 diagnostic protocol where Type 8 Request generates a Type 0 Reply.',
+      part: 'diag-link',
+    },
+    'default-gateway': {
+      term: 'Default Gateway',
+      definition: 'The local router interface bridging your subnet to external networks.',
+      part: 'diag-gateway',
+    },
+    'dns-demarcation': {
+      term: 'DNS Demarcation',
+      definition: 'Testing reachability by IP vs name to isolate name resolution from routing.',
+      part: 'diag-dns',
+    },
+    'ttl-traceroute': {
+      term: 'Traceroute TTL Probing',
+      definition: 'Sending incremental TTL packets that expire to map hop-by-hop routers.',
+      part: 'diag-trace',
+    },
+  },
+  beats: [
+    {
+      id: 'b1',
+      kind: 'say',
+      text: "An employee panics: 'The internet is dead!' As a network engineer, you test systematically instead of guessing.",
+      revealedParts: ['diag-link'],
+    },
+    {
+      id: 'b2',
+      kind: 'predict',
+      text: 'Step 1: You run ping 8.8.8.8 and it replies in 12ms. But ping google.com fails. What is broken?',
+      prompt: 'Select the failing network boundary:',
+      options: [
+        { id: 'opt-phys', text: 'The physical Ethernet cable was unplugged from the wall.', isCorrect: false },
+        { id: 'opt-gw', text: 'The local default gateway router has crashed.', isCorrect: false },
+        { id: 'opt-dns', text: 'The DNS name server is unreachable or unconfigured.', isCorrect: true },
+      ],
+      whyPrompt: 'Why does this test isolate DNS?',
+      whyOptions: [
+        { id: 'why-dns', text: 'Public IP routing works end-to-end, so only domain name translation is failing.', isCorrect: true },
+        { id: 'why-wrong', text: 'Because 8.8.8.8 is a link-local address that never touches a router.', isCorrect: false },
+      ],
+      revealedParts: ['diag-link', 'diag-ip'],
+    },
+    {
+      id: 'b3',
+      kind: 'point',
+      target: 'diag-gateway',
+      text: 'Ping 8.8.8.8 proves physical link, local IP, and default gateway routing are 100% healthy.',
+      revealedParts: ['diag-link', 'diag-ip', 'diag-gateway'],
+    },
+    {
+      id: 'b4',
+      kind: 'action',
+      prompt: 'Isolate the {{term:dns-demarcation}} failure by querying the DNS server directly.',
+      buttonLabel: 'Demarcate DNS',
+      targetState: { spotlight: 'dns-check' },
+      revealedParts: ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns'],
+    },
+    {
+      id: 'b5',
+      kind: 'say',
+      text: 'What if a remote website is unreachable across the wide internet? How do you locate the failing router?',
+      revealedParts: ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns'],
+    },
+    {
+      id: 'b6',
+      kind: 'predict',
+      text: 'How does traceroute identify each intermediate router along an unknown internet path?',
+      prompt: 'Select the hop discovery mechanism:',
+      options: [
+        { id: 'opt-ttl', text: 'It sends probes with incremental TTL=1, 2, 3... that expire at each hop.', isCorrect: true },
+        { id: 'opt-ask', text: 'It requests a full copy of the internet BGP routing table from the ISP.', isCorrect: false },
+        { id: 'opt-arp', text: 'It broadcasts Layer 2 ARP frames across all transit routers.', isCorrect: false },
+      ],
+      whyPrompt: 'Why does TTL expiration expose routers?',
+      whyOptions: [
+        { id: 'why-icmp', text: 'Routers decrement TTL to 0, discard the probe, and reply with ICMP Time Exceeded.', isCorrect: true },
+        { id: 'why-bad', text: 'Because expired packets write the router hostname onto the physical fiber.', isCorrect: false },
+      ],
+      revealedParts: ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns', 'diag-trace'],
+    },
+    {
+      id: 'b7',
+      kind: 'point',
+      target: 'diag-trace',
+      text: 'Every router that decrements TTL to 0 sends an ICMP error, completing {{term:ttl-traceroute}}.',
+      revealedParts: ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns', 'diag-trace'],
+    },
+    {
+      id: 'b8',
+      kind: 'debrief',
+      text: 'By systematically checking link, IP, gateway, DNS, and transit hops, you solve any outage without guesswork.',
+      revealedParts: ['diag-link', 'diag-ip', 'diag-gateway', 'diag-dns', 'diag-trace'],
+    },
+  ],
+  ticketScene: {
+    ticketId: 'TCK-114',
+    title: 'Office Outage: Can Ping Gateway But No Web Browsing',
+    symptom: 'Workstation ACME-PC-04 cannot open company portals. Ping to 192.168.1.1 succeeds, ping to 8.8.8.8 succeeds, but ping to corp.internal fails with Unknown Host.',
+    options: [
+      { id: 'opt1', text: 'Replace the physical network adapter card.', isCorrect: false },
+      { id: 'opt2', text: 'DNS resolver is misconfigured or pointing to an unreachable DNS server IP.', isCorrect: true },
+      { id: 'opt3', text: 'Reboot the building core default gateway router.', isCorrect: false },
+    ],
+    repairActions: [
+      { id: 'rep1', text: 'Re-seat the RJ-45 copper patch cable in the wall jack.', isCorrect: false },
+      {
+        id: 'rep2',
+        text: 'Configure primary DNS server to 192.168.1.10 and flush OS resolver cache with ipconfig /flushdns.',
+        isCorrect: true,
+        patch: { action: 'set_dns_and_flush', target: 'ACME-PC-04' },
+      },
+      { id: 'rep3', text: 'Assign an APIPA 169.254.1.1 static fallback address.', isCorrect: false },
+    ],
+  },
+};
 
 /**
  * net-14: Diagnostics & Windows Office Troubleshooting
@@ -43,6 +180,7 @@ export const NET_14_MODULE: ModuleData = {
       shortDescription:
         'Understand how ICMP enables network probing: Echo Request/Reply types and the clever TTL increment mechanism powering traceroute.',
       theory: {
+        mentorScript: NET_14_MENTOR_SCRIPT,
         summary:
           'The Internet Control Message Protocol (ICMP) operates at Layer 3 to communicate diagnostic telemetry and transmission errors without application sockets. Traceroute exploits the IPv4 Time-to-Live (TTL) field by transmitting incremental probe packets (TTL=1, 2, 3...); each intermediate router decrements the TTL to zero, discards the packet, and responds with an ICMP Time Exceeded (Type 11 Code 0) datagram, systematically exposing the hop-by-hop topology across the internet.',
         explanation: [

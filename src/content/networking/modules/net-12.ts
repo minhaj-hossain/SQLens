@@ -1,4 +1,205 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_12_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-12',
+  conceptId: 'net12-c1-seq-ack-math',
+  revealLadder: {
+    'step-0': ['sender-stream'],
+    'step-1': ['sender-stream', 'seq-bytes'],
+    'step-2': ['sender-stream', 'seq-bytes', 'receiver-buffer'],
+    'step-3': ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack'],
+    'step-4': ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack', 'dup-ack-gap'],
+    'step-5': ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack', 'dup-ack-gap', 'fast-retransmit', 'window-scale'],
+  },
+  terms: {
+    seqnum: {
+      label: 'Sequence Number (Seq)',
+      part: 'seq-bytes',
+      explanation: 'The byte-stream offset of the very first byte of data carried in this TCP segment.',
+    },
+    cumack: {
+      label: 'Cumulative ACK (Ack N)',
+      part: 'cum-ack',
+      explanation: 'Confirms receipt of all bytes up to N-1 and declares that byte N is expected next.',
+    },
+    fastretransmit: {
+      label: 'Fast Retransmit',
+      part: 'fast-retransmit',
+      explanation: 'Retransmitting a missing segment immediately upon receiving 3 duplicate ACKs without waiting for RTO timer.',
+    },
+    timewait: {
+      label: 'TIME_WAIT (2*MSL)',
+      part: 'window-scale',
+      explanation: 'The 60-120 second lingering state ensuring delayed duplicate packets expire before port reuse.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: Byte Offsets vs Packet Counts' },
+      kind: 'say',
+      text: 'TCP does not count packets. TCP counts individual bytes! A 5,000-byte file is numbered byte 0 through byte 4,999. Watch how TCP tracks this byte stream.',
+      spotlight: 'sender-stream',
+      revealedParts: ['sender-stream'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: The Cumulative ACK Rule' },
+      kind: 'predict',
+      text: 'The sender transmits a 1,000-byte payload with `Seq = 5,001` (carrying bytes 5,001 through 6,000). What {{term:cumack}} number must the receiver return?',
+      spotlight: 'cum-ack',
+      revealedParts: ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack'],
+      options: [
+        {
+          id: 'opt-ack-6001',
+          label: 'Ack = 6,001 (all bytes through 6,000 received; expecting byte 6,001 next)',
+          isCorrect: true,
+          feedback: 'Correct! TCP ACKs are forward-looking: Ack N confirms everything up to N-1 and requests byte N next.',
+        },
+        {
+          id: 'opt-ack-5001',
+          label: 'Ack = 5,001 (repeating the sequence number)',
+          isCorrect: false,
+          feedback: 'Ack 5,001 would inform the sender that byte 5,001 was never received!',
+        },
+        {
+          id: 'opt-ack-1000',
+          label: 'Ack = 1,000 (the count of bytes in the segment)',
+          isCorrect: false,
+          feedback: 'TCP acknowledgments are cumulative stream offsets, not relative payload lengths.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-forward-looking-ack',
+          label: 'An ACK number of N unambiguously tells the sender: "I have accepted every continuous byte up to N-1, send byte N next."',
+          isCorrect: true,
+          feedback: 'Spot on! This cumulative design allows a single ACK to confirm multiple received segments.',
+        },
+        {
+          id: 'why-packet-index',
+          label: 'ACK numbers represent the line number in the operating system log.',
+          isCorrect: false,
+          feedback: 'ACK numbers strictly represent the 32-bit stream byte index.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: Simulate a Dropped Segment Gap' },
+      kind: 'do',
+      text: 'Segment 2 (bytes 6,001 to 7,000) is dropped by a congested router, but Segment 3 (7,001 to 8,000) arrives. Click Receive Segment 3 to observe duplicate ACKs.',
+      actionPrompt: 'Deliver Out-of-Order Segment 3',
+      actionTargetPart: 'dup-ack-gap',
+      revealedParts: ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack', 'dup-ack-gap'],
+      spotlight: 'dup-ack-gap',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Predict: Fast Retransmit Trigger' },
+      kind: 'predict',
+      text: 'Because byte 6,001 is missing, the receiver cannot ACK byte 8,001. It repeats `Ack = 6,001` three times. What does this trigger at the sender?',
+      spotlight: 'fast-retransmit',
+      revealedParts: ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack', 'dup-ack-gap', 'fast-retransmit'],
+      options: [
+        {
+          id: 'opt-trigger-fast-retransmit',
+          label: 'Immediate Fast Retransmit of bytes 6,001–7,000 without waiting for the slow Retransmission Timeout (RTO) timer.',
+          isCorrect: true,
+          feedback: 'Brilliant! RFC 5681 states 3 duplicate ACKs are an unambiguous proof of packet loss. Fast Retransmit kicks in immediately!',
+        },
+        {
+          id: 'opt-terminate-connection',
+          label: 'Immediate TCP RST connection termination.',
+          isCorrect: false,
+          feedback: 'Packet loss is normal in IP networks. TCP is built to recover gracefully, not crash.',
+        },
+        {
+          id: 'opt-ignore-gap',
+          label: 'The sender ignores the gap and assumes the application will fill in random characters.',
+          isCorrect: false,
+          feedback: 'TCP guarantees 100% byte integrity without missing gaps.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-fast-retransmit-rfc',
+          label: 'Three duplicate ACKs prove that later segments arrived, localized the loss to that specific gap, and bypass the slow RTO timer.',
+          isCorrect: true,
+          feedback: 'Exactly right! It prevents throughput from collapsing down to zero.',
+        },
+        {
+          id: 'why-reorder-only',
+          label: 'Duplicate ACKs only indicate that the network cable is twisted.',
+          isCorrect: false,
+          feedback: 'Duplicate ACKs are software protocol signals generated by the receiver IP stack.',
+        },
+      ],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Observe: Teardown & The TIME_WAIT State' },
+      kind: 'point',
+      text: 'When closing a connection, TCP uses a 4-way FIN $\\to$ ACK $\\to$ FIN $\\to$ ACK handshake. The active closer stays in {{term:timewait}} for 2*MSL (60-120 seconds) to ensure the final ACK arrived and prevent ghost packets from corrupting new connections.',
+      spotlight: 'window-scale',
+      revealedParts: ['sender-stream', 'seq-bytes', 'receiver-buffer', 'cum-ack', 'dup-ack-gap', 'fast-retransmit', 'window-scale'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '112',
+    title: 'Ticket #112: Zero Window Stall & Database Freezing',
+    symptom: 'Bulk ETL export to PostgreSQL database freezes at 34% completion. Wire capture shows repetitive TCP ZeroWindow advertisements.',
+    telemetry: [
+      'Sender Wireshark Capture: Seq 140001:141460, Ack 140001, Win=64240',
+      'Receiver Response: Seq 1024, Ack 141461, Win=0 [TCP ZeroWindow]',
+      'Sender Reaction: Transmission paused. Sending periodic [TCP ZeroWindowProbe] byte.',
+      'Database Server CPU: PostgreSQL worker process pegged at 100% CPU in disk I/O wait; buffer pool full.',
+    ],
+    options: [
+      {
+        id: 'opt-zero-window-full',
+        label: 'The database server TCP receive buffer is completely full (Win=0) because the slow disk subsystem cannot drain the socket buffer.',
+        isCorrect: true,
+        feedback: 'Correct! TCP Flow Control uses the Receive Window (rwnd) field. When the receiver buffer fills, it advertises Win=0 to stop the sender from overwhelming it.',
+      },
+      {
+        id: 'opt-bad-ethernet-cable',
+        label: 'The Ethernet cable was cut in half by maintenance.',
+        isCorrect: false,
+        feedback: 'Both sides are actively transmitting ZeroWindow probes and updates; physical link is intact.',
+      },
+      {
+        id: 'opt-dns-timeout',
+        label: 'The DNS authoritative server timed out.',
+        isCorrect: false,
+        feedback: 'The TCP connection is already established and mid-stream.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-tune-db-io',
+        label: 'Increase PostgreSQL write buffer queue and disk I/O IOPS to drain socket receive buffers',
+        isCorrect: true,
+        patch: { action: 'increase-buffer', target: 'db-server', value: { ioThreads: 8, bufferMb: 4096 } },
+      },
+      {
+        id: 'fix-reboot-client',
+        label: 'Reboot the ETL client machine',
+        isCorrect: false,
+        patch: { action: 'reboot-client', target: 'sender-stream', value: true },
+      },
+      {
+        id: 'fix-swap-cable',
+        label: 'Replace the copper patch cable',
+        isCorrect: false,
+        patch: { action: 'swap-cable', target: 'sender-stream', value: 'cat6' },
+      },
+    ],
+  },
+};
 
 /**
  * net-12: TCP Reliability, Flow Control & Teardown
@@ -44,6 +245,7 @@ export const NET_12_MODULE: ModuleData = {
       shortDescription:
         'Understand TCP byte accounting: how Sequence Numbers track byte offsets and why Acknowledgments confirm continuous streams.',
       theory: {
+        mentorScript: NET_12_MENTOR_SCRIPT,
         summary:
           'TCP is a stream of bytes. Sequence numbers track the byte offset of payload bytes. Acknowledgments are cumulative: ACK N indicates that all bytes through N-1 were received and byte N is expected next. Gaps cause repeated duplicate ACKs.',
         explanation: [

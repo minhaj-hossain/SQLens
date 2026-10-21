@@ -1,4 +1,141 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_15_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  moduleId: 'net-15',
+  stageTitle: 'STP Loops & Boundary Firewall Protection Lab',
+  stageSubtitle: 'Prevent Layer 2 broadcast storms with STP and protect boundaries with stateful connection tracking',
+  initialStageState: {
+    spotlight: 'stp-topology',
+    highlightedField: 'root-election',
+  },
+  revealLadder: {
+    'step-bpdu': ['stp-bpdu'],
+    'step-root': ['stp-bpdu', 'stp-root'],
+    'step-block': ['stp-bpdu', 'stp-root', 'stp-block'],
+    'step-acl': ['stp-bpdu', 'stp-root', 'stp-block', 'fw-acl'],
+    'step-conntrack': ['stp-bpdu', 'stp-root', 'stp-block', 'fw-acl', 'fw-conntrack'],
+  },
+  terms: {
+    'spanning-tree': {
+      term: 'Spanning Tree Protocol',
+      definition: 'IEEE 802.1D standard that breaks physical switch loops into a logical tree.',
+      part: 'stp-root',
+    },
+    'root-bridge': {
+      term: 'Root Bridge',
+      definition: 'The reference switch with the lowest numerical Bridge ID in an STP domain.',
+      part: 'stp-root',
+    },
+    'port-blocking': {
+      term: 'Port Blocking',
+      definition: 'STP port state that drops user data frames to eliminate broadcast loops.',
+      part: 'stp-block',
+    },
+    'stateful-firewall': {
+      term: 'Stateful Firewall',
+      definition: 'Firewall tracking bidirectional connections to permit return traffic automatically.',
+      part: 'fw-conntrack',
+    },
+  },
+  beats: [
+    {
+      id: 'b1',
+      kind: 'say',
+      text: 'You plug two cables between switches for redundancy. Seconds later, all link lights flash amber and the network freezes!',
+      revealedParts: ['stp-bpdu'],
+    },
+    {
+      id: 'b2',
+      kind: 'predict',
+      text: 'Why does a redundant cable loop between switches cause a catastrophic broadcast storm?',
+      prompt: 'Select the Layer 2 failure mechanism:',
+      options: [
+        { id: 'opt-nottl', text: 'Ethernet frames have no TTL counter, so flooded broadcasts loop and multiply forever.', isCorrect: true },
+        { id: 'opt-heat', text: 'Copper patch cables overheat and reverse the polarity of electrical signals.', isCorrect: false },
+        { id: 'opt-pool', text: 'The switches run out of local IP addresses in their internal subnet pool.', isCorrect: false },
+      ],
+      whyPrompt: 'Why does missing TTL cause infinite multiplication?',
+      whyOptions: [
+        { id: 'why-flood', text: 'Switches flood broadcasts out every active port with no hop limit to stop them.', isCorrect: true },
+        { id: 'why-simplex', text: 'Because Ethernet switches only transmit data in one direction at a time.', isCorrect: false },
+      ],
+      revealedParts: ['stp-bpdu', 'stp-root'],
+    },
+    {
+      id: 'b3',
+      kind: 'point',
+      target: 'stp-root',
+      text: 'Every switch exchanges BPDUs to elect the {{term:root-bridge}} with the lowest Bridge Priority and MAC.',
+      revealedParts: ['stp-bpdu', 'stp-root'],
+    },
+    {
+      id: 'b4',
+      kind: 'action',
+      prompt: 'Run {{term:spanning-tree}} to detect redundant links and block the loop.',
+      buttonLabel: 'Block Redundant Loop',
+      targetState: { spotlight: 'stp-block' },
+      revealedParts: ['stp-bpdu', 'stp-root', 'stp-block'],
+    },
+    {
+      id: 'b5',
+      kind: 'say',
+      text: 'STP places backup links into {{term:port-blocking}}. Now what protects network boundaries from untrusted outside traffic?',
+      revealedParts: ['stp-bpdu', 'stp-root', 'stp-block', 'fw-acl'],
+    },
+    {
+      id: 'b6',
+      kind: 'predict',
+      text: 'Why do modern perimeter firewalls use stateful inspection instead of simple stateless ACL rules?',
+      prompt: 'Select the firewall architecture advantage:',
+      options: [
+        { id: 'opt-track', text: 'Stateful firewalls track TCP states so return traffic is allowed without opening all high ports.', isCorrect: true },
+        { id: 'opt-mac', text: 'Stateless ACLs can only read MAC addresses and cannot inspect IP headers.', isCorrect: false },
+        { id: 'opt-encrypt', text: 'Stateful firewalls encrypt Ethernet cabling using quantum hardware microchips.', isCorrect: false },
+      ],
+      whyPrompt: 'Why does conntrack prevent security holes?',
+      whyOptions: [
+        { id: 'why-dynamic', text: 'Dynamic state tables associate incoming packets with established outbound requests.', isCorrect: true },
+        { id: 'why-discard', text: 'Because stateless ACLs delete packet headers after inspecting port numbers.', isCorrect: false },
+      ],
+      revealedParts: ['stp-bpdu', 'stp-root', 'stp-block', 'fw-acl', 'fw-conntrack'],
+    },
+    {
+      id: 'b7',
+      kind: 'point',
+      target: 'fw-conntrack',
+      text: 'A {{term:stateful-firewall}} remembers outbound sessions, keeping perimeter defenses secure and automatic.',
+      revealedParts: ['stp-bpdu', 'stp-root', 'stp-block', 'fw-acl', 'fw-conntrack'],
+    },
+    {
+      id: 'b8',
+      kind: 'debrief',
+      text: 'STP eliminates internal Layer 2 broadcast storms, while stateful firewalls protect your boundary from outside intrusion.',
+      revealedParts: ['stp-bpdu', 'stp-root', 'stp-block', 'fw-acl', 'fw-conntrack'],
+    },
+  ],
+  ticketScene: {
+    ticketId: 'TCK-115',
+    title: 'Broadcast Storm & MAC Thrashing After Wiring Uplink',
+    symptom: 'After connecting a backup patch cable between Switch-02 and Switch-03, network utilization hit 100%, management SSH froze, and switch logs reported MAC table flapping.',
+    options: [
+      { id: 'opt1', text: 'Replace all Category 6 cables with fiber optic transceivers.', isCorrect: false },
+      { id: 'opt2', text: 'STP is disabled on the newly patched trunk link, causing an active Layer 2 switching loop.', isCorrect: true },
+      { id: 'opt3', text: 'The switches ran out of VLAN IDs.', isCorrect: false },
+    ],
+    repairActions: [
+      { id: 'rep1', text: 'Reboot all end-user workstations.', isCorrect: false },
+      {
+        id: 'rep2',
+        text: 'Enable spanning-tree on the redundant trunk port and verify port enters blocking state.',
+        isCorrect: true,
+        patch: { action: 'enable_stp_blocking', target: 'SW-02-Gi0/2' },
+      },
+      { id: 'rep3', text: 'Disable ARP protocol on the core router.', isCorrect: false },
+    ],
+  },
+};
 
 /**
  * net-15: Boundary Security, Firewalls & STP
@@ -43,6 +180,7 @@ export const NET_15_MODULE: ModuleData = {
       shortDescription:
         'Understand why redundant switch links cause catastrophic broadcast storms and how STP breaks physical loops into logical trees.',
       theory: {
+        mentorScript: NET_15_MENTOR_SCRIPT,
         summary:
           'Because standard Ethernet frames lack a Time-To-Live (TTL) field, redundant physical links between switches cause infinite broadcast multiplication, frame duplication, and MAC address table thrashing that collapse networks in seconds. IEEE 802.1D Spanning Tree Protocol (STP) and 802.1w Rapid STP prevent loops by exchanging Bridge Protocol Data Units (BPDUs), electing a single Root Bridge based on lowest Bridge ID (Priority + MAC), and blocking redundant ports while keeping them ready for instant failover.',
         explanation: [

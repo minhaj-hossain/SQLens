@@ -154,7 +154,37 @@
 
 ---
 
+### Phase 6: Interactive Story Reel (MentorScript) Rollout for Modules 6–16
+*Theme: Author auto-pausing animated story reels obeying strict anti-overload rules (micro-beats <=35 words, 1 dilemma at a time, Third Way assessment with >=3 options & >=2 whyOptions, and TicketScenes).*
+
+- [x] **Batch 1: Crossing Network Boundaries (Modules 6, 7, 8)**
+  - [x] **Module 6 (`net-06.ts`)**: `NET_06_MENTOR_SCRIPT` — IPv6 128-bit Expansion & NDP Solicitation (no more broadcast, solicited-node multicast, SLAAC link-local autoconfig). Wired to `PacketInspector` stage.
+  - [x] **Module 7 (`net-07.ts`)**: `NET_07_MENTOR_SCRIPT` — Default Gateways & Hop-by-Hop L2 Rewrite (leaving the subnet dilemma, router dual-NIC, constant L3 IP vs rewritten L2 MAC, TTL decrement). Wired to 2-hop `PacketInspector` stage.
+  - [x] **Module 8 (`net-08.ts`)**: `NET_08_MENTOR_SCRIPT` — NAT & PAT Overload (RFC 1918 private exhaustion, corporate receptionist analogy, dynamic port translation table, return flow de-NATting, inherent firewall effect). Wired to L2/L3/L4 `PacketInspector` stage.
+  - [x] **Simulator Integration (`MentorLessonStage.tsx`)**: Mounted custom packet inspection stages for `net-06`, `net-07`, and `net-08`.
+  - [x] **Verification Suite**: Updated `tests/tracks/networking-mentor-rollout-m1-m5.test.tsx` to audit Modules 1–8 (56/56 tests passing). Full networking suite: 31 test files, 492/492 tests green (100%).
+- [x] **Batch 2: Services & Transport Mechanics (Modules 9, 10, 11, 12, 13)**
+  - [x] **Module 9 (`net-09.ts`)**: `NET_09_MENTOR_SCRIPT` — DHCP DORA Handshake (0.0.0.0 broadcast discovery, transaction ID matching, lease duration math, T1/T2 renewals, APIPA 169.254.x.x fallback). Wired to `DhcpDoraSimulator`.
+  - [x] **Module 10 (`net-10.ts`)**: `NET_10_MENTOR_SCRIPT` — Hierarchical DNS Resolution (dot root, TLD name servers, authoritative name servers, recursive queries, TTL caching, poisoned resolver flushing). Wired to `DnsResolutionTreeSimulator`.
+  - [x] **Module 11 (`net-11.ts`)**: `NET_11_MENTOR_SCRIPT` — UDP vs TCP Sockets & Port Binding (16-bit port spaces, 5-tuple socket uniqueness, UDP fire-and-forget, TCP 3-way handshake SYN/ACK, socket binding collisions). Wired to `packet-inspector-stage-net11`.
+  - [x] **Module 12 (`net-12.ts`)**: `NET_12_MENTOR_SCRIPT` — TCP Sequence Ladder & Sliding Window (byte-stream sequence offsets, cumulative Ack N math, duplicate ACK gap detection, fast retransmit, 4-way teardown with TIME_WAIT 2*MSL, zero window flow control). Wired to `TcpSequenceLadderSimulator`.
+  - [x] **Module 13 (`net-13.ts`)**: `NET_13_MENTOR_SCRIPT` — HTTP & TLS 1.3 Key Exchange (cleartext sniffing danger, X.509 CA trust chain, 1-RTT ECDHE ephemeral key exchange for forward secrecy, AES-GCM record framing, expired certificate alert). Wired to `HttpTlsHandshakeSimulator`.
+  - [x] **Simulator Integration (`MentorLessonStage.tsx`)**: Wired `DhcpDoraSimulator`, `DnsResolutionTreeSimulator`, `packet-inspector-stage-net11`, `TcpSequenceLadderSimulator`, and `HttpTlsHandshakeSimulator`.
+  - [x] **Verification Suite**: Updated `tests/tracks/networking-mentor-rollout-m1-m5.test.tsx` to audit Modules 1–13 (91/91 tests passing).
+- [x] **Batch 3: Enterprise Infrastructure & Incident Triage (Modules 14, 15, 16)**
+  - [x] **Module 14 (`net-14.ts`)**: `NET_14_MENTOR_SCRIPT` — 5-Layer Office Outage Triage (L1 link light $\to$ L2/L3 APIPA $\to$ L3 gateway reachability $\to$ L3 internet ping 8.8.8.8 $\to$ L7 DNS resolution $\to$ TTL traceroute hop mapping). Wired to `virtual-terminal-stage`.
+  - [x] **Module 15 (`net-15.ts`)**: `NET_15_MENTOR_SCRIPT` — STP BPDU Root Election & Boundary Firewalls (missing frame TTL reality, infinite broadcast storm multiplication, BPDU exchange, lowest Priority + MAC Root Bridge election, port blocking, stateful conntrack return flow tracking). Wired to `firewall-stp-stage`.
+  - [x] **Module 16 (`net-16.ts`)**: `NET_16_MENTOR_SCRIPT` — 802.1Q VLAN Trunking & Dijkstra Shortest Path (flat broadcast domain isolation, untagged access ports, 4-byte IEEE 802.1Q trunk tagging with 12-bit VID, Wi-Fi half-duplex CSMA/CA collision avoidance, Dijkstra SPF shortest path tree calculation). Wired to `vlan-dijkstra-stage`.
+  - [x] **Simulator Integration (`MentorLessonStage.tsx`)**: Mounted `VirtualTerminalSimulator` (`virtual-terminal-stage`), `FirewallAclRuleSimulator` (`firewall-stp-stage`), and `VlanTrunkDijkstraLab` (`vlan-dijkstra-stage`).
+  - [x] **Verification Suite**: Updated `tests/tracks/networking-mentor-rollout-m1-m5.test.tsx` to audit ALL 16 Modules (112/112 tests passing). Full networking regression suite: 31 test files, 548/548 tests green (100% pass rate).
+
+---
+
 ## 💾 Current Session State (Where We Are Right Now)
-* **Active Milestone:** Completed Phase 5 (Milestones 6 & 7: Modules 14, 15, 16).
-* **Next Immediate Task:** Commit Phase 5 changes and summarize milestone achievements.
+* **Active Milestone:** **Phase 6 COMPLETE across all 16 Modules.**
+* **Current Status:**
+  - Modules 1–16 have complete, verified, interactive `mentorScript` story reels attached to Concept 1.
+  - Every single story reel strictly obeys all pedagogical constraints: micro-beats ($\le 35$ words), single dilemma at a time, active cadence ($\le 2$ passive beats), cumulative superset reveal ladders, show-then-name term bindings, and 3-way assessment predict beats.
+  - Interactive stage simulators are dynamically mounted for every module in `MentorLessonStage.tsx`.
+* **Next Immediate Task:** Transition to Frontend & UI polish (visual styling, animations, responsiveness, dark mode, sound design, or student journey flows).
 

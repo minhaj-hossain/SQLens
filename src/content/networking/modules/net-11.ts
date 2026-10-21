@@ -1,4 +1,205 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_11_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-11',
+  conceptId: 'net11-c1-transport-multiplexing',
+  revealLadder: {
+    'step-0': ['client-app'],
+    'step-1': ['client-app', 'ip-layer'],
+    'step-2': ['client-app', 'ip-layer', 'l4-ports'],
+    'step-3': ['client-app', 'ip-layer', 'l4-ports', 'five-tuple'],
+    'step-4': ['client-app', 'ip-layer', 'l4-ports', 'five-tuple', 'udp-postage'],
+    'step-5': ['client-app', 'ip-layer', 'l4-ports', 'five-tuple', 'udp-postage', 'tcp-handshake'],
+  },
+  terms: {
+    port: {
+      label: '16-bit Port Number',
+      part: 'l4-ports',
+      explanation: 'A 16-bit number (0-65535) identifying the specific process or service on a host.',
+    },
+    fivetuple: {
+      label: '5-Tuple Socket Binding',
+      part: 'five-tuple',
+      explanation: 'The unique combination: (Protocol, Source IP, Source Port, Destination IP, Destination Port).',
+    },
+    udp: {
+      label: 'UDP Datagram',
+      part: 'udp-postage',
+      explanation: 'Lightweight, connectionless transport with an 8-byte header and zero handshake overhead.',
+    },
+    tcp: {
+      label: 'TCP 3-Way Handshake',
+      part: 'tcp-handshake',
+      explanation: 'Connection-oriented synchronization: SYN -> SYN-ACK -> ACK ensuring reliable ordered byte delivery.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The Multi-App Multiplexing Dilemma' },
+      kind: 'say',
+      text: 'You have 5 browser tabs open, a Zoom call, and Spotify streaming simultaneously. Your NIC receives a packet destined for your IP. How does your operating system know which app gets the packet?',
+      spotlight: 'client-app',
+      revealedParts: ['client-app'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: The Role of Layer 4 Ports' },
+      kind: 'predict',
+      text: 'Layer 3 IP delivers from computer to computer. What does Layer 4 (Transport) add to identify the running software process?',
+      spotlight: 'l4-ports',
+      revealedParts: ['client-app', 'ip-layer', 'l4-ports'],
+      options: [
+        {
+          id: 'opt-l4-ports',
+          label: 'A 16-bit Port Number (0 to 65,535) stamped in the transport header.',
+          isCorrect: true,
+          feedback: 'Correct! The OS demultiplexes incoming packets to socket file descriptors using port numbers.',
+        },
+        {
+          id: 'opt-app-name-string',
+          label: 'The English application filename (e.g. "spotify.exe") written in clear text.',
+          isCorrect: false,
+          feedback: 'Headers must be compact binary numbers. Text names would waste bandwidth and vary by OS.',
+        },
+        {
+          id: 'opt-mac-table',
+          label: 'The MAC address table of the local switch.',
+          isCorrect: false,
+          feedback: 'MAC addresses identify hardware interfaces on Layer 2, not software applications.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-16bit-ports',
+          label: 'A fixed 16-bit integer field allows operating system kernels to route packets to socket queues in nanoseconds.',
+          isCorrect: true,
+          feedback: 'Spot on! The kernel maintains a fast hash table indexed by the port number.',
+        },
+        {
+          id: 'why-variable-strings',
+          label: 'String matching is computationally cheaper than integer indexing.',
+          isCorrect: false,
+          feedback: 'Integer lookups in binary tables are orders of magnitude faster than string parsing.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: Inspect the 5-Tuple Binding' },
+      kind: 'do',
+      text: 'Click Bind Socket to inspect the {{term:fivetuple}}: (TCP, 192.168.1.10, 52144, 198.51.100.4, 443).',
+      actionPrompt: 'Bind Socket (5-Tuple Unique Key)',
+      actionTargetPart: 'five-tuple',
+      revealedParts: ['client-app', 'ip-layer', 'l4-ports', 'five-tuple'],
+      spotlight: 'five-tuple',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Predict: UDP vs TCP Trade-Off' },
+      kind: 'predict',
+      text: 'You are streaming a live multiplayer FPS game where getting an older frame 200ms late is completely useless. Which transport protocol should the game engine use?',
+      spotlight: 'udp-postage',
+      revealedParts: ['client-app', 'ip-layer', 'l4-ports', 'five-tuple', 'udp-postage'],
+      options: [
+        {
+          id: 'opt-udp-choice',
+          label: 'UDP: minimal 8-byte header, zero handshake latency, and no retransmissions delaying new updates.',
+          isCorrect: true,
+          feedback: 'Spot on! UDP is like a postcard: fast and low-overhead. If a packet drops, the next state update arrives immediately.',
+        },
+        {
+          id: 'opt-tcp-choice',
+          label: 'TCP: pauses all game updates until lost packets are successfully retransmitted.',
+          isCorrect: false,
+          feedback: 'TCP retransmissions cause head-of-line blocking, freezing the live game for the player.',
+        },
+        {
+          id: 'opt-icmp-choice',
+          label: 'ICMP: uses echo requests to carry all game controller input.',
+          isCorrect: false,
+          feedback: 'ICMP is a control protocol for network diagnostics, not an application transport protocol.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-udp-best-effort',
+          label: 'Real-time telemetry prioritizes fresh timely data over historical retransmissions.',
+          isCorrect: true,
+          feedback: 'Correct! Missing frames are interpolated by the game client while fresh inputs continue flowing.',
+        },
+        {
+          id: 'why-tcp-head-of-line',
+          label: 'TCP retransmission delays are completely unnoticeable in 60fps games.',
+          isCorrect: false,
+          feedback: 'TCP retransmissions introduce multi-RTT lag spikes that ruin real-time gameplay.',
+        },
+      ],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Observe: The TCP 3-Way Handshake' },
+      kind: 'point',
+      text: 'For websites and file downloads where every single byte MUST arrive without corruption, we use {{term:tcp}}: SYN $\\to$ SYN-ACK $\\to$ ACK. Both endpoints synchronize sequence numbers before a single byte of data is sent!',
+      spotlight: 'tcp-handshake',
+      revealedParts: ['client-app', 'ip-layer', 'l4-ports', 'five-tuple', 'udp-postage', 'tcp-handshake'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '111',
+    title: 'Ticket #111: Socket Port Conflict & Binding Crash',
+    symptom: 'Production Node.js API service fails to start on Web-Server-01 with error `EADDRINUSE: address already in use :::8080`.',
+    telemetry: [
+      'Application Log: Error: listen EADDRINUSE: address already in use :::8080',
+      'Process Table: Node.js API process PID 1420 exited with status 1',
+      'Port Socket Telemetry (`netstat -ano | findstr :8080`):',
+      '  TCP  0.0.0.0:8080  0.0.0.0:0  LISTENING  PID 3892 (Zombie Java service)',
+    ],
+    options: [
+      {
+        id: 'opt-port-in-use',
+        label: 'A zombie Java daemon (PID 3892) is already bound to listening socket 0.0.0.0:8080, blocking the new process.',
+        isCorrect: true,
+        feedback: 'Correct! Two processes cannot bind the same IP:Port combination without specialized SO_REUSEPORT socket flags.',
+      },
+      {
+        id: 'opt-cable-unplugged',
+        label: 'The server network cable was unseated from the top-of-rack switch.',
+        isCorrect: false,
+        feedback: 'This is a local operating system socket binding error; the hardware link is active.',
+      },
+      {
+        id: 'opt-dns-refusal',
+        label: 'The recursive DNS server refused the socket connection.',
+        isCorrect: false,
+        feedback: 'Binding a local listening port does not query DNS.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-kill-zombie-process',
+        label: 'Terminate zombie process: `taskkill /PID 3892 /F` (or `kill -9 3892`) and restart API',
+        isCorrect: true,
+        patch: { action: 'kill-process', target: 'web-server', value: { pid: 3892 } },
+      },
+      {
+        id: 'fix-flush-arp',
+        label: 'Flush workstation ARP cache',
+        isCorrect: false,
+        patch: { action: 'flush-arp', target: 'web-server', value: true },
+      },
+      {
+        id: 'fix-reconfigure-mask',
+        label: 'Change the server subnet mask to /16',
+        isCorrect: false,
+        patch: { action: 'reconfigure-interface', target: 'web-server', value: { mask: '255.255.0.0' } },
+      },
+    ],
+  },
+};
 
 /**
  * net-11: Transport Layer: UDP & TCP Foundations
@@ -44,6 +245,7 @@ export const NET_11_MODULE: ModuleData = {
       shortDescription:
         'Understand how an operating system routes incoming packets to the exact socket connection and application process using port numbers and 5-tuple socket bindings.',
       theory: {
+        mentorScript: NET_11_MENTOR_SCRIPT,
         summary:
           '16-bit port numbers (0–65,535) enable host process-to-process multiplexing. Every active connection is uniquely bound by its 5-tuple: (Protocol, Source IP, Source Port, Destination IP, Destination Port). Ephemeral source ports allow distinct concurrent transport sessions to the same server (note: modern protocols like HTTP/2 can multiplex multiple application requests over one connection).',
         explanation: [

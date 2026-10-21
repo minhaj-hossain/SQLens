@@ -1,4 +1,204 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_10_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-10',
+  conceptId: 'net10-c1-dns-hierarchy',
+  revealLadder: {
+    'step-0': ['client-stub'],
+    'step-1': ['client-stub', 'recursive-resolver'],
+    'step-2': ['client-stub', 'recursive-resolver', 'root-server'],
+    'step-3': ['client-stub', 'recursive-resolver', 'root-server', 'tld-server'],
+    'step-4': ['client-stub', 'recursive-resolver', 'root-server', 'tld-server', 'auth-server'],
+    'step-5': ['client-stub', 'recursive-resolver', 'root-server', 'tld-server', 'auth-server', 'record-answer', 'dns-cache'],
+  },
+  terms: {
+    root: {
+      label: 'Root Server (.)',
+      part: 'root-server',
+      explanation: 'The top of the DNS tree directing resolvers to Top-Level Domain (TLD) servers.',
+    },
+    tld: {
+      label: 'TLD Server (.com)',
+      part: 'tld-server',
+      explanation: 'Top-Level Domain registry holding delegation pointers to domain authoritative nameservers.',
+    },
+    auth: {
+      label: 'Authoritative Nameserver',
+      part: 'auth-server',
+      explanation: 'The master server containing the actual Resource Records (A, AAAA, CNAME) configured by the domain owner.',
+    },
+    ttl: {
+      label: 'DNS Cache TTL',
+      part: 'dns-cache',
+      explanation: 'Time-To-Live in seconds instructing resolvers how long to cache the record before querying again.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The Human Name Dilemma' },
+      kind: 'say',
+      text: 'Humans remember names like `api.company.com`, but routers and network cards only route to IP numbers like `198.51.100.40`. DNS is the global distributed phonebook of the internet.',
+      spotlight: 'client-stub',
+      revealedParts: ['client-stub'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: Centralized vs Hierarchical' },
+      kind: 'predict',
+      text: 'Why does the internet NOT store all 350+ million domain names on a single massive central database server?',
+      spotlight: 'recursive-resolver',
+      revealedParts: ['client-stub', 'recursive-resolver'],
+      options: [
+        {
+          id: 'opt-dns-scaling',
+          label: 'A single server would instantly collapse under global query traffic, suffer catastrophic single-point failure, and prevent delegated management.',
+          isCorrect: true,
+          feedback: 'Exactly! Centralized HOSTS.TXT files died in 1983. DNS is an inverted distributed tree of delegated authority.',
+        },
+        {
+          id: 'opt-dns-legal',
+          label: 'Because international law requires all domain names to be stored on physical punch cards.',
+          isCorrect: false,
+          feedback: 'No, it is an engineering necessity of distributed scaling and resilience.',
+        },
+        {
+          id: 'opt-dns-memory',
+          label: 'Because computers are unable to store more than 10,000 text records in RAM.',
+          isCorrect: false,
+          feedback: 'Modern databases easily hold billions of rows; the bottleneck is network latency and centralized failure.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-delegated-tree',
+          label: 'The hierarchical inverted tree delegates administrative authority down to zone owners while scaling queries across thousands of Anycast servers.',
+          isCorrect: true,
+          feedback: 'Spot on! Each domain owner updates their own authoritative servers without needing permission from a central authority.',
+        },
+        {
+          id: 'why-flat-superior',
+          label: 'Flat text files are faster than tree traversals under global load.',
+          isCorrect: false,
+          feedback: 'Flat files require downloading gigabytes of updates continuously and fail to scale.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: Walk the Iterative Tree' },
+      kind: 'do',
+      text: 'The recursive resolver queries {{term:root}} for `api.company.com`. The Root points to {{term:tld}}. Click Step Iteration to query the TLD server.',
+      actionPrompt: 'Query TLD (.com Registry)',
+      actionTargetPart: 'tld-server',
+      revealedParts: ['client-stub', 'recursive-resolver', 'root-server', 'tld-server'],
+      spotlight: 'tld-server',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Predict: The Final Hop' },
+      kind: 'predict',
+      text: 'The `.com` TLD server replies: "I do not have the IP, but go ask `ns1.company.com`." What kind of nameserver is `ns1.company.com`?',
+      spotlight: 'auth-server',
+      revealedParts: ['client-stub', 'recursive-resolver', 'root-server', 'tld-server', 'auth-server'],
+      options: [
+        {
+          id: 'opt-auth-ns',
+          label: 'An Authoritative Name Server holding the master zone record configured by the domain owner.',
+          isCorrect: true,
+          feedback: 'Correct! The Authoritative server holds the definitive A record mapping `api.company.com` to `198.51.100.40`.',
+        },
+        {
+          id: 'opt-root-clone',
+          label: 'A backup copy of the 13 global root servers.',
+          isCorrect: false,
+          feedback: 'Root servers only know TLDs, not individual second-level company records.',
+        },
+        {
+          id: 'opt-dhcp-client',
+          label: 'A DHCP broadcast relay daemon.',
+          isCorrect: false,
+          feedback: 'DHCP assigns local IP addresses; it does not resolve internet DNS names.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-auth-source',
+          label: 'Authoritative servers hold the ultimate source of truth for a specific zone with the configured A/AAAA records.',
+          isCorrect: true,
+          feedback: 'Exactly right! They answer with the authoritative flag set in the DNS response header.',
+        },
+        {
+          id: 'why-recursive-forward',
+          label: 'Authoritative servers simply forward queries back to the client computer.',
+          isCorrect: false,
+          feedback: 'Authoritative servers answer the query directly from zone database memory.',
+        },
+      ],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Observe: Record Delivery & TTL Caching' },
+      kind: 'point',
+      text: 'The Authoritative server returns `A 198.51.100.40` with a 300-second {{term:ttl}}. The recursive resolver stores it in {{term:ttl}} cache. For the next 5 minutes, subsequent users get instant 1ms answers without walking the tree again!',
+      spotlight: 'dns-cache',
+      revealedParts: ['client-stub', 'recursive-resolver', 'root-server', 'tld-server', 'auth-server', 'record-answer', 'dns-cache'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '110',
+    title: 'Ticket #110: Stale DNS Resolver Cache After Server Migration',
+    symptom: 'Engineering migrated api.click.dev from old IP 198.51.100.10 to new cloud server 203.0.113.80. Branch office users still connect to old decommissioned server.',
+    telemetry: [
+      'Workstation nslookup: api.click.dev -> 198.51.100.10 (TTL remaining: 1840s)',
+      'Authoritative Name Server (`dig @ns1.click.dev`): api.click.dev -> 203.0.113.80 (TTL: 300s)',
+      'Local Workstation DNS Cache (`ipconfig /displaydns`): api.click.dev cached until TTL expires.',
+    ],
+    options: [
+      {
+        id: 'opt-stale-ttl-cache',
+        label: 'Workstations and local recursive resolvers are serving stale records from cache because the previous TTL has not yet expired.',
+        isCorrect: true,
+        feedback: 'Correct! DNS records cannot be forcefully updated on external resolvers; clients continue using cached records until TTL reaches 0.',
+      },
+      {
+        id: 'opt-router-bgp',
+        label: 'The core BGP internet router has a routing loop between AS64512 and AS64513.',
+        isCorrect: false,
+        feedback: 'Querying the authoritative nameserver directly returns the correct new IP 203.0.113.80; routing is functional.',
+      },
+      {
+        id: 'opt-arp-switch-dead',
+        label: 'The switchport ARP table corrupted the MAC address of the DNS server.',
+        isCorrect: false,
+        feedback: 'DNS replies are being delivered normally; the issue is the cached IP content inside the DNS response.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-flush-dns-cache',
+        label: 'Flush local resolver cache: `ipconfig /flushdns` (or `resolvectl flush-caches`)',
+        isCorrect: true,
+        patch: { action: 'flush-dns', target: 'client-stub', value: true },
+      },
+      {
+        id: 'fix-reboot-switch',
+        label: 'Reboot the access switch',
+        isCorrect: false,
+        patch: { action: 'reboot-switch', target: 'switch-sw1', value: true },
+      },
+      {
+        id: 'fix-change-mac',
+        label: 'Change the network interface card MAC address',
+        isCorrect: false,
+        patch: { action: 'change-mac', target: 'client-stub', value: 'random' },
+      },
+    ],
+  },
+};
 
 /**
  * net-10: Domain Name System (DNS)
@@ -43,6 +243,7 @@ export const NET_10_MODULE: ModuleData = {
       shortDescription:
         'Understand the global inverted tree: Root zone, Top-Level Domains (gTLDs/ccTLDs), Second-Level Domains, and zone delegation.',
       theory: {
+        mentorScript: NET_10_MENTOR_SCRIPT,
         summary:
           'DNS is structured as an inverted tree beginning at the Root Zone (.), which delegates to Top-Level Domains (.com, .org), which in turn delegate to authoritative name servers holding the master zone records.',
         explanation: [

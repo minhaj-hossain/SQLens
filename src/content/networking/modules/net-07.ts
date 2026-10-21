@@ -1,4 +1,205 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_07_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-07',
+  conceptId: 'default-gateways-and-mac-rewriting',
+  revealLadder: {
+    'step-0': ['host-a'],
+    'step-1': ['host-a', 'remote-target'],
+    'step-2': ['host-a', 'remote-target', 'subnet-decision'],
+    'step-3': ['host-a', 'remote-target', 'subnet-decision', 'router-r1'],
+    'step-4': ['host-a', 'remote-target', 'subnet-decision', 'router-r1', 'hop1-frame'],
+    'step-5': ['host-a', 'remote-target', 'subnet-decision', 'router-r1', 'hop1-frame', 'hop2-frame'],
+  },
+  terms: {
+    gateway: {
+      label: 'Default Gateway',
+      part: 'router-r1',
+      explanation: 'The local router interface IP on the same subnet that forwards traffic bound for outside networks.',
+    },
+    offlink: {
+      label: 'Off-Link Remote Destination',
+      part: 'remote-target',
+      explanation: 'An IP address whose network prefix does not match the local subnet mask, requiring intermediary routing.',
+    },
+    goldenrule: {
+      label: 'Golden Rule of Routing',
+      part: 'hop2-frame',
+      explanation: 'Layer 3 IP addresses remain constant end-to-end; Layer 2 MAC addresses are stripped and rewritten at every router hop.',
+    },
+    ttl: {
+      label: 'Time-To-Live (TTL)',
+      part: 'router-r1',
+      explanation: 'An 8-bit hop counter decremented by 1 at every router hop to prevent looping packets from circling endlessly.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The "Leaving the Room" Dilemma' },
+      kind: 'say',
+      text: 'Host A (`192.168.1.10/24`) wants to reach a web server at `8.8.8.8`. Host A performs a bitwise AND with its own subnet mask: `8.8.8.8 AND 255.255.255.0 = 8.8.8.0`. That does not match `192.168.1.0`!',
+      spotlight: 'subnet-decision',
+      revealedParts: ['host-a', 'remote-target', 'subnet-decision'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: The ARP Dilemma' },
+      kind: 'predict',
+      text: 'Host A knows `8.8.8.8` is {{term:offlink}}. Can Host A send an ARP broadcast asking "Who has 8.8.8.8?" onto the local office wire?',
+      spotlight: 'subnet-decision',
+      revealedParts: ['host-a', 'remote-target', 'subnet-decision'],
+      options: [
+        {
+          id: 'opt-arp-fail',
+          label: 'No. ARP broadcasts are strictly confined to the local switch; nobody on the local wire owns 8.8.8.8.',
+          isCorrect: true,
+          feedback: 'Exactly right! ARP broadcast FF:FF:FF:FF:FF:FF cannot cross routers. Asking the local switch for 8.8.8.8 will produce complete silence.',
+        },
+        {
+          id: 'opt-arp-succeed',
+          label: 'Yes. The internet will answer the ARP broadcast directly.',
+          isCorrect: false,
+          feedback: 'Routers block ARP broadcasts by design. Local ARP never leaves your office room.',
+        },
+        {
+          id: 'opt-arp-switch',
+          label: 'The switch converts the ARP broadcast into a DNS query automatically.',
+          isCorrect: false,
+          feedback: 'Switches do not convert ARP into DNS. They simply flood broadcast frames out local access ports.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-broadcast-boundary',
+          label: 'Routers terminate broadcast domains and never forward Layer 2 broadcast frames beyond the local segment.',
+          isCorrect: true,
+          feedback: 'Precisely! Routers stop broadcasts dead in their tracks, preventing local noise from flooding the globe.',
+        },
+        {
+          id: 'why-switch-buffers',
+          label: 'Switches hold ARP broadcasts in memory until remote internet servers plug into the switch.',
+          isCorrect: false,
+          feedback: 'Switches do not store broadcasts for external servers; broadcasts vanish if unanswered.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: Introduce the Gateway Door' },
+      kind: 'do',
+      text: 'To leave the room, Host A must send the packet to its {{term:gateway}} at `192.168.1.1`. Click Resolve Gateway to ARP for the router\'s local MAC.',
+      actionPrompt: 'ARP for Gateway MAC (192.168.1.1)',
+      actionTargetPart: 'router-r1',
+      revealedParts: ['host-a', 'remote-target', 'subnet-decision', 'router-r1'],
+      spotlight: 'router-r1',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Observe: Hop 1 Frame Packaging' },
+      kind: 'point',
+      text: 'Look closely at Hop 1: The outer Layer 2 destination MAC is the **Router Gateway MAC**. But the inner Layer 3 destination IP is still **8.8.8.8**!',
+      spotlight: 'hop1-frame',
+      revealedParts: ['host-a', 'remote-target', 'subnet-decision', 'router-r1', 'hop1-frame'],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Predict: The Golden Rule Across Router R1' },
+      kind: 'predict',
+      text: 'Router R1 receives the frame, decrements {{term:ttl}} by 1, and forwards the packet out its WAN port toward the internet. What changes in the frame?',
+      spotlight: 'hop2-frame',
+      revealedParts: ['host-a', 'remote-target', 'subnet-decision', 'router-r1', 'hop1-frame', 'hop2-frame'],
+      options: [
+        {
+          id: 'opt-mac-rewrite',
+          label: 'Layer 2 MACs are rewritten with R1 WAN source and Next-Hop destination MAC; Layer 3 IPs stay 192.168.1.10 and 8.8.8.8.',
+          isCorrect: true,
+          feedback: 'You have mastered the {{term:goldenrule}}! IPs identify true source and destination; MACs only carry the parcel across one physical hop at a time.',
+        },
+        {
+          id: 'opt-ip-rewrite',
+          label: 'The destination IP is replaced with the next router IP address.',
+          isCorrect: false,
+          feedback: 'Never! If the destination IP changed, the packet would forget who it was trying to reach.',
+        },
+        {
+          id: 'opt-both-constant',
+          label: 'Both MAC and IP remain unchanged across all hops from client to server.',
+          isCorrect: false,
+          feedback: 'MAC addresses only have local significance on a single cable link and must be rewritten at every router hop.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-mac-hop-scope',
+          label: 'MAC headers are only valid on a single physical link segment; IP headers represent end-to-end logical endpoints.',
+          isCorrect: true,
+          feedback: 'Correct! That is why Layer 2 encapsulates and de-encapsulates at every intermediate router boundary.',
+        },
+        {
+          id: 'why-ip-hop-scope',
+          label: 'IP addresses expire after passing through a network switch.',
+          isCorrect: false,
+          feedback: 'Switches do not touch or alter IP headers at all.',
+        },
+      ],
+    },
+  ],
+  ticketScene: {
+    ticketId: '107',
+    title: 'Ticket #107: Missing Default Gateway Route',
+    symptom: 'Finance-Server-01 cannot reach cloud accounting at 198.51.100.50. Local ping 192.168.1.1 succeeds, but ping 198.51.100.50 returns General failure.',
+    telemetry: [
+      'Host IP: 192.168.1.50/24 (Subnet: 192.168.1.0/24)',
+      'PING 192.168.1.1 (Gateway): 4 packets transmitted, 4 received (0% loss, avg <1ms)',
+      'PING 198.51.100.50 (Cloud): PING: transmit failed. General failure.',
+      'Routing Table (`route print`): Default route 0.0.0.0/0 is MISSING from active routing table.',
+    ],
+    options: [
+      {
+        id: 'opt-missing-gateway',
+        label: 'The operating system routing table is missing the 0.0.0.0/0 default gateway route via 192.168.1.1.',
+        isCorrect: true,
+        feedback: 'Correct! Without a default route of last resort, the host OS has no route for off-link destinations and drops the packet locally.',
+      },
+      {
+        id: 'opt-bad-cable',
+        label: 'The physical Ethernet cable has severed copper transmit pairs.',
+        isCorrect: false,
+        feedback: 'Pinging the local gateway 192.168.1.1 succeeded with 0% packet loss; physical layer is 100% operational.',
+      },
+      {
+        id: 'opt-dns-down',
+        label: 'The DNS root server is offline preventing IP translation.',
+        isCorrect: false,
+        feedback: 'The command used a direct raw IP address (198.51.100.50), bypassing DNS resolution entirely.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-add-gateway-route',
+        label: 'Add default route: `ip route add default via 192.168.1.1` (or `route add 0.0.0.0 mask 0.0.0.0 192.168.1.1`)',
+        isCorrect: true,
+        patch: { action: 'add-route', target: 'host-a', value: { prefix: '0.0.0.0/0', gateway: '192.168.1.1' } },
+      },
+      {
+        id: 'fix-flush-dns',
+        label: 'Flush local workstation DNS resolver cache',
+        isCorrect: false,
+        patch: { action: 'flush-dns', target: 'host-a', value: true },
+      },
+      {
+        id: 'fix-swap-cable',
+        label: 'Replace the Cat6 patch cable on Port 1',
+        isCorrect: false,
+        patch: { action: 'replace-cable', target: 'host-a', value: 'cat6' },
+      },
+    ],
+  },
+};
 
 /**
  * net-07: Default Gateways & Internetwork Routing
@@ -42,6 +243,7 @@ export const NET_07_MODULE: ModuleData = {
       shortDescription:
         'Understand why remote traffic must be directed to the gateway MAC and how MAC headers rewrite while IP headers stay constant.',
       theory: {
+        mentorScript: NET_07_MENTOR_SCRIPT,
         summary:
           'When sending to an IP outside the local subnet, the host cannot ARP for the remote IP directly. Instead, it sends the frame to its Default Gateway (the local router interface). Across each router hop, the source and destination MACs are rewritten, but the source and destination IPs remain preserved from end to end.',
         explanation: [

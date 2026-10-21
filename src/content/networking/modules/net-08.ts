@@ -1,4 +1,213 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_08_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-08',
+  conceptId: 'why-nat-and-terminology',
+  revealLadder: {
+    'step-0': ['host-a'],
+    'step-1': ['host-a', 'private-ip'],
+    'step-2': ['host-a', 'private-ip', 'edge-router'],
+    'step-3': ['host-a', 'private-ip', 'edge-router', 'nat-table'],
+    'step-4': ['host-a', 'private-ip', 'edge-router', 'nat-table', 'public-web'],
+    'step-5': ['host-a', 'private-ip', 'edge-router', 'nat-table', 'public-web', 'return-flow'],
+  },
+  terms: {
+    rfc1918: {
+      label: 'RFC 1918 Private IP',
+      part: 'private-ip',
+      explanation: 'Internal non-routable IPv4 addresses (10.x, 172.16.x, 192.168.x) dropped immediately by public internet ISP routers.',
+    },
+    pat: {
+      label: 'Port Address Translation (PAT)',
+      part: 'nat-table',
+      explanation: 'NAT overload multiplexing thousands of private devices behind 1 public IP using unique Layer 4 source ports.',
+    },
+    nattable: {
+      label: 'NAT State Table',
+      part: 'nat-table',
+      explanation: 'The router memory table binding (Inside Local IP:Port) to (Inside Global Public IP:Port) to route return traffic.',
+    },
+    denat: {
+      label: 'De-NATting',
+      part: 'return-flow',
+      explanation: 'The reverse translation on incoming response packets restoring the private host destination IP and port.',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The Private Address Dilemma' },
+      kind: 'say',
+      text: 'Host A has IP `192.168.1.100`. This is an {{term:rfc1918}} private address. If this packet enters the public internet wire with a private source IP, ISP routers drop it instantly. It is non-routable!',
+      spotlight: 'private-ip',
+      revealedParts: ['host-a', 'private-ip'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: The Office Analogy' },
+      kind: 'predict',
+      text: 'Your office has 500 employees, but the telephone company only gave your building 1 public phone number. How does an outside client call reach your specific desk extension?',
+      spotlight: 'edge-router',
+      revealedParts: ['host-a', 'private-ip', 'edge-router'],
+      options: [
+        {
+          id: 'opt-receptionist',
+          label: 'The receptionist answers on the main number and connects the call to your unique internal extension.',
+          isCorrect: true,
+          feedback: 'Exactly! The edge router acts like the corporate telephone receptionist. It shares 1 public IP and uses port numbers like internal telephone extensions.',
+        },
+        {
+          id: 'opt-broadcast-phone',
+          label: 'The phone rings on all 500 desks simultaneously and everyone answers.',
+          isCorrect: false,
+          feedback: 'That would cause mass chaos in the office! We need a stateful lookup mechanism.',
+        },
+        {
+          id: 'opt-voicemail',
+          label: 'Every caller is sent to voicemail because IP addresses cannot support voice communication.',
+          isCorrect: false,
+          feedback: 'VoIP runs natively on IP networks; the key challenge is multiplexing multiple conversations.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-port-multiplex',
+          label: 'Layer 4 port numbers distinguish between multiple internal conversations sharing a single public IP address.',
+          isCorrect: true,
+          feedback: 'Spot on! Each inside connection is mapped to a distinct source port on the public IP.',
+        },
+        {
+          id: 'why-ip-overlap',
+          label: 'All private internal devices are assigned the exact same MAC address by the ISP.',
+          isCorrect: false,
+          feedback: 'MAC addresses are unique hardware serials and never touch public ISP routers.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: Outbound PAT Translation' },
+      kind: 'do',
+      text: 'Host A initiates an HTTP request from port 52410 toward `198.51.100.4:80`. Click Translate Egress to record the mapping in the {{term:nattable}}.',
+      actionPrompt: 'Translate Egress (192.168.1.100:52410 → 203.0.113.1:40001)',
+      actionTargetPart: 'nat-table',
+      revealedParts: ['host-a', 'private-ip', 'edge-router', 'nat-table', 'public-web'],
+      spotlight: 'nat-table',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Observe: The Public Internet Egress' },
+      kind: 'point',
+      text: 'The packet leaves the router WAN port stamped with public Source IP `203.0.113.1` and Port `40001`. The web server believes it is talking solely to the router! The private LAN is completely hidden.',
+      spotlight: 'public-web',
+      revealedParts: ['host-a', 'private-ip', 'edge-router', 'nat-table', 'public-web'],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Predict: Return Flow De-NATting' },
+      kind: 'predict',
+      text: 'The web server responds to `203.0.113.1:40001`. How does the edge router know which of the 500 office computers should receive the webpage response?',
+      spotlight: 'return-flow',
+      revealedParts: ['host-a', 'private-ip', 'edge-router', 'nat-table', 'public-web', 'return-flow'],
+      options: [
+        {
+          id: 'opt-nat-lookup',
+          label: 'It checks the NAT table: destination port 40001 maps to Inside Local 192.168.1.100:52410 (De-NATting).',
+          isCorrect: true,
+          feedback: 'Spot on! The router looks up port 40001, swaps the destination IP/port back to Host A, and forwards it onto the local LAN.',
+        },
+        {
+          id: 'opt-nat-flood',
+          label: 'It floods the response to all 500 computers on the switch.',
+          isCorrect: false,
+          feedback: 'No! The router consults its exact state table binding. If no entry matches, the packet is silently discarded.',
+        },
+        {
+          id: 'opt-nat-discard',
+          label: 'It forwards the response to the DNS server to inspect who owns the connection.',
+          isCorrect: false,
+          feedback: 'DNS does not handle live packet state tracking; the router NAT table does.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-state-binding',
+          label: 'The state table preserves the 1:1 dynamic association between private Inside Local and public Inside Global ports.',
+          isCorrect: true,
+          feedback: 'Correct! Without this dynamic state table entry, return packets have no routable path back to the client.',
+        },
+        {
+          id: 'why-stateless-guess',
+          label: 'Routers guess which computer sent the request based on CPU load.',
+          isCorrect: false,
+          feedback: 'Routers never guess; networking relies on deterministic state bindings.',
+        },
+      ],
+    },
+    {
+      id: 'beat-6',
+      stage: { stageNumber: 1, title: 'Observe: The Inherent Firewall Barrier' },
+      kind: 'say',
+      text: 'Notice a vital security superpower: If an external attacker on the internet attempts to initiate an unsolicited connection to `203.0.113.1`, the router has no matching entry in its NAT table and drops it immediately! NAT creates an automatic inbound defense barrier.',
+      spotlight: 'edge-router',
+      revealedParts: ['host-a', 'private-ip', 'edge-router', 'nat-table', 'public-web', 'return-flow'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '108',
+    title: 'Ticket #108: Inbound Web Server Port Forwarding Failure',
+    symptom: 'Public users cannot access company web portal at 203.0.113.10:80. Internal hosts reach the web server at 192.168.1.80:80 without issue.',
+    telemetry: [
+      'Edge Router WAN IP: 203.0.113.10 (State: ACTIVE)',
+      'Internal Web Server: 192.168.1.80:80 (HTTP 200 OK via internal curl)',
+      'External Ingress Test: curl http://203.0.113.10/ -> Connection refused / Timeout',
+      'NAT Translation Table: Zero active translations for TCP port 80. NAT port forwarding rule is MISSING.',
+    ],
+    options: [
+      {
+        id: 'opt-missing-dnat',
+        label: 'The edge router is missing a DNAT (port forwarding) rule mapping WAN port 80 to internal IP 192.168.1.80:80.',
+        isCorrect: true,
+        feedback: 'Correct! Inbound unsolicited traffic is dropped by PAT unless a static DNAT port-forwarding rule explicitly routes that external port to an internal server.',
+      },
+      {
+        id: 'opt-web-dead',
+        label: 'The Apache/Nginx web server service crashed on 192.168.1.80.',
+        isCorrect: false,
+        feedback: 'Internal telemetry verified curl http://192.168.1.80 returns HTTP 200 OK; the web server is healthy.',
+      },
+      {
+        id: 'opt-mac-aging',
+        label: 'The internal web server MAC address aged out of the switch CAM table.',
+        isCorrect: false,
+        feedback: 'Internal communication is working normally, proving the switch CAM table has active entries.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-add-port-forward',
+        label: 'Add static DNAT rule: `ip nat inside source static tcp 192.168.1.80 80 203.0.113.10 80`',
+        isCorrect: true,
+        patch: { action: 'add-nat-forward', target: 'router-r1', value: { proto: 'tcp', extPort: 80, intIp: '192.168.1.80', intPort: 80 } },
+      },
+      {
+        id: 'fix-reboot-server',
+        label: 'Reboot the internal web server hardware',
+        isCorrect: false,
+        patch: { action: 'reboot-host', target: 'web-server', value: true },
+      },
+      {
+        id: 'fix-flush-arp',
+        label: 'Flush the router ARP table on all interfaces',
+        isCorrect: false,
+        patch: { action: 'flush-arp', target: 'router-r1', value: 'all' },
+      },
+    ],
+  },
+};
 
 /**
  * net-08: Network Address Translation (NAT & PAT)
@@ -36,8 +245,6 @@ export const NET_08_MODULE: ModuleData = {
     // ─────────────────────────────────────────────────────
     // Concept 1: Why NAT Exists & Address Terminology (C30a)
     // ─────────────────────────────────────────────────────
-    // Concept 1: Why NAT Exists & Address Terminology (C30a)
-    // ─────────────────────────────────────────────────────
     {
       id: 'why-nat-and-terminology',
       order: 1,
@@ -45,6 +252,7 @@ export const NET_08_MODULE: ModuleData = {
       shortDescription:
         'Understand the IPv4 exhaustion problem, RFC 1918 non-routable boundaries, and standard NAT address terms.',
       theory: {
+        mentorScript: NET_08_MENTOR_SCRIPT,
         summary:
           'Because IPv4 only provides 4.3 billion addresses, the global internet ran out of unallocated address blocks. NAT enables an entire organization or home network to share one public IP. To discuss NAT accurately, network engineers use standardized Inside/Outside terminology.',
         explanation: [

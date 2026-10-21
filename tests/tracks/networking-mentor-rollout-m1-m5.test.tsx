@@ -6,16 +6,38 @@ import { NET_02_MODULE } from '../../src/content/networking/modules/net-02';
 import { NET_03_MODULE } from '../../src/content/networking/modules/net-03';
 import { NET_04_MODULE } from '../../src/content/networking/modules/net-04';
 import { NET_05_MODULE } from '../../src/content/networking/modules/net-05';
+import { NET_06_MODULE } from '../../src/content/networking/modules/net-06';
+import { NET_07_MODULE } from '../../src/content/networking/modules/net-07';
+import { NET_08_MODULE } from '../../src/content/networking/modules/net-08';
+import { NET_09_MODULE } from '../../src/content/networking/modules/net-09';
+import { NET_10_MODULE } from '../../src/content/networking/modules/net-10';
+import { NET_11_MODULE } from '../../src/content/networking/modules/net-11';
+import { NET_12_MODULE } from '../../src/content/networking/modules/net-12';
+import { NET_13_MODULE } from '../../src/content/networking/modules/net-13';
+import { NET_14_MODULE } from '../../src/content/networking/modules/net-14';
+import { NET_15_MODULE } from '../../src/content/networking/modules/net-15';
+import { NET_16_MODULE } from '../../src/content/networking/modules/net-16';
 import { ConceptLessonView } from '../../src/components/learning/ConceptLessonView';
 import type { MentorScript } from '../../src/types/networking-curriculum';
 
-describe('Mentor Mode Rollout: Modules 1 to 5 Invariant Audits', () => {
+describe('Mentor Mode Rollout: Complete Modules 1 to 16 Invariant Audits', () => {
   const modules = [
     { id: 'net-01', module: NET_01_MODULE, stageTestId: 'packet-inspector-stage' },
     { id: 'net-02', module: NET_02_MODULE, stageTestId: 'ethernet-frame-stage' },
     { id: 'net-03', module: NET_03_MODULE, stageTestId: 'switch-simulation-lab' },
     { id: 'net-04', module: NET_04_MODULE, stageTestId: 'subnet-slicer-stage' },
     { id: 'net-05', module: NET_05_MODULE, stageTestId: 'arp-simulation-stage' },
+    { id: 'net-06', module: NET_06_MODULE, stageTestId: 'packet-inspector-stage-net06' },
+    { id: 'net-07', module: NET_07_MODULE, stageTestId: 'packet-inspector-stage-net07' },
+    { id: 'net-08', module: NET_08_MODULE, stageTestId: 'packet-inspector-stage-net08' },
+    { id: 'net-09', module: NET_09_MODULE, stageTestId: 'dhcp-dora-stage' },
+    { id: 'net-10', module: NET_10_MODULE, stageTestId: 'dns-tree-stage' },
+    { id: 'net-11', module: NET_11_MODULE, stageTestId: 'packet-inspector-stage-net11' },
+    { id: 'net-12', module: NET_12_MODULE, stageTestId: 'tcp-ladder-stage' },
+    { id: 'net-13', module: NET_13_MODULE, stageTestId: 'http-tls-stage' },
+    { id: 'net-14', module: NET_14_MODULE, stageTestId: 'virtual-terminal-stage' },
+    { id: 'net-15', module: NET_15_MODULE, stageTestId: 'firewall-stp-stage' },
+    { id: 'net-16', module: NET_16_MODULE, stageTestId: 'vlan-dijkstra-stage' },
   ];
 
   modules.forEach(({ id, module, stageTestId }) => {

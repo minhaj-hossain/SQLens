@@ -1,4 +1,206 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_09_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  track: 'networking',
+  moduleId: 'net-09',
+  conceptId: 'net09-c1-dhcp-bootstrap',
+  revealLadder: {
+    'step-0': ['client-node'],
+    'step-1': ['client-node', 'discover-broadcast'],
+    'step-2': ['client-node', 'discover-broadcast', 'dhcp-server'],
+    'step-3': ['client-node', 'discover-broadcast', 'dhcp-server', 'offer-packet'],
+    'step-4': ['client-node', 'discover-broadcast', 'dhcp-server', 'offer-packet', 'request-packet'],
+    'step-5': ['client-node', 'discover-broadcast', 'dhcp-server', 'offer-packet', 'request-packet', 'ack-packet', 'lease-timer'],
+  },
+  terms: {
+    dora: {
+      label: 'DORA Exchange',
+      part: 'discover-broadcast',
+      explanation: 'The 4-step DHCP handshake: Discover, Offer, Request, and Acknowledgment.',
+    },
+    bootp: {
+      label: '0.0.0.0 Source Broadcast',
+      part: 'discover-broadcast',
+      explanation: 'The unconfigured client IP used to broadcast over UDP port 68 to 255.255.255.255:67.',
+    },
+    apipa: {
+      label: 'APIPA (169.254.x.x)',
+      part: 'client-node',
+      explanation: 'Automatic Private IP Addressing assigned by the OS when all DHCP servers fail to respond.',
+    },
+    lease: {
+      label: 'Lease Renewal (T1 & T2)',
+      part: 'lease-timer',
+      explanation: 'Timers where the client renews its IP lease at 50% (unicast) and 87.5% (broadcast).',
+    },
+  },
+  beats: [
+    {
+      id: 'beat-1',
+      stage: { stageNumber: 1, title: 'Observe: The Bootstrap Paradox' },
+      kind: 'say',
+      text: 'A brand-new laptop unboxes and plugs into the office switch. It has no IP address, no subnet mask, and no gateway. How can it send a packet to ask for an IP if it has no IP itself?',
+      spotlight: 'client-node',
+      revealedParts: ['client-node'],
+    },
+    {
+      id: 'beat-2',
+      stage: { stageNumber: 1, title: 'Predict: The Broadcast Shout' },
+      kind: 'predict',
+      text: 'To solve the bootstrap chicken-and-egg problem, the client sends a DHCP Discover. What Source and Destination IP must it use?',
+      spotlight: 'discover-broadcast',
+      revealedParts: ['client-node', 'discover-broadcast'],
+      options: [
+        {
+          id: 'opt-dhcp-broadcast',
+          label: 'Source 0.0.0.0 (no address) to Destination 255.255.255.255 (local broadcast)',
+          isCorrect: true,
+          feedback: 'Correct! RFC 2131 designates 0.0.0.0 as "this unconfigured host" and 255.255.255.255 to flood all local devices.',
+        },
+        {
+          id: 'opt-dhcp-unicast',
+          label: 'Source 127.0.0.1 to Destination 192.168.1.1',
+          isCorrect: false,
+          feedback: 'The unconfigured client has no knowledge of what subnet it is on or where the server lives.',
+        },
+        {
+          id: 'opt-dhcp-dns',
+          label: 'Source 0.0.0.0 to Destination google.com',
+          isCorrect: false,
+          feedback: 'Without an IP and DNS resolver, names cannot be resolved. It must broadcast locally.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-bootp-rfc',
+          label: '0.0.0.0 represents an unaddressed station, and 255.255.255.255 guarantees every listening DHCP daemon receives the datagram.',
+          isCorrect: true,
+          feedback: 'Precisely! The Layer 2 destination MAC is FF:FF:FF:FF:FF:FF, ensuring the switch delivers it to the DHCP server.',
+        },
+        {
+          id: 'why-routable-broadcast',
+          label: '255.255.255.255 is automatically routed across the public internet to Microsoft servers.',
+          isCorrect: false,
+          feedback: 'Limited broadcast 255.255.255.255 is strictly dropped by routers and never leaves the local LAN.',
+        },
+      ],
+    },
+    {
+      id: 'beat-3',
+      stage: { stageNumber: 1, title: 'Action: Transmit Discover & Receive Offer' },
+      kind: 'do',
+      text: 'Click Send DHCP Discover to watch the broadcast reach DHCP Server S1, which reserves an IP and sends a DHCP Offer.',
+      actionPrompt: 'Send DHCP Discover (Step 1 & 2 of DORA)',
+      actionTargetPart: 'dhcp-server',
+      revealedParts: ['client-node', 'discover-broadcast', 'dhcp-server', 'offer-packet'],
+      spotlight: 'offer-packet',
+    },
+    {
+      id: 'beat-4',
+      stage: { stageNumber: 1, title: 'Predict: Why is Request Broadcast?' },
+      kind: 'predict',
+      text: 'The client receives the Offer from Server S1. Next, the client sends a DHCP Request. Why is the Request ALSO sent as a broadcast instead of a private unicast to Server S1?',
+      spotlight: 'request-packet',
+      revealedParts: ['client-node', 'discover-broadcast', 'dhcp-server', 'offer-packet', 'request-packet'],
+      options: [
+        {
+          id: 'opt-notify-other-servers',
+          label: 'So other DHCP servers on the subnet know their offers were declined and can release their reserved IPs.',
+          isCorrect: true,
+          feedback: 'Brilliant! Multiple DHCP servers may offer leases. Broadcasting the Request officially accepts one server and frees the others.',
+        },
+        {
+          id: 'opt-client-cannot-unicast',
+          label: 'Because computers are physically forbidden from sending unicast UDP frames.',
+          isCorrect: false,
+          feedback: 'Computers send unicast UDP frames all the time (e.g. DNS, streaming).',
+        },
+        {
+          id: 'opt-router-requirement',
+          label: 'Because the router needs to log the request in its MAC table.',
+          isCorrect: false,
+          feedback: 'The router switchport learns MACs from frame headers regardless of broadcast or unicast.',
+        },
+      ],
+      whyOptions: [
+        {
+          id: 'why-unbinding-reservation',
+          label: 'Unselected DHCP servers observe the broadcasted Server Identifier and immediately return their proposed addresses to their pool.',
+          isCorrect: true,
+          feedback: 'Spot on! This prevents address starvation across redundant DHCP servers.',
+        },
+        {
+          id: 'why-arp-cache-flush',
+          label: 'Broadcasting the request forces all workstations to flush their ARP caches.',
+          isCorrect: false,
+          feedback: 'Workstations do not modify their ARP cache upon seeing DHCP control traffic.',
+        },
+      ],
+    },
+    {
+      id: 'beat-5',
+      stage: { stageNumber: 1, title: 'Observe: Acknowledgment & Lease Timers' },
+      kind: 'point',
+      text: 'Server S1 responds with DHCP ACK! The client binds `192.168.1.150` with an 8-hour {{term:lease}}. At T1 (4 hours / 50%), it will attempt unicast renewal. If DHCP fails entirely, the OS drops into {{term:apipa}} (`169.254.x.x`).',
+      spotlight: 'lease-timer',
+      revealedParts: ['client-node', 'discover-broadcast', 'dhcp-server', 'offer-packet', 'request-packet', 'ack-packet', 'lease-timer'],
+    },
+  ],
+  ticketScene: {
+    ticketId: '109',
+    title: 'Ticket #109: Executive Laptop Stuck on APIPA (169.254.12.8)',
+    symptom: 'VP laptop plugged into board room switchport has "No Internet Connection". ipconfig shows 169.254.12.8 with mask 255.255.0.0 and no gateway.',
+    telemetry: [
+      'Ethernet adapter eth0: Autoconfiguration IPv4: 169.254.12.8 (APIPA)',
+      'Subnet Mask: 255.255.0.0',
+      'Default Gateway: (Blank)',
+      'DHCP Server Log: Zero Discover packets received on VLAN 20.',
+      'Switch SW-Core Port 12 Config: switchport access vlan 999 (Unrouted Quarantine VLAN).',
+    ],
+    options: [
+      {
+        id: 'opt-quarantine-vlan',
+        label: 'The switchport was misassigned to an unrouted quarantine VLAN (999) with no active DHCP server or relay agent.',
+        isCorrect: true,
+        feedback: 'Correct! APIPA (169.254.x.x) proves the NIC carrier is active, but DHCP Discovers timed out with zero responses.',
+      },
+      {
+        id: 'opt-severed-cable',
+        label: 'The copper cable is broken and has zero electrical carrier.',
+        isCorrect: false,
+        feedback: 'If the cable had no link carrier, Windows would report "Media disconnected", not an APIPA address.',
+      },
+      {
+        id: 'opt-ip-conflict',
+        label: 'Another device statically claimed 169.254.12.8 causing an IP conflict.',
+        isCorrect: false,
+        feedback: '169.254.x.x is automatically chosen by the client via random probe only after DHCP completely fails.',
+      },
+    ],
+    repairActions: [
+      {
+        id: 'fix-reassign-vlan',
+        label: 'Reassign switchport to Corporate Data VLAN 20 and trigger `ipconfig /renew`',
+        isCorrect: true,
+        patch: { action: 'set-switchport-vlan', target: 'switch-sw1', value: { port: 12, vlan: 20 } },
+      },
+      {
+        id: 'fix-reboot-pc',
+        label: 'Reboot the executive laptop',
+        isCorrect: false,
+        patch: { action: 'reboot-pc', target: 'client-node', value: true },
+      },
+      {
+        id: 'fix-flush-arp',
+        label: 'Flush workstation ARP table',
+        isCorrect: false,
+        patch: { action: 'flush-arp', target: 'client-node', value: true },
+      },
+    ],
+  },
+};
 
 /**
  * net-09: Dynamic Host Configuration Protocol (DHCP)
@@ -43,6 +245,7 @@ export const NET_09_MODULE: ModuleData = {
       shortDescription:
         'Understand the chicken-and-egg problem of IP configuration: how a client without an IP address reaches a DHCP server on the local network.',
       theory: {
+        mentorScript: NET_09_MENTOR_SCRIPT,
         summary:
           'When booting up, an unconfigured host has no IP, subnet mask, or gateway. It sends a UDP bootstrap datagram from 0.0.0.0:68 to 255.255.255.255:67 with MAC FF:FF:FF:FF:FF:FF and a random 32-bit transaction ID (XID) so servers can address replies.',
         explanation: [

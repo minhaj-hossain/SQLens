@@ -1,4 +1,141 @@
 import { ModuleData } from '../../../types/curriculum';
+import type { MentorScript } from '../../../types/networking-curriculum';
+
+export const NET_16_MENTOR_SCRIPT: MentorScript = {
+  version: '1.0.0',
+  moduleId: 'net-16',
+  stageTitle: '802.1Q VLAN Trunking & Dijkstra Shortest Path Lab',
+  stageSubtitle: 'Segment broadcast domains with 802.1Q tags and calculate loop-free enterprise routes with Dijkstra SPF',
+  initialStageState: {
+    spotlight: 'vlan-trunk',
+    highlightedField: 'tag-dissection',
+  },
+  revealLadder: {
+    'step-access': ['vlan-access'],
+    'step-trunk': ['vlan-access', 'vlan-trunk'],
+    'step-wifi': ['vlan-access', 'vlan-trunk', 'wifi-csmaca'],
+    'step-channels': ['vlan-access', 'vlan-trunk', 'wifi-csmaca', 'wifi-channels'],
+    'step-ospf': ['vlan-access', 'vlan-trunk', 'wifi-csmaca', 'wifi-channels', 'ospf-dijkstra'],
+  },
+  terms: {
+    'vlan-segmentation': {
+      term: 'VLAN Segmentation',
+      definition: 'Dividing a physical switch into multiple isolated broadcast domains.',
+      part: 'vlan-access',
+    },
+    'dot1q-tag': {
+      term: '802.1Q Tag',
+      definition: 'A 4-byte header inserted on trunk links containing a 12-bit VLAN ID.',
+      part: 'vlan-trunk',
+    },
+    'csma-ca': {
+      term: 'CSMA/CA',
+      definition: 'Carrier Sense Multiple Access with Collision Avoidance for wireless RF airwaves.',
+      part: 'wifi-csmaca',
+    },
+    'dijkstra-spf': {
+      term: 'Dijkstra SPF',
+      definition: 'Shortest Path First algorithm used by OSPF to compute lowest-cost routing trees.',
+      part: 'ospf-dijkstra',
+    },
+  },
+  beats: [
+    {
+      id: 'b1',
+      kind: 'say',
+      text: 'In a flat network, every workstation receives every other department broadcast chatter, leaking data and wasting CPU.',
+      revealedParts: ['vlan-access'],
+    },
+    {
+      id: 'b2',
+      kind: 'predict',
+      text: 'How does an enterprise switch isolate Finance from Marketing on the same physical box?',
+      prompt: 'Select the Layer 2 segmentation technique:',
+      options: [
+        { id: 'opt-vlan', text: 'By partitioning switch ports into Virtual LANs (VLANs) with isolated broadcast domains.', isCorrect: true },
+        { id: 'opt-volt', text: 'By running different electrical voltages through the copper patch cables.', isCorrect: false },
+        { id: 'opt-mac', text: 'By rotating the switch physical MAC address every thirty seconds.', isCorrect: false },
+      ],
+      whyPrompt: 'Why does VLAN segmentation ensure isolation?',
+      whyOptions: [
+        { id: 'why-domain', text: 'Because switches only flood broadcast and unicast frames to ports sharing the same VLAN ID.', isCorrect: true },
+        { id: 'why-power', text: 'Because computers in different departments use incompatible binary electrical currents.', isCorrect: false },
+      ],
+      revealedParts: ['vlan-access', 'vlan-trunk'],
+    },
+    {
+      id: 'b3',
+      kind: 'point',
+      target: 'vlan-access',
+      text: '{{term:vlan-segmentation}} creates isolated virtual switches inside one physical chassis.',
+      revealedParts: ['vlan-access', 'vlan-trunk'],
+    },
+    {
+      id: 'b4',
+      kind: 'action',
+      prompt: 'Inspect the 4-byte {{term:dot1q-tag}} inserted on trunk links between switches.',
+      buttonLabel: 'Inspect 802.1Q Tag',
+      targetState: { spotlight: 'tag-view' },
+      revealedParts: ['vlan-access', 'vlan-trunk'],
+    },
+    {
+      id: 'b5',
+      kind: 'say',
+      text: 'Now consider wireless links. Why cannot Wi-Fi radios transmit and detect collisions at the same time?',
+      revealedParts: ['vlan-access', 'vlan-trunk', 'wifi-csmaca'],
+    },
+    {
+      id: 'b6',
+      kind: 'predict',
+      text: 'Why must 802.11 Wi-Fi use collision avoidance (CSMA/CA) instead of Ethernet collision detection?',
+      prompt: 'Select the wireless radio limitation:',
+      options: [
+        { id: 'opt-rf', text: 'A radio transmit power overwhelms its own receiver, preventing collision sensing while talking.', isCorrect: true },
+        { id: 'opt-speed', text: 'Radio signals travel faster than light and cannot be decoded by silicon chips.', isCorrect: false },
+        { id: 'opt-ant', text: 'Wi-Fi antennas cannot decode standard binary bits over radio frequencies.', isCorrect: false },
+      ],
+      whyPrompt: 'Why does transmit power blind the receiver?',
+      whyOptions: [
+        { id: 'why-blind', text: 'Local transmission drowns out faint incoming signals from other stations sharing the channel.', isCorrect: true },
+        { id: 'why-rev', text: 'Because radio waves reflect off office walls and invert their binary values.', isCorrect: false },
+      ],
+      revealedParts: ['vlan-access', 'vlan-trunk', 'wifi-csmaca', 'wifi-channels'],
+    },
+    {
+      id: 'b7',
+      kind: 'point',
+      target: 'wifi-csmaca',
+      text: '{{term:csma-ca}} forces stations to listen first and back off randomly to prevent airborne collisions.',
+      revealedParts: ['vlan-access', 'vlan-trunk', 'wifi-csmaca', 'wifi-channels', 'ospf-dijkstra'],
+    },
+    {
+      id: 'b8',
+      kind: 'debrief',
+      text: '802.1Q tags carry multiple VLANs across switches, while {{term:dijkstra-spf}} computes loop-free shortest paths.',
+      revealedParts: ['vlan-access', 'vlan-trunk', 'wifi-csmaca', 'wifi-channels', 'ospf-dijkstra'],
+    },
+  ],
+  ticketScene: {
+    ticketId: 'TCK-116',
+    title: 'Inter-VLAN Black Hole: Engineering Cannot Reach Server Trunk',
+    symptom: 'Workstations on Port FastEthernet0/5 (VLAN 10) cannot reach the file server on Switch-B. Switch-to-switch trunk link is dropping frames for VLAN 10.',
+    options: [
+      { id: 'opt1', text: 'The physical fiber uplink has run out of light bandwidth.', isCorrect: false },
+      { id: 'opt2', text: 'The trunk port allowed VLAN list is missing VLAN 10.', isCorrect: true },
+      { id: 'opt3', text: 'VLAN 10 has exceeded the 32-bit subnet address limit.', isCorrect: false },
+    ],
+    repairActions: [
+      { id: 'rep1', text: 'Change the access port patch cable to unshielded twisted pair.', isCorrect: false },
+      {
+        id: 'rep2',
+        text: 'Update trunk port allowed VLANs with switchport trunk allowed vlan add 10.',
+        isCorrect: true,
+        patch: { action: 'add_vlan_to_trunk', target: 'Gi0/1', vlanId: 10 },
+      },
+      { id: 'rep3', text: 'Configure static ARP entries on every client workstation.', isCorrect: false },
+    ],
+  },
+};
 
 /**
  * net-16: VLANs, Wireless & Enterprise Routing
@@ -44,6 +181,7 @@ export const NET_16_MODULE: ModuleData = {
       shortDescription:
         'Understand logical network segmentation: separating departments on a shared switch, Access vs Trunk port roles, and 802.1Q tagging.',
       theory: {
+        mentorScript: NET_16_MENTOR_SCRIPT,
         summary:
           'VLANs partition switches into isolated broadcast domains. Access ports carry untagged traffic for a single VLAN. Trunk ports carry multiple VLANs across switches using 4-byte IEEE 802.1Q tags with a 12-bit VLAN ID (VID 1–4094). Cross-VLAN traffic requires Layer 3 routing.',
         explanation: [
