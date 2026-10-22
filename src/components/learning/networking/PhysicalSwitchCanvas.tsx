@@ -1187,49 +1187,34 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               aria-label="Broadcast ARP Roll Call Question"
             >
               <rect
-                x="310"
-                y="502"
-                width="380"
-                height="32"
-                rx="16"
-                fill="#451A03"
-                stroke="#D97706"
-                strokeWidth="1.5"
-                filter="url(#softGlow)"
-                className="group-hover:stroke-amber-400 group-hover:fill-amber-900/60 transition-colors"
+                x="250"
+                y="566"
+                width="500"
+                height="38"
+                rx="19"
+                fill="#181206"
+                stroke="#F59E0B"
+                strokeWidth="2"
+                filter="url(#goldGlow)"
+                className="group-hover:stroke-amber-300 group-hover:fill-amber-950/80 transition-all duration-200"
               />
-              <circle cx="330" cy="518" r="4.5" fill="#FBBF24" />
+              <circle cx="275" cy="585" r="5" fill="#FBBF24" className="animate-pulse" />
               <text
-                x="505"
-                y="522"
+                x="508"
+                y="589"
                 textAnchor="middle"
                 fill="#FDE68A"
                 fontSize="11"
                 fontFamily="ui-monospace, monospace"
                 fontWeight="bold"
-                className="group-hover:fill-white transition-colors"
+                letterSpacing="0.2"
+                className="group-hover:fill-white transition-colors select-none"
               >
-                ARP: Who has 192.168.1.20? Tell 192.168.1.10
+                ⚡ Broadcast ARP: Who has 192.168.1.20? Tell 192.168.1.10
               </text>
             </g>
           )}
         </svg>
-
-        {/* Floating Broadcast Action Button */}
-        {onBroadcast && (messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => {
-                if (soundEnabled) soundFx.playSuccess();
-                onBroadcast();
-              }}
-              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-sans text-xs font-bold tracking-wide shadow-xl shadow-amber-500/30 border border-amber-300 transition-all flex items-center gap-2 cursor-pointer active:scale-95 animate-pulse"
-            >
-              <span>⚡ Broadcast ARP Question (Shout to Room)</span>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
