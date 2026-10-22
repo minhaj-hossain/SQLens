@@ -586,33 +586,33 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
         <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#121214] border border-white/[0.08] p-6 shadow-2xl">
           <div className="space-y-4">
             {/* Step Label & Compact Title */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-zinc-500 font-mono">
-                <span className="uppercase tracking-wider font-medium">Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#18181b] border border-white/[0.06] text-zinc-400 text-[11px] font-mono">{currentRung.timeEstimate}</span>
+                <span className="uppercase tracking-wider font-normal">Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
+                <span className="px-2 py-0.5 rounded-md bg-[#18181b] border border-white/[0.06] text-zinc-400 text-[11px] font-mono">{currentRung.timeEstimate}</span>
               </div>
-              <h3 className="text-sm sm:text-[15px] font-semibold text-zinc-200 tracking-tight">
+              <h2 className="text-base sm:text-[17px] font-medium text-zinc-100 tracking-tight">
                 {currentRung.title}
-              </h3>
+              </h2>
             </div>
 
             {/* Subtle Observation / Look line */}
             {currentRung.look && (
-              <div className="text-xs sm:text-[13px] text-zinc-400 leading-relaxed bg-[#18181b]/70 border border-white/[0.04] p-3 rounded-xl flex items-start gap-2">
-                <span className="text-zinc-500 font-mono uppercase text-[10px] tracking-wider font-semibold shrink-0 mt-0.5">
+              <div className="text-xs sm:text-[13px] text-zinc-400 leading-relaxed bg-[#18181b]/50 border-l-2 border-zinc-600 pl-3 py-1.5 rounded-r-xl flex items-start gap-2">
+                <span className="text-zinc-500 font-mono uppercase text-[10px] tracking-wider font-medium shrink-0 mt-0.5">
                   Look:
                 </span>
-                <span>{currentRung.look}</span>
+                <span className="font-normal">{currentRung.look}</span>
               </div>
             )}
 
-            {/* Main Explanation Story: BIGGER, clear, and prominent */}
+            {/* Main Explanation Story */}
             <div className="space-y-2.5">
-              <p className="text-base sm:text-[17px] text-zinc-100 leading-relaxed font-normal">
+              <p className="text-[15px] sm:text-base text-zinc-200 leading-relaxed font-normal">
                 {currentRung.story}
               </p>
               {isTaskDone && currentRung.meaningText && (
-                <p className="text-xs sm:text-sm text-zinc-300 border-l-2 border-emerald-500/50 pl-3 italic leading-relaxed animate-in fade-in duration-300">
+                <p className="text-xs sm:text-sm text-zinc-300 border-l-2 border-emerald-500/50 pl-3 py-1 italic leading-relaxed animate-in fade-in duration-300">
                   {currentRung.meaningText}
                 </p>
               )}
@@ -650,34 +650,38 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               </div>
             )}
 
-            {/* Your turn Hero Block: DO / WHY / EXPECT */}
-            {currentRung.doText && (
-              <div className="rounded-xl bg-[#18181b] border border-white/[0.08] p-4 space-y-2.5 shadow-sm">
-                <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
+            {/* Your turn Hero Block: Only shown for hands-on tasks without questions */}
+            {currentRung.doText && !currentRung.check.options && (
+              <div className="rounded-xl bg-[#18181b]/80 border border-white/[0.06] p-4 space-y-2.5 shadow-sm">
+                <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.4)]" />
                   <span>Your turn:</span>
                 </div>
-                <div className="space-y-1.5 text-xs sm:text-sm">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-semibold text-zinc-100 font-mono text-xs shrink-0">DO:</span>
-                    <span className="text-zinc-200 leading-relaxed">{currentRung.doText}</span>
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-emerald-400 font-mono text-[11px] shrink-0 mt-0.5">DO:</span>
+                    <span className="text-zinc-200 font-normal leading-relaxed">{currentRung.doText}</span>
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-semibold text-zinc-400 font-mono text-xs shrink-0">WHY:</span>
-                    <span className="text-zinc-400 leading-relaxed">{currentRung.whyText}</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-semibold text-zinc-400 font-mono text-xs shrink-0">EXPECT:</span>
-                    <span className="text-zinc-400 leading-relaxed">{currentRung.expectText}</span>
-                  </div>
+                  {currentRung.whyText && (
+                    <div className="flex items-start gap-2 text-zinc-400 font-normal">
+                      <span className="font-medium text-zinc-500 font-mono text-[11px] shrink-0 mt-0.5">WHY:</span>
+                      <span className="leading-relaxed">{currentRung.whyText}</span>
+                    </div>
+                  )}
+                  {currentRung.expectText && (
+                    <div className="flex items-start gap-2 text-zinc-400 font-normal">
+                      <span className="font-medium text-zinc-500 font-mono text-[11px] shrink-0 mt-0.5">EXPECT:</span>
+                      <span className="leading-relaxed">{currentRung.expectText}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Interactive Questions Styled Like Reference List Rows */}
+            {/* Interactive Questions Styled with Clean Radio Indicators */}
             {currentRung.check.options && (
-              <div className="space-y-3 pt-2">
-                <div className="text-sm font-semibold text-white tracking-tight">
+              <div className="space-y-3 pt-1">
+                <div className="text-[14px] sm:text-[15px] font-medium text-zinc-100 tracking-normal leading-snug">
                   {currentRung.check.question}
                 </div>
                 <div className="space-y-2">
@@ -688,23 +692,40 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                         key={opt.id}
                         type="button"
                         onClick={() => handleSelectOption(opt.id)}
-                        className={`w-full text-left py-3.5 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-between group cursor-pointer ${
+                        className={`w-full text-left py-3 px-3.5 rounded-xl border text-sm transition-all flex items-center justify-between group cursor-pointer ${
                           isSelected
                             ? opt.isCorrect
-                              ? 'bg-emerald-950/60 border-emerald-500/80 text-emerald-100 shadow-sm'
-                              : 'bg-[#221c1a] border-amber-500/50 text-amber-200 shadow-sm'
-                            : 'bg-[#18181b] hover:bg-[#202024] border-white/[0.06] hover:border-white/10 text-zinc-200'
+                              ? 'bg-emerald-950/40 border-emerald-500/60 text-emerald-100 shadow-sm'
+                              : 'bg-amber-950/30 border-amber-500/50 text-amber-200 shadow-sm'
+                            : 'bg-[#18181b]/80 hover:bg-[#202024] border-white/[0.06] hover:border-white/10 text-zinc-300 hover:text-zinc-100'
                         }`}
                       >
-                        <span className="leading-snug pr-3">{opt.label}</span>
-                        {isSelected ? (
+                        <div className="flex items-center gap-3 pr-3">
+                          <span
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                              isSelected
+                                ? opt.isCorrect
+                                  ? 'border-emerald-400 bg-emerald-500/20'
+                                  : 'border-amber-400 bg-amber-500/20'
+                                : 'border-zinc-600 group-hover:border-zinc-400'
+                            }`}
+                          >
+                            {isSelected && (
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  opt.isCorrect ? 'bg-emerald-400' : 'bg-amber-400'
+                                }`}
+                              />
+                            )}
+                          </span>
+                          <span className="font-normal leading-snug">{opt.label}</span>
+                        </div>
+                        {isSelected && (
                           opt.isCorrect ? (
                             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                           ) : (
                             <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
                           )
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 shrink-0 transition-colors" />
                         )}
                       </button>
                     );
@@ -716,10 +737,10 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             {/* Feedback message (No red buzzers) */}
             {feedbackText && (
               <div
-                className={`p-3.5 rounded-xl border text-xs sm:text-sm leading-relaxed ${
+                className={`p-3.5 rounded-xl border text-xs sm:text-[13px] leading-relaxed font-normal animate-in fade-in duration-200 ${
                   isQuestionCorrect
-                    ? 'bg-emerald-950/60 border-emerald-600/70 text-emerald-200'
-                    : 'bg-[#1c1c1f] border-white/[0.08] text-zinc-300'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+                    : 'bg-[#18181b] border-white/[0.08] text-zinc-300'
                 }`}
               >
                 {feedbackText}
@@ -904,7 +925,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
+              className="px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
             >
               Back
             </button>
@@ -929,7 +950,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               type="button"
               disabled={!isPrimaryReady}
               onClick={handleContinue}
-              className={`px-7 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
+              className={`px-7 py-3 rounded-xl font-medium text-xs sm:text-sm transition-all cursor-pointer ${
                 isPrimaryReady
                   ? 'bg-black hover:bg-zinc-900 text-white border border-white/20 hover:border-white/40 shadow-lg shadow-black/60 ring-1 ring-white/10 active:scale-[0.98]'
                   : 'bg-zinc-900/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'

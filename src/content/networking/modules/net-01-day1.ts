@@ -423,7 +423,7 @@ export const CONCEPT_1: ConceptDefinition = {
       lockMessage: 'Pick an answer to continue.',
       check: {
         type: 'predict',
-        question: 'Your cable is plugged in, but your friend\'s end is out. What will the link lights show?',
+        question: 'What will the link lights show?',
         options: [
           {
             id: 'pred-off',
