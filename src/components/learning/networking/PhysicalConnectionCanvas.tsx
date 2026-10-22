@@ -1,387 +1,666 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  Monitor,
-  Check,
-  AlertTriangle,
-  ZoomIn,
-  Volume2,
-  VolumeX,
-  X,
-  Info,
-  WifiOff,
-} from 'lucide-react';
-import { RealisticRj45Cable } from './hardware/RealisticRj45Cable';
-import { RealisticNicSiliconModal } from './hardware/RealisticNicSiliconModal';
-import { useNetworkingTheme } from './hardware/NetworkingThemeContext';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { StageState, CableState } from '../../../types/networking-day1';
+import { Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import { soundFx } from '../../../lib/networking/audio-fx';
 
 export interface PhysicalConnectionCanvasProps {
-  isCableSeated: boolean;
+  stageState?: StageState;
+  isCableSeated?: boolean;
   onToggleCable?: () => void;
+  onPlugCable?: (target: 'yours' | 'friends' | 'both') => void;
+  onSelectTag?: (which: 'yours' | 'friends') => void;
+  onOpenLookInside?: (id: string) => void;
+  onReplay?: () => void;
   readOnly?: boolean;
   className?: string;
   activeBeatIndex?: number;
 }
 
 export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> = ({
-  isCableSeated,
+  stageState,
+  isCableSeated = false,
   onToggleCable,
+  onPlugCable,
+  onSelectTag,
+  onOpenLookInside,
+  onReplay,
   readOnly = false,
   className = '',
-  activeBeatIndex,
 }) => {
-  const { soundEnabled, toggleSound } = useNetworkingTheme();
-  const [isNicModalOpen, setIsNicModalOpen] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState<'computer-a' | 'computer-b' | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  // Close modal on Escape key press
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedDevice(null);
-      }
-    };
-    if (selectedDevice) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [selectedDevice]);
+  // Normalize state from either explicit stageState or legacy props
+  const effectiveCable: CableState =
+    stageState?.cable ?? (isCableSeated ? 'both' : 'loose-on-desk');
+  const isBothConnected = effectiveCable === 'both';
+  const isOneYours = effectiveCable === 'one-end-yours';
+  const isLoose = effectiveCable === 'loose-on-desk';
+  const isAbsent = effectiveCable === 'absent';
 
-  const handleToggle = () => {
-    if (readOnly || !onToggleCable) return;
-    if (!isCableSeated) {
-      soundFx.playCablePlug();
-    } else {
-      soundFx.playCableUnplug();
+  const lightYours =
+    stageState?.lights?.yours ?? (isBothConnected ? 'on' : 'off');
+  const lightFriends =
+    stageState?.lights?.friends ?? (isBothConnected ? 'on' : 'off');
+
+  const messageState = stageState?.message ?? 'none';
+  const trafficState = stageState?.traffic ?? 'idle';
+  const tagYours = stageState?.tags?.yours ?? 'hidden';
+  const tagFriends = stageState?.tags?.friends ?? 'hidden';
+  const showBands = stageState?.bands === 'shown';
+  const stopwatch = stageState?.stopwatch ?? null;
+
+  const highlights = stageState?.highlight ?? [];
+  const dims = stageState?.dim ?? [];
+
+  const isDimmed = (id: string) => dims.includes(id);
+  const isHighlighted = (id: string) => highlights.includes(id);
+
+  const handlePlugClick = () => {
+    if (readOnly) return;
+    if (soundEnabled) soundFx.playCablePlug();
+    if (onPlugCable) {
+      onPlugCable(isBothConnected ? 'loose-on-desk' : 'both');
+    } else if (onToggleCable) {
+      onToggleCable();
     }
-    onToggleCable();
   };
-
-  // The cable is introduced when we reach task 3 (beat index >= 2) or when it is plugged in
-  const shouldShowCable = activeBeatIndex === undefined || activeBeatIndex >= 2 || isCableSeated;
 
   return (
     <div
-      className={`relative w-full rounded-2xl bg-zinc-950 border border-zinc-800/80 p-4 sm:p-5 shadow-xl overflow-hidden transition-all duration-300 ${className}`}
+      className={`relative w-full rounded-2xl bg-[#0B101B] border border-zinc-800 shadow-2xl overflow-hidden select-none transition-all duration-300 ${className}`}
       data-testid="physical-connection-canvas"
+      data-cable={effectiveCable}
+      data-light-yours={lightYours}
+      data-light-friends={lightFriends}
+      role="region"
+      aria-label="Physical Connection Canvas"
     >
-      {/* Top Header & Sound Controls */}
-      <div className="relative z-10 flex items-center justify-between pb-2.5 mb-3.5 border-b border-zinc-800/80">
-        <div className="flex items-center gap-2.5">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              isCableSeated ? 'bg-emerald-400' : 'bg-zinc-500'
+      {/* Top telemetry & replay controls */}
+      <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between text-xs font-mono pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold tracking-wider uppercase transition-colors ${
+              isBothConnected
+                ? 'bg-emerald-950/80 border-emerald-600/70 text-emerald-300'
+                : 'bg-zinc-900/90 border-zinc-700/80 text-zinc-400'
             }`}
-          />
-          <h3 className="text-xs font-mono font-medium tracking-wide uppercase text-zinc-300 flex items-center gap-2">
-            <span>Workbench • Devices</span>
-            <span className="sr-only">Acme Office • Physical Layer 1 Canvas</span>
-          </h3>
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1.5">
+          >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isCableSeated ? 'bg-emerald-400' : 'bg-zinc-500'
+              className={`w-2 h-2 rounded-full ${
+                isBothConnected
+                  ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                  : 'bg-zinc-500'
               }`}
             />
-            {isCableSeated ? 'Connected' : 'Unplugged'}
+            {isBothConnected ? 'Link: 100 Mbps UP' : 'Link: Disconnected'}
           </span>
         </div>
 
-        {/* Audio Synthesizer Mute Toggle */}
-        <button
-          type="button"
-          onClick={toggleSound}
-          title={soundEnabled ? 'Mute Mechanical Audio FX' : 'Enable Mechanical Audio FX'}
-          className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
-        >
-          {soundEnabled ? (
-            <Volume2 className="w-3.5 h-3.5 text-zinc-300" />
-          ) : (
-            <VolumeX className="w-3.5 h-3.5 text-zinc-600" />
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {onReplay && (
+            <button
+              type="button"
+              onClick={onReplay}
+              title="Replay animation (R)"
+              className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="sr-only">Replay</span>
+            </button>
           )}
-        </button>
-      </div>
 
-      {/* Main Stage: Computer A ➔ (Cable or Gap) ➔ Computer B */}
-      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 py-2 px-2 sm:px-4">
-        {/* Computer A (Minimal Device Card with Click-to-Inspect Modal) */}
-        <button
-          type="button"
-          onClick={() => setSelectedDevice('computer-a')}
-          className="flex flex-col items-center text-center w-full md:w-48 p-3.5 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700/80 shadow-sm transition-all duration-200 cursor-pointer group"
-          aria-label="Click Computer A to inspect details"
-        >
-          <div className="w-14 h-14 rounded-2xl bg-zinc-850 border border-zinc-750 flex items-center justify-center text-zinc-300 group-hover:text-zinc-100 group-hover:border-zinc-600 mb-2 transition-all">
-            <Monitor className="w-7 h-7" />
-          </div>
-
-          <span className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-            <span>Computer A</span>
-            <Info className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-          </span>
-          <span className="text-[11px] text-zinc-500 mt-0.5">Click for details</span>
-
-          {/* Hidden accessibility anchors for test contract assertions */}
-          <div className="sr-only">
-            <span>Acme-PC-01</span>
-            <span>192.168.1.10</span>
-            <span>MAC: 00-1A-2B-3C-4D-10</span>
-            <span>Port eth0: {isCableSeated ? '[LINK: 1Gbps UP]' : '[LINK: NO CARRIER]'}</span>
-            <span>Zoom NIC Chip</span>
-          </div>
-        </button>
-
-        {/* Center: Cable Connection OR Clean Unconnected Gap */}
-        <div className="flex-1 flex flex-col items-center justify-center w-full px-2 min-h-[110px]">
-          {!shouldShowCable ? (
-            <div className="flex flex-col items-center justify-center text-center p-3 rounded-2xl bg-zinc-900/20 border border-dashed border-zinc-800/80 w-full max-w-xs animate-in fade-in duration-300">
-              <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-1.5">
-                <WifiOff className="w-4 h-4" />
-              </div>
-              <span className="text-xs font-medium text-zinc-300">No Physical Connection</span>
-              <span className="text-[11px] text-zinc-500 mt-0.5">The computers are not connected</span>
-
-              {/* Accessible Fallback Button so static markup tests pass */}
-              <button
-                type="button"
-                disabled={readOnly}
-                onClick={handleToggle}
-                className="sr-only"
-                aria-label={`Cat6 Ethernet cable between Acme-PC-01 and Acme-SW-01. Status: Disconnected. Click or press Enter to plug in.`}
-              >
-                <span>Click to Plug</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center w-full animate-in fade-in duration-300">
-              <div className="text-[11px] font-mono font-medium text-zinc-400 mb-1.5 flex items-center gap-1.5">
-                <span>🔌</span>
-                <span>Network Cable</span>
-              </div>
-
-              <div className="relative p-2.5 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 shadow-inner flex flex-col items-center">
-                <RealisticRj45Cable
-                  isPlugged={isCableSeated}
-                  onToggle={handleToggle}
-                  disabled={readOnly}
-                  label="Network cable between Computer A and Computer B"
-                />
-
-                {/* Accessible Fallback Button for Tests */}
-                <button
-                  type="button"
-                  disabled={readOnly}
-                  onClick={handleToggle}
-                  className="sr-only"
-                  aria-label={`Cat6 Ethernet cable between Acme-PC-01 and Acme-SW-01. Status: ${
-                    isCableSeated ? 'Connected' : 'Disconnected'
-                  }. Click or press Enter to ${isCableSeated ? 'unplug' : 'plug in'}.`}
-                >
-                  <span>{isCableSeated ? 'Connected' : 'Click to Plug'}</span>
-                </button>
-
-                <span className="mt-1.5 text-[10px] font-mono text-center">
-                  {isCableSeated ? (
-                    <span className="text-emerald-400 font-medium">● Cable is plugged in</span>
-                  ) : (
-                    <span className="text-zinc-400">● Unplugged: Click plug to connect</span>
-                  )}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Computer B (Minimal Device Card with Click-to-Inspect Modal) */}
-        <button
-          type="button"
-          onClick={() => setSelectedDevice('computer-b')}
-          className="flex flex-col items-center text-center w-full md:w-48 p-3.5 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700/80 shadow-sm transition-all duration-200 cursor-pointer group"
-          aria-label="Click Computer B to inspect details"
-        >
-          <div className="w-14 h-14 rounded-2xl bg-zinc-850 border border-zinc-755 flex items-center justify-center text-zinc-300 group-hover:text-zinc-100 group-hover:border-zinc-600 mb-2 transition-all">
-            <Monitor className="w-7 h-7" />
-          </div>
-
-          <span className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-            <span>Computer B</span>
-            <Info className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-          </span>
-          <span className="text-[11px] text-zinc-500 mt-0.5">Click for details</span>
-
-          {/* Hidden accessibility anchors for test contract assertions */}
-          <div className="sr-only">
-            <span>Acme-PC-02</span>
-            <span>192.168.1.1</span>
-            <span>MAC: 00-1A-2B-3C-4D-01</span>
-            <span>Port eth0: [LINK: 1Gbps UP]</span>
-            <span data-testid="realistic-switch-chassis">Acme-SW-01</span>
-            <span data-testid="realistic-wire-bus">1000BASE-T</span>
-            <span>Acme-RTR-01</span>
-          </div>
-        </button>
-      </div>
-
-      {/* Minimal Circuit Status Strip */}
-      <div className="relative z-10 mt-3 pt-2.5 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-zinc-400 gap-2">
-        <div className="flex items-center gap-2">
-          {isCableSeated ? (
-            <>
-              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="text-zinc-300">
-                Cable connected. Electrical signals can now travel between Computer A and Computer B.
-              </span>
-            </>
-          ) : !shouldShowCable ? (
-            <>
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 shrink-0" />
-              <span className="text-zinc-400">
-                Two unconnected computers. No wire connects them yet.
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
-              <span className="text-zinc-400">
-                The network cable is unplugged. Click the plug to connect the two computers.
-              </span>
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
-          <span>{isCableSeated ? 'Ethernet Cable' : 'Direct Link'}</span>
-          <span>•</span>
-          <span className={isCableSeated ? 'text-emerald-400' : 'text-zinc-400'}>
-            {isCableSeated ? 'Signals Active' : 'Waiting for Connection'}
-          </span>
-        </div>
-      </div>
-
-      {/* Visual Neighborhood Street Baseline Band */}
-      <div className="relative z-10 mt-2.5 pt-2 border-t border-zinc-900 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-3 py-1 rounded-full">
-          <span>🏡</span>
-          <span>Shared Local Street: <strong className="text-emerald-300">192.168.1</strong>.x</span>
-        </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-400">
-          <span>Host A: <span className="text-zinc-200 font-semibold">.10</span></span>
-          <span className="text-zinc-600">⟷</span>
-          <span>Host B: <span className="text-zinc-200 font-semibold">.1</span></span>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* MODAL DIALOG: COMPUTER DETAILS (Dismiss via X, backdrop click, or Escape) */}
-      {/* ========================================================================= */}
-      {selectedDevice && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setSelectedDevice(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="relative w-full max-w-md rounded-2xl bg-zinc-950 border border-zinc-800 p-5 shadow-2xl text-left space-y-4 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={() => setSoundEnabled((prev) => !prev)}
+            title={soundEnabled ? 'Mute audio' : 'Enable audio'}
+            className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
-                  <Monitor className="w-5 h-5 text-zinc-200" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-zinc-100">
-                    {selectedDevice === 'computer-a' ? 'Computer A' : 'Computer B'}
-                  </h3>
-                  <span className="text-[11px] text-zinc-500">
-                    {selectedDevice === 'computer-a' ? 'Local Workstation' : 'Target Peer Computer'}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDevice(null)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors cursor-pointer"
-                aria-label="Close details"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Specs Grid */}
-            <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                <div className="text-[11px] text-zinc-500 font-mono">IP Address</div>
-                <div className="font-mono font-semibold text-zinc-200 mt-1">
-                  {selectedDevice === 'computer-a' ? '192.168.1.10' : '192.168.1.1'}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                <div className="text-[11px] text-zinc-500 font-mono">MAC Address</div>
-                <div className="font-mono font-semibold text-zinc-200 mt-1">
-                  {selectedDevice === 'computer-a' ? '00-1A-2B-3C-4D-10' : '00-1A-2B-3C-4D-01'}
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                <div className="text-[11px] text-zinc-500 font-mono">Network Port</div>
-                <div className="font-mono font-semibold text-zinc-200 mt-1">eth0</div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                <div className="text-[11px] text-zinc-500 font-mono">Cable Status</div>
-                <div className="font-mono font-semibold mt-1">
-                  {selectedDevice === 'computer-a' ? (
-                    isCableSeated ? (
-                      <span className="text-emerald-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        Connected
-                      </span>
-                    ) : (
-                      <span className="text-zinc-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
-                        Unplugged
-                      </span>
-                    )
-                  ) : (
-                    <span className="text-emerald-400 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      Ready
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            {selectedDevice === 'computer-a' && (
-              <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between">
-                <span className="text-[11px] text-zinc-500">Hardware Interface</span>
-                <button
-                  type="button"
-                  onClick={() => setIsNicModalOpen(true)}
-                  className="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition cursor-pointer"
-                >
-                  <ZoomIn className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>View Network Card Chip</span>
-                </button>
-              </div>
+            {soundEnabled ? (
+              <Volume2 className="w-3.5 h-3.5 text-zinc-200" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
             )}
+            <span className="sr-only">Toggle sound</span>
+          </button>
+        </div>
+      </div>
+
+      {/* SVG Canvas Area (viewBox 0 0 1000 620) */}
+      <div className="relative w-full aspect-[16/10] max-h-[580px]">
+        <svg
+          viewBox="0 0 1000 620"
+          className="w-full h-full block"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <defs>
+            <linearGradient id="deskGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#141D2D" />
+              <stop offset="100%" stopColor="#0B101B" />
+            </linearGradient>
+
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* DESK GROUND (y 470 to 620) */}
+          <rect x="0" y="470" width="1000" height="150" fill="url(#deskGrad)" />
+          <line x1="0" y1="470" x2="1000" y2="470" stroke="#1E293B" strokeWidth="2" />
+
+          {/* STREET BANDS (Concept 2 onward) */}
+          {showBands && (
+            <g className="transition-opacity duration-500">
+              {/* Left computer street band (Blue: 192.168.1) */}
+              <rect
+                x="80"
+                y="485"
+                width="380"
+                height="28"
+                rx="14"
+                fill="#2563EB"
+                fillOpacity="0.18"
+                stroke="#2563EB"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+              />
+              <text
+                x="270"
+                y="504"
+                textAnchor="middle"
+                fill="#60A5FA"
+                fontSize="12"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="600"
+              >
+                Neighborhood Street: 192.168.1.x
+              </text>
+
+              {/* Right computer street band */}
+              {tagFriends !== 'hidden' &&
+              typeof tagFriends === 'object' &&
+              tagFriends.street === '192.168.2' ? (
+                // Purple band for street 2
+                <>
+                  <rect
+                    x="540"
+                    y="485"
+                    width="380"
+                    height="28"
+                    rx="14"
+                    fill="#7C3AED"
+                    fillOpacity="0.18"
+                    stroke="#7C3AED"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 4"
+                  />
+                  <text
+                    x="730"
+                    y="504"
+                    textAnchor="middle"
+                    fill="#C084FC"
+                    fontSize="12"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="600"
+                  >
+                    Neighborhood Street: 192.168.2.x (Different!)
+                  </text>
+                </>
+              ) : (
+                // Shared blue band
+                <>
+                  <rect
+                    x="540"
+                    y="485"
+                    width="380"
+                    height="28"
+                    rx="14"
+                    fill="#2563EB"
+                    fillOpacity="0.18"
+                    stroke="#2563EB"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 4"
+                  />
+                  <text
+                    x="730"
+                    y="504"
+                    textAnchor="middle"
+                    fill="#60A5FA"
+                    fontSize="12"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="600"
+                  >
+                    Neighborhood Street: 192.168.1.x
+                  </text>
+                </>
+              )}
+            </g>
+          )}
+
+          {/* COMPUTER A (LEFT: x 120 to 340, y 250 to 460) */}
+          <g
+            id="computer-a"
+            opacity={isDimmed('yours') ? 0.35 : 1}
+            className="transition-opacity duration-300"
+          >
+            {/* Monitor Stand */}
+            <path d="M210 410 L250 410 L260 455 L200 455 Z" fill="#1E293B" />
+            <rect x="180" y="455" width="100" height="12" rx="4" fill="#334155" />
+
+            {/* Monitor Frame */}
+            <rect
+              x="120"
+              y="250"
+              width="220"
+              height="160"
+              rx="12"
+              fill="#0F172A"
+              stroke={isHighlighted('yours') ? '#3B82F6' : '#334155'}
+              strokeWidth={isHighlighted('yours') ? 3 : 2}
+            />
+
+            {/* Monitor Screen Glass */}
+            <rect
+              x="132"
+              y="262"
+              width="196"
+              height="136"
+              rx="6"
+              fill="#020617"
+            />
+
+            {/* Terminal prompt symbol `>_` */}
+            <text
+              x="148"
+              y="290"
+              fill="#38BDF8"
+              fontSize="16"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="bold"
+            >
+              &gt;_
+            </text>
+
+            {/* Internal NIC Buffer Area */}
+            <rect
+              x="260"
+              y="370"
+              width="60"
+              height="20"
+              rx="4"
+              fill="#1E293B"
+              stroke="#475569"
+              strokeWidth="1"
+            />
+            <text
+              x="290"
+              y="384"
+              textAnchor="middle"
+              fill="#94A3B8"
+              fontSize="9"
+              fontFamily="ui-monospace, monospace"
+            >
+              NIC Buffer
+            </text>
+
+            {/* Cable Socket (340, 380) */}
+            <rect
+              x="338"
+              y="372"
+              width="14"
+              height="22"
+              rx="3"
+              fill="#0F172A"
+              stroke="#64748B"
+              strokeWidth="1.5"
+            />
+
+            {/* Link LED */}
+            <circle
+              cx="330"
+              cy="383"
+              r="6"
+              fill={lightYours === 'on' ? '#22C55E' : '#334155'}
+              stroke={lightYours === 'on' ? '#16A34A' : '#1E293B'}
+              strokeWidth="1.5"
+              filter={lightYours === 'on' ? 'url(#softGlow)' : undefined}
+            />
+          </g>
+
+          {/* COMPUTER B (RIGHT: x 660 to 880, y 250 to 460) */}
+          <g
+            id="computer-b"
+            opacity={isDimmed('friends') ? 0.35 : 1}
+            className="transition-opacity duration-300"
+          >
+            {/* Monitor Stand */}
+            <path d="M750 410 L790 410 L800 455 L740 455 Z" fill="#1E293B" />
+            <rect x="720" y="455" width="100" height="12" rx="4" fill="#334155" />
+
+            {/* Monitor Frame */}
+            <rect
+              x="660"
+              y="250"
+              width="220"
+              height="160"
+              rx="12"
+              fill="#0F172A"
+              stroke={isHighlighted('friends') ? '#3B82F6' : '#334155'}
+              strokeWidth={isHighlighted('friends') ? 3 : 2}
+            />
+
+            {/* Monitor Screen Glass */}
+            <rect
+              x="672"
+              y="262"
+              width="196"
+              height="136"
+              rx="6"
+              fill="#020617"
+            />
+
+            {/* Internal NIC Buffer Area */}
+            <rect
+              x="680"
+              y="370"
+              width="60"
+              height="20"
+              rx="4"
+              fill="#1E293B"
+              stroke="#475569"
+              strokeWidth="1"
+            />
+            <text
+              x="710"
+              y="384"
+              textAnchor="middle"
+              fill="#94A3B8"
+              fontSize="9"
+              fontFamily="ui-monospace, monospace"
+            >
+              NIC Buffer
+            </text>
+
+            {/* Cable Socket (650, 380) */}
+            <rect
+              x="648"
+              y="372"
+              width="14"
+              height="22"
+              rx="3"
+              fill="#0F172A"
+              stroke="#64748B"
+              strokeWidth="1.5"
+            />
+
+            {/* Link LED */}
+            <circle
+              cx="670"
+              cy="383"
+              r="6"
+              fill={lightFriends === 'on' ? '#22C55E' : '#334155'}
+              stroke={lightFriends === 'on' ? '#16A34A' : '#1E293B'}
+              strokeWidth="1.5"
+              filter={lightFriends === 'on' ? 'url(#softGlow)' : undefined}
+            />
+          </g>
+
+          {/* THE PHYSICAL CABLE */}
+          {!isAbsent && (
+            <g id="cable-system">
+              {/* Connected at both ends */}
+              {isBothConnected && (
+                <g>
+                  {/* Cable Wire Path */}
+                  <path
+                    d="M 350 383 C 450 430, 550 430, 650 383"
+                    fill="none"
+                    stroke="#0284C7"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                  {/* RJ45 Plugs */}
+                  <rect x="342" y="375" width="16" height="16" rx="2" fill="#38BDF8" />
+                  <rect x="642" y="375" width="16" height="16" rx="2" fill="#38BDF8" />
+                </g>
+              )}
+
+              {/* Plugged only at Computer A (friend end loose) */}
+              {isOneYours && (
+                <g>
+                  <path
+                    d="M 350 383 C 420 420, 500 480, 580 470"
+                    fill="none"
+                    stroke="#0284C7"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                  <rect x="342" y="375" width="16" height="16" rx="2" fill="#38BDF8" />
+                  {/* Loose plug on desk */}
+                  <g
+                    transform="translate(575, 460) rotate(15)"
+                    className="cursor-pointer hover:scale-110 transition-transform"
+                    onClick={handlePlugClick}
+                  >
+                    <rect x="0" y="0" width="22" height="14" rx="3" fill="#F59E0B" stroke="#B45309" strokeWidth="1.5" />
+                    <text x="11" y="10" textAnchor="middle" fill="#000" fontSize="8" fontWeight="bold">PLUG</text>
+                  </g>
+                </g>
+              )}
+
+              {/* Completely loose on desk */}
+              {isLoose && (
+                <g
+                  className="cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={handlePlugClick}
+                >
+                  <path
+                    d="M 400 475 C 460 460, 540 485, 600 472"
+                    fill="none"
+                    stroke="#0284C7"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                  <rect x="390" y="468" width="20" height="14" rx="3" fill="#38BDF8" />
+                  <rect x="590" y="465" width="20" height="14" rx="3" fill="#38BDF8" />
+                  <text
+                    x="500"
+                    y="450"
+                    textAnchor="middle"
+                    fill="#38BDF8"
+                    fontSize="11"
+                    fontFamily="sans-serif"
+                    fontWeight="600"
+                  >
+                    Ethernet Cable (Click to Plug)
+                  </text>
+                </g>
+              )}
+            </g>
+          )}
+
+          {/* BUSY CABLE TRAFFIC CAPSULES (Concept 3 Rung 2) */}
+          {trafficState === 'file-transfer' && (
+            <g id="file-traffic">
+              {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                <motion.rect
+                  key={i}
+                  width="18"
+                  height="10"
+                  rx="4"
+                  fill="#94A3B8"
+                  initial={{ x: 630 - i * 40, y: 395 }}
+                  animate={{ x: [630 - i * 40, 360] }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2.2,
+                    ease: 'linear',
+                    delay: i * 0.3,
+                  }}
+                />
+              ))}
+            </g>
+          )}
+
+          {/* PING MESSAGE ANIMATION */}
+          <AnimatePresence>
+            {/* 1. Transmit Failed (stops inside Computer A) */}
+            {messageState === 'inside-stopped' && (
+              <motion.g
+                id="msg-stopped"
+                initial={{ x: 170, y: 330, opacity: 0 }}
+                animate={{ x: 310, y: 380, opacity: 1 }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+              >
+                {/* Envelope */}
+                <rect x="0" y="0" width="34" height="22" rx="4" fill="#3B82F6" stroke="#93C5FD" strokeWidth="1.5" />
+                <path d="M 0 0 L 17 12 L 34 0" fill="none" stroke="#93C5FD" strokeWidth="1.5" />
+                <text x="17" y="19" textAnchor="middle" fill="#FFFFFF" fontSize="8" fontWeight="bold">ping</text>
+
+                {/* Stopped Red Cross Badge */}
+                <motion.g
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 1.2, type: 'spring' }}
+                >
+                  <circle cx="38" cy="11" r="10" fill="#EF4444" stroke="#7F1D1D" strokeWidth="1.5" />
+                  <line x1="33" y1="6" x2="43" y2="16" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="43" y1="6" x2="33" y2="16" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                </motion.g>
+              </motion.g>
+            )}
+
+            {/* 2. Round Trip Success (Pulse goes to friend, stopwatch rides it, reply returns) */}
+            {messageState === 'roundtrip' && (
+              <motion.g id="msg-roundtrip">
+                <motion.g
+                  animate={{
+                    x: [350, 640, 350],
+                    y: [383, 383, 383],
+                  }}
+                  transition={{
+                    duration: trafficState === 'file-transfer' ? 3.8 : 2.2,
+                    times: [0, 0.5, 1],
+                    ease: 'easeInOut',
+                    repeat: Infinity,
+                  }}
+                >
+                  <rect x="-17" y="-11" width="34" height="22" rx="4" fill="#10B981" stroke="#A7F3D0" strokeWidth="1.5" filter="url(#softGlow)" />
+                  <path d="M -17 -11 L 0 1 L 17 -11" fill="none" stroke="#A7F3D0" strokeWidth="1.5" />
+                  <text x="0" y="8" textAnchor="middle" fill="#FFFFFF" fontSize="8" fontWeight="bold">echo</text>
+
+                  {/* Stopwatch Pill riding pulse */}
+                  {stopwatch && (
+                    <g transform="translate(-16, -24)">
+                      <rect x="0" y="0" width="32" height="14" rx="7" fill="#0F172A" stroke="#38BDF8" strokeWidth="1" />
+                      <text x="16" y="10" textAnchor="middle" fill="#38BDF8" fontSize="8" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                        {stopwatch}
+                      </text>
+                    </g>
+                  )}
+                </motion.g>
+              </motion.g>
+            )}
+          </AnimatePresence>
+        </svg>
+
+        {/* HTML OVERLAYS: Strictly HTML positioned by percentage for crisp accessibility */}
+
+        {/* Computer A Label */}
+        <div
+          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
+          style={{ left: '23%', top: '74%' }}
+        >
+          <div className="text-sm font-semibold text-zinc-200">Your computer</div>
+          <div
+            className={`text-xs font-mono font-medium ${
+              lightYours === 'on' ? 'text-emerald-400' : 'text-zinc-500'
+            }`}
+          >
+            Light: {lightYours === 'on' ? 'ON' : 'OFF'}
           </div>
         </div>
-      )}
 
-      {/* Silicon Macro Inspector Modal */}
-      <RealisticNicSiliconModal
-        isOpen={isNicModalOpen}
-        onClose={() => setIsNicModalOpen(false)}
-        macAddress="00-1A-2B-3C-4D-10"
-        hostname="Computer A"
-      />
+        {/* Computer B Label */}
+        <div
+          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
+          style={{ left: '77%', top: '74%' }}
+        >
+          <div className="text-sm font-semibold text-zinc-200">Friend&apos;s computer</div>
+          <div
+            className={`text-xs font-mono font-medium ${
+              lightFriends === 'on' ? 'text-emerald-400' : 'text-zinc-500'
+            }`}
+          >
+            Light: {lightFriends === 'on' ? 'ON' : 'OFF'}
+          </div>
+        </div>
+
+        {/* Address Tag Above Computer A */}
+        {tagYours !== 'hidden' && (
+          <div
+            className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer"
+            style={{ left: '23%', top: '34%' }}
+            onClick={() => onSelectTag?.('yours')}
+          >
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
+              {tagYours === 'not-set' ? (
+                <span className="text-amber-400 font-medium">not set</span>
+              ) : typeof tagYours === 'object' ? (
+                <span>
+                  <span className="text-blue-400 font-semibold">{tagYours.street}</span>
+                  <span className="text-zinc-500">.</span>
+                  <span className="text-amber-400 font-semibold">{tagYours.house}</span>
+                </span>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* Address Tag Above Computer B */}
+        {tagFriends !== 'hidden' && (
+          <div
+            className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer"
+            style={{ left: '77%', top: '34%' }}
+            onClick={() => onSelectTag?.('friends')}
+          >
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
+              {typeof tagFriends === 'object' ? (
+                <span>
+                  <span
+                    className={
+                      tagFriends.street === '192.168.2'
+                        ? 'text-purple-400 font-semibold'
+                        : 'text-blue-400 font-semibold'
+                    }
+                  >
+                    {tagFriends.street}
+                  </span>
+                  <span className="text-zinc-500">.</span>
+                  <span className="text-amber-400 font-semibold">{tagFriends.house}</span>
+                </span>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* STOPPED INSIDE BADGE (Concept 1 Rung 4) */}
+        {messageState === 'inside-stopped' && (
+          <div
+            className="absolute transform -translate-y-1/2 pointer-events-none animate-in fade-in zoom-in duration-300"
+            style={{ left: '33%', top: '61%' }}
+          >
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-950/90 border border-red-700/80 text-red-300 font-medium text-xs shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span>Stopped inside</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

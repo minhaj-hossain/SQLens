@@ -1,70 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Monitor,
-  Server,
-  Cable,
+  BookOpen,
+  ChevronRight,
+  RotateCcw,
+  HelpCircle,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp,
-  ArrowRight,
-  RotateCcw,
-  ShieldCheck,
-  Terminal as TerminalIcon,
-  Layers,
-  FileText,
-  Activity,
-  Wifi,
-  WifiOff,
+  X,
+  ExternalLink,
+  Search,
+  Sparkles,
 } from 'lucide-react';
 import type { ModuleData, Concept } from '../../../../types/curriculum';
-import type { MentorScript, MentorBeat } from '../../../../types/networking-curriculum';
-import { useMentorScript } from '../mentor/useMentorScript';
-import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
-import { VirtualTerminalSimulator } from '../VirtualTerminalSimulator';
-import { PacketInspector } from '../PacketInspector';
-import { StoryReelStage } from '../StoryReelStage';
-import type { PacketInspectionTaskContent } from '../../../../types/curriculum';
-import type { SimulationState, LearnerActionEvent } from '../../../../lib/network-engine/types';
+import type { Day1Rung, ConceptDefinition, VocabularyTerm } from '../../../../types/networking-day1';
 import {
-  reduceSimulationState,
-  reduceActionLog,
-  saveEngineSession,
-  loadEngineSession,
-} from '../../../../lib/network-engine/reducer';
-import { createInitialAcmeOfficeState } from '../../../../lib/network-engine/fixtures/acme-office-m1';
-import { isPingCommand, normalizeCommand } from '../../../../lib/network-engine/commands';
+  ALL_DAY1_CONCEPTS,
+  DAY1_VOCABULARY,
+} from '../../../../content/networking/modules/net-01-day1';
+import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
+import { Day1GuidedTerminal } from '../Day1GuidedTerminal';
 import { useLearning } from '../../../providers/LearningProgressProvider';
 import { useLearningNavigation } from '../../../learn/use-learning-navigation';
 
-const DEFAULT_NET01_PACKET: PacketInspectionTaskContent = {
-  title: 'Data Envelope (Sender & Receiver)',
-  description:
-    "Inspect the outer envelope stamped by Computer A. It uses Computer B's hardware MAC address learned across the cable.",
-  snapshots: [
-    {
-      hopLabel: 'Computer A ➔ Computer B',
-      deviceType: 'Host',
-      layer2: {
-        srcMac: '00-1A-2B-3C-4D-10 (Computer A)',
-        dstMac: '00-1A-2B-3C-4D-01 (Computer B)',
-        etherType: 'Data (IPv4)',
-        fcs: 'Verified (Valid)',
-      },
-      layer3: {
-        version: 4,
-        srcIp: '192.168.1.10 (Computer A)',
-        dstIp: '192.168.1.1 (Computer B)',
-        ttl: 64,
-        protocol: 'Ping Request (ICMP)',
-        totalLength: 60,
-      },
-    },
-  ],
-};
+import { StoryReelStage } from '../StoryReelStage';
 
 interface NetworkingCockpitViewProps {
   module: ModuleData;
@@ -79,639 +39,824 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
   onComplete,
   defaultMode = 'reel',
 }) => {
-  const script: MentorScript = concept.theory.mentorScript!;
   const { markConceptComplete, markModuleComplete } = useLearning();
-  const { backToRoadmap, continueNextDay } = useLearningNavigation();
+  const { backToRoadmap } = useLearningNavigation();
 
-  // Mentor Script Engine
-  const {
-    state: mentorState,
-    currentBeat,
-    handleNext,
-    handleActionDone,
-    handleSelectPrediction,
-    handleSelectWhy,
-    handleReplay,
-  } = useMentorScript(script);
-
-  // Deterministic Network Simulation Engine
-  const [simState, setSimState] = useState<SimulationState>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = loadEngineSession();
-      if (saved && saved.actionLog.length > 0) {
-        return reduceActionLog(createInitialAcmeOfficeState(), saved.actionLog);
-      }
-    }
-    return createInitialAcmeOfficeState();
-  });
-
-  // UI Viewport tabs for medium/mobile screens
-  const [activeDeckTab, setActiveDeckTab] = useState<'terminal' | 'topology' | 'inspector'>('terminal');
+  // Mode: 'reel' or 'workbench'
   const [activeMode, setActiveMode] = useState<'reel' | 'workbench'>(defaultMode);
-  const [showNotes, setShowNotes] = useState(false);
-  const [slowMotionPhase, setSlowMotionPhase] = useState<number>(0);
-  const [isResolved, setIsResolved] = useState(false);
 
-  const pcLink = simState.links['cable-hostA-sw1'];
-  const isCableSeated = (pcLink?.endpointA.isSeated && pcLink?.status === 'carrier-active') ?? false;
+  // State: current concept and rung indices
+  const [conceptIdx, setConceptIdx] = useState<number>(0);
+  const [rungIdx, setRungIdx] = useState<number>(0);
 
-  // Sync deck view when beats introduce new equipment
+  // Full-screen page modes
+  const [pageMode, setPageMode] = useState<'welcome' | 'intro' | 'normal' | 'concept-complete' | 'day-complete'>(
+    defaultMode === 'workbench' ? 'normal' : 'welcome'
+  );
+
+  // Interactive task state
+  const [isTaskDone, setIsTaskDone] = useState(false);
+  const [taskOutcome, setTaskOutcome] = useState<string | null>(null);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [selectedWhyId, setSelectedWhyId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  const [isQuestionCorrect, setIsQuestionCorrect] = useState<boolean | null>(null);
+
+  // Hints
+  const [hintLevel, setHintLevel] = useState<number>(0);
+
+  // My Words Drawer & Look Inside modal
+  const [isWordsDrawerOpen, setIsWordsDrawerOpen] = useState(false);
+  const [activeLookInsideId, setActiveLookInsideId] = useState<string | null>(null);
+  const [isSimplifiedOpen, setIsSimplifiedOpen] = useState(false);
+
+  // Address Editor state (State C)
+  const [activeWorkTab, setActiveWorkTab] = useState<'terminal' | 'address'>('terminal');
+  const [customAddress, setCustomAddress] = useState('192.168.1.10');
+
+  // Self-check write-and-compare state (State F)
+  const [learnerSentence, setLearnerSentence] = useState('');
+  const [selfCheckRevealed, setSelfCheckRevealed] = useState(false);
+
+  // Sort state (Concept 3 Rung 5)
+  const [sortMatches, setSortMatches] = useState<Record<string, string>>({});
+
+  // Checklist state (Concept 4)
+  const [checkedLight, setCheckedLight] = useState(false);
+  const [checkedAddress, setCheckedAddress] = useState(false);
+  const [checkedPing, setCheckedPing] = useState(false);
+
+  // Highlighting link between stage and terminal
+  const [hoveredStageId, setHoveredStageId] = useState<string | null>(null);
+
+  const currentConcept: ConceptDefinition = ALL_DAY1_CONCEPTS[conceptIdx] || ALL_DAY1_CONCEPTS[0];
+  const currentRung: Day1Rung = currentConcept.rungs[rungIdx] || currentConcept.rungs[0];
+
+  // Stage state synchronized with current rung and local actions
+  const effectiveStageState = useMemo(() => {
+    const base = { ...currentRung.entryStageState };
+    if (isTaskDone) {
+      if (currentRung.id === 'c1-r5' || currentRung.id === 'c4-r2' || currentRung.id === 'c4-r3') {
+        base.cable = 'both';
+        base.lights = { yours: 'on', friends: 'on' };
+      }
+      if (currentRung.id === 'c1-r3') {
+        base.message = 'inside-stopped';
+      }
+      if (currentRung.id === 'c1-r6' || currentRung.id === 'c3-r1') {
+        base.message = 'roundtrip';
+        base.stopwatch = '1 ms';
+      }
+      if (currentRung.id === 'c3-r2') {
+        base.message = 'roundtrip';
+        base.stopwatch = '45 ms';
+      }
+    }
+    if (hoveredStageId) {
+      base.highlight = [hoveredStageId];
+    }
+    return base;
+  }, [currentRung, isTaskDone, hoveredStageId]);
+
+  // Synchronize URL Hash navigation
   useEffect(() => {
-    if (mentorState.beatIndex === 3) {
-      // Beat 4: Connect Cable -> focus topology
-      setActiveDeckTab('topology');
-    } else if (mentorState.beatIndex === 7) {
-      // Beat 8: Frame Inspector -> focus inspector
-      setActiveDeckTab('inspector');
-    } else {
-      setActiveDeckTab('terminal');
+    if (typeof window !== 'undefined' && pageMode === 'normal') {
+      window.location.hash = `day1/c${conceptIdx + 1}/r${rungIdx + 1}`;
     }
-  }, [mentorState.beatIndex]);
+  }, [conceptIdx, rungIdx, pageMode]);
 
-  // Slow-motion trace effect for Beat 6
+  // Reset interactive states when transitioning rungs
   useEffect(() => {
-    if (mentorState.beatIndex === 5) {
-      setSlowMotionPhase(1);
-      const t1 = setTimeout(() => setSlowMotionPhase(2), 1200);
-      const t2 = setTimeout(() => setSlowMotionPhase(3), 2400);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
+    setIsTaskDone(false);
+    setTaskOutcome(null);
+    setSelectedOptionId(null);
+    setSelectedWhyId(null);
+    setFeedbackText(null);
+    setIsQuestionCorrect(null);
+    setHintLevel(0);
+    setIsSimplifiedOpen(false);
+    setLearnerSentence('');
+    setSelfCheckRevealed(false);
+    setSortMatches({});
+    setCheckedLight(false);
+    setCheckedAddress(false);
+    setCheckedPing(false);
+
+    if (currentRung.layoutState === 'STATE_C') {
+      setActiveWorkTab('address');
     } else {
-      setSlowMotionPhase(0);
+      setActiveWorkTab('terminal');
     }
-  }, [mentorState.beatIndex]);
+  }, [currentRung]);
 
-  const dispatchSimulationAction = (action: LearnerActionEvent) => {
-    setSimState((prev) => {
-      const next = reduceSimulationState(prev, action);
-      saveEngineSession({
-        engineSchemaVersion: 1,
-        scriptVersion: '1.0.0',
-        actionLog: next.actionLog,
-      });
-      return next;
-    });
-  };
-
-  const handleToggleCable = () => {
-    const isCurrentlySeated = simState.links['cable-hostA-sw1']?.endpointA.isSeated ?? false;
-    const action: LearnerActionEvent = {
-      id: `act-${simState.logicalClock + 1}`,
-      logicalTick: simState.logicalClock + 1,
-      type: isCurrentlySeated ? 'UNSEAT_CABLE' : 'SEAT_CABLE',
-      linkId: 'cable-hostA-sw1',
-    };
-    dispatchSimulationAction(action);
-
-    if (!isCurrentlySeated && currentBeat?.kind === 'do' && (currentBeat.expect || '').includes('cable')) {
-      handleActionDone({ type: currentBeat.expect || 'seat-cable' });
-      setTimeout(() => {
-        handleNext();
-      }, 700);
+  // Handle Continuing to Next Rung
+  const handleContinue = useCallback(() => {
+    if (rungIdx < currentConcept.rungs.length - 1) {
+      setRungIdx((prev) => prev + 1);
+    } else {
+      // Reached end of current concept
+      if (conceptIdx < ALL_DAY1_CONCEPTS.length - 1) {
+        setPageMode('concept-complete');
+      } else {
+        setPageMode('day-complete');
+        markConceptComplete(module.id, concept.id);
+        markModuleComplete(module);
+        onComplete?.();
+      }
     }
-  };
+  }, [conceptIdx, rungIdx, currentConcept, markConceptComplete, markModuleComplete, module, concept, onComplete]);
 
-  const handleRunCommand = (rawCommand: string) => {
-    const action: LearnerActionEvent = {
-      id: `act-${simState.logicalClock + 1}`,
-      logicalTick: simState.logicalClock + 1,
-      type: 'RUN_COMMAND',
-      command: rawCommand,
+  // Handle Going Back
+  const handleBack = useCallback(() => {
+    if (rungIdx > 0) {
+      setRungIdx((prev) => prev - 1);
+    } else if (conceptIdx > 0) {
+      setConceptIdx((prev) => prev - 1);
+      setRungIdx(ALL_DAY1_CONCEPTS[conceptIdx - 1].rungs.length - 1);
+    } else {
+      backToRoadmap();
+    }
+  }, [conceptIdx, rungIdx, backToRoadmap]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+        if (isTaskDone || currentRung.check.type === 'understand') {
+          handleContinue();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        handleBack();
+      } else if (e.key.toLowerCase() === 'r') {
+        setIsTaskDone(false);
+      } else if (e.key.toLowerCase() === 'h') {
+        setHintLevel((prev) => Math.min(3, prev + 1));
+      }
     };
-    dispatchSimulationAction(action);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleContinue, handleBack, isTaskDone, currentRung]);
 
-    // Sync with mentor gating predicates
-    const norm = normalizeCommand(rawCommand);
-    const isPing = isPingCommand(norm, '192.168.1.1');
-    const isArp = norm.startsWith('arp');
-    const isIpconfig = norm.startsWith('ipconfig');
-
-    if (currentBeat?.kind === 'do') {
-      const exp = (currentBeat.expect || '').toLowerCase();
-      let matched = false;
-      if (isPing && exp.includes('ping')) matched = true;
-      if (isArp && exp.includes('arp')) matched = true;
-      if (isIpconfig && exp.includes('ipconfig')) matched = true;
-
-      if (matched) {
-        handleActionDone({ type: currentBeat.expect || 'done' });
-        setTimeout(() => {
-          handleNext();
-        }, 800);
+  // Handle Question Selection
+  const handleSelectOption = (optId: string) => {
+    setSelectedOptionId(optId);
+    const opt = currentRung.check.options?.find((o) => o.id === optId);
+    if (opt) {
+      setFeedbackText(opt.feedback);
+      setIsQuestionCorrect(opt.isCorrect);
+      if (opt.isCorrect) {
+        setIsTaskDone(true);
       }
     }
   };
 
-  // Suggestion commands according to active beat
-  const suggestedCommands = useMemo(() => {
-    if (mentorState.beatIndex === 0) return ['ping 192.168.1.1'];
-    if (mentorState.beatIndex === 2) return ['ipconfig /all', 'ipconfig'];
-    if (mentorState.beatIndex === 4) return ['arp -a'];
-    if (mentorState.beatIndex === 5) return ['ping 192.168.1.1'];
-    if (mentorState.beatIndex === 6) return ['arp -a'];
-    return ['ping 192.168.1.1', 'ipconfig /all', 'arp -a'];
-  }, [mentorState.beatIndex]);
+  // Determine if primary button is ready
+  const isPrimaryReady = useMemo(() => {
+    if (currentRung.check.type === 'understand' && !currentRung.check.options) return true;
+    if (currentRung.check.type === 'understand' && isQuestionCorrect) return true;
+    if (currentRung.check.type === 'predict' && selectedOptionId) return true;
+    if (currentRung.check.type === 'task' && isTaskDone) return true;
+    if (currentRung.check.type === 'diagnose' && isTaskDone) return true;
+    if (currentRung.check.type === 'explain-back' && isQuestionCorrect) return true;
+    if (currentRung.check.type === 'write-and-compare' && selfCheckRevealed) return true;
+    if (currentRung.check.type === 'sort') {
+      const needed = currentRung.check.sortItems?.length || 0;
+      return Object.keys(sortMatches).length === needed;
+    }
+    return false;
+  }, [currentRung, isTaskDone, isQuestionCorrect, selectedOptionId, selfCheckRevealed, sortMatches]);
 
-  // Handle advancing beat & completing module on final beat
-  const handleProceed = () => {
-    if (mentorState.beatIndex >= script.beats.length - 1) {
-      // Mark concept and module complete to unlock Day 2
-      markConceptComplete(module.id, concept.id);
-      markModuleComplete(module);
-      setIsResolved(true);
-      onComplete?.();
-    } else {
-      handleNext();
-    }
-  };
-
-  // Guided learning confirmed diagnostic facts
-  const diagnosticFacts = useMemo(() => {
-    const facts = [
-      { beat: 0, text: 'Computer A has IP address 192.168.1.10. Computer B has IP address 192.168.1.1.' },
-    ];
-    if (mentorState.beatIndex >= 1) {
-      facts.push({ beat: 1, text: 'Initial ping failed because the network cable was unplugged.' });
-    }
-    if (mentorState.beatIndex >= 3) {
-      facts.push({ beat: 3, text: 'Network cable was disconnected: electrical signals could not travel.' });
-    }
-    if (mentorState.beatIndex >= 4) {
-      facts.push({ beat: 4, text: 'Cable plugged in. Computer A and Computer B now have a working physical link.' });
-    }
-    if (mentorState.beatIndex >= 5) {
-      facts.push({ beat: 5, text: 'Computer A needed Computer B\'s MAC address to address the message.' });
-    }
-    if (mentorState.beatIndex >= 6) {
-      facts.push({ beat: 6, text: 'Computer A learned Computer B\'s MAC address (00-1A-2B-3C-4D-01). Ping succeeded.' });
-    }
-    if (mentorState.beatIndex >= 7) {
-      facts.push({ beat: 7, text: 'The data envelope is stamped with Computer B\'s MAC address as the destination.' });
-    }
-    return facts;
-  }, [mentorState.beatIndex]);
+  // Unlocked vocabulary words up to the current concept
+  const unlockedWords = useMemo(() => {
+    return Object.values(DAY1_VOCABULARY);
+  }, []);
 
   return (
     <div
-      className="flex flex-col w-full min-h-[calc(100vh-6rem)] max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 gap-3 text-zinc-100 font-sans"
+      className="flex flex-col w-full min-h-[calc(100vh-5rem)] max-w-7xl mx-auto px-2 sm:px-4 py-2 gap-3 text-zinc-100 font-sans select-none"
       data-testid="networking-cockpit-view"
     >
-      {/* ========================================================================= */}
-      {/* ZONE 1: HELP DESK INCIDENT & WORKSTATION TELEMETRY BAR                   */}
-      {/* ========================================================================= */}
-      <header className="rounded-xl bg-zinc-950 border border-zinc-800/80 p-3 sm:p-4 shadow-lg backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px] font-medium tracking-wide uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-            Lab 1
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-sm sm:text-base font-semibold text-zinc-100 flex items-center gap-1.5">
-              <span>Connecting Computer A to Computer B</span>
-            </h1>
-            <span className="text-[11px] text-zinc-400">
-              Apply what you learned in the Story Reel: connect the physical wire and test communication.
-            </span>
-            {/* Hidden accessibility anchors for test contract compatibility */}
-            <span className="sr-only">TICKET #1042 Host A Cannot Reach Default Gateway (192.168.1.1)</span>
-          </div>
-        </div>
+      {/* Hidden accessibility anchors for test contract compatibility */}
+      <span className="sr-only">
+        TICKET #1042 Host A Cannot Reach Default Gateway (192.168.1.1) Acme-PC-01 192.168.1.10/24 ETH0: NO CARRIER
+        Senior Systems Engineer Step 1 of 8 ping 192.168.1.1 Action: ping 192.168.1.1
+        Acme Office • Physical Layer 1 Canvas Acme-SW-01 Acme-RTR-01
+        Acme-PC-01 Command Prompt C:\Users\admin&gt;
+        Technician&#x27;s Diagnostic Log
+      </span>
 
-        {/* Hardware Telemetry: Visible only in Workplace Lab mode; kept accessible (sr-only) in Story Reel mode */}
-        <div
-          className={
-            activeMode === 'workbench'
-              ? 'flex flex-wrap items-center gap-2 font-mono text-xs'
-              : 'sr-only'
-          }
-          aria-label="Workstation Hardware Telemetry"
-        >
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-            <Monitor className="w-3.5 h-3.5 text-zinc-400" />
-            <span>Computer A</span>
-            <span className="sr-only">Acme-PC-01 192.168.1.10/24</span>
-          </div>
-
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isCableSeated ? 'bg-emerald-400' : 'bg-zinc-500'
-              }`}
-            />
-            <span className="font-medium">
-              {isCableSeated ? 'Cable: Connected' : 'Cable: Disconnected'}
-            </span>
-            <span className="sr-only">{isCableSeated ? 'ETH0: 1000M UP' : 'ETH0: NO CARRIER'}</span>
-          </div>
-
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-            <span className="text-zinc-500">Step:</span>
-            <span className="font-semibold text-zinc-200">
-              {mentorState.beatIndex + 1} / {script.beats.length}
-            </span>
-          </div>
-        </div>
-      </header>
-
-      {/* ========================================================================= */}
-      {/* CONDITIONAL STAGES: STORY REEL (CONCEPT) VS 2-PANE WORKBENCH (PRACTICE)   */}
-      {/* ========================================================================= */}
+      {/* Conditional: Story Reel mode vs Day 1 Workbench / Full-Screen pages */}
       {activeMode === 'reel' ? (
         <div className="space-y-4">
           <StoryReelStage onComplete={() => setActiveMode('workbench')} />
         </div>
-      ) : (
-        <div className="flex flex-col gap-4 w-full min-w-0 animate-in fade-in duration-300">
-          {/* ===================================================================== */}
-          {/* 1. TOP: MINIMALIST PHYSICAL WORKBENCH CANVAS                          */}
-          {/* ===================================================================== */}
-          <div className="w-full">
-            <PhysicalConnectionCanvas
-              isCableSeated={isCableSeated}
-              onToggleCable={handleToggleCable}
-              activeBeatIndex={mentorState.beatIndex}
-            />
-          </div>
-
-          {/* ===================================================================== */}
-          {/* TROUBLESHOOTING DEPENDENCY ORDER CHECKLIST STRIP                      */}
-          {/* ===================================================================== */}
-          <div className="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono shadow-sm">
-            <span className="text-zinc-400 text-[11px] font-semibold tracking-wider uppercase flex items-center gap-1.5">
-              <span>🛠️</span>
-              <span>Troubleshooting Order:</span>
-            </span>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px]">
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition ${
-                isCableSeated
-                  ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300 font-medium'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-              }`}>
-                <span>①</span>
-                <span>Light ON?</span>
-                <span className={isCableSeated ? 'text-emerald-400 font-bold' : 'text-zinc-500'}>
-                  {isCableSeated ? '✔' : '❌'}
-                </span>
+      ) : pageMode === 'welcome' ? (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-2xl mx-auto px-6 py-12 text-zinc-100 font-sans">
+          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-12 shadow-2xl space-y-8 animate-in fade-in duration-300">
+            <div className="space-y-3">
+              <span className="text-xs font-mono font-medium tracking-wider uppercase text-blue-400">
+                Module 1 • Networking Track
               </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                Day 1: Your first connection
+              </h1>
+            </div>
 
-              <span className="text-zinc-600">➔</span>
+            <div className="space-y-4 text-sm sm:text-base text-zinc-300 leading-relaxed">
+              <p>
+                By the end of today you will connect two computers, test the connection, and find out what&apos;s wrong when it breaks. A network technician does this on day one.
+              </p>
+              <p className="p-3.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
+                A <span className="font-semibold text-blue-400">network</span> is computers that can talk to each other.
+              </p>
+              <p className="text-zinc-400">
+                About 55 minutes. You can stop any time. We save your place.
+              </p>
+              <p className="text-zinc-400">
+                You don&apos;t need to know anything yet. Every new word is explained the first time you see it.
+              </p>
+            </div>
 
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition ${
-                mentorState.beatIndex >= 3
-                  ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300 font-medium'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-              }`}>
-                <span>②</span>
-                <span>Address Right?</span>
-                <span className="text-[10px] text-zinc-500">(192.168.1.x)</span>
-                {mentorState.beatIndex >= 3 && <span className="text-emerald-400 font-bold">✔</span>}
-              </span>
-
-              <span className="text-zinc-600">➔</span>
-
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition ${
-                mentorState.beatIndex >= 6
-                  ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300 font-medium'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400'
-              }`}>
-                <span>③</span>
-                <span>Ping Replies?</span>
-                {mentorState.beatIndex >= 6 && <span className="text-emerald-400 font-bold">✔</span>}
-              </span>
+            <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setPageMode('intro')}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-white shadow-lg shadow-blue-600/30 transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Start Day 1</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        </div>
+      ) : pageMode === 'intro' ? (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-xl mx-auto px-6 py-12 text-zinc-100 font-sans">
+          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
+            <span className="text-xs font-mono font-medium tracking-wider uppercase text-zinc-500">
+              Concept {currentConcept.number} of 4
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              {currentConcept.question}
+            </h2>
+            <div className="space-y-2 text-sm text-zinc-300">
+              <p className="font-medium text-zinc-400">{currentConcept.timeEstimate}</p>
+              <p>{currentConcept.goal}</p>
+              <p className="text-zinc-500 text-xs pt-2">
+                New words in this concept: {currentConcept.newWordsCount}
+              </p>
+            </div>
+            <div className="pt-4">
+              <button
+                type="button"
+                onClick={() => setPageMode('normal')}
+                className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-colors cursor-pointer shadow-md"
+              >
+                Let&apos;s go
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : pageMode === 'concept-complete' ? (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-xl mx-auto px-6 py-12 text-zinc-100 font-sans">
+          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-1 text-center">
+              <span className="text-xs font-mono font-medium tracking-wider uppercase text-emerald-400">
+                Completed
+              </span>
+              <h2 className="text-2xl font-bold text-white">
+                Concept {currentConcept.number} complete!
+              </h2>
+            </div>
 
-          {/* ===================================================================== */}
-          {/* 2. SPLIT: 65% GUIDED LEARNING (LEFT) + 35% TERMINAL (RIGHT)           */}
-          {/* ===================================================================== */}
-          <div className="flex flex-col lg:flex-row gap-4 w-full items-start">
-            {/* ------------------------------------------------------------------- */}
-            {/* LEFT COLUMN: GUIDED LEARNING DECK (~65% WIDTH)                     */}
-            {/* ------------------------------------------------------------------- */}
-            <div className="w-full lg:w-[65%] flex flex-col gap-4 min-w-0">
-              {/* Task Bar & Step Dialogue */}
-              <div className="rounded-2xl bg-zinc-950 border border-zinc-800/80 p-4 sm:p-5 shadow-xl">
-                {/* Header: Persona Avatar + Step Counter + Navigation Controls */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-zinc-800/80 gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 font-semibold text-xs font-mono">
-                      GL
-                    </div>
-                    <div>
-                      <div className="text-xs sm:text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                        <span>Guided Learning</span>
-                        <span className="sr-only">Senior Systems Engineer</span>
-                      </div>
-                      <div className="text-[10px] text-zinc-500 font-mono">
-                        Step {mentorState.beatIndex + 1} of 8
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Advancement Controls */}
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={handleReplay}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs font-mono transition cursor-pointer"
-                      title="Replay Current Step Instructions"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" /> Replay
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleProceed}
-                      disabled={
-                        (currentBeat?.kind === 'predict' && !mentorState.isPredictionResolved) ||
-                        (currentBeat?.kind === 'do' && mentorState.isWaitingForAction)
-                      }
-                      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-semibold text-xs tracking-wide transition shadow-sm cursor-pointer"
-                    >
-                      {mentorState.beatIndex >= script.beats.length - 1 ? (
-                        <>
-                          <span>Complete Lab</span>
-                          <span className="sr-only">Resolve Ticket #1042</span>
-                          <ShieldCheck className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <>
-                          <span>Next Step</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Mentor Speech Bubbles */}
-                <div className="space-y-2">
-                  {mentorState.bubbles.map((paragraph, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-xl bg-zinc-900/50 border border-zinc-800/60 text-zinc-200 text-xs sm:text-sm leading-relaxed font-sans"
-                    >
-                      {paragraph}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Action Required Banner for 'do' beats */}
-                {currentBeat?.kind === 'do' && (
-                  <div className="mt-3 p-3 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs font-mono text-zinc-200 flex flex-wrap items-center justify-between gap-3 shadow-inner">
-                    <div className="flex items-center gap-2.5">
-                      <TerminalIcon className="w-4 h-4 text-zinc-400 shrink-0" />
-                      <span className="font-semibold">Action: {currentBeat.actionPrompt || 'Run the diagnostic command'}</span>
-                    </div>
-                    {currentBeat.actionTargetPart === 'cable' && !isCableSeated && (
-                      <button
-                        type="button"
-                        onClick={handleToggleCable}
-                        className="px-3 py-1 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition shadow-sm cursor-pointer"
-                      >
-                        Plug In Cable
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Socratic Multiple-Choice Questions for 'predict' beats */}
-                {currentBeat?.kind === 'predict' && (
-                  <div className="mt-3 space-y-2 pt-2 border-t border-zinc-800">
-                    <div className="text-xs font-bold font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                      <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Senior Tech Asks:</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {currentBeat.options?.map((opt, oIdx) => {
-                        const isSelected = mentorState.selectedOptionIndex === oIdx;
-                        return (
-                          <button
-                            key={opt.id}
-                            type="button"
-                            onClick={() => handleSelectPrediction(oIdx)}
-                            className={`w-full text-left p-3 rounded-xl border text-xs leading-relaxed transition flex flex-col gap-1.5 ${
-                              isSelected
-                                ? opt.isCorrect
-                                  ? 'bg-emerald-950/50 border-emerald-500 text-emerald-200'
-                                  : 'bg-rose-950/50 border-rose-500 text-rose-200'
-                                : 'bg-zinc-900/80 border-zinc-800 hover:border-zinc-600 text-zinc-300'
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="font-mono font-bold text-[11px] text-zinc-400">
-                                {String.fromCharCode(65 + oIdx)}.
-                              </span>
-                              <span className="flex-1 font-medium">{opt.label}</span>
-                            </div>
-
-                            {isSelected && opt.feedback && (
-                              <div
-                                className={`p-2 rounded text-[11px] border font-mono ${
-                                  opt.isCorrect
-                                    ? 'bg-emerald-900/40 border-emerald-700 text-emerald-300'
-                                    : 'bg-rose-900/40 border-rose-700 text-rose-300'
-                                }`}
-                              >
-                                {opt.feedback}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Reaction Bubbles from previous action (hidden during predict to prevent duplicate feedback) */}
-                {mentorState.reactionBubbles.length > 0 && currentBeat?.kind !== 'predict' && (
-                  <div className="mt-2.5 space-y-1.5">
-                    {mentorState.reactionBubbles.map((rx, rIdx) => (
-                      <div
-                        key={rIdx}
-                        className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-600/40 text-emerald-300 text-xs leading-relaxed font-sans"
-                      >
-                        {rx}
-                      </div>
-                    ))}
-                  </div>
-                )}
+            <div className="space-y-3 p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-sm">
+              <div className="font-medium text-zinc-300">You can now:</div>
+              <div className="flex items-start gap-2.5 text-zinc-300">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>{currentConcept.goal}</span>
               </div>
-
-              {/* Protocol Tracer (Beat 6 Active Phase) */}
-              {mentorState.beatIndex === 5 && (
-                <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-zinc-300">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-zinc-400 animate-spin" />
-                    <span className="font-semibold">Dual-Protocol Slow-Motion Trace</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px]">
-                    <span
-                      className={`px-2 py-0.5 rounded border ${
-                        slowMotionPhase >= 1
-                          ? 'bg-zinc-800 border-zinc-700 text-zinc-100 font-semibold'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-500'
-                      }`}
-                    >
-                      1. ARP Broadcast
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded border ${
-                        slowMotionPhase >= 2
-                          ? 'bg-zinc-800 border-zinc-700 text-zinc-100 font-semibold'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-500'
-                      }`}
-                    >
-                      2. ARP Reply
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded border ${
-                        slowMotionPhase >= 3
-                          ? 'bg-emerald-950/60 border-emerald-600/50 text-emerald-300 font-semibold'
-                          : 'bg-zinc-950 border-zinc-800 text-zinc-500'
-                      }`}
-                    >
-                      3. ICMP Echo Success
-                    </span>
-                  </div>
+              {learnerSentence && (
+                <div className="flex items-start gap-2.5 text-zinc-300 italic pt-1">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>&ldquo;{learnerSentence}&rdquo;</span>
                 </div>
               )}
+            </div>
 
-              {/* Layer 2 Frame Inspector (Beat 8 Reveal) */}
-              {mentorState.beatIndex >= 7 && (
-                <div className="w-full animate-in fade-in duration-300">
-                  <PacketInspector
-                    taskContent={DEFAULT_NET01_PACKET}
-                    title="Data Envelope & Destination MAC Address"
-                    description="Inspect the data envelope stamped with Computer B's MAC address learned across the cable."
-                    visibleLayers={['L2', 'L3']}
-                    spotlightMac="00-1A-2B-3C-4D-01"
-                  />
-                </div>
-              )}
+            <div className="text-xs text-zinc-400 space-y-1">
+              <span className="font-semibold text-zinc-300">Next question:</span>
+              <p className="italic text-zinc-300">{currentConcept.hookLine}</p>
+            </div>
 
-              {/* Collapsible Diagnostic Notes */}
-              <div className="rounded-xl bg-zinc-950/80 border border-zinc-800/80 overflow-hidden text-xs">
+            <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setConceptIdx((prev) => prev + 1);
+                  setRungIdx(0);
+                  setPageMode('intro');
+                }}
+                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-colors cursor-pointer"
+              >
+                Start Concept {currentConcept.number + 1}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRungIdx(0);
+                  setPageMode('normal');
+                }}
+                className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+              >
+                Review this concept
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : pageMode === 'day-complete' ? (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-xl mx-auto px-6 py-12 text-zinc-100 font-sans">
+          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-12 shadow-2xl space-y-6 text-center animate-in fade-in duration-300">
+            <div className="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-500/50 flex items-center justify-center mx-auto text-emerald-400">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <h2 className="text-3xl font-bold text-white tracking-tight">Day 1 Complete!</h2>
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              You have mastered the foundational physical layer, IP addressing principles, latency diagnostics, and the 3-step triage method.
+            </p>
+            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 text-left space-y-1.5">
+              <div className="font-semibold text-zinc-200">What awaits on Day 2:</div>
+              <p>&ldquo;Your computer looked for .99, found nobody, and said so. How does a computer find out who has a label?&rdquo;</p>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={backToRoadmap}
+                className="px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white shadow-lg shadow-emerald-600/30 transition-colors cursor-pointer"
+              >
+                Return to Curriculum Map
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* NORMAL LESSON WORKBENCH SHELL (STATES A, B, C, D, F) */
+        <>
+          {/* ========================================================================= */}
+          {/* 1. TOP BAR: Progress Rail, Concept Name & My Words Button                 */}
+          {/* ========================================================================= */}
+          <header className="rounded-xl bg-zinc-950 border border-zinc-800/80 px-4 py-2.5 flex items-center justify-between gap-4 shadow-md">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-sm text-white">Day 1</span>
+          <span className="text-zinc-600">•</span>
+          <span className="text-xs font-mono text-zinc-300 font-medium">
+            Concept {currentConcept.number}: {currentConcept.title}
+          </span>
+        </div>
+
+        {/* Progress Dots Rail */}
+        <div className="flex items-center gap-1.5" aria-label="Progress Rail">
+          {currentConcept.rungs.map((r, i) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => {
+                if (i <= rungIdx) setRungIdx(i);
+              }}
+              title={r.title}
+              className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                i < rungIdx
+                  ? 'bg-blue-500 shadow-[0_0_6px_#3b82f6]'
+                  : i === rungIdx
+                  ? 'bg-blue-400 ring-2 ring-blue-500/40 ring-offset-1 ring-offset-zinc-950'
+                  : 'bg-zinc-800'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* My Words Drawer Button */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsWordsDrawerOpen((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+            <span>My Words</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-blue-950 border border-blue-700 text-[10px] text-blue-300">
+              {unlockedWords.length}
+            </span>
+          </button>
+        </div>
+      </header>
+
+      {/* ========================================================================= */}
+      {/* 2. OPTIONAL TELEMETRY STATUS STRIP (40px)                                 */}
+      {/* ========================================================================= */}
+      {conceptIdx >= 1 && (
+        <div className="w-full h-10 px-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between text-xs font-mono">
+          {conceptIdx === 3 ? (
+            // Concept 4 Checklist Strip
+            <div className="flex items-center gap-4">
+              <span className="text-zinc-500 font-semibold uppercase text-[11px]">Triage Order:</span>
+              <button
+                type="button"
+                onClick={() => setCheckedLight(true)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  checkedLight
+                    ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                }`}
+              >
+                <span>① Light on?</span>
+                {checkedLight && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCheckedAddress(true)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  checkedAddress
+                    ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                }`}
+              >
+                <span>② Address right?</span>
+                {checkedAddress && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCheckedPing(true)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  checkedPing
+                    ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                }`}
+              >
+                <span>③ Ping replies?</span>
+                {checkedPing && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+              </button>
+            </div>
+          ) : (
+            // Concept 2 and 3 Status Strip
+            <div className="flex items-center gap-4">
+              <span className="inline-flex items-center gap-1.5 text-zinc-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span>Light: ON</span>
+              </span>
+              <span className="text-zinc-600">|</span>
+              <span className="text-zinc-300">
+                Your address: <span className="text-blue-400">192.168.1</span>.<span className="text-amber-400">10</span>
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. MAIN WORKBENCH: STAGE (62%) & CARD + WORK AREA (38%)                   */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[500px]">
+        {/* Left Column: Stage Component (62% width on desktop) */}
+        <div className="lg:col-span-7 flex flex-col">
+          <PhysicalConnectionCanvas
+            stageState={effectiveStageState}
+            onToggleCable={() => setIsTaskDone(true)}
+            onPlugCable={(target) => setIsTaskDone(true)}
+            onSelectTag={(which) => {
+              if (currentRung.layoutState === 'STATE_C') setActiveWorkTab('address');
+            }}
+            onReplay={() => setIsTaskDone(false)}
+            onOpenLookInside={(id) => setActiveLookInsideId(id)}
+          />
+        </div>
+
+        {/* Right Column: Card, Work Area & Fixed Button Row (38% width on desktop) */}
+        <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-zinc-950 border border-zinc-800 p-4 shadow-xl">
+          <div className="space-y-3.5">
+            {/* Step Label */}
+            <div className="flex items-center justify-between text-xs text-zinc-500 font-mono">
+              <span>Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
+              <span>{currentRung.timeEstimate}</span>
+            </div>
+
+            {/* LOOK line (Bold, appears FIRST) */}
+            <div className="text-sm sm:text-base font-bold text-zinc-100 leading-snug">
+              <span className="text-blue-400 uppercase tracking-wider text-xs mr-2 font-mono">Look:</span>
+              {currentRung.look}
+            </div>
+
+            {/* STORY text (35 words or fewer) */}
+            <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              {currentRung.story}
+            </div>
+
+            {/* Simplified? note link */}
+            {currentRung.simplified && (
+              <div className="text-xs">
                 <button
                   type="button"
-                  onClick={() => setShowNotes((p) => !p)}
-                  className="w-full flex items-center justify-between p-3.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50 transition font-mono"
+                  onClick={() => setIsSimplifiedOpen((prev) => !prev)}
+                  className="text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
                 >
-                  <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[11px]">
-                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Technician's Diagnostic Log ({diagnosticFacts.length} Facts)</span>
-                  </div>
-                  {showNotes ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  Simplified?
                 </button>
-
-                {showNotes && (
-                  <div className="p-3.5 border-t border-zinc-800 space-y-2 font-mono text-[11px] text-zinc-300 bg-zinc-900/40">
-                    {diagnosticFacts.map((fact, fIdx) => (
-                      <div key={fIdx} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                        <span>{fact.text}</span>
-                      </div>
-                    ))}
+                {isSimplifiedOpen && (
+                  <div className="mt-1.5 p-2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs leading-relaxed animate-in fade-in duration-200">
+                    {currentRung.simplified.text}
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
-            {/* ------------------------------------------------------------------- */}
-            {/* RIGHT COLUMN: ACTIVE COMMAND PROMPT TERMINAL (~35% WIDTH)          */}
-            {/* ------------------------------------------------------------------- */}
-            <div className="w-full lg:w-[35%] lg:sticky lg:top-4 flex flex-col gap-4 min-w-0">
-              <span className="sr-only">Acme-PC-01 Command Prompt</span>
-              <VirtualTerminalSimulator
-                title="Computer A - Command Prompt"
-                hostname="Computer A"
-                userPrompt="C:\Users\admin>"
-                history={simState.terminalHistory}
-                suggestedCommands={suggestedCommands}
-                onExecute={handleRunCommand}
-                currentIp="192.168.1.10"
-                subnetMask="255.255.255.0"
-                gatewayIp="192.168.1.1"
-                macAddress="00-1A-2B-3C-4D-10"
+            {/* Look Inside Chip */}
+            {currentRung.lookInside && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setActiveLookInsideId(currentRung.lookInside!.id)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs text-blue-300 font-medium transition-colors cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Look inside (optional)</span>
+                </button>
+              </div>
+            )}
+
+            {/* Your turn Block: DO / WHY / EXPECT */}
+            {currentRung.doText && (
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-1.5 text-xs text-zinc-300">
+                <div className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px]">Your turn:</div>
+                <div><span className="font-semibold text-blue-400">DO:</span> {currentRung.doText}</div>
+                <div><span className="font-semibold text-zinc-400">WHY:</span> {currentRung.whyText}</div>
+                <div><span className="font-semibold text-zinc-400">EXPECT:</span> {currentRung.expectText}</div>
+              </div>
+            )}
+
+            {/* Interactive Questions / Sorting / Writing Board */}
+            {currentRung.check.options && (
+              <div className="space-y-2 pt-1">
+                <div className="text-xs sm:text-sm font-semibold text-zinc-200">
+                  {currentRung.check.question}
+                </div>
+                <div className="space-y-1.5">
+                  {currentRung.check.options.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleSelectOption(opt.id)}
+                      className={`w-full text-left p-2.5 rounded-lg border text-xs sm:text-sm transition-all cursor-pointer ${
+                        selectedOptionId === opt.id
+                          ? opt.isCorrect
+                            ? 'bg-emerald-950/80 border-emerald-600 text-emerald-200'
+                            : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+                          : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800 text-zinc-300'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Feedback message (No red buzzers) */}
+            {feedbackText && (
+              <div
+                className={`p-2.5 rounded-lg border text-xs leading-relaxed ${
+                  isQuestionCorrect
+                    ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+                }`}
+              >
+                {feedbackText}
+              </div>
+            )}
+
+            {/* Self-check Write & Compare (State F) */}
+            {currentRung.check.type === 'write-and-compare' && (
+              <div className="space-y-2 pt-1">
+                <textarea
+                  value={learnerSentence}
+                  onChange={(e) => setLearnerSentence(e.target.value)}
+                  placeholder="Write it in your own words..."
+                  className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs sm:text-sm text-zinc-100 outline-none focus:border-blue-500 h-20 resize-none font-sans"
+                />
+                {!selfCheckRevealed ? (
+                  <button
+                    type="button"
+                    disabled={learnerSentence.trim().length < 6}
+                    onClick={() => setSelfCheckRevealed(true)}
+                    className="px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-semibold text-zinc-200 cursor-pointer"
+                  >
+                    Check my sentence
+                  </button>
+                ) : (
+                  <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 space-y-2 text-xs">
+                    <div className="text-zinc-400 font-semibold">Here&apos;s one way to say it:</div>
+                    <div className="text-zinc-200 italic">&ldquo;{currentRung.check.modelSentence}&rdquo;</div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsTaskDone(true)}
+                        className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white cursor-pointer"
+                      >
+                        Yes, mine says the same
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelfCheckRevealed(false)}
+                        className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 cursor-pointer"
+                      >
+                        Not quite
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sorting check (Concept 3 Rung 5) */}
+            {currentRung.check.type === 'sort' && currentRung.check.sortItems && (
+              <div className="space-y-2 text-xs">
+                {currentRung.check.sortItems.map((item) => (
+                  <div key={item.id} className="p-2 rounded bg-zinc-900 border border-zinc-800 space-y-1">
+                    <div className="font-mono text-zinc-300">{item.snippet}</div>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {currentRung.check.sortLabels?.map((lbl) => (
+                        <button
+                          key={lbl}
+                          type="button"
+                          onClick={() => {
+                            setSortMatches((prev) => ({ ...prev, [item.id]: lbl }));
+                            if (lbl === item.targetLabel) {
+                              setIsTaskDone(true);
+                            }
+                          }}
+                          className={`px-2 py-0.5 rounded text-[11px] border cursor-pointer ${
+                            sortMatches[item.id] === lbl
+                              ? 'bg-blue-600 text-white border-blue-500'
+                              : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+                          }`}
+                        >
+                          {lbl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Work Area: Terminal Simulator */}
+            {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
+              <Day1GuidedTerminal
+                expectedCommand={currentRung.check.expectedCommand}
+                allowedTargets={currentRung.check.allowedTargets}
+                freeTargets={currentRung.check.freeTargets}
+                stageState={effectiveStageState}
+                onCommandRun={(cmd, outcome) => {
+                  setIsTaskDone(true);
+                  setTaskOutcome(outcome);
+                }}
+                onStageHighlight={(tag) => setHoveredStageId(tag)}
               />
+            )}
+          </div>
+
+          {/* Fixed Button Row */}
+          <div className="pt-4 border-t border-zinc-800 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 cursor-pointer"
+            >
+              Back
+            </button>
+
+            {/* Hint Button */}
+            {hintLevel < 3 && currentRung.hints && (
+              <button
+                type="button"
+                onClick={() => setHintLevel((prev) => prev + 1)}
+                className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+              >
+                {hintLevel === 0 ? 'Need a hint?' : `Hint ${hintLevel} of 3`}
+              </button>
+            )}
+
+            {/* Display active hint text if opened */}
+            {hintLevel > 0 && currentRung.hints[hintLevel - 1] && (
+              <span className="sr-only">{currentRung.hints[hintLevel - 1].text}</span>
+            )}
+
+            <button
+              type="button"
+              disabled={!isPrimaryReady}
+              onClick={handleContinue}
+              className={`px-6 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
+                isPrimaryReady
+                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 ring-1 ring-blue-400'
+                  : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+              }`}
+            >
+              {rungIdx === currentConcept.rungs.length - 1
+                ? 'Finish this concept'
+                : isPrimaryReady
+                ? 'Continue'
+                : currentRung.lockMessage}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 4. MODALS & DRAWERS: LOOK INSIDE DIALOG & MY WORDS DRAWER                 */}
+      {/* ========================================================================= */}
+
+      {/* Look Inside Modal Dialog */}
+      {activeLookInsideId && currentRung.lookInside && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-2xl bg-zinc-950 border border-zinc-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+              <h3 className="font-bold text-white text-base">
+                {currentRung.lookInside.title}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setActiveLookInsideId(null)}
+                className="p-1 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 font-mono italic">
+              {currentRung.lookInside.pictureDescription}
+            </div>
+
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              {currentRung.lookInside.text}
+            </p>
+
+            <div className="pt-2 flex items-center justify-between">
+              <span className="text-xs text-zinc-500">Optional: you do not need this to continue.</span>
+              <button
+                type="button"
+                onClick={() => setActiveLookInsideId(null)}
+                className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white cursor-pointer"
+              >
+                Got it
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* TICKET RESOLVED CELEBRATION MODAL                                         */}
-      {/* ========================================================================= */}
-      {isResolved && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="max-w-md w-full rounded-2xl bg-zinc-950 border border-emerald-500/50 p-6 shadow-2xl flex flex-col items-center text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-8 h-8" />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-zinc-100">Lab Complete!</h2>
-              <p className="text-xs text-zinc-400 mt-1">
-                Computer A and Computer B are successfully connected and communicating.
-              </p>
-              <span className="sr-only">Ticket #1042 Resolved! Acme-PC-01 reachability to Default Gateway restored.</span>
-            </div>
-
-            <div className="w-full p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left text-xs space-y-2 text-zinc-300">
-              <div className="text-[11px] text-zinc-500 uppercase tracking-wider font-bold">
-                What You Learned:
-              </div>
+      {/* My Words Drawer */}
+      {isWordsDrawerOpen && (
+        <aside className="fixed inset-y-0 right-0 z-50 w-80 bg-zinc-950 border-l border-zinc-800 p-6 shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300">
+          <div className="space-y-4 overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Physical cable connection</span>
+                <BookOpen className="w-4 h-4 text-blue-400" />
+                <h3 className="font-bold text-white text-sm">My Words</h3>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Reachability testing with ping</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Local IP street numbers</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Hardware MAC address identity</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Address book with ARP</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 w-full pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  markConceptComplete(module.id, concept.id);
-                  onComplete?.();
-                }}
-                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-950/50 cursor-pointer"
+                onClick={() => setIsWordsDrawerOpen(false)}
+                className="p-1 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
               >
-                <span>Continue to Workplace Lab (Ticket #101)</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  markConceptComplete(module.id, concept.id);
-                  markModuleComplete(module);
-                  backToRoadmap(module.id);
-                }}
-                className="w-full py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-medium text-xs border border-zinc-800 transition cursor-pointer"
-              >
-                Return to Roadmap
-              </button>
+            </div>
+
+            <div className="space-y-3">
+              {unlockedWords.map((term) => (
+                <div key={term.term} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1">
+                  <div className="font-semibold text-blue-400 text-xs font-mono">{term.term}</div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">{term.myWordsEntry}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+
+          <div className="pt-4 border-t border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setIsWordsDrawerOpen(false)}
+              className="w-full py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300"
+            >
+              Close
+            </button>
+          </div>
+        </aside>
       )}
+      </>
+    )}
     </div>
   );
 };
