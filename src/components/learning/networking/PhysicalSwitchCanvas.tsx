@@ -272,7 +272,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               />
             </g>
           ) : (
-            <g id="cable-b-unplugged" onClick={() => handleCableClick('b')} className="cursor-pointer">
+            <g id="cable-b-unplugged" onClick={() => handleCableClick('b')} className="cursor-pointer group">
               <path
                 d="M 500 290 C 500 340, 460 380, 440 410"
                 fill="none"
@@ -280,8 +280,15 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 strokeWidth="5"
                 strokeDasharray="6 4"
                 strokeLinecap="round"
+                className="group-hover:stroke-blue-400 transition-colors"
               />
-              <circle cx="440" cy="410" r="5" fill="#EF4444" />
+              <circle cx="440" cy="410" r="6" fill="#EF4444" />
+              <g transform="translate(440, 390)">
+                <rect x="-65" y="-10" width="130" height="20" rx="10" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
+                <text x="0" y="3.5" textAnchor="middle" fill="#38BDF8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                  ⚡ Click to Plug Port 2
+                </text>
+              </g>
             </g>
           )}
 
@@ -310,7 +317,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               />
             </g>
           ) : (
-            <g id="cable-c-unplugged" onClick={() => handleCableClick('c')} className="cursor-pointer">
+            <g id="cable-c-unplugged" onClick={() => handleCableClick('c')} className="cursor-pointer group">
               <path
                 d="M 815 310 C 815 370, 750 450, 690 460"
                 fill="none"
@@ -318,8 +325,15 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 strokeWidth="5"
                 strokeDasharray="6 4"
                 strokeLinecap="round"
+                className="group-hover:stroke-blue-400 transition-colors"
               />
-              <circle cx="690" cy="460" r="5" fill="#EF4444" />
+              <circle cx="690" cy="460" r="6" fill="#EF4444" />
+              <g transform="translate(690, 435)">
+                <rect x="-65" y="-10" width="130" height="20" rx="10" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
+                <text x="0" y="3.5" textAnchor="middle" fill="#38BDF8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                  ⚡ Click to Plug Port 3
+                </text>
+              </g>
             </g>
           )}
 
@@ -376,45 +390,58 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
 
             {/* 4 Ports & LEDs */}
             {[
-              { port: 1, x: 430, led: portLeds.p1 },
-              { port: 2, x: 475, led: portLeds.p2 },
-              { port: 3, x: 525, led: portLeds.p3 },
-              { port: 4, x: 570, led: portLeds.p4 },
-            ].map((p) => (
-              <g key={`port-${p.port}`}>
-                {/* Port LED (8px) */}
-                <circle
-                  cx={p.x}
-                  cy="400"
-                  r="4"
-                  fill={p.led === 'green' ? '#22C55E' : p.led === 'blinking' ? '#38BDF8' : '#334155'}
-                  filter={p.led === 'green' ? 'url(#softGlow)' : undefined}
-                />
-                {/* RJ45 Socket */}
-                <rect
-                  x={p.x - 10}
-                  y="408"
-                  width="20"
-                  height="16"
-                  rx="3"
-                  fill="#0F172A"
-                  stroke="#475569"
-                  strokeWidth="1.5"
-                />
-                {/* Port Number [1] [2] [3] [4] */}
-                <text
-                  x={p.x}
-                  y="432"
-                  textAnchor="middle"
-                  fill="#64748B"
-                  fontSize="8"
-                  fontFamily="ui-monospace, monospace"
-                  fontWeight="bold"
+              { port: 1, x: 430, led: portLeds.p1, cableKey: 'a' as const },
+              { port: 2, x: 475, led: portLeds.p2, cableKey: 'b' as const },
+              { port: 3, x: 525, led: portLeds.p3, cableKey: 'c' as const },
+              { port: 4, x: 570, led: portLeds.p4, cableKey: null },
+            ].map((p) => {
+              const isUnplugged = p.cableKey ? !cables[p.cableKey] : false;
+              return (
+                <g
+                  key={`port-${p.port}`}
+                  onClick={(e) => {
+                    if (isUnplugged && p.cableKey) {
+                      e.stopPropagation();
+                      handleCableClick(p.cableKey);
+                    }
+                  }}
+                  className={isUnplugged ? 'cursor-pointer group/port' : undefined}
                 >
-                  [{p.port}]
-                </text>
-              </g>
-            ))}
+                  {/* Port LED (8px) */}
+                  <circle
+                    cx={p.x}
+                    cy="400"
+                    r="4"
+                    fill={p.led === 'green' ? '#22C55E' : p.led === 'blinking' ? '#38BDF8' : '#334155'}
+                    filter={p.led === 'green' ? 'url(#softGlow)' : undefined}
+                  />
+                  {/* RJ45 Socket */}
+                  <rect
+                    x={p.x - 10}
+                    y="408"
+                    width="20"
+                    height="16"
+                    rx="3"
+                    fill="#0F172A"
+                    stroke={isUnplugged ? '#38BDF8' : '#475569'}
+                    strokeWidth={isUnplugged ? 2 : 1.5}
+                    className={isUnplugged ? 'group-hover/port:stroke-sky-300 transition-colors' : undefined}
+                  />
+                  {/* Port Number [1] [2] [3] [4] */}
+                  <text
+                    x={p.x}
+                    y="432"
+                    textAnchor="middle"
+                    fill={isUnplugged ? '#38BDF8' : '#64748B'}
+                    fontSize="8"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    [{p.port}]
+                  </text>
+                </g>
+              );
+            })}
           </g>
 
           {/* ========================================================================= */}

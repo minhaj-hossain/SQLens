@@ -142,19 +142,33 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
       if (currentRung.id === 'c3-r1' || currentRung.id === 'c3-r2') {
         base.message = 'arp-broadcast';
       }
-      if (currentRung.id === 'c4-r3') {
-        base.cables.c = true;
-        base.portLeds.p3 = 'green';
-      }
     }
 
     return base;
   }, [currentRung, manualCables, customAddressC, isTaskDone]);
 
+  // Restore from URL hash on initial mount (e.g. #c2/r3 or legacy #day2/c2/r3)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const match = window.location.hash.match(/(?:day2\/)?c(\d+)\/r(\d+)/);
+    if (match) {
+      const c = parseInt(match[1], 10) - 1;
+      const r = parseInt(match[2], 10) - 1;
+      if (c >= 0 && c < ALL_DAY2_CONCEPTS.length) {
+        setConceptIdx(c);
+        const rungs = ALL_DAY2_CONCEPTS[c].rungs;
+        if (r >= 0 && r < rungs.length) {
+          setRungIdx(r);
+        }
+        setPageMode('normal');
+      }
+    }
+  }, []);
+
   // URL Hash navigation
   useEffect(() => {
     if (typeof window !== 'undefined' && pageMode === 'normal') {
-      window.location.hash = `day2/c${conceptIdx + 1}/r${rungIdx + 1}`;
+      window.location.hash = `c${conceptIdx + 1}/r${rungIdx + 1}`;
     }
   }, [conceptIdx, rungIdx, pageMode]);
 
@@ -173,6 +187,14 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     setCheckedLight(false);
     setCheckedAddress(false);
     setCheckedPing(false);
+    setManualCables({ ...currentRung.entryStageState.cables });
+    if (typeof currentRung.entryStageState.tags.c === 'object' && 'street' in currentRung.entryStageState.tags.c) {
+      const street = currentRung.entryStageState.tags.c.street;
+      const house = currentRung.entryStageState.tags.c.house;
+      setCustomAddressC(`${street}.${house}`);
+    } else {
+      setCustomAddressC('192.168.1.30');
+    }
 
     if (currentRung.layoutState === 'STATE_C') {
       setActiveWorkTab('address');
@@ -192,7 +214,6 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
         setPageMode('day-complete');
         markConceptComplete(module.id, concept.id);
         markModuleComplete(module);
-        onComplete?.();
       }
     }
   }, [
@@ -203,7 +224,6 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     markModuleComplete,
     module,
     concept,
-    onComplete,
   ]);
 
   // Handle Back
@@ -324,10 +344,10 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPageMode('intro')}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white shadow-xl shadow-black/80 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <span>Start Day 2</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-zinc-400" />
               </button>
             </div>
           </div>
@@ -352,7 +372,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPageMode('normal')}
-                className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all cursor-pointer shadow-md"
+                className="px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white transition-all cursor-pointer shadow-lg active:scale-[0.98]"
               >
                 Let&apos;s go
               </button>
@@ -392,7 +412,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   setRungIdx(0);
                   setPageMode('intro');
                 }}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all cursor-pointer shadow-md"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white transition-all cursor-pointer shadow-lg active:scale-[0.98]"
               >
                 Start Concept {currentConcept.number + 1}
               </button>
@@ -461,9 +481,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   title={r.title}
                   className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                     i < rungIdx
-                      ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
+                      ? 'bg-zinc-400 shadow-[0_0_6px_rgba(255,255,255,0.3)]'
                       : i === rungIdx
-                      ? 'bg-blue-400 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-[#121214]'
+                      ? 'bg-white ring-2 ring-white/40 ring-offset-2 ring-offset-[#121214]'
                       : 'bg-zinc-800/80 hover:bg-zinc-700'
                   }`}
                 />
@@ -475,11 +495,11 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsWordsDrawerOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
               >
-                <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                <BookOpen className="w-3.5 h-3.5 text-zinc-300" />
                 <span>My Words</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-blue-950/80 border border-blue-500/40 text-[10px] font-mono text-blue-300">
+                <span className="px-1.5 py-0.5 rounded-md bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-300">
                   {unlockedWords.length}
                 </span>
               </button>
@@ -571,8 +591,10 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                 onToggleCable={(which) => {
                   setManualCables((prev) => {
                     const next = { ...prev, [which]: !prev[which] };
-                    if (currentRung.id === 'c4-r3' && which === 'c' && next.c) {
-                      setIsTaskDone(true);
+                    if (currentRung.id === 'c1-r3') {
+                      if (next.a && next.b && next.c) {
+                        setIsTaskDone(true);
+                      }
                     }
                     return next;
                   });
@@ -663,12 +685,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                 {currentRung.doText && (
                   <div className="rounded-xl bg-[#18181b] border border-white/[0.08] p-4 space-y-2.5 shadow-sm">
                     <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
                       <span>Your turn:</span>
                     </div>
                     <div className="space-y-1.5 text-xs sm:text-sm">
                       <div className="flex items-baseline gap-2">
-                        <span className="font-semibold text-blue-400 font-mono text-xs shrink-0">DO:</span>
+                        <span className="font-semibold text-zinc-100 font-mono text-xs shrink-0">DO:</span>
                         <span className="text-zinc-200 leading-relaxed">{currentRung.doText}</span>
                       </div>
                       <div className="flex items-baseline gap-2">
@@ -742,7 +764,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       value={learnerSentence}
                       onChange={(e) => setLearnerSentence(e.target.value)}
                       placeholder="Write it in your own words..."
-                      className="w-full p-3.5 rounded-xl bg-[#18181b] border border-white/[0.08] text-sm text-zinc-100 outline-none focus:border-blue-500/70 h-24 resize-none font-sans placeholder:text-zinc-500"
+                      className="w-full p-3.5 rounded-xl bg-[#18181b] border border-white/[0.08] text-sm text-zinc-100 outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10 h-24 resize-none font-sans placeholder:text-zinc-500"
                     />
                     {!selfCheckRevealed ? (
                       <button
@@ -842,73 +864,82 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   </div>
                 )}
 
-                {/* Work Area: Terminal Simulator / Address Editor */}
+                {/* Work Area: Terminal Simulator & Address Editor */}
                 {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
                   <div className="space-y-3">
-                    {currentRung.id === 'c4-r4' ? (
+                    {currentRung.id === 'c4-r4' && (
                       // Computer C Address Editor for Ticket #202
                       <div className="p-4 rounded-xl bg-[#18181b] border border-white/[0.08] space-y-2.5 text-xs font-mono shadow-sm">
-                        <div className="text-zinc-200 font-semibold">Computer C Network Properties:</div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-200 font-semibold">Step ② Fix Computer C Address:</span>
+                          {customAddressC === '192.168.1.30' && (
+                            <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Street matches 192.168.1
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2.5 pt-1">
                           <span className="text-zinc-500 font-mono">IP:</span>
                           <input
                             type="text"
                             value={customAddressC}
                             onChange={(e) => setCustomAddressC(e.target.value)}
-                            className="px-3 py-1.5 bg-[#121214] border border-white/[0.08] rounded-xl text-zinc-100 font-mono text-xs outline-none focus:border-blue-500/80"
+                            className="px-3 py-1.5 bg-[#121214] border border-white/[0.08] rounded-xl text-zinc-100 font-mono text-xs outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              if (customAddressC === '192.168.1.30') {
-                                setIsTaskDone(true);
+                              if (customAddressC !== '192.168.1.30') {
+                                setCustomAddressC('192.168.1.30');
                               }
                             }}
-                            className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all"
+                            className="px-4 py-1.5 rounded-xl bg-black hover:bg-zinc-900 border border-white/20 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all active:scale-[0.98]"
                           >
-                            Save
+                            Set to 192.168.1.30
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <Day2GuidedTerminal
-                        expectedCommand={currentRung.check.expectedCommand || 'ping 192.168.1.20'}
-                        stageState={effectiveStageState}
-                        currentRungId={currentRung.id}
-                        suggestedChips={
-                          currentRung.id === 'c1-r4'
-                            ? ['ping 192.168.1.20']
-                            : currentRung.id === 'c2-r3'
-                            ? ['ipconfig']
-                            : currentRung.id === 'c3-r2'
-                            ? ['ping 192.168.1.20']
-                            : currentRung.id === 'c3-r4'
-                            ? ['arp -a']
-                            : currentRung.id === 'c3-r5'
-                            ? ['ping 192.168.1.99']
-                            : currentRung.id === 'c4-r2'
-                            ? ['ping 192.168.1.30']
-                            : currentRung.id === 'c4-r3'
-                            ? ['ping 192.168.1.30']
-                            : undefined
-                        }
-                        onCommandRun={(cmd, outcome) => {
-                          if (currentRung.check.type === 'task') {
-                            if (
-                              currentRung.check.expectedCommand &&
-                              cmd.toLowerCase().includes(currentRung.check.expectedCommand.toLowerCase())
-                            ) {
-                              setIsTaskDone(true);
-                            }
-                          }
-                          if (currentRung.check.type === 'diagnose') {
-                            if (outcome === 'reply') {
-                              setIsTaskDone(true);
-                            }
-                          }
-                        }}
-                      />
                     )}
+
+                    <Day2GuidedTerminal
+                      expectedCommand={currentRung.check.expectedCommand || 'ping 192.168.1.20'}
+                      stageState={effectiveStageState}
+                      currentRungId={currentRung.id}
+                      suggestedChips={
+                        currentRung.id === 'c1-r4'
+                          ? ['ping 192.168.1.20']
+                          : currentRung.id === 'c2-r3'
+                          ? ['ipconfig']
+                          : currentRung.id === 'c3-r2'
+                          ? ['ping 192.168.1.20']
+                          : currentRung.id === 'c3-r4'
+                          ? ['arp -a']
+                          : currentRung.id === 'c3-r5'
+                          ? ['ping 192.168.1.99']
+                          : currentRung.id === 'c4-r2'
+                          ? ['ping 192.168.1.30']
+                          : currentRung.id === 'c4-r3'
+                          ? ['ping 192.168.1.30']
+                          : currentRung.id === 'c4-r4'
+                          ? ['ping 192.168.1.30']
+                          : undefined
+                      }
+                      onCommandRun={(cmd, outcome) => {
+                        if (currentRung.check.type === 'task') {
+                          if (
+                            currentRung.check.expectedCommand &&
+                            cmd.toLowerCase().includes(currentRung.check.expectedCommand.toLowerCase())
+                          ) {
+                            setIsTaskDone(true);
+                          }
+                        }
+                        if (currentRung.check.type === 'diagnose') {
+                          if (outcome === 'reply') {
+                            setIsTaskDone(true);
+                          }
+                        }
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -945,8 +976,8 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   onClick={handleContinue}
                   className={`px-7 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
                     isPrimaryReady
-                      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 ring-1 ring-blue-400'
-                      : 'bg-zinc-800/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
+                      ? 'bg-black hover:bg-zinc-900 text-white border border-white/20 hover:border-white/40 shadow-lg shadow-black/60 ring-1 ring-white/10 active:scale-[0.98]'
+                      : 'bg-zinc-900/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
                   }`}
                 >
                   {rungIdx === currentConcept.rungs.length - 1

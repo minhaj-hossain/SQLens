@@ -317,6 +317,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               fill="#0F172A"
               stroke="#64748B"
               strokeWidth="1.5"
+              onClick={!isBothConnected ? handlePlugClick : undefined}
+              className={!isBothConnected ? 'cursor-pointer hover:stroke-sky-400' : undefined}
+              role={!isBothConnected ? 'button' : undefined}
+              aria-label={!isBothConnected ? 'Computer A Network Socket - click to plug' : undefined}
             />
 
             {/* Link LED */}
@@ -395,6 +399,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               fill="#0F172A"
               stroke="#64748B"
               strokeWidth="1.5"
+              onClick={!isBothConnected ? handlePlugClick : undefined}
+              className={!isBothConnected ? 'cursor-pointer hover:stroke-sky-400' : undefined}
+              role={!isBothConnected ? 'button' : undefined}
+              aria-label={!isBothConnected ? 'Computer B Network Socket - click to plug' : undefined}
             />
 
             {/* Link LED */}
@@ -431,23 +439,35 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
 
               {/* Plugged only at Computer A (friend end loose) */}
               {isOneYours && (
-                <g>
+                <g
+                  className="cursor-pointer group"
+                  onClick={handlePlugClick}
+                  role="button"
+                  aria-label="Click loose cable to plug into Computer B"
+                >
                   <path
                     d="M 350 383 C 420 420, 500 480, 580 470"
                     fill="none"
                     stroke="#0284C7"
                     strokeWidth="6"
                     strokeLinecap="round"
+                    className="group-hover:stroke-[#38BDF8] transition-colors"
                   />
                   <rect x="342" y="375" width="16" height="16" rx="2" fill="#38BDF8" />
                   {/* Loose plug on desk */}
                   <g
-                    transform="translate(575, 460) rotate(15)"
-                    className="cursor-pointer hover:scale-110 transition-transform"
-                    onClick={handlePlugClick}
+                    transform="translate(575, 458) rotate(15)"
+                    className="group-hover:scale-110 transition-transform"
                   >
-                    <rect x="0" y="0" width="22" height="14" rx="3" fill="#F59E0B" stroke="#B45309" strokeWidth="1.5" />
-                    <text x="11" y="10" textAnchor="middle" fill="#000" fontSize="8" fontWeight="bold">PLUG</text>
+                    <rect x="0" y="0" width="28" height="18" rx="3" fill="#F59E0B" stroke="#B45309" strokeWidth="1.5" />
+                    <text x="14" y="12" textAnchor="middle" fill="#000" fontSize="9" fontWeight="bold">PLUG</text>
+                  </g>
+                  {/* Floating click prompt badge */}
+                  <g transform="translate(620, 420)">
+                    <rect x="-85" y="-12" width="170" height="24" rx="12" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
+                    <text x="0" y="4" textAnchor="middle" fill="#38BDF8" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                      ⚡ Click to Plug Cable
+                    </text>
                   </g>
                 </g>
               )}
@@ -455,8 +475,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               {/* Completely loose on desk */}
               {isLoose && (
                 <g
-                  className="cursor-pointer hover:opacity-90 transition-opacity"
+                  className="cursor-pointer group hover:opacity-95 transition-opacity"
                   onClick={handlePlugClick}
+                  role="button"
+                  aria-label="Click loose cable to plug both computers"
                 >
                   <path
                     d="M 400 475 C 460 460, 540 485, 600 472"
@@ -464,20 +486,24 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
                     stroke="#0284C7"
                     strokeWidth="6"
                     strokeLinecap="round"
+                    className="group-hover:stroke-[#38BDF8] transition-colors"
                   />
                   <rect x="390" y="468" width="20" height="14" rx="3" fill="#38BDF8" />
                   <rect x="590" y="465" width="20" height="14" rx="3" fill="#38BDF8" />
-                  <text
-                    x="500"
-                    y="450"
-                    textAnchor="middle"
-                    fill="#38BDF8"
-                    fontSize="11"
-                    fontFamily="sans-serif"
-                    fontWeight="600"
-                  >
-                    Ethernet Cable (Click to Plug)
-                  </text>
+                  <g transform="translate(500, 435)">
+                    <rect x="-95" y="-12" width="190" height="24" rx="12" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
+                    <text
+                      x="0"
+                      y="4"
+                      textAnchor="middle"
+                      fill="#38BDF8"
+                      fontSize="10"
+                      fontFamily="ui-monospace, monospace"
+                      fontWeight="bold"
+                    >
+                      ⚡ Click to Connect Cable
+                    </text>
+                  </g>
                 </g>
               )}
             </g>

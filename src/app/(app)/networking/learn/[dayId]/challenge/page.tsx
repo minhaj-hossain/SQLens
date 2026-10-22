@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { learnPageMetadata } from '@/lib/learn-metadata';
 import ChallengeView from '@/components/learn/ChallengeView';
 
@@ -20,5 +21,8 @@ export default async function ChallengePage({
   params: Promise<{ dayId: string }>;
 }) {
   const { dayId } = await params;
+  if (dayId === 'net-01' || dayId === 'net-02') {
+    redirect(`/networking/learn/${dayId}`);
+  }
   return <ChallengeView dayId={dayId} />;
 }

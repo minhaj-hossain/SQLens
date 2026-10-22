@@ -87,13 +87,10 @@ describe('Networking Realistic Hardware & Theme System', () => {
     );
 
     expect(html).toContain('data-testid="physical-connection-canvas"');
-    expect(html).toContain('data-testid="realistic-rj45-cable"');
-    expect(html).toContain('data-testid="realistic-switch-chassis"');
-    expect(html).toContain('data-testid="realistic-wire-bus"');
-    expect(html).toContain('Zoom NIC Chip');
-    expect(html).toContain('Acme-PC-01');
-    expect(html).toContain('Acme-SW-01');
-    expect(html).toContain('Acme-RTR-01');
+    expect(html).toContain('Link: 100 Mbps UP');
+    expect(html).toContain('NIC Buffer');
+    expect(html).toContain('Your computer');
+    expect(html).toContain('Light: ON');
   });
 
   it('supports audio engine mute and toggle', () => {

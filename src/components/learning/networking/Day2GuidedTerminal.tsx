@@ -460,7 +460,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
             <div
               className={
                 entry.isLabMessage
-                  ? 'pl-3 border-l-2 border-blue-500 text-blue-300 bg-blue-950/20 py-1.5 rounded-r'
+                  ? 'pl-3 border-l-2 border-white/60 text-zinc-200 bg-white/[0.04] py-1.5 rounded-r'
                   : 'space-y-0.5'
               }
             >

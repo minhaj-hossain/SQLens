@@ -60,7 +60,7 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
       <NetworkingCockpitView
         module={mod}
         concept={concept}
-        onComplete={() => nav.startPractice(mod.id, concept.id)}
+        onComplete={() => router.push('/networking/learn/net-02')}
       />
     );
   }
@@ -71,7 +71,7 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
       <Day2CockpitView
         module={mod}
         concept={concept}
-        onComplete={() => nav.startPractice(mod.id, concept.id)}
+        onComplete={() => router.push(trackRoadmapUrl('networking', 'net-02'))}
       />
     );
   }

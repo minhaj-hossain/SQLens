@@ -456,20 +456,20 @@ export const NetworkingTrackHomePage: React.FC = () => {
 
                               <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-[10px] font-mono bg-blue-500/10 text-blue-300 border border-blue-500/20 px-1.5 py-0.5 rounded">
+                                  <span className="text-[10px] font-mono bg-zinc-800/80 text-zinc-300 border border-white/[0.08] px-1.5 py-0.5 rounded">
                                     🎬 Story Reel
                                   </span>
-                                  <span className="text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-1.5 py-0.5 rounded">
+                                  <span className="text-[10px] font-mono bg-zinc-800/80 text-zinc-300 border border-white/[0.08] px-1.5 py-0.5 rounded">
                                     💻 Admin Lab
                                   </span>
                                 </div>
 
                                 <Link
                                   href={`/networking/learn/${mod.id}`}
-                                  className={`w-full py-2 rounded-lg text-xs font-semibold text-center block transition-all ${
+                                  className={`w-full py-2 rounded-xl text-xs font-semibold text-center block transition-all active:scale-[0.98] ${
                                     isCurrent
-                                      ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-                                      : 'bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 hover:text-white border border-white/[0.08]'
+                                      ? 'bg-black hover:bg-zinc-900 text-white border border-white/20 hover:border-white/40 shadow-lg'
+                                      : 'bg-[#18181b] hover:bg-[#202024] text-zinc-200 hover:text-white border border-white/[0.08]'
                                   }`}
                                 >
                                   {isCompleted ? 'Review Module' : isCurrent ? 'Continue Lesson ➔' : 'Start Module ➔'}

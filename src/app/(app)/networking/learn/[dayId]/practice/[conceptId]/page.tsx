@@ -1,24 +1,14 @@
-import type { Metadata } from 'next';
-import { learnPageMetadata } from '@/lib/learn-metadata';
-import PracticeView from '@/components/learn/PracticeView';
+import { redirect } from 'next/navigation';
 
 /**
- * Server page wrapper (Networking track) — per-concept practice metadata and view.
+ * Server page wrapper (Networking track) — redirects to the unified day cockpit.
+ * Day 1 & Day 2 contain all learning, terminal experiments, and workplace tickets directly in the cockpit.
  */
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ dayId: string; conceptId: string }>;
-}): Promise<Metadata> {
-  const { dayId, conceptId } = await params;
-  return learnPageMetadata({ track: 'networking', dayId, stage: 'practice', conceptId });
-}
-
 export default async function PracticePage({
   params,
 }: {
   params: Promise<{ dayId: string; conceptId: string }>;
 }) {
-  const { dayId, conceptId } = await params;
-  return <PracticeView dayId={dayId} conceptId={conceptId} />;
+  const { dayId } = await params;
+  redirect(`/networking/learn/${dayId}`);
 }

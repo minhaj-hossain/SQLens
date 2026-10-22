@@ -237,9 +237,13 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
       }
 
       // Check physical link and logical states
-      const isCableOut = stageState?.cable !== 'both';
-      const hasNoAddress = stageState?.tags?.yours === 'not-set';
-      const isWrongStreet = target.startsWith('192.168.2.') && stageState?.tags?.yours && typeof stageState.tags.yours === 'object' && stageState.tags.yours.street === '192.168.1';
+      const yourStreet =
+        stageState?.tags?.yours && typeof stageState.tags.yours === 'object' && 'street' in stageState.tags.yours
+          ? stageState.tags.yours.street
+          : null;
+      const targetParts = target.split('.');
+      const targetStreet = targetParts.length === 4 ? targetParts.slice(0, 3).join('.') : null;
+      const isWrongStreet = Boolean(yourStreet && targetStreet && yourStreet !== targetStreet);
       const isBusy = stageState?.traffic === 'file-transfer';
       const isUnreachable = target === '192.168.1.99';
 
@@ -402,7 +406,7 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
             <div
               className={
                 entry.isLabMessage
-                  ? 'pl-3 border-l-2 border-blue-500 text-blue-300 bg-blue-950/20 py-1.5 rounded-r'
+                  ? 'pl-3 border-l-2 border-white/60 text-zinc-200 bg-white/[0.04] py-1.5 rounded-r'
                   : 'space-y-0.5'
               }
             >

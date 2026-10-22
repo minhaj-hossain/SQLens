@@ -81,42 +81,64 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
   const [checkedAddress, setCheckedAddress] = useState(false);
   const [checkedPing, setCheckedPing] = useState(false);
 
+  // Manual physical & address state (prevents ping from magically auto-fixing faults)
+  const [manualCableState, setManualCableState] = useState<CableState | null>(null);
+  const [manualStreetAddress, setManualStreetAddress] = useState<string | null>(null);
+
   // Highlighting link between stage and terminal
   const [hoveredStageId, setHoveredStageId] = useState<string | null>(null);
 
   const currentConcept: ConceptDefinition = ALL_DAY1_CONCEPTS[conceptIdx] || ALL_DAY1_CONCEPTS[0];
   const currentRung: Day1Rung = currentConcept.rungs[rungIdx] || currentConcept.rungs[0];
 
-  // Stage state synchronized with current rung and local actions
+  // Stage state synchronized with current rung and local learner actions
   const effectiveStageState = useMemo(() => {
     const base = { ...currentRung.entryStageState };
-    if (isTaskDone) {
-      if (currentRung.id === 'c1-r5' || currentRung.id === 'c4-r2' || currentRung.id === 'c4-r3') {
-        base.cable = 'both';
+    if (manualCableState !== null) {
+      base.cable = manualCableState;
+      if (manualCableState === 'both') {
         base.lights = { yours: 'on', friends: 'on' };
+      } else {
+        base.lights = { yours: 'off', friends: 'off' };
       }
-      if (currentRung.id === 'c1-r3') {
-        base.message = 'inside-stopped';
-      }
-      if (currentRung.id === 'c1-r6' || currentRung.id === 'c3-r1') {
-        base.message = 'roundtrip';
-        base.stopwatch = '1 ms';
-      }
-      if (currentRung.id === 'c3-r2') {
-        base.message = 'roundtrip';
-        base.stopwatch = '45 ms';
-      }
+    }
+    if (manualStreetAddress !== null && base.tags && typeof base.tags.yours === 'object' && 'street' in base.tags.yours) {
+      base.tags = {
+        ...base.tags,
+        yours: {
+          ...base.tags.yours,
+          street: manualStreetAddress,
+        },
+      };
     }
     if (hoveredStageId) {
       base.highlight = [hoveredStageId];
     }
     return base;
-  }, [currentRung, isTaskDone, hoveredStageId]);
+  }, [currentRung, manualCableState, manualStreetAddress, hoveredStageId]);
+
+  // Restore from URL hash on initial mount (e.g. #c2/r3 or legacy #day1/c2/r3)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const match = window.location.hash.match(/(?:day1\/)?c(\d+)\/r(\d+)/);
+    if (match) {
+      const c = parseInt(match[1], 10) - 1;
+      const r = parseInt(match[2], 10) - 1;
+      if (c >= 0 && c < ALL_DAY1_CONCEPTS.length) {
+        setConceptIdx(c);
+        const rungs = ALL_DAY1_CONCEPTS[c].rungs;
+        if (r >= 0 && r < rungs.length) {
+          setRungIdx(r);
+        }
+        setPageMode('normal');
+      }
+    }
+  }, []);
 
   // Synchronize URL Hash navigation
   useEffect(() => {
     if (typeof window !== 'undefined' && pageMode === 'normal') {
-      window.location.hash = `day1/c${conceptIdx + 1}/r${rungIdx + 1}`;
+      window.location.hash = `c${conceptIdx + 1}/r${rungIdx + 1}`;
     }
   }, [conceptIdx, rungIdx, pageMode]);
 
@@ -136,6 +158,8 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
     setCheckedLight(false);
     setCheckedAddress(false);
     setCheckedPing(false);
+    setManualCableState(null);
+    setManualStreetAddress(null);
 
     if (currentRung.layoutState === 'STATE_C') {
       setActiveWorkTab('address');
@@ -156,10 +180,9 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
         setPageMode('day-complete');
         markConceptComplete(module.id, concept.id);
         markModuleComplete(module);
-        onComplete?.();
       }
     }
-  }, [conceptIdx, rungIdx, currentConcept, markConceptComplete, markModuleComplete, module, concept, onComplete]);
+  }, [conceptIdx, rungIdx, currentConcept, markConceptComplete, markModuleComplete, module, concept]);
 
   // Handle Going Back
   const handleBack = useCallback(() => {
@@ -276,10 +299,10 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPageMode('intro')}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white shadow-xl shadow-black/80 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <span>Start Day 1</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-zinc-400" />
               </button>
             </div>
           </div>
@@ -304,7 +327,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPageMode('normal')}
-                className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all cursor-pointer shadow-md"
+                className="px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white transition-all cursor-pointer shadow-lg active:scale-[0.98]"
               >
                 Let&apos;s go
               </button>
@@ -350,7 +373,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                   setRungIdx(0);
                   setPageMode('intro');
                 }}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all cursor-pointer shadow-md"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white transition-all cursor-pointer shadow-lg active:scale-[0.98]"
               >
                 Start Concept {currentConcept.number + 1}
               </button>
@@ -381,11 +404,21 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <div className="font-semibold text-white">What awaits on Day 2:</div>
               <p>&ldquo;Your computer looked for .99, found nobody, and said so. How does a computer find out who has a label?&rdquo;</p>
             </div>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  onComplete?.();
+                  router.push('/networking/learn/net-02');
+                }}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white shadow-xl transition-all cursor-pointer active:scale-[0.98]"
+              >
+                Continue to Day 2
+              </button>
               <button
                 type="button"
                 onClick={backToRoadmap}
-                className="px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#18181b] hover:bg-[#202024] border border-white/[0.08] text-zinc-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
               >
                 Return to Curriculum Map
               </button>
@@ -419,9 +452,9 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                   title={r.title}
                   className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                     i < rungIdx
-                      ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
+                      ? 'bg-zinc-400 shadow-[0_0_6px_rgba(255,255,255,0.3)]'
                       : i === rungIdx
-                      ? 'bg-blue-400 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-[#121214]'
+                      ? 'bg-white ring-2 ring-white/40 ring-offset-2 ring-offset-[#121214]'
                       : 'bg-zinc-800/80 hover:bg-zinc-700'
                   }`}
                 />
@@ -433,11 +466,11 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsWordsDrawerOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
               >
-                <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                <BookOpen className="w-3.5 h-3.5 text-zinc-300" />
                 <span>My Words</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-blue-950/80 border border-blue-500/40 text-[10px] font-mono text-blue-300">
+                <span className="px-1.5 py-0.5 rounded-md bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-300">
                   {unlockedWords.length}
                 </span>
               </button>
@@ -525,12 +558,26 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
         <div className="lg:col-span-7 flex flex-col rounded-2xl bg-[#0e0e11] border border-white/[0.08] overflow-hidden shadow-2xl">
           <PhysicalConnectionCanvas
             stageState={effectiveStageState}
-            onToggleCable={() => setIsTaskDone(true)}
-            onPlugCable={(target) => setIsTaskDone(true)}
+            onToggleCable={() => {
+              const next = (manualCableState ?? effectiveStageState.cable) === 'both' ? 'loose-on-desk' : 'both';
+              setManualCableState(next);
+              if (currentRung.id === 'c1-r5' && next === 'both') {
+                setIsTaskDone(true);
+              }
+            }}
+            onPlugCable={(target) => {
+              setManualCableState(target);
+              if (currentRung.id === 'c1-r5' && target === 'both') {
+                setIsTaskDone(true);
+              }
+            }}
             onSelectTag={(which) => {
               if (currentRung.layoutState === 'STATE_C') setActiveWorkTab('address');
             }}
-            onReplay={() => setIsTaskDone(false)}
+            onReplay={() => {
+              setIsTaskDone(false);
+              setManualCableState(null);
+            }}
             onOpenLookInside={(id) => setActiveLookInsideId(id)}
           />
         </div>
@@ -595,12 +642,12 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             {currentRung.doText && (
               <div className="rounded-xl bg-[#18181b] border border-white/[0.08] p-4 space-y-2.5 shadow-sm">
                 <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
                   <span>Your turn:</span>
                 </div>
                 <div className="space-y-1.5 text-xs sm:text-sm">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-semibold text-blue-400 font-mono text-xs shrink-0">DO:</span>
+                    <span className="font-semibold text-zinc-100 font-mono text-xs shrink-0">DO:</span>
                     <span className="text-zinc-200 leading-relaxed">{currentRung.doText}</span>
                   </div>
                   <div className="flex items-baseline gap-2">
@@ -674,7 +721,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                   value={learnerSentence}
                   onChange={(e) => setLearnerSentence(e.target.value)}
                   placeholder="Write it in your own words..."
-                  className="w-full p-3.5 rounded-xl bg-[#18181b] border border-white/[0.08] text-sm text-zinc-100 outline-none focus:border-blue-500/70 h-24 resize-none font-sans placeholder:text-zinc-500"
+                  className="w-full p-3.5 rounded-xl bg-[#18181b] border border-white/[0.08] text-sm text-zinc-100 outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10 h-24 resize-none font-sans placeholder:text-zinc-500"
                 />
                 {!selfCheckRevealed ? (
                   <button
@@ -774,6 +821,31 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               </div>
             )}
 
+            {/* Address Configuration Bar for Double-Fault Ticket (c4-r3) */}
+            {currentRung.id === 'c4-r3' && (
+              <div className="p-3.5 rounded-xl bg-[#18181b] border border-white/[0.08] flex items-center justify-between gap-3 text-xs shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-400 font-mono">Step ② Street:</span>
+                  <span className={`font-mono font-semibold ${(manualStreetAddress || '192.168.2') === '192.168.1' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {(manualStreetAddress || '192.168.2')}.10
+                  </span>
+                </div>
+                {(manualStreetAddress || '192.168.2') !== '192.168.1' ? (
+                  <button
+                    type="button"
+                    onClick={() => setManualStreetAddress('192.168.1')}
+                    className="px-3.5 py-1.5 rounded-lg bg-black hover:bg-zinc-900 border border-white/20 text-white font-medium text-xs cursor-pointer shadow-sm active:scale-[0.98]"
+                  >
+                    Fix Street to 192.168.1
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-emerald-400 font-medium font-mono text-[11px]">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Street 192.168.1 (Correct)
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Work Area: Terminal Simulator */}
             {(currentRung.layoutState === 'STATE_B' ||
               currentRung.layoutState === 'STATE_C' ||
@@ -785,8 +857,21 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                 freeTargets={currentRung.check.freeTargets}
                 stageState={effectiveStageState}
                 onCommandRun={(cmd, outcome) => {
-                  setIsTaskDone(true);
                   setTaskOutcome(outcome);
+                  if (currentRung.check.type === 'diagnose') {
+                    // In diagnosis rungs, task completes ONLY when ping genuinely succeeds
+                    if (outcome === 'reply') {
+                      setIsTaskDone(true);
+                    }
+                  } else if (currentRung.check.type === 'task') {
+                    if (currentRung.check.expectedCommand) {
+                      if (cmd.toLowerCase().trim().startsWith(currentRung.check.expectedCommand.toLowerCase().trim())) {
+                        setIsTaskDone(true);
+                      }
+                    } else {
+                      setIsTaskDone(true);
+                    }
+                  }
                 }}
                 onStageHighlight={(tag) => setHoveredStageId(tag)}
               />
@@ -825,8 +910,8 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               onClick={handleContinue}
               className={`px-7 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
                 isPrimaryReady
-                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 ring-1 ring-blue-400'
-                  : 'bg-zinc-800/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
+                  ? 'bg-black hover:bg-zinc-900 text-white border border-white/20 hover:border-white/40 shadow-lg shadow-black/60 ring-1 ring-white/10 active:scale-[0.98]'
+                  : 'bg-zinc-900/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
               }`}
             >
               {rungIdx === currentConcept.rungs.length - 1
@@ -873,7 +958,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveLookInsideId(null)}
-                className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white cursor-pointer"
+                className="px-5 py-2 rounded-lg bg-black hover:bg-zinc-900 border border-white/20 text-xs font-semibold text-white cursor-pointer active:scale-[0.98]"
               >
                 Got it
               </button>
