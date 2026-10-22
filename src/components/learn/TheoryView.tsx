@@ -54,8 +54,8 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
     return null;
   }
 
-  // Networking Track Day 1: Dedicated NOC IT Support Cockpit Workbench
-  if (track === 'networking' && mod.id === 'net-01' && concept.theory.mentorScript) {
+  // Networking Track Day 1: Dedicated The First Link Cockpit Workbench
+  if (track === 'networking' && mod.id === 'net-01') {
     return (
       <NetworkingCockpitView
         module={mod}

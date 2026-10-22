@@ -218,6 +218,43 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     }
   }, [conceptIdx, rungIdx, backToRoadmap]);
 
+  // Option selection
+  const handleSelectOption = (optId: string) => {
+    setSelectedOptionId(optId);
+    const opt = currentRung.check.options?.find((o) => o.id === optId);
+    if (opt) {
+      setFeedbackText(opt.feedback);
+      setIsQuestionCorrect(opt.isCorrect);
+      setIsTaskDone(opt.isCorrect);
+    }
+  };
+
+  // Handle Sort Match Selection (State F)
+  const handleSortSelect = (itemId: string, lbl: string) => {
+    const nextMatches = { ...sortMatches, [itemId]: lbl };
+    setSortMatches(nextMatches);
+    const items = currentRung.check.sortItems || [];
+    const allCorrect =
+      items.length > 0 &&
+      items.every((it) => nextMatches[it.id] === it.targetLabel);
+    setIsTaskDone(allCorrect);
+  };
+
+  const isPrimaryReady = useMemo(() => {
+    if (currentRung.check.type === 'understand' && !currentRung.check.options) return true;
+    if (currentRung.check.type === 'understand' && isQuestionCorrect === true) return true;
+    if (currentRung.check.type === 'predict' && isQuestionCorrect === true) return true;
+    if (currentRung.check.type === 'task' && isTaskDone) return true;
+    if (currentRung.check.type === 'diagnose' && isTaskDone) return true;
+    if (currentRung.check.type === 'write-and-compare' && selfCheckRevealed && isTaskDone) return true;
+    if (currentRung.check.type === 'sort') {
+      const items = currentRung.check.sortItems;
+      if (!items || items.length === 0) return false;
+      return items.every((item) => sortMatches[item.id] === item.targetLabel);
+    }
+    return false;
+  }, [currentRung, isTaskDone, isQuestionCorrect, selfCheckRevealed, sortMatches]);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -225,7 +262,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
         return;
       }
       if (e.key === 'ArrowRight' || e.key === 'Enter') {
-        if (isTaskDone || currentRung.check.type === 'understand') {
+        if (isPrimaryReady) {
           handleContinue();
         }
       } else if (e.key === 'ArrowLeft') {
@@ -238,34 +275,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleContinue, handleBack, isTaskDone, currentRung]);
-
-  // Option selection
-  const handleSelectOption = (optId: string) => {
-    setSelectedOptionId(optId);
-    const opt = currentRung.check.options?.find((o) => o.id === optId);
-    if (opt) {
-      setFeedbackText(opt.feedback);
-      setIsQuestionCorrect(opt.isCorrect);
-      if (opt.isCorrect) {
-        setIsTaskDone(true);
-      }
-    }
-  };
-
-  const isPrimaryReady = useMemo(() => {
-    if (currentRung.check.type === 'understand' && !currentRung.check.options) return true;
-    if (currentRung.check.type === 'understand' && isQuestionCorrect) return true;
-    if (currentRung.check.type === 'predict' && isQuestionCorrect) return true;
-    if (currentRung.check.type === 'task' && isTaskDone) return true;
-    if (currentRung.check.type === 'diagnose' && isTaskDone) return true;
-    if (currentRung.check.type === 'write-and-compare' && selfCheckRevealed) return true;
-    if (currentRung.check.type === 'sort') {
-      const needed = currentRung.check.sortItems?.length || 0;
-      return Object.keys(sortMatches).length === needed;
-    }
-    return false;
-  }, [currentRung, isTaskDone, isQuestionCorrect, selfCheckRevealed, sortMatches]);
+  }, [handleContinue, handleBack, isPrimaryReady]);
 
   const unlockedWords = useMemo(() => {
     return Object.values(DAY2_VOCABULARY);
@@ -730,36 +740,65 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
                 {/* Sorting check (State F) */}
                 {currentRung.check.type === 'sort' && currentRung.check.sortItems && (
-                  <div className="space-y-2 text-xs">
-                    {currentRung.check.sortItems.map((item) => (
-                      <div key={item.id} className="p-2 rounded bg-zinc-900 border border-zinc-800 space-y-1">
-                        <div className="font-mono text-zinc-300">{item.snippet}</div>
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {currentRung.check.sortLabels?.map((lbl) => (
-                            <button
-                              key={lbl}
-                              type="button"
-                              onClick={() => {
-                                setSortMatches((prev) => {
-                                  const next = { ...prev, [item.id]: lbl };
-                                  if (lbl === item.targetLabel) {
-                                    setIsTaskDone(true);
-                                  }
-                                  return next;
-                                });
-                              }}
-                              className={`px-2 py-0.5 rounded text-[11px] border cursor-pointer ${
-                                sortMatches[item.id] === lbl
-                                  ? 'bg-blue-600 text-white border-blue-500'
-                                  : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
-                              }`}
-                            >
-                              {lbl}
-                            </button>
-                          ))}
+                  <div className="space-y-3 text-xs">
+                    {currentRung.check.sortItems.map((item) => {
+                      const selectedLbl = sortMatches[item.id];
+                      const isMatchCorrect = selectedLbl === item.targetLabel;
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-2.5 rounded-xl border space-y-1.5 transition-colors ${
+                            selectedLbl
+                              ? isMatchCorrect
+                                ? 'bg-emerald-950/40 border-emerald-700/60'
+                                : 'bg-zinc-900 border-amber-700/60'
+                              : 'bg-zinc-900 border-zinc-800'
+                          }`}
+                        >
+                          <div className="font-mono text-zinc-200 font-semibold">{item.snippet}</div>
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {currentRung.check.sortLabels?.map((lbl) => {
+                              const isSelected = selectedLbl === lbl;
+                              return (
+                                <button
+                                  key={lbl}
+                                  type="button"
+                                  onClick={() => handleSortSelect(item.id, lbl)}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                                    isSelected
+                                      ? isMatchCorrect
+                                        ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm'
+                                        : 'bg-amber-600 text-white border-amber-400 shadow-sm'
+                                      : 'bg-zinc-800/90 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-white'
+                                  }`}
+                                >
+                                  {lbl}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
+                      );
+                    })}
+
+                    {/* Status Guidance Banner */}
+                    {Object.keys(sortMatches).length === currentRung.check.sortItems.length ? (
+                      isPrimaryReady ? (
+                        <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-700/60 text-emerald-300 text-xs font-medium flex items-center gap-2 animate-in fade-in duration-200">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>All items matched correctly! Press Continue to proceed.</span>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-lg bg-zinc-900 border border-amber-700/60 text-amber-200 text-xs leading-relaxed flex items-center gap-2 animate-in fade-in duration-200">
+                          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>Some matches need adjusting. Double-check each item before continuing.</span>
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-zinc-500 text-[11px] font-mono">
+                        Match all items above to continue.
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
 

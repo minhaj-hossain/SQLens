@@ -78,7 +78,7 @@ describe('NetworkingCockpitView & Routing Integration', () => {
 
   const concept = NET_01_MODULE.concepts[0];
 
-  it('renders Ticket #1042 incident banner and workstation telemetry header', () => {
+  it('renders Day 1 welcome page by default matching pedagogy flow', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
@@ -86,72 +86,51 @@ describe('NetworkingCockpitView & Routing Integration', () => {
       />,
     );
 
-    // Incident Banner
-    expect(html).toContain('TICKET #1042');
-    expect(html).toContain('Host A Cannot Reach Default Gateway (192.168.1.1)');
-    expect(html).toContain('Acme-PC-01');
-    expect(html).toContain('192.168.1.10/24');
-    // Initial physical state: disconnected
-    expect(html).toContain('ETH0: NO CARRIER');
+    expect(html).toContain('Day 1: Your first connection');
+    expect(html).toContain('Start Day 1');
+    expect(html).toContain('About 55 minutes');
   });
 
-  it('defaults to Concept Story Reel mode with unobstructed stage and interactive controls', () => {
+  it('renders Day 1 workbench header with progress rail and My Words button in normal mode', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
         concept={concept}
+        defaultMode="normal"
       />,
     );
 
-    expect(html).toContain('data-testid="story-reel-stage"');
-    expect(html).toContain('INTERACTIVE STORY REEL');
+    expect(html).toContain('Day 1');
+    expect(html).toContain('Concept 1: Connection');
+    expect(html).toContain('aria-label="Progress Rail"');
+    expect(html).toContain('My Words');
   });
 
-  it('renders the Senior Systems Engineer console with Beat 1 instructions in workbench mode', () => {
+  it('renders the 2-computer physical connection canvas on stage in normal mode', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
         concept={concept}
-        defaultMode="workbench"
+        defaultMode="normal"
       />,
     );
 
-    expect(html).toContain('Senior Systems Engineer');
-    expect(html).toContain('Step 1 of 8');
-    // Beat 1 instruction
-    expect(html).toContain('ping 192.168.1.1');
-    expect(html).toContain('Action: ping 192.168.1.1');
+    expect(html).toContain('data-testid="physical-connection-canvas"');
+    expect(html).toContain('Your computer');
+    expect(html).toContain("Friend&#x27;s computer");
   });
 
-  it('renders the Physical Layer 1 Topology Canvas and Windows Command Prompt in workbench mode', () => {
+  it('renders the 5-Second Test card layout: Look and Story', () => {
     const html = renderToStaticMarkup(
       <NetworkingCockpitView
         module={NET_01_MODULE}
         concept={concept}
-        defaultMode="workbench"
+        defaultMode="normal"
       />,
     );
 
-    // Physical canvas
-    expect(html).toContain('Acme Office • Physical Layer 1 Canvas');
-    expect(html).toContain('Acme-SW-01');
-    expect(html).toContain('Acme-RTR-01');
-
-    // Windows Command Prompt
-    expect(html).toContain('Acme-PC-01 Command Prompt');
-    expect(html).toContain('C:\\Users\\admin&gt;');
-  });
-
-  it('renders the collapsible Technician Diagnostic Log with verified facts in workbench mode', () => {
-    const html = renderToStaticMarkup(
-      <NetworkingCockpitView
-        module={NET_01_MODULE}
-        concept={concept}
-        defaultMode="workbench"
-      />,
-    );
-
-    expect(html).toContain("Technician&#x27;s Diagnostic Log");
+    expect(html).toContain('Look:');
+    expect(html).toContain('The left one is yours');
   });
 
   it('routes networking Day 1 to NetworkingCockpitView in TheoryView', () => {
@@ -161,8 +140,7 @@ describe('NetworkingCockpitView & Routing Integration', () => {
     );
 
     expect(html).toContain('data-testid="networking-cockpit-view"');
-    expect(html).toContain('TICKET #1042');
-    // Does NOT render SQL lesson header
+    expect(html).toContain('Day 1: Your first connection');
     expect(html).not.toContain('SQL Lesson');
   });
 
@@ -172,8 +150,7 @@ describe('NetworkingCockpitView & Routing Integration', () => {
       <TheoryView dayId="day-01" conceptId="select-and-from" />,
     );
 
-    // SQL track renders ConceptLessonView with SQL lesson header
     expect(html).toContain('SQL Lesson');
-    expect(html).not.toContain('TICKET #1042');
+    expect(html).not.toContain('Your first connection');
   });
 });
