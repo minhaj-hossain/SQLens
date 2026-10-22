@@ -298,7 +298,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
       {/* Conditional: Full-Screen Page Modes (matching Day 1) */}
       {pageMode === 'welcome' ? (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-2xl mx-auto px-6 py-12 text-zinc-100 font-sans">
-          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-12 shadow-2xl space-y-8 animate-in fade-in duration-300">
+          <div className="w-full rounded-3xl bg-[#121214] border border-white/[0.08] p-8 sm:p-12 shadow-2xl space-y-8 animate-in fade-in duration-300">
             <div className="space-y-3">
               <span className="text-xs font-mono font-medium tracking-wider uppercase text-blue-400">
                 Module 2 • Networking Track
@@ -312,7 +312,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <p>
                 Yesterday you connected two computers with a direct cable. Today, a third computer joins the desk. You will link three machines through a switch, explore hardware MAC badges, watch ARP roll calls, and troubleshoot a shared network.
               </p>
-              <p className="p-3.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200">
+              <p className="p-4 rounded-2xl bg-[#18181b] border border-white/[0.08] text-zinc-200">
                 A <span className="font-semibold text-blue-400">switch</span> connects multiple computers together so they can share one local network.
               </p>
               <p className="text-zinc-400">
@@ -324,7 +324,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPageMode('intro')}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-white shadow-lg shadow-blue-600/30 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>Start Day 2</span>
                 <ChevronRight className="w-4 h-4" />
@@ -334,8 +334,8 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
         </div>
       ) : pageMode === 'intro' ? (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-xl mx-auto px-6 py-12 text-zinc-100 font-sans">
-          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
-            <span className="text-xs font-mono font-medium tracking-wider uppercase text-zinc-500">
+          <div className="w-full rounded-3xl bg-[#121214] border border-white/[0.08] p-8 sm:p-10 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
+            <span className="text-xs font-mono font-medium tracking-wider uppercase text-zinc-400">
               Concept {currentConcept.number} of 4
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
@@ -344,7 +344,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
             <div className="space-y-2 text-sm text-zinc-300">
               <p className="font-medium text-zinc-400">{currentConcept.timeEstimate}</p>
               <p>{currentConcept.goal}</p>
-              <p className="text-zinc-500 text-xs pt-2">
+              <p className="text-zinc-500 text-xs pt-2 font-mono">
                 New words in this concept: {currentConcept.newWordsCount}
               </p>
             </div>
@@ -352,7 +352,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setPageMode('normal')}
-                className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-colors cursor-pointer shadow-md"
+                className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all cursor-pointer shadow-md"
               >
                 Let&apos;s go
               </button>
@@ -361,7 +361,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
         </div>
       ) : pageMode === 'concept-complete' ? (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-xl mx-auto px-6 py-12 text-zinc-100 font-sans">
-          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-10 shadow-2xl space-y-6 animate-in fade-in duration-300">
+          <div className="w-full rounded-3xl bg-[#121214] border border-white/[0.08] p-8 sm:p-10 shadow-2xl space-y-6 animate-in fade-in duration-300">
             <div className="space-y-1 text-center">
               <span className="text-xs font-mono font-medium tracking-wider uppercase text-emerald-400">
                 Completed
@@ -371,9 +371,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               </h2>
             </div>
 
-            <div className="space-y-3 p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-sm">
+            <div className="space-y-3 p-5 rounded-2xl bg-[#18181b] border border-white/[0.08] text-sm">
               <div className="font-medium text-zinc-300">You can now:</div>
-              <div className="flex items-start gap-2.5 text-zinc-300">
+              <div className="flex items-start gap-2.5 text-zinc-200">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <span>{currentConcept.goal}</span>
               </div>
@@ -392,7 +392,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   setRungIdx(0);
                   setPageMode('intro');
                 }}
-                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all cursor-pointer shadow-md"
               >
                 Start Concept {currentConcept.number + 1}
               </button>
@@ -411,23 +411,23 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
         </div>
       ) : pageMode === 'day-complete' ? (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-xl mx-auto px-6 py-12 text-zinc-100 font-sans">
-          <div className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 p-8 sm:p-12 shadow-2xl space-y-6 text-center animate-in fade-in duration-300">
-            <div className="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-500/50 flex items-center justify-center mx-auto text-emerald-400">
-              <CheckCircle2 className="w-6 h-6" />
+          <div className="w-full rounded-3xl bg-[#121214] border border-white/[0.08] p-8 sm:p-12 shadow-2xl space-y-6 text-center animate-in fade-in duration-300">
+            <div className="w-14 h-14 rounded-full bg-emerald-950/80 border border-emerald-500/50 flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
             <h2 className="text-3xl font-bold text-white tracking-tight">Day 2 Complete!</h2>
             <p className="text-sm text-zinc-300 leading-relaxed">
               You connected multiple computers using a switch, mastered hardware MAC badges, observed ARP roll calls, and solved shared network tickets without help.
             </p>
-            <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 text-left space-y-1.5">
-              <div className="font-semibold text-zinc-200">What awaits on Day 3:</div>
+            <div className="p-5 rounded-2xl bg-[#18181b] border border-white/[0.08] text-xs text-zinc-300 text-left space-y-1.5">
+              <div className="font-semibold text-white">What awaits on Day 3:</div>
               <p>&ldquo;We can now talk to any computer on our local switch. But how do we reach a server on a different street, or across the world? (The Default Gateway & Router)&rdquo;</p>
             </div>
             <div className="pt-2">
               <button
                 type="button"
                 onClick={backToRoadmap}
-                className="px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white shadow-lg shadow-emerald-600/30 transition-colors cursor-pointer"
+                className="px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
               >
                 Return to Curriculum Map
               </button>
@@ -440,10 +440,10 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
           {/* ========================================================================= */}
           {/* 1. TOP BAR: Progress Rail, Concept Name & My Words Button                 */}
           {/* ========================================================================= */}
-          <header className="rounded-xl bg-zinc-950 border border-zinc-800/80 px-4 py-2.5 flex items-center justify-between gap-4 shadow-md">
+          <header className="rounded-2xl bg-[#121214] border border-white/[0.08] px-5 py-3 flex items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center gap-3">
-              <span className="font-semibold text-sm text-white">Day 2</span>
-              <span className="text-zinc-600">•</span>
+              <span className="font-semibold text-sm tracking-tight text-white">Day 2</span>
+              <span className="text-zinc-600 font-mono">•</span>
               <span className="text-xs font-mono text-zinc-300 font-medium">
                 Concept {currentConcept.number}: {currentConcept.title}
               </span>
@@ -461,10 +461,10 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   title={r.title}
                   className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                     i < rungIdx
-                      ? 'bg-blue-500 shadow-[0_0_6px_#3b82f6]'
+                      ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
                       : i === rungIdx
-                      ? 'bg-blue-400 ring-2 ring-blue-500/40 ring-offset-1 ring-offset-zinc-950'
-                      : 'bg-zinc-800'
+                      ? 'bg-blue-400 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-[#121214]'
+                      : 'bg-zinc-800/80 hover:bg-zinc-700'
                   }`}
                 />
               ))}
@@ -475,11 +475,11 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsWordsDrawerOpen((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm"
               >
                 <BookOpen className="w-3.5 h-3.5 text-blue-400" />
                 <span>My Words</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-blue-950 border border-blue-700 text-[10px] text-blue-300">
+                <span className="px-1.5 py-0.5 rounded-md bg-blue-950/80 border border-blue-500/40 text-[10px] font-mono text-blue-300">
                   {unlockedWords.length}
                 </span>
               </button>
@@ -487,65 +487,75 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
           </header>
 
           {/* ========================================================================= */}
-          {/* 2. OPTIONAL TELEMETRY STATUS STRIP (40px)                                 */}
+          {/* 2. OPTIONAL TELEMETRY STATUS STRIP (42px)                                 */}
           {/* ========================================================================= */}
           {conceptIdx === 3 ? (
             // Concept 4 Expanded Triage Checklist Strip
-            <div className="w-full h-10 px-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center gap-4">
-                <span className="text-zinc-500 font-semibold uppercase text-[11px]">Triage Order:</span>
+            <div className="w-full h-11 px-5 rounded-2xl bg-[#121214] border border-white/[0.08] flex items-center justify-between text-xs font-mono shadow-md">
+              <div className="flex items-center gap-3">
+                <span className="text-zinc-500 font-semibold uppercase text-[11px] tracking-wider">Triage Order:</span>
                 <button
                   type="button"
                   onClick={() => setCheckedLight(true)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs transition-all cursor-pointer ${
                     checkedLight
-                      ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
-                      : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                      ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300 shadow-sm'
+                      : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <span>① Port lights on?</span>
-                  {checkedLight && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                  {checkedLight && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setCheckedAddress(true)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs transition-all cursor-pointer ${
                     checkedAddress
-                      ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
-                      : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                      ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300 shadow-sm'
+                      : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <span>② Address & ARP right?</span>
-                  {checkedAddress && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                  {checkedAddress && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setCheckedPing(true)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs transition-all cursor-pointer ${
                     checkedPing
-                      ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300'
-                      : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                      ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300 shadow-sm'
+                      : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <span>③ Ping replies?</span>
-                  {checkedPing && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                  {checkedPing && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
+              </div>
+
+              <div className="text-[11px] text-zinc-500 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                <span>Simulated Star Topology</span>
               </div>
             </div>
           ) : (
             // Concept 1-3 Telemetry Strip
-            <div className="w-full h-10 px-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex items-center justify-between text-xs font-mono">
+            <div className="w-full h-11 px-5 rounded-2xl bg-[#121214] border border-white/[0.08] flex items-center justify-between text-xs font-mono shadow-md">
               <div className="flex items-center gap-4">
-                <span className="inline-flex items-center gap-1.5 text-zinc-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span>Switch: 4 Ports Active</span>
+                <span className="inline-flex items-center gap-2 text-zinc-200">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span>Switch: <strong className="text-emerald-400 font-semibold">4 Ports Active</strong></span>
                 </span>
-                <span className="text-zinc-600">|</span>
+                <span className="text-zinc-700">|</span>
                 <span className="text-zinc-300">
-                  Network: <span className="text-blue-400">192.168.1</span>.x (Mask: 255.255.255.0)
+                  Network: <span className="text-blue-400 font-medium">192.168.1</span>.x (Mask: 255.255.255.0)
                 </span>
+              </div>
+
+              <div className="text-[11px] text-zinc-500 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                <span>Simulated Star Topology</span>
               </div>
             </div>
           )}
@@ -553,9 +563,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
           {/* ========================================================================= */}
           {/* 3. MAIN WORKBENCH: STAGE (62%) & CARD + WORK AREA (38%)                   */}
           {/* ========================================================================= */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[500px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[500px]">
             {/* Left Column: Stage Component (62% width on desktop) */}
-            <div className="lg:col-span-7 flex flex-col">
+            <div className="lg:col-span-7 flex flex-col rounded-2xl bg-[#0e0e11] border border-white/[0.08] overflow-hidden shadow-2xl">
               <PhysicalSwitchCanvas
                 stageState={effectiveStageState}
                 onToggleCable={(which) => {
@@ -594,24 +604,28 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
             </div>
 
             {/* Right Column: Card, Work Area & Fixed Button Row (38% width on desktop) */}
-            <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-zinc-950 border border-zinc-800 p-4 shadow-xl">
-              <div className="space-y-3.5">
+            <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#121214] border border-white/[0.08] p-6 shadow-2xl">
+              <div className="space-y-4">
                 {/* Step Label */}
-                <div className="flex items-center justify-between text-xs text-zinc-500 font-mono">
-                  <span>Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
-                  <span>{currentRung.timeEstimate}</span>
+                <div className="flex items-center justify-between text-xs text-zinc-400 font-mono">
+                  <span className="uppercase tracking-wider">Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#1c1c1f] border border-white/[0.06] text-zinc-400 font-mono">{currentRung.timeEstimate}</span>
                 </div>
 
                 {/* LOOK line (Bold, appears FIRST) */}
-                <div className="text-sm sm:text-base font-bold text-zinc-100 leading-snug">
-                  <span className="text-blue-400 uppercase tracking-wider text-xs mr-2 font-mono">Look:</span>
-                  {currentRung.look}
+                <div className="space-y-1">
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-blue-400 font-semibold">
+                    Look:
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
+                    {currentRung.look}
+                  </h2>
                 </div>
 
                 {/* STORY text (35 words or fewer) */}
-                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+                <p className="text-sm text-zinc-300 leading-relaxed font-normal">
                   {currentRung.story}
-                </div>
+                </p>
 
                 {/* Simplified? note link */}
                 {currentRung.simplified && (
@@ -619,12 +633,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsSimplifiedOpen((prev) => !prev)}
-                      className="text-zinc-500 hover:text-zinc-300 underline cursor-pointer"
+                      className="text-zinc-500 hover:text-zinc-300 underline cursor-pointer transition-colors"
                     >
                       Simplified?
                     </button>
                     {isSimplifiedOpen && (
-                      <div className="mt-1.5 p-2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs leading-relaxed animate-in fade-in duration-200">
+                      <div className="mt-2 p-3 rounded-xl bg-[#18181b] border border-white/[0.08] text-zinc-300 text-xs leading-relaxed animate-in fade-in duration-200">
                         {currentRung.simplified.text}
                       </div>
                     )}
@@ -637,47 +651,73 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveLookInsideId(currentRung.lookInside!.id)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs text-blue-300 font-medium transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#18181b] hover:bg-[#202024] border border-white/[0.08] text-xs text-blue-300 font-medium transition-all cursor-pointer shadow-sm"
                     >
-                      <Search className="w-3.5 h-3.5" />
+                      <Search className="w-3.5 h-3.5 text-blue-400" />
                       <span>Look inside (optional)</span>
                     </button>
                   </div>
                 )}
 
-                {/* Your turn Block: DO / WHY / EXPECT */}
+                {/* Your turn Hero Block: DO / WHY / EXPECT */}
                 {currentRung.doText && (
-                  <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-1.5 text-xs text-zinc-300">
-                    <div className="font-semibold text-zinc-200 uppercase tracking-wider text-[11px]">Your turn:</div>
-                    <div><span className="font-semibold text-blue-400">DO:</span> {currentRung.doText}</div>
-                    <div><span className="font-semibold text-zinc-400">WHY:</span> {currentRung.whyText}</div>
-                    <div><span className="font-semibold text-zinc-400">EXPECT:</span> {currentRung.expectText}</div>
+                  <div className="rounded-xl bg-[#18181b] border border-white/[0.08] p-4 space-y-2.5 shadow-sm">
+                    <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]" />
+                      <span>Your turn:</span>
+                    </div>
+                    <div className="space-y-1.5 text-xs sm:text-sm">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-blue-400 font-mono text-xs shrink-0">DO:</span>
+                        <span className="text-zinc-200 leading-relaxed">{currentRung.doText}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-zinc-400 font-mono text-xs shrink-0">WHY:</span>
+                        <span className="text-zinc-400 leading-relaxed">{currentRung.whyText}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-zinc-400 font-mono text-xs shrink-0">EXPECT:</span>
+                        <span className="text-zinc-400 leading-relaxed">{currentRung.expectText}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                {/* Interactive Questions / Sorting / Writing Board */}
+                {/* Interactive Questions Styled Like Reference List Rows */}
                 {currentRung.check.options && (
-                  <div className="space-y-2 pt-1">
-                    <div className="text-xs sm:text-sm font-semibold text-zinc-200">
+                  <div className="space-y-3 pt-2">
+                    <div className="text-sm font-semibold text-white tracking-tight">
                       {currentRung.check.question}
                     </div>
-                    <div className="space-y-1.5">
-                      {currentRung.check.options.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => handleSelectOption(opt.id)}
-                          className={`w-full text-left p-2.5 rounded-lg border text-xs sm:text-sm transition-all cursor-pointer ${
-                            selectedOptionId === opt.id
-                              ? opt.isCorrect
-                                ? 'bg-emerald-950/80 border-emerald-600 text-emerald-200'
-                                : 'bg-zinc-900 border-zinc-700 text-zinc-300'
-                              : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800 text-zinc-300'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <div className="space-y-2">
+                      {currentRung.check.options.map((opt) => {
+                        const isSelected = selectedOptionId === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => handleSelectOption(opt.id)}
+                            className={`w-full text-left py-3.5 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-between group cursor-pointer ${
+                              isSelected
+                                ? opt.isCorrect
+                                  ? 'bg-emerald-950/60 border-emerald-500/80 text-emerald-100 shadow-sm'
+                                  : 'bg-[#221c1a] border-amber-500/50 text-amber-200 shadow-sm'
+                                : 'bg-[#18181b] hover:bg-[#202024] border-white/[0.06] hover:border-white/10 text-zinc-200'
+                            }`}
+                          >
+                            <span className="leading-snug pr-3">{opt.label}</span>
+                            {isSelected ? (
+                              opt.isCorrect ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                              )
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 shrink-0 transition-colors" />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -685,10 +725,10 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                 {/* Feedback message (No red buzzers) */}
                 {feedbackText && (
                   <div
-                    className={`p-2.5 rounded-lg border text-xs leading-relaxed ${
+                    className={`p-3.5 rounded-xl border text-xs sm:text-sm leading-relaxed ${
                       isQuestionCorrect
-                        ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300'
-                        : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+                        ? 'bg-emerald-950/60 border-emerald-600/70 text-emerald-200'
+                        : 'bg-[#1c1c1f] border-white/[0.08] text-zinc-300'
                     }`}
                   >
                     {feedbackText}
@@ -697,38 +737,38 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
                 {/* Self-check Write & Compare (State F) */}
                 {currentRung.check.type === 'write-and-compare' && (
-                  <div className="space-y-2 pt-1">
+                  <div className="space-y-3 pt-2">
                     <textarea
                       value={learnerSentence}
                       onChange={(e) => setLearnerSentence(e.target.value)}
                       placeholder="Write it in your own words..."
-                      className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs sm:text-sm text-zinc-100 outline-none focus:border-blue-500 h-20 resize-none font-sans"
+                      className="w-full p-3.5 rounded-xl bg-[#18181b] border border-white/[0.08] text-sm text-zinc-100 outline-none focus:border-blue-500/70 h-24 resize-none font-sans placeholder:text-zinc-500"
                     />
                     {!selfCheckRevealed ? (
                       <button
                         type="button"
                         disabled={learnerSentence.trim().length < 6}
                         onClick={() => setSelfCheckRevealed(true)}
-                        className="px-4 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-xs font-semibold text-zinc-200 cursor-pointer"
+                        className="px-5 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262b] disabled:opacity-40 text-xs font-semibold text-zinc-200 border border-white/[0.08] cursor-pointer transition-all shadow-sm"
                       >
                         Check my sentence
                       </button>
                     ) : (
-                      <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 space-y-2 text-xs">
+                      <div className="p-4 rounded-xl bg-[#18181b] border border-white/[0.08] space-y-2.5 text-xs sm:text-sm">
                         <div className="text-zinc-400 font-semibold">Here&apos;s one way to say it:</div>
-                        <div className="text-zinc-200 italic">&ldquo;{currentRung.check.modelSentence}&rdquo;</div>
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="text-zinc-200 italic leading-relaxed">&ldquo;{currentRung.check.modelSentence}&rdquo;</div>
+                        <div className="flex items-center gap-2.5 pt-1.5">
                           <button
                             type="button"
                             onClick={() => setIsTaskDone(true)}
-                            className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white cursor-pointer"
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white cursor-pointer shadow-sm transition-all"
                           >
                             Yes, mine says the same
                           </button>
                           <button
                             type="button"
                             onClick={() => setSelfCheckRevealed(false)}
-                            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 cursor-pointer"
+                            className="px-4 py-2 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] text-xs font-medium text-zinc-300 border border-white/[0.06] cursor-pointer transition-all"
                           >
                             Not quite
                           </button>
@@ -747,16 +787,16 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       return (
                         <div
                           key={item.id}
-                          className={`p-2.5 rounded-xl border space-y-1.5 transition-colors ${
+                          className={`p-3.5 rounded-xl border space-y-2.5 transition-all ${
                             selectedLbl
                               ? isMatchCorrect
-                                ? 'bg-emerald-950/40 border-emerald-700/60'
-                                : 'bg-zinc-900 border-amber-700/60'
-                              : 'bg-zinc-900 border-zinc-800'
+                                ? 'bg-emerald-950/40 border-emerald-600/70'
+                                : 'bg-[#18181b] border-amber-500/50'
+                              : 'bg-[#18181b] border-white/[0.08]'
                           }`}
                         >
                           <div className="font-mono text-zinc-200 font-semibold">{item.snippet}</div>
-                          <div className="flex flex-wrap gap-1.5 pt-1">
+                          <div className="flex flex-wrap gap-2 pt-1">
                             {currentRung.check.sortLabels?.map((lbl) => {
                               const isSelected = selectedLbl === lbl;
                               return (
@@ -764,12 +804,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                                   key={lbl}
                                   type="button"
                                   onClick={() => handleSortSelect(item.id, lbl)}
-                                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
                                     isSelected
                                       ? isMatchCorrect
                                         ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm'
                                         : 'bg-amber-600 text-white border-amber-400 shadow-sm'
-                                      : 'bg-zinc-800/90 text-zinc-300 border-zinc-700 hover:bg-zinc-700 hover:text-white'
+                                      : 'bg-[#1c1c1f] text-zinc-300 border-white/[0.06] hover:bg-[#26262a] hover:text-white'
                                   }`}
                                 >
                                   {lbl}
@@ -784,12 +824,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                     {/* Status Guidance Banner */}
                     {Object.keys(sortMatches).length === currentRung.check.sortItems.length ? (
                       isPrimaryReady ? (
-                        <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-700/60 text-emerald-300 text-xs font-medium flex items-center gap-2 animate-in fade-in duration-200">
+                        <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/60 text-emerald-300 text-xs font-medium flex items-center gap-2 animate-in fade-in duration-200">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                           <span>All items matched correctly! Press Continue to proceed.</span>
                         </div>
                       ) : (
-                        <div className="p-2.5 rounded-lg bg-zinc-900 border border-amber-700/60 text-amber-200 text-xs leading-relaxed flex items-center gap-2 animate-in fade-in duration-200">
+                        <div className="p-3 rounded-xl bg-[#18181b] border border-amber-500/60 text-amber-200 text-xs leading-relaxed flex items-center gap-2 animate-in fade-in duration-200">
                           <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
                           <span>Some matches need adjusting. Double-check each item before continuing.</span>
                         </div>
@@ -804,18 +844,18 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
                 {/* Work Area: Terminal Simulator / Address Editor */}
                 {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {currentRung.id === 'c4-r4' ? (
                       // Computer C Address Editor for Ticket #202
-                      <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2 text-xs font-mono">
-                        <div className="text-zinc-300 font-semibold">Computer C Network Properties:</div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-zinc-500">IP:</span>
+                      <div className="p-4 rounded-xl bg-[#18181b] border border-white/[0.08] space-y-2.5 text-xs font-mono shadow-sm">
+                        <div className="text-zinc-200 font-semibold">Computer C Network Properties:</div>
+                        <div className="flex items-center gap-2.5 pt-1">
+                          <span className="text-zinc-500 font-mono">IP:</span>
                           <input
                             type="text"
                             value={customAddressC}
                             onChange={(e) => setCustomAddressC(e.target.value)}
-                            className="px-2 py-1 bg-zinc-950 border border-zinc-700 rounded text-zinc-100 font-mono text-xs outline-none focus:border-blue-500"
+                            className="px-3 py-1.5 bg-[#121214] border border-white/[0.08] rounded-xl text-zinc-100 font-mono text-xs outline-none focus:border-blue-500/80"
                           />
                           <button
                             type="button"
@@ -824,7 +864,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                                 setIsTaskDone(true);
                               }
                             }}
-                            className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer"
+                            className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all"
                           >
                             Save
                           </button>
@@ -874,11 +914,11 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               </div>
 
               {/* Fixed Button Row matching Day 1 */}
-              <div className="pt-4 border-t border-zinc-800 flex items-center justify-between gap-3">
+              <div className="pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
                 >
                   Back
                 </button>
@@ -888,7 +928,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setHintLevel((prev) => prev + 1)}
-                    className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer"
+                    className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer transition-colors"
                   >
                     {hintLevel === 0 ? 'Need a hint?' : `Hint ${hintLevel} of 3`}
                   </button>
@@ -903,10 +943,10 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   type="button"
                   disabled={!isPrimaryReady}
                   onClick={handleContinue}
-                  className={`px-6 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
+                  className={`px-7 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
                     isPrimaryReady
                       ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 ring-1 ring-blue-400'
-                      : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                      : 'bg-zinc-800/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
                   }`}
                 >
                   {rungIdx === currentConcept.rungs.length - 1

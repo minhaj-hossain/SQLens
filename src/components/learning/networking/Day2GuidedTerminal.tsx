@@ -425,21 +425,28 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
 
   return (
     <div
-      className={`rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden font-mono text-xs sm:text-[13px] shadow-lg select-text ${className}`}
+      className={`rounded-2xl bg-[#09090b] border border-white/[0.08] overflow-hidden font-mono text-xs sm:text-[13px] shadow-2xl select-text ${className}`}
       data-testid="day2-guided-terminal"
     >
       {/* Terminal Title Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-zinc-900 border-b border-zinc-800 text-zinc-400 select-none">
-        <div className="flex items-center gap-2">
-          <TerminalIcon className="w-3.5 h-3.5 text-zinc-400" />
-          <span className="font-semibold text-zinc-300">Terminal (Computer A)</span>
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#121214] border-b border-white/[0.06] text-zinc-400 select-none">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700/80" />
+            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700/80" />
+            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700/80" />
+          </div>
+          <div className="flex items-center gap-2 pl-1">
+            <TerminalIcon className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="font-semibold text-zinc-200">Terminal (Computer A)</span>
+          </div>
         </div>
-        <span className="text-[11px] text-zinc-500">C:\Users\you&gt;</span>
+        <span className="text-[11px] text-zinc-500 font-mono">C:\Users\you&gt;</span>
       </div>
 
       {/* Terminal Output Log Area (Max height matching Day 1) */}
       <div
-        className="flex-1 p-3.5 overflow-y-auto max-h-[220px] sm:max-h-[260px] space-y-3"
+        className="flex-1 p-4 overflow-y-auto max-h-[220px] sm:max-h-[260px] space-y-3"
         role="log"
         aria-live="polite"
       >
@@ -453,7 +460,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
             <div
               className={
                 entry.isLabMessage
-                  ? 'pl-3 border-l-2 border-blue-500 text-blue-300 bg-blue-950/20 py-1 rounded-r'
+                  ? 'pl-3 border-l-2 border-blue-500 text-blue-300 bg-blue-950/20 py-1.5 rounded-r'
                   : 'space-y-0.5'
               }
             >
@@ -479,9 +486,9 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
       </div>
 
       {/* Input Row with Ghost Text & Chips */}
-      <div className="p-2.5 bg-zinc-900/60 border-t border-zinc-800/80 space-y-2">
+      <div className="p-3 bg-[#121214] border-t border-white/[0.06] space-y-2">
         <div
-          className="relative flex items-center px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700/80 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+          className="relative flex items-center px-3.5 py-2 rounded-xl bg-[#09090b] border border-white/[0.08] focus-within:border-blue-500/80 focus-within:ring-1 focus-within:ring-blue-500/40"
           onClick={() => inputRef.current?.focus()}
         >
           <span className="text-zinc-500 select-none mr-2">C:\Users\you&gt;</span>

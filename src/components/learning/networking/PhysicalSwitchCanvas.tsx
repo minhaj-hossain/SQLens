@@ -83,7 +83,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
 
   return (
     <div
-      className={`relative w-full rounded-2xl bg-[#0B101B] border border-zinc-800 shadow-2xl overflow-hidden select-none transition-all duration-300 ${className}`}
+      className={`relative w-full rounded-2xl bg-[#0c0c0e] border border-white/[0.08] shadow-2xl overflow-hidden select-none transition-all duration-300 ${className}`}
       data-testid="physical-switch-canvas"
       role="region"
       aria-label="Physical Switch Connection Canvas"
@@ -92,17 +92,17 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
       <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between text-xs font-mono pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold tracking-wider uppercase transition-colors ${
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-mono font-medium tracking-wider transition-all ${
               isAllConnected
-                ? 'bg-emerald-950/80 border-emerald-600/70 text-emerald-300'
-                : 'bg-zinc-900/90 border-zinc-700/80 text-zinc-400'
+                ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300 shadow-sm'
+                : 'bg-[#18181b] border-white/[0.08] text-zinc-400'
             }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${
                 isAllConnected
-                  ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
-                  : 'bg-zinc-500'
+                  ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                  : 'bg-zinc-600'
               }`}
             />
             {isAllConnected
