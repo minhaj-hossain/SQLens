@@ -12,6 +12,7 @@ This directory contains the definitive specifications, architectural contracts, 
 |---|---|
 | [`GLOBAL_SPEC.md`](./GLOBAL_SPEC.md) | **The Global Architecture & Rules.** Covers the 5-second test, learner persona, the 5-stage cognitive engine (`LOOK ➔ WATCH ➔ READ ➔ DO ➔ CHECK`), tone of voice, forbidden words, 6 layout states, guided terminal rules, and quality gates. **Mandatory reading for all modules.** |
 | [`DAY_1_THE_FIRST_LINK.md`](./DAY_1_THE_FIRST_LINK.md) | **Day 1 (Module 1) Specification.** Complete 4 concepts, 25 rungs, exact copy, 8 counted vocabulary words, Simplified notes, Look Inside dialogs, and troubleshooting tickets. |
+| [`DAY_2_THE_SHARED_WIRE.md`](./DAY_2_THE_SHARED_WIRE.md) | **Day 2 (Module 2) Specification.** The introduction of a 3rd computer, the network switch, MAC hardware badges, ARP roll calls (broadcasts), ARP address books (`arp -a`), and Request Timed Out. |
 
 ---
 
