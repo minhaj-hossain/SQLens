@@ -879,6 +879,92 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   </div>
                 )}
 
+                {/* Concept 1 Rung 1: Switch Inspection Task Card */}
+                {currentRung.id === 'c1-r1' && (
+                  <div className="p-4 rounded-xl bg-[#18181b] border border-blue-500/30 space-y-2.5 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-blue-300 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-400" />
+                        <span>Action: Inspect Switch</span>
+                      </span>
+                      {isTaskDone && (
+                        <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Inspected
+                        </span>
+                      )}
+                    </div>
+                    {!isTaskDone && (
+                      <button
+                        type="button"
+                        onClick={() => setIsTaskDone(true)}
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all shadow-md active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>⚡ Click to Inspect 4-Port Switch</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Concept 2 Rung 1: MAC Inspection Task Card */}
+                {currentRung.id === 'c2-r1' && (
+                  <div className="p-4 rounded-xl bg-[#18181b] border border-amber-500/30 space-y-2.5 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-amber-300 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                        <span>Action: Inspect Hardware MAC</span>
+                      </span>
+                      {isTaskDone && (
+                        <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Inspected
+                        </span>
+                      )}
+                    </div>
+                    {!isTaskDone && (
+                      <button
+                        type="button"
+                        onClick={() => setIsTaskDone(true)}
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition-all shadow-md active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>⚡ Click to Inspect MAC Name Tag</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Concept 3 Rung 1: Broadcast ARP Task Card */}
+                {currentRung.id === 'c3-r1' && (
+                  <div className="p-4 rounded-xl bg-[#18181b] border border-amber-500/30 space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-amber-300 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                        <span>Action: Shout to the Room</span>
+                      </span>
+                      {isTaskDone && (
+                        <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Broadcast Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-relaxed font-normal">
+                      Your computer has never communicated with Friend&apos;s computer before and does not know its hardware name tag. Click below to simulate sending a broadcast roll call out to every machine plugged into the switch.
+                    </p>
+                    {!isTaskDone ? (
+                      <button
+                        type="button"
+                        onClick={() => setIsTaskDone(true)}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition-all shadow-md active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <span>⚡ Broadcast ARP Question (Shout to Room)</span>
+                      </button>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 text-xs flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>The ARP roll-call message fanned out across all ports! Click <strong>Continue</strong> below to proceed.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Interactive Questions Styled with Clean Radio Indicators */}
                 {currentRung.check.options && (
                   <div className="space-y-3 pt-1">

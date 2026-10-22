@@ -1176,7 +1176,16 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
 
           {/* ---------------- ARP Roll Call Bubble (Concept 3) ---------------- */}
           {(messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
-            <g id="arp-broadcast-bubble" className="transition-all duration-300">
+            <g
+              id="arp-broadcast-bubble"
+              onClick={() => {
+                if (soundEnabled) soundFx.playSuccess();
+                onBroadcast?.();
+              }}
+              className="transition-all duration-300 cursor-pointer group"
+              role="button"
+              aria-label="Broadcast ARP Roll Call Question"
+            >
               <rect
                 x="310"
                 y="502"
@@ -1187,6 +1196,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 stroke="#D97706"
                 strokeWidth="1.5"
                 filter="url(#softGlow)"
+                className="group-hover:stroke-amber-400 group-hover:fill-amber-900/60 transition-colors"
               />
               <circle cx="330" cy="518" r="4.5" fill="#FBBF24" />
               <text
@@ -1197,12 +1207,29 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 fontSize="11"
                 fontFamily="ui-monospace, monospace"
                 fontWeight="bold"
+                className="group-hover:fill-white transition-colors"
               >
                 ARP: Who has 192.168.1.20? Tell 192.168.1.10
               </text>
             </g>
           )}
         </svg>
+
+        {/* Floating Broadcast Action Button */}
+        {onBroadcast && (messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                if (soundEnabled) soundFx.playSuccess();
+                onBroadcast();
+              }}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-sans text-xs font-bold tracking-wide shadow-xl shadow-amber-500/30 border border-amber-300 transition-all flex items-center gap-2 cursor-pointer active:scale-95 animate-pulse"
+            >
+              <span>⚡ Broadcast ARP Question (Shout to Room)</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

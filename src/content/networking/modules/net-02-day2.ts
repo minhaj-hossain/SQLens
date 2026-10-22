@@ -835,6 +835,9 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
     meaningText:
       'A broadcast is a message addressed to "everyone". When the switch receives a broadcast on Port 1, it forwards copies out of Port 2 and Port 3 so everyone can hear.',
     nextHook: 'What exact question does Your computer shout to the room?',
+    doText: 'Click the Broadcast button on the stage (or in this card) to simulate shouting to the room.',
+    whyText: 'Your computer needs Friend’s hardware name tag (MAC) before it can address the outer envelope.',
+    expectText: 'A golden question wave fans out across the switch to every computer plugged into the room.',
     lockMessage: 'Click the Broadcast button on the stage to simulate shouting to the room.',
     check: {
       type: 'task',
