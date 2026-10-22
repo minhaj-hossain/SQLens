@@ -117,17 +117,24 @@ Follow the layout and styling established in [Day2CockpitView.tsx](file:///d:/Ev
 
 ## 5. Visual Stage Design (62% Left Canvas)
 
-Follow the styling established in `PhysicalConnectionCanvas.tsx`:
-- **Theme**: Premium dark aesthetic (`bg-[#0c0c0e]`, `border-white/[0.06]`).
-- **Nodes (Computers/Switches)**:
-  - Rounded glassmorphic cards with crisp borders.
-  - Active RJ-45 sockets with dual link LEDs (`off` = dark, `on` = glowing emerald `#10b981`).
-  - Street address bands (`192.168.1`) highlighted in blue or purple; house numbers (`.10`, `.20`) highlighted in bright white mono text.
-  - Hardware MAC name tags displayed as metallic badges (`00-00-5e-00-53-01`).
-- **Cables & Signals**:
-  - Smooth SVG curves connecting sockets.
-  - Cable disconnection shows realistic dangling patch cables on the desk.
-  - Electrical packets animate along the wire with particle glow (`emerald` for ping echo, `amber` for broadcast roll-call, `rose` for blocked drop).
+Follow the physical vector workbench established in `PhysicalConnectionCanvas.tsx`, `PhysicalSwitchCanvas.tsx`, and `PhysicalRouterCanvas.tsx`:
+- **CRITICAL ARCHITECTURAL RULE**: The visual stage canvas MUST ALWAYS be an authentic handcrafted **vector SVG workbench scene** (`viewBox="0 0 1000 680"` or `720`).
+- **ABSOLUTE BAN on Generic HTML Div Cards**: Never render computers, switches, routers, or network appliances as HTML flexbox `<div>` cards.
+- **Physical Desk Ground**:
+  - Gradient desk ground (`#141D2D` to `#0B101B`) at `y = 500 to 680` with a horizon line (`#1E293B`).
+  - Neighborhood street bands (`192.168.1.x`, `192.168.2.x`) painted directly on the desk surface with dashed borders.
+- **Physical Hardware Workstations (Monitors)**:
+  - Vector monitor stands, frames (`#0F172A`), screens (`#020617`), and `>_` terminal prompts.
+  - Active RJ-45 sockets with glowing link LEDs (`url(#softGlow)`).
+  - Screen displays mini live status (IP, Gateway, Subnet mask).
+- **Physical Central Rackmount Appliances (Switches, Routers, Gateways, Servers)**:
+  - Rack chassis with metal ears, mounting screws, and ventilation cooling slats.
+  - Cutout RJ-45 ports with individual port numbers, link LEDs, and gateway doorway tags.
+- **Curved Patch Cables & Droop Physics**:
+  - Connected cables are smooth cubic beziers (`strokeWidth="6"` + inner highlight `strokeWidth="1.5"`).
+  - Unplugged cables realistically droop to the desk surface with a red tip and interactive click-to-plug button.
+- **Interactive Layer Switcher**:
+  - Top selector bar: `[All | Sockets | Addresses | Doorways | Name tags]` to provide focused X-ray vision without screen clutter.
 
 ---
 

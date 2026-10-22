@@ -24,9 +24,18 @@ This document provides technical design specifications for the split 62/38 view 
 
 ---
 
-## 2. Dynamic Stage Unfolding (`entryStageState`)
+## 2. Dynamic Stage Unfolding & SVG Workbench Requirement
 
-The stage canvas on the left must **never** be static or overloaded with information. It is driven by the active rung's `entryStageState`:
+### MANDATORY CANVAS RULE: Vector SVG Workbench Only
+The stage canvas on the left must **never** use HTML flexbox `<div>` cards for computers, switches, routers, or network appliances.
+It MUST ALWAYS be implemented as a single, responsive vector SVG canvas (`viewBox="0 0 1000 680"` or `viewBox="0 0 1000 720"`) containing:
+1. **Physical Desk Surface**: `<rect x="0" y="500" width="1000" height="180" fill="url(#deskGrad)" />` with horizon line at `y=500`.
+2. **Physical Computer Monitors**: Stand (`path` + base `rect`), Bezel (`#0F172A`), Glass screen (`#020617`), Terminal prompt `>_`, Socket cutout, and glowing Link LED circle (`#22C55E` with `filter="url(#softGlow)"`).
+3. **Physical Central Networking Appliance**: Rackmount chassis, rack ears with screws, cooling slats, port cutouts, port number labels, link LEDs, and gateway doorway tags.
+4. **Physical Curved Patch Cables**: Smooth cubic bezier curve when connected, drooping dashed cable to the desk surface with red tip when unplugged.
+5. **Interactive Layer Switcher**: Top toolbar: `[All | Sockets | Addresses | Doorways | Name tags]`.
+
+The stage unfolds rung by rung driven by the active rung's `entryStageState`:
 
 ```typescript
 export interface EntryStageState {

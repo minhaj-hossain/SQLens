@@ -23,36 +23,36 @@ export const DAY3_VOCABULARY: Record<string, Day3VocabularyTerm> = {
     term: 'default gateway',
     introducedAt: 'c2-r1',
     firstShownSentence:
-      'The doorway IP address on your local street where you send mail destined for any other street is your default gateway.',
+      'The doorway IP address on your local street where you send packets for any other street is your default gateway.',
     tooltip:
-      'The local IP address of your router’s interface on your street. Your computer hands all foreign mail to this address.',
-    myWordsEntry: 'Default Gateway: the doorway address on your street for reaching the outside world.',
+      'The doorway address on your local street. When your computer needs to reach another street, it sends the packet here.',
+    myWordsEntry: 'Default Gateway: the doorway address on your street for reaching other streets.',
   },
   hop: {
     term: 'hop',
     introducedAt: 'c2-r4',
     firstShownSentence:
-      'Each jump from a computer across a router to the next network link is called a hop.',
+      'Each step from a computer across a router to another network is called a hop.',
     tooltip:
       'A single step along the network path from one router to the next.',
-    myWordsEntry: 'Hop: one step along the journey from your machine across a router.',
+    myWordsEntry: 'Hop: one step along the journey across a router.',
   },
   'routing table': {
     term: 'routing table',
     introducedAt: 'c3-r1',
     firstShownSentence:
-      'The router’s internal notebook listing which street connects to which physical port is called a routing table.',
+      'The router’s internal map showing which street connects to which socket is called a routing table.',
     tooltip:
-      'A lookup table inside a router that maps destination network addresses to physical egress interfaces.',
+      'A map inside a router listing which street is connected to which socket.',
     myWordsEntry: 'Routing table: the router’s internal map of which street is on which port.',
   },
   forwarding: {
     term: 'forwarding',
     introducedAt: 'c3-r2',
     firstShownSentence:
-      'Taking a packet arriving on one socket and sending it out the socket matching the destination street is called forwarding.',
+      'Taking a packet arriving on one socket and sending it out the socket for the destination street is called forwarding.',
     tooltip:
-      'Relaying an incoming packet across router interfaces toward its destination network.',
+      'Taking an incoming packet from one socket and sending it out the socket leading to the target street.',
     myWordsEntry: 'Forwarding: passing a packet from an incoming port to an outgoing port toward its goal.',
   },
   traceroute: {
@@ -61,7 +61,7 @@ export const DAY3_VOCABULARY: Record<string, Day3VocabularyTerm> = {
     firstShownSentence:
       'A diagnostic command that records every router doorway your packet stepped through is called traceroute (or tracert).',
     tooltip:
-      'A terminal diagnostic command that lists each router hop along the path to a remote host.',
+      'A command that lists each router doorway your packet passed through to reach its destination.',
     myWordsEntry: 'Traceroute (tracert): prints the list of router doorways your packet passes through.',
   },
 };
@@ -285,10 +285,10 @@ const CONCEPT_1_RUNGS: Day3Rung[] = [
         },
         {
           id: 'opt-switch-blocked',
-          label: 'The switch automatically converted the ping into an email',
+          label: 'The switch automatically moved Computer B onto Green Street',
           isCorrect: false,
           feedback:
-            'Switches are simple Layer 2 hardware; they do not convert packets into emails.',
+            'Switches only pass traffic between existing cables; they cannot change which street a computer belongs to.',
         },
       ],
     },
@@ -359,9 +359,9 @@ const CONCEPT_1_RUNGS: Day3Rung[] = [
         },
         {
           id: 'opt-summary-wrong2',
-          label: 'Switches only work on Mondays and Tuesdays',
+          label: 'A switch needs to be unplugged and restarted to learn new streets',
           isCorrect: false,
-          feedback: 'Switches run 24/7!',
+          feedback: 'Restarting does not change network boundaries; a switch only operates within one street.',
         },
       ],
     },
@@ -532,7 +532,7 @@ const CONCEPT_2_RUNGS: Day3Rung[] = [
     newWords: [],
     look: 'Think back to Day 2: to send an electrical frame across the wire, Computer A needs a hardware MAC name tag.',
     story:
-      'Here is the golden rule of local networks:\n\n1. Computer A wants to send data to Computer B (`192.168.2.20`).\n2. Computer A knows Computer B is on a **different street**.\n3. Computer A cannot talk to Computer B directly.\n4. So Computer A places the letter in an envelope addressed physically to **the Gateway Doorway** (`192.168.1.1`)!\n\nWhose MAC address does Computer A look up in its notebook?',
+      'Here is the golden rule of local networks:\n\n1. Computer A wants to send data to Computer B (`192.168.2.20`).\n2. Computer A knows Computer B is on a **different street**.\n3. Computer A cannot talk to Computer B directly.\n4. So Computer A addresses the local packet to **the Gateway Doorway** (`192.168.1.1`)!\n\nWhose MAC address does Computer A look up in its notebook?',
     nextHook: 'Let’s check arp -a to verify.',
     lockMessage: 'Select whose MAC address is needed',
     check: {
@@ -730,7 +730,7 @@ const CONCEPT_3_RUNGS: Day3Rung[] = [
     newWords: [],
     look: 'Inspect the packet headers before and after passing through the router.',
     story:
-      'This is one of the deepest truths in computer networking:\n\n- **IP Addresses stay the same** from start to finish! Source IP is always `192.168.1.10`, and Destination IP is always `192.168.2.20`.\n- **MAC Addresses rewrite at every router hop!**\n  - On Green Street: Source MAC = Computer A, Destination MAC = Router Port 1.\n  - On Orange Street: Source MAC = Router Port 2, Destination MAC = Computer B.\n\nThink of the IP address as the postal address written on the letter, and the MAC address as the delivery van carrying it on this specific street.',
+      'Here is what happens as packets cross a router:\n\n- **IP Addresses stay the same from start to finish!** Source IP is always `192.168.1.10`, and Destination IP is always `192.168.2.20`.\n- **MAC Addresses change at every router hop!**\n  - On Green Street: Source MAC = Computer A, Destination MAC = Router Port 1.\n  - On Orange Street: Source MAC = Router Port 2, Destination MAC = Computer B.\n\nThe IP address tells the network which computer to deliver to. The MAC address is the local name tag for the immediate wire.',
     nextHook: 'Let’s sort these properties on the board to prove mastery.',
     lockMessage: 'Confirm what changes across a router hop',
     check: {
@@ -752,15 +752,15 @@ const CONCEPT_3_RUNGS: Day3Rung[] = [
         },
         {
           id: 'opt-all-change',
-          label: 'All letters and numbers change into binary emojis',
+          label: 'Both IP addresses and MAC addresses change completely at every hop',
           isCorrect: false,
-          feedback: 'Network protocols follow strict, disciplined header formats.',
+          feedback: 'IP addresses must remain constant so the destination knows where to send replies.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'General Direction', text: 'Recall the postal address vs delivery van analogy.' },
-      { level: 2, label: 'Specific Clue', text: 'The postal address (IP) stays the same. The local van (MAC) changes.' },
+      { level: 1, label: 'General Direction', text: 'Which address stays constant for the entire trip, and which changes per local wire?' },
+      { level: 2, label: 'Specific Clue', text: 'The destination IP stays the same. The local MAC tag changes at each hop.' },
       { level: 3, label: 'Direct Answer', text: 'Select the option stating MAC addresses are rewritten while IP addresses remain constant.' },
     ],
     lookInside: {
@@ -768,7 +768,7 @@ const CONCEPT_3_RUNGS: Day3Rung[] = [
       title: 'Layer 2 Frame vs Layer 3 Packet',
       chipBeside: 'Packet Anatomy',
       pictureDescription: 'Diagram showing Ethernet header being stripped and rewritten while the IP packet inside stays unchanged.',
-      text: 'When the router receives an Ethernet frame on Port 1, it tears off the old Layer 2 envelope (Computer A ➔ Router Port 1 MAC). It inspects the IP packet inside. When it forwards the packet out Port 2, it wraps it in a brand-new Layer 2 envelope (Router Port 2 MAC ➔ Computer B MAC).',
+      text: 'When the router receives a packet on Port 1, it checks the destination IP address inside. To forward it out Port 2, it gives the packet a fresh local MAC tag for Computer B on Orange Street.',
     },
     entryStageState: CONCEPT_3_BASE_STAGE,
   },
@@ -790,7 +790,7 @@ const CONCEPT_3_RUNGS: Day3Rung[] = [
       sortItems: [
         { id: 'item-1', snippet: 'Stays the same from origin to final destination', targetLabel: 'IP Address (Layer 3)' },
         { id: 'item-2', snippet: 'Rewritten at every router hop along the path', targetLabel: 'MAC Address (Layer 2)' },
-        { id: 'item-3', snippet: 'Identifies the local delivery van on the immediate wire', targetLabel: 'MAC Address (Layer 2)' },
+        { id: 'item-3', snippet: 'Physical name tag used only on the immediate local wire', targetLabel: 'MAC Address (Layer 2)' },
         { id: 'item-4', snippet: 'Specifies the street name (e.g. 192.168.1)', targetLabel: 'IP Address (Layer 3)' },
       ],
       sortLabels: ['IP Address (Layer 3)', 'MAC Address (Layer 2)'],
@@ -955,7 +955,7 @@ const CONCEPT_4_RUNGS: Day3Rung[] = [
     newWords: [],
     look: 'Celebrate your progress: You connected separate local networks across a router!',
     story:
-      'Congratulations on conquering Day 3!\n\nHere is what you mastered:\n1. **The Dead End:** Switches only forward within one local street (`192.168.1`).\n2. **The Router:** A device with multiple network cards that bridges different streets.\n3. **Default Gateway:** The doorway address on your local street where you send all foreign mail.\n4. **Hop-by-Hop Handoff:** IP addresses stay constant, while MAC addresses rewrite at every router hop.\n5. **The Gateway Triage:** Link light ➔ Local IP ➔ Gateway IP on local street ➔ Ping gateway ➔ Ping target.',
+      'Congratulations on conquering Day 3!\n\nHere is what you mastered:\n1. **The Dead End:** Switches only forward within one local street (`192.168.1`).\n2. **The Router:** A device with multiple network cards that bridges different streets.\n3. **Default Gateway:** The doorway address on your local street where you send packets for other streets.\n4. **Hop-by-Hop Handoff:** IP addresses stay constant, while MAC addresses rewrite at every router hop.\n5. **The Gateway Triage:** Link light ➔ Local IP ➔ Gateway IP on local street ➔ Ping gateway ➔ Ping target.',
     nextHook: 'Preview Day 4: Subnetting and how computers mathematically calculate street boundaries.',
     lockMessage: 'Click Continue to finish Day 3',
     check: {
@@ -1035,7 +1035,7 @@ export const ALL_DAY3_CONCEPTS: Day3ConceptDefinition[] = [
     timeEstimate: '14 min',
     goal: 'Discover routers, dual interfaces, and configure a default gateway.',
     newWordsCount: 3,
-    hookLine: 'To reach another street, you must send your mail to the doorway on your own street.',
+    hookLine: 'To reach another street, you must send your packet to the doorway on your own street.',
     rungs: CONCEPT_2_RUNGS,
   },
   {
@@ -1046,7 +1046,7 @@ export const ALL_DAY3_CONCEPTS: Day3ConceptDefinition[] = [
     timeEstimate: '14 min',
     goal: 'Inspect routing tables, trace router hops, and distinguish Layer 2 rewriting from Layer 3 preservation.',
     newWordsCount: 3,
-    hookLine: 'The IP address is the letter’s destination. The MAC address is the local delivery van.',
+    hookLine: 'The IP address is the final destination. The MAC address is the local tag on the wire.',
     rungs: CONCEPT_3_RUNGS,
   },
   {
