@@ -176,15 +176,15 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           <rect x="0" y="470" width="1000" height="150" fill="url(#deskGrad)" />
           <line x1="0" y1="470" x2="1000" y2="470" stroke="#1E293B" strokeWidth="2" />
 
-          {/* SHARED STREET BLUE BAND (y 485) */}
+          {/* SHARED STREET BLUE BAND (y 525) */}
           {showBands && (
             <g className="transition-opacity duration-500">
               <rect
                 x="80"
-                y="485"
+                y="525"
                 width="840"
-                height="28"
-                rx="14"
+                height="32"
+                rx="16"
                 fill="#2563EB"
                 fillOpacity="0.18"
                 stroke="#2563EB"
@@ -193,7 +193,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               />
               <text
                 x="500"
-                y="504"
+                y="546"
                 textAnchor="middle"
                 fill="#60A5FA"
                 fontSize="12"

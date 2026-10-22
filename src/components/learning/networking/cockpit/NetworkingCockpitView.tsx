@@ -712,7 +712,10 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             )}
 
             {/* Work Area: Terminal Simulator */}
-            {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
+            {(currentRung.layoutState === 'STATE_B' ||
+              currentRung.layoutState === 'STATE_C' ||
+              currentRung.layoutState === 'STATE_D' ||
+              Boolean(currentRung.check.expectedCommand)) && (
               <Day1GuidedTerminal
                 expectedCommand={currentRung.check.expectedCommand}
                 allowedTargets={currentRung.check.allowedTargets}

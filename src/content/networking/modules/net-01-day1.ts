@@ -610,7 +610,7 @@ export const CONCEPT_2: ConceptDefinition = {
       newWords: [],
       look: 'Look at your computer\'s tag. It says not set.',
       story: 'Your computer has no address set right now. The cable is plugged in and the light is green.',
-      doText: 'Open the Terminal tab and run ping 192.168.1.20.',
+      doText: 'Type ping 192.168.1.20 and press Enter.',
       whyText: 'Can a machine with no identity send a message?',
       expectText: 'The ping fails: transmit failed.',
       meaningText: 'Without an address of its own, a computer cannot put a return address on the message, so it cannot send.',
@@ -623,7 +623,7 @@ export const CONCEPT_2: ConceptDefinition = {
         allowedTargets: ['192.168.1.20'],
       },
       hints: [
-        { level: 1, label: 'Hint 1 of 3', text: 'Click the Terminal tab and run ping 192.168.1.20.' },
+        { level: 1, label: 'Hint 1 of 3', text: 'Type ping 192.168.1.20 into the terminal and press Enter.' },
         { level: 2, label: 'Hint 2 of 3', text: 'Press Tab and Enter in the terminal.' },
         { level: 3, label: 'Show me', text: 'The lab runs ping for you to observe the failure.' },
       ],

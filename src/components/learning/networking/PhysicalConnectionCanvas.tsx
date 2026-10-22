@@ -158,10 +158,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               {/* Left computer street band (Blue: 192.168.1) */}
               <rect
                 x="80"
-                y="485"
+                y="525"
                 width="380"
-                height="28"
-                rx="14"
+                height="32"
+                rx="16"
                 fill="#2563EB"
                 fillOpacity="0.18"
                 stroke="#2563EB"
@@ -170,7 +170,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               />
               <text
                 x="270"
-                y="504"
+                y="546"
                 textAnchor="middle"
                 fill="#60A5FA"
                 fontSize="12"
@@ -188,10 +188,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
                 <>
                   <rect
                     x="540"
-                    y="485"
+                    y="525"
                     width="380"
-                    height="28"
-                    rx="14"
+                    height="32"
+                    rx="16"
                     fill="#7C3AED"
                     fillOpacity="0.18"
                     stroke="#7C3AED"
@@ -200,7 +200,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
                   />
                   <text
                     x="730"
-                    y="504"
+                    y="546"
                     textAnchor="middle"
                     fill="#C084FC"
                     fontSize="12"
@@ -215,10 +215,10 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
                 <>
                   <rect
                     x="540"
-                    y="485"
+                    y="525"
                     width="380"
-                    height="28"
-                    rx="14"
+                    height="32"
+                    rx="16"
                     fill="#2563EB"
                     fillOpacity="0.18"
                     stroke="#2563EB"
@@ -227,7 +227,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
                   />
                   <text
                     x="730"
-                    y="504"
+                    y="546"
                     textAnchor="middle"
                     fill="#60A5FA"
                     fontSize="12"
@@ -573,7 +573,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         {/* Computer A Label */}
         <div
           className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '23%', top: '74%' }}
+          style={{ left: '23%', top: '68%' }}
         >
           <div className="text-sm font-semibold text-zinc-200">Your computer</div>
           <div
@@ -588,7 +588,7 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
         {/* Computer B Label */}
         <div
           className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '77%', top: '74%' }}
+          style={{ left: '77%', top: '68%' }}
         >
           <div className="text-sm font-semibold text-zinc-200">Friend&apos;s computer</div>
           <div
