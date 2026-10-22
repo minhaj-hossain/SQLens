@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Search,
   Sparkles,
+  Keyboard,
 } from 'lucide-react';
 import type { ModuleData, Concept } from '../../../../types/curriculum';
 import type { Day1Rung, ConceptDefinition, VocabularyTerm } from '../../../../types/networking-day1';
@@ -22,6 +23,8 @@ import {
 import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
 import { Day1GuidedTerminal } from '../Day1GuidedTerminal';
 import { StructuredStoryContent } from './StructuredStoryContent';
+import { ProgressiveHintBox } from './ProgressiveHintBox';
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { useLearning } from '../../../providers/LearningProgressProvider';
 import { useLearningNavigation } from '../../../learn/use-learning-navigation';
 
@@ -61,8 +64,10 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
   // Hints
   const [hintLevel, setHintLevel] = useState<number>(0);
 
-  // My Words Drawer & Look Inside modal
+  // My Words Drawer, Shortcuts & Look Inside modal
   const [isWordsDrawerOpen, setIsWordsDrawerOpen] = useState(false);
+  const [wordsSearchQuery, setWordsSearchQuery] = useState('');
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [activeLookInsideId, setActiveLookInsideId] = useState<string | null>(null);
   const [isSimplifiedOpen, setIsSimplifiedOpen] = useState(false);
 
@@ -198,7 +203,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
   }, [conceptIdx, rungIdx, backToRoadmap]);
 
   // Handle Question Selection
-  const handleSelectOption = (optId: string) => {
+  const handleSelectOption = useCallback((optId: string) => {
     setSelectedOptionId(optId);
     const opt = currentRung.check.options?.find((o) => o.id === optId);
     if (opt) {
@@ -206,7 +211,27 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
       setIsQuestionCorrect(opt.isCorrect);
       setIsTaskDone(opt.isCorrect);
     }
-  };
+  }, [currentRung]);
+
+  // Handle Rung Reset
+  const handleResetRung = useCallback(() => {
+    setIsTaskDone(false);
+    setTaskOutcome(null);
+    setSelectedOptionId(null);
+    setSelectedWhyId(null);
+    setFeedbackText(null);
+    setIsQuestionCorrect(null);
+    setHintLevel(0);
+    setIsSimplifiedOpen(false);
+    setLearnerSentence('');
+    setSelfCheckRevealed(false);
+    setSortMatches({});
+    setCheckedLight(false);
+    setCheckedAddress(false);
+    setCheckedPing(false);
+    setManualCableState(null);
+    setManualStreetAddress(null);
+  }, []);
 
   // Handle Sort Match Selection (Concept 3 Rung 5)
   const handleSortSelect = (itemId: string, lbl: string) => {
@@ -228,35 +253,78 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
     if (currentRung.check.type === 'diagnose' && isTaskDone) return true;
     if (currentRung.check.type === 'explain-back' && isQuestionCorrect === true) return true;
     if (currentRung.check.type === 'write-and-compare' && selfCheckRevealed && isTaskDone) return true;
-    if (currentRung.check.type === 'sort') {
-      const items = currentRung.check.sortItems;
-      if (!items || items.length === 0) return false;
-      return items.every((item) => sortMatches[item.id] === item.targetLabel);
-    }
+    if (currentRung.check.type === 'sort' && isTaskDone) return true;
     return false;
-  }, [currentRung, isTaskDone, isQuestionCorrect, selfCheckRevealed, sortMatches]);
+  }, [currentRung, isQuestionCorrect, isTaskDone, selfCheckRevealed]);
 
-  // Keyboard navigation
+  // Global Keyboard Shortcuts Accelerator (Heuristics 3 & 7)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (pageMode !== 'normal') return;
+
+      if (e.key === 'Escape') {
+        if (isShortcutsOpen) { setIsShortcutsOpen(false); return; }
+        if (activeLookInsideId) { setActiveLookInsideId(null); return; }
+        if (isWordsDrawerOpen) { setIsWordsDrawerOpen(false); return; }
+      }
+
+      // Do not trigger letter/number hotkeys if user is focused inside an input/textarea
+      const target = e.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || target?.isContentEditable) {
         return;
       }
-      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+
+      if (e.key === 'Enter') {
         if (isPrimaryReady) {
+          e.preventDefault();
           handleContinue();
         }
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        e.preventDefault();
         handleBack();
-      } else if (e.key.toLowerCase() === 'r') {
-        setIsTaskDone(false);
+      } else if (e.key === 'ArrowRight') {
+        if (isPrimaryReady) {
+          e.preventDefault();
+          handleContinue();
+        }
+      } else if (e.key === '1' || e.key === '2' || e.key === '3') {
+        const idx = parseInt(e.key, 10) - 1;
+        if (currentRung.check.options && currentRung.check.options[idx]) {
+          e.preventDefault();
+          handleSelectOption(currentRung.check.options[idx].id);
+        }
+      } else if (e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        setIsWordsDrawerOpen((prev) => !prev);
       } else if (e.key.toLowerCase() === 'h') {
-        setHintLevel((prev) => Math.min(3, prev + 1));
+        if (currentRung.hints && currentRung.hints.length > 0) {
+          e.preventDefault();
+          setHintLevel((prev) => (prev < currentRung.hints!.length ? prev + 1 : 1));
+        }
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsOpen((prev) => !prev);
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        handleResetRung();
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleContinue, handleBack, isPrimaryReady]);
+  }, [
+    pageMode,
+    isPrimaryReady,
+    isShortcutsOpen,
+    activeLookInsideId,
+    isWordsDrawerOpen,
+    currentRung,
+    handleContinue,
+    handleBack,
+    handleSelectOption,
+    handleResetRung,
+  ]);
 
   // Unlocked vocabulary words up to the current concept
   const unlockedWords = useMemo(() => {
@@ -462,18 +530,30 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               ))}
             </div>
 
-            {/* My Words Drawer Button */}
+            {/* My Words & Shortcuts Buttons */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => setIsShortcutsOpen(true)}
+                title="Keyboard Shortcuts (?)"
+                className="p-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+              >
+                <Keyboard className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsWordsDrawerOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
               >
                 <BookOpen className="w-3.5 h-3.5 text-zinc-300" />
                 <span>My Words</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-300">
                   {unlockedWords.length}
                 </span>
+                <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-zinc-800/80 text-zinc-400 ml-0.5 border border-white/10 hidden sm:inline">
+                  W
+                </kbd>
               </button>
             </div>
           </header>
@@ -681,7 +761,7 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                   {currentRung.check.question}
                 </div>
                 <div className="space-y-2">
-                  {currentRung.check.options.map((opt) => {
+                  {currentRung.check.options.map((opt, optIndex) => {
                     const isSelected = selectedOptionId === opt.id;
                     return (
                       <button
@@ -701,9 +781,9 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                             className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                               isSelected
                                 ? opt.isCorrect
-                                  ? 'border-emerald-400 bg-emerald-500/20'
-                                  : 'border-amber-400 bg-amber-500/20'
-                                : 'border-zinc-600 group-hover:border-zinc-400'
+                                ? 'border-emerald-400 bg-emerald-500/20'
+                                : 'border-amber-400 bg-amber-500/20'
+                              : 'border-zinc-600 group-hover:border-zinc-400'
                             }`}
                           >
                             {isSelected && (
@@ -716,13 +796,18 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
                           </span>
                           <span className="font-normal leading-snug">{opt.label}</span>
                         </div>
-                        {isSelected && (
-                          opt.isCorrect ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          ) : (
-                            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                          )
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-white/10 group-hover:text-zinc-200 transition-colors">
+                            {optIndex + 1}
+                          </kbd>
+                          {isSelected && (
+                            opt.isCorrect ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            ) : (
+                              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                            )
+                          )}
+                        </div>
                       </button>
                     );
                   })}
@@ -916,47 +1001,73 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             )}
           </div>
 
-          {/* Fixed Button Row */}
-          <div className="pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
-            >
-              Back
-            </button>
+            {/* Progressive Hint Box (Heuristic 10) */}
+            <ProgressiveHintBox
+              hints={currentRung.hints}
+              hintLevel={hintLevel}
+              onNextHint={() => setHintLevel((prev) => (prev < currentRung.hints.length ? prev + 1 : prev))}
+              onClose={() => setHintLevel(0)}
+            />
 
-            {/* Hint Button */}
-            {hintLevel < 3 && currentRung.hints && (
+          {/* Fixed Button Row */}
+          <div className="pt-4 sm:pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setHintLevel((prev) => prev + 1)}
-                className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer transition-colors"
+                onClick={handleBack}
+                className="px-3.5 sm:px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm flex items-center gap-1.5 active:scale-[0.98]"
               >
-                {hintLevel === 0 ? 'Need a hint?' : `Hint ${hintLevel} of 3`}
+                <span>Back</span>
+                <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">←</span>
               </button>
-            )}
 
-            {/* Display active hint text if opened */}
-            {hintLevel > 0 && currentRung.hints[hintLevel - 1] && (
-              <span className="sr-only">{currentRung.hints[hintLevel - 1].text}</span>
+              <button
+                type="button"
+                onClick={handleResetRung}
+                title="Reset step (R)"
+                className="px-3 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98] flex items-center gap-1.5 text-xs font-medium"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            </div>
+
+            {/* Hint Button */}
+            {hintLevel === 0 && currentRung.hints && (
+              <button
+                type="button"
+                onClick={() => setHintLevel(1)}
+                className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer transition-colors flex items-center gap-1"
+              >
+                <span>Need a hint?</span>
+                <kbd className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-white/10 hidden sm:inline">
+                  H
+                </kbd>
+              </button>
             )}
 
             <button
               type="button"
               disabled={!isPrimaryReady}
               onClick={handleContinue}
-              className={`px-7 py-3 rounded-xl font-medium text-xs sm:text-sm transition-all cursor-pointer ${
+              className={`px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 ${
                 isPrimaryReady
                   ? 'bg-black hover:bg-zinc-900 text-white border border-white/20 hover:border-white/40 shadow-lg shadow-black/60 ring-1 ring-white/10 active:scale-[0.98]'
                   : 'bg-zinc-900/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
               }`}
             >
-              {rungIdx === currentConcept.rungs.length - 1
-                ? 'Finish this concept'
-                : isPrimaryReady
-                ? 'Continue'
-                : currentRung.lockMessage}
+              <span>
+                {rungIdx === currentConcept.rungs.length - 1
+                  ? 'Finish this concept'
+                  : isPrimaryReady
+                  ? 'Continue'
+                  : currentRung.lockMessage}
+              </span>
+              {isPrimaryReady && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-white hidden sm:inline">
+                  ↵ Enter
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -1007,29 +1118,57 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
 
       {/* My Words Drawer */}
       {isWordsDrawerOpen && (
-        <aside className="fixed inset-y-0 right-0 z-50 w-80 bg-zinc-950 border-l border-zinc-800 p-6 shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300">
+        <aside className="fixed inset-y-0 right-0 z-50 w-80 sm:w-96 bg-zinc-950 border-l border-zinc-800 p-5 sm:p-6 shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300">
           <div className="space-y-4 overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-blue-400" />
                 <h3 className="font-bold text-white text-sm">My Words</h3>
+                <span className="text-[11px] font-mono text-zinc-500">({unlockedWords.length})</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsWordsDrawerOpen(false)}
-                className="p-1 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
+                className="p-1 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3">
-              {unlockedWords.map((term) => (
-                <div key={term.term} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1">
-                  <div className="font-semibold text-blue-400 text-xs font-mono">{term.term}</div>
-                  <p className="text-xs text-zinc-300 leading-relaxed">{term.myWordsEntry}</p>
+            {/* Search Filter */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={wordsSearchQuery}
+                onChange={(e) => setWordsSearchQuery(e.target.value)}
+                placeholder="Search vocabulary..."
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 outline-none focus:border-blue-500/50 placeholder:text-zinc-500 font-sans"
+              />
+            </div>
+
+            <div className="space-y-2.5">
+              {unlockedWords
+                .filter(
+                  (term) =>
+                    term.term.toLowerCase().includes(wordsSearchQuery.toLowerCase()) ||
+                    (term.myWordsEntry || term.tooltip).toLowerCase().includes(wordsSearchQuery.toLowerCase())
+                )
+                .map((term) => (
+                  <div key={term.term} className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-1">
+                    <div className="font-semibold text-blue-400 text-xs font-mono">{term.term}</div>
+                    <p className="text-xs text-zinc-300 leading-relaxed">{term.myWordsEntry || term.tooltip}</p>
+                  </div>
+                ))}
+              {unlockedWords.filter(
+                (term) =>
+                  term.term.toLowerCase().includes(wordsSearchQuery.toLowerCase()) ||
+                  (term.myWordsEntry || term.tooltip).toLowerCase().includes(wordsSearchQuery.toLowerCase())
+              ).length === 0 && (
+                <div className="text-center py-6 text-xs text-zinc-500 font-mono">
+                  No matching vocabulary found.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -1037,13 +1176,19 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             <button
               type="button"
               onClick={() => setIsWordsDrawerOpen(false)}
-              className="w-full py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300"
+              className="w-full py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer"
             >
-              Close
+              Close (Esc)
             </button>
           </div>
         </aside>
       )}
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+      />
       </>
     )}
     </div>

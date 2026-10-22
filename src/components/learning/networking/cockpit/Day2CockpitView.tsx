@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Search,
   Shield,
+  Keyboard,
 } from 'lucide-react';
 import type { ModuleData, Concept } from '../../../../types/curriculum';
 import type {
@@ -27,6 +28,8 @@ import {
 import { PhysicalSwitchCanvas } from '../PhysicalSwitchCanvas';
 import { Day2GuidedTerminal } from '../Day2GuidedTerminal';
 import { StructuredStoryContent } from './StructuredStoryContent';
+import { ProgressiveHintBox } from './ProgressiveHintBox';
+import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { useLearning } from '../../../providers/LearningProgressProvider';
 import { useLearningNavigation } from '../../../learn/use-learning-navigation';
 
@@ -74,6 +77,8 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
   // Drawers and Modals
   const [isWordsDrawerOpen, setIsWordsDrawerOpen] = useState(false);
+  const [wordsSearchQuery, setWordsSearchQuery] = useState('');
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [activeLookInsideId, setActiveLookInsideId] = useState<string | null>(null);
   const [isSimplifiedOpen, setIsSimplifiedOpen] = useState(false);
 
@@ -262,7 +267,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
   }, [conceptIdx, rungIdx, backToRoadmap]);
 
   // Option selection
-  const handleSelectOption = (optId: string) => {
+  const handleSelectOption = useCallback((optId: string) => {
     setSelectedOptionId(optId);
     const opt = currentRung.check.options?.find((o) => o.id === optId);
     if (opt) {
@@ -270,7 +275,32 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
       setIsQuestionCorrect(opt.isCorrect);
       setIsTaskDone(opt.isCorrect);
     }
-  };
+  }, [currentRung]);
+
+  // Handle Rung Reset
+  const handleResetRung = useCallback(() => {
+    setIsTaskDone(false);
+    setTaskOutcome(null);
+    setSelectedOptionId(null);
+    setFeedbackText(null);
+    setIsQuestionCorrect(null);
+    setHintLevel(0);
+    setIsSimplifiedOpen(false);
+    setLearnerSentence('');
+    setSelfCheckRevealed(false);
+    setSortMatches({});
+    setCheckedLight(false);
+    setCheckedAddress(false);
+    setCheckedPing(false);
+    setCheckedArp(false);
+    setIsCBlocked(true);
+    setManualCables({ ...currentRung.entryStageState.cables });
+    if (currentRung.id === 'c4-r4') {
+      setCustomAddressC('192.168.2.30');
+    } else {
+      setCustomAddressC('192.168.1.30');
+    }
+  }, [currentRung]);
 
   // Handle Sort Match Selection (State F)
   const handleSortSelect = (itemId: string, lbl: string) => {
@@ -304,27 +334,73 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     return false;
   }, [currentRung, isTaskDone, isQuestionCorrect, selfCheckRevealed, sortMatches, isCBlocked]);
 
-  // Keyboard navigation
+  // Keyboard navigation & Shortcuts (Heuristics 3 & 7)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (pageMode !== 'normal') return;
+
+      if (e.key === 'Escape') {
+        if (isShortcutsOpen) { setIsShortcutsOpen(false); return; }
+        if (activeLookInsideId) { setActiveLookInsideId(null); return; }
+        if (isWordsDrawerOpen) { setIsWordsDrawerOpen(false); return; }
+      }
+
+      const target = e.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || target?.isContentEditable) {
         return;
       }
-      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+
+      if (e.key === 'Enter') {
         if (isPrimaryReady) {
+          e.preventDefault();
           handleContinue();
         }
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        e.preventDefault();
         handleBack();
-      } else if (e.key.toLowerCase() === 'r') {
-        setIsTaskDone(false);
+      } else if (e.key === 'ArrowRight') {
+        if (isPrimaryReady) {
+          e.preventDefault();
+          handleContinue();
+        }
+      } else if (e.key === '1' || e.key === '2' || e.key === '3') {
+        const idx = parseInt(e.key, 10) - 1;
+        if (currentRung.check.options && currentRung.check.options[idx]) {
+          e.preventDefault();
+          handleSelectOption(currentRung.check.options[idx].id);
+        }
+      } else if (e.key.toLowerCase() === 'w') {
+        e.preventDefault();
+        setIsWordsDrawerOpen((prev) => !prev);
       } else if (e.key.toLowerCase() === 'h') {
-        setHintLevel((prev) => Math.min(3, prev + 1));
+        if (currentRung.hints && currentRung.hints.length > 0) {
+          e.preventDefault();
+          setHintLevel((prev) => (prev < currentRung.hints!.length ? prev + 1 : 1));
+        }
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsOpen((prev) => !prev);
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        handleResetRung();
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleContinue, handleBack, isPrimaryReady]);
+  }, [
+    pageMode,
+    handleContinue,
+    handleBack,
+    handleSelectOption,
+    handleResetRung,
+    isPrimaryReady,
+    isShortcutsOpen,
+    activeLookInsideId,
+    isWordsDrawerOpen,
+    currentRung,
+  ]);
 
   const unlockedWords = useMemo(() => {
     return Object.values(DAY2_VOCABULARY);
@@ -610,18 +686,30 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               ))}
             </div>
 
-            {/* My Words Drawer Button */}
+            {/* My Words & Shortcuts Buttons */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => setIsShortcutsOpen(true)}
+                title="Keyboard Shortcuts (?)"
+                className="p-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+              >
+                <Keyboard className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsWordsDrawerOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1c1c1f] hover:bg-[#25252a] border border-white/[0.08] text-xs font-medium text-zinc-200 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98]"
               >
                 <BookOpen className="w-3.5 h-3.5 text-zinc-300" />
                 <span>My Words</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-300">
                   {unlockedWords.length}
                 </span>
+                <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-zinc-800/80 text-zinc-400 ml-0.5 border border-white/10 hidden sm:inline">
+                  W
+                </kbd>
               </button>
             </div>
           </header>
@@ -988,7 +1076,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       {currentRung.check.question}
                     </div>
                     <div className="space-y-2">
-                      {currentRung.check.options.map((opt) => {
+                      {currentRung.check.options.map((opt, optIndex) => {
                         const isSelected = selectedOptionId === opt.id;
                         return (
                           <button
@@ -1023,13 +1111,18 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                               </span>
                               <span className="font-normal leading-snug">{opt.label}</span>
                             </div>
-                            {isSelected && (
-                              opt.isCorrect ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                              ) : (
-                                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                              )
-                            )}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-white/10 group-hover:text-zinc-200 transition-colors">
+                                {optIndex + 1}
+                              </kbd>
+                              {isSelected && (
+                                opt.isCorrect ? (
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                ) : (
+                                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                                )
+                              )}
+                            </div>
                           </button>
                         );
                       })}
@@ -1332,47 +1425,73 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                 )}
               </div>
 
-              {/* Fixed Button Row matching Day 1 */}
-              <div className="pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
-                >
-                  Back
-                </button>
+              {/* Progressive Hint Box (Heuristic 10) */}
+              <ProgressiveHintBox
+                hints={currentRung.hints}
+                hintLevel={hintLevel}
+                onNextHint={() => setHintLevel((prev) => (prev < currentRung.hints.length ? prev + 1 : prev))}
+                onClose={() => setHintLevel(0)}
+              />
 
-                {/* Hint Button */}
-                {hintLevel < 3 && currentRung.hints && (
+              {/* Fixed Button Row matching Day 1 */}
+              <div className="pt-4 sm:pt-5 border-t border-white/[0.08] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setHintLevel((prev) => prev + 1)}
-                    className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer transition-colors"
+                    onClick={handleBack}
+                    className="px-3.5 sm:px-4 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm flex items-center gap-1.5 active:scale-[0.98]"
                   >
-                    {hintLevel === 0 ? 'Need a hint?' : `Hint ${hintLevel} of 3`}
+                    <span>Back</span>
+                    <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">←</span>
                   </button>
-                )}
 
-                {/* Display active hint text if opened */}
-                {hintLevel > 0 && currentRung.hints[hintLevel - 1] && (
-                  <span className="sr-only">{currentRung.hints[hintLevel - 1].text}</span>
+                  <button
+                    type="button"
+                    onClick={handleResetRung}
+                    title="Reset step (R)"
+                    className="px-3 py-2.5 rounded-xl bg-[#1c1c1f] hover:bg-[#26262a] border border-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer shadow-sm active:scale-[0.98] flex items-center gap-1.5 text-xs font-medium"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Reset</span>
+                  </button>
+                </div>
+
+                {/* Hint Button */}
+                {hintLevel === 0 && currentRung.hints && (
+                  <button
+                    type="button"
+                    onClick={() => setHintLevel(1)}
+                    className="text-xs text-zinc-400 hover:text-zinc-200 underline cursor-pointer transition-colors flex items-center gap-1"
+                  >
+                    <span>Need a hint?</span>
+                    <kbd className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-white/10 hidden sm:inline">
+                      H
+                    </kbd>
+                  </button>
                 )}
 
                 <button
                   type="button"
                   disabled={!isPrimaryReady}
                   onClick={handleContinue}
-                  className={`px-7 py-3 rounded-xl font-medium text-xs sm:text-sm transition-all cursor-pointer ${
+                  className={`px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 ${
                     isPrimaryReady
                       ? 'bg-black hover:bg-zinc-900 text-white border border-white/20 hover:border-white/40 shadow-lg shadow-black/60 ring-1 ring-white/10 active:scale-[0.98]'
                       : 'bg-zinc-900/60 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
                   }`}
                 >
-                  {rungIdx === currentConcept.rungs.length - 1
-                    ? 'Finish this concept'
-                    : isPrimaryReady
-                    ? 'Continue'
-                    : currentRung.lockMessage}
+                  <span>
+                    {rungIdx === currentConcept.rungs.length - 1
+                      ? 'Finish this concept'
+                      : isPrimaryReady
+                      ? 'Continue'
+                      : currentRung.lockMessage}
+                  </span>
+                  {isPrimaryReady && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-white hidden sm:inline">
+                      ↵ Enter
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -1420,39 +1539,85 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
       {/* My Words Drawer */}
       {isWordsDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md h-full bg-zinc-950 border-l border-zinc-800 p-6 flex flex-col space-y-4 overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-blue-400" />
-                <h3 className="font-bold text-base text-white">My Words (Day 2)</h3>
+          <div className="w-full max-w-md h-full bg-zinc-950 border-l border-zinc-800 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-blue-400" />
+                  <h3 className="font-bold text-base text-white">My Words (Day 2)</h3>
+                  <span className="text-[11px] font-mono text-zinc-500">({unlockedWords.length})</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsWordsDrawerOpen(false)}
+                  className="p-1 rounded-md hover:bg-zinc-800 text-zinc-400 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
+
+              {/* Search Filter */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={wordsSearchQuery}
+                  onChange={(e) => setWordsSearchQuery(e.target.value)}
+                  placeholder="Search vocabulary..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-200 outline-none focus:border-blue-500/50 placeholder:text-zinc-500 font-sans"
+                />
+              </div>
+
+              <div className="space-y-2.5">
+                {unlockedWords
+                  .filter(
+                    (term) =>
+                      term.term.toLowerCase().includes(wordsSearchQuery.toLowerCase()) ||
+                      term.tooltip.toLowerCase().includes(wordsSearchQuery.toLowerCase())
+                  )
+                  .map((term) => (
+                    <div
+                      key={term.term}
+                      className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-1"
+                    >
+                      <span className="font-mono text-xs font-bold text-blue-300 uppercase">
+                        {term.term}
+                      </span>
+                      <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+                        {term.tooltip}
+                      </p>
+                    </div>
+                  ))}
+                {unlockedWords.filter(
+                  (term) =>
+                    term.term.toLowerCase().includes(wordsSearchQuery.toLowerCase()) ||
+                    term.tooltip.toLowerCase().includes(wordsSearchQuery.toLowerCase())
+                ).length === 0 && (
+                  <div className="text-center py-6 text-xs text-zinc-500 font-mono">
+                    No matching vocabulary found.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-800">
               <button
                 type="button"
                 onClick={() => setIsWordsDrawerOpen(false)}
-                className="p-1 rounded-md hover:bg-zinc-800 text-zinc-400 cursor-pointer"
+                className="w-full py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 transition-colors cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                Close (Esc)
               </button>
-            </div>
-
-            <div className="space-y-3">
-              {unlockedWords.map((term) => (
-                <div
-                  key={term.term}
-                  className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 space-y-1"
-                >
-                  <span className="font-mono text-xs font-bold text-blue-300 uppercase">
-                    {term.term}
-                  </span>
-                  <p className="text-xs text-zinc-300 font-sans leading-relaxed">
-                    {term.tooltip}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </div>
       )}
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+      />
     </div>
   );
 };
