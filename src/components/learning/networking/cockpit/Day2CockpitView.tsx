@@ -117,28 +117,36 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
   // Derived effective stage state
   const effectiveStageState: Day2StageState = useMemo(() => {
-    const base = { ...currentRung.entryStageState };
-    base.cables = { ...manualCables };
-
-    // Dynamic port LEDs based on cables
-    base.portLeds = {
-      p1: manualCables.a ? 'green' : 'off',
-      p2: manualCables.b ? 'green' : 'off',
-      p3: manualCables.c ? 'green' : 'off',
-      p4: 'off',
+    const rawTags = currentRung.entryStageState.tags;
+    const baseTags = {
+      a: typeof rawTags.a === 'object' ? { ...rawTags.a } : rawTags.a,
+      b: typeof rawTags.b === 'object' ? { ...rawTags.b } : rawTags.b,
+      c: typeof rawTags.c === 'object' ? { ...rawTags.c } : rawTags.c,
     };
 
-    // Dynamic Computer C address tag
-    if (typeof base.tags.c === 'object' && 'street' in base.tags.c) {
+    // Dynamic Computer C address tag for Ticket #202
+    if (currentRung.id === 'c4-r4' || currentRung.id === 'c4-r5') {
       const parts = customAddressC.split('.');
       if (parts.length === 4) {
-        base.tags.c = {
+        baseTags.c = {
           street: `${parts[0]}.${parts[1]}.${parts[2]}`,
           house: parts[3],
           split: true,
         };
       }
     }
+
+    const base: Day2StageState = {
+      ...currentRung.entryStageState,
+      cables: { ...manualCables },
+      tags: baseTags,
+      portLeds: {
+        p1: manualCables.a ? 'green' : 'off',
+        p2: manualCables.b ? 'green' : 'off',
+        p3: manualCables.c ? 'green' : 'off',
+        p4: 'off',
+      },
+    };
 
     if (isTaskDone) {
       if (currentRung.id === 'c1-r3') {
@@ -199,7 +207,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     setCheckedArp(false);
     setIsCBlocked(true);
     setManualCables({ ...currentRung.entryStageState.cables });
-    if (typeof currentRung.entryStageState.tags.c === 'object' && 'street' in currentRung.entryStageState.tags.c) {
+    if (currentRung.id === 'c4-r4') {
+      setCustomAddressC('192.168.2.30');
+    } else if (typeof currentRung.entryStageState.tags.c === 'object' && 'street' in currentRung.entryStageState.tags.c) {
       const street = currentRung.entryStageState.tags.c.street;
       const house = currentRung.entryStageState.tags.c.house;
       setCustomAddressC(`${street}.${house}`);
@@ -272,6 +282,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
   };
 
   const isPrimaryReady = useMemo(() => {
+    if (currentRung.id === 'c4-r4') {
+      return customAddressC.trim() === '192.168.1.30' || isTaskDone;
+    }
     if (currentRung.id === 'c4-r5') {
       return !isCBlocked && selfCheckRevealed && isTaskDone;
     }
@@ -738,6 +751,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                     setIsTaskDone(true);
                   }
                 }}
+                onSelectTag={(which) => {
+                  if (which === 'c' && currentRung.id === 'c4-r4') {
+                    setCustomAddressC('192.168.1.30');
+                    setIsTaskDone(true);
+                  }
+                }}
                 onReplay={() => setIsTaskDone(false)}
                 onOpenLookInside={(id) => setActiveLookInsideId(id)}
               />
@@ -1141,42 +1160,85 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   </div>
                 )}
 
-                {/* Work Area: Terminal Simulator & Address Editor */}
-                {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
+                {/* Work Area: Computer C Address Editor for Ticket #202 */}
+                {currentRung.id === 'c4-r4' && (
                   <div className="space-y-3">
-                    {currentRung.id === 'c4-r4' && (
-                      // Computer C Address Editor for Ticket #202
-                      <div className="p-4 rounded-xl bg-[#18181b] border border-white/[0.08] space-y-2.5 text-xs font-mono shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-zinc-200 font-semibold">Step ② Fix Computer C Address:</span>
-                          {customAddressC === '192.168.1.30' && (
-                            <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Street matches 192.168.1
-                            </span>
-                          )}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#18181b] border border-white/[0.08] space-y-3.5 shadow-md animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs sm:text-sm text-zinc-100 font-semibold flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-mono text-[11px]">
+                            Address Editor
+                          </span>
+                          <span>Third Computer (Port 3)</span>
+                        </span>
+                        {customAddressC.trim() === '192.168.1.30' ? (
+                          <span className="text-emerald-400 font-medium flex items-center gap-1 text-xs font-mono">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Street 192.168.1 (Fixed)
+                          </span>
+                        ) : (
+                          <span className="text-purple-400 font-medium flex items-center gap-1 text-xs font-mono">
+                            Street 192.168.2 (Wrong!)
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] text-zinc-400 flex items-center justify-between">
+                          <span>IPv4 Address:</span>
+                          <span className="font-mono text-zinc-500 text-[10px]">
+                            Required street: 192.168.1.x
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2.5 pt-1">
-                          <span className="text-zinc-500 font-mono">IP:</span>
-                          <input
-                            type="text"
-                            value={customAddressC}
-                            onChange={(e) => setCustomAddressC(e.target.value)}
-                            className="px-3 py-1.5 bg-[#121214] border border-white/[0.08] rounded-xl text-zinc-100 font-mono text-xs outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10"
-                          />
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                          <div className="relative flex-1">
+                            <input
+                              type="text"
+                              value={customAddressC}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCustomAddressC(val);
+                                if (val.trim() === '192.168.1.30') {
+                                  setIsTaskDone(true);
+                                }
+                              }}
+                              placeholder="192.168.1.30"
+                              className={`w-full px-3.5 py-2.5 bg-[#121214] border rounded-xl font-mono text-xs sm:text-sm outline-none transition-all ${
+                                customAddressC.trim() === '192.168.1.30'
+                                  ? 'border-emerald-500/50 text-emerald-300 ring-1 ring-emerald-500/20'
+                                  : 'border-purple-500/50 text-purple-200 ring-1 ring-purple-500/20 focus:border-blue-400'
+                              }`}
+                            />
+                          </div>
                           <button
                             type="button"
                             onClick={() => {
-                              if (customAddressC !== '192.168.1.30') {
-                                setCustomAddressC('192.168.1.30');
-                              }
+                              setCustomAddressC('192.168.1.30');
+                              setIsTaskDone(true);
                             }}
-                            className="px-4 py-1.5 rounded-xl bg-black hover:bg-zinc-900 border border-white/20 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all active:scale-[0.98]"
+                            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all active:scale-[0.98] shrink-0 flex items-center justify-center gap-1.5"
                           >
-                            Set to 192.168.1.30
+                            <span>⚡ Change to 192.168.1.30</span>
                           </button>
                         </div>
                       </div>
-                    )}
+
+                      {customAddressC.trim() === '192.168.1.30' ? (
+                        <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>Address saved! Third computer is now on street 192.168.1. Click <strong>Continue</strong> below.</span>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-zinc-400 leading-relaxed font-normal">
+                          Third computer currently has <strong className="text-purple-300 font-mono">192.168.2.30</strong>. Change the street number from <span className="font-mono text-purple-300">2</span> to <span className="font-mono text-blue-300">1</span> so it matches our local switch network.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Work Area: Terminal Simulator & Other Tools */}
+                {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
+                  <div className="space-y-3">
 
                     {currentRung.id === 'c4-r5' && (
                       // Ticket #203 Interactive Firewall / ICMP Echo unblock
