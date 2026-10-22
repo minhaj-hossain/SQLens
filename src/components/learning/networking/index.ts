@@ -94,4 +94,7 @@ export {
 } from './VlanTrunkDijkstraLab';
 export { NetworkingPracticeTaskView } from './NetworkingPracticeTaskView';
 export { StoryReelStage } from './StoryReelStage';
+export { PhysicalSwitchCanvas, type PhysicalSwitchCanvasProps } from './PhysicalSwitchCanvas';
+export { Day2GuidedTerminal, type Day2GuidedTerminalProps } from './Day2GuidedTerminal';
 export * from './mentor';
+export * from './cockpit';

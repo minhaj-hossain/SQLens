@@ -11,7 +11,7 @@ import { useTrackCurriculum } from '@/components/learn/use-track';
 import { trackLearnUrl } from '@/lib/track-routes';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
-import { NetworkingCockpitView } from '@/components/learning/networking/cockpit';
+import { NetworkingCockpitView, Day2CockpitView } from '@/components/learning/networking/cockpit';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -58,6 +58,17 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
   if (track === 'networking' && mod.id === 'net-01' && concept.theory.mentorScript) {
     return (
       <NetworkingCockpitView
+        module={mod}
+        concept={concept}
+        onComplete={() => nav.startPractice(mod.id, concept.id)}
+      />
+    );
+  }
+
+  // Networking Track Day 2: Dedicated The Shared Wire Cockpit Workbench
+  if (track === 'networking' && mod.id === 'net-02') {
+    return (
+      <Day2CockpitView
         module={mod}
         concept={concept}
         onComplete={() => nav.startPractice(mod.id, concept.id)}

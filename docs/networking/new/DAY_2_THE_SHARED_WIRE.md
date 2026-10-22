@@ -6,7 +6,7 @@
 
 ## 0. Read this first
 
-**Mission.** Build Day 2 of the networking track: an interactive lab where a beginner, with no mentor and no prior networking background, spends about 55 minutes learning how three computers connect through a switch, why hardware MAC addresses exist, how computers find each other with ARP roll calls (broadcasts), and how to troubleshoot a shared local network.
+**Mission.** Build Day 2 of the networking track: an interactive lab where a beginner, with no mentor and no prior networking background, spends about 1 hours learning how three computers connect through a switch, why hardware MAC addresses exist, how computers find each other with ARP roll calls (broadcasts), and how to troubleshoot a shared local network.
 
 **The hook from Day 1:** *“Your computer looked for .99, found nobody, and said so. How does a computer find out who has a label?”*
 
