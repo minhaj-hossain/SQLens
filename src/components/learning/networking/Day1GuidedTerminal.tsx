@@ -76,6 +76,9 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
 
     const lower = raw.toLowerCase().replace(/\s+/g, ' ');
 
+    const isCableOut = stageState?.cable === 'absent' || stageState?.cable === 'loose-on-desk' || stageState?.cable === 'one-end-yours';
+    const hasNoAddress = stageState?.tags?.yours === 'not-set';
+
     // 1. cls / clear
     if (lower === 'cls' || lower === 'clear') {
       setHistory([]);
@@ -104,9 +107,6 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
 
     // 3. ipconfig
     if (lower === 'ipconfig') {
-      const isCableOut = stageState?.cable === 'absent' || stageState?.cable === 'loose-on-desk' || stageState?.cable === 'one-end-yours';
-      const hasNoAddress = stageState?.tags?.yours === 'not-set';
-
       let lines: TerminalEntry['lines'] = [];
 
       if (isCableOut) {

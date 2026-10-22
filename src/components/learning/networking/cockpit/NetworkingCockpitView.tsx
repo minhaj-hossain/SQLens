@@ -611,8 +611,8 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               <p className="text-base sm:text-[17px] text-zinc-100 leading-relaxed font-normal">
                 {currentRung.story}
               </p>
-              {currentRung.meaningText && (
-                <p className="text-xs sm:text-sm text-zinc-400 border-l-2 border-white/20 pl-3 italic leading-relaxed">
+              {isTaskDone && currentRung.meaningText && (
+                <p className="text-xs sm:text-sm text-zinc-300 border-l-2 border-emerald-500/50 pl-3 italic leading-relaxed animate-in fade-in duration-300">
                   {currentRung.meaningText}
                 </p>
               )}

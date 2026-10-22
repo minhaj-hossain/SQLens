@@ -242,7 +242,7 @@ export const CONCEPT_1: ConceptDefinition = {
       timeEstimate: '2 min',
       newWords: ['ping'],
       look: 'Look at your friend\'s computer. It\'s the one we want to reach.',
-      story: 'To check if another computer is there, we send it a tiny message that means “are you there?” and wait for an answer. That test is called ping.',
+      story: 'We use a command called ping to test if another computer is reachable. When you run ping, your computer sends a small message asking “Are you there?” and waits for a reply.',
       doText: 'Type the grey command, or press Tab, then press Enter.',
       whyText: 'This sends the tiny message to your friend\'s computer.',
       expectText: 'A few lines of text appear. It won\'t work yet, and that\'s the first clue.',
