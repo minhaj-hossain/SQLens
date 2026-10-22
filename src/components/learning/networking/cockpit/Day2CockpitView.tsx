@@ -11,6 +11,7 @@ import {
   X,
   ExternalLink,
   Search,
+  Shield,
 } from 'lucide-react';
 import type { ModuleData, Concept } from '../../../../types/curriculum';
 import type {
@@ -25,6 +26,7 @@ import {
 } from '../../../../content/networking/modules/net-02-day2';
 import { PhysicalSwitchCanvas } from '../PhysicalSwitchCanvas';
 import { Day2GuidedTerminal } from '../Day2GuidedTerminal';
+import { StructuredStoryContent } from './StructuredStoryContent';
 import { useLearning } from '../../../providers/LearningProgressProvider';
 import { useLearningNavigation } from '../../../learn/use-learning-navigation';
 
@@ -676,12 +678,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   onClick={() => setCheckedArp(true)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs transition-all cursor-pointer ${
                     checkedArp
-                      ? 'bg-blue-950/70 border-blue-500/60 text-blue-300 shadow-sm'
+                      ? 'bg-emerald-950/70 border-emerald-500/60 text-emerald-300 shadow-sm'
                       : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <span>④ Check arp -a</span>
-                  {checkedArp && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
+                  {checkedArp && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
               </div>
 
@@ -786,17 +788,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   </div>
                 )}
 
-                {/* Main Explanation Story */}
-                <div className="space-y-2.5">
-                  <p className="text-[15px] sm:text-base text-zinc-200 leading-relaxed font-normal">
-                    {currentRung.story}
-                  </p>
-                  {isTaskDone && currentRung.meaningText && (
-                    <p className="text-xs sm:text-sm text-zinc-300 border-l-2 border-emerald-500/50 pl-3 py-1 italic leading-relaxed animate-in fade-in duration-300">
-                      {currentRung.meaningText}
-                    </p>
-                  )}
-                </div>
+                {/* Main Explanation Story with Structured Lists & Steps */}
+                <StructuredStoryContent
+                  story={currentRung.story}
+                  meaningText={currentRung.meaningText}
+                  isTaskDone={isTaskDone}
+                />
 
                 {/* Simplified? note link */}
                 {currentRung.simplified && (
@@ -1162,147 +1159,125 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
                 {/* Work Area: Computer C Address Editor for Ticket #202 */}
                 {currentRung.id === 'c4-r4' && (
-                  <div className="space-y-3">
-                    <div className="p-4 sm:p-5 rounded-2xl bg-[#18181b] border border-white/[0.08] space-y-3.5 shadow-md animate-in fade-in duration-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-zinc-100 font-semibold flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-mono text-[11px]">
-                            Address Editor
-                          </span>
-                          <span>Third Computer (Port 3)</span>
-                        </span>
-                        {customAddressC.trim() === '192.168.1.30' ? (
-                          <span className="text-emerald-400 font-medium flex items-center gap-1 text-xs font-mono">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Street 192.168.1 (Fixed)
-                          </span>
-                        ) : (
-                          <span className="text-purple-400 font-medium flex items-center gap-1 text-xs font-mono">
-                            Street 192.168.2 (Wrong!)
-                          </span>
-                        )}
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-[#141417] border border-white/[0.08] shadow-sm animate-in fade-in duration-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                        <span className="text-xs font-semibold text-zinc-100">Third Computer Address Configuration</span>
                       </div>
-
-                      <div className="space-y-1.5">
-                        <div className="text-[11px] text-zinc-400 flex items-center justify-between">
-                          <span>IPv4 Address:</span>
-                          <span className="font-mono text-zinc-500 text-[10px]">
-                            Required street: 192.168.1.x
-                          </span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                          <div className="relative flex-1">
-                            <input
-                              type="text"
-                              value={customAddressC}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setCustomAddressC(val);
-                                if (val.trim() === '192.168.1.30') {
-                                  setIsTaskDone(true);
-                                }
-                              }}
-                              placeholder="192.168.1.30"
-                              className={`w-full px-3.5 py-2.5 bg-[#121214] border rounded-xl font-mono text-xs sm:text-sm outline-none transition-all ${
-                                customAddressC.trim() === '192.168.1.30'
-                                  ? 'border-emerald-500/50 text-emerald-300 ring-1 ring-emerald-500/20'
-                                  : 'border-purple-500/50 text-purple-200 ring-1 ring-purple-500/20 focus:border-blue-400'
-                              }`}
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCustomAddressC('192.168.1.30');
-                              setIsTaskDone(true);
-                            }}
-                            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all active:scale-[0.98] shrink-0 flex items-center justify-center gap-1.5"
-                          >
-                            <span>⚡ Change to 192.168.1.30</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {customAddressC.trim() === '192.168.1.30' ? (
-                        <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span>Address saved! Third computer is now on street 192.168.1. Click <strong>Continue</strong> below.</span>
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-zinc-400 leading-relaxed font-normal">
-                          Third computer currently has <strong className="text-purple-300 font-mono">192.168.2.30</strong>. Change the street number from <span className="font-mono text-purple-300">2</span> to <span className="font-mono text-blue-300">1</span> so it matches our local switch network.
-                        </p>
-                      )}
+                      <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
+                        customAddressC.trim() === '192.168.1.30'
+                          ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                          : 'bg-purple-950/60 border-purple-500/40 text-purple-300'
+                      }`}>
+                        {customAddressC.trim() === '192.168.1.30' ? '✓ Street 192.168.1 (Matched)' : 'Street 192.168.2 (Wrong Street)'}
+                      </span>
                     </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={customAddressC}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCustomAddressC(val);
+                            if (val.trim() === '192.168.1.30') {
+                              setIsTaskDone(true);
+                            }
+                          }}
+                          placeholder="192.168.1.30"
+                          className={`w-full px-3 py-2 bg-[#0c0c0e] border rounded-lg font-mono text-xs outline-none transition-all ${
+                            customAddressC.trim() === '192.168.1.30'
+                              ? 'border-emerald-500/50 text-emerald-300 ring-1 ring-emerald-500/20'
+                              : 'border-purple-500/50 text-purple-200 ring-1 ring-purple-500/20 focus:border-blue-400'
+                          }`}
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomAddressC('192.168.1.30');
+                          setIsTaskDone(true);
+                        }}
+                        className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold cursor-pointer shadow-sm transition-all active:scale-[0.98] shrink-0 flex items-center justify-center gap-1.5"
+                      >
+                        <span>Set to 192.168.1.30</span>
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 font-normal">
+                      Computers on the same switch must share the street prefix <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">192.168.1</code> to communicate.
+                    </p>
                   </div>
                 )}
 
                 {/* Work Area: Terminal Simulator & Other Tools */}
                 {(currentRung.layoutState === 'STATE_B' || currentRung.layoutState === 'STATE_D') && (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
 
                     {currentRung.id === 'c4-r5' && (
                       // Ticket #203 Interactive Firewall / ICMP Echo unblock
-                      <div className="p-4 rounded-xl bg-[#18181b] border border-white/[0.08] space-y-3 text-xs shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-zinc-200 font-semibold flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono text-[11px]">
-                              Ticket #203 Fix
-                            </span>
-                            <span>Unblock Incoming Pings on Third computer</span>
-                          </span>
-                          {!isCBlocked ? (
-                            <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Pings Unblocked
-                            </span>
-                          ) : (
-                            <span className="text-amber-400 font-medium text-[11px]">
-                              Firewall Blocking Echo Requests
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-zinc-400 leading-relaxed text-[11px]">
-                          Step ④ (check <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">arp -a</code>) proved Third computer is home because its hardware name tag <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">00-00-5e-00-53-03</code> answered the roll call. However, its software firewall is silently dropping ping echo requests. Click below to allow incoming ping responses, then test your fix in the terminal.
-                        </p>
-                        <div className="pt-1 flex flex-wrap items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsCBlocked(false);
-                            }}
-                            disabled={!isCBlocked}
-                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm ${
+                      <div className="p-3 sm:p-3.5 rounded-xl bg-[#141417] border border-white/[0.08] shadow-sm animate-in fade-in duration-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
                               !isCBlocked
-                                ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 cursor-default'
-                                : 'bg-black hover:bg-zinc-900 border border-white/20 text-white cursor-pointer active:scale-[0.98]'
-                            }`}
-                          >
-                            {!isCBlocked ? '✓ Echo Responses Allowed' : 'Allow Incoming Pings in Software Firewall'}
-                          </button>
+                                ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-400'
+                                : 'bg-zinc-800/80 border-white/10 text-zinc-400'
+                            }`}>
+                              {!isCBlocked ? <CheckCircle2 className="w-4 h-4" /> : <Shield className="w-4 h-4 text-amber-400" />}
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-zinc-100 flex items-center gap-2">
+                                <span>Third Computer Software Firewall</span>
+                                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
+                                  !isCBlocked
+                                    ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/30'
+                                    : 'bg-amber-950/50 text-amber-300 border-amber-500/30'
+                                }`}>
+                                  {!isCBlocked ? 'Echo Allowed' : 'Echo Blocked'}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-zinc-400 font-normal">
+                                {!isCBlocked
+                                  ? (isTaskDone ? 'Verified! Pings are now receiving replies.' : 'Firewall unblocked. Run ping in the terminal below to test.')
+                                  : 'Blocking incoming ICMP echo requests. Click to allow replies.'}
+                              </p>
+                            </div>
+                          </div>
 
-                          {!isCBlocked && (
+                          <div className="flex items-center gap-2 shrink-0">
                             <button
                               type="button"
-                              onClick={() => {
-                                setIsTaskDone(true);
-                              }}
-                              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                                isTaskDone
-                                  ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-300'
-                                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]'
+                              onClick={() => setIsCBlocked(false)}
+                              disabled={!isCBlocked}
+                              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                !isCBlocked
+                                  ? 'bg-zinc-800/60 text-zinc-400 border border-white/[0.06] cursor-default'
+                                  : 'bg-zinc-100 hover:bg-white text-zinc-950 cursor-pointer shadow-sm active:scale-[0.98]'
                               }`}
                             >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>{isTaskDone ? 'Verified & Ready' : 'Mark Verified & Continue'}</span>
+                              {!isCBlocked ? '✓ Allowed' : 'Unblock Echo'}
                             </button>
-                          )}
-                        </div>
 
-                        {!isCBlocked && isTaskDone && (
-                          <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                            <span>Firewall unblocked and ping verified! Third computer is responding. Click <strong>Continue</strong> below.</span>
+                            {!isCBlocked && (
+                              <button
+                                type="button"
+                                onClick={() => setIsTaskDone(true)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isTaskDone
+                                    ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300'
+                                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]'
+                                }`}
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>{isTaskDone ? 'Verified' : 'Verify'}</span>
+                              </button>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     )}
 

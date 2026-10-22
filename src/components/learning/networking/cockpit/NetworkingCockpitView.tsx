@@ -21,6 +21,7 @@ import {
 } from '../../../../content/networking/modules/net-01-day1';
 import { PhysicalConnectionCanvas } from '../PhysicalConnectionCanvas';
 import { Day1GuidedTerminal } from '../Day1GuidedTerminal';
+import { StructuredStoryContent } from './StructuredStoryContent';
 import { useLearning } from '../../../providers/LearningProgressProvider';
 import { useLearningNavigation } from '../../../learn/use-learning-navigation';
 
@@ -607,16 +608,11 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
             )}
 
             {/* Main Explanation Story */}
-            <div className="space-y-2.5">
-              <p className="text-[15px] sm:text-base text-zinc-200 leading-relaxed font-normal">
-                {currentRung.story}
-              </p>
-              {isTaskDone && currentRung.meaningText && (
-                <p className="text-xs sm:text-sm text-zinc-300 border-l-2 border-emerald-500/50 pl-3 py-1 italic leading-relaxed animate-in fade-in duration-300">
-                  {currentRung.meaningText}
-                </p>
-              )}
-            </div>
+            <StructuredStoryContent
+              story={currentRung.story}
+              meaningText={currentRung.meaningText}
+              isTaskDone={isTaskDone}
+            />
 
             {/* Simplified? note link */}
             {currentRung.simplified && (
