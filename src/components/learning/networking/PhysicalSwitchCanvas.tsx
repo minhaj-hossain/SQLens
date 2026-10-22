@@ -632,159 +632,430 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               </motion.g>
             )}
           </AnimatePresence>
+
+          {/* ========================================================================= */}
+          {/* NATIVE SVG LABELS, TAGS & BADGES (Zero Overlap Guaranteed by Vector Math) */}
+          {/* ========================================================================= */}
+
+          {/* ---------------- Computer A (Left: x = 185) ---------------- */}
+          <g id="comp-a-labels" opacity={isDimmed('comp-a') ? 0.35 : 1}>
+            {/* Address Tag Pill */}
+            {tags.a !== 'hidden' && (
+              <g
+                id="comp-a-tag"
+                transform="translate(185, 68)"
+                onClick={() => onSelectTag?.('a')}
+                className="cursor-pointer group"
+                role="button"
+                aria-label="Computer A IP Address Tag"
+              >
+                <rect
+                  x="-65"
+                  y="-13"
+                  width="130"
+                  height="26"
+                  rx="13"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                  className="group-hover:stroke-blue-400 transition-colors"
+                />
+                {tags.a === 'not-set' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#F59E0B"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    not set
+                  </text>
+                ) : tags.a === 'question' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#38BDF8"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    ???
+                  </text>
+                ) : typeof tags.a === 'object' && 'street' in tags.a ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fontFamily="ui-monospace, monospace"
+                    fontSize="11"
+                    fontWeight="bold"
+                  >
+                    <tspan fill={tags.a.street === '192.168.2' ? '#C084FC' : '#60A5FA'}>
+                      {tags.a.street}
+                    </tspan>
+                    <tspan fill="#64748B">.</tspan>
+                    <tspan fill="#FBBF24">{tags.a.house}</tspan>
+                  </text>
+                ) : null}
+              </g>
+            )}
+
+            {/* MAC Badge Pill */}
+            <g
+              id="comp-a-mac"
+              transform="translate(185, 98)"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMacClick('a');
+              }}
+              className="cursor-pointer group"
+              role="button"
+              aria-label="Computer A MAC Badge"
+            >
+              <rect
+                x="-75"
+                y="-11"
+                width="150"
+                height="22"
+                rx="4"
+                fill="#020617"
+                stroke={macGlow.a || isHighlighted('mac-a') ? '#F59E0B' : '#1E293B'}
+                strokeWidth={macGlow.a || isHighlighted('mac-a') ? 1.5 : 1}
+                filter={macGlow.a || isHighlighted('mac-a') ? 'url(#goldGlow)' : undefined}
+                className="group-hover:stroke-amber-400 transition-colors"
+              />
+              <text
+                x="0"
+                y="3.5"
+                textAnchor="middle"
+                fill={macGlow.a || isHighlighted('mac-a') ? '#FCD34D' : '#94A3B8'}
+                fontSize="9.5"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="600"
+                letterSpacing="0.3"
+              >
+                MAC: {macBadges.a}
+              </text>
+            </g>
+
+            {/* Computer Title */}
+            <text
+              x="185"
+              y="145"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="13"
+              fontWeight="600"
+            >
+              Computer A (You)
+            </text>
+
+            {/* Link Light Status */}
+            <text
+              x="185"
+              y="368"
+              textAnchor="middle"
+              fill={cables.a ? '#34D399' : '#64748B'}
+              fontSize="11"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="600"
+            >
+              Light: {cables.a ? 'ON' : 'OFF'}
+            </text>
+          </g>
+
+          {/* ---------------- Computer B (Center: x = 500) ---------------- */}
+          <g id="comp-b-labels" opacity={isDimmed('comp-b') ? 0.35 : 1}>
+            {/* Address Tag Pill */}
+            {tags.b !== 'hidden' && (
+              <g
+                id="comp-b-tag"
+                transform="translate(500, 50)"
+                onClick={() => onSelectTag?.('b')}
+                className="cursor-pointer group"
+                role="button"
+                aria-label="Computer B IP Address Tag"
+              >
+                <rect
+                  x="-65"
+                  y="-13"
+                  width="130"
+                  height="26"
+                  rx="13"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                  className="group-hover:stroke-blue-400 transition-colors"
+                />
+                {tags.b === 'not-set' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#F59E0B"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    not set
+                  </text>
+                ) : tags.b === 'question' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#38BDF8"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    ???
+                  </text>
+                ) : typeof tags.b === 'object' && 'street' in tags.b ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fontFamily="ui-monospace, monospace"
+                    fontSize="11"
+                    fontWeight="bold"
+                  >
+                    <tspan fill={tags.b.street === '192.168.2' ? '#C084FC' : '#60A5FA'}>
+                      {tags.b.street}
+                    </tspan>
+                    <tspan fill="#64748B">.</tspan>
+                    <tspan fill="#FBBF24">{tags.b.house}</tspan>
+                  </text>
+                ) : null}
+              </g>
+            )}
+
+            {/* MAC Badge Pill */}
+            <g
+              id="comp-b-mac"
+              transform="translate(500, 80)"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMacClick('b');
+              }}
+              className="cursor-pointer group"
+              role="button"
+              aria-label="Computer B MAC Badge"
+            >
+              <rect
+                x="-75"
+                y="-11"
+                width="150"
+                height="22"
+                rx="4"
+                fill="#020617"
+                stroke={macGlow.b || isHighlighted('mac-b') ? '#F59E0B' : '#1E293B'}
+                strokeWidth={macGlow.b || isHighlighted('mac-b') ? 1.5 : 1}
+                filter={macGlow.b || isHighlighted('mac-b') ? 'url(#goldGlow)' : undefined}
+                className="group-hover:stroke-amber-400 transition-colors"
+              />
+              <text
+                x="0"
+                y="3.5"
+                textAnchor="middle"
+                fill={macGlow.b || isHighlighted('mac-b') ? '#FCD34D' : '#94A3B8'}
+                fontSize="9.5"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="600"
+                letterSpacing="0.3"
+              >
+                MAC: {macBadges.b}
+              </text>
+            </g>
+
+            {/* Computer Title (at y = 125, cleanly above monitor at y = 160) */}
+            <text
+              x="500"
+              y="125"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="13"
+              fontWeight="600"
+            >
+              Computer B (Teammate)
+            </text>
+
+            {/* Link Light Status (at y = 346, centered in gap between stand y=325 and switch y=370) */}
+            <text
+              x="500"
+              y="346"
+              textAnchor="middle"
+              fill={cables.b ? '#34D399' : '#64748B'}
+              fontSize="11"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="600"
+            >
+              Light: {cables.b ? 'ON' : 'OFF'}
+            </text>
+          </g>
+
+          {/* ---------------- Computer C (Right: x = 815) ---------------- */}
+          <g id="comp-c-labels" opacity={isDimmed('comp-c') ? 0.35 : 1}>
+            {/* Address Tag Pill */}
+            {tags.c !== 'hidden' && (
+              <g
+                id="comp-c-tag"
+                transform="translate(815, 68)"
+                onClick={() => onSelectTag?.('c')}
+                className="cursor-pointer group"
+                role="button"
+                aria-label="Computer C IP Address Tag"
+              >
+                <rect
+                  x="-65"
+                  y="-13"
+                  width="130"
+                  height="26"
+                  rx="13"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                  className="group-hover:stroke-blue-400 transition-colors"
+                />
+                {tags.c === 'not-set' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#F59E0B"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    not set
+                  </text>
+                ) : tags.c === 'question' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#38BDF8"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
+                  >
+                    ???
+                  </text>
+                ) : typeof tags.c === 'object' && 'street' in tags.c ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fontFamily="ui-monospace, monospace"
+                    fontSize="11"
+                    fontWeight="bold"
+                  >
+                    <tspan fill={tags.c.street === '192.168.2' ? '#C084FC' : '#60A5FA'}>
+                      {tags.c.street}
+                    </tspan>
+                    <tspan fill="#64748B">.</tspan>
+                    <tspan fill="#FBBF24">{tags.c.house}</tspan>
+                  </text>
+                ) : null}
+              </g>
+            )}
+
+            {/* MAC Badge Pill */}
+            <g
+              id="comp-c-mac"
+              transform="translate(815, 98)"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMacClick('c');
+              }}
+              className="cursor-pointer group"
+              role="button"
+              aria-label="Computer C MAC Badge"
+            >
+              <rect
+                x="-75"
+                y="-11"
+                width="150"
+                height="22"
+                rx="4"
+                fill="#020617"
+                stroke={macGlow.c || isHighlighted('mac-c') ? '#F59E0B' : '#1E293B'}
+                strokeWidth={macGlow.c || isHighlighted('mac-c') ? 1.5 : 1}
+                filter={macGlow.c || isHighlighted('mac-c') ? 'url(#goldGlow)' : undefined}
+                className="group-hover:stroke-amber-400 transition-colors"
+              />
+              <text
+                x="0"
+                y="3.5"
+                textAnchor="middle"
+                fill={macGlow.c || isHighlighted('mac-c') ? '#FCD34D' : '#94A3B8'}
+                fontSize="9.5"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="600"
+                letterSpacing="0.3"
+              >
+                MAC: {macBadges.c}
+              </text>
+            </g>
+
+            {/* Computer Title */}
+            <text
+              x="815"
+              y="145"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="13"
+              fontWeight="600"
+            >
+              Computer C (New Desk)
+            </text>
+
+            {/* Link Light Status */}
+            <text
+              x="815"
+              y="368"
+              textAnchor="middle"
+              fill={cables.c ? '#34D399' : '#64748B'}
+              fontSize="11"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="600"
+            >
+              Light: {cables.c ? 'ON' : 'OFF'}
+            </text>
+          </g>
+
+          {/* ---------------- ARP Roll Call Bubble (Concept 3) ---------------- */}
+          {(messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
+            <g id="arp-broadcast-bubble" className="transition-all duration-300">
+              <rect
+                x="310"
+                y="472"
+                width="380"
+                height="32"
+                rx="16"
+                fill="#451A03"
+                stroke="#D97706"
+                strokeWidth="1.5"
+                filter="url(#softGlow)"
+              />
+              <circle cx="330" cy="488" r="4.5" fill="#FBBF24" />
+              <text
+                x="505"
+                y="492"
+                textAnchor="middle"
+                fill="#FDE68A"
+                fontSize="11"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                ARP: Who has 192.168.1.20? Tell 192.168.1.10
+              </text>
+            </g>
+          )}
         </svg>
-
-        {/* ========================================================================= */}
-        {/* HTML OVERLAYS: Strictly Crisp HTML Positioned by Percentage               */}
-        {/* ========================================================================= */}
-
-        {/* Computer A Overlays (18.5% left) */}
-        <div
-          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '18.5%', top: '56%' }}
-        >
-          <div className="text-sm font-semibold text-zinc-200">Computer A (You)</div>
-          <div
-            className={`text-xs font-mono font-medium ${
-              cables.a ? 'text-emerald-400' : 'text-zinc-500'
-            }`}
-          >
-            Light: {cables.a ? 'ON' : 'OFF'}
-          </div>
-        </div>
-
-        {/* Address & MAC Tag Above Computer A */}
-        <div
-          className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer space-y-1 text-center"
-          style={{ left: '18.5%', top: '14%' }}
-          onClick={() => onSelectTag?.('a')}
-        >
-          {/* IP Tag */}
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
-            <span className="text-blue-400 font-semibold">192.168.1</span>
-            <span className="text-zinc-500">.</span>
-            <span className="text-amber-400 font-semibold">10</span>
-          </div>
-          {/* MAC Badge */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleMacClick('a');
-            }}
-            className={`inline-block px-2 py-0.5 rounded bg-zinc-950 border font-mono text-[11px] transition-colors ${
-              macGlow.a || isHighlighted('mac-a')
-                ? 'border-amber-500 text-amber-300 shadow-[0_0_8px_#f59e0b]'
-                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            MAC: {macBadges.a}
-          </div>
-        </div>
-
-        {/* Computer B Overlays (50% left) */}
-        <div
-          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '50%', top: '52%' }}
-        >
-          <div className="text-sm font-semibold text-zinc-200">Computer B (Teammate)</div>
-          <div
-            className={`text-xs font-mono font-medium ${
-              cables.b ? 'text-emerald-400' : 'text-zinc-500'
-            }`}
-          >
-            Light: {cables.b ? 'ON' : 'OFF'}
-          </div>
-        </div>
-
-        {/* Address & MAC Tag Above Computer B */}
-        <div
-          className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer space-y-1 text-center"
-          style={{ left: '50%', top: '10%' }}
-          onClick={() => onSelectTag?.('b')}
-        >
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
-            <span className="text-blue-400 font-semibold">192.168.1</span>
-            <span className="text-zinc-500">.</span>
-            <span className="text-amber-400 font-semibold">20</span>
-          </div>
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleMacClick('b');
-            }}
-            className={`inline-block px-2 py-0.5 rounded bg-zinc-950 border font-mono text-[11px] transition-colors ${
-              macGlow.b || isHighlighted('mac-b')
-                ? 'border-amber-500 text-amber-300 shadow-[0_0_8px_#f59e0b]'
-                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            MAC: {macBadges.b}
-          </div>
-        </div>
-
-        {/* Computer C Overlays (81.5% left) */}
-        <div
-          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '81.5%', top: '56%' }}
-        >
-          <div className="text-sm font-semibold text-zinc-200">Computer C (New Desk)</div>
-          <div
-            className={`text-xs font-mono font-medium ${
-              cables.c ? 'text-emerald-400' : 'text-zinc-500'
-            }`}
-          >
-            Light: {cables.c ? 'ON' : 'OFF'}
-          </div>
-        </div>
-
-        {/* Address & MAC Tag Above Computer C */}
-        <div
-          className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer space-y-1 text-center"
-          style={{ left: '81.5%', top: '14%' }}
-          onClick={() => onSelectTag?.('c')}
-        >
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
-            {typeof tags.c === 'object' && 'street' in tags.c ? (
-              <span>
-                <span
-                  className={
-                    tags.c.street === '192.168.2' ? 'text-purple-400 font-semibold' : 'text-blue-400 font-semibold'
-                  }
-                >
-                  {tags.c.street}
-                </span>
-                <span className="text-zinc-500">.</span>
-                <span className="text-amber-400 font-semibold">{tags.c.house}</span>
-              </span>
-            ) : null}
-          </div>
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleMacClick('c');
-            }}
-            className={`inline-block px-2 py-0.5 rounded bg-zinc-950 border font-mono text-[11px] transition-colors ${
-              macGlow.c || isHighlighted('mac-c')
-                ? 'border-amber-500 text-amber-300 shadow-[0_0_8px_#f59e0b]'
-                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            MAC: {macBadges.c}
-          </div>
-        </div>
-
-        {/* ARP Roll Call Bubble Overlay (Concept 3) */}
-        {(messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
-          <div
-            className="absolute transform -translate-x-1/2 pointer-events-none animate-in fade-in duration-300"
-            style={{ left: '50%', top: '68%' }}
-          >
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-950/90 border border-amber-600/80 text-amber-300 font-mono text-xs shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span>ARP: Who has 192.168.1.20? Tell 192.168.1.10</span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

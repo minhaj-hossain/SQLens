@@ -566,100 +566,189 @@ export const PhysicalConnectionCanvas: React.FC<PhysicalConnectionCanvasProps> =
               </motion.g>
             )}
           </AnimatePresence>
-        </svg>
 
-        {/* HTML OVERLAYS: Strictly HTML positioned by percentage for crisp accessibility */}
+          {/* ========================================================================= */}
+          {/* NATIVE SVG LABELS, TAGS & BADGES (Zero Overlap Guaranteed by Vector Math) */}
+          {/* ========================================================================= */}
 
-        {/* Computer A Label */}
-        <div
-          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '23%', top: '68%' }}
-        >
-          <div className="text-sm font-semibold text-zinc-200">Your computer</div>
-          <div
-            className={`text-xs font-mono font-medium ${
-              lightYours === 'on' ? 'text-emerald-400' : 'text-zinc-500'
-            }`}
-          >
-            Light: {lightYours === 'on' ? 'ON' : 'OFF'}
-          </div>
-        </div>
-
-        {/* Computer B Label */}
-        <div
-          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
-          style={{ left: '77%', top: '68%' }}
-        >
-          <div className="text-sm font-semibold text-zinc-200">Friend&apos;s computer</div>
-          <div
-            className={`text-xs font-mono font-medium ${
-              lightFriends === 'on' ? 'text-emerald-400' : 'text-zinc-500'
-            }`}
-          >
-            Light: {lightFriends === 'on' ? 'ON' : 'OFF'}
-          </div>
-        </div>
-
-        {/* Address Tag Above Computer A */}
-        {tagYours !== 'hidden' && (
-          <div
-            className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer"
-            style={{ left: '23%', top: '34%' }}
-            onClick={() => onSelectTag?.('yours')}
-          >
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
-              {tagYours === 'not-set' ? (
-                <span className="text-amber-400 font-medium">not set</span>
-              ) : typeof tagYours === 'object' ? (
-                <span>
-                  <span className="text-blue-400 font-semibold">{tagYours.street}</span>
-                  <span className="text-zinc-500">.</span>
-                  <span className="text-amber-400 font-semibold">{tagYours.house}</span>
-                </span>
-              ) : null}
-            </div>
-          </div>
-        )}
-
-        {/* Address Tag Above Computer B */}
-        {tagFriends !== 'hidden' && (
-          <div
-            className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer"
-            style={{ left: '77%', top: '34%' }}
-            onClick={() => onSelectTag?.('friends')}
-          >
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
-              {typeof tagFriends === 'object' ? (
-                <span>
-                  <span
-                    className={
-                      tagFriends.street === '192.168.2'
-                        ? 'text-purple-400 font-semibold'
-                        : 'text-blue-400 font-semibold'
-                    }
+          {/* ---------------- Your Computer (Left: x = 230) ---------------- */}
+          <g id="comp-yours-labels" opacity={isDimmed('yours') ? 0.35 : 1}>
+            {/* Address Tag Pill */}
+            {tagYours !== 'hidden' && (
+              <g
+                id="comp-yours-tag"
+                transform="translate(230, 160)"
+                onClick={() => onSelectTag?.('yours')}
+                className="cursor-pointer group"
+                role="button"
+                aria-label="Your Computer IP Address Tag"
+              >
+                <rect
+                  x="-65"
+                  y="-13"
+                  width="130"
+                  height="26"
+                  rx="13"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                  className="group-hover:stroke-blue-400 transition-colors"
+                />
+                {tagYours === 'not-set' ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fill="#F59E0B"
+                    fontSize="11"
+                    fontFamily="ui-monospace, monospace"
+                    fontWeight="bold"
                   >
-                    {tagFriends.street}
-                  </span>
-                  <span className="text-zinc-500">.</span>
-                  <span className="text-amber-400 font-semibold">{tagFriends.house}</span>
-                </span>
-              ) : null}
-            </div>
-          </div>
-        )}
+                    not set
+                  </text>
+                ) : typeof tagYours === 'object' && 'street' in tagYours ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fontFamily="ui-monospace, monospace"
+                    fontSize="11"
+                    fontWeight="bold"
+                  >
+                    <tspan fill="#60A5FA">{tagYours.street}</tspan>
+                    <tspan fill="#64748B">.</tspan>
+                    <tspan fill="#FBBF24">{tagYours.house}</tspan>
+                  </text>
+                ) : null}
+              </g>
+            )}
 
-        {/* STOPPED INSIDE BADGE (Concept 1 Rung 4) */}
-        {messageState === 'inside-stopped' && (
-          <div
-            className="absolute transform -translate-y-1/2 pointer-events-none animate-in fade-in zoom-in duration-300"
-            style={{ left: '33%', top: '61%' }}
-          >
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-950/90 border border-red-700/80 text-red-300 font-medium text-xs shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>Stopped inside</span>
-            </div>
-          </div>
-        )}
+            {/* Workstation Title */}
+            <text
+              x="230"
+              y="215"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="14"
+              fontWeight="600"
+            >
+              Your computer
+            </text>
+
+            {/* Link Light Status */}
+            <text
+              x="230"
+              y="495"
+              textAnchor="middle"
+              fill={lightYours === 'on' ? '#34D399' : '#64748B'}
+              fontSize="11"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="600"
+            >
+              Light: {lightYours === 'on' ? 'ON' : 'OFF'}
+            </text>
+          </g>
+
+          {/* ---------------- Friend's Computer (Right: x = 770) ---------------- */}
+          <g id="comp-friends-labels" opacity={isDimmed('friends') ? 0.35 : 1}>
+            {/* Address Tag Pill */}
+            {tagFriends !== 'hidden' && (
+              <g
+                id="comp-friends-tag"
+                transform="translate(770, 160)"
+                onClick={() => onSelectTag?.('friends')}
+                className="cursor-pointer group"
+                role="button"
+                aria-label="Friend's Computer IP Address Tag"
+              >
+                <rect
+                  x="-65"
+                  y="-13"
+                  width="130"
+                  height="26"
+                  rx="13"
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth="1.5"
+                  className="group-hover:stroke-blue-400 transition-colors"
+                />
+                {typeof tagFriends === 'object' && 'street' in tagFriends ? (
+                  <text
+                    x="0"
+                    y="4"
+                    textAnchor="middle"
+                    fontFamily="ui-monospace, monospace"
+                    fontSize="11"
+                    fontWeight="bold"
+                  >
+                    <tspan fill={tagFriends.street === '192.168.2' ? '#C084FC' : '#60A5FA'}>
+                      {tagFriends.street}
+                    </tspan>
+                    <tspan fill="#64748B">.</tspan>
+                    <tspan fill="#FBBF24">{tagFriends.house}</tspan>
+                  </text>
+                ) : null}
+              </g>
+            )}
+
+            {/* Workstation Title */}
+            <text
+              x="770"
+              y="215"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="14"
+              fontWeight="600"
+            >
+              Friend&apos;s computer
+            </text>
+
+            {/* Link Light Status */}
+            <text
+              x="770"
+              y="495"
+              textAnchor="middle"
+              fill={lightFriends === 'on' ? '#34D399' : '#64748B'}
+              fontSize="11"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="600"
+            >
+              Light: {lightFriends === 'on' ? 'ON' : 'OFF'}
+            </text>
+          </g>
+
+          {/* ---------------- Stopped Inside Badge (Concept 1 Rung 4) ---------------- */}
+          {messageState === 'inside-stopped' && (
+            <g
+              id="msg-inside-stopped"
+              transform="translate(340, 380)"
+              className="animate-in fade-in zoom-in duration-300"
+            >
+              <rect
+                x="-60"
+                y="-14"
+                width="120"
+                height="28"
+                rx="14"
+                fill="#450A0A"
+                stroke="#DC2626"
+                strokeWidth="1.5"
+                filter="url(#softGlow)"
+              />
+              <circle cx="-42" cy="0" r="4.5" fill="#EF4444" />
+              <text
+                x="-30"
+                y="4"
+                fill="#FCA5A5"
+                fontSize="11"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                Stopped inside
+              </text>
+            </g>
+          )}
+        </svg>
       </div>
     </div>
   );
