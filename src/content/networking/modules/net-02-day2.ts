@@ -1464,19 +1464,14 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       'Let us run our diagnosis:\n1. Link light? Solid green (Port 3 is active).\n2. Address? Correct (192.168.1.30 matches our street).\n3. Ping? Fails with Request timed out.\n4. Check arp -a: Look at the terminal output! Third computer’s MAC address (00-00-5e-00-53-03) IS listed in our ARP table! Someone is home! Why did ping fail? Third computer’s firewall was configured to block incoming pings.',
     doText: 'Click Unblock Ping on Third computer to allow ping replies, then run ping 192.168.1.30.',
     whyText:
-      'Fixing the firewall completes the diagnosis. Writing down the explanation proves your mastery.',
+      'Fixing the firewall completes the diagnosis. Third computer now responds to ping roll calls.',
     expectText: 'Ping returns Reply from 192.168.1.30: bytes=32 time=1ms.',
-    nextHook: 'Now write one sentence explaining how arp -a proved Third computer was connected.',
-    lockMessage: 'Unblock pings, run ping 192.168.1.30, and write your explanation sentence.',
+    nextHook: 'Concept 4 Complete! Ticket #203 resolved.',
+    lockMessage: 'Unblock pings and run ping 192.168.1.30 to verify.',
     check: {
-      type: 'write-and-compare',
+      type: 'task',
       expectedCommand: 'ping 192.168.1.30',
       allowedTargets: ['192.168.1.30'],
-      mustMention: ['arp', 'mac', 'table', 'roll call', 'connected', 'home'],
-      modelSentence:
-        'Third computer answered the ARP roll call so its MAC address was in our ARP table, proving it was plugged in even though its firewall blocked pings.',
-      modelSentenceSimpler:
-        'The ARP table listed Third computer’s name tag, proving it was connected even though ping timed out.',
     },
     hints: [
       {

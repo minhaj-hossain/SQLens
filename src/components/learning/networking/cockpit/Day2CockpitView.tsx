@@ -286,7 +286,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
       return customAddressC.trim() === '192.168.1.30' || isTaskDone;
     }
     if (currentRung.id === 'c4-r5') {
-      return !isCBlocked && selfCheckRevealed && isTaskDone;
+      return !isCBlocked && isTaskDone;
     }
     if (currentRung.check.type === 'understand' && !currentRung.check.options) return true;
     if (currentRung.check.type === 'understand' && isQuestionCorrect === true) return true;
@@ -1263,10 +1263,12 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                         <p className="text-zinc-400 leading-relaxed text-[11px]">
                           Step ④ (check <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">arp -a</code>) proved Third computer is home because its hardware name tag <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">00-00-5e-00-53-03</code> answered the roll call. However, its software firewall is silently dropping ping echo requests. Click below to allow incoming ping responses, then test your fix in the terminal.
                         </p>
-                        <div className="pt-1">
+                        <div className="pt-1 flex flex-wrap items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => setIsCBlocked(false)}
+                            onClick={() => {
+                              setIsCBlocked(false);
+                            }}
                             disabled={!isCBlocked}
                             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm ${
                               !isCBlocked
@@ -1276,7 +1278,31 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                           >
                             {!isCBlocked ? '✓ Echo Responses Allowed' : 'Allow Incoming Pings in Software Firewall'}
                           </button>
+
+                          {!isCBlocked && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsTaskDone(true);
+                              }}
+                              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                isTaskDone
+                                  ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-300'
+                                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]'
+                              }`}
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>{isTaskDone ? 'Verified & Ready' : 'Mark Verified & Continue'}</span>
+                            </button>
+                          )}
                         </div>
+
+                        {!isCBlocked && isTaskDone && (
+                          <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-200">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>Firewall unblocked and ping verified! Third computer is responding. Click <strong>Continue</strong> below.</span>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1307,6 +1333,11 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                           : undefined
                       }
                       onCommandRun={(cmd, outcome) => {
+                        if (currentRung.id === 'c4-r5') {
+                          if (cmd.toLowerCase().includes('192.168.1.30') && (outcome === 'reply' || !isCBlocked)) {
+                            setIsTaskDone(true);
+                          }
+                        }
                         if (currentRung.check.type === 'task') {
                           if (
                             !currentRung.check.expectedCommand ||
