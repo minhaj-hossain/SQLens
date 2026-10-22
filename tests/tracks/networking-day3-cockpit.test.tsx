@@ -119,4 +119,19 @@ describe('Day3CockpitView & Routing Integration', () => {
     expect(html).toContain('The Router &amp; The Default Gateway');
     expect(html).toContain('Enter Lesson Workbench');
   });
+
+  it('includes dedicated Reset button, keyboard shortcuts launcher, and action bar ergonomics', () => {
+    const html = renderToStaticMarkup(
+      <Day3CockpitView
+        module={NET_03_MODULE}
+        concept={concept}
+        defaultMode="normal"
+      />
+    );
+
+    expect(html).toContain('Reset');
+    expect(html).toContain('Back');
+    expect(html).toContain('Keyboard Shortcuts (?)');
+    expect(html).toContain('My Words');
+  });
 });

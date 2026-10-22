@@ -553,8 +553,41 @@ export const Day3CockpitView: React.FC<Day3CockpitViewProps> = ({
                   isTaskDone={isTaskDone}
                 />
 
-                {/* Gateway Input Editor Strip (when relevant) */}
-                {(currentRung.layoutState === 'STATE_C' || currentRung.id === 'c4-r1' || currentRung.id === 'c4-r2') && (
+                {/* Plug Router Cables Action Card (c2-r2) */}
+                {currentRung.id === 'c2-r2' && (
+                  <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-white/10 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-semibold text-zinc-100 flex items-center gap-1.5">
+                        <Network className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Router Physical Patch Cables</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 font-normal">
+                        {isTaskDone
+                          ? '✓ Cables connected! Both port link LEDs are glowing green.'
+                          : 'Port 1 and Port 2 are currently unplugged.'}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManualCables((prev) => ({ ...prev, routerEth0: true, routerEth1: true }));
+                        setIsTaskDone(true);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isTaskDone
+                          ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300'
+                          : 'bg-white hover:bg-zinc-200 text-zinc-950 shadow-sm active:scale-95'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{isTaskDone ? 'Plugged' : 'Plug Router Cables'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Gateway Input Editor Strip (c2-r3, c4-r1, c4-r2) */}
+                {(currentRung.id === 'c2-r3' || currentRung.id === 'c4-r1' || currentRung.id === 'c4-r2') && (
                   <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-white/10 space-y-2">
                     <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
                       <span>Computer A: Default Gateway Editor</span>
@@ -565,21 +598,37 @@ export const Day3CockpitView: React.FC<Day3CockpitViewProps> = ({
                         type="text"
                         value={customGatewayA}
                         onChange={(e) => setCustomGatewayA(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            if (customGatewayA.trim() === '192.168.1.1') {
+                              setIsTaskDone(true);
+                            }
+                          }
+                        }}
                         placeholder="e.g. 192.168.1.1"
                         className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-950 border border-white/15 text-xs font-mono text-zinc-100 outline-none focus:border-blue-500"
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          if (currentRung.id === 'c2-r3' || currentRung.id === 'c4-r1' || currentRung.id === 'c4-r2') {
-                            if (customGatewayA.trim() === '192.168.1.1') {
-                              setIsTaskDone(true);
-                            }
+                          if (customGatewayA.trim() === '192.168.1.1') {
+                            setIsTaskDone(true);
                           }
                         }}
-                        className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                        className={`px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5 ${
+                          isTaskDone && customGatewayA.trim() === '192.168.1.1'
+                            ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white'
+                        }`}
                       >
-                        Save Gateway
+                        {isTaskDone && customGatewayA.trim() === '192.168.1.1' ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Saved</span>
+                          </>
+                        ) : (
+                          <span>Save Gateway</span>
+                        )}
                       </button>
                     </div>
                   </div>
