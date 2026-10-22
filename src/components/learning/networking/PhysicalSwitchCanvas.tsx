@@ -219,10 +219,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
         </div>
       </div>
 
-      {/* SVG Canvas Area (viewBox 0 0 1000 620) */}
-      <div className="relative w-full aspect-[16/10] max-h-[580px]">
+      {/* SVG Canvas Area (viewBox 0 0 1000 720) */}
+      <div className="relative w-full aspect-[16/11.5] max-h-[660px]">
         <svg
-          viewBox="0 0 1000 620"
+          viewBox="0 0 1000 720"
           className="w-full h-full block"
           preserveAspectRatio="xMidYMid meet"
         >
@@ -251,19 +251,19 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             </filter>
           </defs>
 
-          {/* DESK GROUND (y 470 to 620) */}
-          <rect x="0" y="470" width="1000" height="150" fill="url(#deskGrad)" />
-          <line x1="0" y1="470" x2="1000" y2="470" stroke="#1E293B" strokeWidth="2" />
+          {/* DESK GROUND (y 540 to 720) */}
+          <rect x="0" y="540" width="1000" height="180" fill="url(#deskGrad)" />
+          <line x1="0" y1="540" x2="1000" y2="540" stroke="#1E293B" strokeWidth="2" />
 
-          {/* SHARED STREET BLUE BAND (y 525) */}
+          {/* SHARED STREET BLUE BAND (y 635) */}
           {showBands && showAddressTags && tags.a !== 'hidden' && (
             <g className="transition-opacity duration-500">
               <rect
                 x="80"
-                y="525"
+                y="635"
                 width="840"
-                height="32"
-                rx="16"
+                height="34"
+                rx="17"
                 fill="#2563EB"
                 fillOpacity="0.18"
                 stroke="#2563EB"
@@ -272,7 +272,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               />
               <text
                 x="500"
-                y="546"
+                y="657"
                 textAnchor="middle"
                 fill="#60A5FA"
                 fontSize="12"
@@ -288,7 +288,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           {/* CABLES (Computer A, B, C -> Switch Ports 1, 2, 3)                         */}
           {/* ========================================================================= */}
 
-          {/* Cable A: Computer A (185, 310) -> Switch Port 1 (430, 405) */}
+          {/* Cable A: Computer A (185, 296) -> Switch Port 1 (430, 448) */}
           {cables.a ? (
             <g
               id="cable-a"
@@ -296,7 +296,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 185 310 C 185 390, 360 405, 430 405"
+                d="M 185 296 C 185 385, 360 448, 430 448"
                 fill="none"
                 stroke="#2563EB"
                 strokeWidth="6"
@@ -304,7 +304,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 className="transition-colors group-hover:stroke-blue-400"
               />
               <path
-                d="M 185 310 C 185 390, 360 405, 430 405"
+                d="M 185 296 C 185 385, 360 448, 430 448"
                 fill="none"
                 stroke="#60A5FA"
                 strokeWidth="1.5"
@@ -315,18 +315,18 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           ) : (
             <g id="cable-a-unplugged" onClick={() => handleCableClick('a')} className="cursor-pointer">
               <path
-                d="M 185 310 C 185 370, 240 450, 290 460"
+                d="M 185 296 C 185 365, 240 465, 290 480"
                 fill="none"
                 stroke="#64748B"
                 strokeWidth="5"
                 strokeDasharray="6 4"
                 strokeLinecap="round"
               />
-              <circle cx="290" cy="460" r="5" fill="#EF4444" />
+              <circle cx="290" cy="480" r="5" fill="#EF4444" />
             </g>
           )}
 
-          {/* Cable B: Computer B (500, 290) -> Switch Port 2 (475, 405) */}
+          {/* Cable B: Computer B (500, 296) -> Switch Port 2 (475, 448) */}
           {cables.b ? (
             <g
               id="cable-b"
@@ -334,7 +334,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 500 290 C 500 350, 475 365, 475 405"
+                d="M 500 296 C 500 360, 475 390, 475 448"
                 fill="none"
                 stroke="#2563EB"
                 strokeWidth="6"
@@ -342,7 +342,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 className="transition-colors group-hover:stroke-blue-400"
               />
               <path
-                d="M 500 290 C 500 350, 475 365, 475 405"
+                d="M 500 296 C 500 360, 475 390, 475 448"
                 fill="none"
                 stroke="#60A5FA"
                 strokeWidth="1.5"
@@ -353,7 +353,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           ) : (
             <g id="cable-b-unplugged" onClick={() => handleCableClick('b')} className="cursor-pointer group">
               <path
-                d="M 500 290 C 500 340, 460 380, 440 410"
+                d="M 500 296 C 500 355, 460 440, 440 495"
                 fill="none"
                 stroke="#64748B"
                 strokeWidth="5"
@@ -361,8 +361,8 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 strokeLinecap="round"
                 className="group-hover:stroke-blue-400 transition-colors"
               />
-              <circle cx="440" cy="410" r="6" fill="#EF4444" />
-              <g transform="translate(440, 390)">
+              <circle cx="440" cy="495" r="6" fill="#EF4444" />
+              <g transform="translate(440, 515)">
                 <rect x="-65" y="-10" width="130" height="20" rx="10" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
                 <text x="0" y="3.5" textAnchor="middle" fill="#38BDF8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
                   ⚡ Click to Plug Port 2
@@ -371,7 +371,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             </g>
           )}
 
-          {/* Cable C: Computer C (815, 310) -> Switch Port 3 (525, 405) */}
+          {/* Cable C: Computer C (815, 296) -> Switch Port 3 (525, 448) */}
           {cables.c ? (
             <g
               id="cable-c"
@@ -379,7 +379,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 815 310 C 815 390, 600 405, 525 405"
+                d="M 815 296 C 815 385, 600 448, 525 448"
                 fill="none"
                 stroke="#2563EB"
                 strokeWidth="6"
@@ -387,7 +387,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 className="transition-colors group-hover:stroke-blue-400"
               />
               <path
-                d="M 815 310 C 815 390, 600 405, 525 405"
+                d="M 815 296 C 815 385, 600 448, 525 448"
                 fill="none"
                 stroke="#60A5FA"
                 strokeWidth="1.5"
@@ -398,7 +398,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           ) : (
             <g id="cable-c-unplugged" onClick={() => handleCableClick('c')} className="cursor-pointer group">
               <path
-                d="M 815 310 C 815 370, 750 450, 690 460"
+                d="M 815 296 C 815 365, 750 465, 690 480"
                 fill="none"
                 stroke="#64748B"
                 strokeWidth="5"
@@ -406,8 +406,8 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 strokeLinecap="round"
                 className="group-hover:stroke-blue-400 transition-colors"
               />
-              <circle cx="690" cy="460" r="6" fill="#EF4444" />
-              <g transform="translate(690, 435)">
+              <circle cx="690" cy="480" r="6" fill="#EF4444" />
+              <g transform="translate(690, 455)">
                 <rect x="-65" y="-10" width="130" height="20" rx="10" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
                 <text x="0" y="3.5" textAnchor="middle" fill="#38BDF8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
                   ⚡ Click to Plug Port 3
@@ -430,16 +430,16 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               <>
                 <rect
                   x="370"
-                  y="365"
+                  y="405"
                   width="260"
-                  height="70"
+                  height="85"
                   rx="10"
                   fill="none"
                   stroke="#3B82F6"
                   strokeWidth="3"
                   filter="url(#softGlow)"
                 />
-                <g transform="translate(500, 352)">
+                <g transform="translate(500, 392)">
                   <rect x="-68" y="-10" width="136" height="20" rx="10" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
                   <text x="0" y="3.5" textAnchor="middle" fill="#38BDF8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
                     ⚡ NEW: Central Switch
@@ -451,9 +451,9 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Switch Body */}
             <rect
               x="375"
-              y="370"
+              y="415"
               width="250"
-              height="65"
+              height="70"
               rx="8"
               fill="url(#switchGrad)"
               stroke={isHighlighted('switch-box') ? '#3B82F6' : '#334155'}
@@ -464,7 +464,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Switch label */}
             <text
               x="500"
-              y="390"
+              y="435"
               textAnchor="middle"
               fill="#94A3B8"
               fontSize="9"
@@ -497,7 +497,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   {/* Port LED (8px) */}
                   <circle
                     cx={p.x}
-                    cy="400"
+                    cy="448"
                     r="4"
                     fill={p.led === 'green' ? '#22C55E' : p.led === 'blinking' ? '#38BDF8' : '#334155'}
                     filter={p.led === 'green' ? 'url(#softGlow)' : undefined}
@@ -505,7 +505,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   {/* RJ45 Socket */}
                   <rect
                     x={p.x - 10}
-                    y="408"
+                    y="456"
                     width="20"
                     height="16"
                     rx="3"
@@ -517,7 +517,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   {/* Port Number [1] [2] [3] [4] */}
                   <text
                     x={p.x}
-                    y="432"
+                    y="480"
                     textAnchor="middle"
                     fill={isUnplugged ? '#38BDF8' : '#64748B'}
                     fontSize="8"
@@ -532,7 +532,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           </g>
 
           {/* ========================================================================= */}
-          {/* COMPUTER A (LEFT: x 95 to 275, y 180 to 320)                              */}
+          {/* COMPUTER A (LEFT: x 95 to 275, y 170 to 295)                              */}
           {/* ========================================================================= */}
           <g
             id="computer-a"
@@ -540,13 +540,13 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             className="transition-opacity duration-300"
           >
             {/* Monitor Stand */}
-            <path d="M165 305 L205 305 L215 335 L155 335 Z" fill="#1E293B" />
-            <rect x="145" y="335" width="80" height="10" rx="3" fill="#334155" />
+            <path d="M165 295 L205 295 L215 325 L155 325 Z" fill="#1E293B" />
+            <rect x="145" y="325" width="80" height="10" rx="3" fill="#334155" />
 
             {/* Monitor Frame */}
             <rect
               x="95"
-              y="180"
+              y="170"
               width="180"
               height="125"
               rx="10"
@@ -556,12 +556,12 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             />
 
             {/* Screen Glass */}
-            <rect x="105" y="190" width="160" height="105" rx="5" fill="#020617" />
+            <rect x="105" y="180" width="160" height="105" rx="5" fill="#020617" />
 
             {/* Terminal prompt symbol `>_` */}
             <text
               x="120"
-              y="215"
+              y="205"
               fill="#38BDF8"
               fontSize="14"
               fontFamily="ui-monospace, monospace"
@@ -571,12 +571,12 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             </text>
 
             {/* Cable Socket */}
-            <rect x="180" y="300" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
+            <rect x="180" y="290" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
 
             {/* Link LED */}
             <circle
               cx="174"
-              cy="306"
+              cy="296"
               r="4.5"
               fill={cables.a ? '#22C55E' : '#334155'}
               filter={cables.a ? 'url(#softGlow)' : undefined}
@@ -584,7 +584,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           </g>
 
           {/* ========================================================================= */}
-          {/* COMPUTER B (CENTER: x 410 to 590, y 160 to 300)                           */}
+          {/* COMPUTER B (CENTER: x 410 to 590, y 170 to 295)                           */}
           {/* ========================================================================= */}
           <g
             id="computer-b"
@@ -592,13 +592,13 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             className="transition-opacity duration-300"
           >
             {/* Stand */}
-            <path d="M480 285 L520 285 L530 315 L470 315 Z" fill="#1E293B" />
-            <rect x="460" y="315" width="80" height="10" rx="3" fill="#334155" />
+            <path d="M480 295 L520 295 L530 325 L470 325 Z" fill="#1E293B" />
+            <rect x="460" y="325" width="80" height="10" rx="3" fill="#334155" />
 
             {/* Monitor Frame */}
             <rect
               x="410"
-              y="160"
+              y="170"
               width="180"
               height="125"
               rx="10"
@@ -608,17 +608,17 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             />
 
             {/* Screen Glass */}
-            <rect x="420" y="170" width="160" height="105" rx="5" fill="#020617" />
+            <rect x="420" y="180" width="160" height="105" rx="5" fill="#020617" />
 
-            <text x="435" y="195" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
+            <text x="435" y="205" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
               Friend
             </text>
 
             {/* Socket & Link LED */}
-            <rect x="495" y="280" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
+            <rect x="495" y="290" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
             <circle
               cx="489"
-              cy="286"
+              cy="296"
               r="4.5"
               fill={cables.b ? '#22C55E' : '#334155'}
               filter={cables.b ? 'url(#softGlow)' : undefined}
@@ -626,7 +626,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           </g>
 
           {/* ========================================================================= */}
-          {/* COMPUTER C (RIGHT: x 725 to 905, y 180 to 320)                            */}
+          {/* COMPUTER C (RIGHT: x 725 to 905, y 170 to 295)                            */}
           {/* ========================================================================= */}
           <g
             id="computer-c"
@@ -634,13 +634,13 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             className="transition-opacity duration-300"
           >
             {/* Stand */}
-            <path d="M795 305 L835 305 L845 335 L785 335 Z" fill="#1E293B" />
-            <rect x="775" y="335" width="80" height="10" rx="3" fill="#334155" />
+            <path d="M795 295 L835 295 L845 325 L785 325 Z" fill="#1E293B" />
+            <rect x="775" y="325" width="80" height="10" rx="3" fill="#334155" />
 
             {/* Monitor Frame */}
             <rect
               x="725"
-              y="180"
+              y="170"
               width="180"
               height="125"
               rx="10"
@@ -650,17 +650,17 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             />
 
             {/* Screen Glass */}
-            <rect x="735" y="190" width="160" height="105" rx="5" fill="#020617" />
+            <rect x="735" y="180" width="160" height="105" rx="5" fill="#020617" />
 
-            <text x="750" y="215" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
+            <text x="750" y="205" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
               Third
             </text>
 
             {/* Socket & Link LED */}
-            <rect x="810" y="300" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
+            <rect x="810" y="290" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
             <circle
               cx="804"
-              cy="306"
+              cy="296"
               r="4.5"
               fill={cables.c ? '#22C55E' : '#334155'}
               filter={cables.c ? 'url(#softGlow)' : undefined}
@@ -680,7 +680,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   filter="url(#softGlow)"
                   animate={{
                     cx: [185, 430, 475, 500, 475, 430, 185],
-                    cy: [310, 405, 405, 290, 405, 405, 310],
+                    cy: [296, 448, 448, 296, 448, 448, 296],
                   }}
                   transition={{
                     duration: 2.2,
@@ -699,7 +699,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   <motion.circle
                     key={`arp-ring-${i}`}
                     cx="500"
-                    cy="405"
+                    cy="448"
                     r="25"
                     fill="none"
                     stroke="#F59E0B"
@@ -722,7 +722,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   filter="url(#goldGlow)"
                   animate={{
                     cx: [185, 430],
-                    cy: [310, 405],
+                    cy: [296, 448],
                   }}
                   transition={{
                     duration: 0.9,
@@ -738,7 +738,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   filter="url(#goldGlow)"
                   animate={{
                     cx: [475, 500],
-                    cy: [405, 290],
+                    cy: [448, 296],
                   }}
                   transition={{
                     duration: 0.9,
@@ -755,7 +755,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   filter="url(#goldGlow)"
                   animate={{
                     cx: [525, 815],
-                    cy: [405, 310],
+                    cy: [448, 296],
                   }}
                   transition={{
                     duration: 0.9,
@@ -778,7 +778,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {showAddressTags && tags.a !== 'hidden' && (
               <g
                 id="comp-a-tag"
-                transform="translate(185, 68)"
+                transform="translate(185, 78)"
                 onClick={() => onSelectTag?.('a')}
                 className="cursor-pointer group transition-opacity duration-300"
                 opacity={activeLayer === 'tags' ? 0.35 : 1}
@@ -843,7 +843,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {showMacBadges && (
               <g
                 id="comp-a-mac"
-                transform="translate(185, 98)"
+                transform="translate(185, 112)"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMacClick('a');
@@ -883,7 +883,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Computer Title */}
             <text
               x="185"
-              y="145"
+              y="146"
               textAnchor="middle"
               fill="#E2E8F0"
               fontSize="13"
@@ -895,7 +895,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Link Light Status */}
             <text
               x="185"
-              y="368"
+              y="356"
               textAnchor="middle"
               fill={cables.a ? '#34D399' : '#64748B'}
               fontSize="11"
@@ -912,7 +912,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {showAddressTags && tags.b !== 'hidden' && (
               <g
                 id="comp-b-tag"
-                transform="translate(500, 50)"
+                transform="translate(500, 78)"
                 onClick={() => onSelectTag?.('b')}
                 className="cursor-pointer group transition-opacity duration-300"
                 opacity={activeLayer === 'tags' ? 0.35 : 1}
@@ -977,7 +977,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {showMacBadges && (
               <g
                 id="comp-b-mac"
-                transform="translate(500, 80)"
+                transform="translate(500, 112)"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMacClick('b');
@@ -1017,7 +1017,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Computer Title */}
             <text
               x="500"
-              y="125"
+              y="146"
               textAnchor="middle"
               fill="#E2E8F0"
               fontSize="13"
@@ -1029,7 +1029,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Link Light Status */}
             <text
               x="500"
-              y="346"
+              y="356"
               textAnchor="middle"
               fill={cables.b ? '#34D399' : '#64748B'}
               fontSize="11"
@@ -1046,7 +1046,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {showAddressTags && tags.c !== 'hidden' && (
               <g
                 id="comp-c-tag"
-                transform="translate(815, 68)"
+                transform="translate(815, 78)"
                 onClick={() => onSelectTag?.('c')}
                 className="cursor-pointer group transition-opacity duration-300"
                 opacity={activeLayer === 'tags' ? 0.35 : 1}
@@ -1111,7 +1111,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {showMacBadges && (
               <g
                 id="comp-c-mac"
-                transform="translate(815, 98)"
+                transform="translate(815, 112)"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMacClick('c');
@@ -1151,7 +1151,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Computer Title */}
             <text
               x="815"
-              y="145"
+              y="146"
               textAnchor="middle"
               fill="#E2E8F0"
               fontSize="13"
@@ -1163,7 +1163,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             {/* Link Light Status */}
             <text
               x="815"
-              y="368"
+              y="356"
               textAnchor="middle"
               fill={cables.c ? '#34D399' : '#64748B'}
               fontSize="11"
@@ -1179,7 +1179,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             <g id="arp-broadcast-bubble" className="transition-all duration-300">
               <rect
                 x="310"
-                y="472"
+                y="502"
                 width="380"
                 height="32"
                 rx="16"
@@ -1188,10 +1188,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 strokeWidth="1.5"
                 filter="url(#softGlow)"
               />
-              <circle cx="330" cy="488" r="4.5" fill="#FBBF24" />
+              <circle cx="330" cy="518" r="4.5" fill="#FBBF24" />
               <text
                 x="505"
-                y="492"
+                y="522"
                 textAnchor="middle"
                 fill="#FDE68A"
                 fontSize="11"
