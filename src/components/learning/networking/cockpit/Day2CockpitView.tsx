@@ -357,7 +357,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
             <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
               <button
                 type="button"
-                onClick={() => setPageMode('warmup')}
+                onClick={() => setPageMode('intro')}
                 className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white shadow-xl shadow-black/80 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <span>Start Day 2</span>
@@ -683,7 +683,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
               <div className="flex items-center gap-4">
                 <span className="inline-flex items-center gap-2 text-zinc-200">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                  <span>Switch: <strong className="text-emerald-400 font-semibold">4 Ports Active</strong></span>
+                  <span>Switch: <strong className="text-emerald-400 font-semibold">{Object.values(manualCables).filter(Boolean).length} Ports Active</strong></span>
                 </span>
                 <span className="text-zinc-700">|</span>
                 <span className="text-zinc-300">
@@ -724,7 +724,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   }
                 }}
                 onInspectSwitch={() => {
-                  if (currentRung.id === 'c1-r2') {
+                  if (currentRung.id === 'c1-r1' || currentRung.id === 'c1-r2') {
                     setIsTaskDone(true);
                   }
                 }}
@@ -746,26 +746,38 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
             {/* Right Column: Card, Work Area & Fixed Button Row (38% width on desktop) */}
             <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#121214] border border-white/[0.08] p-6 shadow-2xl">
               <div className="space-y-4">
-                {/* Step Label */}
-                <div className="flex items-center justify-between text-xs text-zinc-400 font-mono">
-                  <span className="uppercase tracking-wider">Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-[#1c1c1f] border border-white/[0.06] text-zinc-400 font-mono">{currentRung.timeEstimate}</span>
-                </div>
-
-                {/* LOOK line (Bold, appears FIRST) */}
-                <div className="space-y-1">
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-blue-400 font-semibold">
-                    Look:
+                {/* Step Label & Compact Title */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs text-zinc-500 font-mono">
+                    <span className="uppercase tracking-wider font-medium">Concept {currentConcept.number} • Step {currentRung.rungNumber} of {currentConcept.rungs.length}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#18181b] border border-white/[0.06] text-zinc-400 text-[11px] font-mono">{currentRung.timeEstimate}</span>
                   </div>
-                  <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
-                    {currentRung.look}
-                  </h2>
+                  <h3 className="text-sm sm:text-[15px] font-semibold text-zinc-200 tracking-tight">
+                    {currentRung.title}
+                  </h3>
                 </div>
 
-                {/* STORY text (35 words or fewer) */}
-                <p className="text-sm text-zinc-300 leading-relaxed font-normal">
-                  {currentRung.story}
-                </p>
+                {/* Subtle Observation / Look line */}
+                {currentRung.look && (
+                  <div className="text-xs sm:text-[13px] text-zinc-400 leading-relaxed bg-[#18181b]/70 border border-white/[0.04] p-3 rounded-xl flex items-start gap-2">
+                    <span className="text-zinc-500 font-mono uppercase text-[10px] tracking-wider font-semibold shrink-0 mt-0.5">
+                      Look:
+                    </span>
+                    <span>{currentRung.look}</span>
+                  </div>
+                )}
+
+                {/* Main Explanation Story: BIGGER, clear, and prominent */}
+                <div className="space-y-2.5">
+                  <p className="text-base sm:text-[17px] text-zinc-100 leading-relaxed font-normal">
+                    {currentRung.story}
+                  </p>
+                  {currentRung.meaningText && (
+                    <p className="text-xs sm:text-sm text-zinc-400 border-l-2 border-white/20 pl-3 italic leading-relaxed">
+                      {currentRung.meaningText}
+                    </p>
+                  )}
+                </div>
 
                 {/* Simplified? note link */}
                 {currentRung.simplified && (
@@ -1128,14 +1140,14 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       onCommandRun={(cmd, outcome) => {
                         if (currentRung.check.type === 'task') {
                           if (
-                            currentRung.check.expectedCommand &&
-                            cmd.toLowerCase().includes(currentRung.check.expectedCommand.toLowerCase())
+                            !currentRung.check.expectedCommand ||
+                            cmd.toLowerCase().includes(currentRung.check.expectedCommand.toLowerCase().trim())
                           ) {
                             setIsTaskDone(true);
                           }
                         }
                         if (currentRung.check.type === 'diagnose') {
-                          if (outcome === 'reply') {
+                          if (outcome === 'reply' || outcome === 'cannot-send' || outcome === 'unreachable' || outcome === 'timed-out') {
                             setIsTaskDone(true);
                           }
                         }
