@@ -287,16 +287,16 @@ export const CONCEPT_1: ConceptDefinition = {
         question: 'Find the glowing line that says transmit failed. What did your computer fail to do?',
         options: [
           {
-            id: 'opt-a',
-            label: 'It couldn\'t send the message.',
-            isCorrect: true,
-            feedback: 'Yes. Transmit means send. The message never left your computer.',
-          },
-          {
             id: 'opt-b',
             label: 'Your friend refused the message.',
             isCorrect: false,
             feedback: 'Not quite. Watch again: the message stopped inside your computer. It never reached your friend, so your friend couldn\'t refuse it.',
+          },
+          {
+            id: 'opt-a',
+            label: 'It couldn\'t send the message.',
+            isCorrect: true,
+            feedback: 'Yes. Transmit means send. The message never left your computer.',
           },
           {
             id: 'opt-c',
@@ -309,24 +309,24 @@ export const CONCEPT_1: ConceptDefinition = {
           question: 'Look at the picture. Where did the message stop?',
           options: [
             {
-              id: 'var-a',
-              label: 'Inside your computer.',
-              isCorrect: true,
-              feedback: 'Yes. It never left your computer.',
-            },
-            {
               id: 'var-b',
               label: 'Somewhere on the way.',
               isCorrect: false,
               feedback: 'Not quite. Look at where the message is when it stops.',
             },
-            {
+          {
+              id: 'var-a',
+              label: 'Inside your computer.',
+              isCorrect: true,
+              feedback: 'Yes. It never left your computer.',
+            },
+          {
               id: 'var-c',
               label: 'Inside your friend\'s computer.',
               isCorrect: false,
               feedback: 'Not quite. Look closely at the left screen.',
             },
-          ],
+        ],
         },
       },
       hints: [
@@ -426,34 +426,34 @@ export const CONCEPT_1: ConceptDefinition = {
         question: 'What will the link lights show?',
         options: [
           {
-            id: 'pred-off',
-            label: 'Both lights stay OFF.',
-            isCorrect: true,
-            feedback: 'Yes! A link light turns on only when a computer hears the other one\'s electrical signal.',
-          },
-          {
             id: 'pred-half',
             label: 'Your light is ON, but your friend\'s is OFF.',
             isCorrect: false,
             feedback: 'Not quite. Your computer can\'t hear any signal if your friend\'s end is out, so your light stays OFF too.',
+          },
+          {
+            id: 'pred-off',
+            label: 'Both lights stay OFF.',
+            isCorrect: true,
+            feedback: 'Yes! A link light turns on only when a computer hears the other one\'s electrical signal.',
           },
         ],
         variant2: {
           question: 'If one end of the cable is loose, can ping send a message?',
           options: [
             {
-              id: 'var-no',
-              label: 'No, it stops inside.',
-              isCorrect: true,
-              feedback: 'Exactly. Without a complete circuit at both ends, the message cannot leave.',
-            },
-            {
               id: 'var-yes',
               label: 'Yes, but it gets lost halfway.',
               isCorrect: false,
               feedback: 'Not quite. The computer senses no link and refuses to send.',
             },
-          ],
+          {
+              id: 'var-no',
+              label: 'No, it stops inside.',
+              isCorrect: true,
+              feedback: 'Exactly. Without a complete circuit at both ends, the message cannot leave.',
+            },
+        ],
         },
       },
       hints: [
@@ -701,12 +701,6 @@ export const CONCEPT_2: ConceptDefinition = {
         question: 'Why can\'t 192.168.1.10 reach 192.168.2.5 over a direct cable?',
         options: [
           {
-            id: 'opt-c2-m-a',
-            label: 'They are on different streets (192.168.1 vs 192.168.2).',
-            isCorrect: true,
-            feedback: 'Yes! The first three numbers do not match, so they are on different streets.',
-          },
-          {
             id: 'opt-c2-m-b',
             label: 'The cable is broken.',
             isCorrect: false,
@@ -717,6 +711,12 @@ export const CONCEPT_2: ConceptDefinition = {
             label: 'House numbers 10 and 5 are too far apart.',
             isCorrect: false,
             feedback: 'Not quite. House numbers can be any valid number on the same street.',
+          },
+          {
+            id: 'opt-c2-m-a',
+            label: 'They are on different streets (192.168.1 vs 192.168.2).',
+            isCorrect: true,
+            feedback: 'Yes! The first three numbers do not match, so they are on different streets.',
           },
         ],
       },
@@ -810,16 +810,16 @@ export const CONCEPT_3: ConceptDefinition = {
         question: 'Your friend is sending a big file over this wire. You ping again. What happens to time?',
         options: [
           {
-            id: 'opt-bigger',
-            label: 'Gets bigger (takes longer).',
-            isCorrect: true,
-            feedback: 'Yes! Messages line up and wait their turn, so time gets bigger.',
-          },
-          {
             id: 'opt-same',
             label: 'Stays about 1ms.',
             isCorrect: false,
             feedback: 'Not quite. With file traffic sharing the wire, your ping has to wait in line.',
+          },
+          {
+            id: 'opt-bigger',
+            label: 'Gets bigger (takes longer).',
+            isCorrect: true,
+            feedback: 'Yes! Messages line up and wait their turn, so time gets bigger.',
           },
           {
             id: 'opt-stop',
@@ -1043,16 +1043,16 @@ export const CONCEPT_4: ConceptDefinition = {
         question: 'The link light next to the cable socket is OFF. What should you check first?',
         options: [
           {
-            id: 'opt-order-no',
-            label: 'Fix the cable first — signals cannot travel without a wire.',
-            isCorrect: true,
-            feedback: 'Spot on! A correct IP address cannot help if the physical wire is unplugged.',
-          },
-          {
             id: 'opt-order-yes',
             label: 'Check the IP address numbers in the settings.',
             isCorrect: false,
             feedback: 'Not yet. If the link light is off, signals cannot travel. Fix the wire first!',
+          },
+          {
+            id: 'opt-order-no',
+            label: 'Fix the cable first — signals cannot travel without a wire.',
+            isCorrect: true,
+            feedback: 'Spot on! A correct IP address cannot help if the physical wire is unplugged.',
           },
         ],
       },
@@ -1162,16 +1162,16 @@ export const CONCEPT_4: ConceptDefinition = {
         question: 'Ping says "Transmit failed". You look down and see the link light is OFF. What is the real cause?',
         options: [
           {
-            id: 'opt-cause-cable',
-            label: 'The physical cable is disconnected or loose.',
-            isCorrect: true,
-            feedback: 'Exactly right! Light OFF is physical. The address doesn\'t matter yet.',
-          },
-          {
             id: 'opt-cause-dns',
             label: 'The computer needs to be restarted.',
             isCorrect: false,
             feedback: 'Restarting won\'t connect an unplugged wire. Plug the cable in first!',
+          },
+          {
+            id: 'opt-cause-cable',
+            label: 'The physical cable is disconnected or loose.',
+            isCorrect: true,
+            feedback: 'Exactly right! Light OFF is physical. The address doesn\'t matter yet.',
           },
         ],
       },

@@ -189,27 +189,27 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
       question: 'What do the numbers [1] through [4] on the switch represent?',
       options: [
         {
-          id: 'opt-ports',
-          label: 'Numbered sockets (ports) where network cables plug in',
-          isCorrect: true,
-          feedback:
-            'Exactly right. Each number marks an individual port where a computer can plug into the shared network.',
-        },
-        {
           id: 'opt-priority',
           label: 'The priority order of which computer gets the fastest internet',
           isCorrect: false,
           feedback:
             'All ports on a modern switch run at equal speed. The numbers are simply physical labels for the sockets.',
         },
-        {
+          {
+          id: 'opt-ports',
+          label: 'Numbered sockets (ports) where network cables plug in',
+          isCorrect: true,
+          feedback:
+            'Exactly right. Each number marks an individual port where a computer can plug into the shared network.',
+        },
+          {
           id: 'opt-version',
           label: 'The version number of the switch software',
           isCorrect: false,
           feedback:
             'These are physical port numbers, just like numbered doors on an office floor.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -359,27 +359,27 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
         'When Your computer sent the ping to Friend’s computer (192.168.1.20), did Third computer on Port 3 receive the ping message?',
       options: [
         {
-          id: 'opt-no-isolation',
-          label: 'No. The switch delivered the ping directly to Port 2, leaving Port 3 quiet.',
-          isCorrect: true,
-          feedback:
-            'Correct! A switch directs messages specifically to the recipient’s port. Third computer never receives the ping.',
-        },
-        {
           id: 'opt-yes-all',
           label: 'Yes. Every message sent into a switch is copied and sent out of all ports.',
           isCorrect: false,
           feedback:
             'Older, obsolete devices called hubs used to do that, but modern switches do not. A switch forwards the ping only to the port where the destination computer is connected.',
         },
-        {
+          {
           id: 'opt-broken',
           label: 'No, but only because Third computer’s cable was broken.',
           isCorrect: false,
           feedback:
             'Third computer’s cable is plugged in and healthy (Port 3 light is green). The switch intentionally kept the message away from Port 3 because it was addressed to Friend’s computer.',
         },
-      ],
+          {
+          id: 'opt-no-isolation',
+          label: 'No. The switch delivered the ping directly to Port 2, leaving Port 3 quiet.',
+          isCorrect: true,
+          feedback:
+            'Correct! A switch directs messages specifically to the recipient’s port. Third computer never receives the ping.',
+        },
+        ],
     },
     hints: [
       {
@@ -432,27 +432,27 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
         'A teammate brings a fourth computer to the desk. What do you need to connect them to the network?',
       options: [
         {
-          id: 'opt-fourth-port',
-          label: 'One network cable to plug the new computer into the switch’s unused Port 4',
-          isCorrect: true,
-          feedback:
-            'Exactly! Switches make network growth simple: just plug the new machine into any available port.',
-        },
-        {
           id: 'opt-replace-switch',
           label: 'A completely new switch, because switches can only connect three computers',
           isCorrect: false,
           feedback:
             'Our switch has 4 ports! Port 4 is still open and ready for a new machine.',
         },
-        {
+          {
+          id: 'opt-fourth-port',
+          label: 'One network cable to plug the new computer into the switch’s unused Port 4',
+          isCorrect: true,
+          feedback:
+            'Exactly! Switches make network growth simple: just plug the new machine into any available port.',
+        },
+          {
           id: 'opt-direct-cables',
           label: 'Three separate cables running directly to each existing computer',
           isCorrect: false,
           feedback:
             'That is the messy web we avoided by using a switch! The new computer only needs one cable to the switch.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -571,21 +571,21 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
           feedback:
             'Exactly right. The MAC address is the hardware name tag of the network interface itself.',
         },
-        {
+          {
           id: 'opt-mac-street',
           label: 'It changes automatically whenever you unplug a cable and plug it into another room.',
           isCorrect: false,
           feedback:
             'That is what an IP address does! The hardware MAC address stays with the computer wherever you carry it.',
         },
-        {
+          {
           id: 'opt-mac-four',
           label: 'It is made of four numbers separated by dots, like 192.168.1.10.',
           isCorrect: false,
           feedback:
             'Four numbers separated by dots is an IPv4 address. A MAC address uses six pairs of characters, like 00-00-5e-00-53-01.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -632,27 +632,27 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
         'How does a switch discover that Friend’s computer (00-00-5e-00-53-02) is connected to Port 2?',
       options: [
         {
-          id: 'opt-learn-sender',
-          label: 'The switch reads the sender’s name tag whenever Friend’s computer transmits a message into Port 2.',
-          isCorrect: true,
-          feedback:
-            'Correct! The switch inspects the sender address on incoming messages and records which port they arrived on.',
-        },
-        {
           id: 'opt-manual-entry',
           label: 'A network administrator had to type every MAC address into the switch before it could work.',
           isCorrect: false,
           feedback:
             'Switches learn automatically! You just plug cables in, and the switch builds its notebook by watching traffic.',
         },
-        {
+          {
+          id: 'opt-learn-sender',
+          label: 'The switch reads the sender’s name tag whenever Friend’s computer transmits a message into Port 2.',
+          isCorrect: true,
+          feedback:
+            'Correct! The switch inspects the sender address on incoming messages and records which port they arrived on.',
+        },
+          {
           id: 'opt-guess-port',
           label: 'The switch guesses randomly and hopes it picks the right port.',
           isCorrect: false,
           feedback:
             'A switch never guesses. It records the exact port where the sender’s electrical signals entered.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -699,27 +699,27 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
       question: 'Why does a network message need both an outer MAC label and an inner IP letter?',
       options: [
         {
-          id: 'opt-layers-purpose',
-          label: 'The switch reads the outer MAC address for physical port delivery; the computer reads the inner IP address.',
-          isCorrect: true,
-          feedback:
-            'Precisely right. The switch uses the outer MAC name tag to pick the wire, and the receiving computer uses the inner IP to handle the data.',
-        },
-        {
           id: 'opt-redundancy',
           label: 'It is a duplicate backup in case the first address gets erased by static electricity.',
           isCorrect: false,
           feedback:
             'They serve completely different purposes! The switch navigates locally by MAC, while computers organize communication by IP.',
         },
-        {
+          {
           id: 'opt-switch-reads-ip',
           label: 'The switch only reads the inner IP address and ignores the outer MAC address completely.',
           isCorrect: false,
           feedback:
             'A local switch does not look at IP addresses at all. It forwards messages based on the outer MAC name tag.',
         },
-      ],
+          {
+          id: 'opt-layers-purpose',
+          label: 'The switch reads the outer MAC address for physical port delivery; the computer reads the inner IP address.',
+          isCorrect: true,
+          feedback:
+            'Precisely right. The switch uses the outer MAC name tag to pick the wire, and the receiving computer uses the inner IP to handle the data.',
+        },
+        ],
     },
     hints: [
       {
@@ -767,27 +767,27 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
         'You move Third computer to another desk in a different department. Which address changes?',
       options: [
         {
-          id: 'opt-ip-changes-mac-stays',
-          label: 'Its IP address changes to match the new street, but its hardware MAC address stays the same.',
-          isCorrect: true,
-          feedback:
-            'Perfect! Your street address changes when you move to a new building, but your physical identity travels with you.',
-        },
-        {
           id: 'opt-mac-changes-ip-stays',
           label: 'Its MAC address changes, but its IP address is permanent and cannot be changed.',
           isCorrect: false,
           feedback:
             'The opposite is true! The MAC address is built into the physical hardware, while the IP address is configured based on your current location.',
         },
-        {
+          {
+          id: 'opt-ip-changes-mac-stays',
+          label: 'Its IP address changes to match the new street, but its hardware MAC address stays the same.',
+          isCorrect: true,
+          feedback:
+            'Perfect! Your street address changes when you move to a new building, but your physical identity travels with you.',
+        },
+          {
           id: 'opt-both-change',
           label: 'Both addresses are physically tied to the wooden desk and must be replaced.',
           isCorrect: false,
           feedback:
             'A computer keeps its hardware network card (and its MAC address) no matter what desk it sits on.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -888,27 +888,27 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
         'When Your computer broadcasts an ARP roll call for 192.168.1.20, what does Third computer (192.168.1.30) do?',
       options: [
         {
-          id: 'opt-third-ignores',
-          label: 'Third computer hears the question, sees it is not for 192.168.1.30, and quietly ignores it.',
-          isCorrect: true,
-          feedback:
-            'Exactly right. Computers only reply to ARP roll calls if their own IP address matches the question.',
-        },
-        {
           id: 'opt-third-replies',
           label: 'Third computer replies saying it does not own that address.',
           isCorrect: false,
           feedback:
             'If every machine replied to say "not me", the network would become clogged with useless chatter! Only the owner replies.',
         },
-        {
+          {
           id: 'opt-third-forwards',
           label: 'Third computer forwards the question to another switch.',
           isCorrect: false,
           feedback:
             'Third computer is an end workstation, not a switch. It simply drops messages that do not belong to it.',
         },
-      ],
+          {
+          id: 'opt-third-ignores',
+          label: 'Third computer hears the question, sees it is not for 192.168.1.30, and quietly ignores it.',
+          isCorrect: true,
+          feedback:
+            'Exactly right. Computers only reply to ARP roll calls if their own IP address matches the question.',
+        },
+        ],
     },
     hints: [
       {
@@ -973,21 +973,21 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
           feedback:
             'Exactly right. The switch does not know which computer owns 192.168.1.20, so it sends the broadcast to all connected ports.',
         },
-        {
+          {
           id: 'opt-switch-knows',
           label: 'Because the switch already knew who owned it and wanted to test Third computer.',
           isCorrect: false,
           feedback:
             'The switch does not track IP addresses. It delivers broadcasts to everyone because it was told to ask the entire room.',
         },
-        {
+          {
           id: 'opt-error',
           label: 'It was an electrical glitch inside the switch.',
           isCorrect: false,
           feedback:
             'This is standard network behavior designed into every Ethernet switch.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -1091,27 +1091,27 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
         'Which notebook maps an IP address (like 192.168.1.20) to a hardware name tag (MAC address)?',
       options: [
         {
-          id: 'opt-arp-table',
-          label: 'Your computer’s ARP table (inspected with arp -a)',
-          isCorrect: true,
-          feedback:
-            'Exactly! Your computer keeps the ARP table to translate IP addresses into hardware MAC name tags.',
-        },
-        {
           id: 'opt-switch-table',
           label: 'The switch’s internal port notebook',
           isCorrect: false,
           feedback:
             'The switch does not know about IP addresses! The switch only maps MAC name tags to physical port numbers.',
         },
-        {
+          {
+          id: 'opt-arp-table',
+          label: 'Your computer’s ARP table (inspected with arp -a)',
+          isCorrect: true,
+          feedback:
+            'Exactly! Your computer keeps the ARP table to translate IP addresses into hardware MAC name tags.',
+        },
+          {
           id: 'opt-cable-table',
           label: 'A notebook stored inside the blue cable wire',
           isCorrect: false,
           feedback:
             'Cables are copper wires that carry electrical pulses; they do not have memory or notebooks.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -1166,27 +1166,27 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
         'When you ping a new neighbor for the very first time, what happens before your ping message leaves your computer?',
       options: [
         {
-          id: 'opt-arp-first',
-          label: 'Your computer sends an ARP broadcast to discover the neighbor’s MAC address.',
-          isCorrect: true,
-          feedback:
-            'Spot on! Your computer must learn the destination’s hardware name tag before it can address the outer envelope.',
-        },
-        {
           id: 'opt-ping-direct',
           label: 'The ping leaves immediately because the switch knows where every IP is without asking.',
           isCorrect: false,
           feedback:
             'The switch does not know IP addresses! Your computer must discover the MAC address first via ARP.',
         },
-        {
+          {
           id: 'opt-format-drive',
           label: 'Your computer deletes its address book and formats its hard drive.',
           isCorrect: false,
           feedback:
             'Sending a ping is a safe diagnostic check; it never formats drives!',
         },
-      ],
+          {
+          id: 'opt-arp-first',
+          label: 'Your computer sends an ARP broadcast to discover the neighbor’s MAC address.',
+          isCorrect: true,
+          feedback:
+            'Spot on! Your computer must learn the destination’s hardware name tag before it can address the outer envelope.',
+        },
+        ],
     },
     hints: [
       {
@@ -1241,27 +1241,27 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
         'When a ping to a neighbor fails on a switch, why is running arp -a useful as an extra step?',
       options: [
         {
-          id: 'opt-arp-proves-presence',
-          label: 'It reveals whether the neighbor answered the roll call, proving they are plugged into the wire.',
-          isCorrect: true,
-          feedback:
-            'Exactly! If their MAC address appears in your ARP table, you know their cable is plugged in and their network card is active.',
-        },
-        {
           id: 'opt-arp-repairs-cable',
           label: 'Running arp -a physically repairs bent copper pins in the network cable.',
           isCorrect: false,
           feedback:
             'Software commands cannot physically fix damaged hardware pins. It is a diagnostic inspection tool.',
         },
-        {
+          {
+          id: 'opt-arp-proves-presence',
+          label: 'It reveals whether the neighbor answered the roll call, proving they are plugged into the wire.',
+          isCorrect: true,
+          feedback:
+            'Exactly! If their MAC address appears in your ARP table, you know their cable is plugged in and their network card is active.',
+        },
+          {
           id: 'opt-arp-speeds-up',
           label: 'It doubles the transmission speed of your switch.',
           isCorrect: false,
           feedback:
             'arp -a simply prints your local notebook. It does not alter hardware link speed.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -1314,21 +1314,21 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
           feedback:
             'Spot on! Timed out means the roll call succeeded and the message was delivered, but the target did not send an answer back.',
         },
-        {
+          {
           id: 'opt-table-empty',
           label: 'The ARP table is completely blank because the target does not exist at all.',
           isCorrect: false,
           feedback:
             'If the ARP table were blank, the ping would have failed with "Destination host unreachable", because no message could even be sent!',
         },
-        {
+          {
           id: 'opt-router-error',
           label: 'A warning saying you must buy a new router immediately.',
           isCorrect: false,
           feedback:
             'We are on a local switch! We do not need a router to reach computers on our own street.',
         },
-      ],
+        ],
     },
     hints: [
       {
@@ -1525,27 +1525,27 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
         'A switch connects computers on the SAME street (like 192.168.1.x). What is needed to reach a computer on a DIFFERENT street?',
       options: [
         {
-          id: 'opt-router-bridge',
-          label: 'A doorway device that connects different streets together (introduced on Day 3)',
-          isCorrect: true,
-          feedback:
-            'Exactly right! A switch manages the local room; a doorway device (router) connects different streets together.',
-        },
-        {
           id: 'opt-longer-cable',
           label: 'Just a much longer blue network cable plugged into the same switch',
           isCorrect: false,
           feedback:
             'A longer cable on the same switch is still on the same street! Different streets require a gateway.',
         },
-        {
+          {
+          id: 'opt-router-bridge',
+          label: 'A doorway device that connects different streets together (introduced on Day 3)',
+          isCorrect: true,
+          feedback:
+            'Exactly right! A switch manages the local room; a doorway device (router) connects different streets together.',
+        },
+          {
           id: 'opt-faster-switch',
           label: 'A switch with 100 ports running at double speed',
           isCorrect: false,
           feedback:
             'No matter how fast a switch is, it only switches traffic within one local street.',
         },
-      ],
+        ],
     },
     hints: [
       {
