@@ -27,12 +27,21 @@ Every networking stage canvas MUST follow the physical workbench layout establis
   ```
 
 ### B. Computer Workstations (Monitors)
+- **Clearance from Top Bar**: The top of the monitor frame sits at `y >= 145`, leaving the entire `y = 0 to 140` zone completely clear for the top utility bar without any overlap.
 - **Stand**: Base path (`<path d="..." fill="#1E293B" />`) and desk foot (`<rect fill="#334155" rx="3" />`).
 - **Bezel**: Dark monitor frame (`fill="#0F172A" stroke="#334155" strokeWidth="2" rx="10"`).
-- **Screen Glass**: High-contrast CRT/display glass (`fill="#020617" rx="5"`).
-- **Screen Display**: Monospace terminal prompt (`>_`) with mini live diagnostics (IP, Gateway, Subnet mask).
+- **Screen Glass**: High-contrast CRT display glass (`fill="#020617" rx="6"`).
+- **Single Source of Truth on Screen (NO DUPLICATE FLOATING PILLS)**:
+  - Do NOT stack floating IP/GW/MAC pills above the monitor.
+  - Render an authentic terminal display directly on the screen glass:
+    - Terminal title bar: `● ● ● host-a (you)`
+    - `IP:  192.168.1.10` (color-coded to street)
+    - `GW:  192.168.1.1` (color-coded to gateway doorway)
+    - `MAC: 00-00-5e-00-53-01` (color-coded to hardware name tag)
+    - `NET: 255.255.255.0`
+  - Layer highlighting: when a layer button is clicked (`Addresses`, `Doorways`, `Name tags`), the corresponding line inside the screen highlights or dims with `opacity="0.35"`.
 - **Physical RJ-45 Socket**: Cutout `<rect fill="#0F172A" stroke="#64748B" strokeWidth="1" rx="2" />` sitting on the monitor bezel.
-- **Link LED**: Glowing circle (`r="4.5"`) with `filter="url(#softGlow)"` (Green `#22C55E` when link is up, dark `#334155` when unplugged).
+- **Link LED**: Glowing circle (`r="4"`) with `filter="url(#softGlow)"` (Green `#22C55E` when link is up, dark `#334155` when unplugged).
 - **Link Status Text**: Crisp label beneath the stand (`Link light: ON` or `OFF`).
 
 ### C. Central Rackmount Chassis (Switch, Router, Server)

@@ -87,7 +87,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
       {/* ========================================================================= */}
       {/* 1. TOP TELEMETRY, LAYER SWITCHER & AUDIO / REPLAY CONTROLS                */}
       {/* ========================================================================= */}
-      <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between text-xs font-mono pointer-events-none gap-2">
+      <div className="absolute top-3.5 left-4 right-4 z-20 flex items-center justify-between text-xs font-mono pointer-events-none gap-2">
         {/* Left Telemetry Status */}
         <div className="flex items-center gap-2 pointer-events-auto">
           <span
@@ -116,7 +116,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
           </span>
         </div>
 
-        {/* Center Layer Selector: All | Sockets | Addresses | Gateways | Name tags */}
+        {/* Center Layer Selector: All | Sockets | Addresses | Doorways | Name tags */}
         <div className="hidden md:flex items-center rounded-xl bg-zinc-950/90 border border-white/[0.12] p-0.5 text-[11px] font-sans font-medium pointer-events-auto shadow-lg">
           <button
             type="button"
@@ -211,11 +211,11 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL SVG WORKBENCH SCENE (viewBox 0 0 1000 680)                         */}
+      {/* 2. FULL SVG WORKBENCH SCENE (viewBox 0 0 1000 710)                         */}
       {/* ========================================================================= */}
-      <div className="relative w-full aspect-[16/11] max-h-[660px]">
+      <div className="relative w-full aspect-[16/11.4] max-h-[690px]">
         <svg
-          viewBox="0 0 1000 680"
+          viewBox="0 0 1000 710"
           className="w-full h-full block"
           preserveAspectRatio="xMidYMid meet"
         >
@@ -252,9 +252,9 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
             </filter>
           </defs>
 
-          {/* DESK GROUND (y 500 to 680) */}
-          <rect x="0" y="500" width="1000" height="180" fill="url(#deskGrad)" />
-          <line x1="0" y1="500" x2="1000" y2="500" stroke="#1E293B" strokeWidth="2" />
+          {/* DESK GROUND (y 520 to 710) */}
+          <rect x="0" y="520" width="1000" height="190" fill="url(#deskGrad)" />
+          <line x1="0" y1="520" x2="1000" y2="520" stroke="#1E293B" strokeWidth="2" />
 
           {/* STREET BANDS ON DESK GROUND */}
           {/* Green Street: 192.168.1.x */}
@@ -265,7 +265,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
           >
             <rect
               x="60"
-              y="590"
+              y="615"
               width="400"
               height="34"
               rx="17"
@@ -277,7 +277,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
             />
             <text
               x="260"
-              y="612"
+              y="637"
               textAnchor="middle"
               fill="#34D399"
               fontSize="12"
@@ -296,7 +296,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
           >
             <rect
               x="540"
-              y="590"
+              y="615"
               width="400"
               height="34"
               rx="17"
@@ -308,7 +308,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
             />
             <text
               x="740"
-              y="612"
+              y="637"
               textAnchor="middle"
               fill="#FBBF24"
               fontSize="12"
@@ -323,7 +323,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
           {/* 3. PATCH CABLES (Host A -> Router Port 1 | Host B -> Router Port 2)       */}
           {/* ========================================================================= */}
 
-          {/* Cable A: Host A socket (185, 286) -> Router Port 1 (405, 444) */}
+          {/* Cable A: Host A socket (185, 304) -> Router Port 1 (405, 444) */}
           {showRouter && cables.hostA && cables.routerEth0 ? (
             <g
               id="cable-a"
@@ -331,7 +331,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 185 286 C 185 390, 310 444, 405 444"
+                d="M 185 304 C 185 395, 310 444, 405 444"
                 fill="none"
                 stroke="#10B981"
                 strokeWidth="6"
@@ -339,7 +339,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                 className="transition-colors group-hover:stroke-emerald-400"
               />
               <path
-                d="M 185 286 C 185 390, 310 444, 405 444"
+                d="M 185 304 C 185 395, 310 444, 405 444"
                 fill="none"
                 stroke="#6EE7B7"
                 strokeWidth="1.5"
@@ -354,7 +354,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 185 286 C 185 365, 235 470, 275 490"
+                d="M 185 304 C 185 375, 235 480, 275 500"
                 fill="none"
                 stroke="#64748B"
                 strokeWidth="5"
@@ -362,8 +362,8 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                 strokeLinecap="round"
                 className="group-hover:stroke-emerald-400 transition-colors"
               />
-              <circle cx="275" cy="490" r="5.5" fill="#EF4444" />
-              <g transform="translate(275, 465)">
+              <circle cx="275" cy="500" r="5.5" fill="#EF4444" />
+              <g transform="translate(275, 475)">
                 <rect
                   x="-65"
                   y="-10"
@@ -389,7 +389,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
             </g>
           )}
 
-          {/* Cable B: Host B socket (815, 286) -> Router Port 2 (595, 444) */}
+          {/* Cable B: Host B socket (815, 304) -> Router Port 2 (595, 444) */}
           {showRouter && cables.hostB && cables.routerEth1 ? (
             <g
               id="cable-b"
@@ -397,7 +397,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 815 286 C 815 390, 690 444, 595 444"
+                d="M 815 304 C 815 395, 690 444, 595 444"
                 fill="none"
                 stroke="#F59E0B"
                 strokeWidth="6"
@@ -405,7 +405,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                 className="transition-colors group-hover:stroke-amber-400"
               />
               <path
-                d="M 815 286 C 815 390, 690 444, 595 444"
+                d="M 815 304 C 815 395, 690 444, 595 444"
                 fill="none"
                 stroke="#FDE68A"
                 strokeWidth="1.5"
@@ -420,7 +420,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
               className="cursor-pointer group"
             >
               <path
-                d="M 815 286 C 815 365, 765 470, 725 490"
+                d="M 815 304 C 815 375, 765 480, 725 500"
                 fill="none"
                 stroke="#64748B"
                 strokeWidth="5"
@@ -428,8 +428,8 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                 strokeLinecap="round"
                 className="group-hover:stroke-amber-400 transition-colors"
               />
-              <circle cx="725" cy="490" r="5.5" fill="#EF4444" />
-              <g transform="translate(725, 465)">
+              <circle cx="725" cy="500" r="5.5" fill="#EF4444" />
+              <g transform="translate(725, 475)">
                 <rect
                   x="-65"
                   y="-10"
@@ -794,88 +794,143 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
             className="transition-opacity duration-300"
           >
             {/* Monitor Stand */}
-            <path d="M165 285 L205 285 L215 315 L155 315 Z" fill="#1E293B" />
-            <rect x="145" y="315" width="80" height="10" rx="3" fill="#334155" />
+            <path d="M165 295 L205 295 L215 330 L155 330 Z" fill="#1E293B" />
+            <rect x="140" y="330" width="90" height="12" rx="3" fill="#334155" />
 
-            {/* Monitor Frame */}
+            {/* Monitor Bezel Frame */}
             <rect
-              x="95"
-              y="160"
-              width="180"
-              height="125"
+              x="85"
+              y="155"
+              width="200"
+              height="145"
               rx="10"
               fill="#0F172A"
               stroke={isHighlighted('hostA') ? '#10B981' : '#334155'}
               strokeWidth={isHighlighted('hostA') ? 3 : 2}
             />
 
-            {/* Screen Glass */}
-            <rect x="105" y="170" width="160" height="105" rx="5" fill="#020617" />
+            {/* High-Contrast Glass Screen */}
+            <rect x="95" y="165" width="180" height="125" rx="6" fill="#020617" />
 
-            {/* Terminal prompt symbol `>_` */}
+            {/* Title above monitor frame (Well below top utility bar!) */}
             <text
-              x="120"
-              y="196"
-              fill="#10B981"
-              fontSize="14"
-              fontFamily="ui-monospace, monospace"
-              fontWeight="bold"
+              x="185"
+              y="142"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="13"
+              fontWeight="600"
             >
-              &gt;_
+              Computer A (You)
             </text>
+
+            {/* Terminal Window Header Bar on Glass */}
+            <rect x="95" y="165" width="180" height="22" rx="6" fill="#090D16" />
+            <circle cx="108" cy="176" r="3" fill="#EF4444" opacity="0.8" />
+            <circle cx="117" cy="176" r="3" fill="#F59E0B" opacity="0.8" />
+            <circle cx="126" cy="176" r="3" fill="#10B981" opacity="0.8" />
             <text
               x="142"
-              y="196"
+              y="179.5"
               fill="#94A3B8"
-              fontSize="11"
+              fontSize="9.5"
               fontFamily="ui-monospace, monospace"
+              fontWeight="600"
             >
-              Host A
+              host-a (you)
             </text>
 
-            {/* Screen text */}
-            <text
-              x="120"
-              y="222"
-              fill="#64748B"
-              fontSize="9.5"
-              fontFamily="ui-monospace, monospace"
+            {/* Terminal Display Lines Inside Screen (Single Source of Truth) */}
+            {/* 1. IP Address Line */}
+            <g
+              id="host-a-screen-ip"
+              opacity={activeLayer === 'tags' || activeLayer === 'gateways' ? 0.35 : 1}
+              className="transition-opacity duration-200"
             >
-              IP:{' '}
-              <tspan fill="#34D399" fontWeight="bold">
-                192.168.1.10
-              </tspan>
-            </text>
-            <text
-              x="120"
-              y="242"
-              fill="#64748B"
-              fontSize="9.5"
-              fontFamily="ui-monospace, monospace"
-            >
-              GW:{' '}
-              <tspan
-                fill={gateways.a ? '#38BDF8' : '#EF4444'}
-                fontWeight={gateways.a ? 'bold' : 'normal'}
+              <text
+                x="108"
+                y="207"
+                fill="#64748B"
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
               >
-                {gateways.a || '<none>'}
-              </tspan>
-            </text>
+                IP:{' '}
+                <tspan
+                  fill="#34D399"
+                  fontWeight="bold"
+                  filter={activeLayer === 'addresses' ? 'url(#softGlow)' : undefined}
+                >
+                  192.168.1.10
+                </tspan>
+              </text>
+            </g>
+
+            {/* 2. Default Gateway Line */}
+            {showGatewayBadges && (
+              <g
+                id="host-a-screen-gw"
+                opacity={activeLayer === 'tags' || activeLayer === 'addresses' ? 0.35 : 1}
+                className="transition-opacity duration-200"
+              >
+                <text
+                  x="108"
+                  y="228"
+                  fill="#64748B"
+                  fontSize="10"
+                  fontFamily="ui-monospace, monospace"
+                >
+                  GW:{' '}
+                  <tspan
+                    fill={gateways.a ? '#38BDF8' : '#F87171'}
+                    fontWeight={gateways.a ? 'bold' : 'normal'}
+                    filter={activeLayer === 'gateways' && gateways.a ? 'url(#softGlow)' : undefined}
+                  >
+                    {gateways.a || '<none>'}
+                  </tspan>
+                </text>
+              </g>
+            )}
+
+            {/* 3. Hardware MAC Name Tag Line */}
+            <g
+              id="host-a-screen-mac"
+              opacity={activeLayer === 'addresses' || activeLayer === 'gateways' ? 0.35 : 1}
+              className="transition-opacity duration-200"
+            >
+              <text
+                x="108"
+                y="249"
+                fill="#64748B"
+                fontSize="9.5"
+                fontFamily="ui-monospace, monospace"
+              >
+                MAC:{' '}
+                <tspan
+                  fill="#FCD34D"
+                  fontWeight="600"
+                  filter={activeLayer === 'tags' ? 'url(#goldGlow)' : undefined}
+                >
+                  {macBadges.a}
+                </tspan>
+              </text>
+            </g>
+
+            {/* 4. Subnet Mask Line */}
             <text
-              x="120"
-              y="260"
+              x="108"
+              y="269"
               fill="#475569"
               fontSize="8.5"
               fontFamily="ui-monospace, monospace"
             >
-              Mask: 255.255.255.0
+              NET: 255.255.255.0
             </text>
 
-            {/* Cable Socket */}
+            {/* Physical Cable Socket on Bottom Right of Monitor */}
             <rect
               x="180"
-              y="280"
-              width="10"
+              y="298"
+              width="12"
               height="12"
               rx="2"
               fill="#0F172A"
@@ -885,134 +940,17 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
 
             {/* Link LED */}
             <circle
-              cx="174"
-              cy="286"
-              r="4.5"
+              cx="172"
+              cy="304"
+              r="4"
               fill={portLeds.hostA === 'green' ? '#22C55E' : '#334155'}
               filter={portLeds.hostA === 'green' ? 'url(#softGlow)' : undefined}
             />
 
-            {/* Title above monitor */}
+            {/* Link light status text below stand */}
             <text
               x="185"
-              y="42"
-              textAnchor="middle"
-              fill="#E2E8F0"
-              fontSize="13"
-              fontWeight="600"
-            >
-              Computer A (You)
-            </text>
-
-            {/* Address Tag Pill */}
-            <g
-              id="host-a-ip-pill"
-              transform="translate(185, 68)"
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'tags' || activeLayer === 'gateways' ? 0.35 : 1}
-            >
-              <rect
-                x="-65"
-                y="-13"
-                width="130"
-                height="26"
-                rx="13"
-                fill="#0F172A"
-                stroke={activeLayer === 'addresses' ? '#10B981' : '#334155'}
-                strokeWidth={activeLayer === 'addresses' ? 2 : 1.5}
-                className="group-hover:stroke-emerald-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="4"
-                textAnchor="middle"
-                fontFamily="ui-monospace, monospace"
-                fontSize="11"
-                fontWeight="bold"
-              >
-                <tspan fill="#34D399">192.168.1</tspan>
-                <tspan fill="#64748B">.</tspan>
-                <tspan fill="#FBBF24">10</tspan>
-              </text>
-            </g>
-
-            {/* Gateway Doorway Pill */}
-            {showGatewayBadges && (
-              <g
-                id="host-a-gw-pill"
-                transform="translate(185, 98)"
-                className="cursor-pointer group transition-opacity duration-300"
-                opacity={activeLayer === 'tags' || activeLayer === 'addresses' ? 0.35 : 1}
-              >
-                <rect
-                  x="-75"
-                  y="-11"
-                  width="150"
-                  height="22"
-                  rx="11"
-                  fill="#020617"
-                  stroke={
-                    activeLayer === 'gateways'
-                      ? '#38BDF8'
-                      : gateways.a
-                      ? '#1E3A8A'
-                      : '#EF4444'
-                  }
-                  strokeWidth={activeLayer === 'gateways' ? 2 : 1.2}
-                  strokeDasharray={gateways.a ? undefined : '3 3'}
-                  className="group-hover:stroke-sky-400 transition-colors"
-                />
-                <text
-                  x="0"
-                  y="3.5"
-                  textAnchor="middle"
-                  fontFamily="ui-monospace, monospace"
-                  fontSize="9.5"
-                  fontWeight="bold"
-                >
-                  <tspan fill="#64748B">GW: </tspan>
-                  <tspan fill={gateways.a ? '#38BDF8' : '#F87171'}>
-                    {gateways.a || 'NO GATEWAY'}
-                  </tspan>
-                </text>
-              </g>
-            )}
-
-            {/* MAC Hardware Badge */}
-            <g
-              id="host-a-mac-pill"
-              transform="translate(185, 126)"
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'addresses' || activeLayer === 'gateways' ? 0.35 : 1}
-            >
-              <rect
-                x="-75"
-                y="-10"
-                width="150"
-                height="20"
-                rx="4"
-                fill="#020617"
-                stroke={activeLayer === 'tags' ? '#F59E0B' : '#1E293B'}
-                strokeWidth={activeLayer === 'tags' ? 1.5 : 1}
-                className="group-hover:stroke-amber-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="3.5"
-                textAnchor="middle"
-                fill={activeLayer === 'tags' ? '#FCD34D' : '#94A3B8'}
-                fontSize="9"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-              >
-                MAC: {macBadges.a}
-              </text>
-            </g>
-
-            {/* Link light text */}
-            <text
-              x="185"
-              y="345"
+              y="360"
               textAnchor="middle"
               fill={cables.hostA ? '#34D399' : '#64748B'}
               fontSize="11"
@@ -1032,85 +970,143 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
             className="transition-opacity duration-300"
           >
             {/* Monitor Stand */}
-            <path d="M795 285 L835 285 L845 315 L785 315 Z" fill="#1E293B" />
-            <rect x="775" y="315" width="80" height="10" rx="3" fill="#334155" />
+            <path d="M795 295 L835 295 L845 330 L785 330 Z" fill="#1E293B" />
+            <rect x="770" y="330" width="90" height="12" rx="3" fill="#334155" />
 
-            {/* Monitor Frame */}
+            {/* Monitor Bezel Frame */}
             <rect
-              x="725"
-              y="160"
-              width="180"
-              height="125"
+              x="715"
+              y="155"
+              width="200"
+              height="145"
               rx="10"
               fill="#0F172A"
               stroke={isHighlighted('hostB') ? '#F59E0B' : '#334155'}
               strokeWidth={isHighlighted('hostB') ? 3 : 2}
             />
 
-            {/* Screen Glass */}
-            <rect x="735" y="170" width="160" height="105" rx="5" fill="#020617" />
+            {/* High-Contrast Glass Screen */}
+            <rect x="725" y="165" width="180" height="125" rx="6" fill="#020617" />
 
-            {/* Terminal prompt symbol `>_` */}
+            {/* Title above monitor frame (Well below top utility bar!) */}
             <text
-              x="750"
-              y="196"
-              fill="#F59E0B"
-              fontSize="14"
-              fontFamily="ui-monospace, monospace"
-              fontWeight="bold"
+              x="815"
+              y="142"
+              textAnchor="middle"
+              fill="#E2E8F0"
+              fontSize="13"
+              fontWeight="600"
             >
-              &gt;_
+              Computer B (Friend)
             </text>
+
+            {/* Terminal Window Header Bar on Glass */}
+            <rect x="725" y="165" width="180" height="22" rx="6" fill="#090D16" />
+            <circle cx="738" cy="176" r="3" fill="#EF4444" opacity="0.8" />
+            <circle cx="747" cy="176" r="3" fill="#F59E0B" opacity="0.8" />
+            <circle cx="756" cy="176" r="3" fill="#10B981" opacity="0.8" />
             <text
               x="772"
-              y="196"
+              y="179.5"
               fill="#94A3B8"
-              fontSize="11"
+              fontSize="9.5"
               fontFamily="ui-monospace, monospace"
+              fontWeight="600"
             >
-              Host B
+              host-b (friend)
             </text>
 
-            {/* Screen text */}
-            <text
-              x="750"
-              y="222"
-              fill="#64748B"
-              fontSize="9.5"
-              fontFamily="ui-monospace, monospace"
+            {/* Terminal Display Lines Inside Screen (Single Source of Truth) */}
+            {/* 1. IP Address Line */}
+            <g
+              id="host-b-screen-ip"
+              opacity={activeLayer === 'tags' || activeLayer === 'gateways' ? 0.35 : 1}
+              className="transition-opacity duration-200"
             >
-              IP:{' '}
-              <tspan fill="#FBBF24" fontWeight="bold">
-                192.168.2.20
-              </tspan>
-            </text>
-            <text
-              x="750"
-              y="242"
-              fill="#64748B"
-              fontSize="9.5"
-              fontFamily="ui-monospace, monospace"
+              <text
+                x="738"
+                y="207"
+                fill="#64748B"
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
+              >
+                IP:{' '}
+                <tspan
+                  fill="#FBBF24"
+                  fontWeight="bold"
+                  filter={activeLayer === 'addresses' ? 'url(#goldGlow)' : undefined}
+                >
+                  192.168.2.20
+                </tspan>
+              </text>
+            </g>
+
+            {/* 2. Default Gateway Line */}
+            {showGatewayBadges && (
+              <g
+                id="host-b-screen-gw"
+                opacity={activeLayer === 'tags' || activeLayer === 'addresses' ? 0.35 : 1}
+                className="transition-opacity duration-200"
+              >
+                <text
+                  x="738"
+                  y="228"
+                  fill="#64748B"
+                  fontSize="10"
+                  fontFamily="ui-monospace, monospace"
+                >
+                  GW:{' '}
+                  <tspan
+                    fill="#38BDF8"
+                    fontWeight="bold"
+                    filter={activeLayer === 'gateways' ? 'url(#softGlow)' : undefined}
+                  >
+                    {gateways.b || '192.168.2.1'}
+                  </tspan>
+                </text>
+              </g>
+            )}
+
+            {/* 3. Hardware MAC Name Tag Line */}
+            <g
+              id="host-b-screen-mac"
+              opacity={activeLayer === 'addresses' || activeLayer === 'gateways' ? 0.35 : 1}
+              className="transition-opacity duration-200"
             >
-              GW:{' '}
-              <tspan fill="#38BDF8" fontWeight="bold">
-                {gateways.b || '192.168.2.1'}
-              </tspan>
-            </text>
+              <text
+                x="738"
+                y="249"
+                fill="#64748B"
+                fontSize="9.5"
+                fontFamily="ui-monospace, monospace"
+              >
+                MAC:{' '}
+                <tspan
+                  fill="#FCD34D"
+                  fontWeight="600"
+                  filter={activeLayer === 'tags' ? 'url(#goldGlow)' : undefined}
+                >
+                  {macBadges.b}
+                </tspan>
+              </text>
+            </g>
+
+            {/* 4. Subnet Mask Line */}
             <text
-              x="750"
-              y="260"
+              x="738"
+              y="269"
               fill="#475569"
               fontSize="8.5"
               fontFamily="ui-monospace, monospace"
             >
-              Mask: 255.255.255.0
+              NET: 255.255.255.0
             </text>
 
-            {/* Cable Socket */}
+            {/* Physical Cable Socket on Bottom Right of Monitor */}
             <rect
               x="810"
-              y="280"
-              width="10"
+              y="298"
+              width="12"
               height="12"
               rx="2"
               fill="#0F172A"
@@ -1120,125 +1116,17 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
 
             {/* Link LED */}
             <circle
-              cx="804"
-              cy="286"
-              r="4.5"
+              cx="802"
+              cy="304"
+              r="4"
               fill={portLeds.hostB === 'green' ? '#22C55E' : '#334155'}
               filter={portLeds.hostB === 'green' ? 'url(#softGlow)' : undefined}
             />
 
-            {/* Title above monitor */}
+            {/* Link light status text below stand */}
             <text
               x="815"
-              y="42"
-              textAnchor="middle"
-              fill="#E2E8F0"
-              fontSize="13"
-              fontWeight="600"
-            >
-              Computer B (Friend)
-            </text>
-
-            {/* Address Tag Pill */}
-            <g
-              id="host-b-ip-pill"
-              transform="translate(815, 68)"
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'tags' || activeLayer === 'gateways' ? 0.35 : 1}
-            >
-              <rect
-                x="-65"
-                y="-13"
-                width="130"
-                height="26"
-                rx="13"
-                fill="#0F172A"
-                stroke={activeLayer === 'addresses' ? '#F59E0B' : '#334155'}
-                strokeWidth={activeLayer === 'addresses' ? 2 : 1.5}
-                className="group-hover:stroke-amber-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="4"
-                textAnchor="middle"
-                fontFamily="ui-monospace, monospace"
-                fontSize="11"
-                fontWeight="bold"
-              >
-                <tspan fill="#FBBF24">192.168.2</tspan>
-                <tspan fill="#64748B">.</tspan>
-                <tspan fill="#FBBF24">20</tspan>
-              </text>
-            </g>
-
-            {/* Gateway Doorway Pill */}
-            {showGatewayBadges && (
-              <g
-                id="host-b-gw-pill"
-                transform="translate(815, 98)"
-                className="cursor-pointer group transition-opacity duration-300"
-                opacity={activeLayer === 'tags' || activeLayer === 'addresses' ? 0.35 : 1}
-              >
-                <rect
-                  x="-75"
-                  y="-11"
-                  width="150"
-                  height="22"
-                  rx="11"
-                  fill="#020617"
-                  stroke={activeLayer === 'gateways' ? '#38BDF8' : '#1E3A8A'}
-                  strokeWidth={activeLayer === 'gateways' ? 2 : 1.2}
-                  className="group-hover:stroke-sky-400 transition-colors"
-                />
-                <text
-                  x="0"
-                  y="3.5"
-                  textAnchor="middle"
-                  fontFamily="ui-monospace, monospace"
-                  fontSize="9.5"
-                  fontWeight="bold"
-                >
-                  <tspan fill="#64748B">GW: </tspan>
-                  <tspan fill="#38BDF8">{gateways.b || '192.168.2.1'}</tspan>
-                </text>
-              </g>
-            )}
-
-            {/* MAC Hardware Badge */}
-            <g
-              id="host-b-mac-pill"
-              transform="translate(815, 126)"
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'addresses' || activeLayer === 'gateways' ? 0.35 : 1}
-            >
-              <rect
-                x="-75"
-                y="-10"
-                width="150"
-                height="20"
-                rx="4"
-                fill="#020617"
-                stroke={activeLayer === 'tags' ? '#F59E0B' : '#1E293B'}
-                strokeWidth={activeLayer === 'tags' ? 1.5 : 1}
-                className="group-hover:stroke-amber-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="3.5"
-                textAnchor="middle"
-                fill={activeLayer === 'tags' ? '#FCD34D' : '#94A3B8'}
-                fontSize="9"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-              >
-                MAC: {macBadges.b}
-              </text>
-            </g>
-
-            {/* Link light text */}
-            <text
-              x="815"
-              y="345"
+              y="360"
               textAnchor="middle"
               fill={cables.hostB ? '#34D399' : '#64748B'}
               fontSize="11"
@@ -1253,7 +1141,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
           {/* 7. ANIMATED PACKET FLOWS: CROSS-HOP PING, PING-TO-GATEWAY, DROP ALERTS    */}
           {/* ========================================================================= */}
           <AnimatePresence>
-            {/* Cross-Hop Ping: Host A (185, 286) -> Router Eth0 (405, 444) -> Router Eth1 (595, 444) -> Host B (815, 286) */}
+            {/* Cross-Hop Ping: Host A (185, 304) -> Router Eth0 (405, 444) -> Router Eth1 (595, 444) -> Host B (815, 304) */}
             {message === 'cross-hop-ping' && showRouter && isBothConnected && (
               <motion.g id="pulse-cross-hop">
                 <motion.circle
@@ -1262,7 +1150,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                   filter="url(#emeraldGlow)"
                   animate={{
                     cx: [185, 405, 500, 595, 815, 595, 500, 405, 185],
-                    cy: [286, 444, 414, 444, 286, 444, 414, 444, 286],
+                    cy: [304, 444, 414, 444, 304, 444, 414, 444, 304],
                     fill: [
                       '#10B981',
                       '#10B981',
@@ -1284,7 +1172,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
               </motion.g>
             )}
 
-            {/* Ping to Gateway: Host A (185, 286) -> Router Eth0 (405, 444) -> Return */}
+            {/* Ping to Gateway: Host A (185, 304) -> Router Eth0 (405, 444) -> Return */}
             {message === 'ping-to-gateway' && showRouter && cables.hostA && cables.routerEth0 && (
               <motion.g id="pulse-ping-gateway">
                 <motion.circle
@@ -1293,7 +1181,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                   filter="url(#emeraldGlow)"
                   animate={{
                     cx: [185, 405, 185],
-                    cy: [286, 444, 286],
+                    cy: [304, 444, 304],
                   }}
                   transition={{
                     duration: 1.8,
@@ -1312,7 +1200,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                   fill="#EF4444"
                   animate={{
                     cx: [185, 250, 250],
-                    cy: [286, 340, 340],
+                    cy: [304, 360, 360],
                     opacity: [1, 1, 0],
                   }}
                   transition={{
@@ -1322,7 +1210,7 @@ export const PhysicalRouterCanvas: React.FC<PhysicalRouterCanvasProps> = ({
                   }}
                 />
                 <motion.g
-                  transform="translate(250, 340)"
+                  transform="translate(250, 360)"
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1.2, 0.5] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
