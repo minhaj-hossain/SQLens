@@ -79,7 +79,7 @@ describe('Day2CockpitView & Routing Integration', () => {
 
   const concept = NET_02_MODULE.concepts[0];
 
-  it('renders Day 2 header with Day 2 badge, title, and 4 concept navigation pills', () => {
+  it('renders Day 2 welcome page by default matching Day 1 flow', () => {
     const html = renderToStaticMarkup(
       <Day2CockpitView
         module={NET_02_MODULE}
@@ -87,26 +87,39 @@ describe('Day2CockpitView & Routing Integration', () => {
       />,
     );
 
-    expect(html).toContain('DAY 2');
-    expect(html).toContain('The Shared Wire');
-    expect(html).toContain('C1');
-    expect(html).toContain('C2');
-    expect(html).toContain('C3');
-    expect(html).toContain('C4');
+    expect(html).toContain('Day 2: The Shared Wire');
+    expect(html).toContain('Start Day 2');
+    expect(html).toContain('About 55 minutes');
   });
 
-  it('renders the 4-Port Fast Ethernet Switch and 3 Workstations with MAC Badges on the 2D stage', () => {
+  it('renders Day 2 workbench header with progress rail and My Words button in normal mode', () => {
     const html = renderToStaticMarkup(
       <Day2CockpitView
         module={NET_02_MODULE}
         concept={concept}
+        defaultMode="normal"
+      />,
+    );
+
+    expect(html).toContain('Day 2');
+    expect(html).toContain('Concept 1: Three computers and a switch');
+    expect(html).toContain('aria-label="Progress Rail"');
+    expect(html).toContain('My Words');
+  });
+
+  it('renders the 4-Port Switch and 3 Workstations with MAC Badges on the 2D stage in normal mode', () => {
+    const html = renderToStaticMarkup(
+      <Day2CockpitView
+        module={NET_02_MODULE}
+        concept={concept}
+        defaultMode="normal"
       />,
     );
 
     // Canvas & Switch
     expect(html).toContain('data-testid="physical-switch-canvas"');
-    expect(html).toContain('4-Port Fast Ethernet Switch');
-    expect(html).toContain('Star Topology');
+    expect(html).toContain('4-PORT ACCESS SWITCH');
+    expect(html).toContain('Shared Star Topology');
 
     // Computers A, B, C
     expect(html).toContain('Computer A (You)');
@@ -119,32 +132,20 @@ describe('Day2CockpitView & Routing Integration', () => {
     expect(html).toContain('MAC: 00-1A-2B-3C-4D-30');
   });
 
-  it('renders the 5-Second Test card layout: LOOK, STORY, DO, WHY, EXPECT, MEANING', () => {
+  it('renders the 5-Second Test card layout: Look, Story, Your turn (DO/WHY/EXPECT)', () => {
     const html = renderToStaticMarkup(
       <Day2CockpitView
         module={NET_02_MODULE}
         concept={concept}
+        defaultMode="normal"
       />,
     );
 
-    expect(html).toContain('LOOK:');
+    expect(html).toContain('Look:');
+    expect(html).toContain('Your turn:');
     expect(html).toContain('DO:');
     expect(html).toContain('WHY:');
     expect(html).toContain('EXPECT:');
-    expect(html).toContain('MEANING:');
-  });
-
-  it('renders the Day 2 Guided Windows Command Prompt with Computer A prompt', () => {
-    const html = renderToStaticMarkup(
-      <Day2CockpitView
-        module={NET_02_MODULE}
-        concept={concept}
-      />,
-    );
-
-    expect(html).toContain('data-testid="day2-guided-terminal"');
-    expect(html).toContain('Computer A • Command Prompt');
-    expect(html).toContain('C:\\Users\\you&gt;');
   });
 
   it('routes networking Day 2 (net-02) to Day2CockpitView in TheoryView', () => {

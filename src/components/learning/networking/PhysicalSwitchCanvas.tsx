@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Day2StageState } from '../../../types/networking-day2';
-import { Volume2, VolumeX, RotateCcw, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import { soundFx } from '../../../lib/networking/audio-fx';
 
 export interface PhysicalSwitchCanvasProps {
@@ -13,6 +13,7 @@ export interface PhysicalSwitchCanvasProps {
   onInspectSwitch?: () => void;
   onInspectMac?: (target: 'a' | 'b' | 'c') => void;
   onBroadcast?: () => void;
+  onSelectTag?: (which: 'a' | 'b' | 'c') => void;
   onOpenLookInside?: (id: string) => void;
   onReplay?: () => void;
   readOnly?: boolean;
@@ -26,6 +27,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
   onInspectSwitch,
   onInspectMac,
   onBroadcast,
+  onSelectTag,
   onOpenLookInside,
   onReplay,
   readOnly = false,
@@ -33,7 +35,6 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
 }) => {
   const [soundEnabled, setSoundEnabled] = useState(false);
 
-  // Fallback defaults
   const cables = stageState?.cables ?? { a: true, b: true, c: true };
   const portLeds = stageState?.portLeds ?? {
     p1: 'green',
@@ -55,27 +56,12 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
   const messageState = stageState?.message ?? 'none';
   const highlights = stageState?.highlight ?? [];
   const dims = stageState?.dim ?? [];
+  const showBands = stageState?.bands !== 'hidden';
 
   const isDimmed = (id: string) => dims.includes(id);
   const isHighlighted = (id: string) => highlights.includes(id);
 
-  // Switch ports geometry
-  // Switch box: x: 380, y: 380, w: 240, h: 70
-  // Port 1: x: 410, y: 415
-  // Port 2: x: 470, y: 415
-  // Port 3: x: 530, y: 415
-  // Port 4: x: 590, y: 415
-  const portCoords = {
-    p1: { x: 410, y: 415 },
-    p2: { x: 470, y: 415 },
-    p3: { x: 530, y: 415 },
-    p4: { x: 590, y: 415 },
-  };
-
-  // Computers geometry
-  const compA = { x: 180, y: 160, jackX: 180, jackY: 220 };
-  const compB = { x: 500, y: 140, jackX: 500, jackY: 200 };
-  const compC = { x: 820, y: 160, jackX: 820, jackY: 220 };
+  const isAllConnected = cables.a && cables.b && cables.c;
 
   const handleCableClick = (which: 'a' | 'b' | 'c') => {
     if (readOnly) return;
@@ -97,793 +83,709 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
 
   return (
     <div
-      className={`relative w-full rounded-2xl bg-[#090D16] border border-zinc-800 shadow-2xl overflow-hidden select-none transition-all duration-300 ${className}`}
+      className={`relative w-full rounded-2xl bg-[#0B101B] border border-zinc-800 shadow-2xl overflow-hidden select-none transition-all duration-300 ${className}`}
       data-testid="physical-switch-canvas"
       role="region"
-      aria-label="Physical Switch Topology Canvas"
+      aria-label="Physical Switch Connection Canvas"
     >
-      {/* Top telemetry & status banner */}
+      {/* Top telemetry & replay controls */}
       <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between text-xs font-mono pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold tracking-wider uppercase transition-colors ${
-              portLeds.p1 === 'green' && portLeds.p2 === 'green' && portLeds.p3 === 'green'
+              isAllConnected
                 ? 'bg-emerald-950/80 border-emerald-600/70 text-emerald-300'
-                : 'bg-amber-950/80 border-amber-600/70 text-amber-300'
+                : 'bg-zinc-900/90 border-zinc-700/80 text-zinc-400'
             }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                portLeds.p1 === 'green' && portLeds.p2 === 'green' && portLeds.p3 === 'green'
+                isAllConnected
                   ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
-                  : 'bg-amber-400 animate-pulse'
+                  : 'bg-zinc-500'
               }`}
             />
-            {portLeds.p1 === 'green' && portLeds.p2 === 'green' && portLeds.p3 === 'green'
-              ? 'Switch: 3 Ports Linked'
-              : 'Switch: Link Alert'}
-          </span>
-
-          <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-800 text-[10px] text-zinc-400">
-            Star Topology • 100BASE-TX
+            {isAllConnected
+              ? 'Switch: 3 Ports Linked (100 Mbps)'
+              : 'Switch: Link Disconnected'}
           </span>
         </div>
 
         <div className="flex items-center gap-2 pointer-events-auto">
-          {onBroadcast && (
+          {onReplay && (
             <button
-              onClick={() => {
-                if (soundEnabled) soundFx.playBeep();
-                onBroadcast();
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-500/50 text-amber-300 hover:bg-amber-500/30 text-xs transition-colors"
-              title="Broadcast ARP to everyone in the room"
+              type="button"
+              onClick={onReplay}
+              title="Replay animation (R)"
+              className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Send Broadcast</span>
-            </button>
-          )}
-
-          {onPlugAll && (!cables.a || !cables.b || !cables.c) && (
-            <button
-              onClick={() => {
-                if (soundEnabled) soundFx.playCablePlug();
-                onPlugAll();
-              }}
-              className="px-2.5 py-1 rounded-md bg-sky-500/20 border border-sky-500/50 text-sky-300 hover:bg-sky-500/30 text-xs transition-colors font-sans"
-            >
-              Connect All Cables
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="sr-only">Replay</span>
             </button>
           )}
 
           <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-1.5 rounded-lg bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
-            title={soundEnabled ? 'Mute lab sounds' : 'Enable lab sounds'}
+            type="button"
+            onClick={() => setSoundEnabled((prev) => !prev)}
+            title={soundEnabled ? 'Mute audio' : 'Enable audio'}
+            className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            {soundEnabled ? (
+              <Volume2 className="w-3.5 h-3.5 text-zinc-200" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
+            )}
+            <span className="sr-only">Toggle sound</span>
           </button>
-
-          {onReplay && (
-            <button
-              onClick={onReplay}
-              className="p-1.5 rounded-lg bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
-              title="Replay animation"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* SVG Stage */}
-      <svg
-        viewBox="0 0 1000 620"
-        className="w-full h-auto max-h-[560px] block"
-        style={{ filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.5))' }}
-      >
-        <defs>
-          {/* Gradients */}
-          <linearGradient id="bgGridGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0B1220" />
-            <stop offset="100%" stopColor="#060911" />
-          </linearGradient>
-
-          <linearGradient id="deskGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1E2638" />
-            <stop offset="15%" stopColor="#151C2C" />
-            <stop offset="100%" stopColor="#0D111A" />
-          </linearGradient>
-
-          <linearGradient id="pcBezelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2A3347" />
-            <stop offset="100%" stopColor="#151A26" />
-          </linearGradient>
-
-          <linearGradient id="switchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1F2839" />
-            <stop offset="50%" stopColor="#141B26" />
-            <stop offset="100%" stopColor="#0C1017" />
-          </linearGradient>
-
-          <linearGradient id="cableGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38BDF8" />
-            <stop offset="50%" stopColor="#0284C7" />
-            <stop offset="100%" stopColor="#0369A1" />
-          </linearGradient>
-
-          {/* Glow filter */}
-          <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* 1. Background Grid & Shared Street Blue Band */}
-        <rect width="1000" height="620" fill="url(#bgGridGrad)" />
-
-        {/* Subtle grid lines */}
-        <g stroke="#1F293D" strokeWidth="1" strokeDasharray="3 3" opacity="0.3">
-          <line x1="0" y1="150" x2="1000" y2="150" />
-          <line x1="0" y1="300" x2="1000" y2="300" />
-          <line x1="0" y1="450" x2="1000" y2="450" />
-          <line x1="250" y1="0" x2="250" y2="620" />
-          <line x1="500" y1="0" x2="500" y2="620" />
-          <line x1="750" y1="0" x2="750" y2="620" />
-        </g>
-
-        {/* Shared Blue Band (Street 192.168.1) */}
-        {stageState?.bands !== 'hidden' && (
-          <g id="shared-street-band" opacity={isDimmed('street-band') ? 0.35 : 1}>
-            <rect
-              x="60"
-              y="275"
-              width="880"
-              height="34"
-              rx="8"
-              fill="#0284C7"
-              fillOpacity="0.12"
-              stroke="#0284C7"
-              strokeWidth="1.5"
-              strokeDasharray="6 4"
-            />
-            <text
-              x="500"
-              y="297"
-              textAnchor="middle"
-              className="text-[12px] font-mono fill-sky-300 font-semibold tracking-wider select-none"
-            >
-              ═══════ Local Street: 192.168.1 (Shared Broadcast Domain) ═══════
-            </text>
-          </g>
-        )}
-
-        {/* Desk Surface */}
-        <polygon
-          points="20,490 980,490 1000,620 0,620"
-          fill="url(#deskGrad)"
-          stroke="#334155"
-          strokeWidth="1"
-        />
-        <line x1="0" y1="490" x2="1000" y2="490" stroke="#475569" strokeWidth="1.5" />
-
-        {/* 2. Three Category-6 Patch Cables */}
-        {/* Cable A: Computer A (180, 220) -> Switch Port 1 (410, 415) */}
-        {cables.a ? (
-          <g
-            id="cable-a"
-            onClick={() => handleCableClick('a')}
-            className="cursor-pointer group"
-          >
-            <path
-              d="M 180 220 C 180 340, 360 415, 410 415"
-              fill="none"
-              stroke="#0284C7"
-              strokeWidth="5"
-              strokeLinecap="round"
-              className="transition-all duration-300 group-hover:stroke-sky-300"
-            />
-            <circle cx="180" cy="220" r="4.5" fill="#38BDF8" />
-            <circle cx="410" cy="415" r="4" fill="#38BDF8" />
-          </g>
-        ) : (
-          <g id="cable-a-unplugged" onClick={() => handleCableClick('a')} className="cursor-pointer">
-            <path
-              d="M 180 220 C 180 320, 260 460, 310 480"
-              fill="none"
-              stroke="#64748B"
-              strokeWidth="4"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
-            />
-            <circle cx="310" cy="480" r="5" fill="#F43F5E" />
-            <text x="325" y="485" className="text-[10px] font-mono fill-rose-400">Loose cable</text>
-          </g>
-        )}
-
-        {/* Cable B: Computer B (500, 200) -> Switch Port 2 (470, 415) */}
-        {cables.b ? (
-          <g
-            id="cable-b"
-            onClick={() => handleCableClick('b')}
-            className="cursor-pointer group"
-          >
-            <path
-              d="M 500 200 C 500 300, 470 340, 470 415"
-              fill="none"
-              stroke="#0284C7"
-              strokeWidth="5"
-              strokeLinecap="round"
-              className="transition-all duration-300 group-hover:stroke-sky-300"
-            />
-            <circle cx="500" cy="200" r="4.5" fill="#38BDF8" />
-            <circle cx="470" cy="415" r="4" fill="#38BDF8" />
-          </g>
-        ) : (
-          <g id="cable-b-unplugged" onClick={() => handleCableClick('b')} className="cursor-pointer">
-            <path
-              d="M 500 200 C 500 290, 460 360, 440 400"
-              fill="none"
-              stroke="#64748B"
-              strokeWidth="4"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
-            />
-            <circle cx="440" cy="400" r="5" fill="#F43F5E" />
-            <text x="375" y="390" className="text-[10px] font-mono fill-rose-400">Unplugged</text>
-          </g>
-        )}
-
-        {/* Cable C: Computer C (820, 220) -> Switch Port 3 (530, 415) */}
-        {cables.c ? (
-          <g
-            id="cable-c"
-            onClick={() => handleCableClick('c')}
-            className="cursor-pointer group"
-          >
-            <path
-              d="M 820 220 C 820 340, 600 415, 530 415"
-              fill="none"
-              stroke="#0284C7"
-              strokeWidth="5"
-              strokeLinecap="round"
-              className="transition-all duration-300 group-hover:stroke-sky-300"
-            />
-            <circle cx="820" cy="220" r="4.5" fill="#38BDF8" />
-            <circle cx="530" cy="415" r="4" fill="#38BDF8" />
-          </g>
-        ) : (
-          <g id="cable-c-unplugged" onClick={() => handleCableClick('c')} className="cursor-pointer">
-            <path
-              d="M 820 220 C 820 320, 720 460, 660 480"
-              fill="none"
-              stroke="#64748B"
-              strokeWidth="4"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
-            />
-            <circle cx="660" cy="480" r="5" fill="#F43F5E" />
-            <text x="675" y="485" className="text-[10px] font-mono fill-rose-400">Unplugged at Port 3</text>
-          </g>
-        )}
-
-        {/* 3. The 4-Port Access Switch */}
-        <g
-          id="switch-box"
-          onClick={handleSwitchClick}
-          className="cursor-pointer group"
-          opacity={isDimmed('switch-box') ? 0.35 : 1}
+      {/* SVG Canvas Area (viewBox 0 0 1000 620) */}
+      <div className="relative w-full aspect-[16/10] max-h-[580px]">
+        <svg
+          viewBox="0 0 1000 620"
+          className="w-full h-full block"
+          preserveAspectRatio="xMidYMid meet"
         >
-          {/* Glow if highlighted */}
-          {isHighlighted('switch-box') && (
-            <rect
-              x="368"
-              y="370"
-              width="264"
-              height="80"
-              rx="12"
-              fill="none"
-              stroke="#38BDF8"
-              strokeWidth="3"
-              filter="url(#cyanGlow)"
-              className="animate-pulse"
-            />
+          <defs>
+            <linearGradient id="deskGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#141D2D" />
+              <stop offset="100%" stopColor="#0B101B" />
+            </linearGradient>
+
+            <linearGradient id="switchGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="100%" stopColor="#0F172A" />
+            </linearGradient>
+
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* DESK GROUND (y 470 to 620) */}
+          <rect x="0" y="470" width="1000" height="150" fill="url(#deskGrad)" />
+          <line x1="0" y1="470" x2="1000" y2="470" stroke="#1E293B" strokeWidth="2" />
+
+          {/* SHARED STREET BLUE BAND (y 485) */}
+          {showBands && (
+            <g className="transition-opacity duration-500">
+              <rect
+                x="80"
+                y="485"
+                width="840"
+                height="28"
+                rx="14"
+                fill="#2563EB"
+                fillOpacity="0.18"
+                stroke="#2563EB"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+              />
+              <text
+                x="500"
+                y="504"
+                textAnchor="middle"
+                fill="#60A5FA"
+                fontSize="12"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="600"
+              >
+                Neighborhood Street: 192.168.1.x (Shared Star Topology)
+              </text>
+            </g>
           )}
 
-          {/* Switch body */}
-          <rect
-            x="374"
-            y="376"
-            width="252"
-            height="72"
-            rx="10"
-            fill="url(#switchGrad)"
-            stroke="#475569"
-            strokeWidth="2"
-            className="transition-colors group-hover:stroke-sky-400"
-          />
+          {/* ========================================================================= */}
+          {/* CABLES (Computer A, B, C -> Switch Ports 1, 2, 3)                         */}
+          {/* ========================================================================= */}
 
-          {/* Top bezel line */}
-          <line x1="384" y1="388" x2="616" y2="388" stroke="#334155" strokeWidth="1" />
+          {/* Cable A: Computer A (185, 310) -> Switch Port 1 (430, 405) */}
+          {cables.a ? (
+            <g
+              id="cable-a"
+              onClick={() => handleCableClick('a')}
+              className="cursor-pointer group"
+            >
+              <path
+                d="M 185 310 C 185 390, 360 405, 430 405"
+                fill="none"
+                stroke="#2563EB"
+                strokeWidth="6"
+                strokeLinecap="round"
+                className="transition-colors group-hover:stroke-blue-400"
+              />
+              <path
+                d="M 185 310 C 185 390, 360 405, 430 405"
+                fill="none"
+                stroke="#60A5FA"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                opacity="0.7"
+              />
+            </g>
+          ) : (
+            <g id="cable-a-unplugged" onClick={() => handleCableClick('a')} className="cursor-pointer">
+              <path
+                d="M 185 310 C 185 370, 240 450, 290 460"
+                fill="none"
+                stroke="#64748B"
+                strokeWidth="5"
+                strokeDasharray="6 4"
+                strokeLinecap="round"
+              />
+              <circle cx="290" cy="460" r="5" fill="#EF4444" />
+            </g>
+          )}
 
-          {/* Switch Label */}
-          <text
-            x="500"
-            y="400"
-            textAnchor="middle"
-            className="text-[10px] font-mono fill-zinc-400 uppercase tracking-widest font-semibold"
+          {/* Cable B: Computer B (500, 290) -> Switch Port 2 (475, 405) */}
+          {cables.b ? (
+            <g
+              id="cable-b"
+              onClick={() => handleCableClick('b')}
+              className="cursor-pointer group"
+            >
+              <path
+                d="M 500 290 C 500 350, 475 365, 475 405"
+                fill="none"
+                stroke="#2563EB"
+                strokeWidth="6"
+                strokeLinecap="round"
+                className="transition-colors group-hover:stroke-blue-400"
+              />
+              <path
+                d="M 500 290 C 500 350, 475 365, 475 405"
+                fill="none"
+                stroke="#60A5FA"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                opacity="0.7"
+              />
+            </g>
+          ) : (
+            <g id="cable-b-unplugged" onClick={() => handleCableClick('b')} className="cursor-pointer">
+              <path
+                d="M 500 290 C 500 340, 460 380, 440 410"
+                fill="none"
+                stroke="#64748B"
+                strokeWidth="5"
+                strokeDasharray="6 4"
+                strokeLinecap="round"
+              />
+              <circle cx="440" cy="410" r="5" fill="#EF4444" />
+            </g>
+          )}
+
+          {/* Cable C: Computer C (815, 310) -> Switch Port 3 (525, 405) */}
+          {cables.c ? (
+            <g
+              id="cable-c"
+              onClick={() => handleCableClick('c')}
+              className="cursor-pointer group"
+            >
+              <path
+                d="M 815 310 C 815 390, 600 405, 525 405"
+                fill="none"
+                stroke="#2563EB"
+                strokeWidth="6"
+                strokeLinecap="round"
+                className="transition-colors group-hover:stroke-blue-400"
+              />
+              <path
+                d="M 815 310 C 815 390, 600 405, 525 405"
+                fill="none"
+                stroke="#60A5FA"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                opacity="0.7"
+              />
+            </g>
+          ) : (
+            <g id="cable-c-unplugged" onClick={() => handleCableClick('c')} className="cursor-pointer">
+              <path
+                d="M 815 310 C 815 370, 750 450, 690 460"
+                fill="none"
+                stroke="#64748B"
+                strokeWidth="5"
+                strokeDasharray="6 4"
+                strokeLinecap="round"
+              />
+              <circle cx="690" cy="460" r="5" fill="#EF4444" />
+            </g>
+          )}
+
+          {/* ========================================================================= */}
+          {/* CENTRAL ACCESS SWITCH (4-Port)                                            */}
+          {/* ========================================================================= */}
+          <g
+            id="switch-box"
+            onClick={handleSwitchClick}
+            className="cursor-pointer group"
+            opacity={isDimmed('switch-box') ? 0.35 : 1}
           >
-            4-Port Fast Ethernet Switch
-          </text>
+            {/* Bezel glow if highlighted */}
+            {isHighlighted('switch-box') && (
+              <rect
+                x="370"
+                y="365"
+                width="260"
+                height="70"
+                rx="10"
+                fill="none"
+                stroke="#3B82F6"
+                strokeWidth="3"
+                filter="url(#softGlow)"
+              />
+            )}
 
-          {/* 4 Switch Ports & LEDs */}
-          {([1, 2, 3, 4] as const).map((num) => {
-            const portKey = `p${num}` as keyof typeof portLeds;
-            const coords = portCoords[portKey];
-            const ledState = portLeds[portKey];
+            {/* Switch Body */}
+            <rect
+              x="375"
+              y="370"
+              width="250"
+              height="65"
+              rx="8"
+              fill="url(#switchGrad)"
+              stroke={isHighlighted('switch-box') ? '#3B82F6' : '#334155'}
+              strokeWidth="2"
+              className="transition-colors group-hover:stroke-blue-400"
+            />
 
-            return (
-              <g key={`port-${num}`}>
-                {/* Port LED (8px circle above socket) */}
+            {/* Switch label */}
+            <text
+              x="500"
+              y="390"
+              textAnchor="middle"
+              fill="#94A3B8"
+              fontSize="9"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="600"
+              letterSpacing="1"
+            >
+              4-PORT ACCESS SWITCH
+            </text>
+
+            {/* 4 Ports & LEDs */}
+            {[
+              { port: 1, x: 430, led: portLeds.p1 },
+              { port: 2, x: 475, led: portLeds.p2 },
+              { port: 3, x: 525, led: portLeds.p3 },
+              { port: 4, x: 570, led: portLeds.p4 },
+            ].map((p) => (
+              <g key={`port-${p.port}`}>
+                {/* Port LED (8px) */}
                 <circle
-                  cx={coords.x}
-                  cy={coords.y - 14}
+                  cx={p.x}
+                  cy="400"
                   r="4"
-                  fill={
-                    ledState === 'green'
-                      ? '#10B981'
-                      : ledState === 'blinking'
-                      ? '#34D399'
-                      : '#374151'
-                  }
-                  className={ledState === 'blinking' ? 'animate-ping' : ''}
+                  fill={p.led === 'green' ? '#22C55E' : p.led === 'blinking' ? '#38BDF8' : '#334155'}
+                  filter={p.led === 'green' ? 'url(#softGlow)' : undefined}
                 />
-                {ledState === 'green' && (
-                  <circle
-                    cx={coords.x}
-                    cy={coords.y - 14}
-                    r="6"
-                    fill="#10B981"
-                    opacity="0.3"
-                    className="animate-pulse"
-                  />
-                )}
-
-                {/* RJ45 Jack Socket */}
+                {/* RJ45 Socket */}
                 <rect
-                  x={coords.x - 12}
-                  y={coords.y - 6}
-                  width="24"
+                  x={p.x - 10}
+                  y="408"
+                  width="20"
                   height="16"
                   rx="3"
                   fill="#0F172A"
-                  stroke="#334155"
+                  stroke="#475569"
                   strokeWidth="1.5"
                 />
-
-                {/* Port Number [1], [2], [3], [4] */}
+                {/* Port Number [1] [2] [3] [4] */}
                 <text
-                  x={coords.x}
-                  y={coords.y + 20}
+                  x={p.x}
+                  y="432"
                   textAnchor="middle"
-                  className="text-[9px] font-mono fill-zinc-400 font-bold"
+                  fill="#64748B"
+                  fontSize="8"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="bold"
                 >
-                  [{num}]
+                  [{p.port}]
                 </text>
               </g>
-            );
-          })}
-        </g>
-
-        {/* 4. Computer A (Your Workstation) */}
-        <g
-          id="comp-a"
-          opacity={isDimmed('comp-a') ? 0.35 : 1}
-          className={isHighlighted('comp-a') ? 'animate-pulse' : ''}
-        >
-          {/* Monitor */}
-          <rect
-            x="110"
-            y="80"
-            width="140"
-            height="95"
-            rx="8"
-            fill="url(#pcBezelGrad)"
-            stroke={isHighlighted('comp-a') ? '#38BDF8' : '#334155'}
-            strokeWidth="2"
-          />
-          {/* Screen with terminal glow */}
-          <rect
-            x="118"
-            y="88"
-            width="124"
-            height="79"
-            rx="4"
-            fill="#050811"
-            stroke="#1E293B"
-            strokeWidth="1"
-          />
-          {/* Terminal prompt symbol on screen */}
-          <text x="126" y="105" className="text-[12px] font-mono fill-emerald-400 font-bold">
-            &gt;_
-          </text>
-          <text x="142" y="105" className="text-[10px] font-mono fill-zinc-400">
-            A: 192.168.1.10
-          </text>
-
-          {/* Stand */}
-          <rect x="172" y="175" width="16" height="25" fill="#1E293B" />
-          <ellipse cx="180" cy="200" rx="30" ry="6" fill="#0F172A" stroke="#334155" />
-
-          {/* Workstation Label */}
-          <text
-            x="180"
-            y="65"
-            textAnchor="middle"
-            className="text-[12px] font-sans fill-zinc-200 font-semibold"
-          >
-            Computer A (You)
-          </text>
-
-          {/* IP Tag (Street + House) */}
-          <g id="tag-a">
-            <rect
-              x="115"
-              y="22"
-              width="130"
-              height="24"
-              rx="6"
-              fill="#0F172A"
-              stroke="#0284C7"
-              strokeWidth="1.5"
-            />
-            <text
-              x="180"
-              y="38"
-              textAnchor="middle"
-              className="text-[11px] font-mono fill-sky-300 font-bold"
-            >
-              192.168.1 . 10
-            </text>
+            ))}
           </g>
 
-          {/* Monospace Hardware MAC Badge */}
+          {/* ========================================================================= */}
+          {/* COMPUTER A (LEFT: x 95 to 275, y 180 to 320)                              */}
+          {/* ========================================================================= */}
           <g
-            id="mac-a"
-            onClick={() => handleMacClick('a')}
-            className="cursor-pointer group"
+            id="computer-a"
+            opacity={isDimmed('comp-a') ? 0.35 : 1}
+            className="transition-opacity duration-300"
           >
+            {/* Monitor Stand */}
+            <path d="M165 305 L205 305 L215 335 L155 335 Z" fill="#1E293B" />
+            <rect x="145" y="335" width="80" height="10" rx="3" fill="#334155" />
+
+            {/* Monitor Frame */}
             <rect
-              x="110"
-              y="48"
-              width="140"
-              height="18"
-              rx="4"
-              fill="#18181B"
-              stroke={macGlow.a || isHighlighted('mac-a') ? '#F59E0B' : '#3F3F46'}
-              strokeWidth={macGlow.a || isHighlighted('mac-a') ? '2' : '1'}
-              className="transition-colors group-hover:stroke-amber-400"
+              x="95"
+              y="180"
+              width="180"
+              height="125"
+              rx="10"
+              fill="#0F172A"
+              stroke={isHighlighted('comp-a') ? '#3B82F6' : '#334155'}
+              strokeWidth={isHighlighted('comp-a') ? 3 : 2}
             />
+
+            {/* Screen Glass */}
+            <rect x="105" y="190" width="160" height="105" rx="5" fill="#020617" />
+
+            {/* Terminal prompt symbol `>_` */}
             <text
-              x="180"
-              y="61"
-              textAnchor="middle"
-              className={`text-[9.5px] font-mono font-medium tracking-tight ${
-                macGlow.a || isHighlighted('mac-a') ? 'fill-amber-300' : 'fill-zinc-400'
-              }`}
+              x="120"
+              y="215"
+              fill="#38BDF8"
+              fontSize="14"
+              fontFamily="ui-monospace, monospace"
+              fontWeight="bold"
             >
-              MAC: {macBadges.a}
+              &gt;_
             </text>
+
+            {/* Cable Socket */}
+            <rect x="180" y="300" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
+
+            {/* Link LED */}
+            <circle
+              cx="174"
+              cy="306"
+              r="4.5"
+              fill={cables.a ? '#22C55E' : '#334155'}
+              filter={cables.a ? 'url(#softGlow)' : undefined}
+            />
           </g>
-        </g>
 
-        {/* 5. Computer B (Teammate / Friend) */}
-        <g
-          id="comp-b"
-          opacity={isDimmed('comp-b') ? 0.35 : 1}
-          className={isHighlighted('comp-b') ? 'animate-pulse' : ''}
-        >
-          {/* Monitor */}
-          <rect
-            x="430"
-            y="60"
-            width="140"
-            height="95"
-            rx="8"
-            fill="url(#pcBezelGrad)"
-            stroke={isHighlighted('comp-b') ? '#38BDF8' : '#334155'}
-            strokeWidth="2"
-          />
-          {/* Screen */}
-          <rect
-            x="438"
-            y="68"
-            width="124"
-            height="79"
-            rx="4"
-            fill="#050811"
-            stroke="#1E293B"
-            strokeWidth="1"
-          />
-          <text x="446" y="85" className="text-[10px] font-mono fill-zinc-500">
-            B: 192.168.1.20
-          </text>
-
-          {/* Stand */}
-          <rect x="492" y="155" width="16" height="25" fill="#1E293B" />
-          <ellipse cx="500" cy="180" rx="30" ry="6" fill="#0F172A" stroke="#334155" />
-
-          {/* Label */}
-          <text
-            x="500"
-            y="45"
-            textAnchor="middle"
-            className="text-[12px] font-sans fill-zinc-200 font-semibold"
+          {/* ========================================================================= */}
+          {/* COMPUTER B (CENTER: x 410 to 590, y 160 to 300)                           */}
+          {/* ========================================================================= */}
+          <g
+            id="computer-b"
+            opacity={isDimmed('comp-b') ? 0.35 : 1}
+            className="transition-opacity duration-300"
           >
-            Computer B (Teammate)
-          </text>
+            {/* Stand */}
+            <path d="M480 285 L520 285 L530 315 L470 315 Z" fill="#1E293B" />
+            <rect x="460" y="315" width="80" height="10" rx="3" fill="#334155" />
 
+            {/* Monitor Frame */}
+            <rect
+              x="410"
+              y="160"
+              width="180"
+              height="125"
+              rx="10"
+              fill="#0F172A"
+              stroke={isHighlighted('comp-b') ? '#3B82F6' : '#334155'}
+              strokeWidth={isHighlighted('comp-b') ? 3 : 2}
+            />
+
+            {/* Screen Glass */}
+            <rect x="420" y="170" width="160" height="105" rx="5" fill="#020617" />
+
+            <text x="435" y="195" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
+              Teammate
+            </text>
+
+            {/* Socket & Link LED */}
+            <rect x="495" y="280" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
+            <circle
+              cx="489"
+              cy="286"
+              r="4.5"
+              fill={cables.b ? '#22C55E' : '#334155'}
+              filter={cables.b ? 'url(#softGlow)' : undefined}
+            />
+          </g>
+
+          {/* ========================================================================= */}
+          {/* COMPUTER C (RIGHT: x 725 to 905, y 180 to 320)                            */}
+          {/* ========================================================================= */}
+          <g
+            id="computer-c"
+            opacity={isDimmed('comp-c') ? 0.35 : 1}
+            className="transition-opacity duration-300"
+          >
+            {/* Stand */}
+            <path d="M795 305 L835 305 L845 335 L785 335 Z" fill="#1E293B" />
+            <rect x="775" y="335" width="80" height="10" rx="3" fill="#334155" />
+
+            {/* Monitor Frame */}
+            <rect
+              x="725"
+              y="180"
+              width="180"
+              height="125"
+              rx="10"
+              fill="#0F172A"
+              stroke={isHighlighted('comp-c') ? '#3B82F6' : '#334155'}
+              strokeWidth={isHighlighted('comp-c') ? 3 : 2}
+            />
+
+            {/* Screen Glass */}
+            <rect x="735" y="190" width="160" height="105" rx="5" fill="#020617" />
+
+            <text x="750" y="215" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
+              Desk C
+            </text>
+
+            {/* Socket & Link LED */}
+            <rect x="810" y="300" width="10" height="12" rx="2" fill="#0F172A" stroke="#64748B" strokeWidth="1" />
+            <circle
+              cx="804"
+              cy="306"
+              r="4.5"
+              fill={cables.c ? '#22C55E' : '#334155'}
+              filter={cables.c ? 'url(#softGlow)' : undefined}
+            />
+          </g>
+
+          {/* ========================================================================= */}
+          {/* ANIMATED PACKETS: PING PULSE & GOLDEN ARP BROADCAST FAN-OUT               */}
+          {/* ========================================================================= */}
+          <AnimatePresence>
+            {/* Direct Ping Pulse: Computer A -> Switch Port 1 -> Port 2 -> Computer B */}
+            {messageState === 'ping-a-b' && (
+              <motion.g id="pulse-ping-a-b">
+                <motion.circle
+                  r="7"
+                  fill="#10B981"
+                  filter="url(#softGlow)"
+                  animate={{
+                    cx: [185, 430, 475, 500, 475, 430, 185],
+                    cy: [310, 405, 405, 290, 405, 405, 310],
+                  }}
+                  transition={{
+                    duration: 2.2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                />
+              </motion.g>
+            )}
+
+            {/* Golden ARP Broadcast Fan-Out: Port 1 -> Port 2 AND Port 3 */}
+            {(messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
+              <motion.g id="pulse-arp-fanout">
+                {/* Wave down from A to Port 1 */}
+                <motion.circle
+                  r="8"
+                  fill="#F59E0B"
+                  filter="url(#goldGlow)"
+                  animate={{
+                    cx: [185, 430],
+                    cy: [310, 405],
+                  }}
+                  transition={{
+                    duration: 0.9,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                />
+
+                {/* Wave out Port 2 to Computer B */}
+                <motion.circle
+                  r="8"
+                  fill="#F59E0B"
+                  filter="url(#goldGlow)"
+                  animate={{
+                    cx: [475, 500],
+                    cy: [405, 290],
+                  }}
+                  transition={{
+                    duration: 0.9,
+                    delay: 0.45,
+                    repeat: Infinity,
+                    ease: 'easeOut',
+                  }}
+                />
+
+                {/* Wave out Port 3 to Computer C */}
+                <motion.circle
+                  r="8"
+                  fill="#F59E0B"
+                  filter="url(#goldGlow)"
+                  animate={{
+                    cx: [525, 815],
+                    cy: [405, 310],
+                  }}
+                  transition={{
+                    duration: 0.9,
+                    delay: 0.45,
+                    repeat: Infinity,
+                    ease: 'easeOut',
+                  }}
+                />
+              </motion.g>
+            )}
+          </AnimatePresence>
+        </svg>
+
+        {/* ========================================================================= */}
+        {/* HTML OVERLAYS: Strictly Crisp HTML Positioned by Percentage               */}
+        {/* ========================================================================= */}
+
+        {/* Computer A Overlays (18.5% left) */}
+        <div
+          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
+          style={{ left: '18.5%', top: '56%' }}
+        >
+          <div className="text-sm font-semibold text-zinc-200">Computer A (You)</div>
+          <div
+            className={`text-xs font-mono font-medium ${
+              cables.a ? 'text-emerald-400' : 'text-zinc-500'
+            }`}
+          >
+            Light: {cables.a ? 'ON' : 'OFF'}
+          </div>
+        </div>
+
+        {/* Address & MAC Tag Above Computer A */}
+        <div
+          className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer space-y-1 text-center"
+          style={{ left: '18.5%', top: '14%' }}
+          onClick={() => onSelectTag?.('a')}
+        >
           {/* IP Tag */}
-          <g id="tag-b">
-            <rect
-              x="435"
-              y="2"
-              width="130"
-              height="24"
-              rx="6"
-              fill="#0F172A"
-              stroke="#0284C7"
-              strokeWidth="1.5"
-            />
-            <text
-              x="500"
-              y="18"
-              textAnchor="middle"
-              className="text-[11px] font-mono fill-sky-300 font-bold"
-            >
-              192.168.1 . 20
-            </text>
-          </g>
-
-          {/* Monospace Hardware MAC Badge */}
-          <g
-            id="mac-b"
-            onClick={() => handleMacClick('b')}
-            className="cursor-pointer group"
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
+            <span className="text-blue-400 font-semibold">192.168.1</span>
+            <span className="text-zinc-500">.</span>
+            <span className="text-amber-400 font-semibold">10</span>
+          </div>
+          {/* MAC Badge */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMacClick('a');
+            }}
+            className={`inline-block px-2 py-0.5 rounded bg-zinc-950 border font-mono text-[11px] transition-colors ${
+              macGlow.a || isHighlighted('mac-a')
+                ? 'border-amber-500 text-amber-300 shadow-[0_0_8px_#f59e0b]'
+                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
+            }`}
           >
-            <rect
-              x="430"
-              y="28"
-              width="140"
-              height="18"
-              rx="4"
-              fill="#18181B"
-              stroke={macGlow.b || isHighlighted('mac-b') ? '#F59E0B' : '#3F3F46'}
-              strokeWidth={macGlow.b || isHighlighted('mac-b') ? '2' : '1'}
-              className="transition-colors group-hover:stroke-amber-400"
-            />
-            <text
-              x="500"
-              y="41"
-              textAnchor="middle"
-              className={`text-[9.5px] font-mono font-medium tracking-tight ${
-                macGlow.b || isHighlighted('mac-b') ? 'fill-amber-300' : 'fill-zinc-400'
-              }`}
-            >
-              MAC: {macBadges.b}
-            </text>
-          </g>
-        </g>
+            MAC: {macBadges.a}
+          </div>
+        </div>
 
-        {/* 6. Computer C (Third Computer / Problem Machine) */}
-        <g
-          id="comp-c"
-          opacity={isDimmed('comp-c') ? 0.35 : 1}
-          className={isHighlighted('comp-c') ? 'animate-pulse' : ''}
+        {/* Computer B Overlays (50% left) */}
+        <div
+          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
+          style={{ left: '50%', top: '52%' }}
         >
-          {/* Monitor */}
-          <rect
-            x="750"
-            y="80"
-            width="140"
-            height="95"
-            rx="8"
-            fill="url(#pcBezelGrad)"
-            stroke={isHighlighted('comp-c') ? '#38BDF8' : '#334155'}
-            strokeWidth="2"
-          />
-          {/* Screen */}
-          <rect
-            x="758"
-            y="88"
-            width="124"
-            height="79"
-            rx="4"
-            fill="#050811"
-            stroke="#1E293B"
-            strokeWidth="1"
-          />
-          <text x="766" y="105" className="text-[10px] font-mono fill-zinc-500">
-            C: {typeof tags.c === 'object' && 'street' in tags.c ? `${tags.c.street}.${tags.c.house}` : '192.168.1.30'}
-          </text>
-
-          {/* Stand */}
-          <rect x="812" y="175" width="16" height="25" fill="#1E293B" />
-          <ellipse cx="820" cy="200" rx="30" ry="6" fill="#0F172A" stroke="#334155" />
-
-          {/* Label */}
-          <text
-            x="820"
-            y="65"
-            textAnchor="middle"
-            className="text-[12px] font-sans fill-zinc-200 font-semibold"
+          <div className="text-sm font-semibold text-zinc-200">Computer B (Teammate)</div>
+          <div
+            className={`text-xs font-mono font-medium ${
+              cables.b ? 'text-emerald-400' : 'text-zinc-500'
+            }`}
           >
-            Computer C (New Desk)
-          </text>
+            Light: {cables.b ? 'ON' : 'OFF'}
+          </div>
+        </div>
 
-          {/* IP Tag */}
-          <g id="tag-c">
-            <rect
-              x="755"
-              y="22"
-              width="130"
-              height="24"
-              rx="6"
-              fill="#0F172A"
-              stroke={
-                typeof tags.c === 'object' && 'street' in tags.c && tags.c.street !== '192.168.1'
-                  ? '#F43F5E'
-                  : '#0284C7'
-              }
-              strokeWidth="1.5"
-            />
-            <text
-              x="820"
-              y="38"
-              textAnchor="middle"
-              className={`text-[11px] font-mono font-bold ${
-                typeof tags.c === 'object' && 'street' in tags.c && tags.c.street !== '192.168.1'
-                  ? 'fill-rose-300'
-                  : 'fill-sky-300'
-              }`}
-            >
-              {typeof tags.c === 'object' && 'street' in tags.c
-                ? `${tags.c.street} . ${tags.c.house}`
-                : '192.168.1 . 30'}
-            </text>
-          </g>
-
-          {/* Monospace Hardware MAC Badge */}
-          <g
-            id="mac-c"
-            onClick={() => handleMacClick('c')}
-            className="cursor-pointer group"
+        {/* Address & MAC Tag Above Computer B */}
+        <div
+          className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer space-y-1 text-center"
+          style={{ left: '50%', top: '10%' }}
+          onClick={() => onSelectTag?.('b')}
+        >
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
+            <span className="text-blue-400 font-semibold">192.168.1</span>
+            <span className="text-zinc-500">.</span>
+            <span className="text-amber-400 font-semibold">20</span>
+          </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMacClick('b');
+            }}
+            className={`inline-block px-2 py-0.5 rounded bg-zinc-950 border font-mono text-[11px] transition-colors ${
+              macGlow.b || isHighlighted('mac-b')
+                ? 'border-amber-500 text-amber-300 shadow-[0_0_8px_#f59e0b]'
+                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
+            }`}
           >
-            <rect
-              x="750"
-              y="48"
-              width="140"
-              height="18"
-              rx="4"
-              fill="#18181B"
-              stroke={macGlow.c || isHighlighted('mac-c') ? '#F59E0B' : '#3F3F46'}
-              strokeWidth={macGlow.c || isHighlighted('mac-c') ? '2' : '1'}
-              className="transition-colors group-hover:stroke-amber-400"
-            />
-            <text
-              x="820"
-              y="61"
-              textAnchor="middle"
-              className={`text-[9.5px] font-mono font-medium tracking-tight ${
-                macGlow.c || isHighlighted('mac-c') ? 'fill-amber-300' : 'fill-zinc-400'
-              }`}
-            >
-              MAC: {macBadges.c}
-            </text>
-          </g>
-        </g>
+            MAC: {macBadges.b}
+          </div>
+        </div>
 
-        {/* 7. Traffic & Broadcast Wave Animations */}
-        {/* A -> B direct Ping pulse */}
-        {messageState === 'ping-a-b' && (
-          <g id="pulse-ping-a-b">
-            <motion.circle
-              cx="180"
-              cy="220"
-              r="8"
-              fill="#10B981"
-              filter="url(#cyanGlow)"
-              animate={{
-                cx: [180, 410, 470, 500],
-                cy: [220, 415, 415, 200],
-              }}
-              transition={{
-                duration: 1.4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-          </g>
-        )}
+        {/* Computer C Overlays (81.5% left) */}
+        <div
+          className="absolute text-center transform -translate-x-1/2 pointer-events-none"
+          style={{ left: '81.5%', top: '56%' }}
+        >
+          <div className="text-sm font-semibold text-zinc-200">Computer C (New Desk)</div>
+          <div
+            className={`text-xs font-mono font-medium ${
+              cables.c ? 'text-emerald-400' : 'text-zinc-500'
+            }`}
+          >
+            Light: {cables.c ? 'ON' : 'OFF'}
+          </div>
+        </div>
 
-        {/* Golden ARP Broadcast Fan-Out: Port 1 -> Port 2 AND Port 3 */}
+        {/* Address & MAC Tag Above Computer C */}
+        <div
+          className="absolute transform -translate-x-1/2 pointer-events-auto cursor-pointer space-y-1 text-center"
+          style={{ left: '81.5%', top: '14%' }}
+          onClick={() => onSelectTag?.('c')}
+        >
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 shadow-md font-mono text-xs sm:text-sm">
+            {typeof tags.c === 'object' && 'street' in tags.c ? (
+              <span>
+                <span
+                  className={
+                    tags.c.street === '192.168.2' ? 'text-purple-400 font-semibold' : 'text-blue-400 font-semibold'
+                  }
+                >
+                  {tags.c.street}
+                </span>
+                <span className="text-zinc-500">.</span>
+                <span className="text-amber-400 font-semibold">{tags.c.house}</span>
+              </span>
+            ) : null}
+          </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMacClick('c');
+            }}
+            className={`inline-block px-2 py-0.5 rounded bg-zinc-950 border font-mono text-[11px] transition-colors ${
+              macGlow.c || isHighlighted('mac-c')
+                ? 'border-amber-500 text-amber-300 shadow-[0_0_8px_#f59e0b]'
+                : 'border-zinc-800 text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            MAC: {macBadges.c}
+          </div>
+        </div>
+
+        {/* ARP Roll Call Bubble Overlay (Concept 3) */}
         {(messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
-          <g id="pulse-arp-fanout">
-            {/* Wave down from Computer A to Switch Port 1 */}
-            <motion.circle
-              cx="180"
-              cy="220"
-              r="9"
-              fill="#F59E0B"
-              filter="url(#goldGlow)"
-              animate={{
-                cx: [180, 410],
-                cy: [220, 415],
-              }}
-              transition={{
-                duration: 0.8,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            />
-
-            {/* Ripple fan-out to Port 2 (Computer B) */}
-            <motion.circle
-              cx="470"
-              cy="415"
-              r="8"
-              fill="#F59E0B"
-              filter="url(#goldGlow)"
-              animate={{
-                cx: [470, 500],
-                cy: [415, 200],
-              }}
-              transition={{
-                duration: 0.8,
-                delay: 0.4,
-                repeat: Infinity,
-                ease: 'easeOut',
-              }}
-            />
-
-            {/* Ripple fan-out to Port 3 (Computer C) */}
-            <motion.circle
-              cx="530"
-              cy="415"
-              r="8"
-              fill="#F59E0B"
-              filter="url(#goldGlow)"
-              animate={{
-                cx: [530, 820],
-                cy: [415, 220],
-              }}
-              transition={{
-                duration: 0.8,
-                delay: 0.4,
-                repeat: Infinity,
-                ease: 'easeOut',
-              }}
-            />
-
-            {/* Broadcast speech label */}
-            <rect x="290" y="340" width="220" height="24" rx="6" fill="#18181B" stroke="#F59E0B" />
-            <text x="400" y="356" textAnchor="middle" className="text-[10px] font-mono fill-amber-300 font-bold">
-              ARP: Who has .20? Tell .10
-            </text>
-          </g>
+          <div
+            className="absolute transform -translate-x-1/2 pointer-events-none animate-in fade-in duration-300"
+            style={{ left: '50%', top: '68%' }}
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-950/90 border border-amber-600/80 text-amber-300 font-mono text-xs shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>ARP: Who has 192.168.1.20? Tell 192.168.1.10</span>
+            </div>
+          </div>
         )}
-      </svg>
+      </div>
     </div>
   );
 };

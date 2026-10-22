@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, Play, HelpCircle, CornerDownLeft } from 'lucide-react';
+import { Terminal as TerminalIcon, HelpCircle } from 'lucide-react';
 import type { Day2StageState } from '../../../types/networking-day2';
 
 export interface Day2GuidedTerminalProps {
@@ -46,21 +46,16 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
   const [history, setHistory] = useState<TerminalEntry[]>([]);
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [cmdHistoryIndex, setCmdHistoryIndex] = useState<number>(-1);
-  const [activeTooltip, setActiveTooltip] = useState<{
-    text: string;
-    x: number;
-    y: number;
-  } | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll on new entries
+  // Auto-scroll on new output
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
-  // Handle ghost text calculation
+  // Ghost text for Tab completion
   const ghostText = (() => {
     if (!expectedCommand) return '';
     if (!inputVal) return expectedCommand;
@@ -96,7 +91,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
           isLabMessage: true,
           lines: [
             {
-              text: 'Lab: Type the suggested command, or press Tab to auto-complete. That is all you need on Day 2.',
+              text: 'Lab: Type the suggested command, or press Tab. That is all you need on Day 2.',
             },
           ],
         },
@@ -107,19 +102,19 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
 
     // 3. ipconfig
     if (lower === 'ipconfig') {
-      const isCableOut = !stageState?.cables.a;
-      if (isCableOut) {
+      const isCableAOut = !stageState?.cables.a;
+      if (isCableAOut) {
         setHistory((prev) => [
           ...prev,
           {
             id: `entry-${Date.now()}`,
             command: raw,
             lines: [
-              { text: 'Windows IP Configuration' },
-              { text: '' },
-              { text: 'Ethernet adapter Ethernet0:' },
-              { text: '   Media State . . . . . . . . . . . : Media disconnected' },
-              { text: '   Connection-specific DNS Suffix  . : ' },
+              { text: 'Windows IP Configuration', isDimmed: true },
+              { text: '', isDimmed: true },
+              { text: 'Ethernet adapter Ethernet:', isDimmed: true },
+              { text: '   Media State . . . . . . . . . . . : Media disconnected', isGlowing: true },
+              { text: '   Connection-specific DNS Suffix  . :', isDimmed: true },
             ],
           },
         ]);
@@ -134,19 +129,19 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
           id: `entry-${Date.now()}`,
           command: raw,
           lines: [
-            { text: 'Windows IP Configuration' },
-            { text: '' },
-            { text: 'Ethernet adapter Ethernet0:' },
-            { text: '   Connection-specific DNS Suffix  . : ' },
+            { text: 'Windows IP Configuration', isDimmed: true },
+            { text: '', isDimmed: true },
+            { text: 'Ethernet adapter Ethernet:', isDimmed: true },
+            { text: '   Connection-specific DNS Suffix  . :', isDimmed: true, tooltip: 'A later day explains this' },
             { text: '   Link-local IPv6 Address . . . . . : fe80::a1b2:c3d4%12', isDimmed: true, tooltip: 'A later day explains IPv6' },
-            { text: '   IPv4 Address. . . . . . . . . . . : 192.168.1.10' },
+            { text: '   IPv4 Address. . . . . . . . . . . : 192.168.1.10', isGlowing: true },
             {
               text: '   Subnet Mask . . . . . . . . . . . : 255.255.255.0',
               isGlowing: currentRungId === 'c2-r3',
               tooltip: 'Subnet mask: tells which numbers belong to the street',
             },
             {
-              text: '   Default Gateway . . . . . . . . . : ',
+              text: '   Default Gateway . . . . . . . . . :',
               isDimmed: true,
               tooltip: 'A later day introduces the Default Gateway (router)',
             },
@@ -160,9 +155,9 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
 
     // 4. arp -a
     if (lower === 'arp -a' || lower === 'arp') {
-      const entries = stageState?.arpTable ?? [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
-      ];
+      const entries = stageState?.arpTable && stageState.arpTable.length > 0
+        ? stageState.arpTable
+        : [{ ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' as const }];
 
       setHistory((prev) => [
         ...prev,
@@ -215,7 +210,6 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
       // Ping to Computer B (192.168.1.20)
       if (target === '192.168.1.20') {
         if (!stageState?.cables.b) {
-          // Port 2 unplugged
           setHistory((prev) => [
             ...prev,
             {
@@ -238,7 +232,6 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
           return;
         }
 
-        // Port 2 healthy
         setHistory((prev) => [
           ...prev,
           {
@@ -246,10 +239,10 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
             command: raw,
             lines: [
               { text: 'Pinging 192.168.1.20 with 32 bytes of data:' },
-              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128' },
-              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128' },
-              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128' },
-              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128' },
+              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128', isGlowing: true },
+              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128', isGlowing: true },
+              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128', isGlowing: true },
+              { text: 'Reply from 192.168.1.20: bytes=32 time=1ms TTL=128', isGlowing: true },
               { text: '' },
               { text: 'Ping statistics for 192.168.1.20:' },
               { text: '    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),' },
@@ -302,10 +295,10 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
               command: raw,
               lines: [
                 { text: 'Pinging 192.168.1.30 with 32 bytes of data:' },
-                { text: 'Request timed out.' },
-                { text: 'Request timed out.' },
-                { text: 'Request timed out.' },
-                { text: 'Request timed out.' },
+                { text: 'Request timed out.', isGlowing: true },
+                { text: 'Request timed out.', isGlowing: true },
+                { text: 'Request timed out.', isGlowing: true },
+                { text: 'Request timed out.', isGlowing: true },
                 { text: '' },
                 { text: 'Ping statistics for 192.168.1.30:' },
                 { text: '    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),' },
@@ -325,10 +318,10 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
             command: raw,
             lines: [
               { text: 'Pinging 192.168.1.30 with 32 bytes of data:' },
-              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128' },
-              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128' },
-              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128' },
-              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128' },
+              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128', isGlowing: true },
+              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128', isGlowing: true },
+              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128', isGlowing: true },
+              { text: 'Reply from 192.168.1.30: bytes=32 time=1ms TTL=128', isGlowing: true },
               { text: '' },
               { text: 'Ping statistics for 192.168.1.30:' },
               { text: '    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),' },
@@ -351,10 +344,10 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
             command: raw,
             lines: [
               { text: 'Pinging 192.168.1.99 with 32 bytes of data:' },
-              { text: 'Reply from 192.168.1.10: Destination host unreachable.' },
-              { text: 'Reply from 192.168.1.10: Destination host unreachable.' },
-              { text: 'Reply from 192.168.1.10: Destination host unreachable.' },
-              { text: 'Reply from 192.168.1.10: Destination host unreachable.' },
+              { text: 'Reply from 192.168.1.10: Destination host unreachable.', isGlowing: true },
+              { text: 'Reply from 192.168.1.10: Destination host unreachable.', isGlowing: true },
+              { text: 'Reply from 192.168.1.10: Destination host unreachable.', isGlowing: true },
+              { text: 'Reply from 192.168.1.10: Destination host unreachable.', isGlowing: true },
               { text: '' },
               { text: 'Ping statistics for 192.168.1.99:' },
               { text: '    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),' },
@@ -432,114 +425,108 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
 
   return (
     <div
-      className={`relative flex flex-col h-full min-h-[300px] rounded-xl bg-[#0C101A] border border-zinc-800 font-mono text-sm text-zinc-100 shadow-xl overflow-hidden select-text ${className}`}
+      className={`rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden font-mono text-xs sm:text-[13px] shadow-lg select-text ${className}`}
       data-testid="day2-guided-terminal"
-      onClick={() => inputRef.current?.focus()}
     >
-      {/* Title bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[#151C2C] border-b border-zinc-800 text-xs text-zinc-400 select-none">
+      {/* Terminal Title Bar */}
+      <div className="flex items-center justify-between px-3.5 py-2 bg-zinc-900 border-b border-zinc-800 text-zinc-400 select-none">
         <div className="flex items-center gap-2">
-          <TerminalIcon className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Computer A • Command Prompt</span>
+          <TerminalIcon className="w-3.5 h-3.5 text-zinc-400" />
+          <span className="font-semibold text-zinc-300">Terminal (Computer A)</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-          <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-          <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-        </div>
+        <span className="text-[11px] text-zinc-500">C:\Users\you&gt;</span>
       </div>
 
-      {/* Suggested Chips Bar */}
-      {suggestedChips && suggestedChips.length > 0 && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/60 border-b border-zinc-800/80 text-xs">
-          <span className="text-zinc-500 font-sans text-[11px]">Suggested:</span>
-          {suggestedChips.map((chip) => (
-            <button
-              key={chip}
-              onClick={(e) => {
-                e.stopPropagation();
-                setInputVal(chip);
-                executeCommand(chip);
-              }}
-              className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-sky-300 border border-zinc-700 text-xs transition-colors"
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Terminal log output */}
-      <div className="flex-1 p-3 overflow-y-auto space-y-2 text-xs sm:text-[13px] leading-relaxed">
-        <div className="text-zinc-500 text-xs mb-2">
-          Microsoft Windows [Version 10.0.19045.3803]<br />
-          (c) Microsoft Corporation. All rights reserved.
-        </div>
-
+      {/* Terminal Output Log Area (Max height matching Day 1) */}
+      <div
+        className="flex-1 p-3.5 overflow-y-auto max-h-[220px] sm:max-h-[260px] space-y-3"
+        role="log"
+        aria-live="polite"
+      >
         {history.map((entry) => (
-          <div key={entry.id} className="space-y-0.5">
-            <div className="flex items-center gap-1 text-zinc-300">
+          <div key={entry.id} className="space-y-1">
+            <div className="flex items-center gap-2 text-zinc-300">
               <span className="text-zinc-500">C:\Users\you&gt;</span>
-              <span>{entry.command}</span>
+              <span className="font-semibold text-zinc-100">{entry.command}</span>
             </div>
-            {entry.lines.map((line, idx) => (
-              <div
-                key={idx}
-                className={`${
-                  line.isGlowing
-                    ? 'text-sky-300 font-semibold'
-                    : line.isDimmed
-                    ? 'text-zinc-600'
-                    : 'text-zinc-300'
-                } flex items-center gap-1`}
-              >
-                <span>{line.text}</span>
-                {line.tooltip && (
-                  <span
-                    className="cursor-help text-zinc-500 hover:text-zinc-300"
-                    title={line.tooltip}
-                  >
-                    <HelpCircle className="w-3 h-3 inline" />
-                  </span>
-                )}
-              </div>
-            ))}
+
+            <div
+              className={
+                entry.isLabMessage
+                  ? 'pl-3 border-l-2 border-blue-500 text-blue-300 bg-blue-950/20 py-1 rounded-r'
+                  : 'space-y-0.5'
+              }
+            >
+              {entry.lines.map((l, idx) => (
+                <div
+                  key={idx}
+                  className={`leading-relaxed transition-colors ${
+                    l.isGlowing
+                      ? 'text-emerald-300 font-semibold underline decoration-emerald-500/50 underline-offset-2'
+                      : l.isDimmed
+                      ? 'text-zinc-500 opacity-60'
+                      : 'text-zinc-300'
+                  } ${l.tooltip ? 'cursor-help border-b border-dotted border-zinc-600 inline-block' : ''}`}
+                  title={l.tooltip}
+                >
+                  {l.text}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
+        <div ref={logEndRef} />
+      </div>
 
-        {/* Current active input line */}
-        <div className="relative flex items-center text-zinc-200 mt-2">
-          <span className="text-zinc-500 mr-2 shrink-0">C:\Users\you&gt;</span>
-          <div className="relative flex-1">
+      {/* Input Row with Ghost Text & Chips */}
+      <div className="p-2.5 bg-zinc-900/60 border-t border-zinc-800/80 space-y-2">
+        <div
+          className="relative flex items-center px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700/80 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+          onClick={() => inputRef.current?.focus()}
+        >
+          <span className="text-zinc-500 select-none mr-2">C:\Users\you&gt;</span>
+
+          <div className="relative flex-1 flex items-center font-mono">
             <input
               ref={inputRef}
               type="text"
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full bg-transparent outline-none text-zinc-100 font-mono caret-emerald-400"
+              className="w-full bg-transparent outline-none text-zinc-100 font-mono text-xs sm:text-[13px] z-10"
               spellCheck={false}
-              autoCapitalize="off"
               autoComplete="off"
+              aria-label="Terminal command"
             />
+
             {ghostText && (
-              <span className="absolute left-0 top-0 pointer-events-none text-zinc-600 font-mono">
+              <span className="absolute left-0 top-0 pointer-events-none text-zinc-600 font-mono text-xs sm:text-[13px]">
                 {inputVal}
                 <span className="text-zinc-500">{ghostText}</span>
               </span>
             )}
           </div>
-          <button
-            onClick={() => executeCommand(inputVal || expectedCommand)}
-            className="ml-2 px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs flex items-center gap-1 transition-colors"
-            title="Execute command (Enter)"
-          >
-            <Play className="w-3 h-3" />
-            <span className="hidden sm:inline">Enter</span>
-          </button>
         </div>
 
-        <div ref={logEndRef} />
+        {/* Suggested Command Chips */}
+        {suggestedChips && suggestedChips.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <span className="text-[10px] text-zinc-500 select-none">Quick:</span>
+            {suggestedChips.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => {
+                  setInputVal(chip);
+                  executeCommand(chip);
+                }}
+                className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-blue-300 border border-zinc-700 text-[11px] font-mono transition-colors cursor-pointer"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
