@@ -58,6 +58,10 @@ export type Day2StageState = {
   lookInside: string | null;
   stopwatch: string | null;
   activeLayer?: 'sockets' | 'addresses' | 'tags';
+  showMacBadges?: boolean;
+  showAddressTags?: boolean;
+  showSwitch?: boolean;
+  unlockedLayers?: ('sockets' | 'addresses' | 'tags')[];
   arpTable: { ip: string; mac: string; type: 'dynamic' }[];
 };
 

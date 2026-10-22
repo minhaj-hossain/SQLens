@@ -18,6 +18,10 @@ export interface PhysicalSwitchCanvasProps {
   onReplay?: () => void;
   layer?: 'sockets' | 'addresses' | 'tags';
   onLayerChange?: (layer: 'sockets' | 'addresses' | 'tags') => void;
+  showMacBadges?: boolean;
+  showAddressTags?: boolean;
+  showSwitch?: boolean;
+  unlockedLayers?: ('sockets' | 'addresses' | 'tags')[];
   readOnly?: boolean;
   className?: string;
 }
@@ -34,9 +38,18 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
   onReplay,
   layer,
   onLayerChange,
+  showMacBadges: propShowMacBadges,
+  showAddressTags: propShowAddressTags,
+  showSwitch: propShowSwitch,
+  unlockedLayers: propUnlockedLayers,
   readOnly = false,
   className = '',
 }) => {
+  const showMacBadges = propShowMacBadges ?? stageState?.showMacBadges ?? true;
+  const showAddressTags = propShowAddressTags ?? stageState?.showAddressTags ?? true;
+  const showSwitch = propShowSwitch ?? stageState?.showSwitch ?? true;
+  const unlockedLayers = propUnlockedLayers ?? stageState?.unlockedLayers ?? ['sockets', 'addresses', 'tags'];
+
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [activeLayer, setActiveLayer] = useState<'sockets' | 'addresses' | 'tags'>(
     layer ?? stageState?.activeLayer ?? 'sockets'
@@ -133,42 +146,48 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
 
         {/* Stage Layer Selector: Sockets | Addresses | Name tags */}
         <div className="flex items-center rounded-xl bg-zinc-950/90 border border-white/[0.12] p-0.5 text-[11px] font-sans font-medium pointer-events-auto shadow-lg">
-          <button
-            type="button"
-            onClick={() => handleLayerSwitch('sockets')}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              activeLayer === 'sockets'
-                ? 'bg-zinc-800 text-white font-semibold shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Focus on physical ports and cables"
-          >
-            Sockets
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLayerSwitch('addresses')}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              activeLayer === 'addresses'
-                ? 'bg-blue-600/30 border border-blue-500/40 text-blue-200 font-semibold shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Focus on street IP addresses"
-          >
-            Addresses
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLayerSwitch('tags')}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              activeLayer === 'tags'
-                ? 'bg-amber-600/30 border border-amber-500/40 text-amber-200 font-semibold shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Focus on hardware MAC name tags"
-          >
-            Name tags
-          </button>
+          {unlockedLayers.includes('sockets') && (
+            <button
+              type="button"
+              onClick={() => handleLayerSwitch('sockets')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                activeLayer === 'sockets'
+                  ? 'bg-zinc-800 text-white font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Focus on physical ports and cables"
+            >
+              Sockets
+            </button>
+          )}
+          {unlockedLayers.includes('addresses') && (
+            <button
+              type="button"
+              onClick={() => handleLayerSwitch('addresses')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                activeLayer === 'addresses'
+                  ? 'bg-blue-600/30 border border-blue-500/40 text-blue-200 font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Focus on street IP addresses"
+            >
+              Addresses
+            </button>
+          )}
+          {unlockedLayers.includes('tags') && (
+            <button
+              type="button"
+              onClick={() => handleLayerSwitch('tags')}
+              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                activeLayer === 'tags'
+                  ? 'bg-amber-600/30 border border-amber-500/40 text-amber-200 font-semibold shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Focus on hardware MAC name tags"
+            >
+              Name tags
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2 pointer-events-auto">
@@ -237,7 +256,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           <line x1="0" y1="470" x2="1000" y2="470" stroke="#1E293B" strokeWidth="2" />
 
           {/* SHARED STREET BLUE BAND (y 525) */}
-          {showBands && (
+          {showBands && showAddressTags && tags.a !== 'hidden' && (
             <g className="transition-opacity duration-500">
               <rect
                 x="80"
@@ -408,17 +427,25 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           >
             {/* Bezel glow if highlighted */}
             {isHighlighted('switch-box') && (
-              <rect
-                x="370"
-                y="365"
-                width="260"
-                height="70"
-                rx="10"
-                fill="none"
-                stroke="#3B82F6"
-                strokeWidth="3"
-                filter="url(#softGlow)"
-              />
+              <>
+                <rect
+                  x="370"
+                  y="365"
+                  width="260"
+                  height="70"
+                  rx="10"
+                  fill="none"
+                  stroke="#3B82F6"
+                  strokeWidth="3"
+                  filter="url(#softGlow)"
+                />
+                <g transform="translate(500, 352)">
+                  <rect x="-68" y="-10" width="136" height="20" rx="10" fill="#09090b" stroke="#38BDF8" strokeWidth="1.5" />
+                  <text x="0" y="3.5" textAnchor="middle" fill="#38BDF8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                    ⚡ NEW: Central Switch
+                  </text>
+                </g>
+              </>
             )}
 
             {/* Switch Body */}
@@ -748,7 +775,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           {/* ---------------- Your Computer (Left: x = 185) ---------------- */}
           <g id="comp-a-labels" opacity={isDimmed('comp-a') ? 0.35 : 1}>
             {/* Address Tag Pill */}
-            {tags.a !== 'hidden' && (
+            {showAddressTags && tags.a !== 'hidden' && (
               <g
                 id="comp-a-tag"
                 transform="translate(185, 68)"
@@ -813,43 +840,45 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             )}
 
             {/* MAC Badge Pill */}
-            <g
-              id="comp-a-mac"
-              transform="translate(185, 98)"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleMacClick('a');
-              }}
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'addresses' ? 0.35 : 1}
-              role="button"
-              aria-label="Your Computer MAC Badge"
-            >
-              <rect
-                x="-75"
-                y="-11"
-                width="150"
-                height="22"
-                rx="4"
-                fill="#020617"
-                stroke={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? '#F59E0B' : '#1E293B'}
-                strokeWidth={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? 1.5 : 1}
-                filter={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? 'url(#goldGlow)' : undefined}
-                className="group-hover:stroke-amber-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="3.5"
-                textAnchor="middle"
-                fill={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? '#FCD34D' : '#94A3B8'}
-                fontSize="9.5"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-                letterSpacing="0.3"
+            {showMacBadges && (
+              <g
+                id="comp-a-mac"
+                transform="translate(185, 98)"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMacClick('a');
+                }}
+                className="cursor-pointer group transition-opacity duration-300"
+                opacity={activeLayer === 'addresses' ? 0.35 : 1}
+                role="button"
+                aria-label="Your Computer MAC Badge"
               >
-                MAC: {macBadges.a}
-              </text>
-            </g>
+                <rect
+                  x="-75"
+                  y="-11"
+                  width="150"
+                  height="22"
+                  rx="4"
+                  fill="#020617"
+                  stroke={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? '#F59E0B' : '#1E293B'}
+                  strokeWidth={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? 1.5 : 1}
+                  filter={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? 'url(#goldGlow)' : undefined}
+                  className="group-hover:stroke-amber-400 transition-colors"
+                />
+                <text
+                  x="0"
+                  y="3.5"
+                  textAnchor="middle"
+                  fill={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? '#FCD34D' : '#94A3B8'}
+                  fontSize="9.5"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="600"
+                  letterSpacing="0.3"
+                >
+                  MAC: {macBadges.a}
+                </text>
+              </g>
+            )}
 
             {/* Computer Title */}
             <text
@@ -880,7 +909,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           {/* ---------------- Friend's Computer (Center: x = 500) ---------------- */}
           <g id="comp-b-labels" opacity={isDimmed('comp-b') ? 0.35 : 1}>
             {/* Address Tag Pill */}
-            {tags.b !== 'hidden' && (
+            {showAddressTags && tags.b !== 'hidden' && (
               <g
                 id="comp-b-tag"
                 transform="translate(500, 50)"
@@ -945,43 +974,45 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             )}
 
             {/* MAC Badge Pill */}
-            <g
-              id="comp-b-mac"
-              transform="translate(500, 80)"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleMacClick('b');
-              }}
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'addresses' ? 0.35 : 1}
-              role="button"
-              aria-label="Friend's Computer MAC Badge"
-            >
-              <rect
-                x="-75"
-                y="-11"
-                width="150"
-                height="22"
-                rx="4"
-                fill="#020617"
-                stroke={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? '#F59E0B' : '#1E293B'}
-                strokeWidth={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? 1.5 : 1}
-                filter={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? 'url(#goldGlow)' : undefined}
-                className="group-hover:stroke-amber-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="3.5"
-                textAnchor="middle"
-                fill={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? '#FCD34D' : '#94A3B8'}
-                fontSize="9.5"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-                letterSpacing="0.3"
+            {showMacBadges && (
+              <g
+                id="comp-b-mac"
+                transform="translate(500, 80)"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMacClick('b');
+                }}
+                className="cursor-pointer group transition-opacity duration-300"
+                opacity={activeLayer === 'addresses' ? 0.35 : 1}
+                role="button"
+                aria-label="Friend's Computer MAC Badge"
               >
-                MAC: {macBadges.b}
-              </text>
-            </g>
+                <rect
+                  x="-75"
+                  y="-11"
+                  width="150"
+                  height="22"
+                  rx="4"
+                  fill="#020617"
+                  stroke={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? '#F59E0B' : '#1E293B'}
+                  strokeWidth={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? 1.5 : 1}
+                  filter={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? 'url(#goldGlow)' : undefined}
+                  className="group-hover:stroke-amber-400 transition-colors"
+                />
+                <text
+                  x="0"
+                  y="3.5"
+                  textAnchor="middle"
+                  fill={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? '#FCD34D' : '#94A3B8'}
+                  fontSize="9.5"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="600"
+                  letterSpacing="0.3"
+                >
+                  MAC: {macBadges.b}
+                </text>
+              </g>
+            )}
 
             {/* Computer Title */}
             <text
@@ -1012,7 +1043,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           {/* ---------------- Third Computer (Right: x = 815) ---------------- */}
           <g id="comp-c-labels" opacity={isDimmed('comp-c') ? 0.35 : 1}>
             {/* Address Tag Pill */}
-            {tags.c !== 'hidden' && (
+            {showAddressTags && tags.c !== 'hidden' && (
               <g
                 id="comp-c-tag"
                 transform="translate(815, 68)"
@@ -1077,43 +1108,45 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             )}
 
             {/* MAC Badge Pill */}
-            <g
-              id="comp-c-mac"
-              transform="translate(815, 98)"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleMacClick('c');
-              }}
-              className="cursor-pointer group transition-opacity duration-300"
-              opacity={activeLayer === 'addresses' ? 0.35 : 1}
-              role="button"
-              aria-label="Third Computer MAC Badge"
-            >
-              <rect
-                x="-75"
-                y="-11"
-                width="150"
-                height="22"
-                rx="4"
-                fill="#020617"
-                stroke={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? '#F59E0B' : '#1E293B'}
-                strokeWidth={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? 1.5 : 1}
-                filter={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? 'url(#goldGlow)' : undefined}
-                className="group-hover:stroke-amber-400 transition-colors"
-              />
-              <text
-                x="0"
-                y="3.5"
-                textAnchor="middle"
-                fill={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? '#FCD34D' : '#94A3B8'}
-                fontSize="9.5"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-                letterSpacing="0.3"
+            {showMacBadges && (
+              <g
+                id="comp-c-mac"
+                transform="translate(815, 98)"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMacClick('c');
+                }}
+                className="cursor-pointer group transition-opacity duration-300"
+                opacity={activeLayer === 'addresses' ? 0.35 : 1}
+                role="button"
+                aria-label="Third Computer MAC Badge"
               >
-                MAC: {macBadges.c}
-              </text>
-            </g>
+                <rect
+                  x="-75"
+                  y="-11"
+                  width="150"
+                  height="22"
+                  rx="4"
+                  fill="#020617"
+                  stroke={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? '#F59E0B' : '#1E293B'}
+                  strokeWidth={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? 1.5 : 1}
+                  filter={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? 'url(#goldGlow)' : undefined}
+                  className="group-hover:stroke-amber-400 transition-colors"
+                />
+                <text
+                  x="0"
+                  y="3.5"
+                  textAnchor="middle"
+                  fill={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? '#FCD34D' : '#94A3B8'}
+                  fontSize="9.5"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="600"
+                  letterSpacing="0.3"
+                >
+                  MAC: {macBadges.c}
+                </text>
+              </g>
+            )}
 
             {/* Computer Title */}
             <text

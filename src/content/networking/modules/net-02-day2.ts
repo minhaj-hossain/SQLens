@@ -99,7 +99,22 @@ const BASE_STAGE: Day2StageState = {
   lookInside: null,
   stopwatch: null,
   activeLayer: 'sockets',
+  showMacBadges: false,
+  showAddressTags: false,
+  showSwitch: true,
+  unlockedLayers: ['sockets'],
   arpTable: [],
+};
+
+const CONCEPT_2_BASE_STAGE: Day2StageState = {
+  ...BASE_STAGE,
+  cables: { a: true, b: true, c: true },
+  portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+  showMacBadges: true,
+  showAddressTags: true,
+  showSwitch: true,
+  unlockedLayers: ['sockets', 'addresses', 'tags'],
+  activeLayer: 'tags',
 };
 
 // =============================================================================
@@ -318,6 +333,9 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'addresses',
+      showMacBadges: false,
+      showAddressTags: true,
+      unlockedLayers: ['sockets', 'addresses'],
     },
   },
   {
@@ -385,7 +403,10 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       message: 'ping-a-b',
-      activeLayer: 'sockets',
+      activeLayer: 'addresses',
+      showMacBadges: false,
+      showAddressTags: true,
+      unlockedLayers: ['sockets', 'addresses'],
     },
   },
   {
@@ -455,6 +476,9 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'sockets',
+      showMacBadges: false,
+      showAddressTags: true,
+      unlockedLayers: ['sockets', 'addresses'],
     },
   },
 ];
@@ -513,7 +537,7 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
       text: 'Think of your MAC address as your National ID card: it proves who you are no matter where you travel. Your IP address is your postal address: it tells everyone which street and desk you are sitting at today. You need the postal address to find the neighborhood, and the name tag to hand the message to the right machine.',
     },
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       highlight: ['mac-a'],
@@ -581,7 +605,7 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'tags',
@@ -648,7 +672,7 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       highlight: ['switch-box'],
@@ -715,7 +739,7 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'tags',
@@ -783,7 +807,7 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'tags',
@@ -833,7 +857,7 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       message: 'arp-broadcast',
@@ -912,7 +936,7 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
       text: 'An ARP message has no file data, images, or web text. It contains only four simple fields: Sender IP (192.168.1.10), Sender MAC (00-00-5e-00-53-01), Target IP (192.168.1.20), and Target MAC (00-00-00-00-00-00, meaning "tell me!").',
     },
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       message: 'arp-broadcast',
@@ -980,7 +1004,7 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       message: 'arp-broadcast',
@@ -1030,7 +1054,7 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
       text: 'Entries in your computer’s ARP table are not permanent. If you stop communicating with Friend’s computer, the entry expires and disappears after a few minutes (learned automatically). If you ping again later, your computer simply runs another quick roll call.',
     },
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       arpTable: [
@@ -1104,7 +1128,7 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       arpTable: [
@@ -1179,7 +1203,7 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'addresses',
@@ -1254,7 +1278,7 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'addresses',
@@ -1325,7 +1349,7 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       text: 'Request timed out frequently happens when a computer’s operating system firewall is set to ignore incoming ping echo requests for security.',
     },
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'addresses',
@@ -1370,7 +1394,7 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: false },
       portLeds: { p1: 'green', p2: 'green', p3: 'off', p4: 'off' },
       activeLayer: 'sockets',
@@ -1413,7 +1437,7 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       tags: {
@@ -1469,7 +1493,7 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       },
     ],
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       arpTable: [
@@ -1550,7 +1574,7 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
       text: 'On Linux, you view your network card’s MAC hardware name tag by typing ip link. You inspect your local ARP notebook by typing ip neigh (short for IP neighbors). The concepts are identical on every operating system in the world.',
     },
     entryStageState: {
-      ...BASE_STAGE,
+      ...CONCEPT_2_BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       activeLayer: 'addresses',

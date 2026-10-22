@@ -107,7 +107,7 @@ describe('Day2CockpitView & Routing Integration', () => {
     expect(html).toContain('My Words');
   });
 
-  it('renders the 4-Port Switch and 3 Workstations with MAC Badges on the 2D stage in normal mode', () => {
+  it('renders the 4-Port Switch and 3 Workstations in Concept 1 with MAC Badges hidden initially', () => {
     const html = renderToStaticMarkup(
       <Day2CockpitView
         module={NET_02_MODULE}
@@ -125,7 +125,22 @@ describe('Day2CockpitView & Routing Integration', () => {
     expect(html).toContain('Friend’s computer');
     expect(html).toContain('Third computer');
 
-    // Factory MAC Badges (RFC 7042 documentation addresses)
+    // MAC Badges are omitted in Concept 1 to avoid overwhelming beginners
+    expect(html).not.toContain('MAC: 00-00-5e-00-53-01');
+  });
+
+  it('reveals MAC Badges on the stage in Concept 2 when hardware name tags are introduced', () => {
+    // Concept 2
+    const concept2 = NET_02_MODULE.concepts[1] || concept;
+    const html = renderToStaticMarkup(
+      <Day2CockpitView
+        module={NET_02_MODULE}
+        concept={concept2}
+        defaultMode="normal"
+      />,
+    );
+
+    // Factory MAC Badges appear in Concept 2 (RFC 7042 documentation addresses)
     expect(html).toContain('00-00-5e-00-53-01');
     expect(html).toContain('00-00-5e-00-53-02');
     expect(html).toContain('00-00-5e-00-53-03');

@@ -45,7 +45,13 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
   const { backToRoadmap } = useLearningNavigation();
 
   // Navigation indices
-  const [conceptIdx, setConceptIdx] = useState<number>(0);
+  const initialConceptIdx = useMemo(() => {
+    if (concept?.order && concept.order >= 1 && concept.order <= ALL_DAY2_CONCEPTS.length) {
+      return concept.order - 1;
+    }
+    return 0;
+  }, [concept?.order]);
+  const [conceptIdx, setConceptIdx] = useState<number>(initialConceptIdx);
   const [rungIdx, setRungIdx] = useState<number>(0);
 
   // Full-screen page modes matching Day 1
