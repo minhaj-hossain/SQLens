@@ -16,6 +16,8 @@ export interface PhysicalSwitchCanvasProps {
   onSelectTag?: (which: 'a' | 'b' | 'c') => void;
   onOpenLookInside?: (id: string) => void;
   onReplay?: () => void;
+  layer?: 'sockets' | 'addresses' | 'tags';
+  onLayerChange?: (layer: 'sockets' | 'addresses' | 'tags') => void;
   readOnly?: boolean;
   className?: string;
 }
@@ -30,10 +32,28 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
   onSelectTag,
   onOpenLookInside,
   onReplay,
+  layer,
+  onLayerChange,
   readOnly = false,
   className = '',
 }) => {
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [activeLayer, setActiveLayer] = useState<'sockets' | 'addresses' | 'tags'>(
+    layer ?? stageState?.activeLayer ?? 'sockets'
+  );
+
+  React.useEffect(() => {
+    if (layer) {
+      setActiveLayer(layer);
+    } else if (stageState?.activeLayer) {
+      setActiveLayer(stageState.activeLayer);
+    }
+  }, [layer, stageState?.activeLayer]);
+
+  const handleLayerSwitch = (nextLayer: 'sockets' | 'addresses' | 'tags') => {
+    setActiveLayer(nextLayer);
+    onLayerChange?.(nextLayer);
+  };
 
   const cables = stageState?.cables ?? { a: true, b: true, c: true };
   const portLeds = stageState?.portLeds ?? {
@@ -48,9 +68,9 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
     c: { street: '192.168.1', house: '30', split: true },
   };
   const macBadges = stageState?.macBadges ?? {
-    a: '00-1A-2B-3C-4D-10',
-    b: '00-1A-2B-3C-4D-20',
-    c: '00-1A-2B-3C-4D-30',
+    a: '00-00-5e-00-53-01',
+    b: '00-00-5e-00-53-02',
+    c: '00-00-5e-00-53-03',
   };
   const macGlow = stageState?.macGlow ?? { a: false, b: false, c: false };
   const messageState = stageState?.message ?? 'none';
@@ -88,7 +108,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
       role="region"
       aria-label="Physical Switch Connection Canvas"
     >
-      {/* Top telemetry & replay controls */}
+      {/* Top telemetry, layer selector & replay controls */}
       <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between text-xs font-mono pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <span
@@ -106,9 +126,49 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               }`}
             />
             {isAllConnected
-              ? 'Switch: 3 Ports Linked (100 Mbps)'
-              : 'Switch: Link Disconnected'}
+              ? 'Switch: 3 Ports Linked'
+              : 'Switch: Cable Unplugged'}
           </span>
+        </div>
+
+        {/* Stage Layer Selector: Sockets | Addresses | Name tags */}
+        <div className="flex items-center rounded-xl bg-zinc-950/90 border border-white/[0.12] p-0.5 text-[11px] font-sans font-medium pointer-events-auto shadow-lg">
+          <button
+            type="button"
+            onClick={() => handleLayerSwitch('sockets')}
+            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              activeLayer === 'sockets'
+                ? 'bg-zinc-800 text-white font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+            title="Focus on physical ports and cables"
+          >
+            Sockets
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLayerSwitch('addresses')}
+            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              activeLayer === 'addresses'
+                ? 'bg-blue-600/30 border border-blue-500/40 text-blue-200 font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+            title="Focus on street IP addresses"
+          >
+            Addresses
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLayerSwitch('tags')}
+            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+              activeLayer === 'tags'
+                ? 'bg-amber-600/30 border border-amber-500/40 text-amber-200 font-semibold shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+            title="Focus on hardware MAC name tags"
+          >
+            Name tags
+          </button>
         </div>
 
         <div className="flex items-center gap-2 pointer-events-auto">
@@ -200,7 +260,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 fontFamily="ui-monospace, monospace"
                 fontWeight="600"
               >
-                Neighborhood Street: 192.168.1.x (Shared Star Topology)
+                Neighborhood Street: 192.168.1.x (Shared Street)
               </text>
             </g>
           )}
@@ -524,7 +584,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             <rect x="420" y="170" width="160" height="105" rx="5" fill="#020617" />
 
             <text x="435" y="195" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
-              Teammate
+              Friend
             </text>
 
             {/* Socket & Link LED */}
@@ -566,7 +626,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
             <rect x="735" y="190" width="160" height="105" rx="5" fill="#020617" />
 
             <text x="750" y="215" fill="#64748B" fontSize="12" fontFamily="ui-monospace, monospace">
-              Desk C
+              Third
             </text>
 
             {/* Socket & Link LED */}
@@ -581,7 +641,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           </g>
 
           {/* ========================================================================= */}
-          {/* ANIMATED PACKETS: PING PULSE & GOLDEN ARP BROADCAST FAN-OUT               */}
+          {/* ANIMATED PACKETS: PING PULSE & ROLL-CALL ARP BROADCAST EXPANDING WAVES    */}
           {/* ========================================================================= */}
           <AnimatePresence>
             {/* Direct Ping Pulse: Computer A -> Switch Port 1 -> Port 2 -> Computer B */}
@@ -604,9 +664,30 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               </motion.g>
             )}
 
-            {/* Golden ARP Broadcast Fan-Out: Port 1 -> Port 2 AND Port 3 */}
+            {/* Roll-Call ARP Broadcast Waves & Cable Fan-Out */}
             {(messageState === 'arp-broadcast' || messageState === 'arp-silent') && (
               <motion.g id="pulse-arp-fanout">
+                {/* Concentric radar roll-call rings radiating out from the switch */}
+                {[0, 0.5, 1.0].map((d, i) => (
+                  <motion.circle
+                    key={`arp-ring-${i}`}
+                    cx="500"
+                    cy="405"
+                    r="25"
+                    fill="none"
+                    stroke="#F59E0B"
+                    strokeWidth="2"
+                    initial={{ r: 25, opacity: 0.8 }}
+                    animate={{ r: [25, 340], opacity: [0.8, 0] }}
+                    transition={{
+                      duration: 2.4,
+                      delay: d,
+                      repeat: Infinity,
+                      ease: 'easeOut',
+                    }}
+                  />
+                ))}
+
                 {/* Wave down from A to Port 1 */}
                 <motion.circle
                   r="8"
@@ -623,7 +704,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   }}
                 />
 
-                {/* Wave out Port 2 to Computer B */}
+                {/* Wave out Port 2 to Friend's computer */}
                 <motion.circle
                   r="8"
                   fill="#F59E0B"
@@ -640,7 +721,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   }}
                 />
 
-                {/* Wave out Port 3 to Computer C */}
+                {/* Wave out Port 3 to Third computer */}
                 <motion.circle
                   r="8"
                   fill="#F59E0B"
@@ -664,7 +745,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
           {/* NATIVE SVG LABELS, TAGS & BADGES (Zero Overlap Guaranteed by Vector Math) */}
           {/* ========================================================================= */}
 
-          {/* ---------------- Computer A (Left: x = 185) ---------------- */}
+          {/* ---------------- Your Computer (Left: x = 185) ---------------- */}
           <g id="comp-a-labels" opacity={isDimmed('comp-a') ? 0.35 : 1}>
             {/* Address Tag Pill */}
             {tags.a !== 'hidden' && (
@@ -672,9 +753,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 id="comp-a-tag"
                 transform="translate(185, 68)"
                 onClick={() => onSelectTag?.('a')}
-                className="cursor-pointer group"
+                className="cursor-pointer group transition-opacity duration-300"
+                opacity={activeLayer === 'tags' ? 0.35 : 1}
                 role="button"
-                aria-label="Computer A IP Address Tag"
+                aria-label="Your Computer IP Address Tag"
               >
                 <rect
                   x="-65"
@@ -683,8 +765,8 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   height="26"
                   rx="13"
                   fill="#0F172A"
-                  stroke="#334155"
-                  strokeWidth="1.5"
+                  stroke={activeLayer === 'addresses' ? '#3B82F6' : '#334155'}
+                  strokeWidth={activeLayer === 'addresses' ? 2 : 1.5}
                   className="group-hover:stroke-blue-400 transition-colors"
                 />
                 {tags.a === 'not-set' ? (
@@ -738,9 +820,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 e.stopPropagation();
                 handleMacClick('a');
               }}
-              className="cursor-pointer group"
+              className="cursor-pointer group transition-opacity duration-300"
+              opacity={activeLayer === 'addresses' ? 0.35 : 1}
               role="button"
-              aria-label="Computer A MAC Badge"
+              aria-label="Your Computer MAC Badge"
             >
               <rect
                 x="-75"
@@ -749,16 +832,16 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 height="22"
                 rx="4"
                 fill="#020617"
-                stroke={macGlow.a || isHighlighted('mac-a') ? '#F59E0B' : '#1E293B'}
-                strokeWidth={macGlow.a || isHighlighted('mac-a') ? 1.5 : 1}
-                filter={macGlow.a || isHighlighted('mac-a') ? 'url(#goldGlow)' : undefined}
+                stroke={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? '#F59E0B' : '#1E293B'}
+                strokeWidth={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? 1.5 : 1}
+                filter={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? 'url(#goldGlow)' : undefined}
                 className="group-hover:stroke-amber-400 transition-colors"
               />
               <text
                 x="0"
                 y="3.5"
                 textAnchor="middle"
-                fill={macGlow.a || isHighlighted('mac-a') ? '#FCD34D' : '#94A3B8'}
+                fill={activeLayer === 'tags' || macGlow.a || isHighlighted('mac-a') ? '#FCD34D' : '#94A3B8'}
                 fontSize="9.5"
                 fontFamily="ui-monospace, monospace"
                 fontWeight="600"
@@ -777,7 +860,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               fontSize="13"
               fontWeight="600"
             >
-              Computer A (You)
+              Your computer
             </text>
 
             {/* Link Light Status */}
@@ -790,11 +873,11 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               fontFamily="ui-monospace, monospace"
               fontWeight="600"
             >
-              Light: {cables.a ? 'ON' : 'OFF'}
+              Link light: {cables.a ? 'ON' : 'OFF'}
             </text>
           </g>
 
-          {/* ---------------- Computer B (Center: x = 500) ---------------- */}
+          {/* ---------------- Friend's Computer (Center: x = 500) ---------------- */}
           <g id="comp-b-labels" opacity={isDimmed('comp-b') ? 0.35 : 1}>
             {/* Address Tag Pill */}
             {tags.b !== 'hidden' && (
@@ -802,9 +885,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 id="comp-b-tag"
                 transform="translate(500, 50)"
                 onClick={() => onSelectTag?.('b')}
-                className="cursor-pointer group"
+                className="cursor-pointer group transition-opacity duration-300"
+                opacity={activeLayer === 'tags' ? 0.35 : 1}
                 role="button"
-                aria-label="Computer B IP Address Tag"
+                aria-label="Friend's Computer IP Address Tag"
               >
                 <rect
                   x="-65"
@@ -813,8 +897,8 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   height="26"
                   rx="13"
                   fill="#0F172A"
-                  stroke="#334155"
-                  strokeWidth="1.5"
+                  stroke={activeLayer === 'addresses' ? '#3B82F6' : '#334155'}
+                  strokeWidth={activeLayer === 'addresses' ? 2 : 1.5}
                   className="group-hover:stroke-blue-400 transition-colors"
                 />
                 {tags.b === 'not-set' ? (
@@ -868,9 +952,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 e.stopPropagation();
                 handleMacClick('b');
               }}
-              className="cursor-pointer group"
+              className="cursor-pointer group transition-opacity duration-300"
+              opacity={activeLayer === 'addresses' ? 0.35 : 1}
               role="button"
-              aria-label="Computer B MAC Badge"
+              aria-label="Friend's Computer MAC Badge"
             >
               <rect
                 x="-75"
@@ -879,16 +964,16 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 height="22"
                 rx="4"
                 fill="#020617"
-                stroke={macGlow.b || isHighlighted('mac-b') ? '#F59E0B' : '#1E293B'}
-                strokeWidth={macGlow.b || isHighlighted('mac-b') ? 1.5 : 1}
-                filter={macGlow.b || isHighlighted('mac-b') ? 'url(#goldGlow)' : undefined}
+                stroke={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? '#F59E0B' : '#1E293B'}
+                strokeWidth={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? 1.5 : 1}
+                filter={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? 'url(#goldGlow)' : undefined}
                 className="group-hover:stroke-amber-400 transition-colors"
               />
               <text
                 x="0"
                 y="3.5"
                 textAnchor="middle"
-                fill={macGlow.b || isHighlighted('mac-b') ? '#FCD34D' : '#94A3B8'}
+                fill={activeLayer === 'tags' || macGlow.b || isHighlighted('mac-b') ? '#FCD34D' : '#94A3B8'}
                 fontSize="9.5"
                 fontFamily="ui-monospace, monospace"
                 fontWeight="600"
@@ -898,7 +983,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               </text>
             </g>
 
-            {/* Computer Title (at y = 125, cleanly above monitor at y = 160) */}
+            {/* Computer Title */}
             <text
               x="500"
               y="125"
@@ -907,10 +992,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               fontSize="13"
               fontWeight="600"
             >
-              Computer B (Teammate)
+              Friend’s computer
             </text>
 
-            {/* Link Light Status (at y = 346, centered in gap between stand y=325 and switch y=370) */}
+            {/* Link Light Status */}
             <text
               x="500"
               y="346"
@@ -920,11 +1005,11 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               fontFamily="ui-monospace, monospace"
               fontWeight="600"
             >
-              Light: {cables.b ? 'ON' : 'OFF'}
+              Link light: {cables.b ? 'ON' : 'OFF'}
             </text>
           </g>
 
-          {/* ---------------- Computer C (Right: x = 815) ---------------- */}
+          {/* ---------------- Third Computer (Right: x = 815) ---------------- */}
           <g id="comp-c-labels" opacity={isDimmed('comp-c') ? 0.35 : 1}>
             {/* Address Tag Pill */}
             {tags.c !== 'hidden' && (
@@ -932,9 +1017,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 id="comp-c-tag"
                 transform="translate(815, 68)"
                 onClick={() => onSelectTag?.('c')}
-                className="cursor-pointer group"
+                className="cursor-pointer group transition-opacity duration-300"
+                opacity={activeLayer === 'tags' ? 0.35 : 1}
                 role="button"
-                aria-label="Computer C IP Address Tag"
+                aria-label="Third Computer IP Address Tag"
               >
                 <rect
                   x="-65"
@@ -943,8 +1029,8 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                   height="26"
                   rx="13"
                   fill="#0F172A"
-                  stroke="#334155"
-                  strokeWidth="1.5"
+                  stroke={activeLayer === 'addresses' ? '#3B82F6' : '#334155'}
+                  strokeWidth={activeLayer === 'addresses' ? 2 : 1.5}
                   className="group-hover:stroke-blue-400 transition-colors"
                 />
                 {tags.c === 'not-set' ? (
@@ -998,9 +1084,10 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 e.stopPropagation();
                 handleMacClick('c');
               }}
-              className="cursor-pointer group"
+              className="cursor-pointer group transition-opacity duration-300"
+              opacity={activeLayer === 'addresses' ? 0.35 : 1}
               role="button"
-              aria-label="Computer C MAC Badge"
+              aria-label="Third Computer MAC Badge"
             >
               <rect
                 x="-75"
@@ -1009,16 +1096,16 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
                 height="22"
                 rx="4"
                 fill="#020617"
-                stroke={macGlow.c || isHighlighted('mac-c') ? '#F59E0B' : '#1E293B'}
-                strokeWidth={macGlow.c || isHighlighted('mac-c') ? 1.5 : 1}
-                filter={macGlow.c || isHighlighted('mac-c') ? 'url(#goldGlow)' : undefined}
+                stroke={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? '#F59E0B' : '#1E293B'}
+                strokeWidth={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? 1.5 : 1}
+                filter={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? 'url(#goldGlow)' : undefined}
                 className="group-hover:stroke-amber-400 transition-colors"
               />
               <text
                 x="0"
                 y="3.5"
                 textAnchor="middle"
-                fill={macGlow.c || isHighlighted('mac-c') ? '#FCD34D' : '#94A3B8'}
+                fill={activeLayer === 'tags' || macGlow.c || isHighlighted('mac-c') ? '#FCD34D' : '#94A3B8'}
                 fontSize="9.5"
                 fontFamily="ui-monospace, monospace"
                 fontWeight="600"
@@ -1037,7 +1124,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               fontSize="13"
               fontWeight="600"
             >
-              Computer C (New Desk)
+              Third computer
             </text>
 
             {/* Link Light Status */}
@@ -1050,7 +1137,7 @@ export const PhysicalSwitchCanvas: React.FC<PhysicalSwitchCanvasProps> = ({
               fontFamily="ui-monospace, monospace"
               fontWeight="600"
             >
-              Light: {cables.c ? 'ON' : 'OFF'}
+              Link light: {cables.c ? 'ON' : 'OFF'}
             </text>
           </g>
 

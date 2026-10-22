@@ -12,6 +12,7 @@ export interface Day2GuidedTerminalProps {
   stageState?: Day2StageState;
   suggestedChips?: string[];
   currentRungId?: string;
+  isCBlocked?: boolean;
   onCommandRun?: (
     command: string,
     outcome: 'reply' | 'cannot-send' | 'unreachable' | 'timed-out' | 'arp' | 'ipconfig'
@@ -39,6 +40,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
   stageState,
   suggestedChips,
   currentRungId = 'c1-r4',
+  isCBlocked = true,
   onCommandRun,
   className = '',
 }) => {
@@ -157,7 +159,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
     if (lower === 'arp -a' || lower === 'arp') {
       const entries = stageState?.arpTable && stageState.arpTable.length > 0
         ? stageState.arpTable
-        : [{ ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' as const }];
+        : [{ ip: '192.168.1.20', mac: '00-00-5e-00-53-02', type: 'dynamic' as const }];
 
       setHistory((prev) => [
         ...prev,
@@ -168,9 +170,16 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
             { text: 'Interface: 192.168.1.10 --- 0x2' },
             { text: '  Internet Address      Physical Address      Type' },
             ...entries.map((entry) => ({
-              text: `  ${entry.ip.padEnd(22)}${entry.mac.padEnd(22)}${entry.type}`,
+              text: `  ${entry.ip.padEnd(22)}${entry.mac.toLowerCase().padEnd(22)}${entry.type}`,
               isGlowing: true,
             })),
+            { text: '  224.0.0.22            01-00-5e-00-00-16     static', isDimmed: true, tooltip: 'Multicast system entry (dimmed)' },
+            { text: '  224.0.0.251           01-00-5e-00-00-fb     static', isDimmed: true, tooltip: 'Multicast system entry (dimmed)' },
+            { text: '  224.0.0.252           01-00-5e-00-00-fc     static', isDimmed: true, tooltip: 'Multicast system entry (dimmed)' },
+            { text: '  239.255.255.250       01-00-5e-7f-ff-fa     static', isDimmed: true, tooltip: 'Multicast system entry (dimmed)' },
+            { text: '  255.255.255.255       ff-ff-ff-ff-ff-ff     static', isDimmed: true, tooltip: 'Broadcast system entry (dimmed)' },
+            { text: '' },
+            { text: '  (Entries are learned automatically. This notebook forgets entries after a while).', isDimmed: true },
           ],
         },
       ]);
@@ -207,7 +216,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
         return;
       }
 
-      // Ping to Computer B (192.168.1.20)
+      // Ping to Friend's computer (192.168.1.20)
       if (target === '192.168.1.20') {
         if (!stageState?.cables.b) {
           setHistory((prev) => [
@@ -256,7 +265,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
         return;
       }
 
-      // Ping to Computer C (192.168.1.30)
+      // Ping to Third computer (192.168.1.30)
       if (target === '192.168.1.30') {
         const isCPortDown = !stageState?.cables.c;
         const tagC = stageState?.tags.c;
@@ -286,8 +295,9 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
           return;
         }
 
-        // Silent machine scenario on C4 Rung 2: Request timed out
-        if (currentRungId === 'c4-r2') {
+        // Silent machine scenario (firewall blocking ping echo): Request timed out
+        const shouldTimeOut = currentRungId === 'c4-r2' || (currentRungId === 'c4-r5' && isCBlocked !== false);
+        if (shouldTimeOut) {
           setHistory((prev) => [
             ...prev,
             {
@@ -310,7 +320,7 @@ export const Day2GuidedTerminal: React.FC<Day2GuidedTerminalProps> = ({
           return;
         }
 
-        // C is healthy
+        // Third computer is healthy and ping unblocked
         setHistory((prev) => [
           ...prev,
           {

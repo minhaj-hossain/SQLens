@@ -86,7 +86,7 @@
 - **S1 (C1 Rung 4):** The exact words differ between Windows versions, and on Linux. The meaning is the same: nothing was sent.
 - **S2 (C1 Rung 6):** On a fast connection, Windows may show time<1ms instead of time=1ms. It means the same thing: very quick.
 - **S3 (C2 Rung 3):** A real computer with no address often gives itself a temporary one. A later day covers that. In this lab, no address means no sending.
-- **S4 (C2 Rung 4):** In this lab, two computers on one cable talk only when their first three numbers match. That is true here. Day 2 explains the full rule, and why it is three numbers in this lab.
+- **S4 (C2 Rung 4):** In this lab, two computers on one cable talk only when their first three numbers match. That is true here. A later day explains the full rule, and why it is three numbers in this lab.
 - **S5 (C3 Rung 2):** The lab slows things down so you can see them. A real cable moves messages far faster.
 - **S6 (C3 Rung 3):** Windows still prints Received = 4 and 0% loss under this result. Ignore that line. Nobody answered. Linux words this message differently.
 - **S7 (C3 Rung 4):** On Linux the command is ip a. We show it at the end of Day 1.

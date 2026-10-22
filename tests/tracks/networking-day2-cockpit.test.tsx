@@ -102,7 +102,7 @@ describe('Day2CockpitView & Routing Integration', () => {
     );
 
     expect(html).toContain('Day 2');
-    expect(html).toContain('Concept 1: Three computers and a switch');
+    expect(html).toContain('Concept 1: Three computers need a switch');
     expect(html).toContain('aria-label="Progress Rail"');
     expect(html).toContain('My Words');
   });
@@ -119,17 +119,16 @@ describe('Day2CockpitView & Routing Integration', () => {
     // Canvas & Switch
     expect(html).toContain('data-testid="physical-switch-canvas"');
     expect(html).toContain('4-PORT ACCESS SWITCH');
-    expect(html).toContain('Shared Star Topology');
 
-    // Computers A, B, C
-    expect(html).toContain('Computer A (You)');
-    expect(html).toContain('Computer B (Teammate)');
-    expect(html).toContain('Computer C (New Desk)');
+    // Computers: Your computer, Friend's computer, Third computer
+    expect(html).toContain('Your computer');
+    expect(html).toContain('Friend’s computer');
+    expect(html).toContain('Third computer');
 
-    // Factory MAC Badges
-    expect(html).toContain('MAC: 00-1A-2B-3C-4D-10');
-    expect(html).toContain('MAC: 00-1A-2B-3C-4D-20');
-    expect(html).toContain('MAC: 00-1A-2B-3C-4D-30');
+    // Factory MAC Badges (RFC 7042 documentation addresses)
+    expect(html).toContain('00-00-5e-00-53-01');
+    expect(html).toContain('00-00-5e-00-53-02');
+    expect(html).toContain('00-00-5e-00-53-03');
   });
 
   it('renders the 5-Second Test card layout: Look, Story, Your turn (DO/WHY/EXPECT)', () => {

@@ -1,6 +1,6 @@
 // src/content/networking/modules/net-02-day2.ts
 // Networking Module 2, Day 2: The Shared Wire (Complete 23-Rung Curriculum)
-// Strictly adheres to GLOBAL_SPEC.md and DAY_2_THE_SHARED_WIRE.md
+// Carefully structured with thorough explanations, zero jargon, and authentic diagnostic workflows.
 
 import type {
   Day2ConceptDefinition,
@@ -16,44 +16,44 @@ export const DAY2_VOCABULARY: Record<string, Day2VocabularyTerm> = {
     firstShownSentence:
       'A box with many sockets that connects multiple computers together is called a switch.',
     tooltip:
-      'A device with numbered ports that connects multiple computers on the same street.',
-    myWordsEntry: 'Switch: connects multiple computers together.',
+      'A central hardware box with numbered sockets (ports) that connects computers together on the same street.',
+    myWordsEntry: 'Switch: connects multiple computers together on one local network.',
+  },
+  port: {
+    term: 'port',
+    introducedAt: 'c1-r1',
+    firstShownSentence:
+      'Each physical socket on the switch where you plug in a network cable is called a port.',
+    tooltip:
+      'A numbered physical socket on a switch or computer where a network cable plugs in.',
+    myWordsEntry: 'Port: a physical socket for a network cable.',
   },
   'mac address': {
     term: 'MAC address',
     introducedAt: 'c2-r1',
     firstShownSentence:
-      'Inside each network card is a permanent hardware badge, called a MAC address.',
+      'Inside each network card is a permanent hardware name tag, called a MAC address.',
     tooltip:
-      "A computer's permanent hardware identifier, burned in at the factory.",
-    myWordsEntry: 'MAC address: permanent hardware badge.',
-  },
-  'subnet mask': {
-    term: 'subnet mask',
-    introducedAt: 'c2-r3',
-    firstShownSentence:
-      'The rule that says which numbers belong to the street is called the subnet mask.',
-    tooltip:
-      'A setting (like 255.255.255.0) that tells your computer how long the street name is.',
-    myWordsEntry: 'Subnet mask: tells which numbers are the street.',
+      "A computer's hardware name tag built in at the factory, written as six pairs of characters.",
+    myWordsEntry: 'MAC address: permanent hardware name tag.',
   },
   broadcast: {
     term: 'broadcast',
     introducedAt: 'c3-r1',
     firstShownSentence:
-      'Sending one message to every computer in the room is called a broadcast.',
+      'Sending one message out to every computer in the room is called a broadcast.',
     tooltip:
-      'A message sent to all computers connected to the same switch.',
-    myWordsEntry: 'Broadcast: sending to everyone in the room.',
+      'A message delivered to every socket connected to the switch.',
+    myWordsEntry: 'Broadcast: shouting to everyone connected to the switch.',
   },
   arp: {
     term: 'ARP',
     introducedAt: 'c3-r2',
     firstShownSentence:
-      'The question that asks “who has this IP address?” is called ARP.',
+      'The roll-call question asking “who has this IP address?” is called ARP.',
     tooltip:
-      'The roll call a computer uses to discover who owns an IP address.',
-    myWordsEntry: 'ARP: asks who owns an IP address.',
+      'The roll-call method a computer uses to discover which name tag owns an IP address.',
+    myWordsEntry: 'ARP: roll call that asks who owns an IP address.',
   },
   'arp table': {
     term: 'ARP table',
@@ -61,17 +61,17 @@ export const DAY2_VOCABULARY: Record<string, Day2VocabularyTerm> = {
     firstShownSentence:
       'The computer writes down who answered in its local address book, called the ARP table.',
     tooltip:
-      'A temporary address book matching IP addresses to MAC hardware badges.',
-    myWordsEntry: 'ARP table: local address book of IP to MAC.',
+      'A temporary local notebook matching IP addresses to MAC hardware name tags.',
+    myWordsEntry: 'ARP table: local notebook matching IP addresses to MAC name tags.',
   },
   'request timed out': {
     term: 'request timed out',
     introducedAt: 'c4-r2',
     firstShownSentence:
-      'Your message left the computer, but nobody replied before time ran out. That result is called request timed out.',
+      'Your message reached the destination, but no answer came back before the timer expired. That result is called request timed out.',
     tooltip:
-      'Your ping was sent, but the target did not answer before the timer expired.',
-    myWordsEntry: 'Request timed out: sent, but no answer came back.',
+      'The destination machine is connected and received the ping, but did not reply back.',
+    myWordsEntry: 'Request timed out: target is connected, but gave no answer.',
   },
 };
 
@@ -85,9 +85,9 @@ const BASE_STAGE: Day2StageState = {
     c: { street: '192.168.1', house: '30', split: true },
   },
   macBadges: {
-    a: '00-1A-2B-3C-4D-10',
-    b: '00-1A-2B-3C-4D-20',
-    c: '00-1A-2B-3C-4D-30',
+    a: '00-00-5e-00-53-01',
+    b: '00-00-5e-00-53-02',
+    c: '00-00-5e-00-53-03',
   },
   macGlow: { a: false, b: false, c: false },
   bands: 'shown',
@@ -98,57 +98,58 @@ const BASE_STAGE: Day2StageState = {
   dim: [],
   lookInside: null,
   stopwatch: null,
+  activeLayer: 'sockets',
   arpTable: [],
 };
 
-// ============================================================================
-// CONCEPT 1: THREE COMPUTERS AND A SWITCH (6 rungs, ~13 min)
-// ============================================================================
+// =============================================================================
+// CONCEPT 1: Three computers need a switch (6 Rungs)
+// Hook: How do three computers share one connection?
+// Words introduced: switch, port
+// =============================================================================
 const CONCEPT_1_RUNGS: Day2Rung[] = [
   {
     id: 'c1-r1',
     conceptNumber: 1,
     rungNumber: 1,
     layoutState: 'STATE_A',
-    title: 'A third computer arrives',
+    title: 'The three-computer problem',
     timeEstimate: '2 min',
-    newWords: ['switch'],
-    look: 'Look at Computer C on the far right.',
+    newWords: ['switch', 'port'],
+    look: 'On Day 1, two computers talked through a single cable plugged directly between them. Now look at the desk: a third computer has arrived. A normal network cable has only two ends, and each computer has only one network socket. You cannot physically split one cable to reach two different desks.',
     story:
-      'A teammate joined your desk. Now there are three computers. A single cable can only connect two machines.',
-    doText: 'Look at the desk and notice three computers sitting side by side.',
-    whyText: 'To see why two machines were simple, but three require something new.',
-    expectText: 'Computer C appears on the right side of the desk.',
-    meaningText: 'One cable has only two ends. Three computers need a shared meeting point.',
-    nextHook: 'How do three computers connect together?',
-    lockMessage: 'Take in the three computers to continue.',
+      'To let three or more computers share one local network without running separate cables between every pair, all machines plug into a central meeting box. A box with many sockets that connects multiple computers together is called a switch. Each physical socket on the switch where you plug in a network cable is called a port.',
+    meaningText:
+      'The switch sits at the center of the room. Every computer runs one cable directly to an open port on the switch.',
+    doText: 'Click the switch box in the center of the desk to inspect its ports.',
+    whyText: 'Observing the switch physically grounds how computers meet at a central point.',
+    expectText: 'The switch highlights and you see its numbered ports clearly.',
+    nextHook: 'Let us inspect the switch up close and see how its ports work.',
+    lockMessage: 'Click the switch on the desk to inspect its ports.',
     check: {
-      type: 'understand',
-      question: 'Why can two computers use one cable, but three computers cannot?',
-      options: [
-        {
-          id: 'c1r1-opt-a',
-          label: 'A standard cable has only two plugs, so it can only join two ports.',
-          isCorrect: true,
-          feedback:
-            'Exactly! A single patch cable only has two ends. You need a central box for more machines.',
-        },
-        {
-          id: 'c1r1-opt-b',
-          label: 'Computer C uses a different electrical voltage.',
-          isCorrect: false,
-          feedback: 'All computers use standard signals. The physical limitation is the two cable ends.',
-        },
-      ],
+      type: 'task',
     },
     hints: [
-      { level: 1, label: 'Look at the cable ends', text: 'Count how many plugs a regular cable has.' },
-      { level: 2, label: 'Two into three', text: 'A single wire cannot plug into three sockets at once.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Observation',
+        text: 'Look at the center of the desk between the computers.',
+      },
+      {
+        level: 2,
+        label: 'Action',
+        text: 'Click on the dark rectangular switch box in the middle of the screen.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Click directly on the switch body to inspect its numbered ports.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
-      highlight: ['comp-c'],
+      highlight: ['switch-box'],
+      activeLayer: 'sockets',
     },
   },
   {
@@ -156,34 +157,70 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
     conceptNumber: 1,
     rungNumber: 2,
     layoutState: 'STATE_A',
-    title: 'Meet the switch',
+    title: 'Inside the switch ports',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Look at the small box in the middle of the desk.',
+    look: 'Notice the row of numbered sockets on the front panel: [1], [2], [3], and [4]. Right above each port is a small link light. Right now, all four link lights are dark because no cables are plugged into the switch yet.',
     story:
-      'A box with many sockets that connects multiple computers together is called a switch. It has four numbered ports.',
-    doText: 'Click the switch box to inspect its numbered ports.',
-    whyText: 'To see where each computer connects into the network.',
-    expectText: 'Port 1, Port 2, Port 3, and Port 4 glow brightly.',
-    meaningText: 'Each computer gets its own cable running into one port on the switch.',
-    nextHook: 'Let us connect each computer to its port.',
-    lockMessage: 'Click the switch box to inspect the ports.',
-    simplified: {
-      id: 's1',
-      text: 'Real switches have 8, 24 or 48 ports. This lab uses 4 ports so the screen stays clear.',
-    },
+      'Each port on the switch acts as an independent connection point. When you plug a cable in, the switch and the computer test the electrical wire. If both ends are seated securely, the link light turns green, just like the link light on the back of your computer did on Day 1.',
+    doText: 'Observe the four ports on the switch.',
+    whyText:
+      'Understanding how ports are numbered helps you track which computer connects to which socket.',
+    expectText: 'Notice that Port 4 is an extra open port, ready for another machine.',
+    nextHook: 'Let us plug all three computers into the switch.',
+    lockMessage: 'Answer the question about the switch ports to continue.',
     check: {
-      type: 'task',
-      expectedCommand: 'click-switch',
+      type: 'understand',
+      question: 'What do the numbers [1] through [4] on the switch represent?',
+      options: [
+        {
+          id: 'opt-ports',
+          label: 'Numbered sockets (ports) where network cables plug in',
+          isCorrect: true,
+          feedback:
+            'Exactly right. Each number marks an individual port where a computer can plug into the shared network.',
+        },
+        {
+          id: 'opt-priority',
+          label: 'The priority order of which computer gets the fastest internet',
+          isCorrect: false,
+          feedback:
+            'All ports on a modern switch run at equal speed. The numbers are simply physical labels for the sockets.',
+        },
+        {
+          id: 'opt-version',
+          label: 'The version number of the switch software',
+          isCorrect: false,
+          feedback:
+            'These are physical port numbers, just like numbered doors on an office floor.',
+        },
+      ],
     },
     hints: [
-      { level: 1, label: 'Find the center box', text: 'The dark metal box with 4 sockets sits between the desks.' },
-      { level: 2, label: 'Click to inspect', text: 'Click anywhere on the switch box.' },
-      { level: 3, label: 'Direct action', text: 'Click the switch in the center of the canvas.' },
+      {
+        level: 1,
+        label: 'Think about physical sockets',
+        text: 'Where do network cables connect to a switch?',
+      },
+      {
+        level: 2,
+        label: 'Review the story',
+        text: 'Each physical socket where you plug in a cable is called a port.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating they are numbered sockets where network cables plug in.',
+      },
     ],
+    simplified: {
+      id: 's1',
+      text: 'Real switches in business offices often have 8, 24, or 48 ports. This lab uses 4 ports so the screen remains clear and easy to read.',
+    },
     entryStageState: {
       ...BASE_STAGE,
       highlight: ['switch-box'],
+      activeLayer: 'sockets',
     },
   },
   {
@@ -191,31 +228,44 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
     conceptNumber: 1,
     rungNumber: 3,
     layoutState: 'STATE_A',
-    title: 'Plug all three computers in',
+    title: 'Connecting all three machines',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Look at the loose cables on the desk.',
+    look: 'Three computers sit on the desk: Your computer on the left, Friend’s computer in the middle, and Third computer on the right. Their cables are currently unplugged and lying on the desk.',
     story:
-      'Each computer needs a cable connected to the switch.',
-    doText: 'Click the cables to plug Computer A to Port 1, B to Port 2, and C to Port 3.',
-    whyText: 'To complete the physical link for all three machines.',
-    expectText: 'Port lights 1, 2, and 3 turn solid green.',
-    meaningText: 'All three computers are physically linked through the switch.',
-    nextHook: 'Now that everyone is connected, can we ping through the switch?',
-    lockMessage: 'Plug all three computers into the switch.',
+      'We need to connect all three computers to the switch. Your computer will plug into Port 1, Friend’s computer into Port 2, and Third computer into Port 3. Once connected, each machine has an unbroken electrical path into the switch.',
+    doText: 'Click the cables to plug all three computers into the switch.',
+    whyText:
+      'A computer cannot send or receive signals until its physical wire is firmly seated in a port.',
+    expectText:
+      'Watch the link lights above Port 1, Port 2, and Port 3 turn solid green.',
+    nextHook: 'Now that everyone is plugged in, let us test the connection with a ping.',
+    lockMessage: 'Click the cables or the Connect All button to link all three computers.',
     check: {
       type: 'task',
-      expectedCommand: 'plug-all',
     },
     hints: [
-      { level: 1, label: 'Click the cables', text: 'Click the loose cables on the desk to seat them into the switch ports.' },
-      { level: 2, label: 'Check the lights', text: 'Make sure all three port LEDs illuminate green.' },
-      { level: 3, label: 'Direct action', text: 'Click the Connect All Cables button on the stage.' },
+      {
+        level: 1,
+        label: 'Observation',
+        text: 'Look at the loose cable ends resting near the switch ports.',
+      },
+      {
+        level: 2,
+        label: 'Action',
+        text: 'Click on each unplugged cable to seat it into its corresponding switch port.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Click the loose cables or click Connect All to light up Ports 1, 2, and 3.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: false, b: false, c: false },
       portLeds: { p1: 'off', p2: 'off', p3: 'off', p4: 'off' },
+      activeLayer: 'sockets',
     },
   },
   {
@@ -223,40 +273,51 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
     conceptNumber: 1,
     rungNumber: 4,
     layoutState: 'STATE_B',
-    title: 'Ping through the switch',
+    title: 'Pinging through the switch',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Look at Computer B (192.168.1.20).',
+    look: 'All three link lights on the switch are solid green. Your computer has address 192.168.1.10. Friend’s computer has address 192.168.1.20. Both are on the 192.168.1 street.',
     story:
-      'Computer A can now send messages to Computer B through the switch.',
+      'On Day 1, a ping traveled straight across one direct cable. Now, your message must travel out of your computer, enter Port 1 on the switch, and cross over to Port 2 where Friend’s computer is listening. Let us test if messages can cross the switch.',
     doText: 'Type ping 192.168.1.20 and press Enter.',
-    whyText: 'To test reachability across the switch.',
-    expectText: 'Reply from 192.168.1.20: bytes=32 time=1ms.',
-    meaningText: 'The switch forwarded your ping directly to Computer B.',
-    nextHook: 'Did Computer C see that message too?',
+    whyText: 'This verifies that the switch successfully moves messages between two connected ports.',
+    expectText: 'Four replies will return with time=1ms, confirming the path works.',
+    nextHook: 'While your ping traveled to Friend’s computer, what happened to Third computer?',
     lockMessage: 'Run ping 192.168.1.20 in the terminal.',
-    lookInside: {
-      id: 'l1',
-      title: 'Inside the switch',
-      chipBeside: 'Switch chip',
-      pictureDescription: 'A microchip with memory paths forwarding traffic between ports.',
-      text:
-        'A switch has a microchip that remembers which computer is plugged into each port. It only sends messages to the port that needs them, keeping the other cables quiet.',
-    },
     check: {
       type: 'task',
       expectedCommand: 'ping 192.168.1.20',
       allowedTargets: ['192.168.1.20'],
     },
     hints: [
-      { level: 1, label: 'Type the command', text: 'Type ping 192.168.1.20 or press Tab.' },
-      { level: 2, label: 'Press Enter', text: 'Hit Enter to send the test knock through Port 1 to Port 2.' },
-      { level: 3, label: 'Direct command', text: 'Run: ping 192.168.1.20' },
+      {
+        level: 1,
+        label: 'Check the prompt',
+        text: 'Your computer is on the left at 192.168.1.10. Friend’s computer is at 192.168.1.20.',
+      },
+      {
+        level: 2,
+        label: 'Command help',
+        text: 'Type ping 192.168.1.20 or click the suggested command chip.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Press Tab to autofill ping 192.168.1.20 and press Enter.',
+      },
     ],
+    lookInside: {
+      id: 'l1',
+      title: 'Inside the switch',
+      chipBeside: 'Processor & Memory',
+      pictureDescription: 'Inside a switch showing internal microchip connecting ports.',
+      text: 'A switch is not just dumb plastic and metal. Inside is a specialized computer chip that inspects incoming messages. It checks where each message needs to go and forwards it only to the intended port, keeping the other cables completely free.',
+    },
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      activeLayer: 'addresses',
     },
   },
   {
@@ -264,148 +325,199 @@ const CONCEPT_1_RUNGS: Day2Rung[] = [
     conceptNumber: 1,
     rungNumber: 5,
     layoutState: 'STATE_A',
-    title: 'Prediction: Does Computer C see the ping?',
+    title: 'Does Third computer see the ping?',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Look at Computer C on Port 3 while Computer A pings Computer B.',
+    look: 'Look at the three cables. Your computer is plugged into Port 1. Friend’s computer is plugged into Port 2. Third computer is plugged into Port 3.',
     story:
-      'Computer A sent a message meant only for Computer B.',
-    doText: 'Predict whether Computer C receives the ping message.',
-    whyText: 'To understand how a switch handles private conversation.',
-    expectText: 'The ping travels through Port 1 directly to Port 2. Port 3 stays quiet.',
-    meaningText: 'A switch forwards private messages only to the intended recipient.',
-    nextHook: 'Why can we not just tie three wires together?',
-    lockMessage: 'Answer the prediction to continue.',
+      'When your ping traveled across the switch, it went directly from Port 1 to Port 2. The switch did not send your ping to Port 3. Third computer heard nothing, and its cable remained completely quiet and free for other work. (Before the ping, an automatic roll call was sent to everyone to find Friend’s computer, which Concept 3 explains in detail; but the ping message itself traveled only to Friend’s computer.)',
+    meaningText:
+      'A switch isolates traffic: when two computers talk, other computers plugged into the switch do not receive their private messages.',
+    nextHook: 'What would happen if our team grew and we needed to add a fourth computer?',
+    lockMessage: 'Answer the question about traffic isolation to continue.',
     check: {
-      type: 'predict',
-      question: 'Did the ping message travel across Computer C’s cable?',
+      type: 'understand',
+      question:
+        'When Your computer sent the ping to Friend’s computer (192.168.1.20), did Third computer on Port 3 receive the ping message?',
       options: [
         {
-          id: 'c1r5-opt-a',
-          label: 'No. The switch sends it only to Computer B.',
+          id: 'opt-no-isolation',
+          label: 'No. The switch delivered the ping directly to Port 2, leaving Port 3 quiet.',
           isCorrect: true,
           feedback:
-            'Exactly! A switch is smart. It delivers messages only to the computer that needs them, keeping Computer C’s wire free.',
+            'Correct! A switch directs messages specifically to the recipient’s port. Third computer never receives the ping.',
         },
         {
-          id: 'c1r5-opt-b',
-          label: 'Yes. All messages go to all computers on the desk.',
+          id: 'opt-yes-all',
+          label: 'Yes. Every message sent into a switch is copied and sent out of all ports.',
           isCorrect: false,
           feedback:
-            'Older boxes called hubs used to do that, but switches keep private messages strictly on the destination port.',
+            'Older, obsolete devices called hubs used to do that, but modern switches do not. A switch forwards the ping only to the port where the destination computer is connected.',
+        },
+        {
+          id: 'opt-broken',
+          label: 'No, but only because Third computer’s cable was broken.',
+          isCorrect: false,
+          feedback:
+            'Third computer’s cable is plugged in and healthy (Port 3 light is green). The switch intentionally kept the message away from Port 3 because it was addressed to Friend’s computer.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'Think about privacy', text: 'Does Computer C need to hear messages sent to Computer B?' },
-      { level: 2, label: 'Switch behavior', text: 'A switch sends traffic only to the port where the destination lives.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Review the story',
+        text: 'The story explains that the ping went directly from Port 1 to Port 2.',
+      },
+      {
+        level: 2,
+        label: 'Consider the purpose of a switch',
+        text: 'Switches keep conversations private between the sender and recipient ports.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating No, the switch delivered the ping directly to Port 2.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       message: 'ping-a-b',
+      activeLayer: 'sockets',
     },
   },
   {
     id: 'c1-r6',
     conceptNumber: 1,
     rungNumber: 6,
-    layoutState: 'STATE_F',
-    title: 'Mastery check: Why do we need a switch?',
+    layoutState: 'STATE_A',
+    title: 'Adding a fourth computer',
     timeEstimate: '3 min',
     newWords: [],
-    look: 'Look at the 3-computer star layout on the desk.',
+    look: 'Take a close look at the switch faceplate again. Ports 1, 2, and 3 are currently in use. Port 4 is empty, with its link light off.',
     story:
-      'You connected three computers and watched the switch route traffic cleanly.',
-    doText: 'Choose the true reason three computers need a central switch.',
-    whyText: 'To cement the physical necessity of central port boxes.',
-    expectText: 'Confirmation of the star layout principle.',
-    meaningText: 'A switch bridges multiple point-to-point links into one shared room.',
-    nextHook: 'How does the switch know which machine is which?',
-    lockMessage: 'Answer the mastery check to unlock Concept 2.',
+      'Imagine a new teammate arrives tomorrow with a fourth computer. Because we installed a switch with four ports, we do not need to replace our cables or rewire the office. We simply run one new cable from the new computer into the switch’s open Port 4.',
+    doText: 'Consider what equipment is required to connect a fourth computer to this network.',
+    whyText: 'This checks your understanding of how a switch enables modular network growth.',
+    expectText: 'Connect your mental model of ports to real workplace network expansion.',
+    nextHook:
+      'The switch sent our ping right to Port 2. But how did the switch know which socket Friend’s computer was plugged into?',
+    lockMessage: 'Select the correct answer to complete Concept 1.',
     check: {
       type: 'understand',
-      question: 'Why can’t three computers talk using only one regular cable?',
+      question:
+        'A teammate brings a fourth computer to the desk. What do you need to connect them to the network?',
       options: [
         {
-          id: 'c1r6-opt-a',
-          label: 'A cable has only two ends, so three computers need a central box with multiple ports.',
+          id: 'opt-fourth-port',
+          label: 'One network cable to plug the new computer into the switch’s unused Port 4',
           isCorrect: true,
           feedback:
-            'Spot on! Each cable connects one computer to one port on the switch.',
+            'Exactly! Switches make network growth simple: just plug the new machine into any available port.',
         },
         {
-          id: 'c1r6-opt-b',
-          label: 'Cables only carry electricity in one direction.',
+          id: 'opt-replace-switch',
+          label: 'A completely new switch, because switches can only connect three computers',
           isCorrect: false,
-          feedback: 'Network cables carry data in both directions. The limitation is having only two physical ends.',
+          feedback:
+            'Our switch has 4 ports! Port 4 is still open and ready for a new machine.',
         },
         {
-          id: 'c1r6-opt-c',
-          label: 'Computer C requires wireless signals.',
+          id: 'opt-direct-cables',
+          label: 'Three separate cables running directly to each existing computer',
           isCorrect: false,
-          feedback: 'All three workstations are wired computers.',
+          feedback:
+            'That is the messy web we avoided by using a switch! The new computer only needs one cable to the switch.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'Physical ends', text: 'Think about how many plugs are on a cable.' },
-      { level: 2, label: 'Central hub', text: 'A central box is needed when you have more than two machines.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Check open ports',
+        text: 'How many unused ports are on the switch right now?',
+      },
+      {
+        level: 2,
+        label: 'One cable per machine',
+        text: 'Each computer only needs one cable connecting to an open port.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Choose the option mentioning one network cable plugged into Port 4.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      activeLayer: 'sockets',
     },
   },
 ];
 
-// ============================================================================
-// CONCEPT 2: THE HARDWARE BADGE (MAC ADDRESS) (5 rungs, ~12 min)
-// ============================================================================
+// =============================================================================
+// CONCEPT 2: Every computer has a name tag (5 Rungs)
+// Hook: How does the switch know which socket Friend's computer is on?
+// Words introduced: MAC address
+// =============================================================================
 const CONCEPT_2_RUNGS: Day2Rung[] = [
   {
     id: 'c2-r1',
     conceptNumber: 2,
     rungNumber: 1,
     layoutState: 'STATE_A',
-    title: 'Meet the hardware badge',
+    title: 'The hardware name tag',
     timeEstimate: '2 min',
     newWords: ['mac address'],
-    look: 'Look at the badge below each computer’s IP address.',
+    look: 'In Concept 1, we asked: How does the switch know which socket Friend’s computer is on? Look at each computer on the stage. Beneath each monitor, you can now see a new hardware badge.',
     story:
-      'Inside each network card is a permanent hardware badge, called a MAC address. It was burned in at the factory.',
-    doText: 'Click Computer A’s hardware badge to read 00-1A-2B-3C-4D-10.',
-    whyText: 'Every network card in the world has a unique hardware identity.',
-    expectText: 'Computer A’s hardware badge glows amber.',
-    meaningText: 'IP is your postal street address; MAC is your physical fingerprint badge.',
-    nextHook: 'What happens if you move your computer to a new room?',
-    lockMessage: 'Click Computer A’s hardware badge to inspect it.',
-    lookInside: {
-      id: 'l2',
-      title: 'Why both IP and MAC?',
-      chipBeside: 'Identity comparison',
-      pictureDescription: 'A government ID card side-by-side with a home envelope address.',
-      text:
-        'Think of MAC as your National ID card (who you are permanently) and IP as your postal address (where you currently live). You need both so messages find your street and verify who receives them.',
-    },
+      'Every network card built in a factory is stamped with a unique physical identity badge. Inside each network card is a permanent hardware name tag, called a MAC address. While an IP address is like a street address that can change when you move, your MAC address is like your physical name tag: it identifies the hardware itself.',
+    doText: 'Click on Your computer’s hardware name tag badge to inspect it.',
+    whyText: 'Learning to identify hardware name tags shows you how the switch distinguishes computers physically.',
+    expectText: 'Notice the badge showing 00-00-5e-00-53-01.',
+    nextHook: 'Let us inspect the formatting and structure of these hardware badges.',
+    lockMessage: 'Click the hardware name tag badge on Your computer.',
     check: {
       type: 'task',
-      expectedCommand: 'inspect-mac-a',
     },
     hints: [
-      { level: 1, label: 'Find the amber badge', text: 'Look right below the IP address label on Computer A.' },
-      { level: 2, label: 'Click the badge', text: 'Click the badge reading 00-1A-2B-3C-4D-10.' },
-      { level: 3, label: 'Direct action', text: 'Click Computer A’s hardware badge on the stage.' },
+      {
+        level: 1,
+        label: 'Observation',
+        text: 'Look right under the IP address tag on the left computer (Your computer).',
+      },
+      {
+        level: 2,
+        label: 'Action',
+        text: 'Click on the small badge labeled MAC: 00-00-5e-00-53-01.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Click the MAC badge on Your computer to complete this inspection.',
+      },
     ],
+    simplified: {
+      id: 's2',
+      text: 'Although MAC addresses are stamped into the hardware at the factory, modern operating systems and software can override them (called MAC spoofing). In everyday networking, however, they represent the machine’s physical identity.',
+    },
+    lookInside: {
+      id: 'l2',
+      title: 'Why do we need both an IP and a MAC?',
+      chipBeside: 'Identity vs Location',
+      pictureDescription: 'Comparison of a person’s National ID badge versus their home postal address.',
+      text: 'Think of your MAC address as your National ID card: it proves who you are no matter where you travel. Your IP address is your postal address: it tells everyone which street and desk you are sitting at today. You need the postal address to find the neighborhood, and the name tag to hand the message to the right machine.',
+    },
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       highlight: ['mac-a'],
+      activeLayer: 'tags',
     },
   },
   {
@@ -413,93 +525,134 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
     conceptNumber: 2,
     rungNumber: 2,
     layoutState: 'STATE_A',
-    title: 'IP vs MAC comparison',
+    title: 'Reading the badges',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Compare the two labels above Computer A.',
+    look: 'Compare the three hardware badges on the screen: Your computer has 00-00-5e-00-53-01. Friend’s computer has 00-00-5e-00-53-02. Third computer has 00-00-5e-00-53-03.',
     story:
-      'IP addresses can be changed anytime. A MAC address belongs to the physical card and never changes.',
-    doText: 'Consider what changes when a computer moves to a new building.',
-    whyText: 'To understand why computers have two distinct kinds of addresses.',
-    expectText: 'Clear separation between local street location and permanent hardware identity.',
-    meaningText: 'You change postal addresses when moving homes, but keep your passport identity.',
-    nextHook: 'How does a computer know which part of the IP is the street?',
-    lockMessage: 'Answer the comparison check to continue.',
-    simplified: {
-      id: 's2',
-      text: 'MAC addresses are written in hex numbers (0-9 and A-F). Day 2 only asks you to match them, not calculate hex.',
-    },
+      'MAC addresses are written as six pairs of hexadecimal characters separated by dashes or colons. Hexadecimal uses numbers 0 through 9 and letters a through f. In real life, no two network cards in the world share the same factory MAC address. (The prefix 00-00-5e shown here is the official range reserved for documentation and learning labs by RFC 7042.)',
+    doText: 'Examine the differences between the three hardware name tags.',
+    whyText: 'Knowing how MAC addresses look helps you recognize them instantly in diagnostic tools.',
+    expectText: 'Notice how each machine has a completely distinct hardware badge ending in 01, 02, and 03.',
+    nextHook: 'Now that we know each machine has a name tag, how does the switch learn them?',
+    lockMessage: 'Answer the question about MAC address uniqueness to proceed.',
     check: {
       type: 'understand',
-      question: 'If you move your computer to a new office with a new street, which label changes?',
+      question: 'Which of the following is true about a computer’s MAC address?',
       options: [
         {
-          id: 'c2r2-opt-a',
-          label: 'The IP address changes to match the new street, but the MAC address stays the same.',
+          id: 'opt-mac-hardware',
+          label: 'It is a physical hardware name tag stamped into the network card at the factory.',
           isCorrect: true,
           feedback:
-            'Yes! IP is where you live right now. MAC is who you are permanently.',
+            'Exactly right. The MAC address is the hardware name tag of the network interface itself.',
         },
         {
-          id: 'c2r2-opt-b',
-          label: 'The MAC address changes, but the IP address stays the same.',
+          id: 'opt-mac-street',
+          label: 'It changes automatically whenever you unplug a cable and plug it into another room.',
           isCorrect: false,
-          feedback: 'The MAC address was burned into the chip at the factory and never changes.',
+          feedback:
+            'That is what an IP address does! The hardware MAC address stays with the computer wherever you carry it.',
         },
         {
-          id: 'c2r2-opt-c',
-          label: 'Both labels stay identical forever.',
+          id: 'opt-mac-four',
+          label: 'It is made of four numbers separated by dots, like 192.168.1.10.',
           isCorrect: false,
-          feedback: 'IP addresses must change to match the street of the network they connect to.',
+          feedback:
+            'Four numbers separated by dots is an IPv4 address. A MAC address uses six pairs of characters, like 00-00-5e-00-53-01.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'Permanent vs temporary', text: 'Which badge is burned in at the factory?' },
-      { level: 2, label: 'Moving desks', text: 'Street numbers change when you move; your hardware chip does not.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Recall the definition',
+        text: 'Review the story: what was stamped into the network card at the factory?',
+      },
+      {
+        level: 2,
+        label: 'Compare with IP',
+        text: 'IP addresses change by street. MAC addresses belong to the hardware.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating it is a physical hardware name tag stamped into the network card.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
-      macGlow: { a: true, b: false, c: false },
+      activeLayer: 'tags',
     },
   },
   {
     id: 'c2-r3',
     conceptNumber: 2,
     rungNumber: 3,
-    layoutState: 'STATE_B',
-    title: 'Meet the subnet mask',
+    layoutState: 'STATE_A',
+    title: 'The switch’s notebook',
     timeEstimate: '3 min',
-    newWords: ['subnet mask'],
-    look: 'Look at the line Subnet Mask . . . : 255.255.255.0 in ipconfig.',
+    newWords: [],
+    look: 'Inside the switch is internal memory. Think of it as a small blank notebook. When the switch was first powered on, its notebook was completely empty: it had no idea which computer was plugged into which port.',
     story:
-      'The rule that says which numbers belong to the street is called the subnet mask.',
-    doText: 'Run ipconfig and inspect the Subnet Mask line.',
-    whyText: 'It tells your computer that the first three numbers (192.168.1) are the street.',
-    expectText: 'The Subnet Mask line is bright and glows blue.',
-    meaningText: '255.255.255.0 confirms all three computers are neighbors on the same street.',
-    nextHook: 'When sending a message, what gets written on the envelope?',
-    lockMessage: 'Run ipconfig in the terminal to inspect the mask.',
-    simplified: {
-      id: 's3',
-      text: '255.255.255.0 means the first three numbers are the street. A later day shows other street lengths.',
-    },
+      'Here is the secret of how the switch learns: whenever a computer sends any electrical signal into a port, the switch looks at the sender’s hardware name tag. When Friend’s computer sends a message into Port 2, the switch immediately writes down in its notebook: “Name tag 00-00-5e-00-53-02 is sitting on Port 2.” The switch learns this automatically without any human configuring it.',
+    meaningText:
+      'By listening to the sender’s name tag on incoming messages, the switch builds its own map connecting every name tag to its exact physical socket.',
+    nextHook: 'Now that the switch has a notebook, how do messages travel between computers?',
+    lockMessage: 'Answer the question about how the switch learns port locations.',
     check: {
-      type: 'task',
-      expectedCommand: 'ipconfig',
+      type: 'understand',
+      question:
+        'How does a switch discover that Friend’s computer (00-00-5e-00-53-02) is connected to Port 2?',
+      options: [
+        {
+          id: 'opt-learn-sender',
+          label: 'The switch reads the sender’s name tag whenever Friend’s computer transmits a message into Port 2.',
+          isCorrect: true,
+          feedback:
+            'Correct! The switch inspects the sender address on incoming messages and records which port they arrived on.',
+        },
+        {
+          id: 'opt-manual-entry',
+          label: 'A network administrator had to type every MAC address into the switch before it could work.',
+          isCorrect: false,
+          feedback:
+            'Switches learn automatically! You just plug cables in, and the switch builds its notebook by watching traffic.',
+        },
+        {
+          id: 'opt-guess-port',
+          label: 'The switch guesses randomly and hopes it picks the right port.',
+          isCorrect: false,
+          feedback:
+            'A switch never guesses. It records the exact port where the sender’s electrical signals entered.',
+        },
+      ],
     },
     hints: [
-      { level: 1, label: 'Run the command', text: 'Type ipconfig into the terminal.' },
-      { level: 2, label: 'Find the mask line', text: 'Look under Ethernet adapter for Subnet Mask.' },
-      { level: 3, label: 'Direct command', text: 'Run: ipconfig' },
+      {
+        level: 1,
+        label: 'Think about incoming traffic',
+        text: 'What does a message carry that tells the switch who sent it?',
+      },
+      {
+        level: 2,
+        label: 'Automatic learning',
+        text: 'The switch observes the sender’s MAC address when messages arrive.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating the switch reads the sender’s name tag whenever it transmits a message.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      highlight: ['switch-box'],
+      activeLayer: 'sockets',
     },
   },
   {
@@ -507,177 +660,263 @@ const CONCEPT_2_RUNGS: Day2Rung[] = [
     conceptNumber: 2,
     rungNumber: 4,
     layoutState: 'STATE_A',
-    title: 'Postal address vs Badge',
-    timeEstimate: '2 min',
+    title: 'Nested layers: envelope and letter',
+    timeEstimate: '3 min',
     newWords: [],
-    look: 'Look at the delivery envelope preparing to leave Computer A.',
+    look: 'Every network message is packaged in two nested layers, like a letter inside a mailing envelope. The outer layer is the delivery envelope. The inner layer is the message inside.',
     story:
-      'To deliver a message across a switch, the computer stamps two pieces of delivery information.',
-    doText: 'Identify what Computer A stamps on the outer delivery envelope.',
-    whyText: 'To understand how computers address messages on a shared network.',
-    expectText: 'Both the street IP address and the hardware MAC badge appear on the frame.',
-    meaningText: 'The network needs both: IP for the street, MAC for the specific card.',
-    nextHook: 'Let us match our three key addressing concepts.',
-    lockMessage: 'Answer the envelope addressing check to continue.',
+      'The outer envelope carries the destination’s hardware name tag (MAC address). The switch reads this outer label so it knows which physical port to send the signal out of. Once delivered, the destination computer opens the envelope and reads the inner letter, which contains the street and house number (IP address) and the actual data. This is why both addresses exist: the switch reads the outer name tag to navigate the room, while the computer reads the inner IP address to process the conversation.',
+    meaningText:
+      'Switches only need to read the outer MAC envelope to forward signals to the right wire. Computers read the inner IP letter.',
+    nextHook: 'Let us see what happens when you physically move a computer to a new desk.',
+    lockMessage: 'Answer the question about nested address layers to proceed.',
     check: {
       type: 'understand',
-      question: 'Computer A wants to send a message to Computer B. What does it stamp on the outer delivery envelope?',
+      question: 'Why does a network message need both an outer MAC label and an inner IP letter?',
       options: [
         {
-          id: 'c2r4-opt-a',
-          label: 'Both: Destination IP (the street address) and Destination MAC (the hardware badge).',
+          id: 'opt-layers-purpose',
+          label: 'The switch reads the outer MAC address for physical port delivery; the computer reads the inner IP address.',
           isCorrect: true,
           feedback:
-            'Exactly! The network needs the IP to know the street, and the MAC badge to hand it to the exact machine.',
+            'Precisely right. The switch uses the outer MAC name tag to pick the wire, and the receiving computer uses the inner IP to handle the data.',
         },
         {
-          id: 'c2r4-opt-b',
-          label: 'Only the computer’s nickname.',
+          id: 'opt-redundancy',
+          label: 'It is a duplicate backup in case the first address gets erased by static electricity.',
           isCorrect: false,
-          feedback: 'Hardware network chips do not understand informal nicknames.',
+          feedback:
+            'They serve completely different purposes! The switch navigates locally by MAC, while computers organize communication by IP.',
         },
         {
-          id: 'c2r4-opt-c',
-          label: 'Only the switch port number.',
+          id: 'opt-switch-reads-ip',
+          label: 'The switch only reads the inner IP address and ignores the outer MAC address completely.',
           isCorrect: false,
-          feedback: 'Computers do not know which physical port number another machine is plugged into.',
+          feedback:
+            'A local switch does not look at IP addresses at all. It forwards messages based on the outer MAC name tag.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'Both addresses', text: 'Think about postal delivery: street address plus recipient name.' },
-      { level: 2, label: 'Hardware and software', text: 'Computer A needs both the IP address and the MAC badge.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Think about who reads what',
+        text: 'Who reads the outer envelope? Who opens and reads the letter inside?',
+      },
+      {
+        level: 2,
+        label: 'Review the story',
+        text: 'The switch reads the outer label, and the computer reads the inner letter.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option explaining that the switch reads the outer MAC for port delivery and the computer reads the inner IP.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      activeLayer: 'tags',
     },
   },
   {
     id: 'c2-r5',
     conceptNumber: 2,
     rungNumber: 5,
-    layoutState: 'STATE_F',
-    title: 'Mastery check: Match the terms',
-    timeEstimate: '3 min',
+    layoutState: 'STATE_A',
+    title: 'Moving to a new desk',
+    timeEstimate: '2 min',
     newWords: [],
-    look: 'Review the three addressing terms on your screen.',
+    look: 'Imagine you unplug Third computer (192.168.1.30, MAC 00-00-5e-00-53-03) from this desk, carry the computer down the hall into another department, and plug it into a different network.',
     story:
-      'You learned the three components that define identity on a local network.',
-    doText: 'Match each term to its exact definition.',
-    whyText: 'To ensure you never confuse an IP address, a MAC badge, and a subnet mask.',
-    expectText: 'All three cards match their definitions.',
-    meaningText: 'IP is location, MAC is hardware identity, subnet mask defines street boundaries.',
-    nextHook: 'If Computer A only knows the IP, how does it learn Computer B’s MAC badge?',
-    lockMessage: 'Match all three terms to unlock Concept 3.',
+      'In the new department, the local street is 10.0.0.x instead of 192.168.1.x. To talk to its new neighbors, Third computer must change its IP address to match the new street. But what happens to its hardware name tag? The network card inside the computer did not change, so its MAC address remains 00-00-5e-00-53-03.',
+    doText: 'Consider which address changes when a machine moves locations.',
+    whyText: 'This confirms you can distinguish temporary street addresses from permanent hardware identities.',
+    expectText: 'Connect the physical nature of hardware to the flexibility of network addresses.',
+    nextHook: 'Concept 2 complete! You can take a break here, or continue to Concept 3.',
+    lockMessage: 'Select the correct outcome to finish Concept 2.',
     check: {
-      type: 'sort',
-      sortLabels: ['IP address', 'MAC address', 'Subnet mask'],
-      sortItems: [
+      type: 'understand',
+      question:
+        'You move Third computer to another desk in a different department. Which address changes?',
+      options: [
         {
-          id: 'sort-ip',
-          snippet: 'Where the computer lives on this street.',
-          targetLabel: 'IP address',
+          id: 'opt-ip-changes-mac-stays',
+          label: 'Its IP address changes to match the new street, but its hardware MAC address stays the same.',
+          isCorrect: true,
+          feedback:
+            'Perfect! Your street address changes when you move to a new building, but your physical identity travels with you.',
         },
         {
-          id: 'sort-mac',
-          snippet: 'Permanent hardware badge on the network card.',
-          targetLabel: 'MAC address',
+          id: 'opt-mac-changes-ip-stays',
+          label: 'Its MAC address changes, but its IP address is permanent and cannot be changed.',
+          isCorrect: false,
+          feedback:
+            'The opposite is true! The MAC address is built into the physical hardware, while the IP address is configured based on your current location.',
         },
         {
-          id: 'sort-mask',
-          snippet: 'Rule that defines which numbers belong to the street.',
-          targetLabel: 'Subnet mask',
+          id: 'opt-both-change',
+          label: 'Both addresses are physically tied to the wooden desk and must be replaced.',
+          isCorrect: false,
+          feedback:
+            'A computer keeps its hardware network card (and its MAC address) no matter what desk it sits on.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'IP = Street', text: 'Match IP address to where the computer lives on this street.' },
-      { level: 2, label: 'MAC = Hardware', text: 'Match MAC address to the permanent hardware badge.' },
-      { level: 3, label: 'Subnet mask = Rule', text: 'Match Subnet mask to the rule defining street numbers.' },
+      {
+        level: 1,
+        label: 'Think about physical hardware',
+        text: 'Did the computer get a new network card when it was carried down the hall?',
+      },
+      {
+        level: 2,
+        label: 'Street vs Name tag',
+        text: 'The street address (IP) updates to match the new room. The name tag (MAC) stays on the machine.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Choose the option stating IP changes to match the street, but MAC stays the same.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
-      macGlow: { a: true, b: true, c: true },
+      activeLayer: 'tags',
     },
   },
 ];
 
-// ============================================================================
-// CONCEPT 3: ASKING THE ROOM (ARP & ADDRESS BOOK) (6 rungs, ~15 min)
-// ============================================================================
+// =============================================================================
+// CONCEPT 3: Asking the room (6 Rungs)
+// Hook: How does Your computer find Friend's computer's name tag?
+// Words introduced: broadcast, ARP, ARP table
+// =============================================================================
 const CONCEPT_3_RUNGS: Day2Rung[] = [
   {
     id: 'c3-r1',
     conceptNumber: 3,
     rungNumber: 1,
     layoutState: 'STATE_A',
-    title: 'Shouting to the room (Broadcast)',
+    title: 'The missing name tag problem',
     timeEstimate: '2 min',
     newWords: ['broadcast'],
-    look: 'Watch the golden pulse leave Computer A.',
+    look: 'Your computer wants to send a message to Friend’s computer at 192.168.1.20. You know Friend’s IP address. But as we learned in Concept 2, the switch requires an outer envelope addressed with Friend’s hardware name tag (MAC address) to deliver the message.',
     story:
-      'Sending one message to every computer in the room is called a broadcast. The switch sends it out every port.',
-    doText: 'Click the Send Broadcast button on the stage.',
-    whyText: 'When you do not know who has a badge, you must ask everyone in the room.',
-    expectText: 'A golden wave enters Port 1 and ripples out Port 2 and Port 3 simultaneously.',
-    meaningText: 'A broadcast reaches all machines connected to this switch.',
-    nextHook: 'What question does Computer A ask the room?',
-    lockMessage: 'Click Send Broadcast to watch the ripple.',
+      'Your computer is freshly turned on and does not know what hardware name tag belongs to 192.168.1.20. It cannot guess. How does it find out? It shouts a question into the switch that reaches every computer plugged into the room. Sending one message out to every computer in the room is called a broadcast.',
+    meaningText:
+      'A broadcast is a message addressed to "everyone". When the switch receives a broadcast on Port 1, it forwards copies out of Port 2 and Port 3 so everyone can hear.',
+    nextHook: 'What exact question does Your computer shout to the room?',
+    lockMessage: 'Click the Broadcast button on the stage to simulate shouting to the room.',
     check: {
       type: 'task',
-      expectedCommand: 'send-broadcast',
     },
     hints: [
-      { level: 1, label: 'Click the button', text: 'Click Send Broadcast on the stage controls.' },
-      { level: 2, label: 'Watch the wave', text: 'See how the wave copies out to all connected ports.' },
-      { level: 3, label: 'Direct action', text: 'Click the Send Broadcast button.' },
+      {
+        level: 1,
+        label: 'Observation',
+        text: 'Look at the stage controls at the bottom of the canvas.',
+      },
+      {
+        level: 2,
+        label: 'Action',
+        text: 'Click the Broadcast button to see the golden ripple pulse fan out across the switch.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Trigger the broadcast animation to proceed to the next rung.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      message: 'arp-broadcast',
+      activeLayer: 'addresses',
     },
   },
   {
     id: 'c3-r2',
     conceptNumber: 3,
     rungNumber: 2,
-    layoutState: 'STATE_B',
-    title: 'The question called ARP',
-    timeEstimate: '3 min',
+    layoutState: 'STATE_A',
+    title: 'The roll-call question: ARP',
+    timeEstimate: '2 min',
     newWords: ['arp'],
-    look: 'Read the message bubble: “Who has 192.168.1.20? Tell 192.168.1.10.”',
+    look: 'Your computer sends a special roll-call question into Port 1. The switch receives it and sends it out to both Friend’s computer (Port 2) and Third computer (Port 3).',
     story:
-      'The question that asks “who has this IP address?” is called ARP.',
-    doText: 'Run ping 192.168.1.20 and watch the roll call happen first.',
-    whyText: 'Computer A cannot send a ping until it learns Computer B’s MAC badge.',
-    expectText: 'An ARP broadcast fans out. Computer B replies with its MAC badge.',
-    meaningText: 'Computer B replies directly: “I am 192.168.1.20! My MAC is 00-1A-2B-3C-4D-20.”',
-    nextHook: 'Why did Computer C stay silent?',
-    lockMessage: 'Run ping 192.168.1.20 to trigger the ARP roll call.',
-    simplified: {
-      id: 's4',
-      text: 'ARP roll calls happen automatically in milliseconds. The lab slows it down so you can see who answers.',
-    },
+      'The roll-call question asking “who has this IP address?” is called ARP (Address Resolution Protocol). Your computer broadcasts: “Who has 192.168.1.20? Tell 192.168.1.10.” Third computer hears the roll call, checks its own IP (192.168.1.30), says “that is not me,” and stays quiet. Friend’s computer hears it, recognizes its own address, and sends a direct reply: “I have 192.168.1.20, and my name tag is 00-00-5e-00-53-02!”',
+    meaningText:
+      'ARP is the bridge that discovers the hardware name tag for any local IP address.',
+    nextHook: 'Let us watch this roll-call wave spread across the wires in slow motion.',
+    lockMessage: 'Answer the question about how machines handle an ARP roll call.',
     check: {
-      type: 'task',
-      expectedCommand: 'ping 192.168.1.20',
-      allowedTargets: ['192.168.1.20'],
+      type: 'understand',
+      question:
+        'When Your computer broadcasts an ARP roll call for 192.168.1.20, what does Third computer (192.168.1.30) do?',
+      options: [
+        {
+          id: 'opt-third-ignores',
+          label: 'Third computer hears the question, sees it is not for 192.168.1.30, and quietly ignores it.',
+          isCorrect: true,
+          feedback:
+            'Exactly right. Computers only reply to ARP roll calls if their own IP address matches the question.',
+        },
+        {
+          id: 'opt-third-replies',
+          label: 'Third computer replies saying it does not own that address.',
+          isCorrect: false,
+          feedback:
+            'If every machine replied to say "not me", the network would become clogged with useless chatter! Only the owner replies.',
+        },
+        {
+          id: 'opt-third-forwards',
+          label: 'Third computer forwards the question to another switch.',
+          isCorrect: false,
+          feedback:
+            'Third computer is an end workstation, not a switch. It simply drops messages that do not belong to it.',
+        },
+      ],
     },
     hints: [
-      { level: 1, label: 'Type the ping', text: 'Type ping 192.168.1.20 and hit Enter.' },
-      { level: 2, label: 'Watch the stage', text: 'Notice the golden roll call before the green ping.' },
-      { level: 3, label: 'Direct command', text: 'Run: ping 192.168.1.20' },
+      {
+        level: 1,
+        label: 'Think about a classroom roll call',
+        text: 'When a teacher calls out a student’s name, do all the other students yell "not me"?',
+      },
+      {
+        level: 2,
+        label: 'Only the owner responds',
+        text: 'Only the computer holding the requested IP address answers back.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating Third computer quietly ignores the question.',
+      },
     ],
+    simplified: {
+      id: 's4',
+      text: 'Real ARP roll calls take less than a single millisecond. The lab slows down the animation so you can clearly observe the question fanning out and the reply coming back.',
+    },
+    lookInside: {
+      id: 'l3',
+      title: 'What does an ARP message contain?',
+      chipBeside: 'Simple Query Format',
+      pictureDescription: 'An ARP request structure showing sender IP/MAC and target IP.',
+      text: 'An ARP message has no file data, images, or web text. It contains only four simple fields: Sender IP (192.168.1.10), Sender MAC (00-00-5e-00-53-01), Target IP (192.168.1.20), and Target MAC (00-00-00-00-00-00, meaning "tell me!").',
+    },
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      message: 'arp-broadcast',
+      activeLayer: 'addresses',
     },
   },
   {
@@ -685,61 +924,67 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
     conceptNumber: 3,
     rungNumber: 3,
     layoutState: 'STATE_A',
-    title: 'Prediction: Why did Computer C ignore it?',
+    title: 'Watching the roll call',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Look at Computer C while Computer A asks who has .20.',
+    look: 'Notice the golden wave rolling outward across the switch: it leaves Your computer, enters Port 1, and pulses out across Port 2 and Port 3 simultaneously.',
     story:
-      'Computer A shouted to the whole room: “Who has 192.168.1.20?”',
-    doText: 'Explain why Computer C stayed silent and dropped the request.',
-    whyText: 'To understand how computers filter broadcast roll calls.',
-    expectText: 'Computer C compares the request against its own address and drops it.',
-    meaningText: 'Only the machine with the matching IP address sends an ARP reply.',
-    nextHook: 'Where does Computer A save this answer?',
-    lockMessage: 'Answer the roll call check to continue.',
-    lookInside: {
-      id: 'l3',
-      title: 'What an ARP packet holds',
-      chipBeside: 'Packet format',
-      pictureDescription: 'A tiny message packet showing Sender IP, Sender MAC, and Target IP.',
-      text:
-        'An ARP question has no regular data. It simply asks: “Who has 192.168.1.20? Tell 192.168.1.10.” Computer B replies with its MAC badge.',
-    },
+      'This roll-call wave is the same roll call you experienced on Day 1 when you pinged .99! On Day 1, your computer shouted across the wire, but nobody had .99, so nobody answered. Today, Friend’s computer is plugged into Port 2, so it hears the shout and sends its name tag back directly to your port.',
+    doText: 'Watch the roll-call ripple fan out from the switch to both computers.',
+    whyText: 'Observing the visual pulse cements the idea of broadcast distribution.',
+    expectText: 'Notice how the wave reaches both Port 2 and Port 3 at the same time.',
+    nextHook: 'Now that Friend replied, where does Your computer store this information?',
+    lockMessage: 'Answer the question about the broadcast destination to continue.',
     check: {
-      type: 'predict',
-      question: 'Why didn’t Computer C answer Computer A’s ARP question?',
+      type: 'understand',
+      question: 'Why does the switch send the ARP question out of both Port 2 and Port 3?',
       options: [
         {
-          id: 'c3r3-opt-a',
-          label: 'Computer C checked its own label (192.168.1.30), saw it was not .20, and remained silent.',
+          id: 'opt-broadcast-fanout',
+          label: 'Because the ARP question is a broadcast, so the switch delivers it to every active port in the room.',
           isCorrect: true,
           feedback:
-            'Correct! Only the computer that owns that IP address is allowed to answer an ARP question.',
+            'Exactly right. The switch does not know which computer owns 192.168.1.20, so it sends the broadcast to all connected ports.',
         },
         {
-          id: 'c3r3-opt-b',
-          label: 'Computer C’s cable is broken.',
+          id: 'opt-switch-knows',
+          label: 'Because the switch already knew who owned it and wanted to test Third computer.',
           isCorrect: false,
-          feedback: 'Port 3 is green and healthy. Computer C received the broadcast and safely ignored it.',
+          feedback:
+            'The switch does not track IP addresses. It delivers broadcasts to everyone because it was told to ask the entire room.',
         },
         {
-          id: 'c3r3-opt-c',
-          label: 'Computer C was turned off.',
+          id: 'opt-error',
+          label: 'It was an electrical glitch inside the switch.',
           isCorrect: false,
-          feedback: 'Computer C is on and actively listening to broadcasts on the shared switch.',
+          feedback:
+            'This is standard network behavior designed into every Ethernet switch.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'Check C’s IP', text: 'What is Computer C’s IP address? Is it .20 or .30?' },
-      { level: 2, label: 'Filtering rule', text: 'A computer only answers when its own address is called.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Remember what a broadcast means',
+        text: 'A broadcast means delivering to everyone in the room.',
+      },
+      {
+        level: 2,
+        label: 'Switch role',
+        text: 'When a switch gets a broadcast, it replicates it to all active ports.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option explaining it is a broadcast delivered to every active port.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
-      message: 'arp-silent',
+      message: 'arp-broadcast',
+      activeLayer: 'addresses',
     },
   },
   {
@@ -747,274 +992,425 @@ const CONCEPT_3_RUNGS: Day2Rung[] = [
     conceptNumber: 3,
     rungNumber: 4,
     layoutState: 'STATE_B',
-    title: 'Check your address book (arp -a)',
+    title: 'The computer’s notebook: ARP table',
     timeEstimate: '3 min',
     newWords: ['arp table'],
-    look: 'Look at the new command suggestion: arp -a.',
+    look: 'Your computer does not want to shout to the entire room every single time it sends a ping. That would waste network bandwidth and interrupt other machines.',
     story:
-      'The computer writes down who answered in its local address book, called the ARP table.',
-    doText: 'Type arp -a and press Enter.',
-    whyText: 'To see the list of IP addresses matched to MAC hardware badges.',
-    expectText: '192.168.1.20 is matched to 00-1a-2b-3c-4d-20 as dynamic.',
-    meaningText: 'Computer A remembered Computer B’s badge. Next time, it doesn’t need to shout!',
-    nextHook: 'What happens if you ask for an IP address that nobody owns?',
-    lockMessage: 'Run arp -a to inspect the local address book.',
-    simplified: {
-      id: 's5',
-      text: 'Entries in the ARP table expire after a few minutes if no messages are sent.',
-    },
+      'When Friend’s computer answers the roll call, Your computer writes down who answered in its local address book, called the ARP table. The next time you send a ping to 192.168.1.20, Your computer checks its notebook, finds Friend’s name tag (00-00-5e-00-53-02), and creates the outer envelope immediately without shouting to the room. In Windows, you inspect this notebook with the command arp -a.',
+    doText: 'Type arp -a and press Enter in the terminal.',
+    whyText: 'This displays the local address book matching IP addresses to physical MAC name tags.',
+    expectText: 'Notice the table entry: 192.168.1.20 mapped to 00-00-5e-00-53-02.',
+    nextHook: 'Now we have two different notebooks on our desk! Let us compare them side by side.',
+    lockMessage: 'Run arp -a in the terminal.',
     check: {
       type: 'task',
       expectedCommand: 'arp -a',
+      allowedTargets: ['-a'],
     },
     hints: [
-      { level: 1, label: 'Type the command', text: 'Type arp -a into the terminal.' },
-      { level: 2, label: 'Read the table', text: 'Look for the Internet Address and Physical Address columns.' },
-      { level: 3, label: 'Direct command', text: 'Run: arp -a' },
+      {
+        level: 1,
+        label: 'Terminal command',
+        text: 'Type arp -a in the terminal window.',
+      },
+      {
+        level: 2,
+        label: 'Shortcut',
+        text: 'Click the suggested command chip labeled arp -a.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Press Tab to autofill arp -a and press Enter.',
+      },
     ],
+    simplified: {
+      id: 's5',
+      text: 'Entries in your computer’s ARP table are not permanent. If you stop communicating with Friend’s computer, the entry expires and disappears after a few minutes (learned automatically). If you ping again later, your computer simply runs another quick roll call.',
+    },
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       arpTable: [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
+        {
+          ip: '192.168.1.20',
+          mac: '00-00-5e-00-53-02',
+          type: 'dynamic',
+        },
       ],
+      activeLayer: 'addresses',
     },
   },
   {
     id: 'c3-r5',
     conceptNumber: 3,
     rungNumber: 5,
-    layoutState: 'STATE_B',
-    title: 'A silent machine on ARP',
+    layoutState: 'STATE_A',
+    title: 'The two notebooks side by side',
     timeEstimate: '3 min',
     newWords: [],
-    look: 'What happens when you ping 192.168.1.99?',
+    look: 'Beginners often confuse the switch’s notebook with the computer’s notebook. Look at the two tables side by side: the switch keeps one, and your computer keeps the other.',
     story:
-      'Computer A broadcasts: “Who has .99?” Silence. No machine on the switch owns .99.',
-    doText: 'Run ping 192.168.1.99 in the terminal.',
-    whyText: 'To observe what happens when ARP gets no reply.',
-    expectText: 'Reply from 192.168.1.10: Destination host unreachable.',
-    meaningText: 'Now you know why Day 1 printed unreachable: ARP timed out with no reply!',
-    nextHook: 'Can you explain the complete roll call in your own words?',
-    lockMessage: 'Run ping 192.168.1.99 to observe the silent response.',
+      'The switch’s notebook (MAC table) matches a hardware name tag to a switch port (00-00-5e-00-53-02 ➔ Port 2). Its job is physical: knowing which electrical socket to send signals down. Your computer’s notebook (ARP table) matches an IP address to a hardware name tag (192.168.1.20 ➔ 00-00-5e-00-53-02). Its job is packaging: knowing what hardware name tag to write on the delivery envelope.',
+    meaningText:
+      'Your computer maps IP ➔ MAC. The switch maps MAC ➔ Port. Together, they guide the message from your application straight to Friend’s socket.',
+    nextHook: 'Let us test your understanding of who keeps which notebook.',
+    lockMessage: 'Answer the question comparing the two notebooks to proceed.',
     check: {
-      type: 'task',
-      expectedCommand: 'ping 192.168.1.99',
-      allowedTargets: ['192.168.1.99'],
+      type: 'understand',
+      question:
+        'Which notebook maps an IP address (like 192.168.1.20) to a hardware name tag (MAC address)?',
+      options: [
+        {
+          id: 'opt-arp-table',
+          label: 'Your computer’s ARP table (inspected with arp -a)',
+          isCorrect: true,
+          feedback:
+            'Exactly! Your computer keeps the ARP table to translate IP addresses into hardware MAC name tags.',
+        },
+        {
+          id: 'opt-switch-table',
+          label: 'The switch’s internal port notebook',
+          isCorrect: false,
+          feedback:
+            'The switch does not know about IP addresses! The switch only maps MAC name tags to physical port numbers.',
+        },
+        {
+          id: 'opt-cable-table',
+          label: 'A notebook stored inside the blue cable wire',
+          isCorrect: false,
+          feedback:
+            'Cables are copper wires that carry electrical pulses; they do not have memory or notebooks.',
+        },
+      ],
     },
     hints: [
-      { level: 1, label: 'Type the ping', text: 'Type ping 192.168.1.99 in the terminal.' },
-      { level: 2, label: 'Watch the result', text: 'Notice Destination host unreachable after nobody answers ARP.' },
-      { level: 3, label: 'Direct command', text: 'Run: ping 192.168.1.99' },
+      {
+        level: 1,
+        label: 'Review the two jobs',
+        text: 'Who translates an IP address into a MAC address?',
+      },
+      {
+        level: 2,
+        label: 'Think about arp -a',
+        text: 'You just ran arp -a on your computer, showing IP mapped to Physical Address.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select Your computer’s ARP table (inspected with arp -a).',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       arpTable: [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
+        {
+          ip: '192.168.1.20',
+          mac: '00-00-5e-00-53-02',
+          type: 'dynamic',
+        },
       ],
+      activeLayer: 'addresses',
     },
   },
   {
     id: 'c3-r6',
     conceptNumber: 3,
     rungNumber: 6,
-    layoutState: 'STATE_F',
-    title: 'Mastery check: Explain the roll call',
+    layoutState: 'STATE_A',
+    title: 'Explaining the whole journey',
     timeEstimate: '3 min',
     newWords: [],
-    look: 'Review the steps Computer A takes when pinging a neighbor.',
+    look: 'Take a step back and look at the whole picture: your terminal, the switch, and the three computers.',
     story:
-      'You watched Computer A ask the room with ARP, receive a MAC badge, and save it in its ARP table.',
-    doText: 'Write in your own words what happens when Computer A pings a teammate for the first time.',
-    whyText: 'Explaining a process in your own words ensures deep conceptual retention.',
-    expectText: 'Compare your explanation with the benchmark model sentence.',
-    meaningText: 'ARP is the bridge that turns an IP address into a real hardware delivery badge.',
-    nextHook: 'What happens when cables and ARP work, but ping still fails?',
-    lockMessage: 'Write your explanation and compare it to unlock Concept 4.',
+      'When you type ping 192.168.1.20, your computer checks its ARP table. If it does not know the MAC address, it broadcasts an ARP roll call to the room. Friend’s computer replies with its name tag. Your computer writes the name tag on the outer envelope and sends the ping. The switch reads the outer MAC address and forwards the message out of Port 2.',
+    doText: 'Review how an IP address becomes a physical delivery across the switch.',
+    whyText: 'Explaining this complete sequence is the core skill of local network fundamentals.',
+    expectText: 'Connect all three concepts into one coherent, repeatable mental model.',
+    nextHook: 'Now that we understand how a healthy shared network runs, what happens when it breaks?',
+    lockMessage: 'Select the correct step sequence to complete Concept 3.',
     check: {
-      type: 'write-and-compare',
-      mustMention: ['arp', 'mac', 'broadcast', 'ip'],
-      modelSentence:
-        'Computer A broadcasts an ARP roll call asking who owns the IP address. The matching computer replies with its MAC hardware badge, and Computer A saves it in its ARP address book.',
-      modelSentenceSimpler:
-        'Computer A asks everyone on the switch who owns the IP. The owner replies with its hardware badge, and Computer A writes it down.',
+      type: 'understand',
+      question:
+        'When you ping a new neighbor for the very first time, what happens before your ping message leaves your computer?',
+      options: [
+        {
+          id: 'opt-arp-first',
+          label: 'Your computer sends an ARP broadcast to discover the neighbor’s MAC address.',
+          isCorrect: true,
+          feedback:
+            'Spot on! Your computer must learn the destination’s hardware name tag before it can address the outer envelope.',
+        },
+        {
+          id: 'opt-ping-direct',
+          label: 'The ping leaves immediately because the switch knows where every IP is without asking.',
+          isCorrect: false,
+          feedback:
+            'The switch does not know IP addresses! Your computer must discover the MAC address first via ARP.',
+        },
+        {
+          id: 'opt-format-drive',
+          label: 'Your computer deletes its address book and formats its hard drive.',
+          isCorrect: false,
+          feedback:
+            'Sending a ping is a safe diagnostic check; it never formats drives!',
+        },
+      ],
     },
     hints: [
-      { level: 1, label: 'Step 1: Broadcast', text: 'Computer A broadcasts an ARP question to everyone on the switch.' },
-      { level: 2, label: 'Step 2: Reply', text: 'The matching computer sends back its permanent MAC hardware badge.' },
-      { level: 3, label: 'Step 3: Table', text: 'Computer A stores the pairing in its local ARP table.' },
+      {
+        level: 1,
+        label: 'Remember the envelope rule',
+        text: 'What must be written on the outer envelope before the switch can deliver it?',
+      },
+      {
+        level: 2,
+        label: 'Roll call before delivery',
+        text: 'Your computer broadcasts an ARP question to find the missing name tag.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Choose the option stating Your computer sends an ARP broadcast to discover the neighbor’s MAC address.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
-      arpTable: [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
-      ],
+      activeLayer: 'addresses',
     },
   },
 ];
 
-// ============================================================================
-// CONCEPT 4: FIND THE FAULT ON A SHARED WIRE (6 rungs, ~15 min)
-// ============================================================================
+// =============================================================================
+// CONCEPT 4: Find the fault on a shared wire (6 Rungs)
+// Hook: Nobody answers. Is anyone home?
+// Words introduced: request timed out
+// =============================================================================
 const CONCEPT_4_RUNGS: Day2Rung[] = [
   {
     id: 'c4-r1',
     conceptNumber: 4,
     rungNumber: 1,
-    layoutState: 'STATE_D',
-    title: 'The expanded triage checklist',
+    layoutState: 'STATE_A',
+    title: 'The 4-step shared wire checklist',
     timeEstimate: '2 min',
     newWords: [],
-    look: 'Look at the updated triage strip: Port lights on? -> Address & ARP table right? -> Ping replies?',
+    look: 'On Day 1, we learned a reliable 3-step triage habit: ① Is the link light on? ② Is the address on the right street? ③ Does ping reply? Now that we have a switch and an address book, we keep that exact habit and add one optional diagnostic step when a ping fails.',
     story:
-      'On a switch network, check port LEDs first, then verify the ARP table, then ping.',
-    doText: 'Click the checklist steps to review the 3-step triage sequence.',
-    whyText: 'Physical link at the switch must be green before software tables work.',
-    expectText: 'All three checklist steps highlight in sequence.',
-    meaningText: 'Always check hardware links before suspecting software configuration.',
-    nextHook: 'Let us see what happens when the target refuses to talk.',
-    lockMessage: 'Review the 3-step checklist to continue.',
+      'When troubleshooting on a switch, follow our 4-step checklist:\n1. Link light on? (Check both the computer and the switch port lights).\n2. Address right? (Verify the first three numbers match the local street).\n3. Ping replies? (Test communication with ping).\n4. Check arp -a: (If ping fails, check arp -a to see if the computer answered the roll call).',
+    meaningText:
+      'Step 4 (arp -a) is your secret diagnostic tool: it reveals whether the target computer is physically present on the wire even when it refuses to answer pings.',
+    nextHook: 'What does it mean when a ping fails with Request timed out instead of Unreachable?',
+    lockMessage: 'Answer the question about our troubleshooting checklist to proceed.',
     check: {
-      type: 'task',
-      expectedCommand: 'review-checklist',
+      type: 'understand',
+      question:
+        'When a ping to a neighbor fails on a switch, why is running arp -a useful as an extra step?',
+      options: [
+        {
+          id: 'opt-arp-proves-presence',
+          label: 'It reveals whether the neighbor answered the roll call, proving they are plugged into the wire.',
+          isCorrect: true,
+          feedback:
+            'Exactly! If their MAC address appears in your ARP table, you know their cable is plugged in and their network card is active.',
+        },
+        {
+          id: 'opt-arp-repairs-cable',
+          label: 'Running arp -a physically repairs bent copper pins in the network cable.',
+          isCorrect: false,
+          feedback:
+            'Software commands cannot physically fix damaged hardware pins. It is a diagnostic inspection tool.',
+        },
+        {
+          id: 'opt-arp-speeds-up',
+          label: 'It doubles the transmission speed of your switch.',
+          isCorrect: false,
+          feedback:
+            'arp -a simply prints your local notebook. It does not alter hardware link speed.',
+        },
+      ],
     },
     hints: [
-      { level: 1, label: 'Step 1: Port lights', text: 'Always check if the green port LED is on.' },
-      { level: 2, label: 'Step 2: ARP & IP', text: 'Verify the IP address and check if ARP learned the MAC badge.' },
-      { level: 3, label: 'Step 3: Ping', text: 'Send a test ping once the first two steps pass.' },
+      {
+        level: 1,
+        label: 'Think about evidence',
+        text: 'What does having a neighbor’s MAC in your notebook prove?',
+      },
+      {
+        level: 2,
+        label: 'Roll-call response',
+        text: 'A computer only appears in arp -a if it heard and answered the roll call.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating it reveals whether the neighbor answered the roll call.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
-      arpTable: [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
-      ],
+      activeLayer: 'addresses',
     },
   },
   {
     id: 'c4-r2',
     conceptNumber: 4,
     rungNumber: 2,
-    layoutState: 'STATE_B',
-    title: 'Meet Request Timed Out',
+    layoutState: 'STATE_A',
+    title: 'Unreachable vs. Request timed out',
     timeEstimate: '3 min',
     newWords: ['request timed out'],
-    look: 'Look at Computer C. Its cable is plugged in, port light is green, and ARP succeeded. But ping fails!',
+    look: 'There are two very different ways a ping can fail. Understanding the contrast between them is the hallmark of a skilled network technician.',
     story:
-      'Your message reached Computer C, but Computer C did not answer. That result is called Request timed out.',
-    doText: 'Run ping 192.168.1.30 and observe the Request timed out lines.',
-    whyText: 'To distinguish between a roll call failure and a target that does not answer.',
-    expectText: 'Request timed out appears after your packet was delivered.',
-    meaningText: 'Timed out means the destination exists, but dropped or failed to reply.',
-    nextHook: 'Time to put our triage checklist into action on workplace tickets.',
-    lockMessage: 'Answer the question comparing unreachable and timed out.',
-    simplified: {
-      id: 's6',
-      text: 'Request timed out can also happen if a firewall silently drops your ping.',
-    },
+      '“Destination host unreachable” means NOBODY IS HOME: your computer broadcast an ARP roll call, but nobody answered. No name tag was ever found, so your computer could not even send the ping.\n“Request timed out” means SOMEONE IS HOME, BUT NOT ANSWERING: your computer found their name tag in the ARP table and delivered the ping message to their port, but no reply came back before the stopwatch expired.',
+    meaningText:
+      'Unreachable = roll call failed (unplugged or wrong street). Timed out = roll call succeeded, but the target ignored or blocked the ping.',
+    nextHook: 'Let us practice solving real workplace tickets using this contrast.',
+    lockMessage: 'Answer the question contrasting Unreachable and Timed out.',
     check: {
       type: 'understand',
-      question: 'What is the difference between Destination host unreachable and Request timed out?',
+      question:
+        'Your ping returns "Request timed out", and you run arp -a. What do you expect to see in the ARP table?',
       options: [
         {
-          id: 'c4r2-opt-a',
-          label: 'Unreachable means ARP found nobody with that IP. Timed out means the machine was reached, but never answered back.',
+          id: 'opt-mac-present',
+          label: 'The target’s IP and MAC address ARE listed, proving the machine is on the wire but not replying.',
           isCorrect: true,
           feedback:
-            'Yes! Unreachable = no one on the street answered the roll call. Timed out = the machine is there, but refused or failed to reply.',
+            'Spot on! Timed out means the roll call succeeded and the message was delivered, but the target did not send an answer back.',
         },
         {
-          id: 'c4r2-opt-b',
-          label: 'They mean the exact same thing.',
+          id: 'opt-table-empty',
+          label: 'The ARP table is completely blank because the target does not exist at all.',
           isCorrect: false,
-          feedback: 'They are very different! Unreachable fails at ARP; Timed out reaches the target but gets no answer.',
+          feedback:
+            'If the ARP table were blank, the ping would have failed with "Destination host unreachable", because no message could even be sent!',
         },
         {
-          id: 'c4r2-opt-c',
-          label: 'Timed out means the cable is unplugged.',
+          id: 'opt-router-error',
+          label: 'A warning saying you must buy a new router immediately.',
           isCorrect: false,
-          feedback: 'If the cable were unplugged, the terminal would show Transmit failed or Unreachable.',
+          feedback:
+            'We are on a local switch! We do not need a router to reach computers on our own street.',
         },
       ],
     },
     hints: [
-      { level: 1, label: 'Unreachable = ARP', text: 'Unreachable happens when no computer answers the ARP roll call.' },
-      { level: 2, label: 'Timed out = No answer', text: 'Timed out means the message reached the destination, but no reply arrived.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Remember the contrast',
+        text: 'Unreachable means nobody answered roll call. Timed out means someone is home.',
+      },
+      {
+        level: 2,
+        label: 'Evidence in the notebook',
+        text: 'If someone answered the roll call, their MAC address was recorded in arp -a.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option stating the target’s IP and MAC are listed in the ARP table.',
+      },
     ],
+    simplified: {
+      id: 's6',
+      text: 'Request timed out frequently happens when a computer’s operating system firewall is set to ignore incoming ping echo requests for security.',
+    },
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
-      arpTable: [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
-        { ip: '192.168.1.30', mac: '00-1a-2b-3c-4d-30', type: 'dynamic' },
-      ],
+      activeLayer: 'addresses',
     },
   },
   {
     id: 'c4-r3',
     conceptNumber: 4,
     rungNumber: 3,
-    layoutState: 'STATE_D',
-    title: 'Ticket #201: Port disconnected at switch',
+    layoutState: 'STATE_B',
+    title: 'Ticket #201: The dark port light',
     timeEstimate: '3 min',
     newWords: [],
-    look: 'User says: “Computer C cannot ping anyone.” Look at Port 3 on the switch.',
+    look: 'Help Desk Ticket #201: “I cannot ping Third computer at 192.168.1.30. It says Destination host unreachable.” Follow our checklist!',
     story:
-      'Step 1 of triage is checking port LEDs. Port 3 light is dark!',
-    doText: 'Plug in the cable at Switch Port 3, then run ping 192.168.1.30.',
-    whyText: 'Physical link at the switch port must be established first.',
-    expectText: 'Port 3 LED turns green and ping succeeds with 1ms replies.',
-    meaningText: 'Always check the physical port light before suspecting IP settings.',
-    nextHook: 'What if the port light is on, but ping still fails?',
-    lockMessage: 'Fix the unplugged port and verify with ping.',
+      'Step 1: Check the link light! Look at Port 3 on the switch: its light is completely DARK, and the cable to Third computer has come loose from the socket. Because the wire is unplugged, your ARP roll call could never reach Third computer, resulting in Destination host unreachable.',
+    doText: 'Click the loose cable to plug Third computer back into Port 3, then run ping 192.168.1.30.',
+    whyText: 'Physical layer disconnection is always step 1 of network triage.',
+    expectText: 'The Port 3 light turns solid green, and ping returns four successful replies.',
+    nextHook: 'Ticket #201 resolved! Now let us inspect Ticket #202.',
+    lockMessage: 'Plug in the cable to Port 3 and verify ping 192.168.1.30 in the terminal.',
     check: {
-      type: 'diagnose',
+      type: 'task',
       expectedCommand: 'ping 192.168.1.30',
+      allowedTargets: ['192.168.1.30'],
     },
     hints: [
-      { level: 1, label: 'Check the switch', text: 'Notice that Port 3 LED is completely dark.' },
-      { level: 2, label: 'Plug cable', text: 'Click the loose cable end to seat it into Port 3.' },
-      { level: 3, label: 'Test with ping', text: 'Type ping 192.168.1.30 to verify the link.' },
+      {
+        level: 1,
+        label: 'Check the checklist',
+        text: 'Step 1: Is the link light on? Look at Port 3 on the switch.',
+      },
+      {
+        level: 2,
+        label: 'Fix physical connection',
+        text: 'Click the loose cable to seat it in Port 3. Watch the light turn green.',
+      },
+      {
+        level: 3,
+        label: 'Run ping',
+        text: 'Type ping 192.168.1.30 in the terminal to verify the fix.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: false },
       portLeds: { p1: 'green', p2: 'green', p3: 'off', p4: 'off' },
+      activeLayer: 'sockets',
     },
   },
   {
     id: 'c4-r4',
     conceptNumber: 4,
     rungNumber: 4,
-    layoutState: 'STATE_D',
-    title: 'Ticket #202: Wrong subnet on Computer C',
+    layoutState: 'STATE_C',
+    title: 'Ticket #202: The wrong street',
     timeEstimate: '3 min',
     newWords: [],
-    look: 'User says: “Computer C is plugged into the switch, but cannot reach Computer A.”',
+    look: 'Help Desk Ticket #202: “All link lights are green, but pinging Third computer gives Destination host unreachable again.” Follow our checklist!',
     story:
-      'Port 3 light is green. But check Computer C’s address tag: 192.168.2.30!',
-    doText: 'Change Computer C’s IP address to 192.168.1.30 and test with ping.',
-    whyText: 'All machines on this switch must live on the same 192.168.1 street.',
-    expectText: 'Computer C joins street 192.168.1 and ping replies arrive.',
-    meaningText: 'Subnet numbers must match across all neighbors on the same switch.',
-    nextHook: 'Ready to solve a ticket completely on your own?',
-    lockMessage: 'Fix Computer C’s street number and verify with ping.',
+      'Step 1: Link lights are on. Step 2: Check the addresses! Your computer is on street 192.168.1 (192.168.1.10). Look at Third computer’s address tag: someone typed 192.168.2.30! The first three numbers do not match our street. Third computer is listening on street 192.168.2, so it ignored our 192.168.1 roll call.',
+    doText: 'In the address editor, change Third computer’s address from 192.168.2.30 to 192.168.1.30.',
+    whyText: 'Computers on the same switch must share the same street address numbers to communicate locally.',
+    expectText: 'Notice Third computer’s address band change from purple to matching blue.',
+    nextHook: 'Third computer is back on our street. Now let us tackle Ticket #203.',
+    lockMessage: 'Change Third computer’s address to 192.168.1.30.',
     check: {
-      type: 'diagnose',
-      expectedCommand: 'ping 192.168.1.30',
+      type: 'task',
     },
     hints: [
-      { level: 1, label: 'Compare street numbers', text: 'Computer A is on 192.168.1. Computer C is set to 192.168.2!' },
-      { level: 2, label: 'Edit the IP', text: 'Use the address editor tab to set Computer C to 192.168.1.30.' },
-      { level: 3, label: 'Ping to confirm', text: 'Run ping 192.168.1.30 to confirm reachability.' },
+      {
+        level: 1,
+        label: 'Check the checklist',
+        text: 'Step 2: Is the address right? Compare 192.168.2 with 192.168.1.',
+      },
+      {
+        level: 2,
+        label: 'Address editor',
+        text: 'Change the third number from 2 to 1 so it reads 192.168.1.30.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Click Save Address to update Third computer’s IP to 192.168.1.30.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
@@ -1025,118 +1421,139 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
         b: { street: '192.168.1', house: '20', split: true },
         c: { street: '192.168.2', house: '30', split: true },
       },
+      activeLayer: 'addresses',
     },
   },
   {
     id: 'c4-r5',
     conceptNumber: 4,
     rungNumber: 5,
-    layoutState: 'STATE_D',
-    title: 'Ticket #203: The silent machine (Unassisted)',
-    timeEstimate: '3 min',
+    layoutState: 'STATE_B',
+    title: 'Ticket #203: The silent machine',
+    timeEstimate: '4 min',
     newWords: [],
-    look: 'User says: “My workstation cannot reach Computer B.” Diagnose using your checklist.',
+    look: 'Help Desk Ticket #203: “Third computer is on 192.168.1.30, its cable light is solid green, but when we ping it, Windows returns: Request timed out.”',
     story:
-      'Check ① Port lights, ② Address & ARP table, and ③ Ping.',
-    doText: 'Follow your triage sequence to identify the fault and report the cause.',
-    whyText: 'Real workplace troubleshooting requires disciplined dependency order.',
-    expectText: 'Accurate root-cause identification backed by physical and ARP evidence.',
-    meaningText: 'You now possess a systematic troubleshooting methodology for local networks.',
-    nextHook: 'Let us celebrate your mastery of Day 2!',
-    lockMessage: 'Select the correct diagnosis based on your investigation.',
+      'Let us run our diagnosis:\n1. Link light? Solid green (Port 3 is active).\n2. Address? Correct (192.168.1.30 matches our street).\n3. Ping? Fails with Request timed out.\n4. Check arp -a: Look at the terminal output! Third computer’s MAC address (00-00-5e-00-53-03) IS listed in our ARP table! Someone is home! Why did ping fail? Third computer’s firewall was configured to block incoming pings.',
+    doText: 'Click Unblock Ping on Third computer to allow ping replies, then run ping 192.168.1.30.',
+    whyText:
+      'Fixing the firewall completes the diagnosis. Writing down the explanation proves your mastery.',
+    expectText: 'Ping returns Reply from 192.168.1.30: bytes=32 time=1ms.',
+    nextHook: 'Now write one sentence explaining how arp -a proved Third computer was connected.',
+    lockMessage: 'Unblock pings, run ping 192.168.1.30, and write your explanation sentence.',
     check: {
-      type: 'understand',
-      question: 'You ran arp -a and saw Computer B’s MAC is missing, and Port 2 LED is off. What is the fault?',
-      options: [
-        {
-          id: 'c4r5-opt-a',
-          label: 'Port 2 has no physical link (cable unplugged or loose at the switch).',
-          isCorrect: true,
-          feedback:
-            'Outstanding! Port LED is off, which explains why ARP received no reply and ping failed. Physical link is step 1.',
-        },
-        {
-          id: 'c4r5-opt-b',
-          label: 'Computer B has the wrong subnet mask.',
-          isCorrect: false,
-          feedback: 'A subnet mask mismatch would not turn off the physical link LED on the switch.',
-        },
-        {
-          id: 'c4r5-opt-c',
-          label: 'The ARP table is corrupted and needs a reboot.',
-          isCorrect: false,
-          feedback: 'ARP tables simply cache who answers. If the port is disconnected, no machine can answer.',
-        },
-      ],
+      type: 'write-and-compare',
+      expectedCommand: 'ping 192.168.1.30',
+      allowedTargets: ['192.168.1.30'],
+      mustMention: ['arp', 'mac', 'table', 'roll call', 'connected', 'home'],
+      modelSentence:
+        'Third computer answered the ARP roll call so its MAC address was in our ARP table, proving it was plugged in even though its firewall blocked pings.',
+      modelSentenceSimpler:
+        'The ARP table listed Third computer’s name tag, proving it was connected even though ping timed out.',
     },
     hints: [
-      { level: 1, label: 'Step 1: Check the light', text: 'Port 2 LED is off. What does that tell you?' },
-      { level: 2, label: 'Physical layer first', text: 'Without a physical carrier, no ARP or IP traffic can flow.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
-    ],
-    entryStageState: {
-      ...BASE_STAGE,
-      cables: { a: true, b: false, c: true },
-      portLeds: { p1: 'green', p2: 'off', p3: 'green', p4: 'off' },
-    },
-  },
-  {
-    id: 'c4-r6',
-    conceptNumber: 4,
-    rungNumber: 6,
-    layoutState: 'STATE_E',
-    title: 'Day 2 Wrap-up & Tomorrow’s Question',
-    timeEstimate: '2 min',
-    newWords: [],
-    look: 'Look at the completed 3-workstation office network.',
-    story:
-      'You connected multiple computers using a switch, mastered hardware MAC badges, and traced ARP roll calls.',
-    doText: 'Review your achievements and discover the question for Day 3.',
-    whyText: 'To reflect on your progress and preview the bridge to the outside world.',
-    expectText: 'All Day 2 skills unlocked and logged.',
-    meaningText: 'You can now build, address, and troubleshoot any local switch network.',
-    nextHook: 'How do we send a message to a server on a different street, or across the world?',
-    lockMessage: 'Complete Day 2 to unlock your achievement.',
-    lookInside: {
-      id: 'l4',
-      title: 'Viewing MAC on Linux',
-      chipBeside: 'Linux terminal',
-      pictureDescription: 'A bash shell displaying ip link and ip neigh outputs.',
-      text:
-        'On Linux, type ip link or cat /sys/class/net/eth0/address to see your MAC badge. Type ip neigh to see your ARP table.',
-    },
-    check: {
-      type: 'understand',
-      question: 'We can now talk to any computer on our local switch. What do we need to talk to a server on a different street?',
-      options: [
-        {
-          id: 'c4r6-opt-a',
-          label: 'A gateway device (called a router) that connects different streets together.',
-          isCorrect: true,
-          feedback:
-            'Exactly! Switches connect one street. To cross between different streets, you need a router. That is Day 3!',
-        },
-        {
-          id: 'c4r6-opt-b',
-          label: 'A longer blue cable that stretches across town.',
-          isCorrect: false,
-          feedback: 'Cables cannot stretch infinitely. You need a device that routes between different networks.',
-        },
-      ],
-    },
-    hints: [
-      { level: 1, label: 'Different streets', text: 'A switch only links computers on the same street.' },
-      { level: 2, label: 'Leaving the room', text: 'Crossing to another street requires a gateway device.' },
-      { level: 3, label: 'Direct answer', text: 'Select option A.' },
+      {
+        level: 1,
+        label: 'Evidence of connection',
+        text: 'What proved that Third computer heard and answered our roll call?',
+      },
+      {
+        level: 2,
+        label: 'Mention key terms',
+        text: 'Explain that Third computer’s MAC address was present in the ARP table.',
+      },
+      {
+        level: 3,
+        label: 'Model answer',
+        text: 'The ARP table showed Third computer’s name tag, proving it was connected while its firewall blocked the ping.',
+      },
     ],
     entryStageState: {
       ...BASE_STAGE,
       cables: { a: true, b: true, c: true },
       portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
       arpTable: [
-        { ip: '192.168.1.20', mac: '00-1a-2b-3c-4d-20', type: 'dynamic' },
-        { ip: '192.168.1.30', mac: '00-1a-2b-3c-4d-30', type: 'dynamic' },
+        {
+          ip: '192.168.1.30',
+          mac: '00-00-5e-00-53-03',
+          type: 'dynamic',
+        },
       ],
+      activeLayer: 'addresses',
+    },
+  },
+  {
+    id: 'c4-r6',
+    conceptNumber: 4,
+    rungNumber: 6,
+    layoutState: 'STATE_A',
+    title: 'Beyond the local street: The router preview',
+    timeEstimate: '2 min',
+    newWords: [],
+    look: 'Celebrate what you have built: three computers connected to a shared switch, talking with both street addresses (IP) and hardware name tags (MAC), discovering each other via ARP, and running a complete diagnostic checklist.',
+    story:
+      'A switch is the king of the local room: it connects everyone on the same street (192.168.1.x). But what happens if you want to send a message to a computer on another street across town, or a web server across the world? A switch cannot cross between different streets. To leave your local street, your network needs a doorway device that connects two different streets together.',
+    meaningText:
+      'Day 2 taught you how machines share a local wire. Day 3 will introduce the device that connects different streets to the wider world: the router.',
+    nextHook: 'Day 2 complete! You are ready for the world beyond your local switch.',
+    lockMessage: 'Select the bridge question to finish Day 2.',
+    check: {
+      type: 'understand',
+      question:
+        'A switch connects computers on the SAME street (like 192.168.1.x). What is needed to reach a computer on a DIFFERENT street?',
+      options: [
+        {
+          id: 'opt-router-bridge',
+          label: 'A doorway device that connects different streets together (introduced on Day 3)',
+          isCorrect: true,
+          feedback:
+            'Exactly right! A switch manages the local room; a doorway device (router) connects different streets together.',
+        },
+        {
+          id: 'opt-longer-cable',
+          label: 'Just a much longer blue network cable plugged into the same switch',
+          isCorrect: false,
+          feedback:
+            'A longer cable on the same switch is still on the same street! Different streets require a gateway.',
+        },
+        {
+          id: 'opt-faster-switch',
+          label: 'A switch with 100 ports running at double speed',
+          isCorrect: false,
+          feedback:
+            'No matter how fast a switch is, it only switches traffic within one local street.',
+        },
+      ],
+    },
+    hints: [
+      {
+        level: 1,
+        label: 'Think about streets',
+        text: 'A switch handles one local street. How do you leave your street?',
+      },
+      {
+        level: 2,
+        label: 'Day 3 preview',
+        text: 'Day 3 introduces the device that connects different streets together.',
+      },
+      {
+        level: 3,
+        label: 'Direct answer',
+        text: 'Select the option mentioning a doorway device connecting different streets together.',
+      },
+    ],
+    lookInside: {
+      id: 'l4',
+      title: 'Viewing hardware badges on Linux',
+      chipBeside: 'ip link & ip neigh',
+      pictureDescription: 'Linux terminal showing ip link and ip neigh outputs.',
+      text: 'On Linux, you view your network card’s MAC hardware name tag by typing ip link. You inspect your local ARP notebook by typing ip neigh (short for IP neighbors). The concepts are identical on every operating system in the world.',
+    },
+    entryStageState: {
+      ...BASE_STAGE,
+      cables: { a: true, b: true, c: true },
+      portLeds: { p1: 'green', p2: 'green', p3: 'green', p4: 'off' },
+      activeLayer: 'addresses',
     },
   },
 ];
@@ -1144,31 +1561,31 @@ const CONCEPT_4_RUNGS: Day2Rung[] = [
 export const ALL_DAY2_CONCEPTS: Day2ConceptDefinition[] = [
   {
     number: 1,
-    id: 'three-computers-and-a-switch',
-    title: 'Three computers and a switch',
-    question: 'How do more than two computers connect?',
+    id: 'three-computers-need-a-switch',
+    title: 'Three computers need a switch',
+    question: 'How do three computers share one connection?',
     timeEstimate: '13 min',
     goal: 'Connect three computers through a switch and verify reachability.',
-    newWordsCount: 1,
+    newWordsCount: 2,
     hookLine: 'Two computers can share a cable. Three computers need a meeting point.',
     rungs: CONCEPT_1_RUNGS,
   },
   {
     number: 2,
     id: 'the-hardware-badge-mac',
-    title: 'The hardware badge (MAC address)',
-    question: 'How does a computer know which machine is which?',
+    title: 'Every computer has a name tag',
+    question: 'How does the switch know which socket Friend’s computer is on?',
     timeEstimate: '12 min',
-    goal: 'Distinguish permanent hardware MAC badges from temporary IP addresses.',
-    newWordsCount: 2,
-    hookLine: 'IP is your street address. MAC is your permanent fingerprint.',
+    goal: 'Distinguish permanent hardware MAC name tags from temporary IP addresses.',
+    newWordsCount: 1,
+    hookLine: 'IP is your street address. MAC is your permanent hardware name tag.',
     rungs: CONCEPT_2_RUNGS,
   },
   {
     number: 3,
     id: 'asking-the-room-arp',
-    title: 'Asking the room (ARP & the address book)',
-    question: 'How does Computer A match an IP to a hardware badge?',
+    title: 'Asking the room',
+    question: 'How does Your computer find Friend’s computer’s name tag?',
     timeEstimate: '15 min',
     goal: 'Explain broadcast roll calls and inspect the ARP address book.',
     newWordsCount: 3,
@@ -1178,12 +1595,12 @@ export const ALL_DAY2_CONCEPTS: Day2ConceptDefinition[] = [
   {
     number: 4,
     id: 'find-the-fault-shared-wire',
-    title: 'Find the fault on a shared wire',
-    question: 'How do we troubleshoot a switch network when something breaks?',
+    title: 'Find the fault',
+    question: 'Nobody answers. Is anyone home?',
     timeEstimate: '15 min',
     goal: 'Use expanded triage order to resolve switch tickets without help.',
     newWordsCount: 1,
-    hookLine: 'Port LED first, ARP address book second, ping third.',
+    hookLine: 'Link light first, address second, ping third, ARP table fourth.',
     rungs: CONCEPT_4_RUNGS,
   },
 ];

@@ -50,8 +50,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
 
   // Full-screen page modes matching Day 1
   const [pageMode, setPageMode] = useState<
-    'welcome' | 'intro' | 'normal' | 'concept-complete' | 'day-complete'
+    'welcome' | 'warmup' | 'intro' | 'normal' | 'concept-complete' | 'day-complete'
   >(defaultMode);
+  const [warmupSolved, setWarmupSolved] = useState(false);
 
   // Interactive task state
   const [isTaskDone, setIsTaskDone] = useState(false);
@@ -71,6 +72,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
   // Work tabs & Address Editor (for Concept 4)
   const [activeWorkTab, setActiveWorkTab] = useState<'terminal' | 'address'>('terminal');
   const [customAddressC, setCustomAddressC] = useState('192.168.1.30');
+  const [isCBlocked, setIsCBlocked] = useState(true);
 
   // Self-check write-and-compare
   const [learnerSentence, setLearnerSentence] = useState('');
@@ -83,6 +85,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
   const [checkedLight, setCheckedLight] = useState(false);
   const [checkedAddress, setCheckedAddress] = useState(false);
   const [checkedPing, setCheckedPing] = useState(false);
+  const [checkedArp, setCheckedArp] = useState(false);
 
   // Stage state mutations
   const [manualCables, setManualCables] = useState<{
@@ -187,6 +190,8 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
     setCheckedLight(false);
     setCheckedAddress(false);
     setCheckedPing(false);
+    setCheckedArp(false);
+    setIsCBlocked(true);
     setManualCables({ ...currentRung.entryStageState.cables });
     if (typeof currentRung.entryStageState.tags.c === 'object' && 'street' in currentRung.entryStageState.tags.c) {
       const street = currentRung.entryStageState.tags.c.street;
@@ -261,6 +266,9 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
   };
 
   const isPrimaryReady = useMemo(() => {
+    if (currentRung.id === 'c4-r5') {
+      return !isCBlocked && selfCheckRevealed && isTaskDone;
+    }
     if (currentRung.check.type === 'understand' && !currentRung.check.options) return true;
     if (currentRung.check.type === 'understand' && isQuestionCorrect === true) return true;
     if (currentRung.check.type === 'predict' && isQuestionCorrect === true) return true;
@@ -273,7 +281,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
       return items.every((item) => sortMatches[item.id] === item.targetLabel);
     }
     return false;
-  }, [currentRung, isTaskDone, isQuestionCorrect, selfCheckRevealed, sortMatches]);
+  }, [currentRung, isTaskDone, isQuestionCorrect, selfCheckRevealed, sortMatches, isCBlocked]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -343,11 +351,85 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
             <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
               <button
                 type="button"
-                onClick={() => setPageMode('intro')}
+                onClick={() => setPageMode('warmup')}
                 className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-black hover:bg-zinc-900 border border-white/20 hover:border-white/40 font-semibold text-white shadow-xl shadow-black/80 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <span>Start Day 2</span>
                 <ChevronRight className="w-4 h-4 text-zinc-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : pageMode === 'warmup' ? (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] max-w-2xl mx-auto px-6 py-12 text-zinc-100 font-sans">
+          <div className="w-full rounded-3xl bg-[#121214] border border-white/[0.08] p-8 sm:p-10 shadow-2xl space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-1">
+              <span className="text-xs font-mono font-medium tracking-wider uppercase text-blue-400">
+                3-Minute Warm-Up • Day 1 Recall
+              </span>
+              <h2 className="text-2xl font-bold text-white tracking-tight">
+                What did Day 1 leave open?
+              </h2>
+            </div>
+
+            <div className="space-y-4 text-xs sm:text-sm text-zinc-300">
+              <div className="p-4 rounded-2xl bg-[#18181b] border border-white/[0.08] space-y-2">
+                <div className="font-semibold text-white">Three quick checks from yesterday:</div>
+                <ul className="space-y-1.5 list-disc list-inside text-zinc-300">
+                  <li><strong>Link light:</strong> The physical light next to your port must turn ON before electrical signals can travel.</li>
+                  <li><strong>Street address:</strong> Two computers on the same cable talk only when the first three numbers of their IP match (like 192.168.1).</li>
+                  <li><strong>Unreachable:</strong> When nobody answers the roll call, Windows reports <em>Destination host unreachable</em>.</li>
+                </ul>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#18181b] border border-white/[0.08] space-y-3">
+                <div className="font-semibold text-white">The Day 1 Recall Puzzle:</div>
+                <p className="text-zinc-300 leading-relaxed">
+                  On Day 1, your ping to <code className="text-amber-300 font-mono">192.168.1.99</code> returned <em>Destination host unreachable</em>. Who did your computer ask, and who stayed quiet?
+                </p>
+
+                <div className="space-y-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setWarmupSolved(true)}
+                    className={`w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-between ${
+                      warmupSolved
+                        ? 'bg-emerald-950/60 border-emerald-500/80 text-emerald-100 shadow-sm'
+                        : 'bg-[#121214] hover:bg-[#1a1a1d] border-white/10 text-zinc-200'
+                    }`}
+                  >
+                    <span>Your computer asked across the entire cable, but because nobody had .99, nobody answered back.</span>
+                    {warmupSolved && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWarmupSolved(false)}
+                    className="w-full text-left p-3.5 rounded-xl border border-white/10 bg-[#121214] hover:bg-[#1a1a1d] text-zinc-400 text-xs sm:text-sm transition-all cursor-pointer"
+                  >
+                    <span>The cable was broken, so the question never left your computer.</span>
+                  </button>
+                </div>
+
+                {warmupSolved && (
+                  <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs animate-in fade-in duration-200">
+                    Exactly! Your computer asked the room, but got complete silence. Today, you will see how that exact roll call works on a shared switch!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                disabled={!warmupSolved}
+                onClick={() => setPageMode('intro')}
+                className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-semibold text-white transition-all cursor-pointer shadow-lg active:scale-[0.98] ${
+                  warmupSolved
+                    ? 'bg-black hover:bg-zinc-900 border border-white/20'
+                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/[0.04]'
+                }`}
+              >
+                Begin Concept 1
               </button>
             </div>
           </div>
@@ -398,6 +480,23 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                 <span>{currentConcept.goal}</span>
               </div>
             </div>
+
+            {/* Natural Break Point: Concept 2 Completion */}
+            {conceptIdx === 1 && (
+              <div className="p-4 rounded-2xl bg-zinc-900 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-semibold text-amber-300">Natural Break Point</div>
+                  <div className="text-xs text-zinc-400">You completed the first two concepts. You can take a break now and return anytime!</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={backToRoadmap}
+                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-white border border-white/10 shrink-0 cursor-pointer transition-colors"
+                >
+                  Save & Take a Break
+                </button>
+              </div>
+            )}
 
             <div className="text-xs text-zinc-400 space-y-1">
               <span className="font-semibold text-zinc-300">Next question:</span>
@@ -523,7 +622,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  <span>① Port lights on?</span>
+                  <span>① Link light on?</span>
                   {checkedLight && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
 
@@ -536,7 +635,7 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  <span>② Address & ARP right?</span>
+                  <span>② Address right?</span>
                   {checkedAddress && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
 
@@ -552,11 +651,24 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                   <span>③ Ping replies?</span>
                   {checkedPing && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCheckedArp(true)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border text-xs transition-all cursor-pointer ${
+                    checkedArp
+                      ? 'bg-blue-950/70 border-blue-500/60 text-blue-300 shadow-sm'
+                      : 'bg-[#1c1c1f] border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span>④ Check arp -a</span>
+                  {checkedArp && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
+                </button>
               </div>
 
               <div className="text-[11px] text-zinc-500 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-                <span>Simulated Star Topology</span>
+                <span>Shared Switch Network</span>
               </div>
             </div>
           ) : (
@@ -569,13 +681,13 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                 </span>
                 <span className="text-zinc-700">|</span>
                 <span className="text-zinc-300">
-                  Network: <span className="text-blue-400 font-medium">192.168.1</span>.x (Mask: 255.255.255.0)
+                  Street: <span className="text-blue-400 font-medium">192.168.1</span>.x
                 </span>
               </div>
 
               <div className="text-[11px] text-zinc-500 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-                <span>Simulated Star Topology</span>
+                <span>Shared Switch Network</span>
               </div>
             </div>
           )}
@@ -700,6 +812,46 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       <div className="flex items-baseline gap-2">
                         <span className="font-semibold text-zinc-400 font-mono text-xs shrink-0">EXPECT:</span>
                         <span className="text-zinc-400 leading-relaxed">{currentRung.expectText}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Side-by-side Notebooks View (Concept 3 Rung 5) */}
+                {currentRung.id === 'c3-r5' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-2xl bg-[#18181b] border border-white/[0.08] text-xs font-mono shadow-sm animate-in fade-in duration-300">
+                    <div className="p-3.5 rounded-xl bg-[#121214] border border-blue-500/30 space-y-2">
+                      <div className="text-blue-400 font-bold uppercase tracking-wider text-[11px] flex items-center justify-between">
+                        <span>Switch's Notebook</span>
+                        <span className="text-[10px] text-zinc-500">MAC Table</span>
+                      </div>
+                      <div className="text-zinc-400 text-[11px] pb-1 border-b border-zinc-800">
+                        Kept by: The Switch
+                      </div>
+                      <div className="space-y-1 text-zinc-200 text-xs">
+                        <div>00-00-5e-00-53-01 ➔ Port 1</div>
+                        <div>00-00-5e-00-53-02 ➔ Port 2</div>
+                        <div>00-00-5e-00-53-03 ➔ Port 3</div>
+                      </div>
+                      <div className="text-[10px] text-zinc-400 pt-1 border-t border-zinc-800 italic">
+                        Job: Knows which physical port to send electrical signals down.
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-[#121214] border border-emerald-500/30 space-y-2">
+                      <div className="text-emerald-400 font-bold uppercase tracking-wider text-[11px] flex items-center justify-between">
+                        <span>Computer's Notebook</span>
+                        <span className="text-[10px] text-zinc-500">ARP Table</span>
+                      </div>
+                      <div className="text-zinc-400 text-[11px] pb-1 border-b border-zinc-800">
+                        Kept by: Your Computer (arp -a)
+                      </div>
+                      <div className="space-y-1 text-zinc-200 text-xs">
+                        <div>192.168.1.20 ➔ 00-00-5e-00-53-02</div>
+                        <div>192.168.1.30 ➔ 00-00-5e-00-53-03</div>
+                      </div>
+                      <div className="text-[10px] text-zinc-400 pt-1 border-t border-zinc-800 italic">
+                        Job: Knows which hardware name tag to write on the delivery envelope.
                       </div>
                     </div>
                   </div>
@@ -901,10 +1053,51 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                       </div>
                     )}
 
+                    {currentRung.id === 'c4-r5' && (
+                      // Ticket #203 Interactive Firewall / ICMP Echo unblock
+                      <div className="p-4 rounded-xl bg-[#18181b] border border-white/[0.08] space-y-3 text-xs shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-200 font-semibold flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono text-[11px]">
+                              Ticket #203 Fix
+                            </span>
+                            <span>Unblock Incoming Pings on Third computer</span>
+                          </span>
+                          {!isCBlocked ? (
+                            <span className="text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Pings Unblocked
+                            </span>
+                          ) : (
+                            <span className="text-amber-400 font-medium text-[11px]">
+                              Firewall Blocking Echo Requests
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-zinc-400 leading-relaxed text-[11px]">
+                          Step ④ (check <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">arp -a</code>) proved Third computer is home because its hardware name tag <code className="text-zinc-200 font-mono bg-zinc-800/80 px-1 py-0.5 rounded">00-00-5e-00-53-03</code> answered the roll call. However, its software firewall is silently dropping ping echo requests. Click below to allow incoming ping responses, then test your fix in the terminal.
+                        </p>
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setIsCBlocked(false)}
+                            disabled={!isCBlocked}
+                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm ${
+                              !isCBlocked
+                                ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 cursor-default'
+                                : 'bg-black hover:bg-zinc-900 border border-white/20 text-white cursor-pointer active:scale-[0.98]'
+                            }`}
+                          >
+                            {!isCBlocked ? '✓ Echo Responses Allowed' : 'Allow Incoming Pings in Software Firewall'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <Day2GuidedTerminal
                       expectedCommand={currentRung.check.expectedCommand || 'ping 192.168.1.20'}
                       stageState={effectiveStageState}
                       currentRungId={currentRung.id}
+                      isCBlocked={isCBlocked}
                       suggestedChips={
                         currentRung.id === 'c1-r4'
                           ? ['ping 192.168.1.20']
@@ -915,13 +1108,15 @@ export const Day2CockpitView: React.FC<Day2CockpitViewProps> = ({
                           : currentRung.id === 'c3-r4'
                           ? ['arp -a']
                           : currentRung.id === 'c3-r5'
-                          ? ['ping 192.168.1.99']
+                          ? ['arp -a', 'ping 192.168.1.99']
                           : currentRung.id === 'c4-r2'
-                          ? ['ping 192.168.1.30']
+                          ? ['ping 192.168.1.30', 'arp -a']
                           : currentRung.id === 'c4-r3'
                           ? ['ping 192.168.1.30']
                           : currentRung.id === 'c4-r4'
                           ? ['ping 192.168.1.30']
+                          : currentRung.id === 'c4-r5'
+                          ? ['ping 192.168.1.30', 'arp -a']
                           : undefined
                       }
                       onCommandRun={(cmd, outcome) => {

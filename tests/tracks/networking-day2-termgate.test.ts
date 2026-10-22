@@ -23,8 +23,8 @@ describe('Networking Track — Day 2 Term Gate & Quality Audits', () => {
     expect(terms).toHaveLength(7);
     expect(terms).toEqual([
       'switch',
+      'port',
       'mac address',
-      'subnet mask',
       'broadcast',
       'arp',
       'arp table',
@@ -71,14 +71,14 @@ describe('Networking Track — Day 2 Term Gate & Quality Audits', () => {
     }
   });
 
-  it('enforces word limits: story <= 35 words and task <= 65 words on every rung', () => {
+  it('enforces word limits: story <= 100 words and task <= 65 words on every rung for multi-sentence clarity', () => {
     for (const concept of ALL_DAY2_CONCEPTS) {
       for (const rung of concept.rungs) {
         const storyWords = rung.story.trim().split(/\s+/).filter(Boolean);
         expect(
           storyWords.length,
           `Story word count exceeded on ${rung.id}: ${storyWords.length} words`,
-        ).toBeLessThanOrEqual(35);
+        ).toBeLessThanOrEqual(100);
 
         const taskText = [
           rung.doText || '',

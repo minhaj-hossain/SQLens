@@ -57,6 +57,7 @@ export type Day2StageState = {
   dim: string[];
   lookInside: string | null;
   stopwatch: string | null;
+  activeLayer?: 'sockets' | 'addresses' | 'tags';
   arpTable: { ip: string; mac: string; type: 'dynamic' }[];
 };
 
