@@ -14,6 +14,7 @@ export interface Day1GuidedTerminalProps {
   currentRungId?: string;
   onCommandRun?: (command: string, outcome: 'reply' | 'cannot-send' | 'unreachable' | 'busy' | 'ipconfig') => void;
   onStageHighlight?: (targetId: string | null) => void;
+  onFocusOrClick?: () => void;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
   currentRungId = 'c1-r2',
   onCommandRun,
   onStageHighlight,
+  onFocusOrClick,
   className = '',
 }) => {
   const [inputVal, setInputVal] = useState('');
@@ -44,6 +46,11 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus input on mount or rung change
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [currentRungId]);
 
   // Auto-scroll on new entries
   useEffect(() => {
@@ -369,8 +376,12 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl bg-[#09090b] border border-white/[0.08] shadow-2xl overflow-hidden font-mono text-xs sm:text-[13px] ${className}`}
+      className={`relative flex flex-col rounded-2xl bg-[#09090b] border border-white/[0.08] shadow-2xl overflow-hidden font-mono text-xs sm:text-[13px] cursor-text ${className}`}
       data-testid="day1-guided-terminal"
+      onClick={() => {
+        inputRef.current?.focus();
+        onFocusOrClick?.();
+      }}
     >
       {/* Terminal Title Bar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-[#121214] border-b border-white/[0.06] text-zinc-400 select-none">
@@ -390,9 +401,13 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
 
       {/* Terminal Output Log Area (Max 14 lines before scroll) */}
       <div
-        className="flex-1 p-4 overflow-y-auto max-h-[300px] space-y-3"
+        className="flex-1 p-4 overflow-y-auto max-h-[300px] space-y-3 cursor-text"
         role="log"
         aria-live="polite"
+        onClick={() => {
+          inputRef.current?.focus();
+          onFocusOrClick?.();
+        }}
       >
         {history.map((entry) => (
           <div key={entry.id} className="space-y-1">
@@ -440,8 +455,11 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
       {/* Input Row with Ghost Text */}
       <div className="p-3 bg-[#121214] border-t border-white/[0.06] space-y-2">
         <div
-          className="relative flex items-center px-3.5 py-2 rounded-xl bg-[#09090b] border border-white/[0.08] focus-within:border-blue-500/80 focus-within:ring-1 focus-within:ring-blue-500/40"
-          onClick={() => inputRef.current?.focus()}
+          className="relative flex items-center px-3.5 py-2 rounded-xl bg-[#09090b] border border-white/[0.08] focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/10"
+          onClick={() => {
+            inputRef.current?.focus();
+            onFocusOrClick?.();
+          }}
         >
           <span className="text-zinc-500 select-none mr-2">C:\Users\you&gt;</span>
 
@@ -451,7 +469,11 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
               ref={inputRef}
               type="text"
               value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
+              onFocus={() => onFocusOrClick?.()}
+              onChange={(e) => {
+                setInputVal(e.target.value);
+                onFocusOrClick?.();
+              }}
               onKeyDown={handleKeyDown}
               className="w-full bg-transparent outline-none text-zinc-100 font-mono text-xs sm:text-[13px] z-10"
               spellCheck={false}
@@ -467,6 +489,26 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
               </span>
             )}
           </div>
+
+          {/* Quick Run / Enter button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFocusOrClick?.();
+              const cmdToRun = inputVal.trim() || (ghostText ? expectedCommand : '');
+              if (cmdToRun) {
+                setInputVal(cmdToRun);
+                executeCommand(cmdToRun);
+              }
+              inputRef.current?.focus();
+            }}
+            className="ml-2 px-2.5 py-1 rounded-lg bg-[#1c1c1f] hover:bg-[#25252a] text-zinc-200 text-xs font-mono font-medium flex items-center gap-1 cursor-pointer transition-colors shrink-0 border border-white/10 active:scale-[0.98]"
+            title="Execute command"
+          >
+            <span>Run</span>
+            <CornerDownLeft className="w-3 h-3 text-zinc-400" />
+          </button>
 
           {/* Quick Tab Prompt */}
           {ghostText && (
@@ -484,11 +526,14 @@ export const Day1GuidedTerminal: React.FC<Day1GuidedTerminalProps> = ({
               <button
                 key={chip}
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setInputVal(chip);
+                  onFocusOrClick?.();
+                  executeCommand(chip);
                   inputRef.current?.focus();
                 }}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 hover:text-white font-mono transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#18181b] hover:bg-[#222226] border border-white/10 text-[11px] text-zinc-300 hover:text-white font-mono transition-colors cursor-pointer active:scale-[0.98]"
               >
                 <span>{chip}</span>
               </button>

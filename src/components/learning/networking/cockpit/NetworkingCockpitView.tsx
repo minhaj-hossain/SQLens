@@ -864,12 +864,21 @@ export const NetworkingCockpitView: React.FC<NetworkingCockpitViewProps> = ({
               currentRung.layoutState === 'STATE_D' ||
               Boolean(currentRung.check.expectedCommand)) && (
               <Day1GuidedTerminal
-                expectedCommand={currentRung.check.expectedCommand}
+                expectedCommand={currentRung.check.expectedCommand || 'ping 192.168.1.20'}
                 allowedTargets={currentRung.check.allowedTargets}
                 freeTargets={currentRung.check.freeTargets}
                 stageState={effectiveStageState}
+                currentRungId={currentRung.id}
+                onFocusOrClick={() => {
+                  if (currentRung.id === 'c1-r2') {
+                    setIsTaskDone(true);
+                  }
+                }}
                 onCommandRun={(cmd, outcome) => {
                   setTaskOutcome(outcome);
+                  if (currentRung.id === 'c1-r2') {
+                    setIsTaskDone(true);
+                  }
                   if (currentRung.check.type === 'diagnose') {
                     // In diagnosis rungs, task completes ONLY when ping genuinely succeeds
                     if (outcome === 'reply') {

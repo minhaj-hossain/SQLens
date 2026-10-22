@@ -218,7 +218,10 @@ export const CONCEPT_1: ConceptDefinition = {
       meaningText: 'That grey text is a suggestion. Press Tab and it fills in for you. You\'ll use it in a moment.',
       nextHook: 'Next: send your first test message.',
       lockMessage: 'Click the terminal to continue.',
-      check: { type: 'task' },
+      check: {
+        type: 'task',
+        expectedCommand: 'ping 192.168.1.20',
+      },
       hints: [
         { level: 1, label: 'Hint 1 of 3', text: 'The terminal is the dark box on the right. Click anywhere inside it.' },
         { level: 2, label: 'Hint 2 of 3', text: 'Click on the prompt line, the one that ends with a > sign.' },
