@@ -1,0 +1,151 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { NetworkingModule } from '@/types/networking';
+import { NetworkingCanvas } from '../canvas/NetworkingCanvas';
+import { NetworkingTerminal } from '../terminal/NetworkingTerminal';
+import { NetworkingLessonSidebar } from '../sidebar/NetworkingLessonSidebar';
+import { ArrowLeft, Map, CheckCircle2 } from 'lucide-react';
+
+interface NetworkingWorkspaceProps {
+  module: NetworkingModule;
+}
+
+export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
+  module,
+}) => {
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [lastCommand, setLastCommand] = useState('');
+  const [isPinging, setIsPinging] = useState(false);
+  const [pc3Ip, setPc3Ip] = useState('192.168.1.30');
+  const [pc4Ip, setPc4Ip] = useState('192.168.2.10');
+  const [prefillCmd, setPrefillCmd] = useState<string | null>(null);
+
+  const currentStep = module.steps[activeStepIndex];
+
+  // Auto-complete recap step (step 5) if all preceding 5 commands are done
+  useEffect(() => {
+    if (activeStepIndex === 5 && [0, 1, 2, 3, 4].every((k) => completedSteps.has(k))) {
+      setCompletedSteps((prev) => new Set([...prev, 5]));
+    }
+  }, [activeStepIndex, completedSteps]);
+
+  const handleCommandRun = (cmd: string, output: string) => {
+    setLastCommand(cmd);
+
+    // Trigger ping pulse animation
+    if (cmd.startsWith('ping')) {
+      setIsPinging(true);
+      setTimeout(() => setIsPinging(false), 2500);
+    }
+
+    // Check if command satisfies current step or any step
+    const stepIdx = module.steps.findIndex((s) => s.cmd && s.cmd.toLowerCase() === cmd);
+    if (stepIdx > -1) {
+      setCompletedSteps((prev) => new Set([...prev, stepIdx]));
+    }
+  };
+
+  const handleCodeClick = (cmd: string) => {
+    setPrefillCmd(cmd);
+  };
+
+  return (
+    <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-[#ececf0] font-sans overflow-hidden">
+      {/* Top Header Bar */}
+      <header className="flex items-center justify-between px-4 py-2.5 border-b border-[#26262b] bg-[#0e0e11] shrink-0 z-20">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/networking"
+            className="flex items-center gap-1.5 text-[12px] font-mono text-[#9a9aa5] hover:text-[#4ade80] transition-colors px-2 py-1 rounded bg-[#141416] border border-[#26262b]"
+          >
+            <ArrowLeft size={13} />
+            <span>Roadmap</span>
+          </Link>
+          <div className="h-4 w-[1px] bg-[#26262b]"></div>
+          <b className="text-[14px] font-semibold tracking-wide text-[#ececf0]">
+            {module.title}
+          </b>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-[12px] font-mono text-[#9a9aa5]">
+            <CheckCircle2
+              size={14}
+              className={
+                completedSteps.size >= 5 ? 'text-[#4ade80]' : 'text-[#62626d]'
+              }
+            />
+            <span>
+              {completedSteps.size} / {module.steps.length} Completed
+            </span>
+          </div>
+
+          <Link
+            href="/networking"
+            className="hidden sm:flex items-center gap-1 text-[12px] text-[#9a9aa5] hover:text-[#60a5fa] transition-colors"
+          >
+            <Map size={13} />
+            <span>12 Days</span>
+          </Link>
+        </div>
+      </header>
+
+      {/* Main Workspace (Layout A: Top-left Canvas, Bottom-left Terminal, Right Sidebar) */}
+      <main className="flex-1 min-h-0 p-2.5 grid gap-2.5 overflow-hidden md:grid-cols-[1fr_410px] md:grid-rows-[1fr_220px] max-md:flex max-md:flex-col max-md:overflow-y-auto">
+        {/* Canvas Area (Top-Left) */}
+        <section
+          id="canvas"
+          className="md:[grid-area:1/1] min-h-0 min-w-0 max-md:h-[270px] max-md:shrink-0"
+        >
+          <NetworkingCanvas
+            dayId={module.id}
+            activeStepIndex={activeStepIndex}
+            completedSteps={completedSteps}
+            lastCommand={lastCommand}
+            isPinging={isPinging}
+            pc3Ip={pc3Ip}
+            pc4Ip={pc4Ip}
+          />
+        </section>
+
+        {/* Terminal Area (Bottom-Left) */}
+        <div
+          id="term-container"
+          className="md:[grid-area:2/1] min-h-0 min-w-0 max-md:order-3 max-md:h-[240px] max-md:shrink-0"
+        >
+          <NetworkingTerminal
+            dayId={module.id}
+            expectedCmd={currentStep?.cmd || null}
+            staticResponses={module.staticResponses}
+            onCommandRun={handleCommandRun}
+            completedSteps={completedSteps}
+            activeStepIndex={activeStepIndex}
+            pc3Ip={pc3Ip}
+            pc4Ip={pc4Ip}
+            setPc3Ip={setPc3Ip}
+            setPc4Ip={setPc4Ip}
+            prefillCmd={prefillCmd}
+            onClearPrefill={() => setPrefillCmd(null)}
+          />
+        </div>
+
+        {/* Lesson Sidebar Area (Right Full-Height) */}
+        <aside
+          id="lesson-container"
+          className="md:[grid-area:1/2/3/2] min-h-0 min-w-0 max-md:order-2 max-md:min-h-[380px]"
+        >
+          <NetworkingLessonSidebar
+            steps={module.steps}
+            activeStepIndex={activeStepIndex}
+            setActiveStepIndex={setActiveStepIndex}
+            completedSteps={completedSteps}
+            onCodeClick={handleCodeClick}
+          />
+        </aside>
+      </main>
+    </div>
+  );
+};
