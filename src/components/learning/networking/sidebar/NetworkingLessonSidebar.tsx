@@ -27,7 +27,10 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
   return (
     <section
       id="lesson"
-      className="flex flex-col bg-[#141416] border border-[#26262b] rounded-xl overflow-hidden min-h-0 h-full"
+      style={{
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+      }}
+      className="flex flex-col bg-[#141416] border border-[#26262b] rounded-xl overflow-hidden min-h-0 h-full text-[15px] leading-[1.6]"
     >
       {/* Sidebar Header */}
       <div className="flex items-center justify-between px-3.5 py-2 border-b border-[#26262b] bg-[#141416] text-[11px] font-mono uppercase tracking-wider text-[#9a9aa5]">
@@ -64,12 +67,12 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
       {/* Step Body Content */}
       <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-3.5 text-[#ececf0] text-[15px] leading-relaxed select-text">
         {/* Step Group Tag */}
-        <div className="text-[12px] font-mono text-[#9a9aa5] tracking-wide">
+        <div className="text-[12px] text-[#9a9aa5]">
           {currentStep.group}
         </div>
 
         {/* Step Title */}
-        <h2 className="text-[19px] font-bold text-[#ececf0] leading-snug m-0">
+        <h2 className="text-[19px] font-bold text-[#ececf0] leading-[1.3] m-0">
           {currentStep.title}
         </h2>
 
@@ -78,7 +81,7 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
           <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1">
             {currentStep.cmd ? 'What is it?' : 'The big picture'}
           </div>
-          <p className="text-[#ececf0]/90 text-[14.5px] leading-relaxed m-0">
+          <p className="text-[#ececf0] text-[15px] leading-[1.6] m-0">
             {currentStep.what}
           </p>
         </div>
@@ -89,14 +92,13 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
             <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1">
               Why does it matter?
             </div>
-            <p className="text-[#ececf0]/90 text-[14.5px] leading-relaxed mb-2.5">
+            <p className="text-[#ececf0] text-[15px] leading-[1.6] mb-2">
               {currentStep.why}
             </p>
 
             {currentStep.pic && (
-              <div className="border border-[#26262b] rounded-lg p-2.5 bg-[#4ade80]/[0.06] text-[13px] leading-normal text-[#ececf0]">
-                <b className="text-[#4ade80]">On the canvas: </b>
-                <span>{currentStep.pic}</span>
+              <div className="border border-[#26262b] rounded-[10px] p-[10px_12px] bg-[#4ade80]/[0.07] text-[15px] leading-[1.6] text-[#ececf0]">
+                <b>On the canvas:</b> {currentStep.pic}
               </div>
             )}
           </div>
@@ -108,29 +110,44 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
             <div className="text-[11px] font-semibold tracking-wider uppercase text-[#4ade80] mb-1">
               Your turn
             </div>
-            <p className="text-[14px] leading-normal mb-3">
+            <p className="text-[15px] leading-[1.6] mb-2">
               {currentStep.task} Type{' '}
-              <button
-                type="button"
+              <code
+                data-c={currentStep.cmd}
                 onClick={() => onCodeClick(currentStep.cmd!)}
-                className="inline-flex items-center gap-1 font-mono text-[13px] bg-[#050506] hover:bg-[#1a1a20] text-[#4ade80] px-2 py-0.5 rounded border border-[#26262b] hover:border-[#4ade80]/50 transition-colors cursor-pointer"
-                title="Click to fill into terminal"
+                style={{
+                  fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
+                }}
+                className="bg-[#050506] text-[#4ade80] px-[7px] py-[2px] rounded-[6px] text-[13px] cursor-pointer inline-block"
               >
-                <span>{currentStep.cmd}</span>
-              </button>{' '}
-              <span className="text-[#9a9aa5] text-[13px]">
+                {currentStep.cmd}
+              </code>{' '}
+              <span className="text-[#9a9aa5] text-[14px]">
                 (tap it to fill the terminal).
               </span>
             </p>
 
             {/* How to read the result table */}
-            <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1.5">
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1">
               How to read the result
             </div>
-            <div className="grid grid-cols-[minmax(0,46%)_1fr] gap-x-3 gap-y-1.5 text-[13px] border border-[#26262b] rounded-lg p-2.5 bg-[#0a0a0c]">
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 46%) 1fr',
+                gap: '6px 12px',
+              }}
+              className="text-[13px] border border-[#26262b] rounded-[10px] p-[10px_12px]"
+            >
               {currentStep.read.map(([k, v], idx) => (
                 <React.Fragment key={idx}>
-                  <b className="font-mono text-[12.5px] font-medium text-[#4ade80] break-words">
+                  <b
+                    style={{
+                      font: '500 12.5px ui-monospace, Menlo, Consolas, monospace',
+                      overflowWrap: 'anywhere',
+                    }}
+                    className="text-[#4ade80]"
+                  >
                     {k}
                   </b>
                   <span className="text-[#9a9aa5]">{v}</span>
@@ -141,13 +158,26 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         ) : (
           /* Recap Step */
           <div>
-            <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1.5">
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1">
               The four questions
             </div>
-            <div className="grid grid-cols-[minmax(0,46%)_1fr] gap-x-3 gap-y-1.5 text-[13px] border border-[#26262b] rounded-lg p-2.5 bg-[#0a0a0c] mb-3">
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 46%) 1fr',
+                gap: '6px 12px',
+              }}
+              className="text-[13px] border border-[#26262b] rounded-[10px] p-[10px_12px] mb-3"
+            >
               {currentStep.read.map(([k, v], idx) => (
                 <React.Fragment key={idx}>
-                  <b className="font-mono text-[12.5px] font-medium text-[#4ade80] break-words">
+                  <b
+                    style={{
+                      font: '500 12.5px ui-monospace, Menlo, Consolas, monospace',
+                      overflowWrap: 'anywhere',
+                    }}
+                    className="text-[#4ade80]"
+                  >
                     {k}
                   </b>
                   <span className="text-[#9a9aa5]">{v}</span>
@@ -158,37 +188,31 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
             <div className="text-[11px] font-semibold tracking-wider uppercase text-[#4ade80] mb-1">
               Your turn
             </div>
-            <p className="text-[14px] leading-normal m-0 text-[#ececf0]">
+            <p className="text-[15px] leading-[1.6] m-0 text-[#ececf0]">
               {currentStep.task}
             </p>
           </div>
         )}
 
         {/* The Big Takeaway Callout */}
-        <div className="border-l-[3px] border-[#60a5fa] pl-3 py-1 my-3 font-semibold text-[#ececf0] text-[13.5px]">
+        <div className="border-l-[3px] border-[#60a5fa] pl-3 py-[2px] mt-4 font-semibold text-[#ececf0] text-[15px]">
           {currentStep.rem}
         </div>
 
         {/* Completion Badge */}
-        <div className="min-h-[22px] flex items-center text-[#4ade80] text-[13px] font-semibold">
-          {isStepDone && (
-            <span className="flex items-center gap-1.5">
-              <Check size={15} strokeWidth={2.5} />
-              <span>Done – nice work</span>
-            </span>
-          )}
+        <div className="text-[#4ade80] text-[13px] mt-2 min-h-[20px]">
+          {isStepDone ? '✓ Done – nice work' : ''}
         </div>
       </div>
 
       {/* Navigation Footer */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-[#26262b] bg-[#141416]">
+      <div className="flex justify-between p-[10px_14px] border-t border-[#26262b]">
         <button
           onClick={() => setActiveStepIndex(Math.max(0, activeStepIndex - 1))}
           disabled={activeStepIndex === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#26262b] hover:border-[#60a5fa] hover:text-[#ececf0] disabled:opacity-30 disabled:hover:border-[#26262b] text-[#9a9aa5] text-[13px] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default"
         >
-          <ArrowLeft size={14} />
-          <span>Back</span>
+          ← Back
         </button>
 
         <button
@@ -196,10 +220,9 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
             setActiveStepIndex(Math.min(steps.length - 1, activeStepIndex + 1))
           }
           disabled={activeStepIndex === steps.length - 1}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#26262b] hover:border-[#4ade80] hover:text-[#ececf0] disabled:opacity-30 disabled:hover:border-[#26262b] text-[#9a9aa5] text-[13px] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default"
         >
-          <span>Next</span>
-          <ArrowRight size={14} />
+          Next →
         </button>
       </div>
     </section>

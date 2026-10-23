@@ -53,19 +53,24 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-[#ececf0] font-sans overflow-hidden">
+    <div
+      style={{
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+      }}
+      className="flex flex-col h-screen w-full bg-[#0a0a0a] text-[#ececf0] text-[15px] leading-[1.6] overflow-hidden"
+    >
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between px-4 py-2.5 border-b border-[#26262b] bg-[#0e0e11] shrink-0 z-20">
+      <header className="flex items-center justify-between p-[10px_16px] border-b border-[#26262b] bg-[#0a0a0a] shrink-0 z-20 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Link
             href="/networking"
-            className="flex items-center gap-1.5 text-[12px] font-mono text-[#9a9aa5] hover:text-[#4ade80] transition-colors px-2 py-1 rounded bg-[#141416] border border-[#26262b]"
+            className="flex items-center gap-1.5 text-[12px] font-mono text-[#9a9aa5] hover:text-[#4ade80] transition-colors px-2 py-0.5 rounded bg-[#141416] border border-[#26262b]"
           >
             <ArrowLeft size={13} />
             <span>Roadmap</span>
           </Link>
           <div className="h-4 w-[1px] bg-[#26262b]"></div>
-          <b className="text-[14px] font-semibold tracking-wide text-[#ececf0]">
+          <b className="text-[14px] font-bold text-[#ececf0]">
             {module.title}
           </b>
         </div>
@@ -94,7 +99,7 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
       </header>
 
       {/* Main Workspace (Layout A: Top-left Canvas, Bottom-left Terminal, Right Sidebar) */}
-      <main className="flex-1 min-h-0 p-2.5 grid gap-2.5 overflow-hidden md:grid-cols-[1fr_410px] md:grid-rows-[1fr_220px] max-md:flex max-md:flex-col max-md:overflow-y-auto">
+      <main className="flex-1 min-h-0 p-[10px] grid gap-[10px] overflow-hidden md:grid-cols-[1fr_410px] md:grid-rows-[1fr_220px] max-md:flex max-md:flex-col max-md:overflow-y-auto">
         {/* Canvas Area (Top-Left) */}
         <section
           id="canvas"

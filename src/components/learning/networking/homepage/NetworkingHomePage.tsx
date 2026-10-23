@@ -40,7 +40,12 @@ export const NetworkingHomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#ececf0] font-sans flex flex-col selection:bg-[#4ade80]/20 selection:text-[#4ade80]">
+    <div
+      style={{
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+      }}
+      className="min-h-screen bg-[#0a0a0a] text-[#ececf0] text-[16px] leading-[1.6] flex flex-col selection:bg-[#4ade80]/20 selection:text-[#4ade80]"
+    >
       {/* Top Navigation */}
       <nav className="sticky top-0 z-30 flex items-center justify-between px-6 py-3.5 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-[#2a2a30]">
         <Link href="/" className="font-semibold text-[17px] tracking-tight hover:text-[#4ade80] transition-colors">
