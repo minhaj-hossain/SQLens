@@ -41,6 +41,11 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
     return <BlockedView onSignOut={signOut} />;
   }
 
+  // Networking track has its own dedicated header and full-viewport layout.
+  if (pathname?.startsWith('/networking')) {
+    return <main className="w-full h-full min-h-screen bg-[#0a0a0a]">{children}</main>;
+  }
+
   return (
     <div
       className={`flex min-h-screen flex-col ${
