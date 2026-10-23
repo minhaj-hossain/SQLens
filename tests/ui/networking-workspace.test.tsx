@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NetworkingWorkspace } from '@/components/learning/networking/workspace/NetworkingWorkspace';
+import { NetworkingLessonSidebar } from '@/components/learning/networking/sidebar/NetworkingLessonSidebar';
 import { NET_01_MODULE, NET_02_MODULE, NET_03_MODULE } from '@/content/networking';
 
 describe('NetworkingWorkspace Component', () => {
@@ -40,5 +41,37 @@ describe('NetworkingWorkspace Component', () => {
     expect(html).toContain('Day 3 · Subnetting: Splitting a Network');
     expect(html).toContain('Prefix length: a shorter way to write the mask');
     expect(html).toContain('cidr');
+  });
+
+  it('gates the Next button when task is not completed', () => {
+    // When completedSteps is empty on step 0 (which has command "link status")
+    const htmlUncompleted = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_01_MODULE.steps}
+        activeStepIndex={0}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set()}
+        onCodeClick={() => {}}
+      />
+    );
+
+    // Next button has disabled attribute and title indicating task must be completed
+    expect(htmlUncompleted).toContain('disabled=""');
+    expect(htmlUncompleted).toContain('title="Complete the current task to continue"');
+
+    // When step 0 is completed in completedSteps
+    const htmlCompleted = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_01_MODULE.steps}
+        activeStepIndex={0}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set([0])}
+        onCodeClick={() => {}}
+      />
+    );
+
+    // Next button is enabled and has title="Next step"
+    expect(htmlCompleted).toContain('title="Next step"');
+    expect(htmlCompleted).toContain('✓ Done – nice work');
   });
 });

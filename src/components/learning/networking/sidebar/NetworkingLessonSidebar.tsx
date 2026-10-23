@@ -22,7 +22,19 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
   const currentStep = steps[activeStepIndex];
   if (!currentStep) return null;
 
-  const isStepDone = completedSteps.has(activeStepIndex);
+  const isCurrentStepDone = !currentStep.cmd || completedSteps.has(activeStepIndex);
+  const canGoNext = activeStepIndex < steps.length - 1 && isCurrentStepDone;
+
+  const isStepAccessible = (targetIdx: number) => {
+    if (targetIdx <= activeStepIndex) return true;
+    for (let k = 0; k < targetIdx; k++) {
+      const step = steps[k];
+      if (step?.cmd && !completedSteps.has(k)) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   return (
     <section
@@ -45,19 +57,27 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         {steps.map((_, idx) => {
           const isDone = completedSteps.has(idx);
           const isActive = idx === activeStepIndex;
+          const accessible = isStepAccessible(idx);
 
           return (
             <button
               key={idx}
-              onClick={() => setActiveStepIndex(idx)}
+              onClick={() => {
+                if (accessible) {
+                  setActiveStepIndex(idx);
+                }
+              }}
+              disabled={!accessible}
               className={`flex-1 h-1.5 rounded-full transition-all duration-200 ${
                 isActive
-                  ? 'bg-[#60a5fa] ring-2 ring-[#60a5fa]/30'
+                  ? 'bg-[#60a5fa] ring-2 ring-[#60a5fa]/30 cursor-pointer'
                   : isDone
-                  ? 'bg-[#4ade80]'
-                  : 'bg-[#26262b] hover:bg-[#3f3f46]'
+                  ? 'bg-[#4ade80] cursor-pointer'
+                  : accessible
+                  ? 'bg-[#26262b] hover:bg-[#3f3f46] cursor-pointer'
+                  : 'bg-[#26262b]/50 opacity-40 cursor-not-allowed'
               }`}
-              title={`Step ${idx + 1}`}
+              title={accessible ? `Step ${idx + 1}` : `Complete previous steps to unlock`}
               aria-label={`Jump to step ${idx + 1}`}
             />
           );
@@ -201,7 +221,7 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
 
         {/* Completion Badge */}
         <div className="text-[#4ade80] text-[13px] mt-2 min-h-[20px]">
-          {isStepDone ? '✓ Done – nice work' : ''}
+          {isCurrentStepDone ? '✓ Done – nice work' : ''}
         </div>
       </div>
 
@@ -216,10 +236,19 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         </button>
 
         <button
-          onClick={() =>
-            setActiveStepIndex(Math.min(steps.length - 1, activeStepIndex + 1))
+          onClick={() => {
+            if (canGoNext) {
+              setActiveStepIndex(Math.min(steps.length - 1, activeStepIndex + 1));
+            }
+          }}
+          disabled={!canGoNext}
+          title={
+            activeStepIndex === steps.length - 1
+              ? 'End of lesson'
+              : !isCurrentStepDone
+              ? 'Complete the current task to continue'
+              : 'Next step'
           }
-          disabled={activeStepIndex === steps.length - 1}
           className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default"
         >
           Next →
