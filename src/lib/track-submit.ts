@@ -46,11 +46,6 @@ export type { InferredField, InferredResultType } from './prisma-engine/prisma-t
 export type { ConsoleDisplayMode } from './prisma-engine/prisma-submit-pipeline';
 export { isPrismaTask } from './prisma-engine/prisma-submit-pipeline';
 export type { PrismaWorkspaceMode } from '../types/prisma-curriculum';
-import {
-  isNetworkingTask,
-  gradeNetworkingSubmission,
-} from './network-engine/networking-submit-pipeline';
-export { isNetworkingTask, gradeNetworkingSubmission };
 
 /** Prisma SQL Lens payload — what `SqlLensPanel` renders. */
 export interface SqlLensState {
@@ -130,21 +125,6 @@ export interface TrackSubmitOutcome {
 export function submitForTask(options: TrackSubmitOptions): TrackSubmitOutcome {
   const { task, code, hooks, judgmentAnswers, surface, attempt, record } = options;
 
-  if (isNetworkingTask(task)) {
-    const netOutcome = gradeNetworkingSubmission({
-      task,
-      judgmentAnswers,
-      selectedOptionIndex:
-        code !== undefined && code !== '' && !Number.isNaN(Number(code))
-          ? Number(code)
-          : undefined,
-    });
-    return {
-      passed: netOutcome.passed,
-      feedback: netOutcome.feedback,
-      stage: netOutcome.stage,
-    };
-  }
 
   if (!isPrismaTask(task)) {
     return runAndGradeSubmission({
@@ -292,13 +272,6 @@ export function solutionReveal(task: PracticeTask): {
       language: isSchema ? 'prisma' : 'typescript',
       label: isSchema ? 'Solution (schema.prisma)' : 'Solution (TypeScript)',
       code: task.prisma!.solutionCode,
-    };
-  }
-  if (isNetworkingTask(task)) {
-    return {
-      language: 'sql',
-      label: 'Technical Explanation',
-      code: task.solutionExplanation || 'Review the technical rule governing this scenario.',
     };
   }
   return { language: 'sql', label: 'Solution SQL', code: task.solutionSql };

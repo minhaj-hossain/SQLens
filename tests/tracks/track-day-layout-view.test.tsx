@@ -259,7 +259,6 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const SQL_LAYOUT = 'src/app/(app)/sql/learn/[dayId]/layout.tsx';
 const PRISMA_LAYOUT = 'src/app/(app)/prisma/learn/[dayId]/layout.tsx';
-const NETWORKING_LAYOUT = 'src/app/(app)/networking/learn/[dayId]/layout.tsx';
 const VIEW = 'src/components/learn/TrackDayLayoutView.tsx';
 
 describe('Phase 4.2 — day layouts are thin, parity-checked delegates', () => {
@@ -271,9 +270,6 @@ describe('Phase 4.2 — day layouts are thin, parity-checked delegates', () => {
     const prisma = layoutSource(PRISMA_LAYOUT);
     expect(prisma).toContain(importLine);
     expect(prisma).toContain('<TrackDayLayoutView track="prisma">');
-    const networking = layoutSource(NETWORKING_LAYOUT);
-    expect(networking).toContain(importLine);
-    expect(networking).toContain('<TrackDayLayoutView track="networking">');
   });
 
   it('delegates contain none of the day-boundary logic (single owner: the view)', () => {
@@ -294,7 +290,7 @@ describe('Phase 4.2 — day layouts are thin, parity-checked delegates', () => {
       'Icon',
       'resolveDayLayoutState',
     ];
-    for (const rel of [SQL_LAYOUT, PRISMA_LAYOUT, NETWORKING_LAYOUT]) {
+    for (const rel of [SQL_LAYOUT, PRISMA_LAYOUT]) {
       const src = layoutSource(rel);
       for (const marker of markers) {
         expect(src, `${rel} must not contain ${marker}`).not.toMatch(
@@ -341,9 +337,7 @@ describe('Phase 4.2 — day layouts are thin, parity-checked delegates', () => {
   it('the delegates differ ONLY in the track literal (zero drift, forever)', () => {
     const sql = layoutSource(SQL_LAYOUT);
     const prisma = layoutSource(PRISMA_LAYOUT);
-    const networking = layoutSource(NETWORKING_LAYOUT);
     expect(sql.replace('track="sql"', 'track="prisma"')).toBe(prisma);
-    expect(sql.replace('track="sql"', 'track="networking"')).toBe(networking);
   });
 });
 
@@ -357,7 +351,7 @@ describe('Phase 4.2 — route inventory, sitemap and redirect contracts stay fro
     expect(
       learnLayouts,
       'Adding a track? Add its delegate layout AND update this pinned list (Task 4.2 tripwire).',
-    ).toEqual([PRISMA_LAYOUT, SQL_LAYOUT, NETWORKING_LAYOUT].sort());
+    ).toEqual([PRISMA_LAYOUT, SQL_LAYOUT].sort());
   });
 
   it('the canonical sitemap still emits both track surfaces and every module overview', () => {

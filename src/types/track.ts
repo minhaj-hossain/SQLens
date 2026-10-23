@@ -21,9 +21,9 @@
  * `TRACK_REGISTRY`) covers it. The tuple is a literal type, so
  * `TRACK_IDS[0]` is `'sql'` — not a widened `string`.
  */
-export const TRACK_IDS = ['sql', 'prisma', 'networking'] as const;
+export const TRACK_IDS = ['sql', 'prisma'] as const;
 
-/** Id of a track the build ships (`'sql' | 'prisma' | 'networking'`). */
+/** Id of a track the build ships (`'sql' | 'prisma'`). */
 export type BuiltinTrackId = (typeof TRACK_IDS)[number];
 
 /**
@@ -40,13 +40,13 @@ export function isTrackId(value: unknown): value is TrackId {
 /** Display metadata for the track selector (Phase 2 `/` page). */
 export interface TrackMeta {
   id: BuiltinTrackId;
-  /** Short label, e.g. "SQL" / "Prisma" / "Networking". */
+  /** Short label, e.g. "SQL" / "Prisma". */
   label: string;
   /** Full title, e.g. "SQLens — 57 Days of Hands-On SQL". */
   title: string;
   /** One-line pitch for the selector card. */
   tagline: string;
-  /** URL base path for the track's roadmap. `/sql` / `/prisma` / `/networking`. */
+  /** URL base path for the track's roadmap. `/sql` / `/prisma`. */
   basePath: string;
   /** LocalStorage guest key (signed-in keys are derived per user + track). */
   guestStorageKey: string;
@@ -100,15 +100,5 @@ export const TRACK_META: Record<TrackId, TrackMeta> = {
     guestStorageKey: 'prismalens_progress_v1',
     userStorageKeyPrefix: 'prismalens_progress_user_',
     initialModuleId: 'prisma-01',
-  },
-  networking: {
-    id: 'networking',
-    label: 'Networking',
-    title: 'Networking Fundamentals',
-    tagline: 'Understand how computers connect, communicate, and route data — from local links to the global internet.',
-    basePath: '/networking',
-    guestStorageKey: 'networking_progress_v1',
-    userStorageKeyPrefix: 'networking_progress_user_',
-    initialModuleId: 'net-01',
   },
 };

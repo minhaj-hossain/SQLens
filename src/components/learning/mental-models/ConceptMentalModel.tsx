@@ -17,7 +17,6 @@ import { StringTransformVisualizer } from './StringTransformVisualizer';
 import { DateTimelineVisualizer } from './DateTimelineVisualizer';
 import { CtePipelineVisualizer, CtePipelineVariant } from './CtePipelineVisualizer';
 import { InterviewWhiteboardVisualizer } from './InterviewWhiteboardVisualizer';
-import { SwitchSimulationLab } from '../networking/SwitchSimulationLab';
 
 export type ConceptArchetype =
   | 'TABULAR_PROJECTION'    // Default: shows authentic source table
@@ -35,8 +34,7 @@ export type ConceptArchetype =
   | 'SCHEMA_DDL'            // Days 27, 28, 29, 30, 33
   | 'BTREE_INDEXING'        // Day 31
   | 'SECURITY_DEFENSE'      // Day 32 (injection concepts only)
-  | 'INTERVIEW_WHITEBOARD'  // Days 36, 37, 38
-  | 'SWITCHING_SIMULATOR';  // net-03: Local Switching & MAC Learning
+  | 'INTERVIEW_WHITEBOARD';  // Days 36, 37, 38
 
 // ---------------------------------------------------------------------------
 // Concept-ID -> archetype overrides.
@@ -161,7 +159,6 @@ export function resolveConceptArchetype(moduleId: string, concept?: Concept): Co
   // Day 32 security: concept-level overrides above handle injection vs production concepts.
   if (mid === 'day-32') return 'SECURITY_DEFENSE';
   if (mid === 'day-36' || mid === 'day-37') return 'INTERVIEW_WHITEBOARD';
-  if (mid === 'net-03') return 'SWITCHING_SIMULATOR';
 
   // ── Milestone 4 (Days 39–57) ──────────────────────────────────────────────
   // Days 39/40 (views) and 46 (triggers) deliberately stay TABULAR_PROJECTION:
@@ -284,7 +281,6 @@ export function shouldSuppressTopIntroTable(moduleId: string, concept?: Concept)
     'day-29', 'day-30', 'day-31', 'day-32',
     'day-36', 'day-37', 'day-38',
     'day-41', 'day-42', 'day-49', 'day-50', 'day-52', 'day-56', 'day-57',
-    'net-03',
   ];
   return diagramDrivenModules.includes(mid);
 }
@@ -329,16 +325,6 @@ export const ConceptMentalModel: React.FC<ConceptMentalModelProps> = ({ moduleId
       return <SecurityInjectionVisualizer />;
     case 'INTERVIEW_WHITEBOARD':
       return <InterviewWhiteboardVisualizer />;
-    case 'SWITCHING_SIMULATOR':
-      return (
-        <div className="mt-6 mb-8">
-          <SwitchSimulationLab
-            enablePredictionGate={true}
-            title="Interactive Switch Laboratory: MAC Learning & Forwarding"
-            subtitle="Step through the frame transmission below. Notice how the Prediction Gate pauses playback before the return frame event executes."
-          />
-        </div>
-      );
     default:
       // Tabular projection concepts rely on their authentic source table
       return null;

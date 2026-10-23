@@ -141,191 +141,77 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   return (
     <div className="max-w-[960px] mx-auto px-[28px] max-[760px]:px-[18px]">
       {/* ============ HERO ============ */}
-      {track === 'networking' ? (
-        <section className="pt-16 pb-14 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
-          <div>
-            <div className="flex items-center gap-2 font-mono text-xs text-text-faint tracking-[0.08em] uppercase mb-5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-400 font-semibold">NETWORKING SUITE</span>
-              <span className="text-border">/</span>
-              <span>PROTOCOL ARCHITECTURE</span>
-            </div>
-            <h1 className="font-mono font-bold text-[32px] md:text-[42px] leading-[1.14] tracking-tight text-text">
-              Master computer networking from <span className="text-emerald-400">raw ethernet frames</span> to global routing.
-            </h1>
-            <p className="mt-4 text-[15.5px] text-text-dim max-w-[500px] leading-[1.65]">
-              Hands-on interactive laboratory: trace packets in real-time, inspect Layer 2 Ethernet frames, model Layer 2 switching, solve CIDR subnets, and debug TLS handshakes.
-            </p>
-            <div className="mt-[30px] flex items-center gap-4 flex-wrap">
-              <button
-                onClick={handleContinue}
-                className="font-semibold text-[14.5px] bg-emerald-500 hover:bg-emerald-400 text-black px-[22px] py-[13px] rounded-lg inline-flex items-center gap-2 hover:-translate-y-px transition-transform cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.25)]"
-              >
-                {completedCount === 0 ? 'Start Lab 1: End-to-End Journey' : 'Continue where you left off'} <span aria-hidden="true">→</span>
-              </button>
-              <button
-                onClick={handleViewPlan}
-                className="font-mono text-[13px] text-text-dim border border-border px-4 py-3 rounded-lg hover:text-text hover:border-text-dim transition-colors cursor-pointer"
-              >
-                View network topology
-              </button>
+      <section className="pt-16 pb-14 grid grid-cols-1 md:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
+        <div>
+          <div className="font-mono text-xs text-text-faint tracking-[0.06em] uppercase mb-5">
+            {track === 'prisma' ? 'PRISMA' : 'SQL'} <span className="text-func">/</span> CURRICULUM ROADMAP
+          </div>
+          <h1 className="font-sans font-bold text-[34px] md:text-[44px] leading-[1.12] tracking-tight text-text text-balance">
+            {track === 'prisma' ? (
+              <>Go from <code className="font-mono text-func font-semibold">prisma.findMany()</code> to production.</>
+            ) : (
+              <>Go from <code className="font-mono text-func font-semibold">SELECT *</code> to shipped.</>
+            )}
+          </h1>
+          <p className="mt-4 text-[15.5px] text-text-dim max-w-[480px] leading-[1.65]">
+            {track === 'prisma'
+              ? "Type-safe queries, one schema at a time — because guessing your DB shape isn't a strategy."
+              : <>&quot;I sort of know JOINs&quot; isn&apos;t a personality trait — hands-on SQL, one query at a time.</>}
+          </p>
+          <div className="mt-[30px] flex items-center gap-4 flex-wrap">
+            <button
+              onClick={handleContinue}
+              className="font-semibold text-[14.5px] bg-func text-ink px-[22px] py-[13px] rounded-lg inline-flex items-center gap-2 hover:-translate-y-px transition-transform cursor-pointer"
+            >
+              {completedCount === 0
+                ? track === 'prisma'
+                  ? 'Start Day 1: Schema Modeling'
+                  : 'Start Day 1: Find a Table'
+                : 'Continue where you left off'}{' '}
+              <span aria-hidden="true">→</span>
+            </button>
+            <button
+              onClick={handleViewPlan}
+              className="font-mono text-[13px] text-text-dim border border-border px-4 py-3 rounded-lg hover:text-text hover:border-text-dim transition-colors cursor-pointer"
+            >
+              View full plan
+            </button>
+          </div>
+        </div>
+
+        {/* % ring — the graphical centerpiece */}
+        <div className="flex flex-col items-center bg-surface border border-border rounded-[18px] p-7 px-5 md:order-none order-first">
+          <div className="relative w-[150px] h-[150px]">
+            <svg viewBox="0 0 150 150" className="w-full h-full -rotate-90">
+              <circle cx="75" cy="75" r="64" fill="none" stroke="var(--border)" strokeWidth="7" />
+              <circle
+                cx="75"
+                cy="75"
+                r="64"
+                fill="none"
+                stroke="var(--func)"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={RING_CIRCUMFERENCE}
+                strokeDashoffset={ringOffset}
+                style={{ filter: 'drop-shadow(0 0 6px var(--accent-line))' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="font-mono text-[30px] font-bold text-text">{overallPct}%</div>
+              <div className="font-mono text-[10px] text-text-faint tracking-[0.05em] mt-0.5">COMPLETE</div>
             </div>
           </div>
-
-          {/* Protocol Stack & Network HUD */}
-          <div className="flex flex-col bg-surface border border-emerald-500/25 rounded-[18px] p-6 shadow-[0_0_30px_rgba(16,185,129,0.06)] relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500/10 via-emerald-500 to-emerald-500/10" />
-            
-            {/* HUD Header */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-border-soft">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="font-mono text-[11px] font-bold text-emerald-400 tracking-wider uppercase">
-                  LINK 100BASE-TX: ACTIVE
-                </span>
-              </div>
-              <span className="font-mono text-[10.5px] text-text-faint">
-                100 Mbps Full-Duplex
-              </span>
-            </div>
-
-            {/* Protocol Stack Hierarchy */}
-            <div className="py-4 space-y-2 font-mono text-xs">
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-2/80 border border-border-soft">
-                <span className="text-text font-semibold flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">L7</span>
-                  Application
-                </span>
-                <span className="text-text-faint text-[11px]">HTTP/3 · DNS · TLS 1.3</span>
-              </div>
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-2/80 border border-border-soft">
-                <span className="text-text font-semibold flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">L4</span>
-                  Transport
-                </span>
-                <span className="text-text-faint text-[11px]">TCP Windows · UDP</span>
-              </div>
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-2/80 border border-border-soft">
-                <span className="text-text font-semibold flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">L3</span>
-                  Internetwork
-                </span>
-                <span className="text-text-faint text-[11px]">IPv4 · IPv6 · Routing</span>
-              </div>
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-2/80 border border-border-soft">
-                <span className="text-text font-semibold flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">L2</span>
-                  Data Link
-                </span>
-                <span className="text-text-faint text-[11px]">Ethernet · MAC · ARP</span>
-              </div>
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-2/80 border border-border-soft">
-                <span className="text-text font-semibold flex items-center gap-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">L1</span>
-                  Physical Media
-                </span>
-                <span className="text-text-faint text-[11px]">Tx/Rx Signal Lines</span>
-              </div>
-            </div>
-
-            {/* Progress Telemetry */}
-            <div className="pt-3 border-t border-border-soft">
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="font-mono text-text-dim text-[11px]">
-                  Lab Curriculum Progress
-                </span>
-                <span className="font-mono font-bold text-emerald-400 text-xs">
-                  {completedCount}/{totalModules} Modules ({overallPct}%)
-                </span>
-              </div>
-              <div className="w-full h-2 bg-surface-3 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                  style={{ width: `${Math.max(4, overallPct)}%` }}
-                />
-              </div>
-              <p className="mt-3 text-[11px] text-text-faint text-center leading-relaxed">
-                Stage {currentMilestoneIndex + 1} of {ROADMAP_MILESTONES.length}: <b className="text-text font-semibold">{currentMilestone.title}</b>
-                {nextModule && overallPct < 100 ? (
-                  <> — <b className="text-emerald-400 font-semibold">{nextModule.shortTitle}</b> is next.</>
-                ) : '.'}
-              </p>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="pt-16 pb-14 grid grid-cols-1 md:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
-          <div>
-            <div className="font-mono text-xs text-text-faint tracking-[0.06em] uppercase mb-5">
-              {track === 'prisma' ? 'PRISMA' : 'SQL'} <span className="text-func">/</span> CURRICULUM ROADMAP
-            </div>
-            <h1 className="font-sans font-bold text-[34px] md:text-[44px] leading-[1.12] tracking-tight text-text text-balance">
-              {track === 'prisma' ? (
-                <>Go from <code className="font-mono text-func font-semibold">prisma.findMany()</code> to production.</>
-              ) : (
-                <>Go from <code className="font-mono text-func font-semibold">SELECT *</code> to shipped.</>
-              )}
-            </h1>
-            <p className="mt-4 text-[15.5px] text-text-dim max-w-[480px] leading-[1.65]">
-              {track === 'prisma'
-                ? "Type-safe queries, one schema at a time — because guessing your DB shape isn't a strategy."
-                : <>&quot;I sort of know JOINs&quot; isn&apos;t a personality trait — hands-on SQL, one query at a time.</>}
-            </p>
-            <div className="mt-[30px] flex items-center gap-4 flex-wrap">
-              <button
-                onClick={handleContinue}
-                className="font-semibold text-[14.5px] bg-func text-ink px-[22px] py-[13px] rounded-lg inline-flex items-center gap-2 hover:-translate-y-px transition-transform cursor-pointer"
-              >
-                {completedCount === 0
-                  ? track === 'prisma'
-                    ? 'Start Day 1: Schema Modeling'
-                    : 'Start Day 1: Find a Table'
-                  : 'Continue where you left off'}{' '}
-                <span aria-hidden="true">→</span>
-              </button>
-              <button
-                onClick={handleViewPlan}
-                className="font-mono text-[13px] text-text-dim border border-border px-4 py-3 rounded-lg hover:text-text hover:border-text-dim transition-colors cursor-pointer"
-              >
-                View full plan
-              </button>
-            </div>
-          </div>
-
-          {/* % ring — the graphical centerpiece */}
-          <div className="flex flex-col items-center bg-surface border border-border rounded-[18px] p-7 px-5 md:order-none order-first">
-            <div className="relative w-[150px] h-[150px]">
-              <svg viewBox="0 0 150 150" className="w-full h-full -rotate-90">
-                <circle cx="75" cy="75" r="64" fill="none" stroke="var(--border)" strokeWidth="7" />
-                <circle
-                  cx="75"
-                  cy="75"
-                  r="64"
-                  fill="none"
-                  stroke="var(--func)"
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_CIRCUMFERENCE}
-                  strokeDashoffset={ringOffset}
-                  style={{ filter: 'drop-shadow(0 0 6px var(--accent-line))' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="font-mono text-[30px] font-bold text-text">{overallPct}%</div>
-                <div className="font-mono text-[10px] text-text-faint tracking-[0.05em] mt-0.5">COMPLETE</div>
-              </div>
-            </div>
-            <p className="mt-4 text-xs text-text-dim text-center leading-relaxed">
-              You&apos;re through <b className="text-text font-semibold">{currentMilestoneIndex + 1 === ROADMAP_MILESTONES.length && overallPct === 100 ? 'all stages' : `Stage ${currentMilestoneIndex + 1}`}</b> of {ROADMAP_MILESTONES.length}
-              {nextModule && overallPct < 100 ? (
-                <> — <b className="text-text font-semibold">{nextModule.shortTitle}</b> is next up.</>
-              ) : (
-                '.'
-              )}
-            </p>
-          </div>
-        </section>
-      )}
+          <p className="mt-4 text-xs text-text-dim text-center leading-relaxed">
+            You&apos;re through <b className="text-text font-semibold">{currentMilestoneIndex + 1 === ROADMAP_MILESTONES.length && overallPct === 100 ? 'all stages' : `Stage ${currentMilestoneIndex + 1}`}</b> of {ROADMAP_MILESTONES.length}
+            {nextModule && overallPct < 100 ? (
+              <> — <b className="text-text font-semibold">{nextModule.shortTitle}</b> is next up.</>
+            ) : (
+              '.'
+            )}
+          </p>
+        </div>
+      </section>
 
       {/* locked-day notice (shown when a locked leaf is clicked) */}
       {lockedAlert && (
@@ -352,7 +238,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
       {/* ============ EXECUTION PATH ============ */}
       <section id="execution-path">
         <div className="font-mono text-[11.5px] text-text-faint tracking-[0.08em] uppercase mb-[18px]">
-          {track === 'prisma' ? 'Learning path' : track === 'networking' ? 'Network Architecture Path' : 'Execution path'}
+          {track === 'prisma' ? 'Learning path' : 'Execution path'}
         </div>
 
         <div className="relative pb-5">
@@ -376,9 +262,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 <div
                   className={`relative z-[2] mx-auto mb-[22px] w-[210px] bg-surface border-[1.5px] border-border rounded-[14px] p-4 px-[18px] text-center ${
                     stageState === 'active'
-                      ? track === 'networking'
-                        ? 'border-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.15)]'
-                        : 'border-func shadow-[0_0_0_5px_var(--accent-dim)]'
+                      ? 'border-func shadow-[0_0_0_5px_var(--accent-dim)]'
                       : stageState === 'locked'
                       ? 'opacity-50'
                       : ''
@@ -387,9 +271,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   <div
                     className={`font-mono text-[10px] tracking-[0.08em] mb-1.5 ${
                       stageState === 'active'
-                        ? track === 'networking'
-                          ? 'text-emerald-400 font-semibold'
-                          : 'text-func'
+                        ? 'text-func'
                         : 'text-text-faint'
                     }`}
                   >
@@ -402,9 +284,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                   <div
                     className={`font-mono text-[11px] mt-[9px] pt-[9px] border-t border-border-soft ${
                       stageState === 'active'
-                        ? track === 'networking'
-                          ? 'text-emerald-400'
-                          : 'text-text'
+                        ? 'text-text'
                         : 'text-text-faint'
                     }`}
                   >
@@ -441,13 +321,9 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-all duration-150 ${
                           isDone
-                            ? track === 'networking'
-                              ? 'bg-surface-2 border-[1.5px] border-emerald-500/40 text-emerald-400 font-bold hover:bg-emerald-500/10 hover:border-emerald-500 hover:-translate-y-0.5 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.1)]'
-                              : 'bg-surface-2 border-[1.5px] border-func/40 text-func font-bold hover:bg-func/10 hover:border-func hover:-translate-y-0.5 cursor-pointer shadow-[0_0_12px_rgba(244,196,48,0.06)]'
+                            ? 'bg-surface-2 border-[1.5px] border-func/40 text-func font-bold hover:bg-func/10 hover:border-func hover:-translate-y-0.5 cursor-pointer shadow-[0_0_12px_rgba(244,196,48,0.06)]'
                             : isCurrent
-                            ? track === 'networking'
-                              ? 'bg-emerald-500 border-[1.5px] border-emerald-500 text-black font-bold shadow-[0_0_0_5px_rgba(16,185,129,0.25)] hover:-translate-y-0.5 cursor-pointer'
-                              : 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_5px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
+                            ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_5px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
                             : isUnlocked
                             ? 'bg-surface border-[1.5px] border-border text-text-dim hover:text-text hover:border-border-strong hover:-translate-y-0.5 cursor-pointer'
                             : 'bg-surface border-[1.5px] border-border-soft text-text-faint opacity-50 cursor-not-allowed'
@@ -462,20 +338,16 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
 
                 {/* callout — hangs off the active stage, shows the current module */}
                 {isActiveStage && activeModuleInStage && (
-                  <div className={`max-w-[680px] mx-auto mt-[26px] bg-surface-2 border ${
-                    track === 'networking' ? 'border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.06)]' : 'border-(--accent-line) shadow-[0_0_24px_rgba(244,196,48,0.06)]'
-                  } rounded-xl p-[18px] px-5 relative`}>
+                  <div className="max-w-[680px] mx-auto mt-[26px] bg-surface-2 border border-(--accent-line) shadow-[0_0_24px_rgba(244,196,48,0.06)] rounded-xl p-[18px] px-5 relative">
                     <div
-                      className={`absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t ${
-                        track === 'networking' ? 'border-emerald-500/40' : 'border-(--accent-line)'
-                      }`}
+                      className="absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t border-(--accent-line)"
                       aria-hidden="true"
                     />
                     <div className="flex items-center justify-between mb-3 gap-2">
                       <div className="font-sans text-[14px] font-bold text-text truncate">
                         {getModuleDisplayLabel(currentModule)} — {currentModule.shortTitle}
                       </div>
-                      <div className={`font-mono text-[11px] font-semibold ${track === 'networking' ? 'text-emerald-400' : 'text-func'} shrink-0`}>
+                      <div className="font-mono text-[11px] font-semibold text-func shrink-0">
                         {activeTaskPct}% done
                       </div>
                     </div>
@@ -532,13 +404,9 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                   <span
                                     className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] shrink-0 font-bold ${
                                       conceptDone
-                                        ? track === 'networking'
-                                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                                          : 'bg-func/20 text-func border border-func/40'
+                                        ? 'bg-func/20 text-func border border-func/40'
                                         : isConceptCurrent
-                                        ? track === 'networking'
-                                          ? 'bg-emerald-500 text-black'
-                                          : 'bg-func text-ink'
+                                        ? 'bg-func text-ink'
                                         : 'bg-surface-2 text-text-faint border border-border'
                                     }`}
                                   >
@@ -582,9 +450,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                               }}
                               className={`mt-2.5 pt-2.5 border-t border-dashed border-border w-full flex items-center justify-between font-mono text-[11.5px] transition ${
                                 activeChallengeUnlocked || activeChallengeDone
-                                  ? track === 'networking'
-                                    ? 'text-emerald-400 hover:brightness-110 cursor-pointer'
-                                    : 'text-func hover:brightness-110 cursor-pointer'
+                                  ? 'text-func hover:brightness-110 cursor-pointer'
                                   : 'text-text-faint opacity-60 cursor-not-allowed'
                               }`}
                             >
@@ -616,7 +482,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
 
       <footer className="mt-[74px] mb-11 flex flex-col items-center justify-center gap-5 text-center">
         <div className="font-mono text-[11px] text-text-faint">
-          {track === 'prisma' ? 'Prisma' : track === 'networking' ? 'Networking' : 'SQL'} — {overallPct}% through the path.
+          {track === 'prisma' ? 'Prisma' : 'SQL'} — {overallPct}% through the path.
         </div>
         
         {onResetClick && (
@@ -625,7 +491,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
             className="text-xs font-mono text-text-dim hover:text-error border border-border-soft hover:border-error/30 bg-surface px-4 py-2 rounded-lg transition-all inline-flex items-center gap-2 cursor-pointer"
           >
             <Icon name="restart_alt" className="text-[14px]" />
-            Reset {track === 'prisma' ? 'Prisma' : track === 'networking' ? 'Networking' : 'SQL'} Progress
+            Reset {track === 'prisma' ? 'Prisma' : 'SQL'} Progress
           </button>
         )}
       </footer>

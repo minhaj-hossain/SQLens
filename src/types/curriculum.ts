@@ -4,90 +4,7 @@ import type {
   PrismaTheoryContent,
   SkillType,
 } from './prisma-curriculum';
-import type {
-  NetworkingTaskContent,
-  SubnettingTaskContent,
-  SubnetFieldDef,
-  ArpTaskContent,
-  ArpHost,
-  ArpSimulationStep,
-  PacketInspectionTaskContent,
-  PacketSnapshot,
-  Layer2Header,
-  Layer3Header,
-  Layer4Header,
-  Layer7Payload,
-  TerminalScenario,
-  EthernetFrameTaskContent,
-  EthernetVlanTag,
-  Ipv6NdpTaskContent,
-  DhcpTaskContent,
-  DhcpServerInfo,
-  DnsTaskContent,
-  DnsRecordEntry,
-  DnsResolutionHop,
-  TcpLadderTaskContent,
-  TcpSegmentEntry,
-  HttpTlsTaskContent,
-  HttpStreamEntry,
-  TlsHandshakeHop,
-  X509CertificateInfo,
-  FirewallTaskContent,
-  AclRule,
-  ConntrackEntry,
-  StpSwitchNode,
-  StpLink,
-  VlanDijkstraTaskContent,
-  VlanConfig,
-  TrunkPortConfig,
-  VlanTrunkPacket,
-  WifiChannelConfig,
-  OspfRouterNode,
-  OspfLink,
-} from './networking-curriculum';
 import type { TrackId } from './track';
-
-export type {
-  NetworkingTaskContent,
-  SubnettingTaskContent,
-  SubnetFieldDef,
-  ArpTaskContent,
-  ArpHost,
-  ArpSimulationStep,
-  PacketInspectionTaskContent,
-  PacketSnapshot,
-  Layer2Header,
-  Layer3Header,
-  Layer4Header,
-  Layer7Payload,
-  TerminalScenario,
-  EthernetFrameTaskContent,
-  EthernetVlanTag,
-  Ipv6NdpTaskContent,
-  DhcpTaskContent,
-  DhcpServerInfo,
-  DnsTaskContent,
-  DnsRecordEntry,
-  DnsResolutionHop,
-  TcpLadderTaskContent,
-  TcpSegmentEntry,
-  HttpTlsTaskContent,
-  HttpStreamEntry,
-  TlsHandshakeHop,
-  X509CertificateInfo,
-  FirewallTaskContent,
-  AclRule,
-  ConntrackEntry,
-  StpSwitchNode,
-  StpLink,
-  VlanDijkstraTaskContent,
-  VlanConfig,
-  TrunkPortConfig,
-  VlanTrunkPacket,
-  WifiChannelConfig,
-  OspfRouterNode,
-  OspfLink,
-};
 
 export type { GradingType, SkillType };
 
@@ -270,71 +187,6 @@ export interface PracticeTask {
    * stays the executable reference (generated SQL runs via the SQL engine).
    */
   prisma?: PrismaTaskContent;
-  /**
-   * Networking track extension (Gate 3).
-   * Defines topology, transmission sequence, and interactive prediction choices.
-   */
-  networking?: NetworkingTaskContent;
-  /**
-   * Subnetting Pilot extension (Module 4).
-   * Defines 5-stage cognitive fading, Bit-Slicer config, and structured fields.
-   */
-  subnetting?: SubnettingTaskContent;
-  /**
-   * ARP Protocol Pilot extension (Module 5).
-   * Defines 5-stage cognitive fading, ARP packet simulation, hold queue, and structured grading.
-   */
-  arp?: ArpTaskContent;
-  /**
-   * Packet Inspector component extension (Phase 4).
-   * Multi-layer progressive disclosure (L2/L3/L4/L7) and hop-by-hop before/after comparison.
-   */
-  packetInspection?: PacketInspectionTaskContent;
-  /**
-   * Virtual Terminal Simulator extension (Phase 5).
-   * Interactive CLI environment (ipconfig, ping, tracert, nslookup).
-   */
-  terminal?: TerminalScenario;
-  /**
-   * Ethernet Frame Inspector extension (Sprint 1 / Module 2).
-   * Interactive framing dissection, payload padding slider, and bit-flip CRC-32 integrity checker.
-   */
-  ethernetFrame?: EthernetFrameTaskContent;
-  /**
-   * IPv6 NDP & EUI-64 Simulator extension (Sprint 2 / Module 6).
-   * Modified EUI-64 transformation, Solicited-Node Multicast derivation, and NS/NA resolution flow.
-   */
-  ipv6Ndp?: Ipv6NdpTaskContent;
-  /**
-   * DHCP DORA Protocol Stepper extension (Sprint 3 / Module 9).
-   * 4-way DORA handshake, lease countdown timers (T1/T2), competing server resolution, and APIPA failure.
-   */
-  dhcp?: DhcpTaskContent;
-  /**
-   * DNS Resolution Tree & Cache Simulator extension (Sprint 4 / Module 10).
-   * Recursive vs iterative tree resolution, TTL caching, records table, and failure diagnostics (SERVFAIL/NXDOMAIN).
-   */
-  dns?: DnsTaskContent;
-  /**
-   * TCP Sequence & Sliding Window Ladder extension (Sprint 5 / Module 12).
-   * Space-time ladder diagram, sequence/ACK byte math, fast retransmit on 3 dup ACKs, zero window, and 4-way teardown with TIME_WAIT.
-   */
-  tcpLadder?: TcpLadderTaskContent;
-  /**
-   * HTTP/2, HTTP/3 & TLS 1.3 Handshake Simulator extension (Sprint 6 / Module 13).
-   * 1-RTT/0-RTT handshake latency waterfall, TCP vs QUIC HoL blocking, ECDHE forward secrecy, and X.509 PKI certificate chain validation.
-   */
-  httpTls?: HttpTlsTaskContent;
-  /**
-   * Stateful Firewall, ACL & STP Topology Simulator extension (Sprint 7 / Module 15).
-   * Top-down ACL first-match with implicit deny, stateful connection tracking (conntrack), and STP BPDU Root Bridge loop elimination.
-   */
-  firewall?: FirewallTaskContent;
-  /**
-   * 802.1Q VLAN Trunk & OSPF Dijkstra Lab extension (Sprint 8 / Module 16).
-   * 4-byte 802.1Q tag insertion/inspection, Wi-Fi 2.4 GHz channel overlap spectrum, and Dijkstra link-state shortest path tree calculation.
-   */
-  vlanDijkstra?: VlanDijkstraTaskContent;
 }
 
 export interface SyntaxBlock {
@@ -404,11 +256,6 @@ export interface ConceptTheory {
    * mirrors `liveDemoSql` for the TypeScript editor.
    */
   prisma?: PrismaTheoryContent;
-  /**
-   * Networking track Mentor Mode extension (optional).
-   * When present, ConceptLessonView mounts the MentorLessonStage studio.
-   */
-  mentorScript?: import('./networking-curriculum').MentorScript;
   commonMistakes?: string[];
   understandingChecks?: { question: string; answer?: string }[];
   debuggingExercise?: { brokenSql: string; bugs: string[]; fixDescription: string };

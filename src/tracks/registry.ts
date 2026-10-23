@@ -31,11 +31,6 @@ import {
 } from '../content/prisma/prisma-curriculum-index';
 import { PRISMA_ROADMAP_MILESTONES } from '../content/prisma/prisma-roadmap';
 import {
-  NETWORKING_MODULES,
-  getNetworkingModuleById,
-} from '../content/networking/networking-curriculum-index';
-import { NETWORKING_ROADMAP_MILESTONES } from '../content/networking/networking-roadmap';
-import {
   TRACK_IDS,
   TRACK_META,
   type BuiltinTrackId,
@@ -82,13 +77,6 @@ export const TRACK_REGISTRY: Record<BuiltinTrackId, TrackDefinition> = {
     getModuleById: getPrismaModuleById,
     milestones: PRISMA_ROADMAP_MILESTONES,
     moduleIdPattern: /^prisma-/,
-  },
-  networking: {
-    meta: TRACK_META.networking,
-    modules: NETWORKING_MODULES,
-    getModuleById: getNetworkingModuleById,
-    milestones: NETWORKING_ROADMAP_MILESTONES,
-    moduleIdPattern: /^net-/,
   },
 };
 

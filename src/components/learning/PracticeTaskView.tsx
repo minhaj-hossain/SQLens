@@ -13,7 +13,6 @@ import {
   editorStarterCode,
   editorSurface,
   idleLensState,
-  isNetworkingTask,
   isPrismaTask,
   isSavedCodeCompatibleWithTask,
   previewPrismaTask,
@@ -29,7 +28,6 @@ import { DatabaseExplorer } from './DatabaseExplorer';
 import { SQLEditor } from './SQLEditor';
 import { ResultsConsole } from './ResultsConsole';
 import { PrismaTypeInspector } from './prisma/PrismaTypeInspector';
-import { NetworkingPracticeTaskView } from './networking/NetworkingPracticeTaskView';
 import { buildEditorPlaceholder } from '../../lib/task-scaffold';
 import { deriveEvaluationState } from '../../lib/evaluation-state';
 
@@ -275,24 +273,6 @@ export const PracticeTaskView: React.FC<PracticeTaskViewProps> = ({
     hasFeedback: validationMessage !== null,
   });
 
-  if (isNetworkingTask(task)) {
-    return (
-      <NetworkingPracticeTaskView
-        task={task}
-        taskIndex={taskIndex}
-        totalTasks={totalTasks}
-        concept={concept}
-        conceptIndex={conceptIndex}
-        totalConcepts={totalConcepts}
-        isCompleted={taskPassed || isCompleted}
-        onTaskSuccess={onTaskSuccess}
-        onNextTask={onNextTask}
-        onBack={onBack}
-        backLabel={backLabel}
-        hasChallenge={hasChallenge}
-      />
-    );
-  }
 
   return (
     <motion.div

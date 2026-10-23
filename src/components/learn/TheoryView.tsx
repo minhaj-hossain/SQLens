@@ -11,7 +11,6 @@ import { useTrackCurriculum } from '@/components/learn/use-track';
 import { trackLearnUrl } from '@/lib/track-routes';
 import { isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { ConceptLessonView, ConceptDot } from '@/components/learning/ConceptLessonView';
-import { NetworkingCockpitView, Day2CockpitView, Day3CockpitView } from '@/components/learning/networking/cockpit';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
 import { useSqlExecutor } from '@/components/providers/SqlExecutorProvider';
 import { useLearningNavigation } from '@/components/learn/use-learning-navigation';
@@ -52,39 +51,6 @@ export default function TheoryView({ dayId, conceptId }: TheoryViewProps) {
       router.replace(trackLearnUrl(track, mod.id, 'theory', firstIncomplete.id));
     }
     return null;
-  }
-
-  // Networking Track Day 1: Dedicated The First Link Cockpit Workbench
-  if (track === 'networking' && mod.id === 'net-01') {
-    return (
-      <NetworkingCockpitView
-        module={mod}
-        concept={concept}
-        onComplete={() => router.push('/networking/learn/net-02')}
-      />
-    );
-  }
-
-  // Networking Track Day 2: Dedicated The Shared Wire Cockpit Workbench
-  if (track === 'networking' && mod.id === 'net-02') {
-    return (
-      <Day2CockpitView
-        module={mod}
-        concept={concept}
-        onComplete={() => router.push('/networking/learn/net-03')}
-      />
-    );
-  }
-
-  // Networking Track Day 3: Dedicated The Router & Default Gateway Cockpit Workbench
-  if (track === 'networking' && mod.id === 'net-03') {
-    return (
-      <Day3CockpitView
-        module={mod}
-        concept={concept}
-        onComplete={() => router.push(trackRoadmapUrl('networking', 'net-03'))}
-      />
-    );
   }
 
   return (

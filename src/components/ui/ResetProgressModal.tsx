@@ -36,10 +36,9 @@ export default function ResetProgressModal({
   const { modules, meta } = useTrackCurriculum();
   const totalModules = modules.length;
 
-  const isNetworking = meta.id === 'networking';
-  const unitWord = isNetworking ? 'Module' : 'Day';
-  const unitWordPlural = isNetworking ? 'Modules' : 'Days';
-  const taskWord = isNetworking ? 'interactive simulation tasks' : 'practice queries';
+  const unitWord = 'Day';
+  const unitWordPlural = 'Days';
+  const taskWord = 'practice queries';
 
   if (!isOpen) return null;
 
@@ -139,7 +138,7 @@ export default function ResetProgressModal({
                     Reset Entire Track ({unitWordPlural} 1–{totalModules})
                   </span>
                   <span className="text-text-dim mt-0.5 block leading-relaxed">
-                    Wipes all completed lessons, {isNetworking ? 'simulation labs' : 'practice tasks'}, challenges, and unlock records back to {unitWord} 1.
+                    Wipes all completed lessons, practice tasks, challenges, and unlock records back to Day 1.
                   </span>
                 </div>
               </label>
@@ -148,9 +147,7 @@ export default function ResetProgressModal({
                 onClick={() => setResetMode('module')}
                 className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
                   resetMode === 'module'
-                    ? isNetworking
-                      ? 'border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                      : 'border-func/50 bg-func/5 shadow-[0_0_12px_rgba(244,196,48,0.1)]'
+                    ? 'border-func/50 bg-func/5 shadow-[0_0_12px_rgba(244,196,48,0.1)]'
                     : 'border-border/60 bg-surface hover:border-border hover:bg-surface-3/50'
                 }`}
               >
@@ -159,7 +156,7 @@ export default function ResetProgressModal({
                   name="reset-scope"
                   checked={resetMode === 'module'}
                   onChange={() => setResetMode('module')}
-                  className={`mt-1 ${isNetworking ? 'text-emerald-500 focus:ring-emerald-500' : 'text-func focus:ring-func'}`}
+                  className="mt-1 text-func focus:ring-func"
                 />
                 <div className="text-xs">
                   <span className="font-semibold text-text block">
@@ -190,8 +187,8 @@ export default function ResetProgressModal({
               are diagnosable — cloud tombstone, other-device convergence,
               draft clearing. */}
           <div className="px-3 py-2 rounded-lg bg-surface border border-border/60 text-[11px] text-text-dim mb-5 leading-relaxed">
-            Clears cloud progress + this device (including {isNetworking ? 'saved simulations' : 'editor drafts'}).
-            Other signed-in devices converge to {unitWord} 1 on next focus.
+            Clears cloud progress + this device (including editor drafts).
+            Other signed-in devices converge to Day 1 on next focus.
             Other accounts on this device are untouched.
           </div>
 

@@ -33,7 +33,6 @@ import { SqlLensPanel } from './SqlLensPanel';
 import { JsonViewer } from './JsonViewer';
 import { executePrismaDemo, type PrismaDemoRunResult } from '../../lib/prisma-engine/prisma-demo-runner';
 import { RotateCcw } from 'lucide-react';
-import { MentorLessonStage } from './networking/mentor';
 
 export type ConceptDot = 'done' | 'current' | 'todo';
 
@@ -483,7 +482,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           {/* Left: label — truncates cleanly with line-clamp */}
           <div className="font-mono text-[10.5px] sm:text-[11.5px] text-text-faint min-w-0 flex-1 line-clamp-1">
             <span className="block ">
-              {moduleId.startsWith('net-') ? 'Networking' : moduleId.startsWith('prisma-') ? 'Prisma' : 'SQL'} Lesson {conceptIndex + 1}
+              {moduleId.startsWith('prisma-') ? 'Prisma' : 'SQL'} Lesson {conceptIndex + 1}
               <span className="mx-1 text-border">/</span>
               <b className="text-text-dim font-medium ">{concept.title}</b>
             </span>
@@ -528,18 +527,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
           <p className="text-sm text-text-dim mt-1.5 font-sans">{concept.shortDescription}</p>
         )}
 
-        {/* Mentor Mode Studio (Networking Track) or Classic Theory View */}
-        {theory.mentorScript ? (
-          <div className="mt-5">
-            <MentorLessonStage
-              moduleId={moduleId}
-              concept={concept}
-              script={theory.mentorScript}
-              onComplete={onStartPractice}
-            />
-          </div>
-        ) : (
-          <>
+
             {/* summary */}
             {theory.summary && (
               <p className="text-sm sm:text-[14.5px] leading-relaxed text-text-dim mt-5 max-w-[620px] font-sans">
@@ -572,8 +560,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
                 <FormattedExplanation content={theory.explanation} />
               </div>
             )}
-          </>
-        )}
+
 
 
         {/* P2.1 — Prisma hero call: shown above the generated-SQL target card */}
@@ -617,9 +604,7 @@ export const ConceptLessonView: React.FC<ConceptLessonViewProps> = ({
         {theory.stepBreakdowns && theory.stepBreakdowns.length > 0 && (
           <>
             <SectionLabel>
-              {moduleId.startsWith('net-')
-                ? 'Step-by-step protocol processing'
-                : moduleId.startsWith('prisma-')
+              {moduleId.startsWith('prisma-')
                 ? 'Step-by-step query execution'
                 : 'Step-by-step SQL processing'}
             </SectionLabel>

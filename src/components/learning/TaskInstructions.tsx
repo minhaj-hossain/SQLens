@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PracticeTask, Concept } from '../../types/curriculum';
 import { ChevronDown, ChevronUp, Code, Copy, Check, HelpCircle } from 'lucide-react';
-import { solutionReveal, isPrismaTask, isNetworkingTask } from '../../lib/track-submit';
+import { solutionReveal, isPrismaTask } from '../../lib/track-submit';
 import { PrismaTaskHeaderMeta } from './prisma/PrismaTaskHeaderMeta';
 
 interface TaskInstructionsProps {
@@ -109,31 +109,9 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
       </div>
 
 
-      {/* Meta strip — Prisma-native metadata for Prisma tasks; Networking scenario for networking; SQL metadata for SQL tasks */}
+      {/* Meta strip — Prisma-native metadata for Prisma tasks; SQL metadata for SQL tasks */}
       {isPrismaTask(task) ? (
         <PrismaTaskHeaderMeta task={task} concept={concept} />
-      ) : isNetworkingTask(task) ? (
-        <div className="mt-3 sm:mt-4 space-y-3 min-w-0 font-sans">
-          {task.description && (
-            <p className="text-xs sm:text-sm text-text-dim leading-relaxed">
-              {task.description}
-            </p>
-          )}
-          {task.instructions && task.instructions.length > 0 && (
-            <div className="space-y-2 pt-2.5 border-t border-border-soft">
-              <span className="font-mono text-xs font-bold text-text uppercase tracking-wider block">
-                Scenario Context &amp; Objectives:
-              </span>
-              <ul className="text-xs sm:text-sm text-text space-y-2 list-disc list-inside font-sans">
-                {task.instructions.map((inst, i) => (
-                  <li key={i} className="leading-relaxed text-text/90">
-                    <StepText text={inst} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
       ) : task.primaryTable ? (
         <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4 font-mono text-xs bg-surface-2 border border-border-soft rounded-lg p-2.5 sm:px-4 sm:py-2.5 min-w-0">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-surface border border-border sm:border-none sm:bg-transparent sm:px-0 sm:py-0 sm:pr-4 sm:mr-0 sm:border-r sm:border-border shrink-0">
@@ -184,9 +162,7 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
           <div className="flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-text-dim" />
             <span className="font-medium">
-              {isNetworkingTask(task)
-                ? 'Need a hint for this network scenario?'
-                : isPrismaTask(task)
+              {isPrismaTask(task)
                 ? reveal.language === 'prisma'
                   ? 'Need help with this schema?'
                   : 'Need help with this code?'
@@ -240,44 +216,30 @@ export const TaskInstructions: React.FC<TaskInstructionsProps> = ({
             {/* Inline Solution Display */}
             {showSolution && (
               <div className="mt-2 p-3 rounded-lg bg-ink border border-border relative text-xs">
-                {isNetworkingTask(task) ? (
-                  <div className="space-y-1.5 font-sans">
-                    <div className="flex items-center gap-1.5 text-func text-[11px] font-bold uppercase tracking-wider font-mono">
-                      <Code className="w-3.5 h-3.5" />
-                      <span>{reveal.label}</span>
-                    </div>
-                    <p className="text-text text-xs leading-relaxed font-sans">
-                      {task.solutionExplanation || reveal.code}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between mb-1.5 text-text-dim text-[11px]">
-                      <span className="font-bold text-text-dim flex items-center gap-1">
-                        <Code className="w-3 h-3" /> {reveal.label}:
-                      </span>
-                      <button
-                        onClick={handleCopySolution}
-                        className="flex items-center gap-1 text-text-dim hover:text-text cursor-pointer"
-                        title="Copy Solution"
-                      >
-                        {copiedSolution ? (
-                          <Check className="w-3 h-3 text-text" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                        <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
-                      </button>
-                    </div>
-                    <pre className="text-editor-text font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-                      {reveal.code}
-                    </pre>
-                    {task.solutionExplanation && (
-                      <p className="mt-2 pt-2 border-t border-border text-text-dim text-[11px] font-body leading-relaxed">
-                        {task.solutionExplanation}
-                      </p>
+                <div className="flex items-center justify-between mb-1.5 text-text-dim text-[11px]">
+                  <span className="font-bold text-text-dim flex items-center gap-1">
+                    <Code className="w-3 h-3" /> {reveal.label}:
+                  </span>
+                  <button
+                    onClick={handleCopySolution}
+                    className="flex items-center gap-1 text-text-dim hover:text-text cursor-pointer"
+                    title="Copy Solution"
+                  >
+                    {copiedSolution ? (
+                      <Check className="w-3 h-3 text-text" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
                     )}
-                  </>
+                    <span>{copiedSolution ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+                <pre className="text-editor-text font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                  {reveal.code}
+                </pre>
+                {task.solutionExplanation && (
+                  <p className="mt-2 pt-2 border-t border-border text-text-dim text-[11px] font-body leading-relaxed">
+                    {task.solutionExplanation}
+                  </p>
                 )}
               </div>
             )}
