@@ -32,6 +32,35 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
     }
   }, [activeStepIndex, completedSteps]);
 
+  const isCurrentStepDone =
+    completedSteps.has(activeStepIndex) || currentStep?.cmd === null;
+  const canGoNext = isCurrentStepDone && activeStepIndex < module.steps.length - 1;
+
+  // Keyboard ergonomics: Ctrl+Enter to proceed, Alt+Arrow keys to navigate
+  useEffect(() => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        if (canGoNext) {
+          e.preventDefault();
+          setActiveStepIndex((prev) => Math.min(module.steps.length - 1, prev + 1));
+        }
+      } else if (e.altKey && e.key === 'ArrowLeft') {
+        if (activeStepIndex > 0) {
+          e.preventDefault();
+          setActiveStepIndex((prev) => Math.max(0, prev - 1));
+        }
+      } else if (e.altKey && e.key === 'ArrowRight') {
+        if (canGoNext) {
+          e.preventDefault();
+          setActiveStepIndex((prev) => Math.min(module.steps.length - 1, prev + 1));
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, [canGoNext, activeStepIndex, module.steps.length]);
+
   const handleCommandRun = (cmd: string, output: string) => {
     setLastCommand(cmd);
 

@@ -60,13 +60,16 @@ export const SvgCable: React.FC<SvgCableProps> = ({
 
       {/* Pulse Packet Animation */}
       {isTransmitting && (
-        <circle r={4} fill="#ffffff" className="drop-shadow-[0_0_6px_#4ade80]">
-          <animateMotion
-            path={pathD}
-            dur="1.2s"
-            repeatCount="indefinite"
-          />
-        </circle>
+        <g>
+          {/* Soft outer glow halo */}
+          <circle r={6} fill={color} opacity={0.4} className="drop-shadow-[0_0_8px_#4ade80]">
+            <animateMotion path={pathD} dur="0.95s" repeatCount="indefinite" />
+          </circle>
+          {/* High-intensity particle core */}
+          <circle r={3.5} fill="#ffffff" className="drop-shadow-[0_0_5px_#ffffff]">
+            <animateMotion path={pathD} dur="0.95s" repeatCount="indefinite" />
+          </circle>
+        </g>
       )}
     </g>
   );

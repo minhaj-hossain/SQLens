@@ -145,6 +145,7 @@ export const SvgWorkstation: React.FC<SvgWorkstationProps> = ({
       {/* Port pinout notch */}
       <rect x={cx - 4} y={y + 45} width={8} height={5} fill="#141417" />
       {/* Port Link LEDs */}
+      {/* Green Link LED (solid when link is up) */}
       <circle
         cx={cx - 6}
         cy={y + 41}
@@ -152,13 +153,23 @@ export const SvgWorkstation: React.FC<SvgWorkstationProps> = ({
         fill={isLinked ? '#4ade80' : '#3f3f46'}
         className={isLinked ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
       />
+      {/* Amber Activity LED (flickers realistically on network traffic) */}
       <circle
         cx={cx + 6}
         cy={y + 41}
         r={1.5}
-        fill={isPinging ? '#fbbf24' : '#3f3f46'}
-        className={isPinging ? 'animate-ping' : ''}
-      />
+        fill={isPinging ? '#fbbf24' : isLinked ? '#f59e0b' : '#3f3f46'}
+        className={isPinging ? 'drop-shadow-[0_0_5px_#fbbf24]' : ''}
+      >
+        {isLinked && (
+          <animate
+            attributeName="opacity"
+            values={isPinging ? '1;0.15;1;0.3;0.9;0.2;1' : '0.9;0.4;0.85;0.3;0.9'}
+            dur={isPinging ? '0.25s' : '2.4s'}
+            repeatCount="indefinite"
+          />
+        )}
+      </circle>
 
       {/* Device Name Label */}
       <text

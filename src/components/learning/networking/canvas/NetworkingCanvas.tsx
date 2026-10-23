@@ -203,6 +203,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
               port2Active={true}
               port3Active={showPC3}
               port4Active={showPC4}
+              isPinging={isSwitchPinging}
             />
           )}
 

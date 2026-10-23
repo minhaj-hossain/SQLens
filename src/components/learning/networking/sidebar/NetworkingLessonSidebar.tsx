@@ -220,8 +220,20 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         </div>
 
         {/* Completion Badge */}
-        <div className="text-[#4ade80] text-[13px] mt-2 min-h-[20px]">
-          {isCurrentStepDone ? '✓ Done – nice work' : ''}
+        <div className="flex items-center gap-2 text-[#4ade80] text-[13px] mt-2 min-h-[20px] transition-all duration-300">
+          {isCurrentStepDone && (
+            <span className="flex items-center gap-1.5 flex-wrap">
+              <span>✓ Done – nice work</span>
+              {canGoNext && activeStepIndex < steps.length - 1 && (
+                <span className="text-[#9a9aa5] text-[12px]">
+                  · Press Next or{' '}
+                  <kbd className="font-mono text-[11px] px-1 py-0.5 rounded bg-[#1f1f23] text-[#ececf0] border border-[#2e2e34]">
+                    Ctrl+Enter
+                  </kbd>
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </div>
 
@@ -230,7 +242,7 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         <button
           onClick={() => setActiveStepIndex(Math.max(0, activeStepIndex - 1))}
           disabled={activeStepIndex === 0}
-          className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default"
+          className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default hover:border-[#3f3f46] transition-colors"
         >
           ← Back
         </button>
@@ -249,9 +261,15 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
               ? 'Complete the current task to continue'
               : 'Next step'
           }
-          className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default"
+          className={`rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
+            !canGoNext
+              ? 'bg-transparent border border-[#26262b] text-[#ececf0] opacity-35 cursor-default'
+              : isCurrentStepDone && activeStepIndex < steps.length - 1
+              ? 'bg-[#4ade80]/10 border border-[#4ade80]/60 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.25)] hover:bg-[#4ade80]/20 hover:border-[#4ade80]'
+              : 'bg-transparent border border-[#26262b] text-[#ececf0] hover:border-[#60a5fa]/60'
+          }`}
         >
-          Next →
+          <span>Next →</span>
         </button>
       </div>
     </section>

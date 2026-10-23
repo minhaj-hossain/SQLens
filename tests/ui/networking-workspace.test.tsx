@@ -73,5 +73,18 @@ describe('NetworkingWorkspace Component', () => {
     // Next button is enabled and has title="Next step"
     expect(htmlCompleted).toContain('title="Next step"');
     expect(htmlCompleted).toContain('✓ Done – nice work');
+    expect(htmlCompleted).toContain('Ctrl+Enter');
+    expect(htmlCompleted).toContain('shadow-[0_0_14px_rgba(74,222,128,0.25)]');
+  });
+
+  it('renders terminal ergonomics hints and shortcuts', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingWorkspace module={NET_01_MODULE} />
+    );
+
+    // Terminal clear shortcut hint
+    expect(html).toContain('[Ctrl+L] clear');
+    // Tab autocomplete hint
+    expect(html).toContain('[Tab]');
   });
 });

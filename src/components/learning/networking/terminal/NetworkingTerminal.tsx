@@ -206,8 +206,30 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
       }
     }
 
+    if (v === 'clear' || v === 'cls') {
+      setLogs([]);
+      setInputVal('');
+      return;
+    }
+
     if (!out) {
-      out = 'Unknown command. Type help.';
+      if (v.startsWith('pign') || v === 'pin') {
+        out = "Did you mean 'ping'? Try: ping 192.168.1.20";
+      } else if (v === 'ping') {
+        out = 'ping: missing destination address. Try: ping 192.168.1.20';
+      } else if (v === 'ifconfig' || v.startsWith('ipconfig /')) {
+        out = 'On this system, use: ipconfig (check the lesson instructions).';
+      } else if (v === 'arp') {
+        out = 'To display the ARP cache, use: arp -a';
+      } else if (v === 'mac' || v === 'mac table' || v === 'show mac') {
+        out = 'To inspect switch MAC table, use: show mac table';
+      } else if (v === 'link' || v === 'status') {
+        out = 'To check physical cable state, use: link status';
+      } else if (v.startsWith('setip') && v.split(' ').length < 4) {
+        out = 'Usage: setip <device> <address> <mask>\nExample: setip pc3 192.168.1.130 255.255.255.128';
+      } else {
+        out = 'Unknown command. Type help to see commands or tap the green code chip in the lesson.';
+      }
       isSuccess = false;
     } else {
       isSuccess = true;
@@ -223,6 +245,13 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Ctrl+L or Cmd+L clears terminal
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      setLogs([]);
+      return;
+    }
+
     if (e.key === 'Enter') {
       e.preventDefault();
       runCommand(inputVal);
@@ -265,12 +294,13 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
           <Terminal size={12} className="text-[#4ade80]" />
           <span>Terminal · PC1</span>
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-[#62626d]">
+        <div className="flex items-center gap-3 text-[10px] text-[#62626d]">
           {expectedCmd && (
             <span className="hidden sm:inline text-[#60a5fa]/80">
               hint: <span className="text-[#ececf0]">{expectedCmd}</span> [Tab]
             </span>
           )}
+          <span className="hidden md:inline text-[#71717a]">[Ctrl+L] clear</span>
           <span>type help</span>
         </div>
       </div>

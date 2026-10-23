@@ -7,6 +7,7 @@ interface SvgSwitchProps {
   port2Active?: boolean;
   port3Active?: boolean;
   port4Active?: boolean;
+  isPinging?: boolean;
 }
 
 export const SvgSwitch: React.FC<SvgSwitchProps> = ({
@@ -16,11 +17,11 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
   port2Active = true,
   port3Active = true,
   port4Active = false,
+  isPinging = false,
 }) => {
   const width = 110;
   const height = 58;
   const cx = x + width / 2;
-  const cy = y + height / 2;
 
   return (
     <g className="transition-all duration-500 ease-out">
@@ -67,7 +68,22 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
       <g transform={`translate(${cx - 38}, ${y + 24})`}>
         <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
         <rect x="4" y="5" width="8" height="4" fill="#141418" />
-        <circle cx="8" cy="1" r="1.5" fill={port1Active ? '#4ade80' : '#27272a'} />
+        <circle
+          cx="8"
+          cy="1"
+          r="1.5"
+          fill={port1Active ? '#4ade80' : '#27272a'}
+          className={port1Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
+        >
+          {port1Active && (
+            <animate
+              attributeName="opacity"
+              values={isPinging ? '1;0.2;0.9;0.1;1' : '1;0.4;0.9;0.3;1'}
+              dur={isPinging ? '0.2s' : '2.1s'}
+              repeatCount="indefinite"
+            />
+          )}
+        </circle>
         <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">1</text>
       </g>
 
@@ -75,7 +91,22 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
       <g transform={`translate(${cx - 18}, ${y + 24})`}>
         <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
         <rect x="4" y="5" width="8" height="4" fill="#141418" />
-        <circle cx="8" cy="1" r="1.5" fill={port2Active ? '#4ade80' : '#27272a'} />
+        <circle
+          cx="8"
+          cy="1"
+          r="1.5"
+          fill={port2Active ? '#4ade80' : '#27272a'}
+          className={port2Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
+        >
+          {port2Active && (
+            <animate
+              attributeName="opacity"
+              values={isPinging ? '1;0.1;0.95;0.2;1' : '0.9;0.3;1;0.5;0.9'}
+              dur={isPinging ? '0.24s' : '1.7s'}
+              repeatCount="indefinite"
+            />
+          )}
+        </circle>
         <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">2</text>
       </g>
 
@@ -83,7 +114,22 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
       <g transform={`translate(${cx + 2}, ${y + 24})`}>
         <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
         <rect x="4" y="5" width="8" height="4" fill="#141418" />
-        <circle cx="8" cy="1" r="1.5" fill={port3Active ? '#4ade80' : '#27272a'} />
+        <circle
+          cx="8"
+          cy="1"
+          r="1.5"
+          fill={port3Active ? '#4ade80' : '#27272a'}
+          className={port3Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
+        >
+          {port3Active && (
+            <animate
+              attributeName="opacity"
+              values={isPinging ? '1;0.3;0.8;0.15;1' : '1;0.5;0.8;0.3;1'}
+              dur={isPinging ? '0.19s' : '2.5s'}
+              repeatCount="indefinite"
+            />
+          )}
+        </circle>
         <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">3</text>
       </g>
 
@@ -91,7 +137,22 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
       <g transform={`translate(${cx + 22}, ${y + 24})`}>
         <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
         <rect x="4" y="5" width="8" height="4" fill="#141418" />
-        <circle cx="8" cy="1" r="1.5" fill={port4Active ? '#4ade80' : '#27272a'} />
+        <circle
+          cx="8"
+          cy="1"
+          r="1.5"
+          fill={port4Active ? '#4ade80' : '#27272a'}
+          className={port4Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
+        >
+          {port4Active && (
+            <animate
+              attributeName="opacity"
+              values={isPinging ? '1;0.2;1;0.3;0.9' : '0.85;0.4;1;0.2;0.85'}
+              dur={isPinging ? '0.22s' : '2.8s'}
+              repeatCount="indefinite"
+            />
+          )}
+        </circle>
         <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">4</text>
       </g>
 
