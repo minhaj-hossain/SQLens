@@ -43,7 +43,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
   // Networking track has its own dedicated header and full-viewport layout.
   if (pathname?.startsWith('/networking')) {
-    return <main className="w-full h-full min-h-screen bg-[#0a0a0a]">{children}</main>;
+    return <main className="w-full min-h-screen bg-[#0a0a0a] overflow-x-hidden">{children}</main>;
   }
 
   return (
