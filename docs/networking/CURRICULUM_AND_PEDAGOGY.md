@@ -15,11 +15,10 @@ Students do not learn real-world networking by reading stories about mailmen, po
    * **Mandatory**: Use exact digital and physical terms: packets, frames, byte streams, IP addresses, MAC hardware addresses, routing tables, gateways, next hops, netmasks, broadcast addresses, and CIDR prefixes.
    * Explain *why* the technology works directly in terms of digital devices and electrical/logical networks.
 
-2. **6-Idea Progressive Disclosure**:
-   Every Day module is structured into **5 to 6 discrete Ideas** (steps):
-   * Each idea introduces **one single concept** at a time.
-   * Never introduce two new concepts in the same step.
-   * Progressively build the canvas and tables: devices appear or update as concepts unlock.
+2. **Natural, Flexible Step Pacing (No Artificial Limits)**:
+   * A module takes **as many steps as the topic genuinely needs** to be understood clearly (typically 4 to 8 steps, or more if a protocol warrants it).
+   * **Never artificially pad or squeeze a lesson** into a fixed number. Simple topics stay concise; complex multi-stage protocols (like DHCP DORA, TCP handshakes, or STP convergence) take as many steps as required to explain each transition cleanly.
+   * UI components (`NetworkingLessonSidebar`, progress bar, dot rail, Next/Back buttons) dynamically adapt to `steps.length`.
 
 3. **Consistent TypeScript Schema (`NetworkingStep`)**:
    Every step in `src/content/networking/modules/net-0X.ts` must implement:

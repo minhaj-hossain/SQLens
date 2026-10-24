@@ -14,7 +14,7 @@ Whenever designing, authoring, modifying, or testing any Networking Track module
 
 ## 1. Pedagogical Doctrine: "Zero Analogies & Physical Reality"
 * **Never use metaphors or analogies**: No mailboxes, postmen, envelopes, apartments, or postcards. Explain packets, frames, byte streams, IP addresses, MAC addresses, routing tables, and CIDR masks as the concrete digital realities they are.
-* **5 to 6 discrete Ideas per Day**: Every Day in `src/content/networking/modules/net-0X.ts` has 5–6 steps implementing the `NetworkingStep` interface (`num`, `group`, `title`, `concept`, `why`, `pic`, `task`, `cmd`, `read`, `rem`).
+* **Natural Step Count**: Modules take as many steps as the topic naturally demands (e.g. 4 to 8+ steps). Never squeeze a complex protocol or pad a simple concept to fit an arbitrary number. UI and progress bars adapt dynamically to `steps.length`. Every step implements the `NetworkingStep` interface (`num`, `group`, `title`, `concept`, `why`, `pic`, `task`, `cmd`, `read`, `rem`).
 * **Task Hint Policy**: Only show `(tap it to fill the terminal).` on Days 1 and 2. On Day 3+, omit this hint and end the sentence with `.`.
 * **Pacing Gaps**:
   * Binary and Hexadecimal: MAC addresses use hex, CIDR/subnets use binary bits.
