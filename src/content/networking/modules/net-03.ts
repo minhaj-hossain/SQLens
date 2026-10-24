@@ -10,7 +10,7 @@ export const NET_03_MODULE: NetworkingModule = {
       group: 'Idea 1 of 5 · Writing the mask',
       title: 'Prefix length: a shorter way to write the mask',
       what:
-        "In Day 2 you learned that the mask 255.255.255.0 splits an address into a network part and a host part. Each of the four numbers in an address is made of 8 bits, which are single 0s and 1s, so an address has 32 bits in total. In a mask, every 255 is eight bits set to 1. Counting the 1s gives a short form called the prefix length, written after a slash. 255.255.255.0 has 24 ones, so it is written /24, and PC1's address with its mask is written 192.168.1.10/24.",
+        "In Day 2 you learned that the mask 255.255.255.0 splits an address into a network part and a host part. Computers store addresses in binary: a bit is a single switch that is either 0 or 1. Eight bits give 256 possible combinations (counting from 0 to 255), which is why each of the four numbers in an address stops at 255. In total an address has 32 bits. In a mask, every 255 is eight bits set to 1. Counting the 1s gives a short form called the prefix length, written after a slash. 255.255.255.0 has 24 ones, so it is written /24, and PC1's address with its mask is written 192.168.1.10/24.",
       why:
         'The prefix length tells you directly how many bits belong to the network part. The remaining bits belong to the host part. Every networking tool uses this form.',
       pic:
@@ -24,7 +24,7 @@ export const NET_03_MODULE: NetworkingModule = {
         ['Network bits 24', 'The first three numbers.'],
         [
           'Host bits 8',
-          'The last number. 8 bits give 256 values, which is why a /24 network has 254 usable addresses.',
+          'The last number. 8 bits give 256 values (0 to 255), which is why a /24 network has 254 usable addresses.',
         ],
       ],
       rem: 'The prefix length is the number of network bits: /24 means 24.',

@@ -66,7 +66,7 @@ export const NET_01_MODULE: NetworkingModule = {
       group: 'Idea 4 of 5 · Hardware identity',
       title: 'MAC address: identifying the network card',
       what:
-        'Your ping reached 192.168.1.20, but on the cable, data is delivered to a network card, not to an IP address. So PC1 has to know which network card uses that IP address. Every network card has a MAC address set at the factory, like AA:BB:CC:00:00:02. It is stored in the hardware, so it stays the same even if the IP address changes.',
+        'Your ping reached 192.168.1.20, but on the cable, data is delivered to a network card, not to an IP address. So PC1 has to know which network card uses that IP address. Every network card has a MAC address set at the factory, like AA:BB:CC:00:00:02. It is stored in the hardware, so it stays the same even if the IP address changes. It is written in hexadecimal, a counting system that uses letters A through F alongside digits 0 to 9 to write large values with fewer characters.',
       why:
         'Each device keeps a list that matches IP addresses to MAC addresses. It uses this list to deliver every message to the correct network card.',
       pic:
@@ -74,6 +74,10 @@ export const NET_01_MODULE: NetworkingModule = {
       read: [
         ['192.168.1.20', 'The IP address of PC2.'],
         ['AA:BB:CC:00:00:02', "The MAC address of PC2's network card."],
+        [
+          'Hexadecimal letters',
+          'Letters A through F stand for values 10 to 15 to keep the hardware address compact.',
+        ],
       ],
       rem: 'A MAC address identifies the network card itself, and the hardware fixes it.',
       task: "Your ping made PC1 learn PC2's MAC address. Show that list.",
