@@ -81,16 +81,52 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
       setTimeout(() => setIsPinging(false), 2500);
     }
 
+    const norm = (str: string) => str.trim().toLowerCase().replace(/\s+/g, ' ');
+    const normalizedCmd = norm(cmd);
+
     // Prioritize active step if its command matches, otherwise find any matching step
     const currentStep = module.steps[activeStepIndex];
-    if (currentStep?.cmd && currentStep.cmd.toLowerCase() === cmd) {
+    if (currentStep?.cmd && norm(currentStep.cmd) === normalizedCmd) {
       setCompletedSteps((prev) => new Set([...prev, activeStepIndex]));
     } else {
-      const stepIdx = module.steps.findIndex(
-        (s) => s.cmd && s.cmd.toLowerCase() === cmd
-      );
-      if (stepIdx > -1) {
-        setCompletedSteps((prev) => new Set([...prev, stepIdx]));
+      // Check multi-action / alternate commands explicitly instructed in tasks
+      let isAlternateMatch = false;
+      if (
+        module.id === 'net-02' &&
+        activeStepIndex === 3 &&
+        normalizedCmd === 'ping 192.168.1.40'
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-04' &&
+        activeStepIndex === 5 &&
+        (normalizedCmd === 'setgw pc1 192.168.1.1' ||
+          normalizedCmd.startsWith('ping 192.168.1.'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-05' &&
+        activeStepIndex === 5 &&
+        normalizedCmd === 'ping 192.168.3.10'
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-06' &&
+        activeStepIndex === 4 &&
+        normalizedCmd === 'ping 198.51.100.10'
+      ) {
+        isAlternateMatch = true;
+      }
+
+      if (isAlternateMatch) {
+        setCompletedSteps((prev) => new Set([...prev, activeStepIndex]));
+      } else {
+        const stepIdx = module.steps.findIndex(
+          (s) => s.cmd && norm(s.cmd) === normalizedCmd
+        );
+        if (stepIdx > -1) {
+          setCompletedSteps((prev) => new Set([...prev, stepIdx]));
+        }
       }
     }
   };

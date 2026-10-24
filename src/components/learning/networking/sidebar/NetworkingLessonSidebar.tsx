@@ -275,30 +275,46 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
           </Link>
         )}
 
-        <button
-          onClick={() => {
-            if (canGoNext) {
-              setActiveStepIndex(Math.min(steps.length - 1, activeStepIndex + 1));
+        {activeStepIndex === steps.length - 1 ? (
+          dayNumber && dayNumber < 7 ? (
+            <Link
+              href={`/networking/learn/net-0${dayNumber + 1}`}
+              title={`Proceed to Day ${dayNumber + 1}`}
+              className="rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 bg-[#4ade80]/15 border border-[#4ade80]/80 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.3)] hover:bg-[#4ade80]/25 hover:border-[#4ade80]"
+            >
+              <span>Day {dayNumber + 1} →</span>
+            </Link>
+          ) : (
+            <Link
+              href={`/networking#day-${dayNumber || 7}`}
+              title="Return to Roadmap"
+              className="rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 bg-[#4ade80]/15 border border-[#4ade80]/80 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.3)] hover:bg-[#4ade80]/25 hover:border-[#4ade80]"
+            >
+              <span>Back to Roadmap ✓</span>
+            </Link>
+          )
+        ) : (
+          <button
+            onClick={() => {
+              if (canGoNext) {
+                setActiveStepIndex(Math.min(steps.length - 1, activeStepIndex + 1));
+              }
+            }}
+            disabled={!canGoNext}
+            title={
+              !isCurrentStepDone
+                ? 'Complete the current task to continue'
+                : 'Next step'
             }
-          }}
-          disabled={!canGoNext}
-          title={
-            activeStepIndex === steps.length - 1
-              ? 'End of lesson'
-              : !isCurrentStepDone
-              ? 'Complete the current task to continue'
-              : 'Next step'
-          }
-          className={`rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
-            !canGoNext
-              ? 'bg-transparent border border-[#26262b] text-[#ececf0] opacity-35 cursor-default'
-              : isCurrentStepDone && activeStepIndex < steps.length - 1
-              ? 'bg-[#4ade80]/10 border border-[#4ade80]/60 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.25)] hover:bg-[#4ade80]/20 hover:border-[#4ade80]'
-              : 'bg-transparent border border-[#26262b] text-[#ececf0] hover:border-[#60a5fa]/60'
-          }`}
-        >
-          <span>Next →</span>
-        </button>
+            className={`rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 ${
+              !canGoNext
+                ? 'bg-transparent border border-[#26262b] text-[#ececf0] opacity-35 cursor-default'
+                : 'bg-[#4ade80]/10 border border-[#4ade80]/60 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.25)] hover:bg-[#4ade80]/20 hover:border-[#4ade80]'
+            }`}
+          >
+            <span>Next →</span>
+          </button>
+        )}
       </div>
     </section>
   );
