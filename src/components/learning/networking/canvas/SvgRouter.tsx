@@ -35,12 +35,7 @@ export const SvgRouter: React.FC<SvgRouterProps> = ({
 }) => {
   const width = 126;
   const height = 52;
-  const baseW = 136;
-  const baseH = 4;
-
   const cx = x + width / 2;
-  const baseX = cx - baseW / 2;
-  const baseY = y + height;
 
   // Filter list of active port IPs to render in a clean, non-overlapping stacked table
   const portList: { label: string; ip: string }[] = [];
@@ -79,13 +74,13 @@ export const SvgRouter: React.FC<SvgRouterProps> = ({
         </g>
       )}
 
-      {/* Router Main Chassis (Dark Charcoal matching laptop and switch) */}
+      {/* Router Main Chassis (Dark Charcoal, rounded corners) */}
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
-        rx={3}
+        rx={4}
         fill="#232326"
         stroke="#3c3c44"
         strokeWidth="1.2"
@@ -97,16 +92,13 @@ export const SvgRouter: React.FC<SvgRouterProps> = ({
         y={y + 3}
         width={width - 6}
         height={height - 6}
-        rx={2}
+        rx={3}
         fill="#141416"
         stroke="#1c1c20"
         strokeWidth="0.8"
       />
 
-      {/* Power status LED */}
-      <circle cx={x + 10} cy={y + 13} r="1.4" fill="#4ade80" className="drop-shadow-[0_0_3px_#4ade80]" />
-
-      {/* Router Name Label */}
+      {/* Router Name Label - Bold matching PC */}
       <text
         x={cx}
         y={y + 14}
@@ -203,30 +195,17 @@ export const SvgRouter: React.FC<SvgRouterProps> = ({
         <text x="8" y="22" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="monospace">P4</text>
       </g>
 
-      {/* Sleek Metallic Silver Base Chassis (Matching Laptop Base) */}
-      <rect
-        x={baseX}
-        y={baseY}
-        width={baseW}
-        height={baseH}
-        rx={2}
-        fill="#d4d4d8"
-        stroke="#9ca3af"
-        strokeWidth="0.6"
-        className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
-      />
-
-      {/* Structured, Non-Overlapping Port IP Badges Below Silver Base */}
+      {/* Structured, Non-Overlapping Port IP Badges Below Router Chassis */}
       {showPortIps && portList.length > 0 && (
-        <g transform={`translate(${cx}, ${baseY + 8})`}>
+        <g transform={`translate(${cx}, ${y + height + 6})`}>
           {portList.map((p, idx) => (
-            <g key={idx} transform={`translate(0, ${idx * 18})`}>
+            <g key={idx} transform={`translate(0, ${idx * 17})`}>
               {/* Clean Port Pill Container */}
               <rect
                 x="-64"
                 y="0"
                 width="128"
-                height="16"
+                height="15"
                 rx="3.5"
                 fill="#0c121e"
                 stroke="#1e293b"
@@ -235,7 +214,7 @@ export const SvgRouter: React.FC<SvgRouterProps> = ({
               {/* Port Name */}
               <text
                 x="-56"
-                y="11.5"
+                y="11"
                 fill="#60a5fa"
                 fontSize="8.5"
                 fontFamily="monospace"
@@ -246,7 +225,7 @@ export const SvgRouter: React.FC<SvgRouterProps> = ({
               {/* Port IP (Right-aligned, never overlaps) */}
               <text
                 x="56"
-                y="11.5"
+                y="11"
                 textAnchor="end"
                 fill="#ececf0"
                 fontSize="8.5"

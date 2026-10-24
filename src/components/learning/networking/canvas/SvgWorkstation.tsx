@@ -97,7 +97,7 @@ export const SvgWorkstation: React.FC<SvgWorkstationProps> = ({
         strokeWidth="0.8"
       />
 
-      {/* Device Name Inside Screen */}
+      {/* Device Name Inside Screen - Bold Typography */}
       <text
         x={cx}
         y={y + 28}
@@ -110,24 +110,6 @@ export const SvgWorkstation: React.FC<SvgWorkstationProps> = ({
       >
         {name}
       </text>
-
-      {/* Screen Activity / Link Status LED Dot in Screen Corner */}
-      <circle
-        cx={x + screenW - 8}
-        cy={y + 8}
-        r={1.5}
-        fill={isLinked ? '#4ade80' : '#475569'}
-        className={isLinked ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
-      >
-        {isPinging && (
-          <animate
-            attributeName="opacity"
-            values="1;0.2;1;0.2;1"
-            dur="0.25s"
-            repeatCount="indefinite"
-          />
-        )}
-      </circle>
 
       {/* 2. Sleek Metallic Silver Base Chassis (Matching User Image Exactly) */}
       <rect

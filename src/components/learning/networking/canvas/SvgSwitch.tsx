@@ -21,22 +21,17 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
 }) => {
   const width = 112;
   const height = 48;
-  const baseW = 122;
-  const baseH = 4;
-
   const cx = x + width / 2;
-  const baseX = cx - baseW / 2;
-  const baseY = y + height;
 
   return (
     <g className="transition-all duration-300 ease-out">
-      {/* Switch Main Chassis (Dark Charcoal matching laptop screen) */}
+      {/* Switch Main Chassis (Dark Charcoal) */}
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
-        rx={3}
+        rx={4}
         fill="#232326"
         stroke="#3c3c44"
         strokeWidth="1.2"
@@ -48,21 +43,21 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
         y={y + 3}
         width={width - 6}
         height={height - 6}
-        rx={2}
+        rx={3}
         fill="#141416"
         stroke="#1c1c20"
         strokeWidth="0.8"
       />
 
-      {/* Switch Label */}
+      {/* Switch Label - Crisp Bold text matching PC and Router */}
       <text
         x={cx}
         y={y + 16}
         textAnchor="middle"
-        fill="#94a3b8"
-        fontSize="9.5"
+        fill="#f1f5f9"
+        fontSize="10.5"
         fontWeight="700"
-        letterSpacing="0.1em"
+        letterSpacing="0.08em"
         fontFamily="ui-monospace, Menlo, Consolas, monospace"
       >
         ETHERNET SWITCH
@@ -136,22 +131,6 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
         </circle>
         <text x="8" y="21" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="monospace">4</text>
       </g>
-
-      {/* Power status LED */}
-      <circle cx={x + 9} cy={y + 13} r="1.4" fill="#4ade80" className="drop-shadow-[0_0_3px_#4ade80]" />
-
-      {/* Sleek Metallic Silver Base (Matching Laptop Base) */}
-      <rect
-        x={baseX}
-        y={baseY}
-        width={baseW}
-        height={baseH}
-        rx={2}
-        fill="#d4d4d8"
-        stroke="#9ca3af"
-        strokeWidth="0.6"
-        className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
-      />
     </g>
   );
 };
