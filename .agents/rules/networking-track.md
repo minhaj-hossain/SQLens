@@ -44,7 +44,23 @@ Whenever designing, authoring, modifying, or testing any Networking Track module
 * **Terminal (`NetworkingTerminal.tsx`)**:
   * Must support both `cls` and `clear` commands to reset terminal logs.
   * Supports `Ctrl+L`, ghost Tab autocomplete, command history (`ArrowUp`/`ArrowDown`), and code chip pre-filling.
+  * **Command Matching in Workspace**: Normalize whitespace with `.trim().toLowerCase().replace(/\s+/g, ' ')`. Always prioritize checking `activeStepIndex` first before fallback searching to support repeated commands across steps.
 * **Navigation & Return Flow**:
   * On Idea 1 (`activeStepIndex === 0`), the `← Back` button in `NetworkingLessonSidebar` is **active and enabled**. It links directly to `/networking#day-${dayNumber}`.
+  * On the final Recap step (`activeStepIndex === steps.length - 1`), the button dynamically renders `Day N+1 →` (or `Back to Roadmap ✓` on final day) to smoothly continue navigation.
   * The top header "Roadmap" and "35 Days" buttons link to `/networking#day-${module.dayNumber}`.
   * On `/networking`, targeted day circles highlight with `:target` ring and smoothly scroll into center view.
+
+---
+
+## 4. Gradual Canvas Reveal Policy
+* **Never dump all elements on Step 0**: Topologies must unfold progressively as the ideas advance.
+* Elements like distant routers, new workstations (e.g. PC4 on Day 2, PC5 on Day 5, Web Server on Day 6), route banners, and ARP/MAC table HUD entries must be conditioned on `activeStepIndex >= X` so the learner watches the network physically grow.
+
+---
+
+## 5. Mandatory Verification Protocol
+Before marking any new day complete, you MUST:
+1. Run curriculum & progression tests: `npx vitest run tests/curriculum/networking-interactive-flow.test.tsx tests/curriculum/networking-step-progression.test.tsx`.
+2. Confirm TypeScript build passes: `npx tsc --noEmit`.
+3. Verify interactive command entry unlocks the Next button on every single step.
