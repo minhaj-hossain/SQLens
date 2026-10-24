@@ -40,8 +40,8 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
 * **Day 7 · ARP: Finding a Neighbour's Hardware Address** (`net-07`) [LIVE]
   * *Concepts*: How a computer that knows only an IP address discovers the MAC address; the broadcast question to `FF:FF:FF:FF:FF:FF`; direct unicast reply; ARP cache timeouts; asking for the Default Gateway's MAC when reaching distant networks.
   * *Canvas*: Local Subnet 1 (PC1, PC2, Switch SW1, ARP Cache Table) ↔ Router R1 ↔ Distant Subnet 3 (PC5) (`1180x540`).
-* **Day 8 · How a Switch Learns** (`net-08`) [PLANNED]
-  * *Concepts*: Source MAC learning, port mapping tables, flooding unknown unicasts, selective forwarding once learned.
+* **Day 8 · How a Switch Learns: The MAC Address Table** (`net-08`) [PLANNED - See [DAY_08_DETAILED_SPEC.md](./DAY_08_DETAILED_SPEC.md)]
+  * *Concepts*: Source MAC learning on frame ingress, port mapping tables, flooding unknown unicasts, selective point-to-point forwarding once learned, MAC aging timers.
 * **Day 9 · Broadcast Domains** (`net-09`) [PLANNED]
   * *Concepts*: Why switches flood broadcasts; where broadcast domains end (at the router interface); broadcast traffic isolation.
 
