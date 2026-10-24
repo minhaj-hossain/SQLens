@@ -125,8 +125,80 @@ describe('NetworkingWorkspace Component', () => {
     );
 
     // Terminal clear shortcut hint
-    expect(html).toContain('[Ctrl+L] clear');
+    expect(html).toContain('[Ctrl+L] / cls clear');
     // Tab autocomplete hint
     expect(html).toContain('[Tab]');
+  });
+
+  it('renders enabled Back button on step 0 pointing to the roadmap day anchor', () => {
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_01_MODULE.steps}
+        activeStepIndex={0}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set()}
+        onCodeClick={() => {}}
+        dayNumber={1}
+      />
+    );
+
+    // On step 0, it renders as a Link to /networking#day-1, not a disabled button
+    expect(htmlStep0).toContain('href="/networking#day-1"');
+    expect(htmlStep0).toContain('title="Return to Roadmap"');
+    expect(htmlStep0).toContain('← Back');
+  });
+
+  it('renders previous step button on step 1+', () => {
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_01_MODULE.steps}
+        activeStepIndex={1}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set([0])}
+        onCodeClick={() => {}}
+        dayNumber={1}
+      />
+    );
+
+    expect(htmlStep1).toContain('title="Previous step"');
+    expect(htmlStep1).toContain('← Back');
+  });
+
+  it('shows "tap it to fill the terminal" only on introductory days (Days 1-2) and omits it on Day 3+', () => {
+    const htmlDay1 = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_01_MODULE.steps}
+        activeStepIndex={0}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set()}
+        onCodeClick={() => {}}
+        dayNumber={1}
+      />
+    );
+    expect(htmlDay1).toContain('(tap it to fill the terminal).');
+
+    const htmlDay4 = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_04_MODULE.steps}
+        activeStepIndex={0}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set()}
+        onCodeClick={() => {}}
+        dayNumber={4}
+      />
+    );
+    expect(htmlDay4).not.toContain('(tap it to fill the terminal).');
+
+    const htmlDay6 = renderToStaticMarkup(
+      <NetworkingLessonSidebar
+        steps={NET_06_MODULE.steps}
+        activeStepIndex={0}
+        setActiveStepIndex={() => {}}
+        completedSteps={new Set()}
+        onCodeClick={() => {}}
+        dayNumber={6}
+      />
+    );
+    expect(htmlDay6).not.toContain('(tap it to fill the terminal).');
   });
 });

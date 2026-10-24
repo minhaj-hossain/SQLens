@@ -103,7 +103,7 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
       <header className="flex items-center justify-between p-[10px_16px] border-b border-[#26262b] bg-[#0a0a0a] shrink-0 z-20 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Link
-            href="/networking"
+            href={`/networking#day-${module.dayNumber}`}
             className="flex items-center gap-1.5 text-[12px] font-mono text-[#9a9aa5] hover:text-[#4ade80] transition-colors px-2 py-0.5 rounded bg-[#141416] border border-[#26262b]"
           >
             <ArrowLeft size={13} />
@@ -129,7 +129,7 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           </div>
 
           <Link
-            href="/networking"
+            href={`/networking#day-${module.dayNumber}`}
             className="hidden sm:flex items-center gap-1 text-[12px] text-[#9a9aa5] hover:text-[#60a5fa] transition-colors"
           >
             <Map size={13} />
@@ -203,6 +203,7 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             setActiveStepIndex={setActiveStepIndex}
             completedSteps={completedSteps}
             onCodeClick={handleCodeClick}
+            dayNumber={module.dayNumber}
           />
         </aside>
       </main>

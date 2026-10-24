@@ -105,26 +105,26 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
 
     const newLogs: LogEntry[] = [...logs, { type: 'input', text: `PC1> ${raw}` }];
 
-    if (v === 'clear') {
+    if (v === 'clear' || v === 'cls') {
       setLogs([]);
       setInputVal('');
       return;
     }
 
     if (v === 'help') {
-      let helpMsg = 'Commands: help, clear';
+      let helpMsg = 'Commands: help, cls, clear';
       if (dayId === 'net-01') {
-        helpMsg = 'Commands: link status, ipconfig, ping 192.168.1.20, arp -a, show mac table, clear, help';
+        helpMsg = 'Commands: link status, ipconfig, ping 192.168.1.20, arp -a, show mac table, cls, clear, help';
       } else if (dayId === 'net-02') {
-        helpMsg = 'Commands: subnet, subnet info, ping <address>, setip <device> <address> <mask>, clear, help';
+        helpMsg = 'Commands: subnet, subnet info, ping <address>, setip <device> <address> <mask>, cls, clear, help';
       } else if (dayId === 'net-03') {
-        helpMsg = 'Commands: cidr, split <network>, subnet <address>/<prefix>, setip pc3 <address> <mask>, ping <address>, clear, help';
+        helpMsg = 'Commands: cidr, split <network>, subnet <address>/<prefix>, setip pc3 <address> <mask>, ping <address>, cls, clear, help';
       } else if (dayId === 'net-04') {
-        helpMsg = 'Commands: show router, show ports, ipconfig, show routes, setgw pc1 <address|none>, ping <address>, clear, help';
+        helpMsg = 'Commands: show router, show ports, ipconfig, show routes, setgw pc1 <address|none>, ping <address>, cls, clear, help';
       } else if (dayId === 'net-05') {
-        helpMsg = 'Commands: show router r2, show ports r2, ping <address>, r1 route add <network> via <next hop>, r2 route add <network> via <next hop>, clear, help';
+        helpMsg = 'Commands: show router r2, show ports r2, ping <address>, r1 route add <network> via <next hop>, r2 route add <network> via <next hop>, cls, clear, help';
       } else if (dayId === 'net-06') {
-        helpMsg = 'Commands: show router isp, ping <address>, r1 route add <network> via <next hop>, r1 lookup <address>, r2 route add <network> via <next hop>, pc5 ping <address>, clear, help';
+        helpMsg = 'Commands: show router isp, ping <address>, r1 route add <network> via <next hop>, r1 lookup <address>, r2 route add <network> via <next hop>, pc5 ping <address>, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -485,7 +485,7 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
               hint: <span className="text-[#ececf0]">{expectedCmd}</span> [Tab]
             </span>
           )}
-          <span className="hidden md:inline text-[#71717a]">[Ctrl+L] clear</span>
+          <span className="hidden md:inline text-[#71717a]">[Ctrl+L] / cls clear</span>
           <span>type help</span>
         </div>
       </div>

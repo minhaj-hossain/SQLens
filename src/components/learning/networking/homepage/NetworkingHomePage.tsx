@@ -122,6 +122,31 @@ export const NetworkingHomePage: React.FC = () => {
       ? NETWORKING_ROADMAP_STAGES
       : NETWORKING_ROADMAP_STAGES.filter((s) => s.name === activeStageFilter);
 
+  // Smoothly center the targeted day if returning from a lesson (e.g., #day-4 or #day-6)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#day-')) {
+        const dayNum = hash.replace('#day-', '');
+        const target =
+          document.getElementById(`day-${dayNum}`) ||
+          document.getElementById(`card-day-${dayNum}`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+      }
+    };
+
+    const timer = setTimeout(scrollToHash, 200);
+    window.addEventListener('hashchange', scrollToHash);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', scrollToHash);
+    };
+  }, [viewMode]);
+
   return (
     <div
       style={{
@@ -349,6 +374,7 @@ export const NetworkingHomePage: React.FC = () => {
 
                             {/* Node Circle Anchor */}
                             <Link
+                              id={`day-${day.dayNumber}`}
                               href={
                                 isAvailable
                                   ? `/networking/learn/${day.id}`
@@ -363,7 +389,7 @@ export const NetworkingHomePage: React.FC = () => {
                                 handleMouseEnter(e, day, stage.name)
                               }
                               onMouseLeave={handleMouseLeave}
-                              className={`relative z-10 w-[54px] h-[54px] rounded-full border grid place-items-center font-mono text-[16px] font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[#4ade80] ${
+                              className={`relative z-10 w-[54px] h-[54px] rounded-full border grid place-items-center font-mono text-[16px] font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[#4ade80] scroll-mt-48 target:ring-4 target:ring-[#4ade80]/60 target:scale-110 target:border-[#4ade80] ${
                                 isFirst
                                   ? 'bg-[#4ade80] border-[#4ade80] text-[#07090e] shadow-[0_0_24px_rgba(74,222,128,0.45)] hover:scale-110 active:scale-95 ring-4 ring-[#4ade80]/20'
                                   : isAvailable
@@ -470,7 +496,8 @@ export const NetworkingHomePage: React.FC = () => {
                       return (
                         <div
                           key={day.id}
-                          className={`rounded-xl border p-4 flex flex-col justify-between transition-all duration-200 ${
+                          id={`card-day-${day.dayNumber}`}
+                          className={`rounded-xl border p-4 flex flex-col justify-between transition-all duration-200 scroll-mt-36 target:ring-2 target:ring-[#4ade80]/60 target:border-[#4ade80] ${
                             isAvailable
                               ? 'bg-[#131b2a] border-[#22314a] hover:border-[#4ade80]/60 hover:shadow-lg hover:shadow-[#4ade80]/5 hover:-translate-y-0.5'
                               : 'bg-[#0d121c] border-[#182130] opacity-60'

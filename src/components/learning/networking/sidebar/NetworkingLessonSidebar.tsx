@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { NetworkingStep } from '@/types/networking';
 import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 
@@ -10,6 +11,7 @@ interface NetworkingLessonSidebarProps {
   setActiveStepIndex: (index: number) => void;
   completedSteps: Set<number>;
   onCodeClick: (cmd: string) => void;
+  dayNumber?: number;
 }
 
 export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = ({
@@ -18,6 +20,7 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
   setActiveStepIndex,
   completedSteps,
   onCodeClick,
+  dayNumber,
 }) => {
   const currentStep = steps[activeStepIndex];
   if (!currentStep) return null;
@@ -142,16 +145,24 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
               <code
                 data-c={currentStep.cmd}
                 onClick={() => onCodeClick(currentStep.cmd!)}
+                title="Tap to fill the terminal"
                 style={{
                   fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
                 }}
-                className="bg-[#050506] text-[#4ade80] px-[7px] py-[2px] rounded-[6px] text-[13px] cursor-pointer inline-block"
+                className="bg-[#050506] text-[#4ade80] px-[7px] py-[2px] rounded-[6px] text-[13px] cursor-pointer inline-block hover:bg-[#141416] transition-colors"
               >
                 {currentStep.cmd}
-              </code>{' '}
-              <span className="text-[#9a9aa5] text-[14px]">
-                (tap it to fill the terminal).
-              </span>
+              </code>
+              {(!dayNumber || dayNumber <= 2) ? (
+                <>
+                  {' '}
+                  <span className="text-[#9a9aa5] text-[14px]">
+                    (tap it to fill the terminal).
+                  </span>
+                </>
+              ) : (
+                '.'
+              )}
             </p>
 
             {/* How to read the result table */}
@@ -246,13 +257,23 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
 
       {/* Navigation Footer */}
       <div className="flex justify-between p-[10px_14px] border-t border-[#26262b]">
-        <button
-          onClick={() => setActiveStepIndex(Math.max(0, activeStepIndex - 1))}
-          disabled={activeStepIndex === 0}
-          className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer disabled:opacity-35 disabled:cursor-default hover:border-[#3f3f46] transition-colors"
-        >
-          ← Back
-        </button>
+        {activeStepIndex > 0 ? (
+          <button
+            onClick={() => setActiveStepIndex(activeStepIndex - 1)}
+            title="Previous step"
+            className="bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer hover:border-[#3f3f46] hover:text-[#4ade80] transition-colors"
+          >
+            ← Back
+          </button>
+        ) : (
+          <Link
+            href={`/networking#day-${dayNumber || 1}`}
+            title="Return to Roadmap"
+            className="inline-flex items-center bg-transparent border border-[#26262b] text-[#ececf0] rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer hover:border-[#3f3f46] hover:text-[#4ade80] transition-colors"
+          >
+            ← Back
+          </Link>
+        )}
 
         <button
           onClick={() => {
