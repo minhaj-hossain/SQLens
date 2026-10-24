@@ -181,6 +181,55 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('* 192.168.3.10 routed via R1');
   });
 
+  it('Day 8 renders MAC address table HUD, unknown unicast flooding, and selective forwarding', () => {
+    // Step 0: Empty MAC address table
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-08"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('MAC ADDRESS TABLE · SW1');
+    expect(htmlStep0).toContain('(0 entries learned · table empty)');
+    expect(htmlStep0).toContain('LOCAL STAR TOPOLOGY · SWITCH SW1');
+
+    // Step 2: Unknown unicast flood & mismatch drops
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-08"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('UNKNOWN UNICAST FLOOD ➔ Ports 2, 3, 4');
+    expect(htmlStep2).toContain('PC3: DA Mismatch ➔ Discard ✕');
+    expect(htmlStep2).toContain('PC4: DA Mismatch ➔ Discard ✕');
+    expect(htmlStep2).toContain('PC2: DA Matched ➔ Accept ✓');
+
+    // Step 3: Selective forwarding
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-08"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('SELECTIVE POINT-TO-POINT (P2 ➔ P1)');
+    expect(htmlStep3).toContain('AA:BB:CC:00:00:01');
+    expect(htmlStep3).toContain('AA:BB:CC:00:00:02');
+
+    // Step 4: Flushed table
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-08"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep4).toContain('TABLE FLUSHED (0 ENTRIES)');
+  });
+
   it('renders pan/zoom controls and navigation hints', () => {
     const html = renderToStaticMarkup(
       <NetworkingCanvas

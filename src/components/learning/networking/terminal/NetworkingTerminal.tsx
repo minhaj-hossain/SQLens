@@ -127,6 +127,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show router isp, ping <address>, r1 route add <network> via <next hop>, r1 lookup <address>, r2 route add <network> via <next hop>, pc5 ping <address>, cls, clear, help';
       } else if (dayId === 'net-07') {
         helpMsg = 'Commands: arp -a, debug arp on, ping 192.168.1.20, ping 192.168.3.10, ipconfig, link status, cls, clear, help';
+      } else if (dayId === 'net-08') {
+        helpMsg = 'Commands: show mac table, ping 192.168.1.20, show switch log, clear mac table, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -408,6 +410,37 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
           out = 'No ARP entries found.';
           isSuccess = true;
         }
+      }
+    }
+
+    // Day 8 dynamic logic
+    if (dayId === 'net-08') {
+      if (v === 'show mac table' || v === 'mac-table' || v === 'show mac') {
+        if (activeStepIndex === 0 && !completedSteps.has(1)) {
+          out =
+            'Switch SW1 MAC Address Table\n--------------------------------------------\nVLAN  Port    MAC Address        Type     Age\n(0 entries learned · table empty at boot)';
+          isSuccess = true;
+        } else if (activeStepIndex === 1 || activeStepIndex === 2) {
+          out =
+            'Switch SW1 MAC Address Table\n--------------------------------------------\nVLAN  Port    MAC Address        Type     Age\n1     Port 1  AA:BB:CC:00:00:01  DYNAMIC  14s\nTotal entries: 1';
+          isSuccess = true;
+        } else if (activeStepIndex === 4 && completedSteps.has(4)) {
+          out =
+            'Switch SW1 MAC Address Table\n--------------------------------------------\nVLAN  Port    MAC Address        Type     Age\n(0 entries learned · table flushed by clear mac table)';
+          isSuccess = true;
+        } else {
+          out =
+            'Switch SW1 MAC Address Table\n--------------------------------------------\nVLAN  Port    MAC Address        Type     Age\n1     Port 1  AA:BB:CC:00:00:01  DYNAMIC  22s\n1     Port 2  AA:BB:CC:00:00:02  DYNAMIC  6s\nTotal entries: 2';
+          isSuccess = true;
+        }
+      } else if (v === 'clear mac table' || v === 'clear mac') {
+        out =
+          'Switch SW1: Dynamic MAC address table cleared.\nAll learned port mappings removed.';
+        isSuccess = true;
+      } else if (v === 'show switch log' || v === 'show log') {
+        out =
+          '[Port 1] Ingress frame: SA=AA:BB:CC:00:00:01 DA=AA:BB:CC:00:00:02\n[SW1]    Learned: AA:BB:CC:00:00:01 on Port 1\n[SW1]    Lookup DA AA:BB:CC:00:00:02: NOT IN TABLE\n[SW1]    Action: UNKNOWN UNICAST FLOOD -> Ports 2, 3, 4\n[Port 2] Frame delivered to PC2 (DA matched)\n[Port 3] Discarded by PC3 (DA mismatch)\n[Port 4] Discarded by PC4 (DA mismatch)';
+        isSuccess = true;
       }
     }
 

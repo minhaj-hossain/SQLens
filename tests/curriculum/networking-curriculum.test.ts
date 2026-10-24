@@ -7,6 +7,7 @@ import {
   NET_05_MODULE,
   NET_06_MODULE,
   NET_07_MODULE,
+  NET_08_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -147,6 +148,37 @@ describe('Networking Curriculum Content Modules', () => {
     expect(fullText.toLowerCase()).not.toContain('frame');
   });
 
+  it('Day 8 module has exact title, 6 steps, and MAC learning commands', () => {
+    expect(NET_08_MODULE.id).toBe('net-08');
+    expect(NET_08_MODULE.title).toBe(
+      'Day 8 · How a Switch Learns: The MAC Address Table'
+    );
+    expect(NET_08_MODULE.steps).toHaveLength(6);
+
+    const step1 = NET_08_MODULE.steps[0];
+    expect(step1.title).toBe('The switch starts with an empty table');
+    expect(step1.cmd).toBe('show mac table');
+
+    const step2 = NET_08_MODULE.steps[1];
+    expect(step2.cmd).toBe('ping 192.168.1.20');
+    expect(step2.what).toContain('Source MAC');
+
+    const step3 = NET_08_MODULE.steps[2];
+    expect(step3.cmd).toBe('show switch log');
+    expect(step3.what).toContain('unknown unicast flooding');
+
+    const step4 = NET_08_MODULE.steps[3];
+    expect(step4.cmd).toBe('show mac table');
+    expect(step4.what).toContain('selective forwarding');
+
+    const step5 = NET_08_MODULE.steps[4];
+    expect(step5.cmd).toBe('clear mac table');
+    expect(step5.what).toContain('Aging Timer');
+
+    const step6 = NET_08_MODULE.steps[5];
+    expect(step6.cmd).toBeNull();
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -162,5 +194,6 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(5)?.id).toBe('net-05');
     expect(getNetworkingModule(6)?.id).toBe('net-06');
     expect(getNetworkingModule(7)?.id).toBe('net-07');
+    expect(getNetworkingModule(8)?.id).toBe('net-08');
   });
 });

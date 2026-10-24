@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getAllNetworkingModules } from '@/content/networking';
 
-describe('Interactive Step Completion Audit (Days 1 to 7)', () => {
+describe('Interactive Step Completion Audit (Days 1 to 8)', () => {
   const modules = getAllNetworkingModules();
 
   modules.forEach((mod) => {
@@ -43,7 +43,9 @@ describe('Interactive Step Completion Audit (Days 1 to 7)', () => {
               normalized === 'show router r2' ||
               normalized === 'show ports r2' ||
               normalized === 'show router isp' ||
-              normalized === 'show mac table'
+              normalized === 'show mac table' ||
+              normalized === 'show switch log' ||
+              normalized === 'clear mac table'
           ).toBe(true);
 
           // Test completion logic:

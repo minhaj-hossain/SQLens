@@ -116,6 +116,24 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
         normalizedCmd === 'ping 198.51.100.10'
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-08' &&
+        (activeStepIndex === 0 || activeStepIndex === 3) &&
+        (normalizedCmd === 'show mac' || normalizedCmd === 'mac-table')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-08' &&
+        activeStepIndex === 2 &&
+        normalizedCmd === 'show log'
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-08' &&
+        activeStepIndex === 4 &&
+        normalizedCmd === 'clear mac'
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

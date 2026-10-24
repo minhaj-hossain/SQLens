@@ -2,7 +2,7 @@
 ## Day 8 · How a Switch Learns: The MAC Address Table (`net-08`)
 
 > **Authoritative Specification for Implementation in Next Conversation**  
-> **Status**: READY FOR IMPLEMENTATION  
+> **Status**: [LIVE - IMPLEMENTED & VERIFIED]  
 > **Pedagogical Doctrine**: Zero Analogies, Physical Digital Reality, Exact Terminology, Gradual Canvas Reveal.
 
 ---

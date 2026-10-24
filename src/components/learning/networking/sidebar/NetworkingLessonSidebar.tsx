@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { NetworkingStep } from '@/types/networking';
+import { getAllNetworkingModules } from '@/content/networking';
 import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface NetworkingLessonSidebarProps {
@@ -23,6 +24,7 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
   dayNumber,
 }) => {
   const currentStep = steps[activeStepIndex];
+  const maxLiveDay = React.useMemo(() => getAllNetworkingModules().length, []);
   if (!currentStep) return null;
 
   const isCurrentStepDone = !currentStep.cmd || completedSteps.has(activeStepIndex);
@@ -276,9 +278,9 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         )}
 
         {activeStepIndex === steps.length - 1 ? (
-          dayNumber && dayNumber < 7 ? (
+          dayNumber && dayNumber < maxLiveDay ? (
             <Link
-              href={`/networking/learn/net-0${dayNumber + 1}`}
+              href={`/networking/learn/net-${String(dayNumber + 1).padStart(2, '0')}`}
               title={`Proceed to Day ${dayNumber + 1}`}
               className="rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 bg-[#4ade80]/15 border border-[#4ade80]/80 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.3)] hover:bg-[#4ade80]/25 hover:border-[#4ade80]"
             >
@@ -286,7 +288,7 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
             </Link>
           ) : (
             <Link
-              href={`/networking#day-${dayNumber || 7}`}
+              href={`/networking#day-${dayNumber || maxLiveDay}`}
               title="Return to Roadmap"
               className="rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 bg-[#4ade80]/15 border border-[#4ade80]/80 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.3)] hover:bg-[#4ade80]/25 hover:border-[#4ade80]"
             >

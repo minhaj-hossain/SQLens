@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getAllNetworkingModules } from '@/content/networking';
 
-describe('Auditing All Steps Progression (Days 1 to 7)', () => {
+describe('Auditing All Steps Progression (Days 1 to 8)', () => {
   const modules = getAllNetworkingModules();
 
   modules.forEach((mod) => {
