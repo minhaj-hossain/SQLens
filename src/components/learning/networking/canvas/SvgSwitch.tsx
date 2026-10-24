@@ -19,22 +19,27 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
   port4Active = false,
   isPinging = false,
 }) => {
-  const width = 110;
-  const height = 58;
+  const width = 112;
+  const height = 48;
+  const baseW = 122;
+  const baseH = 4;
+
   const cx = x + width / 2;
+  const baseX = cx - baseW / 2;
+  const baseY = y + height;
 
   return (
-    <g className="transition-all duration-500 ease-out">
-      {/* Switch Outer Chassis */}
+    <g className="transition-all duration-300 ease-out">
+      {/* Switch Main Chassis (Dark Charcoal matching laptop screen) */}
       <rect
         x={x}
         y={y}
         width={width}
         height={height}
-        rx={8}
-        fill="#141418"
-        stroke="#2c2c36"
-        strokeWidth="1.5"
+        rx={3}
+        fill="#232326"
+        stroke="#3c3c44"
+        strokeWidth="1.2"
       />
 
       {/* Front Face Inset Plate */}
@@ -43,10 +48,10 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
         y={y + 3}
         width={width - 6}
         height={height - 6}
-        rx={6}
-        fill="#0d0d10"
-        stroke="#1c1c22"
-        strokeWidth="1"
+        rx={2}
+        fill="#141416"
+        stroke="#1c1c20"
+        strokeWidth="0.8"
       />
 
       {/* Switch Label */}
@@ -54,110 +59,99 @@ export const SvgSwitch: React.FC<SvgSwitchProps> = ({
         x={cx}
         y={y + 16}
         textAnchor="middle"
-        fill="#9a9aa5"
-        fontSize="10"
+        fill="#94a3b8"
+        fontSize="9.5"
         fontWeight="700"
-        letterSpacing="0.12em"
+        letterSpacing="0.1em"
         fontFamily="ui-monospace, Menlo, Consolas, monospace"
       >
         ETHERNET SWITCH
       </text>
 
-      {/* 4 Front Ports Cluster */}
-      {/* Port 1 (left) */}
-      <g transform={`translate(${cx - 38}, ${y + 24})`}>
-        <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
-        <rect x="4" y="5" width="8" height="4" fill="#141418" />
+      {/* 4 Port Sockets Cluster */}
+      {/* Port 1 */}
+      <g transform={`translate(${cx - 39}, ${y + 22})`}>
+        <rect x="0" y="3" width="16" height="11" rx="1.5" fill="#09090b" stroke="#27272a" strokeWidth="0.8" />
         <circle
           cx="8"
           cy="1"
-          r="1.5"
-          fill={port1Active ? '#4ade80' : '#27272a'}
+          r="1.4"
+          fill={port1Active ? '#4ade80' : '#3f3f46'}
           className={port1Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
         >
-          {port1Active && (
-            <animate
-              attributeName="opacity"
-              values={isPinging ? '1;0.2;0.9;0.1;1' : '1;0.4;0.9;0.3;1'}
-              dur={isPinging ? '0.2s' : '2.1s'}
-              repeatCount="indefinite"
-            />
+          {port1Active && isPinging && (
+            <animate attributeName="opacity" values="1;0.2;1;0.2;1" dur="0.25s" repeatCount="indefinite" />
           )}
         </circle>
-        <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">1</text>
+        <text x="8" y="21" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="monospace">1</text>
       </g>
 
-      {/* Port 2 (center-left) */}
-      <g transform={`translate(${cx - 18}, ${y + 24})`}>
-        <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
-        <rect x="4" y="5" width="8" height="4" fill="#141418" />
+      {/* Port 2 */}
+      <g transform={`translate(${cx - 19}, ${y + 22})`}>
+        <rect x="0" y="3" width="16" height="11" rx="1.5" fill="#09090b" stroke="#27272a" strokeWidth="0.8" />
         <circle
           cx="8"
           cy="1"
-          r="1.5"
-          fill={port2Active ? '#4ade80' : '#27272a'}
+          r="1.4"
+          fill={port2Active ? '#4ade80' : '#3f3f46'}
           className={port2Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
         >
-          {port2Active && (
-            <animate
-              attributeName="opacity"
-              values={isPinging ? '1;0.1;0.95;0.2;1' : '0.9;0.3;1;0.5;0.9'}
-              dur={isPinging ? '0.24s' : '1.7s'}
-              repeatCount="indefinite"
-            />
+          {port2Active && isPinging && (
+            <animate attributeName="opacity" values="1;0.2;1;0.2;1" dur="0.25s" repeatCount="indefinite" />
           )}
         </circle>
-        <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">2</text>
+        <text x="8" y="21" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="monospace">2</text>
       </g>
 
-      {/* Port 3 (center-right) */}
-      <g transform={`translate(${cx + 2}, ${y + 24})`}>
-        <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
-        <rect x="4" y="5" width="8" height="4" fill="#141418" />
+      {/* Port 3 */}
+      <g transform={`translate(${cx + 3}, ${y + 22})`}>
+        <rect x="0" y="3" width="16" height="11" rx="1.5" fill="#09090b" stroke="#27272a" strokeWidth="0.8" />
         <circle
           cx="8"
           cy="1"
-          r="1.5"
-          fill={port3Active ? '#4ade80' : '#27272a'}
+          r="1.4"
+          fill={port3Active ? '#4ade80' : '#3f3f46'}
           className={port3Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
         >
-          {port3Active && (
-            <animate
-              attributeName="opacity"
-              values={isPinging ? '1;0.3;0.8;0.15;1' : '1;0.5;0.8;0.3;1'}
-              dur={isPinging ? '0.19s' : '2.5s'}
-              repeatCount="indefinite"
-            />
+          {port3Active && isPinging && (
+            <animate attributeName="opacity" values="1;0.2;1;0.2;1" dur="0.25s" repeatCount="indefinite" />
           )}
         </circle>
-        <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">3</text>
+        <text x="8" y="21" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="monospace">3</text>
       </g>
 
-      {/* Port 4 (right) */}
-      <g transform={`translate(${cx + 22}, ${y + 24})`}>
-        <rect x="0" y="4" width="16" height="12" rx="2" fill="#070709" stroke="#2c2c34" strokeWidth="0.8" />
-        <rect x="4" y="5" width="8" height="4" fill="#141418" />
+      {/* Port 4 */}
+      <g transform={`translate(${cx + 23}, ${y + 22})`}>
+        <rect x="0" y="3" width="16" height="11" rx="1.5" fill="#09090b" stroke="#27272a" strokeWidth="0.8" />
         <circle
           cx="8"
           cy="1"
-          r="1.5"
-          fill={port4Active ? '#4ade80' : '#27272a'}
+          r="1.4"
+          fill={port4Active ? '#4ade80' : '#3f3f46'}
           className={port4Active ? 'drop-shadow-[0_0_3px_#4ade80]' : ''}
         >
-          {port4Active && (
-            <animate
-              attributeName="opacity"
-              values={isPinging ? '1;0.2;1;0.3;0.9' : '0.85;0.4;1;0.2;0.85'}
-              dur={isPinging ? '0.22s' : '2.8s'}
-              repeatCount="indefinite"
-            />
+          {port4Active && isPinging && (
+            <animate attributeName="opacity" values="1;0.2;1;0.2;1" dur="0.25s" repeatCount="indefinite" />
           )}
         </circle>
-        <text x="8" y="24" textAnchor="middle" fill="#62626d" fontSize="8" fontFamily="monospace">4</text>
+        <text x="8" y="21" textAnchor="middle" fill="#64748b" fontSize="7.5" fontFamily="monospace">4</text>
       </g>
 
       {/* Power status LED */}
-      <circle cx={x + 10} cy={y + 14} r="1.5" fill="#4ade80" className="drop-shadow-[0_0_3px_#4ade80]" />
+      <circle cx={x + 9} cy={y + 13} r="1.4" fill="#4ade80" className="drop-shadow-[0_0_3px_#4ade80]" />
+
+      {/* Sleek Metallic Silver Base (Matching Laptop Base) */}
+      <rect
+        x={baseX}
+        y={baseY}
+        width={baseW}
+        height={baseH}
+        rx={2}
+        fill="#d4d4d8"
+        stroke="#9ca3af"
+        strokeWidth="0.6"
+        className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+      />
     </g>
   );
 };
