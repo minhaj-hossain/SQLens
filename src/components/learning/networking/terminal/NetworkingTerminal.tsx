@@ -16,6 +16,12 @@ interface NetworkingTerminalProps {
   setPc4Ip: (ip: string) => void;
   prefillCmd?: string | null;
   onClearPrefill?: () => void;
+  gateway?: string;
+  setGateway?: (gw: string) => void;
+  r1Route?: boolean;
+  setR1Route?: (val: boolean) => void;
+  r2Route?: boolean;
+  setR2Route?: (val: boolean) => void;
 }
 
 interface LogEntry {
@@ -37,6 +43,12 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
   setPc4Ip,
   prefillCmd,
   onClearPrefill,
+  gateway = '192.168.1.1',
+  setGateway,
+  r1Route = false,
+  setR1Route,
+  r2Route = false,
+  setR2Route,
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [history, setHistory] = useState<string[]>([]);
@@ -99,6 +111,10 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: subnet, subnet info, ping <address>, setip <device> <address> <mask>, clear, help';
       } else if (dayId === 'net-03') {
         helpMsg = 'Commands: cidr, split <network>, subnet <address>/<prefix>, setip pc3 <address> <mask>, ping <address>, clear, help';
+      } else if (dayId === 'net-04') {
+        helpMsg = 'Commands: show router, show ports, ipconfig, show routes, setgw pc1 <address|none>, ping <address>, clear, help';
+      } else if (dayId === 'net-05') {
+        helpMsg = 'Commands: show router r2, show ports r2, ping <address>, r1 route add <network> via <next hop>, r2 route add <network> via <next hop>, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -202,6 +218,102 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
             out = `PC3 address set to ${ip} / ${mask}\nPC3 is in Subnet 1 (192.168.1.0/25), the same as PC1 and PC2.`;
             isSuccess = true;
           }
+        }
+      }
+    }
+
+    // Day 4 dynamic logic
+    if (dayId === 'net-04') {
+      if (v === 'ipconfig') {
+        out = `IPv4             192.168.1.10\nMask             255.255.255.128\nDefault gateway  ${
+          gateway === 'none' ? '(none)' : gateway
+        }`;
+        isSuccess = true;
+      }
+
+      const setgwMatch = v.match(/^setgw pc1 (\S+)$/);
+      if (setgwMatch) {
+        const targetGw = setgwMatch[1];
+        setGateway?.(targetGw);
+        out =
+          targetGw === 'none'
+            ? 'PC1 default gateway removed.'
+            : `PC1 default gateway set to ${targetGw}.`;
+        isSuccess = true;
+      }
+
+      const pingMatch = v.match(/^ping (\S+)$/);
+      if (pingMatch) {
+        const ip = pingMatch[1];
+        if (ip === '192.168.1.20' || ip === '192.168.1.40') {
+          out = `Reply from ${ip}: time<1ms\nReply from ${ip}: time<1ms\nReply from ${ip}: time<1ms\n3 sent, 3 received, 0% loss`;
+          isSuccess = true;
+        } else if (ip === '192.168.1.130') {
+          if (gateway === '192.168.1.1') {
+            out = `Reply from ${ip}: time 1ms (sent via gateway 192.168.1.1)\nReply from ${ip}: time 1ms (sent via gateway 192.168.1.1)\nReply from ${ip}: time 1ms (sent via gateway 192.168.1.1)\n3 sent, 3 received, 0% loss`;
+            isSuccess = true;
+          } else {
+            out = `Request timed out.\nRequest timed out.\nRequest timed out.\n0 received. ${
+              gateway === 'none'
+                ? 'PC1 has no default gateway, so it cannot send data outside 192.168.1.0/25.'
+                : `The gateway ${gateway} does not answer.`
+            }`;
+            isSuccess = true;
+          }
+        } else {
+          out = `Request timed out.\nRequest timed out.\nRequest timed out.\n0 received. No device answers at ${ip}.`;
+        }
+      }
+    }
+
+    // Day 5 dynamic logic
+    if (dayId === 'net-05') {
+      const pingMatch = v.match(/^ping (\S+)$/);
+      if (pingMatch) {
+        const ip = pingMatch[1];
+        if (ip === '192.168.1.20' || ip === '192.168.1.40') {
+          out = `Reply from ${ip}: time<1ms\nReply from ${ip}: time<1ms\nReply from ${ip}: time<1ms\n3 sent, 3 received, 0% loss`;
+          isSuccess = true;
+        } else if (ip === '192.168.1.130') {
+          out = `Reply from ${ip}: time 1ms (via gateway 192.168.1.1)\nReply from ${ip}: time 1ms (via gateway 192.168.1.1)\nReply from ${ip}: time 1ms (via gateway 192.168.1.1)\n3 sent, 3 received, 0% loss`;
+          isSuccess = true;
+        } else if (ip === '192.168.3.10') {
+          if (!r1Route) {
+            out =
+              'Reply from 192.168.1.1: Destination network unreachable\nReply from 192.168.1.1: Destination network unreachable\nReply from 192.168.1.1: Destination network unreachable\n0 received. R1 has no route to 192.168.3.0/24.';
+            isSuccess = true;
+          } else if (!r2Route) {
+            out =
+              'Request timed out.\nRequest timed out.\nRequest timed out.\n0 received. The message reached PC5, but R2 has no route back to 192.168.1.0/24, so the reply was lost.';
+            isSuccess = true;
+          } else {
+            out =
+              'Reply from 192.168.3.10: time 2ms (via gateway 192.168.1.1)\nReply from 192.168.3.10: time 2ms (via gateway 192.168.1.1)\nReply from 192.168.3.10: time 2ms (via gateway 192.168.1.1)\n3 sent, 3 received, 0% loss';
+            isSuccess = true;
+          }
+        } else {
+          out = `Request timed out.\nRequest timed out.\nRequest timed out.\n0 received. No device answers at ${ip}.`;
+        }
+      }
+
+      const routeMatch = v.match(/^(r1|r2) route add (\S+) via (\S+)$/);
+      if (routeMatch) {
+        const router = routeMatch[1];
+        const net = routeMatch[2];
+        const nextHop = routeMatch[3];
+
+        if (router === 'r1' && net === '192.168.3.0/24' && nextHop === '192.168.2.2') {
+          setR1Route?.(true);
+          out =
+            'Route added on R1.\nRouting table of R1:\nNetwork           Via / Port   Type\n192.168.1.0/25    port 1       connected\n192.168.1.128/25  port 2       connected\n192.168.2.0/24    port 3       connected\n192.168.3.0/24    192.168.2.2  static';
+          isSuccess = true;
+        } else if (router === 'r2' && net === '192.168.1.0/24' && nextHop === '192.168.2.1') {
+          setR2Route?.(true);
+          out =
+            'Route added on R2.\nRouting table of R2:\nNetwork           Via / Port   Type\n192.168.2.0/24    port 1       connected\n192.168.3.0/24    port 2       connected\n192.168.1.0/24    192.168.2.1  static';
+          isSuccess = true;
+        } else {
+          out = 'Route not accepted. Check the network and the next hop.';
         }
       }
     }

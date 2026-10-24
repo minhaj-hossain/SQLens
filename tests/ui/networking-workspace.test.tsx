@@ -3,7 +3,13 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NetworkingWorkspace } from '@/components/learning/networking/workspace/NetworkingWorkspace';
 import { NetworkingLessonSidebar } from '@/components/learning/networking/sidebar/NetworkingLessonSidebar';
-import { NET_01_MODULE, NET_02_MODULE, NET_03_MODULE } from '@/content/networking';
+import {
+  NET_01_MODULE,
+  NET_02_MODULE,
+  NET_03_MODULE,
+  NET_04_MODULE,
+  NET_05_MODULE,
+} from '@/content/networking';
 
 describe('NetworkingWorkspace Component', () => {
   it('renders Day 1 workspace with canvas, terminal prompt, and lesson card', () => {
@@ -41,6 +47,28 @@ describe('NetworkingWorkspace Component', () => {
     expect(html).toContain('Day 3 · Subnetting: Splitting a Network');
     expect(html).toContain('Prefix length: a shorter way to write the mask');
     expect(html).toContain('cidr');
+  });
+
+  it('renders Day 4 workspace with Router R1 and Subnet 1/2', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingWorkspace module={NET_04_MODULE} />
+    );
+
+    expect(html).toContain('Day 4 · The Router: Connecting Networks');
+    expect(html).toContain('ROUTER R1');
+    expect(html).toContain('LAYER 3 GATEWAY');
+    expect(html).toContain('show router');
+  });
+
+  it('renders Day 5 workspace with Router R1 and Router R2', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingWorkspace module={NET_05_MODULE} />
+    );
+
+    expect(html).toContain('Day 5 · Static Routes: Reaching Distant Networks');
+    expect(html).toContain('ROUTER R1');
+    expect(html).toContain('ROUTER R2');
+    expect(html).toContain('show router r2');
   });
 
   it('gates the Next button when task is not completed', () => {

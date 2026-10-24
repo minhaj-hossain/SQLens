@@ -2,12 +2,16 @@ import { NetworkingModule } from '@/types/networking';
 import { NET_01_MODULE } from './modules/net-01';
 import { NET_02_MODULE } from './modules/net-02';
 import { NET_03_MODULE } from './modules/net-03';
+import { NET_04_MODULE } from './modules/net-04';
+import { NET_05_MODULE } from './modules/net-05';
 import { NETWORKING_ROADMAP_STAGES } from './roadmap';
 
 export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
   'net-01': NET_01_MODULE,
   'net-02': NET_02_MODULE,
   'net-03': NET_03_MODULE,
+  'net-04': NET_04_MODULE,
+  'net-05': NET_05_MODULE,
 };
 
 export function getNetworkingModule(
@@ -29,7 +33,20 @@ export function getNetworkingModule(
 }
 
 export function getAllNetworkingModules(): NetworkingModule[] {
-  return [NET_01_MODULE, NET_02_MODULE, NET_03_MODULE];
+  return [
+    NET_01_MODULE,
+    NET_02_MODULE,
+    NET_03_MODULE,
+    NET_04_MODULE,
+    NET_05_MODULE,
+  ];
 }
 
-export { NET_01_MODULE, NET_02_MODULE, NET_03_MODULE, NETWORKING_ROADMAP_STAGES };
+export {
+  NET_01_MODULE,
+  NET_02_MODULE,
+  NET_03_MODULE,
+  NET_04_MODULE,
+  NET_05_MODULE,
+  NETWORKING_ROADMAP_STAGES,
+};

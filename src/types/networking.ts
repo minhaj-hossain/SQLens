@@ -5,6 +5,7 @@ export interface NetworkingStepReadItem {
 
 export interface NetworkingStep {
   group: string; // "Idea 1 of 5 · The connection"
+  chg?: string; // "Since Day N" card text at the top of idea 1
   title: string; // "The cable: the physical link"
   what: string;
   why?: string;

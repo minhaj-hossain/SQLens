@@ -22,15 +22,24 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
   const [pc3Ip, setPc3Ip] = useState('192.168.1.30');
   const [pc4Ip, setPc4Ip] = useState('192.168.2.10');
   const [prefillCmd, setPrefillCmd] = useState<string | null>(null);
+  const [gateway, setGateway] = useState('192.168.1.1');
+  const [r1Route, setR1Route] = useState(false);
+  const [r2Route, setR2Route] = useState(false);
 
   const currentStep = module.steps[activeStepIndex];
+  const recapIdx = module.steps.length - 1;
 
-  // Auto-complete recap step (step 5) if all preceding 5 commands are done
+  // Auto-complete recap step if all preceding commands are done
   useEffect(() => {
-    if (activeStepIndex === 5 && [0, 1, 2, 3, 4].every((k) => completedSteps.has(k))) {
-      setCompletedSteps((prev) => new Set([...prev, 5]));
+    if (activeStepIndex === recapIdx) {
+      const allPriorDone = Array.from({ length: recapIdx }, (_, idx) => idx).every(
+        (k) => completedSteps.has(k)
+      );
+      if (allPriorDone) {
+        setCompletedSteps((prev) => new Set([...prev, recapIdx]));
+      }
     }
-  }, [activeStepIndex, completedSteps]);
+  }, [activeStepIndex, completedSteps, recapIdx]);
 
   const isCurrentStepDone =
     completedSteps.has(activeStepIndex) || currentStep?.cmd === null;
@@ -142,6 +151,9 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             isPinging={isPinging}
             pc3Ip={pc3Ip}
             pc4Ip={pc4Ip}
+            gateway={gateway}
+            r1Route={r1Route}
+            r2Route={r2Route}
           />
         </section>
 
@@ -163,6 +175,12 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             setPc4Ip={setPc4Ip}
             prefillCmd={prefillCmd}
             onClearPrefill={() => setPrefillCmd(null)}
+            gateway={gateway}
+            setGateway={setGateway}
+            r1Route={r1Route}
+            setR1Route={setR1Route}
+            r2Route={r2Route}
+            setR2Route={setR2Route}
           />
         </div>
 

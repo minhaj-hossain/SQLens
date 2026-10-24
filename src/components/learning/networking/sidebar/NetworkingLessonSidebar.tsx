@@ -91,6 +91,13 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
           {currentStep.group}
         </div>
 
+        {/* Since Day N Card if present */}
+        {currentStep.chg && (
+          <div className="border border-[#26262b] rounded-[10px] p-[10px_12px] bg-[#4ade80]/[0.07] text-[14px] leading-[1.6] text-[#ececf0] my-2">
+            {currentStep.chg}
+          </div>
+        )}
+
         {/* Step Title */}
         <h2 className="text-[19px] font-bold text-[#ececf0] leading-[1.3] m-0">
           {currentStep.title}

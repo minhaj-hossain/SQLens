@@ -3,17 +3,21 @@
 import React from 'react';
 import { SvgWorkstation } from './SvgWorkstation';
 import { SvgSwitch } from './SvgSwitch';
+import { SvgRouter } from './SvgRouter';
 import { SvgCable } from './SvgCable';
 
 interface NetworkingCanvasProps {
-  dayId: string; // 'net-01' | 'net-02' | 'net-03'
+  dayId: string; // 'net-01' | 'net-02' | 'net-03' | 'net-04' | 'net-05'
   activeStepIndex: number;
   completedSteps: Set<number>;
   lastCommand?: string;
   isPinging?: boolean;
-  pc3Ip?: string; // default: '192.168.1.30'
-  pc4Ip?: string; // default: '192.168.2.10'
+  pc3Ip?: string;
+  pc4Ip?: string;
   isLinkUp?: boolean;
+  gateway?: string;
+  r1Route?: boolean;
+  r2Route?: boolean;
 }
 
 export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
@@ -25,19 +29,24 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
   pc3Ip = '192.168.1.30',
   pc4Ip = '192.168.2.10',
   isLinkUp = true,
+  gateway = '192.168.1.1',
+  r1Route = false,
+  r2Route = false,
 }) => {
   const isDay1 = dayId === 'net-01';
   const isDay2 = dayId === 'net-02';
   const isDay3 = dayId === 'net-03';
+  const isDay4 = dayId === 'net-04';
+  const isDay5 = dayId === 'net-05';
 
   // Day 1 Progressive reveals
   const showDay1DirectWire = isDay1 && activeStepIndex < 4;
   const showSwitch = !isDay1 || activeStepIndex >= 4;
   const showPC3 = !isDay1 || activeStepIndex >= 4;
-  const showPC4 = isDay2 && activeStepIndex >= 2;
+  const showPC4 = (isDay2 && activeStepIndex >= 2) || isDay4 || isDay5;
 
   const showIps = !isDay1 || activeStepIndex >= 1;
-  const showMacs = !isDay1 || activeStepIndex >= 3;
+  const showMacs = (!isDay1 && !isDay4 && !isDay5) || activeStepIndex >= 3;
   const showSubnetLegend = isDay3 && activeStepIndex >= 1;
 
   // Day 1 link status glow
@@ -53,7 +62,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
   // Day 3 Subnet color logic
   const isPc3Subnet2 =
     isDay3 && (pc3Ip === '192.168.1.130' || activeStepIndex >= 3);
-  const pc3Color = isPc3Subnet2 ? 'green' : 'blue';
+  const pc3Color = isPc3Subnet2 || isDay4 || isDay5 ? 'green' : 'blue';
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0d0d10] relative select-none overflow-hidden rounded-t-xl md:rounded-l-xl md:rounded-tr-none border-b md:border-b-0 md:border-r border-[#26262b]">
@@ -66,6 +75,10 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
         <div className="text-[10px] text-[#62626d]">
           {isDay1 && activeStepIndex < 4
             ? 'DIRECT POINT-TO-POINT LINK'
+            : isDay4
+            ? 'ROUTER CONNECTING TWO SUBNETS'
+            : isDay5
+            ? 'MULTI-ROUTER STATIC ROUTES TOPOLOGY'
             : showPC4
             ? '4-NODE LOCAL STAR TOPOLOGY'
             : '3-NODE SWITCH TOPOLOGY'}
@@ -93,192 +106,365 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
           <rect width="100%" height="100%" fill="url(#stage-grid)" opacity="0.6" />
 
           {/* =================================================== */}
-          {/* CABLES LAYER */}
+          {/* DAY 1 - DAY 3 TOPOLOGIES */}
           {/* =================================================== */}
-
-          {/* Day 1 Direct Wire: PC1 to PC2 */}
-          {showDay1DirectWire && (
-            <SvgCable
-              x1={146}
-              y1={150}
-              x2={594}
-              y2={150}
-              glow={wireGlow}
-              color="#4ade80"
-              isTransmitting={isDirectPinging}
-            />
-          )}
-
-          {/* Switch Topologies */}
-          {showSwitch && (
-            <g className="transition-opacity duration-500">
-              {/* Wire 1: PC1 to Switch */}
-              <SvgCable
-                x1={146}
-                y1={150}
-                x2={326}
-                y2={150}
-                glow={true}
-                color="#4ade80"
-                isTransmitting={isSwitchPinging && lastCommand.includes('192.168.1.')}
-              />
-
-              {/* Wire 2: Switch to PC2 */}
-              <SvgCable
-                x1={434}
-                y1={150}
-                x2={594}
-                y2={150}
-                glow={true}
-                color="#4ade80"
-                isTransmitting={isSwitchPinging && lastCommand.includes('192.168.1.20')}
-              />
-
-              {/* Wire 3: PC3 to Switch */}
-              {showPC3 && (
+          {(isDay1 || isDay2 || isDay3) && (
+            <>
+              {/* Day 1 Direct Wire: PC1 to PC2 */}
+              {showDay1DirectWire && (
                 <SvgCable
-                  x1={380}
-                  y1={82}
-                  x2={380}
-                  y2={126}
-                  glow={true}
-                  color={isPc3Subnet2 ? '#4ade80' : '#60a5fa'}
-                  isTransmitting={isSwitchPinging && lastCommand.includes(pc3Ip)}
-                />
-              )}
-
-              {/* Wire 4: Switch to PC4 (Day 2 Step 3+) */}
-              {showPC4 && (
-                <SvgCable
-                  x1={380}
-                  y1={184}
-                  x2={380}
-                  y2={220}
-                  glow={true}
+                  x1={146}
+                  y1={150}
+                  x2={594}
+                  y2={150}
+                  glow={wireGlow}
                   color="#4ade80"
-                  isTransmitting={isSwitchPinging && lastCommand.includes(pc4Ip)}
+                  isTransmitting={isDirectPinging}
                 />
               )}
-            </g>
-          )}
 
-          {/* =================================================== */}
-          {/* HARDWARE DEVICES LAYER */}
-          {/* =================================================== */}
+              {/* Switch Topologies */}
+              {showSwitch && (
+                <g className="transition-opacity duration-500">
+                  <SvgCable
+                    x1={146}
+                    y1={150}
+                    x2={326}
+                    y2={150}
+                    glow={true}
+                    color="#4ade80"
+                    isTransmitting={isSwitchPinging && lastCommand.includes('192.168.1.')}
+                  />
 
-          {/* PC1 (Left) */}
-          <SvgWorkstation
-            x={60}
-            y={114}
-            name="PC1"
-            ip="192.168.1.10"
-            mac="AA:BB:CC:00:00:01"
-            ipColor="blue"
-            showIp={showIps}
-            showMac={showMacs}
-            isLinked={wireGlow || showSwitch}
-            isPinging={isDirectPinging}
-          />
+                  <SvgCable
+                    x1={434}
+                    y1={150}
+                    x2={594}
+                    y2={150}
+                    glow={true}
+                    color="#4ade80"
+                    isTransmitting={isSwitchPinging && lastCommand.includes('192.168.1.20')}
+                  />
 
-          {/* PC2 (Right) */}
-          <SvgWorkstation
-            x={594}
-            y={114}
-            name="PC2"
-            ip="192.168.1.20"
-            mac="AA:BB:CC:00:00:02"
-            ipColor="blue"
-            showIp={showIps}
-            showMac={showMacs}
-            isLinked={wireGlow || showSwitch}
-            isPinging={isDirectPinging}
-          />
+                  {showPC3 && (
+                    <SvgCable
+                      x1={380}
+                      y1={82}
+                      x2={380}
+                      y2={126}
+                      glow={true}
+                      color={isPc3Subnet2 ? '#4ade80' : '#60a5fa'}
+                      isTransmitting={isSwitchPinging && lastCommand.includes(pc3Ip)}
+                    />
+                  )}
 
-          {/* Central Switch */}
-          {showSwitch && (
-            <SvgSwitch
-              x={325}
-              y={124}
-              port1Active={true}
-              port2Active={true}
-              port3Active={showPC3}
-              port4Active={showPC4}
-              isPinging={isSwitchPinging}
-            />
-          )}
+                  {showPC4 && (
+                    <SvgCable
+                      x1={380}
+                      y1={184}
+                      x2={380}
+                      y2={220}
+                      glow={true}
+                      color="#4ade80"
+                      isTransmitting={isSwitchPinging && lastCommand.includes(pc4Ip)}
+                    />
+                  )}
+                </g>
+              )}
 
-          {/* PC3 (Top Center) */}
-          {showPC3 && (
-            <SvgWorkstation
-              x={337}
-              y={10}
-              name="PC3"
-              ip={pc3Ip}
-              mac="AA:BB:CC:00:00:03"
-              ipColor={pc3Color}
-              showIp={showIps}
-              showMac={showMacs}
-              isLinked={true}
-            />
-          )}
-
-          {/* PC4 (Bottom Center - Day 2 only) */}
-          {showPC4 && (
-            <SvgWorkstation
-              x={337}
-              y={220}
-              name="PC4"
-              ip={pc4Ip}
-              mac="AA:BB:CC:00:00:04"
-              ipColor={pc4Ip.startsWith('192.168.1.') ? 'blue' : 'default'}
-              showIp={true}
-              showMac={false}
-              isLinked={true}
-            />
-          )}
-
-          {/* =================================================== */}
-          {/* DAY 3 SUBNET LEGEND */}
-          {/* =================================================== */}
-          {showSubnetLegend && (
-            <g
-              transform="translate(200, 290)"
-              className="transition-opacity duration-300"
-            >
-              <rect
-                x="-10"
-                y="-14"
-                width="360"
-                height="24"
-                rx="12"
-                fill="#141417"
-                stroke="#2a2a32"
-                strokeWidth="1"
+              {/* Devices */}
+              <SvgWorkstation
+                x={60}
+                y={114}
+                name="PC1"
+                ip="192.168.1.10"
+                mac="AA:BB:CC:00:00:01"
+                ipColor="blue"
+                showIp={showIps}
+                showMac={showMacs}
+                isLinked={wireGlow || showSwitch}
+                isPinging={isDirectPinging}
               />
-              <circle cx="16" cy="-2" r="4" fill="#60a5fa" />
-              <text
-                x="26"
-                y="2"
-                fill="#60a5fa"
-                fontSize="11"
-                fontWeight="600"
-                fontFamily="ui-monospace, Menlo, Consolas, monospace"
-              >
-                Subnet 1 · 192.168.1.0/25
+
+              <SvgWorkstation
+                x={594}
+                y={114}
+                name="PC2"
+                ip="192.168.1.20"
+                mac="AA:BB:CC:00:00:02"
+                ipColor="blue"
+                showIp={showIps}
+                showMac={showMacs}
+                isLinked={wireGlow || showSwitch}
+                isPinging={isDirectPinging}
+              />
+
+              {showSwitch && (
+                <SvgSwitch
+                  x={325}
+                  y={124}
+                  port1Active={true}
+                  port2Active={true}
+                  port3Active={showPC3}
+                  port4Active={showPC4}
+                  isPinging={isSwitchPinging}
+                />
+              )}
+
+              {showPC3 && (
+                <SvgWorkstation
+                  x={337}
+                  y={10}
+                  name="PC3"
+                  ip={pc3Ip}
+                  mac="AA:BB:CC:00:00:03"
+                  ipColor={pc3Color}
+                  showIp={showIps}
+                  showMac={showMacs}
+                  isLinked={true}
+                />
+              )}
+
+              {showPC4 && (
+                <SvgWorkstation
+                  x={337}
+                  y={220}
+                  name="PC4"
+                  ip={pc4Ip}
+                  mac="AA:BB:CC:00:00:04"
+                  ipColor={pc4Ip.startsWith('192.168.1.') ? 'blue' : 'default'}
+                  showIp={true}
+                  showMac={false}
+                  isLinked={true}
+                />
+              )}
+
+              {showSubnetLegend && (
+                <g transform="translate(200, 290)">
+                  <rect
+                    x="-10"
+                    y="-14"
+                    width="360"
+                    height="24"
+                    rx="12"
+                    fill="#141417"
+                    stroke="#2a2a32"
+                    strokeWidth="1"
+                  />
+                  <circle cx="16" cy="-2" r="4" fill="#60a5fa" />
+                  <text
+                    x="26"
+                    y="2"
+                    fill="#60a5fa"
+                    fontSize="11"
+                    fontWeight="600"
+                    fontFamily="ui-monospace, Menlo, Consolas, monospace"
+                  >
+                    Subnet 1 · 192.168.1.0/25
+                  </text>
+                  <circle cx="204" cy="-2" r="4" fill="#4ade80" />
+                  <text
+                    x="214"
+                    y="2"
+                    fill="#4ade80"
+                    fontSize="11"
+                    fontWeight="600"
+                    fontFamily="ui-monospace, Menlo, Consolas, monospace"
+                  >
+                    Subnet 2 · 192.168.1.128/25
+                  </text>
+                </g>
+              )}
+            </>
+          )}
+
+          {/* =================================================== */}
+          {/* DAY 4: THE ROUTER CONNECTING TWO SUBNETS */}
+          {/* =================================================== */}
+          {isDay4 && (
+            <>
+              {/* Cables */}
+              {/* PC1 to SW1 */}
+              <SvgCable x1={116} y1={76} x2={190} y2={145} color="#4ade80" isTransmitting={isSwitchPinging} />
+              {/* PC2 to SW1 */}
+              <SvgCable x1={116} y1={216} x2={190} y2={165} color="#4ade80" />
+              {/* PC4 to SW1 */}
+              <SvgCable x1={220} y1={175} x2={220} y2={215} color="#4ade80" />
+              {/* SW1 to R1 Port 1 */}
+              <SvgCable x1={250} y1={150} x2={330} y2={150} color="#4ade80" isTransmitting={isSwitchPinging} />
+              {/* R1 Port 2 to PC3 */}
+              <SvgCable x1={444} y1={150} x2={580} y2={150} color="#4ade80" isTransmitting={isSwitchPinging} />
+
+              {/* Subnet 1 Label */}
+              <text x={170} y={30} fill="#60a5fa" fontSize="11" fontWeight="700" fontFamily="monospace">
+                SUBNET 1 · 192.168.1.0/25
+              </text>
+              {/* Subnet 2 Label */}
+              <text x={530} y={30} fill="#4ade80" fontSize="11" fontWeight="700" fontFamily="monospace">
+                SUBNET 2 · 192.168.1.128/25
               </text>
 
-              <circle cx="204" cy="-2" r="4" fill="#4ade80" />
-              <text
-                x="214"
-                y="2"
-                fill="#4ade80"
-                fontSize="11"
-                fontWeight="600"
-                fontFamily="ui-monospace, Menlo, Consolas, monospace"
-              >
-                Subnet 2 · 192.168.1.128/25
+              {/* PC1 */}
+              <SvgWorkstation
+                x={30}
+                y={40}
+                name="PC1"
+                ip="192.168.1.10"
+                ipColor="blue"
+                showIp={true}
+              />
+              {/* PC1 Gateway status indicator */}
+              {activeStepIndex >= 2 && (
+                <text
+                  x={73}
+                  y={136}
+                  textAnchor="middle"
+                  fill={gateway === 'none' ? '#ef4444' : '#60a5fa'}
+                  fontSize="10"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="600"
+                >
+                  {gateway === 'none' ? 'no gateway' : `gw: ${gateway}`}
+                </text>
+              )}
+
+              {/* PC2 */}
+              <SvgWorkstation
+                x={30}
+                y={180}
+                name="PC2"
+                ip="192.168.1.20"
+                ipColor="blue"
+                showIp={true}
+              />
+
+              {/* SW1 Switch */}
+              <SvgSwitch x={190} y={125} port1Active={true} port2Active={true} port3Active={true} port4Active={true} />
+
+              {/* PC4 */}
+              <SvgWorkstation
+                x={180}
+                y={215}
+                name="PC4"
+                ip="192.168.1.40"
+                ipColor="blue"
+                showIp={true}
+              />
+
+              {/* Router R1 */}
+              <SvgRouter
+                x={330}
+                y={116}
+                name="Router R1"
+                port1Ip={activeStepIndex >= 1 ? '192.168.1.1' : undefined}
+                port2Ip={activeStepIndex >= 1 ? '192.168.1.129' : undefined}
+                port1Active={true}
+                port2Active={true}
+                showPortIps={activeStepIndex >= 1}
+                isPinging={isSwitchPinging}
+              />
+
+              {/* PC3 in Subnet 2 */}
+              <SvgWorkstation
+                x={580}
+                y={114}
+                name="PC3"
+                ip="192.168.1.130"
+                ipColor="green"
+                showIp={true}
+              />
+            </>
+          )}
+
+          {/* =================================================== */}
+          {/* DAY 5: STATIC ROUTES & DISTANT NETWORKS */}
+          {/* =================================================== */}
+          {isDay5 && (
+            <>
+              {/* Cables */}
+              {/* PC1 to SW1 */}
+              <SvgCable x1={106} y1={70} x2={165} y2={140} color="#4ade80" />
+              {/* PC2 to SW1 */}
+              <SvgCable x1={106} y1={210} x2={165} y2={160} color="#4ade80" />
+              {/* PC4 to SW1 */}
+              <SvgCable x1={195} y1={175} x2={195} y2={210} color="#4ade80" />
+              {/* SW1 to R1 */}
+              <SvgCable x1={225} y1={145} x2={295} y2={145} color="#4ade80" />
+              {/* R1 to PC3 */}
+              <SvgCable x1={337} y1={180} x2={337} y2={215} color="#4ade80" />
+              {/* R1 to R2 Inter-router link */}
+              <SvgCable x1={409} y1={145} x2={475} y2={145} color="#4ade80" isTransmitting={isSwitchPinging} />
+              {/* R2 to PC5 (shown when step >= 1) */}
+              {activeStepIndex >= 1 && (
+                <SvgCable x1={589} y1={145} x2={640} y2={145} color="#4ade80" isTransmitting={isSwitchPinging && r1Route} />
+              )}
+
+              {/* PC1 */}
+              <SvgWorkstation x={20} y={35} name="PC1" ip="192.168.1.10" ipColor="blue" showIp={true} />
+              <text x={63} y={124} textAnchor="middle" fill="#60a5fa" fontSize="9.5" fontFamily="monospace">
+                gw: 192.168.1.1
               </text>
-            </g>
+
+              {/* PC2 */}
+              <SvgWorkstation x={20} y={175} name="PC2" ip="192.168.1.20" ipColor="blue" showIp={true} />
+
+              {/* Switch SW1 */}
+              <SvgSwitch x={165} y={125} port1Active={true} port2Active={true} port3Active={true} port4Active={true} />
+
+              {/* PC4 */}
+              <SvgWorkstation x={160} y={215} name="PC4" ip="192.168.1.40" ipColor="blue" showIp={true} />
+
+              {/* Router R1 */}
+              <SvgRouter
+                x={295}
+                y={110}
+                name="Router R1"
+                port1Ip="192.168.1.1"
+                port2Ip="192.168.1.129"
+                port3Ip="192.168.2.1"
+                port1Active={true}
+                port2Active={true}
+                port3Active={true}
+                showPortIps={true}
+                staticRouteText={r1Route || activeStepIndex >= 3 ? '192.168.3.0/24 via 192.168.2.2' : undefined}
+                isPinging={isSwitchPinging}
+              />
+
+              {/* PC3 */}
+              <SvgWorkstation x={300} y={215} name="PC3" ip="192.168.1.130" ipColor="green" showIp={true} />
+
+              {/* Router R2 */}
+              <SvgRouter
+                x={475}
+                y={110}
+                name="Router R2"
+                port1Ip="192.168.2.2"
+                port2Ip={activeStepIndex >= 1 ? '192.168.3.1' : 'no cable'}
+                port1Active={true}
+                port2Active={activeStepIndex >= 1}
+                port3Active={false}
+                showPortIps={true}
+                staticRouteText={r2Route || activeStepIndex >= 5 ? '192.168.1.0/24 via 192.168.2.1' : undefined}
+                isPinging={isSwitchPinging}
+              />
+
+              {/* PC5 */}
+              {activeStepIndex >= 1 && (
+                <SvgWorkstation
+                  x={640}
+                  y={110}
+                  name="PC5"
+                  ip="192.168.3.10"
+                  ipColor="blue"
+                  showIp={true}
+                />
+              )}
+
+              {/* Inter-router link network label */}
+              <text x={442} y={135} textAnchor="middle" fill="#9a9aa5" fontSize="9" fontFamily="monospace">
+                192.168.2.0/24
+              </text>
+            </>
           )}
         </svg>
       </div>

@@ -3,6 +3,8 @@ import {
   NET_01_MODULE,
   NET_02_MODULE,
   NET_03_MODULE,
+  NET_04_MODULE,
+  NET_05_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -66,16 +68,47 @@ describe('Networking Curriculum Content Modules', () => {
     );
   });
 
-  it('Roadmap contains 4 stages and 12 total days', () => {
-    expect(NETWORKING_ROADMAP_STAGES).toHaveLength(4);
+  it('Day 4 module has exact title, 7 steps, and router commands', () => {
+    expect(NET_04_MODULE.id).toBe('net-04');
+    expect(NET_04_MODULE.title).toBe('Day 4 · The Router: Connecting Networks');
+    expect(NET_04_MODULE.steps).toHaveLength(7);
+
+    const step1 = NET_04_MODULE.steps[0];
+    expect(step1.cmd).toBe('show router');
+    expect(step1.chg).toContain('Since Day 3');
+
+    const step3 = NET_04_MODULE.steps[2];
+    expect(step3.title).toBe('The default gateway: where to send outside data');
+    expect(step3.cmd).toBe('ipconfig');
+  });
+
+  it('Day 5 module has exact title, 7 steps, and static route commands', () => {
+    expect(NET_05_MODULE.id).toBe('net-05');
+    expect(NET_05_MODULE.title).toBe(
+      'Day 5 · Static Routes: Reaching Distant Networks'
+    );
+    expect(NET_05_MODULE.steps).toHaveLength(7);
+
+    const step1 = NET_05_MODULE.steps[0];
+    expect(step1.cmd).toBe('show router r2');
+    expect(step1.chg).toContain('Since Day 4');
+
+    const step4 = NET_05_MODULE.steps[3];
+    expect(step4.cmd).toBe('r1 route add 192.168.3.0/24 via 192.168.2.2');
+  });
+
+  it('Roadmap contains 9 stages and 35 total days', () => {
+    expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
       (acc, s) => acc + s.days.length,
       0
     );
-    expect(totalDays).toBe(12);
+    expect(totalDays).toBe(35);
 
     expect(getNetworkingModule('net-01')).toBeDefined();
     expect(getNetworkingModule(2)?.id).toBe('net-02');
     expect(getNetworkingModule('Day 3')?.id).toBe('net-03');
+    expect(getNetworkingModule(4)?.id).toBe('net-04');
+    expect(getNetworkingModule(5)?.id).toBe('net-05');
   });
 });
