@@ -93,4 +93,52 @@ describe('NetworkingCanvas Component', () => {
     expect(html).toContain('Subnet 2 · 192.168.1.128/25');
     expect(html).toContain('192.168.1.130');
   });
+
+  it('Day 6 progressively reveals ISP router, Web Server, and default route indicators', () => {
+    // Step 0: ISP Router is visible, Web Server is not
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-06"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('ROUTER ISP');
+    expect(htmlStep0).toContain('Public 203.0.113.0/24');
+    expect(htmlStep0).not.toContain('Web Server');
+
+    // Step 1: Web Server appears
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-06"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('Web Server');
+    expect(htmlStep1).toContain('198.51.100.10');
+
+    // Step 2: R1 default route indicator appears
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-06"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+        r1DefaultRoute="203.0.113.1"
+      />
+    );
+    expect(htmlStep2).toContain('0.0.0.0/0 via 203.0.113.1');
+
+    // Step 4: R2 default route indicator appears
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-06"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+        r1DefaultRoute="203.0.113.1"
+        r2DefaultRoute="192.168.2.1"
+      />
+    );
+    expect(htmlStep4).toContain('0.0.0.0/0 via 192.168.2.1');
+  });
 });

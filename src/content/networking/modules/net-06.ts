@@ -1,0 +1,110 @@
+import { NetworkingModule } from '@/types/networking';
+
+export const NET_06_MODULE: NetworkingModule = {
+  id: 'net-06',
+  dayNumber: 6,
+  title: 'Day 6 · The Default Route: Leaving the Network',
+  shortTitle: 'The Default Route: Leaving the Network',
+  steps: [
+    {
+      group: 'Idea 1 of 5 · A network outside ours',
+      chg: 'Since Day 5: nothing changes at first. This idea adds an ISP router on a new port of R1, and the web server appears at idea 2.',
+      title: 'Public and private addresses',
+      what: 'In Day 5 you connected two routers with private addresses starting with 192.168. Private addresses are used inside home and office networks, but they cannot cross the wider internet. R1 now gets a fourth port, port 4, with the address 203.0.113.2/24. This port connects by cable to an internet service provider router, named ISP, at 203.0.113.1/24. These addresses are public addresses, which belong to the global internet outside our network.',
+      why: 'Every home and company connects to an internet provider through an outside link like this one. To reach services on the internet, your router must have a link to a provider router.',
+      pic: 'The ISP router and its cable appear connected to R1 port 4 on the canvas.',
+      read: [
+        ['R1 port 4  203.0.113.2/24', 'R1\'s public address on the link to the internet provider.'],
+        ['ISP port 1  203.0.113.1/24', 'The provider router\'s address on the same link.'],
+        ['Public address', 'An address that belongs to the wider internet outside our network.'],
+      ],
+      rem: 'Private addresses stay inside our network; public addresses connect to the internet.',
+      task: 'Show the ISP router and what its ports are connected to.',
+      cmd: 'show router isp',
+    },
+    {
+      group: 'Idea 2 of 5 · Too many networks to list',
+      title: 'The internet is too large for individual routes',
+      what: 'Now place a web server, 198.51.100.10, behind the ISP router. PC1 wants to ping this server. PC1 sends the message to its default gateway R1, as in Day 4. But R1 only lists the networks directly connected to its own four ports, plus the static route to 192.168.3.0/24 you added in Day 5. It has no route for 198.51.100.0/24, so it drops the message and answers destination network unreachable. The internet has hundreds of thousands of networks, so listing each one by hand is impossible.',
+      why: 'Static routes work when you connect a few distant offices. But no router can hold a separate route for every single website and server in the world.',
+      pic: 'The web server 198.51.100.10 appears behind the ISP router on the canvas.',
+      read: [
+        ['Reply from 192.168.1.1', 'The unreachable message comes from R1, PC1\'s gateway.'],
+        ['Destination network unreachable', 'R1 has no route to the network 198.51.100.0/24.'],
+        ['0 received', 'No reply came from the web server.'],
+      ],
+      rem: 'A router cannot hold a separate route for every network on the internet.',
+      task: 'Ping the web server from PC1 to see R1 reject it.',
+      cmd: 'ping 198.51.100.10',
+    },
+    {
+      group: 'Idea 3 of 5 · The default route',
+      title: '0.0.0.0/0: matching every unknown network',
+      what: 'Instead of listing every network, you can give R1 one rule that matches everything not listed elsewhere. This is called a default route. Its destination is written 0.0.0.0/0. A prefix length of /0 means zero bits must match, so every IP address in the world matches it. The next hop is the provider router at 203.0.113.1. When R1 receives data for an address it does not know, the default route sends it to the provider router, which knows the way to the rest of the internet.',
+      why: 'The default route is how any home or office router sends web browsing and internet traffic outward without needing a gigantic routing table.',
+      pic: 'A label above R1 shows its new default route: 0.0.0.0/0 via 203.0.113.1.',
+      read: [
+        ['0.0.0.0/0', 'Matches all addresses because zero network bits are required to match.'],
+        ['via 203.0.113.1', 'The next hop: send all unknown traffic to the provider router.'],
+        ['default', 'The route of last resort when no specific route matches.'],
+      ],
+      rem: 'The default route 0.0.0.0/0 sends any unknown address to a chosen next hop.',
+      task: 'Add the default route on R1.',
+      cmd: 'r1 route add 0.0.0.0/0 via 203.0.113.1',
+    },
+    {
+      group: 'Idea 4 of 5 · Which route is chosen',
+      title: 'Longest prefix match: the most specific route wins',
+      what: 'R1 now has a route for 192.168.3.0/24 and a default route for 0.0.0.0/0. If PC1 sends data to PC5 at 192.168.3.10, both routes match, because 0.0.0.0/0 matches everything. When more than one route matches, the router always chooses the route with the longer prefix length. /24 has 24 matching bits, while /0 has 0 matching bits, so 192.168.3.0/24 wins and the data goes to R2, not to the ISP. This rule is called the longest prefix match.',
+      why: 'Longest prefix match ensures that your private traffic still reaches your internal computers while general internet traffic leaves through the provider.',
+      pic: 'On the routing table, the matching lines are compared and the /24 route is chosen over /0.',
+      read: [
+        ['Matches 192.168.3.0/24 (/24)', 'Matches 24 network bits.'],
+        ['Matches 0.0.0.0/0 (/0)', 'Matches 0 network bits.'],
+        ['Longest prefix wins', 'The router picks /24 because 24 is longer than 0.'],
+        ['via 192.168.2.2', 'The data correctly goes to R2, not the internet.'],
+      ],
+      rem: 'When multiple routes match, the router always chooses the longest prefix.',
+      task: 'Check which route R1 selects for 192.168.3.10.',
+      cmd: 'r1 lookup 192.168.3.10',
+    },
+    {
+      group: 'Idea 5 of 5 · Defaults on other routers',
+      title: 'Passing unknown traffic up the chain',
+      what: 'Now test PC5 at 192.168.3.10. PC5 wants to visit the web server too, but pinging 198.51.100.10 fails because R2 has no default route. R2 is not connected to the internet provider, but it is connected to R1. By giving R2 a default route that points to R1 at 192.168.2.1, R2 sends all unknown traffic to R1, and R1 forwards it out to the ISP. Once R2 has this default route, PC5 can reach the web server.',
+      why: 'Internal routers do not all need direct connections to the internet. They simply send unknown traffic toward the edge router that does.',
+      pic: 'A label above R2 shows its default route to R1. The path from PC5 to the web server lights up.',
+      read: [
+        ['0.0.0.0/0 via 192.168.2.1', 'R2 sends all unknown traffic toward R1.'],
+        ['Reply from 198.51.100.10', 'PC5 successfully reaches the web server.'],
+        ['time 3ms', 'The message passed through R2, R1, and ISP.'],
+      ],
+      rem: 'Routers deep inside a network send their unknown traffic toward the edge router.',
+      task: 'Add the default route on R2, then ping the web server from PC5.',
+      cmd: 'r2 route add 0.0.0.0/0 via 192.168.2.1',
+    },
+    {
+      group: 'Recap',
+      title: 'Putting it together',
+      what: 'Listing every network on the internet is impossible. A default route uses 0.0.0.0/0 to match all addresses, sending any traffic not specifically listed to an upstream router. When an address matches both a specific route and the default route, the router always picks the longest prefix. Internal routers point their default routes toward the edge router that connects to the provider.',
+      read: [
+        ['0.0.0.0/0', 'What route matches every address?'],
+        ['Too many networks', 'Why is listing every network impossible?'],
+        ['Longest prefix', 'Which route wins when two match?'],
+        ['Upstream router', 'Where do internal routers send unknown traffic?'],
+        ['Edge router', 'Which router connects to the provider?'],
+      ],
+      rem: 'Specific routes for internal networks, 0.0.0.0/0 for everything else.',
+      task: 'Complete the five commands above to finish this lesson.',
+      cmd: null,
+    },
+  ],
+  staticResponses: {
+    'show router isp':
+      'Router ISP\nPort 1  203.0.113.1/24   connected to R1 (link network 203.0.113.0/24)\nPort 2  198.51.100.1/24  connected to Web Server (198.51.100.10)',
+    'r1 lookup 192.168.3.10':
+      'Lookup 192.168.3.10 in R1 table:\n  192.168.3.0/24  -> matches (/24)  [SELECTED - longest prefix]\n  0.0.0.0/0       -> matches (/0)\nResult: send via 192.168.2.2 on port 3.',
+    'r1 lookup 198.51.100.10':
+      'Lookup 198.51.100.10 in R1 table:\n  0.0.0.0/0       -> matches (/0)  [SELECTED - only match]\nResult: send via 203.0.113.1 on port 4.',
+  },
+};

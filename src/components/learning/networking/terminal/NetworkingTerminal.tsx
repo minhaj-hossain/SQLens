@@ -22,6 +22,10 @@ interface NetworkingTerminalProps {
   setR1Route?: (val: boolean) => void;
   r2Route?: boolean;
   setR2Route?: (val: boolean) => void;
+  r1DefaultRoute?: boolean;
+  setR1DefaultRoute?: (val: boolean) => void;
+  r2DefaultRoute?: boolean;
+  setR2DefaultRoute?: (val: boolean) => void;
 }
 
 interface LogEntry {
@@ -49,6 +53,10 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
   setR1Route,
   r2Route = false,
   setR2Route,
+  r1DefaultRoute = false,
+  setR1DefaultRoute,
+  r2DefaultRoute = false,
+  setR2DefaultRoute,
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [history, setHistory] = useState<string[]>([]);
@@ -115,6 +123,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show router, show ports, ipconfig, show routes, setgw pc1 <address|none>, ping <address>, clear, help';
       } else if (dayId === 'net-05') {
         helpMsg = 'Commands: show router r2, show ports r2, ping <address>, r1 route add <network> via <next hop>, r2 route add <network> via <next hop>, clear, help';
+      } else if (dayId === 'net-06') {
+        helpMsg = 'Commands: show router isp, ping <address>, r1 route add <network> via <next hop>, r1 lookup <address>, r2 route add <network> via <next hop>, pc5 ping <address>, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -311,6 +321,69 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
           setR2Route?.(true);
           out =
             'Route added on R2.\nRouting table of R2:\nNetwork           Via / Port   Type\n192.168.2.0/24    port 1       connected\n192.168.3.0/24    port 2       connected\n192.168.1.0/24    192.168.2.1  static';
+          isSuccess = true;
+        } else {
+          out = 'Route not accepted. Check the network and the next hop.';
+        }
+      }
+    }
+
+    // Day 6 dynamic logic
+    if (dayId === 'net-06') {
+      const pingMatch = v.match(/^(?:pc1\s+)?ping (\S+)$/);
+      if (pingMatch) {
+        const ip = pingMatch[1];
+        if (['192.168.1.20', '192.168.1.40', '192.168.1.130'].includes(ip)) {
+          out = `Reply from ${ip}: time<1ms\nReply from ${ip}: time<1ms\nReply from ${ip}: time<1ms\n3 sent, 3 received, 0% loss`;
+          isSuccess = true;
+        } else if (ip === '192.168.3.10') {
+          out = `Reply from ${ip}: time 2ms (via gateway 192.168.1.1)\nReply from ${ip}: time 2ms (via gateway 192.168.1.1)\nReply from ${ip}: time 2ms (via gateway 192.168.1.1)\n3 sent, 3 received, 0% loss`;
+          isSuccess = true;
+        } else if (ip === '198.51.100.10') {
+          if (!r1DefaultRoute) {
+            out =
+              'Reply from 192.168.1.1: Destination network unreachable\nReply from 192.168.1.1: Destination network unreachable\nReply from 192.168.1.1: Destination network unreachable\n0 received. R1 has no route to 198.51.100.10.';
+            isSuccess = true;
+          } else {
+            out =
+              'Reply from 198.51.100.10: time 2ms (via gateway 192.168.1.1)\nReply from 198.51.100.10: time 2ms (via gateway 192.168.1.1)\nReply from 198.51.100.10: time 2ms (via gateway 192.168.1.1)\n3 sent, 3 received, 0% loss';
+            isSuccess = true;
+          }
+        } else {
+          out = `Request timed out.\nRequest timed out.\nRequest timed out.\n0 received. No device answers at ${ip}.`;
+        }
+      }
+
+      const pc5PingMatch = v.match(/^pc5 ping (\S+)$/);
+      if (pc5PingMatch) {
+        const ip = pc5PingMatch[1];
+        if (ip === '198.51.100.10') {
+          if (!r2DefaultRoute) {
+            out =
+              'Request timed out.\nRequest timed out.\nRequest timed out.\n0 received. R2 has no route to 198.51.100.10.';
+          } else {
+            out =
+              'Reply from 198.51.100.10: time 3ms (via gateway 192.168.3.1)\nReply from 198.51.100.10: time 3ms (via gateway 192.168.3.1)\nReply from 198.51.100.10: time 3ms (via gateway 192.168.3.1)\n3 sent, 3 received, 0% loss';
+            isSuccess = true;
+          }
+        }
+      }
+
+      const routeMatch = v.match(/^(r1|r2) route add (\S+) via (\S+)$/);
+      if (routeMatch) {
+        const router = routeMatch[1];
+        const net = routeMatch[2];
+        const nextHop = routeMatch[3];
+
+        if (router === 'r1' && net === '0.0.0.0/0' && nextHop === '203.0.113.1') {
+          setR1DefaultRoute?.(true);
+          out =
+            'Route added on R1.\nRouting table of R1:\nNetwork           Via / Port   Type\n192.168.1.0/25    port 1       connected\n192.168.1.128/25  port 2       connected\n192.168.2.0/24    port 3       connected\n192.168.3.0/24    192.168.2.2  static\n203.0.113.0/24    port 4       connected\n0.0.0.0/0         203.0.113.1  default';
+          isSuccess = true;
+        } else if (router === 'r2' && net === '0.0.0.0/0' && nextHop === '192.168.2.1') {
+          setR2DefaultRoute?.(true);
+          out =
+            'Route added on R2.\nRouting table of R2:\nNetwork           Via / Port   Type\n192.168.2.0/24    port 1       connected\n192.168.3.0/24    port 2       connected\n192.168.1.0/24    192.168.2.1  static\n0.0.0.0/0         192.168.2.1  default';
           isSuccess = true;
         } else {
           out = 'Route not accepted. Check the network and the next hop.';

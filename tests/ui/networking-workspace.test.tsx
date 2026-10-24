@@ -9,6 +9,7 @@ import {
   NET_03_MODULE,
   NET_04_MODULE,
   NET_05_MODULE,
+  NET_06_MODULE,
 } from '@/content/networking';
 
 describe('NetworkingWorkspace Component', () => {
@@ -69,6 +70,19 @@ describe('NetworkingWorkspace Component', () => {
     expect(html).toContain('ROUTER R1');
     expect(html).toContain('ROUTER R2');
     expect(html).toContain('show router r2');
+  });
+
+  it('renders Day 6 workspace with Router ISP and default route curriculum', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingWorkspace module={NET_06_MODULE} />
+    );
+
+    expect(html).toContain('Day 6 · The Default Route: Leaving the Network');
+    expect(html).toContain('Public and private addresses');
+    expect(html).toContain('ROUTER ISP');
+    expect(html).toContain('203.0.113.0/24');
+    expect(html).toContain('show router isp');
+    expect(html).toContain('0.0.0.0/0');
   });
 
   it('gates the Next button when task is not completed', () => {

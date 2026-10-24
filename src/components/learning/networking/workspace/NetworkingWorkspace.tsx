@@ -25,6 +25,8 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
   const [gateway, setGateway] = useState('192.168.1.1');
   const [r1Route, setR1Route] = useState(false);
   const [r2Route, setR2Route] = useState(false);
+  const [r1DefaultRoute, setR1DefaultRoute] = useState(false);
+  const [r2DefaultRoute, setR2DefaultRoute] = useState(false);
 
   const currentStep = module.steps[activeStepIndex];
   const recapIdx = module.steps.length - 1;
@@ -154,6 +156,8 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             gateway={gateway}
             r1Route={r1Route}
             r2Route={r2Route}
+            r1DefaultRoute={r1DefaultRoute}
+            r2DefaultRoute={r2DefaultRoute}
           />
         </section>
 
@@ -181,6 +185,10 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             setR1Route={setR1Route}
             r2Route={r2Route}
             setR2Route={setR2Route}
+            r1DefaultRoute={r1DefaultRoute}
+            setR1DefaultRoute={setR1DefaultRoute}
+            r2DefaultRoute={r2DefaultRoute}
+            setR2DefaultRoute={setR2DefaultRoute}
           />
         </div>
 

@@ -18,6 +18,8 @@ interface NetworkingCanvasProps {
   gateway?: string;
   r1Route?: boolean;
   r2Route?: boolean;
+  r1DefaultRoute?: boolean;
+  r2DefaultRoute?: boolean;
 }
 
 export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
@@ -32,12 +34,15 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
   gateway = '192.168.1.1',
   r1Route = false,
   r2Route = false,
+  r1DefaultRoute = false,
+  r2DefaultRoute = false,
 }) => {
   const isDay1 = dayId === 'net-01';
   const isDay2 = dayId === 'net-02';
   const isDay3 = dayId === 'net-03';
   const isDay4 = dayId === 'net-04';
   const isDay5 = dayId === 'net-05';
+  const isDay6 = dayId === 'net-06';
 
   // Day 1 Progressive reveals
   const showDay1DirectWire = isDay1 && activeStepIndex < 4;
@@ -62,7 +67,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
   // Day 3 Subnet color logic
   const isPc3Subnet2 =
     isDay3 && (pc3Ip === '192.168.1.130' || activeStepIndex >= 3);
-  const pc3Color = isPc3Subnet2 || isDay4 || isDay5 ? 'green' : 'blue';
+  const pc3Color = isPc3Subnet2 || isDay4 || isDay5 || isDay6 ? 'green' : 'blue';
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0d0d10] relative select-none overflow-hidden rounded-t-xl md:rounded-l-xl md:rounded-tr-none border-b md:border-b-0 md:border-r border-[#26262b]">
@@ -79,6 +84,8 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
             ? 'ROUTER CONNECTING TWO SUBNETS'
             : isDay5
             ? 'MULTI-ROUTER STATIC ROUTES TOPOLOGY'
+            : isDay6
+            ? 'THE DEFAULT ROUTE & GLOBAL INTERNET ACCESS (0.0.0.0/0)'
             : showPC4
             ? '4-NODE LOCAL STAR TOPOLOGY'
             : '3-NODE SWITCH TOPOLOGY'}
@@ -463,6 +470,135 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
               {/* Inter-router link network label */}
               <text x={442} y={135} textAnchor="middle" fill="#9a9aa5" fontSize="9" fontFamily="monospace">
                 192.168.2.0/24
+              </text>
+            </>
+          )}
+
+          {/* =================================================== */}
+          {/* DAY 6: THE DEFAULT ROUTE & INTERNET ACCESS */}
+          {/* =================================================== */}
+          {isDay6 && (
+            <>
+              {/* Internal Cables */}
+              {/* PC1 to SW1 */}
+              <SvgCable x1={106} y1={65} x2={160} y2={135} color="#4ade80" />
+              {/* PC2 to SW1 */}
+              <SvgCable x1={106} y1={205} x2={160} y2={155} color="#4ade80" />
+              {/* PC4 to SW1 */}
+              <SvgCable x1={160} y1={175} x2={160} y2={205} color="#4ade80" />
+              {/* SW1 to R1 */}
+              <SvgCable x1={190} y1={140} x2={240} y2={140} color="#4ade80" isTransmitting={isSwitchPinging} />
+              {/* R1 to PC3 */}
+              <SvgCable x1={295} y1={170} x2={295} y2={215} color="#4ade80" />
+              {/* R1 Port 3 to R2 Port 1 */}
+              <SvgCable x1={354} y1={140} x2={385} y2={185} color="#4ade80" />
+              {/* R2 Port 2 to PC5 */}
+              <SvgCable x1={499} y1={195} x2={560} y2={195} color="#4ade80" />
+
+              {/* Public Outside Cables */}
+              {/* R1 Port 4 to Router ISP Port 1 */}
+              <SvgCable
+                x1={354}
+                y1={120}
+                x2={420}
+                y2={65}
+                color="#60a5fa"
+                isTransmitting={isSwitchPinging && (lastCommand.includes('198.51.100.') || r1DefaultRoute)}
+              />
+
+              {/* Router ISP Port 2 to Web Server (revealed in idea 2+) */}
+              {activeStepIndex >= 1 && (
+                <SvgCable
+                  x1={534}
+                  y1={65}
+                  x2={605}
+                  y2={65}
+                  color="#60a5fa"
+                  isTransmitting={isSwitchPinging && r1DefaultRoute}
+                />
+              )}
+
+              {/* PC1 */}
+              <SvgWorkstation x={20} y={30} name="PC1" ip="192.168.1.10" ipColor="blue" showIp={true} />
+              <text x={63} y={118} textAnchor="middle" fill="#60a5fa" fontSize="9" fontFamily="monospace">
+                gw: 192.168.1.1
+              </text>
+
+              {/* PC2 */}
+              <SvgWorkstation x={20} y={170} name="PC2" ip="192.168.1.20" ipColor="blue" showIp={true} />
+
+              {/* Switch SW1 */}
+              <SvgSwitch x={135} y={115} port1Active={true} port2Active={true} port3Active={true} port4Active={true} />
+
+              {/* PC4 */}
+              <SvgWorkstation x={125} y={205} name="PC4" ip="192.168.1.40" ipColor="blue" showIp={true} />
+
+              {/* Router R1 (Edge Router) */}
+              <SvgRouter
+                x={240}
+                y={100}
+                name="Router R1"
+                port1Ip="192.168.1.1"
+                port2Ip="192.168.1.129"
+                port3Ip="203.0.113.2"
+                port1Active={true}
+                port2Active={true}
+                port3Active={true}
+                showPortIps={true}
+                staticRouteText={r1DefaultRoute || activeStepIndex >= 2 ? '0.0.0.0/0 via 203.0.113.1' : undefined}
+                isPinging={isSwitchPinging}
+              />
+
+              {/* PC3 */}
+              <SvgWorkstation x={250} y={215} name="PC3" ip="192.168.1.130" ipColor="green" showIp={true} />
+
+              {/* Router R2 (Internal Router) */}
+              <SvgRouter
+                x={385}
+                y={165}
+                name="Router R2"
+                port1Ip="192.168.2.2"
+                port2Ip="192.168.3.1"
+                port1Active={true}
+                port2Active={true}
+                port3Active={false}
+                showPortIps={true}
+                staticRouteText={r2DefaultRoute || activeStepIndex >= 4 ? '0.0.0.0/0 via 192.168.2.1' : undefined}
+                isPinging={isSwitchPinging}
+              />
+
+              {/* PC5 */}
+              <SvgWorkstation x={560} y={165} name="PC5" ip="192.168.3.10" ipColor="blue" showIp={true} />
+
+              {/* Router ISP (Internet Service Provider) */}
+              <SvgRouter
+                x={420}
+                y={30}
+                name="Router ISP"
+                port1Ip="203.0.113.1"
+                port2Ip={activeStepIndex >= 1 ? '198.51.100.1' : undefined}
+                port1Active={true}
+                port2Active={activeStepIndex >= 1}
+                port3Active={false}
+                showPortIps={true}
+                isPinging={isSwitchPinging && r1DefaultRoute}
+              />
+
+              {/* Web Server (198.51.100.10) */}
+              {activeStepIndex >= 1 && (
+                <SvgWorkstation
+                  x={605}
+                  y={30}
+                  name="Web Server"
+                  ip="198.51.100.10"
+                  ipColor="green"
+                  showIp={true}
+                />
+              )}
+
+              {/* Public link label */}
+              <text x={388} y={80} textAnchor="middle" fill="#60a5fa" fontSize="8.5" fontFamily="monospace">
+                Public 203.0.113.0/24
               </text>
             </>
           )}

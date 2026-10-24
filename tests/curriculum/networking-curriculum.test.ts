@@ -5,6 +5,7 @@ import {
   NET_03_MODULE,
   NET_04_MODULE,
   NET_05_MODULE,
+  NET_06_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -97,6 +98,26 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step4.cmd).toBe('r1 route add 192.168.3.0/24 via 192.168.2.2');
   });
 
+  it('Day 6 module has exact title, 6 steps, and default route commands', () => {
+    expect(NET_06_MODULE.id).toBe('net-06');
+    expect(NET_06_MODULE.title).toBe(
+      'Day 6 · The Default Route: Leaving the Network'
+    );
+    expect(NET_06_MODULE.steps).toHaveLength(6);
+
+    const step1 = NET_06_MODULE.steps[0];
+    expect(step1.cmd).toBe('show router isp');
+    expect(step1.chg).toContain('Since Day 5');
+
+    const step3 = NET_06_MODULE.steps[2];
+    expect(step3.title).toBe('0.0.0.0/0: matching every unknown network');
+    expect(step3.cmd).toBe('r1 route add 0.0.0.0/0 via 203.0.113.1');
+
+    const step4 = NET_06_MODULE.steps[3];
+    expect(step4.title).toBe('Longest prefix match: the most specific route wins');
+    expect(step4.cmd).toBe('r1 lookup 192.168.3.10');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -110,5 +131,6 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule('Day 3')?.id).toBe('net-03');
     expect(getNetworkingModule(4)?.id).toBe('net-04');
     expect(getNetworkingModule(5)?.id).toBe('net-05');
+    expect(getNetworkingModule(6)?.id).toBe('net-06');
   });
 });
