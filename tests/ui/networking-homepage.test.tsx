@@ -27,6 +27,13 @@ describe('NetworkingHomePage Component', () => {
     // View switcher controls
     expect(html).toContain('Topology Tree');
     expect(html).toContain('Module Cards');
+
+    // Clean navbar track labels and 35 Days Track hero badge
+    expect(html).toContain('>SQL<');
+    expect(html).toContain('>Prisma<');
+    expect(html).not.toContain('Playground');
+    expect(html).not.toContain('SQL Track (57 Days)');
+    expect(html).toContain('35 Days Track');
   });
 
   it('renders module titles and roadmap tree elements', () => {

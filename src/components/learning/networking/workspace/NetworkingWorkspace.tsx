@@ -133,7 +133,7 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             className="hidden sm:flex items-center gap-1 text-[12px] text-[#9a9aa5] hover:text-[#60a5fa] transition-colors"
           >
             <Map size={13} />
-            <span>12 Days</span>
+            <span>35 Days</span>
           </Link>
         </div>
       </header>

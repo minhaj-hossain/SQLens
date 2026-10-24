@@ -154,19 +154,10 @@ export const NetworkingHomePage: React.FC = () => {
 
           <div className="hidden md:flex items-center gap-5 text-[13.5px] text-[#8e98a8]">
             <Link href="/sql" className="hover:text-[#ececf0] transition-colors">
-              SQL Track (57 Days)
+              SQL
             </Link>
             <Link href="/prisma" className="hover:text-[#ececf0] transition-colors">
-              Prisma Track (14 Days)
-            </Link>
-            <Link
-              href="/playground"
-              className="hover:text-[#ececf0] transition-colors flex items-center gap-1.5"
-            >
-              <span>Playground</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] font-mono">
-                Live
-              </span>
+              Prisma
             </Link>
           </div>
         </div>
@@ -234,8 +225,7 @@ export const NetworkingHomePage: React.FC = () => {
           </span>
           <span className="hidden sm:inline">·</span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-[#38bdf8]" /> 12 Days
-            Foundation Track
+            <CheckCircle2 size={13} className="text-[#38bdf8]" /> 35 Days Track
           </span>
           <span className="hidden sm:inline">·</span>
           <span className="flex items-center gap-1.5">
@@ -619,13 +609,10 @@ export const NetworkingHomePage: React.FC = () => {
       <footer className="relative z-10 border-t border-[#1b2230] py-8 px-6 text-center text-[13px] text-[#64748b] bg-[#07090e]">
         <div className="flex flex-wrap items-center justify-center gap-6 mb-3">
           <Link href="/sql" className="hover:text-[#94a3b8] transition-colors">
-            SQL Track
+            SQL
           </Link>
           <Link href="/prisma" className="hover:text-[#94a3b8] transition-colors">
-            Prisma Track
-          </Link>
-          <Link href="/playground" className="hover:text-[#94a3b8] transition-colors">
-            Playground
+            Prisma
           </Link>
           <a
             href="#roadmap"
