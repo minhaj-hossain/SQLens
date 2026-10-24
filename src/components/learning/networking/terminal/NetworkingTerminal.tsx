@@ -125,6 +125,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show router r2, show ports r2, ping <address>, r1 route add <network> via <next hop>, r2 route add <network> via <next hop>, cls, clear, help';
       } else if (dayId === 'net-06') {
         helpMsg = 'Commands: show router isp, ping <address>, r1 route add <network> via <next hop>, r1 lookup <address>, r2 route add <network> via <next hop>, pc5 ping <address>, cls, clear, help';
+      } else if (dayId === 'net-07') {
+        helpMsg = 'Commands: arp -a, debug arp on, ping 192.168.1.20, ping 192.168.3.10, ipconfig, link status, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -387,6 +389,24 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
           isSuccess = true;
         } else {
           out = 'Route not accepted. Check the network and the next hop.';
+        }
+      }
+    }
+
+    // Day 7 dynamic logic
+    if (dayId === 'net-07') {
+      if (v === 'arp -a') {
+        if (completedSteps.has(4) || activeStepIndex >= 4) {
+          out =
+            'Interface: 192.168.1.10 on eth0\n  Internet Address      Physical Address      Type       Age\n  192.168.1.1           AA:BB:CC:00:A1:01     dynamic    4s\n  192.168.1.20          AA:BB:CC:00:00:02     dynamic    45s';
+          isSuccess = true;
+        } else if (completedSteps.has(2) || activeStepIndex >= 3) {
+          out =
+            'Interface: 192.168.1.10 on eth0\n  Internet Address      Physical Address      Type       Age\n  192.168.1.20          AA:BB:CC:00:00:02     dynamic    14s';
+          isSuccess = true;
+        } else {
+          out = 'No ARP entries found.';
+          isSuccess = true;
         }
       }
     }

@@ -81,10 +81,17 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
       setTimeout(() => setIsPinging(false), 2500);
     }
 
-    // Check if command satisfies current step or any step
-    const stepIdx = module.steps.findIndex((s) => s.cmd && s.cmd.toLowerCase() === cmd);
-    if (stepIdx > -1) {
-      setCompletedSteps((prev) => new Set([...prev, stepIdx]));
+    // Prioritize active step if its command matches, otherwise find any matching step
+    const currentStep = module.steps[activeStepIndex];
+    if (currentStep?.cmd && currentStep.cmd.toLowerCase() === cmd) {
+      setCompletedSteps((prev) => new Set([...prev, activeStepIndex]));
+    } else {
+      const stepIdx = module.steps.findIndex(
+        (s) => s.cmd && s.cmd.toLowerCase() === cmd
+      );
+      if (stepIdx > -1) {
+        setCompletedSteps((prev) => new Set([...prev, stepIdx]));
+      }
     }
   };
 

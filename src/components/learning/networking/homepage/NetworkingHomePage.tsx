@@ -39,6 +39,7 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-04': 'Introduce Router R1 to connect Subnet 1 and Subnet 2. Configure default gateways and inspect layer-3 boundaries.',
   'net-05': 'Chain Router R1 to Router R2 across Subnet 3. Add static routes with next-hop IP addresses.',
   'net-06': 'Connect to an ISP provider router and external web server. Master 0.0.0.0/0 default routes and longest prefix matching.',
+  'net-07': 'How devices find hardware MAC addresses using Address Resolution Protocol (ARP), broadcast requests, and the ARP cache.',
 };
 
 export const NetworkingHomePage: React.FC = () => {
@@ -234,10 +235,10 @@ export const NetworkingHomePage: React.FC = () => {
           </Link>
 
           <Link
-            href="/networking/learn/net-06"
+            href="/networking/learn/net-07"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#121824] border border-[#26354d] text-[#e2e8f0] rounded-full px-5 py-3 font-medium text-[14px] hover:border-[#4ade80]/60 hover:text-[#4ade80] transition-colors"
           >
-            <span>Latest: Day 6 · The Default Route</span>
+            <span>Latest: Day 7 · ARP & Neighbour MAC</span>
             <ChevronRight size={15} />
           </Link>
         </div>
@@ -245,7 +246,7 @@ export const NetworkingHomePage: React.FC = () => {
         {/* Key Track Badges */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12.5px] font-mono text-[#7b899e]">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-[#4ade80]" /> 6 Days Live
+            <CheckCircle2 size={13} className="text-[#4ade80]" /> 7 Days Live
             Today
           </span>
           <span className="hidden sm:inline">·</span>

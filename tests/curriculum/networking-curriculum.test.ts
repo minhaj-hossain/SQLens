@@ -6,6 +6,7 @@ import {
   NET_04_MODULE,
   NET_05_MODULE,
   NET_06_MODULE,
+  NET_07_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -118,6 +119,34 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step4.cmd).toBe('r1 lookup 192.168.3.10');
   });
 
+  it('Day 7 module has exact title, 6 steps, and ARP neighbour discovery commands', () => {
+    expect(NET_07_MODULE.id).toBe('net-07');
+    expect(NET_07_MODULE.title).toBe(
+      "Day 7 · ARP: Finding a Neighbour's Hardware Address"
+    );
+    expect(NET_07_MODULE.steps).toHaveLength(6);
+
+    const step1 = NET_07_MODULE.steps[0];
+    expect(step1.title).toBe('IP alone cannot deliver data');
+    expect(step1.cmd).toBe('arp -a');
+    expect(step1.what).toContain('hexadecimal');
+
+    const step2 = NET_07_MODULE.steps[1];
+    expect(step2.cmd).toBe('debug arp on');
+    expect(step2.what).toContain('FF:FF:FF:FF:FF:FF');
+
+    const step3 = NET_07_MODULE.steps[2];
+    expect(step3.cmd).toBe('ping 192.168.1.20');
+
+    const step5 = NET_07_MODULE.steps[4];
+    expect(step5.title).toBe('Outside the network: The Gateway’s MAC');
+    expect(step5.cmd).toBe('ping 192.168.3.10');
+
+    // Terminology check: strictly uses "message", never "frame"
+    const fullText = JSON.stringify(NET_07_MODULE.steps);
+    expect(fullText.toLowerCase()).not.toContain('frame');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -132,5 +161,6 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(4)?.id).toBe('net-04');
     expect(getNetworkingModule(5)?.id).toBe('net-05');
     expect(getNetworkingModule(6)?.id).toBe('net-06');
+    expect(getNetworkingModule(7)?.id).toBe('net-07');
   });
 });

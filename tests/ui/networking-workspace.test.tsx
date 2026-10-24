@@ -10,6 +10,7 @@ import {
   NET_04_MODULE,
   NET_05_MODULE,
   NET_06_MODULE,
+  NET_07_MODULE,
 } from '@/content/networking';
 
 describe('NetworkingWorkspace Component', () => {
@@ -83,6 +84,19 @@ describe('NetworkingWorkspace Component', () => {
     expect(html).toContain('203.0.113.0/24');
     expect(html).toContain('show router isp');
     expect(html).toContain('0.0.0.0/0');
+  });
+
+  it('renders Day 7 workspace with ARP discovery and cache curriculum', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingWorkspace module={NET_07_MODULE} />
+    );
+
+    expect(html).toContain(
+      'Day 7 · ARP: Finding a Neighbour&#x27;s Hardware Address'
+    );
+    expect(html).toContain('IP alone cannot deliver data');
+    expect(html).toContain('arp -a');
+    expect(html).toContain('ARP CACHE · PC1');
   });
 
   it('gates the Next button when task is not completed', () => {

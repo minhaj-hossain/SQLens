@@ -142,6 +142,45 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('0.0.0.0/0 via 192.168.2.1');
   });
 
+  it('Day 7 renders ARP cache HUD, broadcast indicators, and gateway MAC lookup', () => {
+    // Step 0: Empty ARP cache HUD
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-07"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('ARP CACHE · PC1');
+    expect(htmlStep0).toContain('(empty · no entries learned)');
+    expect(htmlStep0).toContain('LOCAL SUBNET 1');
+    expect(htmlStep0).toContain('DISTANT SUBNET 3');
+
+    // Step 1: Broadcast request indicator
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-07"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('Searching FF:FF:FF:FF:FF:FF');
+    expect(htmlStep1).toContain('ARP Request ➔ FF:FF:FF:FF:FF:FF');
+
+    // Step 4: Router R1 gateway MAC learned
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-07"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('P1 MAC: AA:BB:CC:00:A1:01');
+    expect(htmlStep4).toContain('192.168.1.1');
+    expect(htmlStep4).toContain('192.168.1.20');
+    expect(htmlStep4).toContain('* 192.168.3.10 routed via R1');
+  });
+
   it('renders pan/zoom controls and navigation hints', () => {
     const html = renderToStaticMarkup(
       <NetworkingCanvas

@@ -34,17 +34,16 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
 
 ---
 
-## Stage 3: Dynamic Configuration & Addressing (Days 7–10) · *Automation on the Wire*
-*Goal*: Automate device onboarding, network configuration, and address leasing.
+## Stage 3: Local Delivery (Days 7–9) · *Hardware Discovery & Switching*
+*Goal*: Understand how Layer 2 hardware delivery operates across switches using ARP, MAC learning, and broadcast boundaries.
 
-* **Day 7 · DHCP: The Automatic Handshake** (`net-07`) [PLANNED]
-  * *Concepts*: Manual IP configuration failures; DHCP discover (broadcast `255.255.255.255`), offer, request, and acknowledge (DORA flow); IP lease duration.
-* **Day 8 · DHCP Relays: Crossing Router Boundaries** (`net-08`) [PLANNED]
-  * *Concepts*: Why broadcasts don't cross routers; the IP helper address / DHCP relay agent forwarding unicast requests to a centralized server.
-* **Day 9 · Broadcast Storms & Loops: STP on the Wire** (`net-09`) [PLANNED]
-  * *Concepts*: Redundant switch cables creating infinite frame loops; CPU exhaustion; Spanning Tree Protocol (STP) blocking ports to form a loop-free tree.
-* **Day 10 · VLANs: Logical Separation on One Switch** (`net-10`) [PLANNED]
-  * *Concepts*: Trunking, 802.1Q VLAN tags, access ports vs trunk ports, isolating guest traffic from corporate traffic on shared physical switches.
+* **Day 7 · ARP: Finding a Neighbour's Hardware Address** (`net-07`) [LIVE]
+  * *Concepts*: How a computer that knows only an IP address discovers the MAC address; the broadcast question to `FF:FF:FF:FF:FF:FF`; direct unicast reply; ARP cache timeouts; asking for the Default Gateway's MAC when reaching distant networks.
+  * *Canvas*: Local Subnet 1 (PC1, PC2, Switch SW1, ARP Cache Table) ↔ Router R1 ↔ Distant Subnet 3 (PC5) (`1180x540`).
+* **Day 8 · How a Switch Learns** (`net-08`) [PLANNED]
+  * *Concepts*: Source MAC learning, port mapping tables, flooding unknown unicasts, selective forwarding once learned.
+* **Day 9 · Broadcast Domains** (`net-09`) [PLANNED]
+  * *Concepts*: Why switches flood broadcasts; where broadcast domains end (at the router interface); broadcast traffic isolation.
 
 ---
 
