@@ -141,4 +141,20 @@ describe('NetworkingCanvas Component', () => {
     );
     expect(htmlStep4).toContain('0.0.0.0/0 via 192.168.2.1');
   });
+
+  it('renders pan/zoom controls and navigation hints', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-04"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+
+    expect(html).toContain('Zoom Out');
+    expect(html).toContain('Zoom In');
+    expect(html).toContain('Fit');
+    expect(html).toContain('Drag to Pan · Scroll to Zoom');
+    expect(html).toContain('ROUTER CONNECTING TWO SUBNETS');
+  });
 });
