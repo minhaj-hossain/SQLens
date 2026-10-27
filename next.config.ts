@@ -16,12 +16,12 @@
 // ---------------------------------------------------------------------------
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "worker-src 'self' blob:",
-  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
-  "font-src 'self' data: https://cdn.jsdelivr.net",
-  "connect-src 'self' https://cdn.jsdelivr.net",
+  "font-src 'self' data:",
+  "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -46,8 +46,7 @@ if (process.env.NODE_ENV === 'production') {
 const nextConfig = {
   reactStrictMode: true,
   typescript: {
-    // Allow production builds to complete while future milestone modules are being stabilized
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   // Phase 2: the SQL track moved under /sql. Every pre-existing bookmark,
   // shared link and indexed URL keeps working (temporary redirect: the old

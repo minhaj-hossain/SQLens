@@ -52,8 +52,21 @@ const databaseName =
  */
 export const db = mongoClient.db(databaseName);
 
+const isBuildPhase =
+  process.env.NEXT_PHASE === 'phase-production-build' ||
+  process.env.npm_lifecycle_event === 'build' ||
+  process.env.BUILDING === 'true';
+
+if (process.env.NODE_ENV === 'production' && !isBuildPhase && !process.env.BETTER_AUTH_SECRET) {
+  throw new Error('BETTER_AUTH_SECRET must be set in production to prevent session forgery.');
+}
+
+const authSecret =
+  process.env.BETTER_AUTH_SECRET ||
+  'development-insecure-secret-minimum-32-chars-long-do-not-use-in-production';
+
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: authSecret,
   baseURL:
     process.env.BETTER_AUTH_URL ??
     `http://localhost:${process.env.PORT || 3000}`,
