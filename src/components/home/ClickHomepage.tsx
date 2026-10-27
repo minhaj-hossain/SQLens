@@ -24,6 +24,12 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
       href: '/sql',
       tags: ['SELECT & Filtering', 'Multi-table JOINs', 'Window Functions', 'EXPLAIN & Indexes', 'ACID Transactions'],
       diagram: <SqlDiagramSvg />,
+      hoverBorder: 'hover:border-[#f4c430]/60',
+      hoverShadow: 'hover:shadow-2xl hover:shadow-[#f4c430]/10',
+      badgeBorder: 'border-[#f4c430]/30 text-[#f4c430] bg-[#f4c430]/10',
+      hoverTitle: 'group-hover:text-[#f4c430]',
+      ctaText: 'text-[#f4c430]',
+      outlineRing: 'focus-visible:outline-[#f4c430]',
     },
     {
       id: 'prisma',
@@ -34,6 +40,12 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
       href: '/prisma',
       tags: ['Schema DSL', '1:1, 1:N & M:N Relations', 'Migrations Workflow', 'Query Optimization', 'REST API Capstone'],
       diagram: <PrismaDiagramSvg />,
+      hoverBorder: 'hover:border-[#38bdf8]/60',
+      hoverShadow: 'hover:shadow-2xl hover:shadow-[#38bdf8]/10',
+      badgeBorder: 'border-[#38bdf8]/30 text-[#38bdf8] bg-[#38bdf8]/10',
+      hoverTitle: 'group-hover:text-[#38bdf8]',
+      ctaText: 'text-[#38bdf8]',
+      outlineRing: 'focus-visible:outline-[#38bdf8]',
     },
   ];
 
@@ -151,11 +163,11 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
             <Link
               key={card.id}
               href={card.href}
-              className="tile group flex flex-col overflow-hidden rounded-[20px] border border-[#1b2a47] bg-[#0d1526] hover:border-[#38bdf8]/50 hover:shadow-2xl hover:shadow-[#38bdf8]/10 transition-all duration-300 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#38bdf8]"
+              className={`tile group flex flex-col overflow-hidden rounded-[20px] border border-[#1b2a47] bg-[#0d1526] ${card.hoverBorder} ${card.hoverShadow} transition-all duration-300 ease-out hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${card.outlineRing}`}
             >
               {/* Top Visual Container with Dot-Grid pattern */}
               <div className="bg-dot-grid relative flex items-center justify-center border-b border-[#1b2a47] p-6 group-hover:bg-[#0f192d] transition-colors">
-                <span className="absolute top-3 left-4 font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#1b2a47]/70 text-[#8a9bbd] border border-[#2a3d63]/50">
+                <span className={`absolute top-3 left-4 font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${card.badgeBorder}`}>
                   {card.badge}
                 </span>
                 {card.diagram}
@@ -165,7 +177,7 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
               <div className="flex flex-col gap-3 p-5 sm:p-6 flex-1 justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="text-[22px] font-bold tracking-[-0.02em] text-[#f8fafc] group-hover:text-[#38bdf8] transition-colors">
+                    <span className={`text-[22px] font-bold tracking-[-0.02em] text-[#f8fafc] ${card.hoverTitle} transition-colors`}>
                       {card.title}
                     </span>
                     <span className="flex-1" />
@@ -188,7 +200,7 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-[#1b2a47]/60 text-xs font-semibold text-[#38bdf8] group-hover:text-white transition-colors">
+                <div className={`flex items-center justify-between pt-3 border-t border-[#1b2a47]/60 text-xs font-semibold ${card.ctaText} group-hover:text-white transition-colors`}>
                   <span>Start Track</span>
                   <span className="flex items-center gap-1 transition-transform duration-200 group-hover:translate-x-1">
                     <span>Enter</span>

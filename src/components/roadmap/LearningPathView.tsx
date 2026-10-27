@@ -48,6 +48,7 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   // unchanged while resolving against the ACTIVE track.
   const { modules: ALL_MODULES, milestones: ROADMAP_MILESTONES, getModuleById, track, meta } =
     useTrackCurriculum();
+  const isPrisma = track === 'prisma';
   const [pulseId, setPulseId] = useState<string | null>(null);
   const [lockedAlert, setLockedAlert] = useState<{
     title: string;
@@ -66,24 +67,49 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
   );
   const nextModule = getNextModule(currentModule, ALL_MODULES);
 
+  // Helper to resolve element by ID, hash, or normalized day number
+  const resolveTargetElement = (idOrHash: string): HTMLElement | null => {
+    if (typeof document === 'undefined') return null;
+    const raw = idOrHash.replace(/^#/, '');
+    if (!raw) return null;
+
+    const direct =
+      document.getElementById(raw) ||
+      document.getElementById(`leaf-${raw}`) ||
+      document.getElementById(`stage-card-${raw}`) ||
+      document.getElementById(`day-${raw}`);
+    if (direct) return direct;
+
+    const match = raw.match(/(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      const padded = String(num).padStart(2, '0');
+      const candidates = [
+        `day-${num}`,
+        `day-${padded}`,
+        `leaf-day-${padded}`,
+        `leaf-prisma-${padded}`,
+        `stage-card-day-${padded}`,
+        `stage-card-prisma-${padded}`,
+        `day-${padded}`,
+        `prisma-${padded}`,
+      ];
+      for (const candidate of candidates) {
+        const found = document.getElementById(candidate);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   // Auto-scroll to a target day's leaf (returns from a lesson via ?highlight=).
-  // Strategy:
-  //   1. requestAnimationFrame ensures the DOM is fully painted before we try
-  //      to find/scroll to the element.
-  //   2. scrollIntoView with block:'nearest' scrolls the minimum required —
-  //      never bounces up to the top if the element is already visible.
-  //   3. onScrolledToModule (URL cleanup) is deferred 700ms so the smooth-
-  //      scroll animation finishes before router.replace('/') triggers a
-  //      re-render that would reset the scroll position.
   useEffect(() => {
     if (!scrollToModuleId) return;
     let cleanupTimer: ReturnType<typeof setTimeout>;
     const rafId = requestAnimationFrame(() => {
-      const el =
-        document.getElementById(`stage-card-${scrollToModuleId}`) ??
-        document.getElementById(`leaf-${scrollToModuleId}`);
+      const el = resolveTargetElement(scrollToModuleId);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
         setPulseId(scrollToModuleId);
         setTimeout(() => setPulseId(null), 1800);
         // Clean up the ?highlight= query param silently after the smooth scroll completes
@@ -98,6 +124,31 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollToModuleId]);
+
+  // Smoothly center target day from URL hash on mount or hashchange (e.g., #day-4 or #prisma-02)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const el = resolveTargetElement(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        const modIdMatch = el.id.match(/(?:leaf-|stage-card-)?(day-\d{2}|prisma-\d{2})/);
+        const pulseTarget = modIdMatch ? modIdMatch[1] : el.id;
+        setPulseId(pulseTarget);
+        setTimeout(() => setPulseId(null), 1800);
+      }
+    };
+
+    const timer = setTimeout(scrollToHash, 200);
+    window.addEventListener('hashchange', scrollToHash);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', scrollToHash);
+    };
+  }, []);
 
   const handleContinue = () => {
     onSelectModuleAndConcept(currentModule.id, currentConceptId ?? undefined, 'theory');
@@ -161,14 +212,18 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
           <div className="mt-[30px] flex items-center gap-4 flex-wrap">
             <button
               onClick={handleContinue}
-              className="font-semibold text-[14.5px] bg-func text-ink px-[22px] py-[13px] rounded-lg inline-flex items-center gap-2 hover:-translate-y-px transition-transform cursor-pointer"
+              className={`font-semibold text-[14.5px] px-[22px] py-[13px] rounded-lg inline-flex items-center gap-2 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer ${
+                isPrisma
+                  ? 'bg-[#38bdf8] text-[#080c14] hover:bg-[#7dd3fc] hover:shadow-lg hover:shadow-[#38bdf8]/25'
+                  : 'bg-[#f4c430] text-[#09090b] hover:bg-[#fde047] hover:shadow-lg hover:shadow-[#f4c430]/25'
+              }`}
             >
               {completedCount === 0
-                ? track === 'prisma'
+                ? isPrisma
                   ? 'Start Day 1: Schema Modeling'
                   : 'Start Day 1: Find a Table'
                 : 'Continue where you left off'}{' '}
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-1">→</span>
             </button>
             <button
               onClick={handleViewPlan}
@@ -194,7 +249,11 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                 strokeLinecap="round"
                 strokeDasharray={RING_CIRCUMFERENCE}
                 strokeDashoffset={ringOffset}
-                style={{ filter: 'drop-shadow(0 0 6px var(--accent-line))' }}
+                style={{
+                  filter: isPrisma
+                    ? 'drop-shadow(0 0 8px rgba(56,189,248,0.35))'
+                    : 'drop-shadow(0 0 8px rgba(244,196,48,0.35))',
+                }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -260,12 +319,14 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
               >
                 {/* stage node */}
                 <div
-                  className={`relative z-[2] mx-auto mb-[22px] w-[210px] bg-surface border-[1.5px] border-border rounded-[14px] p-4 px-[18px] text-center ${
+                  className={`relative z-[2] mx-auto mb-[22px] w-[210px] bg-surface border-[1.5px] rounded-[14px] p-4 px-[18px] text-center transition-all duration-300 ease-out hover:-translate-y-0.5 ${
                     stageState === 'active'
-                      ? 'border-func shadow-[0_0_0_5px_var(--accent-dim)]'
+                      ? isPrisma
+                        ? 'border-[#38bdf8] shadow-[0_0_0_5px_rgba(56,189,248,0.12)] hover:shadow-[0_0_24px_rgba(56,189,248,0.22)]'
+                        : 'border-[#f4c430] shadow-[0_0_0_5px_rgba(244,196,48,0.12)] hover:shadow-[0_0_24px_rgba(244,196,48,0.22)]'
                       : stageState === 'locked'
-                      ? 'opacity-50'
-                      : ''
+                      ? 'border-border opacity-50'
+                      : 'border-border hover:border-border-strong hover:shadow-lg hover:shadow-black/20'
                   }`}
                 >
                   <div
@@ -305,32 +366,55 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                       getModuleDisplayLabel(mod).replace(/^(?:Day|Module)\s*/i, '').trim() ||
                       String(mod.curriculumOrder ?? mod.day);
 
+                    const isThisPulsing =
+                      pulseId === mod.id ||
+                      pulseId === `stage-card-${mod.id}` ||
+                      pulseId === `day-${mod.day}` ||
+                      pulseId === `leaf-${mod.id}`;
+
                     return (
                       <div
                         key={mod.id}
-                        id={`stage-card-${mod.id}`}
-                        className={`rounded-full p-1 transition-shadow duration-700 ${
-                          pulseId === mod.id ? 'stage-pulse' : ''
-                        }`}
+                        id={`day-${mod.day}`}
+                        className="scroll-mt-48"
                       >
-                      <button
-                        id={`leaf-${mod.id}`}
-                        onClick={() => handleLeaf(mod)}
-                        disabled={!isUnlocked}
-                        title={`${getModuleDisplayLabel(mod)} — ${mod.shortTitle}${isDone ? ' (complete)' : isCurrent ? ' (you are here)' : isUnlocked ? '' : ' (locked)'}`}
-                        aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-all duration-150 ${
-                          isDone
-                            ? 'bg-surface-2 border-[1.5px] border-func/40 text-func font-bold hover:bg-func/10 hover:border-func hover:-translate-y-0.5 cursor-pointer shadow-[0_0_12px_rgba(244,196,48,0.06)]'
-                            : isCurrent
-                            ? 'bg-func border-[1.5px] border-func text-ink font-bold shadow-[0_0_0_5px_var(--accent-dim)] hover:-translate-y-0.5 cursor-pointer'
-                            : isUnlocked
-                            ? 'bg-surface border-[1.5px] border-border text-text-dim hover:text-text hover:border-border-strong hover:-translate-y-0.5 cursor-pointer'
-                            : 'bg-surface border-[1.5px] border-border-soft text-text-faint opacity-50 cursor-not-allowed'
-                        }`}
-                      >
-                        {isDone ? '✓' : moduleNum}
-                      </button>
+                        <div
+                          id={`stage-card-${mod.id}`}
+                          className={`rounded-full p-1 transition-shadow duration-700 ${
+                            isThisPulsing ? 'stage-pulse' : ''
+                          }`}
+                        >
+                          <button
+                            id={`leaf-${mod.id}`}
+                            onClick={() => handleLeaf(mod)}
+                            disabled={!isUnlocked}
+                            title={`${getModuleDisplayLabel(mod)} — ${mod.shortTitle}${isDone ? ' (complete)' : isCurrent ? ' (you are here)' : isUnlocked ? '' : ' (locked)'}`}
+                            aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-mono text-[11px] shrink-0 transition-all duration-200 ease-out outline-none focus-visible:ring-2 ${
+                              isPrisma
+                                ? `focus-visible:ring-[#38bdf8] target:ring-4 target:ring-[#38bdf8]/60 target:border-[#38bdf8] target:scale-110 ${
+                                    isDone
+                                      ? 'bg-surface-2 border-[1.5px] border-[#38bdf8]/40 text-[#38bdf8] font-bold hover:bg-[#38bdf8]/10 hover:border-[#38bdf8] hover:scale-110 hover:shadow-[0_0_18px_rgba(56,189,248,0.25)] active:scale-95 cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.08)]'
+                                      : isCurrent
+                                      ? 'bg-[#38bdf8] border-[1.5px] border-[#38bdf8] text-[#080c14] font-bold shadow-[0_0_20px_rgba(56,189,248,0.45)] hover:scale-110 active:scale-95 ring-4 ring-[#38bdf8]/20 cursor-pointer'
+                                      : isUnlocked
+                                      ? 'bg-surface border-[1.5px] border-border text-text-dim hover:text-text hover:border-[#38bdf8]/50 hover:bg-[#38bdf8]/5 hover:scale-110 hover:shadow-[0_0_14px_rgba(56,189,248,0.12)] active:scale-95 cursor-pointer'
+                                      : 'bg-surface border-[1.5px] border-border-soft text-text-faint opacity-50 cursor-not-allowed'
+                                  }`
+                                : `focus-visible:ring-[#f4c430] target:ring-4 target:ring-[#f4c430]/60 target:border-[#f4c430] target:scale-110 ${
+                                    isDone
+                                      ? 'bg-surface-2 border-[1.5px] border-[#f4c430]/40 text-[#f4c430] font-bold hover:bg-[#f4c430]/10 hover:border-[#f4c430] hover:scale-110 hover:shadow-[0_0_18px_rgba(244,196,48,0.25)] active:scale-95 cursor-pointer shadow-[0_0_12px_rgba(244,196,48,0.08)]'
+                                      : isCurrent
+                                      ? 'bg-[#f4c430] border-[1.5px] border-[#f4c430] text-[#09090b] font-bold shadow-[0_0_20px_rgba(244,196,48,0.45)] hover:scale-110 active:scale-95 ring-4 ring-[#f4c430]/20 cursor-pointer'
+                                      : isUnlocked
+                                      ? 'bg-surface border-[1.5px] border-border text-text-dim hover:text-text hover:border-[#f4c430]/50 hover:bg-[#f4c430]/5 hover:scale-110 hover:shadow-[0_0_14px_rgba(244,196,48,0.12)] active:scale-95 cursor-pointer'
+                                      : 'bg-surface border-[1.5px] border-border-soft text-text-faint opacity-50 cursor-not-allowed'
+                                  }`
+                            }`}
+                          >
+                            {isDone ? '✓' : moduleNum}
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
@@ -338,9 +422,17 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
 
                 {/* callout — hangs off the active stage, shows the current module */}
                 {isActiveStage && activeModuleInStage && (
-                  <div className="max-w-[680px] mx-auto mt-[26px] bg-surface-2 border border-(--accent-line) shadow-[0_0_24px_rgba(244,196,48,0.06)] rounded-xl p-[18px] px-5 relative">
+                  <div
+                    className={`max-w-[680px] mx-auto mt-[26px] bg-surface-2 border rounded-xl p-[18px] px-5 relative transition-shadow duration-300 ${
+                      isPrisma
+                        ? 'border-[#38bdf8]/35 shadow-[0_0_28px_rgba(56,189,248,0.08)]'
+                        : 'border-[#f4c430]/35 shadow-[0_0_28px_rgba(244,196,48,0.08)]'
+                    }`}
+                  >
                     <div
-                      className="absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t border-(--accent-line)"
+                      className={`absolute -top-[9px] left-1/2 -translate-x-1/2 rotate-45 w-4 h-4 bg-surface-2 border-l border-t ${
+                        isPrisma ? 'border-[#38bdf8]/35' : 'border-[#f4c430]/35'
+                      }`}
                       aria-hidden="true"
                     />
                     <div className="flex items-center justify-between mb-3 gap-2">
@@ -395,18 +487,24 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                       ? `${concept.title} (locked — complete earlier concepts first)`
                                       : concept.title
                                   }
-                                  className={`flex items-center gap-2.5 text-xs px-3 py-2.5 rounded-[8px] text-left transition-all ${
+                                  className={`group flex items-center gap-2.5 text-xs px-3 py-2.5 rounded-[8px] text-left transition-all duration-200 ease-out ${
                                     isConceptLocked
                                       ? 'bg-surface/50 border border-border-soft/60 text-text-faint opacity-60 cursor-not-allowed'
-                                      : 'bg-surface border border-border-soft text-text-dim hover:bg-surface-3 hover:border-border hover:text-text hover:-translate-y-px cursor-pointer'
+                                      : isPrisma
+                                      ? 'bg-surface border border-border-soft text-text-dim hover:bg-[#38bdf8]/[0.05] hover:border-[#38bdf8]/40 hover:text-text hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#38bdf8]/10 cursor-pointer'
+                                      : 'bg-surface border border-border-soft text-text-dim hover:bg-[#f4c430]/[0.05] hover:border-[#f4c430]/40 hover:text-text hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#f4c430]/10 cursor-pointer'
                                   }`}
                                 >
                                   <span
-                                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] shrink-0 font-bold ${
+                                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] shrink-0 font-bold transition-transform duration-200 group-hover:scale-110 ${
                                       conceptDone
-                                        ? 'bg-func/20 text-func border border-func/40'
+                                        ? isPrisma
+                                          ? 'bg-[#38bdf8]/20 text-[#38bdf8] border border-[#38bdf8]/40'
+                                          : 'bg-[#f4c430]/20 text-[#f4c430] border border-[#f4c430]/40'
                                         : isConceptCurrent
-                                        ? 'bg-func text-ink'
+                                        ? isPrisma
+                                          ? 'bg-[#38bdf8] text-[#080c14] shadow-[0_0_8px_rgba(56,189,248,0.4)]'
+                                          : 'bg-[#f4c430] text-[#09090b] shadow-[0_0_8px_rgba(244,196,48,0.4)]'
                                         : 'bg-surface-2 text-text-faint border border-border'
                                     }`}
                                   >
@@ -419,12 +517,22 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                     )}
                                   </span>
                                   <span
-                                    className={`truncate flex-1 font-medium ${
-                                      conceptDone ? 'text-text' : isConceptLocked ? 'text-text-faint' : 'text-text'
+                                    className={`truncate flex-1 font-medium transition-colors ${
+                                      conceptDone ? 'text-text' : isConceptLocked ? 'text-text-faint' : 'text-text group-hover:text-white'
                                     }`}
                                   >
                                     {concept.title}
                                   </span>
+                                  {!isConceptLocked && (
+                                    <span
+                                      className={`text-[11px] opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 ${
+                                        isPrisma ? 'text-[#38bdf8]' : 'text-[#f4c430]'
+                                      }`}
+                                      aria-hidden="true"
+                                    >
+                                      →
+                                    </span>
+                                  )}
                                 </button>
                               );
                             })}
@@ -448,23 +556,25 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                                 }
                                 onSelectModuleAndConcept(currentModule.id, undefined, 'challenge');
                               }}
-                              className={`mt-2.5 pt-2.5 border-t border-dashed border-border w-full flex items-center justify-between font-mono text-[11.5px] transition ${
+                              className={`mt-2.5 pt-2.5 border-t border-dashed border-border w-full flex items-center justify-between font-mono text-[11.5px] transition-all duration-200 group ${
                                 activeChallengeUnlocked || activeChallengeDone
-                                  ? 'text-func hover:brightness-110 cursor-pointer'
+                                  ? isPrisma
+                                    ? 'text-[#38bdf8] hover:text-[#7dd3fc] hover:brightness-110 cursor-pointer'
+                                    : 'text-[#f4c430] hover:text-[#fde047] hover:brightness-110 cursor-pointer'
                                   : 'text-text-faint opacity-60 cursor-not-allowed'
                               }`}
                             >
-                              <span className="flex items-center gap-1.5">
+                              <span className="flex items-center gap-1.5 transition-transform duration-200 group-hover:translate-x-0.5">
                                 <span>🏆 Stage challenge</span>
                                 {!activeChallengeUnlocked && !activeChallengeDone && (
                                   <Icon name="lock" className="text-[12px]" />
                                 )}
                               </span>
-                              <span>
+                              <span className="transition-transform duration-200 group-hover:translate-x-0.5">
                                 {activeChallengeDone
-                                  ? 'Complete'
+                                  ? 'Complete ✓'
                                   : activeChallengeUnlocked
-                                  ? `${activeChallengePct}% done`
+                                  ? `${activeChallengePct}% done →`
                                   : 'Locked'}
                               </span>
                             </button>
