@@ -27,10 +27,14 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('Schema modeling and type-safe database access');
   });
 
-  it('applies the design system styling classes (.tile, .bg-dot-grid, max-w-[1120px])', () => {
+  it('applies the design system styling classes (.tile, .bg-dot-grid, max-w-[1120px], bg-ink, text-text)', () => {
     expect(html).toContain('tile');
     expect(html).toContain('bg-dot-grid');
     expect(html).toContain('max-w-[1120px]');
+    expect(html).toContain('bg-ink');
+    expect(html).toContain('text-text');
+    expect(html).toContain('border-func/30');
+    expect(html).toContain('text-func');
   });
 
   it('renders ClickFooter with brand tagline and copyright', () => {
@@ -47,7 +51,7 @@ describe('ClickHomepage Component', () => {
 });
 
 describe('TrackDiagrams SVG components', () => {
-  it('renders SqlDiagramSvg with query.sql, JOIN code, and sorted result table', () => {
+  it('renders SqlDiagramSvg with query.sql, JOIN code, and sorted result table with theme tokens', () => {
     const sqlHtml = renderToStaticMarkup(<SqlDiagramSvg />);
     expect(sqlHtml).toContain('query.sql');
     expect(sqlHtml).toContain('SELECT');
@@ -59,6 +63,9 @@ describe('TrackDiagrams SVG components', () => {
     expect(sqlHtml).toContain('420');
     expect(sqlHtml).toContain('Liam');
     expect(sqlHtml).toContain('310');
+    expect(sqlHtml).toContain('var(--func)');
+    expect(sqlHtml).toContain('var(--surface-2)');
+    expect(sqlHtml).toContain('var(--border)');
   });
 
   it('renders PrismaDiagramSvg with schema.prisma, model User, and app.ts autocomplete', () => {
