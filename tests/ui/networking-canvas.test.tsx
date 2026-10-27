@@ -1149,6 +1149,200 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep3).toContain('translate(440, 65)');
     expect(htmlStep3).toContain('translate(1220, 115)');
   });
+
+  it('Day 17 progressively reveals TCP 3-way handshake, 4-way teardown, and 2MSL TIME_WAIT state', () => {
+    // Step 0: ISN Synchronization & SYN
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'TCP CONNECTION LIFECYCLE · 3-WAY HANDSHAKE &amp; 4-WAY TEARDOWN'
+    );
+    expect(htmlStep0).toContain('PC1 (Client)');
+    expect(htmlStep0).toContain('GATEWAY R1');
+    expect(htmlStep0).toContain('Web Server');
+    expect(htmlStep0).toContain('State: SYN_SENT');
+    expect(htmlStep0).toContain('State: LISTEN');
+    expect(htmlStep0).toContain('[TCP SYN] seq=1000 ack=0 (ISN_c)');
+    expect(htmlStep0).toContain('TCP HEADER ANATOMY');
+    expect(htmlStep0).toContain(
+      'INITIAL SEQUENCE NUMBER (ISN) SYNCHRONIZATION'
+    );
+    expect(htmlStep0).toContain('CONNECTIONLESS IP VS STATEFUL TCP');
+
+    // Step 1: 3-Way Handshake & ESTABLISHED
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('TCP 3-WAY HANDSHAKE SEQUENCE (RFC 793)');
+    expect(htmlStep1).toContain('[1] PC1 → SYN (seq=1000) → Server (SYN_SENT)');
+    expect(htmlStep1).toContain(
+      '[2] Server → SYN, ACK (seq=5000, ack=1001) → PC1 (SYN_RECEIVED)'
+    );
+    expect(htmlStep1).toContain(
+      '[3] PC1 → ACK (seq=1001, ack=5001) → Server'
+    );
+    expect(htmlStep1).toContain('State: ESTABLISHED');
+    expect(htmlStep1).toContain(
+      '[TCP ACK] seq=1001 ack=5001 (Handshake Complete)'
+    );
+    expect(htmlStep1).toContain('THE 3-WAY HANDSHAKE');
+    expect(htmlStep1).toContain(
+      'WHY 2-WAY HANDSHAKES FAIL (GHOST CONNECTIONS)'
+    );
+    expect(htmlStep1).toContain('SOCKET BUFFER COMMITMENT');
+
+    // Step 2: 4-Way Teardown & Half-Closed
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('TCP 4-WAY TEARDOWN SEQUENCE (RFC 793)');
+    expect(htmlStep2).toContain(
+      '[1] PC1 → FIN, ACK (seq=1001, ack=5001) → Server [FIN_WAIT_1]'
+    );
+    expect(htmlStep2).toContain(
+      '[2] Server → ACK (ack=1002) → PC1 [Server: CLOSE_WAIT | Client: FIN_WAIT_2]'
+    );
+    expect(htmlStep2).toContain(
+      '[3] Server → FIN, ACK (seq=5001, ack=1002) → PC1 [Server: LAST_ACK]'
+    );
+    expect(htmlStep2).toContain(
+      '[4] PC1 → ACK (ack=5002) → Server [Server: CLOSED | Client: TIME_WAIT]'
+    );
+    expect(htmlStep2).toContain('State: FIN_WAIT_2');
+    expect(htmlStep2).toContain('State: CLOSE_WAIT');
+    expect(htmlStep2).toContain(
+      '[TCP FIN, ACK] seq=1001 ack=5001 (Client Close)'
+    );
+    expect(htmlStep2).toContain('FULL-DUPLEX TEARDOWN');
+    expect(htmlStep2).toContain(
+      'THE HALF-CLOSED STATE (CLOSE_WAIT &amp; FIN_WAIT_2)'
+    );
+    expect(htmlStep2).toContain('GRACEFUL VS ABRUPT TERMINATION');
+
+    // Step 3: TIME_WAIT State & 2MSL Timer
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('State: TIME_WAIT (60s)');
+    expect(htmlStep3).toContain('State: CLOSED');
+    expect(htmlStep3).toContain(
+      '2MSL SAFETY DRAIN TIMER (60 SECONDS COUNTDOWN)'
+    );
+    expect(htmlStep3).toContain('THE TIME_WAIT INVARIANT');
+    expect(htmlStep3).toContain(
+      'WHY 2MSL IS MANDATORY (ACK RESEND &amp; STRAY DRAIN)'
+    );
+    expect(htmlStep3).toContain('TIME_WAIT SOCKET EXHAUSTION');
+
+    // Step 4: Recap
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('TCP STATE MACHINE RECAP');
+    expect(htmlStep4).toContain(
+      'THE 4 CORE RULES OF TCP CONNECTION MANAGEMENT'
+    );
+    expect(htmlStep4).toContain('CONNECTION METRICS');
+    expect(htmlStep4).toContain(
+      'Next: Day 18 · Sequence Numbers, ACK &amp; Sliding Windows →'
+    );
+  });
+
+  it('ensures Day 17 canvas coordinates strictly prevent component overlaps', () => {
+    // Step 0: Initial layout
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    // Link labels cleared 60px above cables (y=190 vs cable y=250)
+    expect(htmlStep0).toContain('translate(454, 190)');
+    expect(htmlStep0).toContain('translate(1013, 190)');
+
+    // State pills above devices
+    expect(htmlStep0).toContain('translate(140, 130)');
+    expect(htmlStep0).toContain('translate(1220, 130)');
+
+    // In-flight packet badge on Cable 1 (span 228..680, width 320 leaves 66px clearance on each side)
+    expect(htmlStep0).toContain('translate(454, 250)');
+    expect(htmlStep0).toContain('width="320"');
+
+    // Bottom diagnostic HUD cards strictly clear the 94px device envelope (y=350 vs device y=220..314)
+    expect(htmlStep0).toContain('translate(70, 350)');
+    expect(htmlStep0).toContain('translate(380, 350)');
+    expect(htmlStep0).toContain('translate(1040, 350)');
+
+    // Step 1: Overhead 3-way handshake ladder diagram at translate(460, 65)
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('translate(460, 65)');
+    // In-flight packet badge on Cable 2 (span 806..1220, width 340 leaves 37px clearance on each side)
+    expect(htmlStep1).toContain('translate(1013, 250)');
+    expect(htmlStep1).toContain('width="340"');
+
+    // Step 2: Overhead 4-way teardown ladder diagram at translate(460, 65)
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('translate(460, 65)');
+    // In-flight packet badge on Cable 2 (span 806..1220, width 330 leaves 42px clearance on each side)
+    expect(htmlStep2).toContain('translate(1013, 250)');
+    expect(htmlStep2).toContain('width="330"');
+
+    // Step 3: Overhead 2MSL timer at translate(460, 65)
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('translate(460, 65)');
+
+    // Step 4: Recap layout cards
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-17"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('translate(70, 350)');
+    expect(htmlStep4).toContain('translate(380, 350)');
+    expect(htmlStep4).toContain('translate(1130, 350)');
+  });
 });
 
 

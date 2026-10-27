@@ -431,6 +431,44 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'nmap 198.51.100.10')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-17' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'tcp connect 198.51.100.10:80' ||
+          normalizedCmd === 'tcp connect 198.51.100.10' ||
+          normalizedCmd === 'connect 198.51.100.10:80' ||
+          normalizedCmd === 'curl 198.51.100.10')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-17' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'ss -tan state established' ||
+          normalizedCmd === 'ss -t state established' ||
+          normalizedCmd === 'ss -tan' ||
+          normalizedCmd === 'netstat -tan | grep established' ||
+          normalizedCmd === 'ss -t')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-17' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'tcp close 198.51.100.10:80' ||
+          normalizedCmd === 'tcp close' ||
+          normalizedCmd === 'close 198.51.100.10:80' ||
+          normalizedCmd === 'tcp disconnect')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-17' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'ss -tan state time-wait' ||
+          normalizedCmd === 'ss -t state time-wait' ||
+          normalizedCmd === 'ss -tan | grep time_wait' ||
+          normalizedCmd === 'show time-wait' ||
+          normalizedCmd === 'netstat -tan | grep time_wait')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

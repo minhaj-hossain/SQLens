@@ -145,6 +145,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: traceroute 198.51.100.10, show fiber links, traceroute 198.51.100.50, show return path, cls, clear, help';
       } else if (dayId === 'net-16') {
         helpMsg = 'Commands: ss -tlpn, show ip-port-range, ss -t4 state established, nc -zv 198.51.100.10 80 81, cls, clear, help';
+      } else if (dayId === 'net-17') {
+        helpMsg = 'Commands: tcp connect 198.51.100.10:80, ss -tan state established, tcp close 198.51.100.10:80, ss -tan state time-wait, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -765,6 +767,48 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'nmap 198.51.100.10'
       ) {
         out = staticResponses['nc -zv 198.51.100.10 80 81'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 17 dynamic logic
+    if (dayId === 'net-17') {
+      if (
+        v === 'tcp connect 198.51.100.10:80' ||
+        v === 'tcp connect 198.51.100.10' ||
+        v === 'connect 198.51.100.10:80' ||
+        v === 'curl 198.51.100.10'
+      ) {
+        out = staticResponses['tcp connect 198.51.100.10:80'];
+        isSuccess = true;
+      } else if (
+        v === 'ss -tan state established' ||
+        v === 'ss -t state established' ||
+        v === 'ss -tan' ||
+        v === 'netstat -tan | grep established' ||
+        v === 'netstat -tan | grep ESTABLISHED' ||
+        v === 'ss -t'
+      ) {
+        out = staticResponses['ss -tan state established'];
+        isSuccess = true;
+      } else if (
+        v === 'tcp close 198.51.100.10:80' ||
+        v === 'tcp close' ||
+        v === 'close 198.51.100.10:80' ||
+        v === 'tcp disconnect'
+      ) {
+        out = staticResponses['tcp close 198.51.100.10:80'];
+        isSuccess = true;
+      } else if (
+        v === 'ss -tan state time-wait' ||
+        v === 'ss -t state time-wait' ||
+        v === 'ss -tan | grep time_wait' ||
+        v === 'ss -tan | grep TIME_WAIT' ||
+        v === 'show time-wait' ||
+        v === 'netstat -tan | grep time_wait' ||
+        v === 'netstat -tan | grep TIME_WAIT'
+      ) {
+        out = staticResponses['ss -tan state time-wait'];
         isSuccess = true;
       }
     }

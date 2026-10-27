@@ -16,6 +16,7 @@ import {
   NET_14_MODULE,
   NET_15_MODULE,
   NET_16_MODULE,
+  NET_17_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -490,6 +491,52 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step5.title).toBe('The four rules of ports and sockets');
   });
 
+  it('Day 17 module has exact title, 5 steps, and authentic TCP connection lifecycle commands', () => {
+    expect(NET_17_MODULE).toBeDefined();
+    expect(NET_17_MODULE.id).toBe('net-17');
+    expect(NET_17_MODULE.title).toBe(
+      'Day 17 · TCP: Opening and Closing a Connection'
+    );
+    expect(NET_17_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_17_MODULE.steps[0];
+    expect(step1.title).toBe(
+      'The need for connection state and Initial Sequence Numbers (ISN)'
+    );
+    expect(step1.cmd).toBe('tcp connect 198.51.100.10:80');
+    expect(step1.what).toContain('Initial Sequence Number (ISN)');
+    expect(step1.what).toContain('RFC 6528');
+
+    const step2 = NET_17_MODULE.steps[1];
+    expect(step2.cmd).toBe('ss -tan state established');
+    expect(step2.title).toBe(
+      'SYN → SYN-ACK → ACK: Why three packets are mandatory'
+    );
+    expect(step2.what).toContain(
+      'The fundamental law of TCP connection setup is the 3-Way Handshake'
+    );
+    expect(step2.what).toContain("Why Couldn't We Use a 2-Way Handshake?");
+
+    const step3 = NET_17_MODULE.steps[2];
+    expect(step3.cmd).toBe('tcp close 198.51.100.10:80');
+    expect(step3.title).toBe(
+      'FIN → ACK → FIN → ACK: Full-duplex graceful termination'
+    );
+    expect(step3.what).toContain('Full-Duplex');
+    expect(step3.what).toContain('CLOSE_WAIT');
+
+    const step4 = NET_17_MODULE.steps[3];
+    expect(step4.cmd).toBe('ss -tan state time-wait');
+    expect(step4.title).toBe('Why TIME_WAIT exists: The 2MSL safety timer');
+    expect(step4.what).toContain('2MSL');
+    expect(step4.what).toContain('Maximum Segment Lifetime');
+
+    const step5 = NET_17_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe('The four rules of TCP connection management');
+    expect(step5.what).toContain('TCP provides ordered, full-duplex reliability');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -514,6 +561,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(14)?.id).toBe('net-14');
     expect(getNetworkingModule(15)?.id).toBe('net-15');
     expect(getNetworkingModule(16)?.id).toBe('net-16');
+    expect(getNetworkingModule(17)?.id).toBe('net-17');
   });
 });
 
