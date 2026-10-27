@@ -225,28 +225,28 @@ function unknownTypeError(col: string, sqlType: string, suggestion?: string): st
 function unsupportedDdlError(cmd: string): string {
   const c = cmd.trim();
   if (/^TRUNCATE\b/i.test(c)) {
-    return `TRUNCATE is not supported by SQLens. Use DELETE FROM <table> to remove rows (the table itself stays) — docs/sql/DIALECT.md §5.`;
+    return `TRUNCATE is not supported by Click. Use DELETE FROM <table> to remove rows (the table itself stays) — docs/sql/DIALECT.md §5.`;
   }
   if (/^RENAME\s+TABLE\b/i.test(c)) {
-    return `RENAME TABLE is not supported by SQLens — create the new table, copy the rows, then DROP the old one (docs/sql/DIALECT.md §5).`;
+    return `RENAME TABLE is not supported by Click — create the new table, copy the rows, then DROP the old one (docs/sql/DIALECT.md §5).`;
   }
   if (/^ALTER\b/i.test(c)) {
     if (/\bDROP\s+COLUMN\b/i.test(c)) {
-      return `ALTER ... DROP COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
+      return `ALTER ... DROP COLUMN is not supported by Click. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
     }
     if (/\bRENAME\b/i.test(c)) {
-      return `ALTER ... RENAME is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
+      return `ALTER ... RENAME is not supported by Click. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
     }
     if (/\b(MODIFY|ALTER\s+COLUMN|CHANGE\s+COLUMN)\b/i.test(c)) {
-      return `ALTER ... MODIFY/CHANGE COLUMN is not supported by SQLens. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
+      return `ALTER ... MODIFY/CHANGE COLUMN is not supported by Click. The supported ALTER form is ADD COLUMN (docs/sql/DIALECT.md §5).`;
     }
     if (/\bCONSTRAINT\b/i.test(c)) {
-      return `ALTER ... CONSTRAINT is not supported by SQLens. Declare constraints inside CREATE TABLE instead (docs/sql/DIALECT.md §5).`;
+      return `ALTER ... CONSTRAINT is not supported by Click. Declare constraints inside CREATE TABLE instead (docs/sql/DIALECT.md §5).`;
     }
-    return `Unsupported or malformed ALTER statement. SQLens supports: ALTER TABLE <table> ADD COLUMN <col> <type> [DEFAULT <value>] (docs/sql/DIALECT.md §5).`;
+    return `Unsupported or malformed ALTER statement. Click supports: ALTER TABLE <table> ADD COLUMN <col> <type> [DEFAULT <value>] (docs/sql/DIALECT.md §5).`;
   }
   const head = c.split('\n')[0].slice(0, 60);
-  return `Unsupported DDL statement${head ? `: "${head}${c.split('\n')[0].length > 60 ? '…' : ''}"` : ''} — SQLens cannot execute it. Supported forms are listed in docs/sql/DIALECT.md §5.`;
+  return `Unsupported DDL statement${head ? `: "${head}${c.split('\n')[0].length > 60 ? '…' : ''}"` : ''} — Click cannot execute it. Supported forms are listed in docs/sql/DIALECT.md §5.`;
 }
 
 /**
@@ -1946,7 +1946,7 @@ export class SqlExecutor {
           rows: [],
           rowCount: 0,
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-          error: `Unsupported clause after DROP TABLE: "${dropLeftover.slice(0, 60)}${dropLeftover.length > 60 ? '…' : ''}". SQLens drops ONE table per statement and supports no trailing clauses (docs/sql/DIALECT.md §5).`,
+          error: `Unsupported clause after DROP TABLE: "${dropLeftover.slice(0, 60)}${dropLeftover.length > 60 ? '…' : ''}". Click drops ONE table per statement and supports no trailing clauses (docs/sql/DIALECT.md §5).`,
         };
       }
       if (!this.db.tables[tbl]) {
@@ -2024,7 +2024,7 @@ export class SqlExecutor {
           rows: [],
           rowCount: 0,
           executionTimeMs: Math.round((performance.now() - startTime) * 100) / 100,
-          error: `Unsupported clause after ADD COLUMN: "${leftover.slice(0, 60)}${leftover.length > 60 ? '…' : ''}". SQLens runs ONE clause per ALTER TABLE statement — split it into separate statements (docs/sql/DIALECT.md §5).`,
+          error: `Unsupported clause after ADD COLUMN: "${leftover.slice(0, 60)}${leftover.length > 60 ? '…' : ''}". Click runs ONE clause per ALTER TABLE statement — split it into separate statements (docs/sql/DIALECT.md §5).`,
         };
       }
       const tbl = alterMatch[1].replace(/[`"']/g, '').toLowerCase();
@@ -2185,7 +2185,7 @@ export class SqlExecutor {
         columns: ['status'],
         rows: [
           {
-            status: `Simulated: ${simulation[0].trim()} — SQLens does not persist privileges or principals (concept-only simulation, docs/sql/DIALECT.md §8).`,
+            status: `Simulated: ${simulation[0].trim()} — Click does not persist privileges or principals (concept-only simulation, docs/sql/DIALECT.md §8).`,
           },
         ],
         rowCount: 1,

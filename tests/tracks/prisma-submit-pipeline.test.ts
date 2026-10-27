@@ -9,7 +9,6 @@
 import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
-import { Prisma_05_MODULE as Prisma_05_Migrations_MODULE } from '../../src/content/prisma/modules/prisma-05-migrations-seeding';
 import { renderGeneratedSql } from '../../src/lib/prisma-engine/prisma-sql-generator';
 import {
   isPrismaSchemaLab,
@@ -52,7 +51,7 @@ function firstPrismaTask(): PracticeTask {
 
 /** Any Prisma task by id (concept task or challenge task). */
 function taskById(id: string): PracticeTask {
-  for (const mod of [Prisma_05_Migrations_MODULE, ...PRISMA_MODULES]) {
+  for (const mod of PRISMA_MODULES) {
     const hit = [...mod.concepts.flatMap((c) => c.tasks), ...(mod.challenge?.tasks ?? [])].find(
       (t) => t.id === id,
     );
@@ -270,7 +269,7 @@ describe('P1.2 — snippet-lab terminal display contract', () => {
   });
 
   it('attaches terminal output to CLI labs and drops the reference rows', () => {
-    const task = taskById('prisma05-c1-t1');
+    const task = taskById('prisma12-c1-t1');
     const { out } = submit(task, task.prisma!.solutionCode);
     expect(out.passed).toBe(true);
     expect(out.displayMode).toBe('terminal');
@@ -292,7 +291,7 @@ describe('P1.2 — snippet-lab terminal display contract', () => {
     let cli = 0;
     let schema = 0;
     const failures: string[] = [];
-    for (const mod of [...PRISMA_MODULES, Prisma_05_Migrations_MODULE]) {
+    for (const mod of PRISMA_MODULES) {
       const all = [...mod.concepts.flatMap((c) => c.tasks), ...(mod.challenge?.tasks ?? [])];
       for (const task of all) {
         const ex = new SqlExecutor();
@@ -331,8 +330,8 @@ describe('P1.2 — snippet-lab terminal display contract', () => {
 });
 
 describe('P1.1 — CLI snippet normalization (validator + display)', () => {
-  /** The curriculum's CLI-shaped labs (Day 5 migrations and deployments). */
-  const CLI_TASK_IDS = ['prisma05-c1-t1', 'prisma05-c1-t2'];
+  /** The curriculum's CLI-shaped labs (Day 12 migrations and deployments). */
+  const CLI_TASK_IDS = ['prisma12-c1-t1', 'prisma12-c1-t2'];
   /** Every runner alias from the Task-1.1 D3b set — all ≡ `npx prisma`. */
   const RUNNERS = [
     'pnpm dlx prisma',
@@ -367,7 +366,7 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
   });
 
   it('accepts quoted / equals flag values and parses the migration name from them', () => {
-    const task = taskById('prisma05-c1-t1');
+    const task = taskById('prisma12-c1-t1');
     const sol = task.prisma!.solutionCode; // `… --name init_users`
     const quoted = sol.replace('--name init_users', '--name "init_users"');
     const equals = sol.replace('--name init_users', '--name=init_users');
@@ -389,8 +388,8 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
   });
 
   it('treats double-spaced and newline-split commands as the same command', () => {
-    const t1 = taskById('prisma05-c1-t1');
-    const t2 = taskById('prisma05-c1-t2');
+    const t1 = taskById('prisma12-c1-t1');
+    const t2 = taskById('prisma12-c1-t2');
     expect(submit(t1, t1.prisma!.solutionCode.replace('npx prisma', 'npx  prisma')).out.passed).toBe(true);
     expect(submit(t1, t1.prisma!.solutionCode.replace('migrate dev', 'migrate\n    dev')).out.passed).toBe(true);
     expect(submit(t2, t2.prisma!.solutionCode.replace('npx prisma', 'npx\n  prisma')).out.passed).toBe(true);
@@ -404,8 +403,8 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
       expect(out.passed, `${id} starter`).toBe(false);
       expect(out.stage, `${id} starter stage`).toBe('validation');
     }
-    const t1 = taskById('prisma05-c1-t1'); // migrate dev lab; forbids `db push`
-    const t2 = taskById('prisma05-c1-t2'); // migrate deploy lab; forbids `migrate dev`
+    const t1 = taskById('prisma12-c1-t1'); // migrate dev lab; forbids `db push`
+    const t2 = taskById('prisma12-c1-t2'); // migrate deploy lab; forbids `migrate dev`
     // A runner variant with the WRONG subcommand still fails.
     expect(submit(t1, 'const cmd = "pnpm dlx prisma db push";').out.passed).toBe(false);
     // A runner variant missing the `--name` fragment still fails.
@@ -421,7 +420,7 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
   });
 
   it('quotes the AUTHORED fragment in failures; non-CLI fragments keep the literal contract', () => {
-    const gen = taskById('prisma05-c1-t2');
+    const gen = taskById('prisma12-c1-t2');
     // Failure text always shows the authored spelling, even for runner variants.
     const miss = validatePrismaCode('return "pnpm dlx prisma validate";', gen.prisma!.validation);
     expect(miss.passed).toBe(false);
@@ -439,7 +438,7 @@ describe('P1.1 — CLI snippet normalization (validator + display)', () => {
     expect(canonicalizeCli('bunx prisma migrate\n  dev --name=init')).toBe('npx prisma migrate dev --name init');
     // A NON-CLI fragment is literal about WHITESPACE (a split token never matches)…
     const task = taskById('prisma13-c3-t1');
-    const spaced = task.prisma!.solutionCode.replace('maxWait: 5000', 'maxWait : 5000');
+    const spaced = task.prisma!.solutionCode.replace('maxWait: 5000', 'max Wait: 5000');
     expect(spaced).not.toBe(task.prisma!.solutionCode);
     expect(validatePrismaCode(spaced, task.prisma!.validation).passed).toBe(false);
   });

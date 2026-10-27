@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { AlertCircle, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react';
 import { authClient } from '../../lib/auth-client';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { ClickSpinner } from '@/components/ui/Loading';
 
 interface AuthViewProps {
   mode: 'signin' | 'signup' | null;
@@ -258,14 +259,14 @@ function SignInForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_var(--accent-dim)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_var(--accent-line)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
       >
         {loading ? (
-          <span className="w-[15px] h-[15px] rounded-full border-2 border-[rgba(10,13,18,0.25)] border-t-ink animate-spin" />
+          <ClickSpinner size="sm" variant="muted" />
         ) : (
           <>Sign in</>
         )}
       </button>
 
       {/* <p className="text-center text-[13px] text-text-dim">
-        New to SQLens?{' '}
+        New to Click?{' '}
         <button type="button" onClick={onSwitch} className="text-func font-semibold hover:underline cursor-pointer">
           Create an account
         </button>
@@ -444,7 +445,7 @@ function SignUpForm({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: 
         className="w-full bg-func text-ink font-bold text-[14.5px] py-3 rounded-[8px] flex items-center justify-center gap-2 shadow-[0_8px_24px_-10px_var(--accent-dim)] hover:-translate-y-px hover:shadow-[0_10px_28px_-8px_var(--accent-line)] transition disabled:opacity-60 disabled:transform-none cursor-pointer"
       >
         {loading ? (
-          <span className="w-[15px] h-[15px] rounded-full border-2 border-[rgba(10,13,18,0.25)] border-t-ink animate-spin" />
+          <ClickSpinner size="sm" variant="muted" />
         ) : (
           <>Create account</>
         )}

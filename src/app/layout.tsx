@@ -22,20 +22,21 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
-const TITLE = 'SQLens — Learn SQL by Doing, 57 Days Hands-On';
+const TITLE = 'Click — When concepts finally click. Hands-on database learning runtime.';
 const DESCRIPTION =
-  'Master SQL in 57 Days through visual mental models, an interactive in-browser query engine, guided practice tasks and independent challenges. No setup required.';
+  'Master SQL & Prisma through visual mental models, an interactive in-browser engine, guided practice tasks and independent challenges. No setup required.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: '%s · SQLens',
+    template: '%s · Click',
   },
   description: DESCRIPTION,
-  applicationName: 'SQLens',
+  applicationName: 'Click',
   keywords: [
     'learn SQL',
+    'learn Prisma',
     'SQL course',
     'SQL practice',
     'interactive SQL',
@@ -43,13 +44,13 @@ export const metadata: Metadata = {
     'database queries',
     'SELECT',
     'JOINs',
-    'SQL for beginners',
+    'database engineering',
   ],
-  authors: [{ name: 'SQLens' }],
+  authors: [{ name: 'Click' }],
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    siteName: 'SQLens',
+    siteName: 'Click',
     title: TITLE,
     description: DESCRIPTION,
   },
@@ -101,7 +102,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'WebApplication',
-              name: 'SQLens',
+              name: 'Click',
               url: SITE_URL,
               applicationCategory: 'EducationalApplication',
               operatingSystem: 'Any',

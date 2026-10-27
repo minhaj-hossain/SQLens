@@ -3,7 +3,7 @@ import AuthScreen from '@/components/auth/AuthScreen';
 
 export const metadata: Metadata = {
   title: 'Sign In',
-  description: 'Sign in to SQLens to sync your learning progress across devices.',
+  description: 'Sign in to Click to sync your learning progress across devices.',
 };
 
 export default function SignInPage() {

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Icon from '@/components/ui/Icon';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { ClickSpinner } from '@/components/ui/Loading';
 import { UserLearningState } from '../../types/progress';
 import { ModuleData } from '../../types/curriculum';
 import { useTrackCurriculum } from '@/components/learn/use-track';
@@ -135,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Checking session"
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface-2 border border-border flex items-center justify-center"
             >
-              <span className="w-3 h-3 rounded-full border-2 border-border border-t-func animate-spin" />
+              <ClickSpinner size="xs" variant="sky" />
             </button>
           ) : user ? (
             <div

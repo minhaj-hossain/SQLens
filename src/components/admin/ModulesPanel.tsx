@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -9,6 +9,7 @@ import {
   AdminApiError,
 } from '../../lib/admin-api';
 import { ALL_MODULES } from '../../content/sql/curriculum-index';
+import { AdminTableSkeleton } from '@/components/ui/Loading';
 
 const MODE_META: Record<
   ModuleAvailability['unlockMode'],
@@ -96,7 +97,7 @@ export default function ModulesPanel() {
   };
 
   if (!map && !error) {
-    return <p className="font-mono text-xs text-text-dim animate-pulse py-12 text-center">Loading⬦</p>;
+    return <AdminTableSkeleton rows={8} />;
   }
 
   if (error && !map) {

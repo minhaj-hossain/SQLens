@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../../types/curriculum';
+import { ModuleData } from '../../../types/curriculum';
 
 export const Day_38_MODULE: ModuleData = {
   id: 'day-38',
@@ -136,7 +136,7 @@ export const Day_38_MODULE: ModuleData = {
             targetTable: 'products',
             expectedRowCount: 11,
           },
-          successMessage: 'Congratulations! You have completed the SQLens SQL Master Curriculum!',
+          successMessage: 'Congratulations! You have completed the Click SQL Master Curriculum!',
         },
       ],
     },
@@ -170,7 +170,7 @@ export const Day_38_MODULE: ModuleData = {
           targetTable: 'products',
           expectedRowCount: 11,
         },
-        successMessage: 'Congratulations on graduating the SQLens SQL Master Curriculum! 🎓',
+        successMessage: 'Congratulations on graduating the Click SQL Master Curriculum! 🎓',
       },
     ],
   },

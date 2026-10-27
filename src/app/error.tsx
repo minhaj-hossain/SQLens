@@ -11,7 +11,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Surface the failure in the console for debugging/diagnostics.
-    console.error('SQLens runtime error:', error);
+    console.error('Click runtime error:', error);
   }, [error]);
 
   return (

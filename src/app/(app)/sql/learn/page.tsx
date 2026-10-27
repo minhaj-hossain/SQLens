@@ -13,6 +13,7 @@ import { useTrackCurriculum } from '@/components/learn/use-track';
 import { deriveLastPosition, isConceptCompleted } from '@/lib/progress/unlock-calculator';
 import { trackLearnUrl } from '@/lib/track-routes';
 import { useLearning } from '@/components/providers/LearningProgressProvider';
+import { CurriculumWorkspaceSkeleton } from '@/components/ui/Loading';
 
 export default function LearnIndexPage() {
   const { userState, isProgressReady } = useLearning();
@@ -43,9 +44,5 @@ export default function LearnIndexPage() {
     router.replace(trackLearnUrl(track, mod.id, 'complete'));
   }, [isProgressReady, userState, modules, track, getModuleById, router]);
 
-  return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <span className="w-8 h-8 rounded-full border-2 border-border border-t-func animate-spin" />
-    </div>
-  );
+  return <CurriculumWorkspaceSkeleton trackName="SQL Track" />;
 }

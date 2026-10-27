@@ -398,7 +398,7 @@ export const Day_17_MODULE: ModuleData = {
       title: 'Shape Compatibility: The Rule Both Sides Must Obey',
       shortDescription: 'Equal column count, compatible types — or the engine refuses to run.',
       theory: {
-        summary: 'Stacking only makes sense if the two results have the same shape: the same number of columns, with compatible types, position by position. A 2-column result cannot be stacked on a 1-column result — and SQLens refuses loudly instead of guessing.',
+        summary: 'Stacking only makes sense if the two results have the same shape: the same number of columns, with compatible types, position by position. A 2-column result cannot be stacked on a 1-column result — and Click refuses loudly instead of guessing.',
         introTable: {
           tableName: 'Compatible vs incompatible shapes',
           description: 'What the engine checks before stacking',

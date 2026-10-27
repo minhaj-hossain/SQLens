@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Icon } from '@/components/ui/Icon';
+import { ClickSpinner } from '@/components/ui/Loading';
 import { ModuleData } from '@/types/curriculum';
 import { getModuleDisplayLabel } from '@/lib/curriculum/module-order';
 import { useTrackCurriculum } from '@/components/learn/use-track';
@@ -219,7 +220,7 @@ export default function ResetProgressModal({
             >
               {isResetting ? (
                 <>
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  <ClickSpinner size="xs" variant="white" />
                   <span>Resetting...</span>
                 </>
               ) : (

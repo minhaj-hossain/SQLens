@@ -49,11 +49,11 @@ export function learnPageMetadata({ dayId, stage, conceptId, track = 'sql' }: Le
     description: descriptions[stage],
     alternates: { canonical: url },
     openGraph: {
-      title: `${titles[stage]} · SQLens`,
+      title: `${titles[stage]} · Click`,
       description: descriptions[stage],
       url,
       type: 'website',
-      siteName: 'SQLens',
+      siteName: 'Click',
     },
     twitter: { card: 'summary_large_image', title: titles[stage], description: descriptions[stage] },
   };
@@ -72,7 +72,7 @@ export function moduleJsonLd(dayId: string, track: TrackId = 'sql'): string | nu
     timeRequired: `PT${mod.estimatedMinutes}M`,
     educationalLevel: 'Beginner',
     teaches: mod.concepts.map((c) => c.title),
-    provider: { '@type': 'Organization', name: 'SQLens', url: SITE_URL },
+    provider: { '@type': 'Organization', name: 'Click', url: SITE_URL },
     isAccessibleForFree: true,
   });
 }

@@ -11,7 +11,7 @@ import { describe, it, expect } from 'vitest';
 import { SqlExecutor } from '../../src/lib/sql-engine/executor';
 import { runAndGradeSubmission } from '../../src/lib/sql-engine/submit-pipeline';
 import { PRISMA_MODULES } from '../../src/content/prisma/prisma-curriculum-index';
-import { Prisma_05_MODULE as Prisma_05_Migrations_MODULE } from '../../src/content/prisma/modules/prisma-05-migrations-seeding';
+import { Prisma_12_MODULE as Prisma_12_Migrations_MODULE } from '../../src/content/prisma/modules/prisma-12-migrations-seeding';
 import { ALL_MODULES } from '../../src/content/sql/curriculum-index';
 import { deriveEvaluationState } from '../../src/lib/evaluation-state';
 import {
@@ -147,7 +147,7 @@ describe('Phase 7 — submitForTask routing', () => {
   });
 
   it('a snippet-lab solution passes through the read-through contract', () => {
-    const task = Prisma_05_Migrations_MODULE.concepts[0].tasks[0];
+    const task = Prisma_12_Migrations_MODULE.concepts[0].tasks[0];
     const ex = new SqlExecutor();
     const out = submitForTask({
       task,
@@ -353,7 +353,7 @@ describe('Phase 7 — editor + reveal + idle lens decisions', () => {
   });
 
   it('idle lens: snippet labs say there is nothing to translate', () => {
-    const idle = idleLensState(Prisma_05_Migrations_MODULE.concepts[0].tasks[0])!;
+    const idle = idleLensState(Prisma_12_Migrations_MODULE.concepts[0].tasks[0])!;
     expect(idle.steps).toEqual([]);
     expect(idle.note).toContain('no Prisma client call');
   });

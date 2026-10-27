@@ -10,6 +10,7 @@ import {
   AdminAnnouncement,
 } from '@/lib/admin-api';
 import { Megaphone, Trash2, Plus, AlertCircle, Info, Wrench, CheckCircle } from 'lucide-react';
+import { AdminAnnouncementsSkeleton } from '@/components/ui/Loading';
 
 export default function AdminAnnouncementsPanel() {
   const [announcements, setAnnouncements] = useState<AdminAnnouncement[]>([]);
@@ -194,7 +195,9 @@ export default function AdminAnnouncementsPanel() {
         </div>
 
         {loading ? (
-          <p className="p-8 text-center font-mono text-xs text-text-dim animate-pulse">Loading announcements...</p>
+          <div className="p-4">
+            <AdminAnnouncementsSkeleton />
+          </div>
         ) : error ? (
           <p className="p-8 text-center font-mono text-xs text-error">{error}</p>
         ) : announcements.length === 0 ? (

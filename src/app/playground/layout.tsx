@@ -8,12 +8,12 @@ export const metadata: Metadata = {
     'A standalone in-browser SQL playground: multi-statement scripts, history, CSV export, lesson/scratch database switcher and Ctrl+Space autocomplete.',
   alternates: { canonical: `${SITE_URL}/playground` },
   openGraph: {
-    title: 'SQL Playground · SQLens',
+    title: 'Playground · Click',
     description:
       'Write and run real SQL in your browser — multi-statement scripts, history, CSV export and autocomplete. No setup required.',
     url: `${SITE_URL}/playground`,
     type: 'website',
-    siteName: 'SQLens',
+    siteName: 'Click',
   },
 };
 

@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAdminUsers } from './AdminUsersContext';
+import { AdminTableSkeleton } from '@/components/ui/Loading';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 /**
  * AdminShell — shared chrome for the split admin pages (Phase 5):
@@ -31,9 +33,7 @@ export default function AdminShell({ adminName, children }: { adminName: string;
       <header className="sticky top-0 z-40 bg-ink/95 border-b border-border-soft">
         <div className="max-w-5xl mx-auto h-14 px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-display font-bold text-sm sm:text-base text-text whitespace-nowrap">
-              SQL<span className="text-func">ens</span>
-            </span>
+            <BrandLogo size="sm" variant="click" />
             <span className="hidden sm:inline-block text-border font-mono text-xs">/</span>
             <span className="hidden sm:inline-block font-body text-xs text-text-dim">Admin</span>
             <span className="ml-2 inline-flex items-center bg-func/10 text-func border border-func/30 font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -44,7 +44,7 @@ export default function AdminShell({ adminName, children }: { adminName: string;
             href="/"
             className="shrink-0 text-text-dim hover:text-text transition-colors font-mono text-xs"
           >
-            ← App
+            ← Back to Click
           </Link>
         </div>
         {/* Tab navigation — real routes */}
@@ -77,11 +77,11 @@ export default function AdminShell({ adminName, children }: { adminName: string;
               href="/"
               className="inline-block bg-func/10 text-func border border-func/30 font-mono text-xs px-4 py-2 rounded-lg hover:bg-func/20 transition"
             >
-              ← Back to SQLens
+              ← Back to Click
             </Link>
           </div>
         ) : loading || !data ? (
-          <p className="font-mono text-xs text-text-dim animate-pulse py-12 text-center">Loading…</p>
+          <AdminTableSkeleton rows={6} />
         ) : (
           children
         )}

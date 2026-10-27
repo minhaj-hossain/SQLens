@@ -35,13 +35,13 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
             <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#7b8db0] uppercase">
               TRACKS
             </span>
-            <Link href="/sql" className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors">
+            <Link href="/sql" className="flink text-sm">
               SQL (57 Days)
             </Link>
-            <Link href="/prisma" className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors">
+            <Link href="/prisma" className="flink text-sm">
               Prisma (14 Days)
             </Link>
-            <Link href="/playground?from=/" className="text-sm text-[#38bdf8] hover:text-[#38bdf8]/80 transition-colors flex items-center gap-1">
+            <Link href="/playground?from=/" className="flink text-sm flex items-center gap-1 text-[#38bdf8] hover:text-[#38bdf8]/80">
               <span>Playground</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30 font-mono">Live</span>
             </Link>
@@ -51,22 +51,22 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
             <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#7b8db0] uppercase">
               PROJECT
             </span>
-            <Link href="/sql/learn/day-01" className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors">
-              Curriculum Roadmap
-            </Link>
+            <a href="#about" className="flink text-sm">
+              About
+            </a>
             <a
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors"
+              className="flink text-sm"
             >
               GitHub Repository
             </a>
             <a
-              href="mailto:support@click-sql.dev"
-              className="text-sm text-[#8a9bbd] hover:text-[#e8eefb] transition-colors"
+              href="#feedback"
+              className="flink text-sm"
             >
-              Feedback & Issues
+              Feedback
             </a>
           </div>
         </div>

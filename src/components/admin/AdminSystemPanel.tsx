@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { adminGetSystemHealth, AdminSystemHealth } from '@/lib/admin-api';
 import { Server, Database, BookOpen, Activity, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { AdminSystemSkeleton } from '@/components/ui/Loading';
 
 export default function AdminSystemPanel() {
   const [health, setHealth] = useState<AdminSystemHealth | null>(null);
@@ -44,8 +45,8 @@ export default function AdminSystemPanel() {
 
   if (loading) {
     return (
-      <div className="py-16 text-center">
-        <p className="font-mono text-xs text-text-dim animate-pulse">Querying server diagnostics & database health…</p>
+      <div className="py-2">
+        <AdminSystemSkeleton />
       </div>
     );
   }

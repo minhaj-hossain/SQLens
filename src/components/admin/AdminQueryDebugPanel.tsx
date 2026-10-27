@@ -176,7 +176,7 @@ export default function AdminQueryDebugPanel() {
           <div className="flex items-center gap-2 font-mono text-xs text-text">
             <Terminal size={14} className="text-func" />
             <span className="font-semibold">Query Editor</span>
-            <span className="text-text-faint text-[11px] hidden sm:inline">· SQLens In-Browser Engine</span>
+            <span className="text-text-faint text-[11px] hidden sm:inline">· Click In-Browser Engine</span>
           </div>
 
           <div className="flex items-center gap-2">

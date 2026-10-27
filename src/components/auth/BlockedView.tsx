@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import Icon from '@/components/ui/Icon';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 /**
  * Full-page screen shown when the signed-in account has status = 'blocked'
@@ -16,9 +17,7 @@ export default function BlockedView({ onSignOut }: { onSignOut?: () => void }) {
       {/* Top bar */}
       <header className="border-b border-border-soft">
         <div className="max-w-5xl mx-auto h-14 px-4 sm:px-6 flex items-center justify-between">
-          <span className="font-display font-bold text-sm sm:text-lg tracking-tight text-text">
-            SQL<span className="text-func">ens</span>
-          </span>
+          <BrandLogo size="sm" variant="click" />
           {onSignOut && (
             <button
               onClick={onSignOut}

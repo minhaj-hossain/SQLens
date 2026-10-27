@@ -6,6 +6,7 @@ import { adminGetAnalytics, AdminAnalyticsData } from '@/lib/admin-api';
 // Task 0.2 — this panel renders SQL-track analytics (src/lib/admin/analytics.ts
 // aggregates ALL_MODULES only), so counts derive from the same source.
 import { ALL_MODULES } from '@/content/sql/curriculum-index';
+import { AdminAnalyticsSkeleton } from '@/components/ui/Loading';
 
 export default function AdminAnalyticsPanel() {
   const [data, setData] = useState<AdminAnalyticsData | null>(null);
@@ -27,8 +28,8 @@ export default function AdminAnalyticsPanel() {
 
   if (loading) {
     return (
-      <div className="py-16 text-center">
-        <p className="font-mono text-xs text-text-dim animate-pulse">Aggregating learner analytics across all {ALL_MODULES.length} modules…</p>
+      <div className="py-2">
+        <AdminAnalyticsSkeleton />
       </div>
     );
   }

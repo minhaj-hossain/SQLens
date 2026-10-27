@@ -19,6 +19,7 @@ import { formatExecutionTime } from '@/lib/format-execution-time';
 import { DataGrid } from './DataGrid';
 import { MonacoCodeEditor, MonacoCodeEditorHandle } from './MonacoCodeEditor';
 import { PLAYGROUND_DRAFT_KEY, PLAYGROUND_HISTORY_KEY } from '@/lib/progress/storage';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 const HISTORY_KEY = PLAYGROUND_HISTORY_KEY;
 const DRAFT_KEY = PLAYGROUND_DRAFT_KEY;
@@ -325,7 +326,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sqlens-query-${key}.csv`;
+    a.download = `click-query-${key}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }, []);
@@ -396,9 +397,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
       <header className="sticky top-0 z-40 bg-ink/95 border-b border-border-soft">
         <div className="max-w-6xl mx-auto h-14 px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-display font-bold text-sm text-text whitespace-nowrap">
-              SQL<span className="text-func">ens</span>
-            </span>
+            <BrandLogo size="sm" variant="click" />
             <span className="hidden sm:inline-block text-border font-mono text-xs">/</span>
             <span className="hidden sm:inline-block font-mono text-xs text-func uppercase tracking-wider">
               Playground
@@ -550,7 +549,7 @@ export default function Playground({ onClose }: PlaygroundProps) {
               <span className="font-mono text-[11px] text-text-dim">
                 {mode === 'prisma'
                   ? 'playground.ts — users + posts seed'
-                  : dbMode === 'lesson' ? 'sqlens.db — lesson dataset' : 'sqlens.db — scratch space'}
+                  : dbMode === 'lesson' ? 'click.db — lesson dataset' : 'click.db — scratch space'}
               </span>
               <button
                 onClick={clearEditor}

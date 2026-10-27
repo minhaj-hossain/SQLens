@@ -49,7 +49,7 @@ const BOOKSTORE_FULL_SETUP_SQL = [
 
 
 // =============================================================================
-// DAY 33 - CAPSTONE PROJECT: SQLens Bookstore (id: day-33, order 33)
+// DAY 33 - CAPSTONE PROJECT: Click Bookstore (id: day-33, order 33)
 // -----------------------------------------------------------------------------
 // The finale: the learner APPLIES every skill across the 31-day curriculum by
 // building a brand-new domain schema from scratch — the very flow the engine's
@@ -92,7 +92,7 @@ export const Day_33_MODULE: ModuleData = {
       shortDescription: 'Decide the entities, keys, and relationships before writing a line of SQL.',
       theory: {
         summary:
-          'SQLens is opening a bookstore. Before any CREATE TABLE, a good designer settles the entities and how they relate. The core fact is a SALE of a BOOK; a BOOK is written by an AUTHOR and published by a PUBLISHER. That gives four entities — and the relationships tell you which is a parent and which is a child, which column becomes a foreign key, and why the children must be seeded after their parents.',
+          'Click is opening a bookstore. Before any CREATE TABLE, a good designer settles the entities and how they relate. The core fact is a SALE of a BOOK; a BOOK is written by an AUTHOR and published by a PUBLISHER. That gives four entities — and the relationships tell you which is a parent and which is a child, which column becomes a foreign key, and why the children must be seeded after their parents.',
         introTable: {
           tableName: 'The relationship map',
           description: 'One-to-many relationships running from parents to children.',
@@ -863,7 +863,7 @@ export const Day_33_MODULE: ModuleData = {
   ],
   challenge: {
     id: 'day-33-homework',
-    title: 'Day 33 — SQLens Bookstore Capstone (Ending Activity)',
+    title: 'Day 33 — Click Bookstore Capstone (Ending Activity)',
     scenario:
       'The COO wants one clean, replayable migration that rebuilds the Bookstore from scratch: create the full 4-table schema, seed it, answer the leadership revenue dashboard, and keep the catalog fast. Prove the whole pipeline end to end.',
     databaseLifecycle: 'inherit',

@@ -1,4 +1,4 @@
-﻿import { ModuleData } from '../../../types/curriculum';
+import { ModuleData } from '../../../types/curriculum';
 
 // =============================================================================
 // DAY 12 — Date Functions  (id: day-12 · order 12)
@@ -44,7 +44,7 @@ export const Day_12_MODULE: ModuleData = {
         explanation: [
           '```sql\nSELECT order_date,\n       YEAR(order_date) AS yr,\n       MONTH(order_date) AS mon,\n       DAY(order_date) AS dy\nFROM orders;\n```',
           'Each function returns a **number**: YEAR → 2026, MONTH → 6, DAY → 10. Numbers sort and group the way numbers should — no string sorting surprises.',
-          'You will also meet the SQL-standard spelling: `EXTRACT(YEAR FROM order_date)` — same result, different syntax. SQLens accepts both.',
+          'You will also meet the SQL-standard spelling: `EXTRACT(YEAR FROM order_date)` — same result, different syntax. Click accepts both.',
           'MCQ trap: why not `WHERE order_date LIKE \'2026%\'`? Because LIKE is a **string** pattern — it happens to work here, but it breaks the moment the format shifts and hides the fact that you are comparing dates as text.',
         ],
         targetQuery: {
@@ -335,7 +335,7 @@ export const Day_12_MODULE: ModuleData = {
         },
         explanation: [
           '```sql\nSELECT COUNT(*) AS recent_orders\nFROM orders\nWHERE order_date >= CURDATE() - INTERVAL 30 DAY;\n```',
-          'Read the boundary right to left: CURDATE() is today (2026-08-24 in SQLens), INTERVAL 30 DAY steps back 30 days → 2026-07-25. Every order on or after that date passes `>=`.',
+          'Read the boundary right to left: CURDATE() is today (2026-08-24 in Click), INTERVAL 30 DAY steps back 30 days → 2026-07-25. Every order on or after that date passes `>=`.',
           'The magic: run this tomorrow and the boundary moves too. The query **never goes stale** — that is why production code always uses relative windows instead of pasted dates. (Change the unit to MONTH or YEAR for longer windows.)',
         ],
         targetQuery: {
