@@ -36,15 +36,15 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           {/* Pointer arrow polygon */}
           <path
             d="M10 7V21L14 17L17 24L19.5 23L16.5 16.3H22Z"
-            fill="var(--func, #38bdf8)"
-            stroke="var(--func, #38bdf8)"
+            fill="var(--func)"
+            stroke="var(--func)"
             strokeWidth="1.5"
             strokeLinejoin="round"
           />
           {/* Radiating click energy burst rays */}
           <path
             d="M10 3V1M6 4L4.5 2.5M6 8H4"
-            stroke="var(--func, #38bdf8)"
+            stroke="var(--func)"
             strokeWidth="2"
             strokeLinecap="round"
           />
@@ -52,7 +52,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
         {showText && (
           <span
-            className={`font-semibold tracking-[-0.02em] text-[#e8eefb] whitespace-nowrap ${clickDimensions.text}`}
+            className={`font-semibold tracking-[-0.02em] text-text whitespace-nowrap ${clickDimensions.text}`}
           >
             Click
           </span>

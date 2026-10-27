@@ -72,4 +72,9 @@ export function useTheme(): ThemeContextValue {
   return ctx;
 }
 
+export function useSafeTheme(): ThemeId {
+  const ctx = useContext(ThemeContext);
+  return ctx?.theme ?? DEFAULT_THEME;
+}
+
 export default ThemeProvider;

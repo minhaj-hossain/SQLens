@@ -6,6 +6,7 @@ import type { OnMount, Monaco } from '@monaco-editor/react';
 
 import { parsePrismaSchema } from '@/lib/prisma-engine/prisma-schema-parser';
 import { emitMonacoDtsFromAst } from '@/lib/prisma-engine/prisma-dts-emitter';
+import { useSafeTheme } from '@/components/providers/ThemeProvider';
 
 // Configure Monaco to load from local static assets (same-origin /monaco/vs)
 // Safe loader configuration without top-level loader.init execution
@@ -37,11 +38,11 @@ function InteractiveEditorFallback({
 
   return (
     <div
-      className="flex w-full h-full min-h-[160px] bg-[#0d0d12] text-[#f4f4f5] font-mono text-[13px] leading-[22px] overflow-hidden relative cursor-text select-text"
+      className="flex w-full h-full min-h-[160px] bg-ink text-text font-mono text-[13px] leading-[22px] overflow-hidden relative cursor-text select-text"
       style={{ minHeight }}
       aria-label="Editor loading preview"
     >
-      <div className="w-[46px] shrink-0 py-3 pr-2.5 text-right text-[#52525b] border-r border-[#18181c] select-none opacity-80 pointer-events-none">
+      <div className="w-[46px] shrink-0 py-3 pr-2.5 text-right text-text-faint border-r border-border-soft select-none opacity-80 pointer-events-none">
         {lines.map((_, i) => (
           <div key={i} className="leading-[22px]">
             {i + 1}
@@ -55,7 +56,7 @@ function InteractiveEditorFallback({
         placeholder={placeholder}
         readOnly={readOnly}
         spellCheck={false}
-        className="flex-1 py-3 px-4 font-mono text-[13px] leading-[22px] bg-transparent text-[#f4f4f5] resize-none outline-none border-none whitespace-pre overflow-auto focus:ring-0 selection:bg-[#f4c43033]"
+        className="flex-1 py-3 px-4 font-mono text-[13px] leading-[22px] bg-transparent text-text resize-none outline-none border-none whitespace-pre overflow-auto focus:ring-0 selection:bg-func/20"
       />
     </div>
   );
@@ -189,49 +190,51 @@ function setupMonaco(monaco: Monaco) {
   if (monacoGlobalConfigured) return;
   monacoGlobalConfigured = true;
 
-  // 1. Setup Theme: High-contrast Dark with vibrant, distinctive syntax tokens
-  const clickDarkTheme = {
+  // 1. Setup Themes: Separate palettes for Graphite and Sky
+  const syntaxRules = [
+    // Control flow & language keywords (await, return, const, let, function, async, export, import)
+    { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' },
+    { token: 'keyword.control', foreground: 'c084fc', fontStyle: 'bold' },
+    { token: 'keyword.operator', foreground: 'fb923c' },
+
+    // Types & Classes (User, Post, PrismaClient, String, Int, Boolean, DateTime)
+    { token: 'type', foreground: '38bdf8', fontStyle: 'bold' },
+    { token: 'type.identifier', foreground: '38bdf8', fontStyle: 'bold' },
+
+    // Functions & Methods (findMany, findUnique, create, update, delete, count)
+    { token: 'function', foreground: '60a5fa' },
+    { token: 'member', foreground: '7dd3fc' }, // Object property keys & clauses (where, select, include, data, orderBy)
+    { token: 'attribute.name', foreground: '7dd3fc' },
+
+    // Prisma Schema annotations (@id, @unique, @default, @relation, @@id, @@index)
+    { token: 'annotation', foreground: 'f4c430', fontStyle: 'bold' },
+    { token: 'annotation.block', foreground: 'fbbf24', fontStyle: 'bold' },
+
+    // Literals
+    { token: 'string', foreground: '4ade80' },
+    { token: 'string.escape', foreground: '86efac' },
+    { token: 'number', foreground: 'facc15' },
+    { token: 'number.float', foreground: 'facc15' },
+
+    // Comments & Docs
+    { token: 'comment', foreground: '64748b', fontStyle: 'italic' },
+    { token: 'comment.doc', foreground: '94a3b8', fontStyle: 'italic' },
+
+    // Delimiters & Operators
+    { token: 'delimiter', foreground: '94a3b8' },
+    { token: 'delimiter.bracket', foreground: '94a3b8' },
+    { token: 'operator', foreground: 'fb923c' },
+    { token: 'operator.optional', foreground: 'fb923c', fontStyle: 'bold' },
+    { token: 'operator.list', foreground: 'fb923c', fontStyle: 'bold' },
+
+    // Identifiers & standard variables
+    { token: 'identifier', foreground: 'f1f5f9' },
+  ];
+
+  const clickGraphiteTheme = {
     base: 'vs-dark' as const,
     inherit: true,
-    rules: [
-      // Control flow & language keywords (await, return, const, let, function, async, export, import)
-      { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' },
-      { token: 'keyword.control', foreground: 'c084fc', fontStyle: 'bold' },
-      { token: 'keyword.operator', foreground: 'fb923c' },
-
-      // Types & Classes (User, Post, PrismaClient, String, Int, Boolean, DateTime)
-      { token: 'type', foreground: '38bdf8', fontStyle: 'bold' },
-      { token: 'type.identifier', foreground: '38bdf8', fontStyle: 'bold' },
-
-      // Functions & Methods (findMany, findUnique, create, update, delete, count)
-      { token: 'function', foreground: '60a5fa' },
-      { token: 'member', foreground: '7dd3fc' }, // Object property keys & clauses (where, select, include, data, orderBy)
-      { token: 'attribute.name', foreground: '7dd3fc' },
-
-      // Prisma Schema annotations (@id, @unique, @default, @relation, @@id, @@index)
-      { token: 'annotation', foreground: 'f4c430', fontStyle: 'bold' },
-      { token: 'annotation.block', foreground: 'fbbf24', fontStyle: 'bold' },
-
-      // Literals
-      { token: 'string', foreground: '4ade80' },
-      { token: 'string.escape', foreground: '86efac' },
-      { token: 'number', foreground: 'facc15' },
-      { token: 'number.float', foreground: 'facc15' },
-
-      // Comments & Docs
-      { token: 'comment', foreground: '64748b', fontStyle: 'italic' },
-      { token: 'comment.doc', foreground: '94a3b8', fontStyle: 'italic' },
-
-      // Delimiters & Operators
-      { token: 'delimiter', foreground: '94a3b8' },
-      { token: 'delimiter.bracket', foreground: '94a3b8' },
-      { token: 'operator', foreground: 'fb923c' },
-      { token: 'operator.optional', foreground: 'fb923c', fontStyle: 'bold' },
-      { token: 'operator.list', foreground: 'fb923c', fontStyle: 'bold' },
-
-      // Identifiers & standard variables
-      { token: 'identifier', foreground: 'f1f5f9' },
-    ],
+    rules: syntaxRules,
     colors: {
       'editor.background': '#0d0d12',
       'editor.foreground': '#f1f5f9',
@@ -245,8 +248,29 @@ function setupMonaco(monaco: Monaco) {
       'editorBracketMatch.border': '#f4c43060',
     },
   };
-  monaco.editor.defineTheme('click-dark', clickDarkTheme);
-  monaco.editor.defineTheme('sqlens-dark', clickDarkTheme);
+
+  const clickSkyTheme = {
+    base: 'vs-dark' as const,
+    inherit: true,
+    rules: syntaxRules,
+    colors: {
+      'editor.background': '#0a101d',
+      'editor.foreground': '#f0f6fc',
+      'editorCursor.foreground': '#38bdf8',
+      'editor.lineHighlightBackground': '#16203260',
+      'editorLineNumber.foreground': '#64748b',
+      'editorLineNumber.activeForeground': '#38bdf8',
+      'editor.selectionBackground': '#38bdf826',
+      'editor.inactiveSelectionBackground': '#38bdf814',
+      'editorBracketMatch.background': '#38bdf820',
+      'editorBracketMatch.border': '#38bdf860',
+    },
+  };
+
+  monaco.editor.defineTheme('click-graphite', clickGraphiteTheme);
+  monaco.editor.defineTheme('click-sky', clickSkyTheme);
+  monaco.editor.defineTheme('click-dark', clickGraphiteTheme);
+  monaco.editor.defineTheme('sqlens-dark', clickGraphiteTheme);
 
   // 2. Setup TypeScript Compiler Options & Declarations
   const ts = monaco.languages.typescript.typescriptDefaults;
@@ -540,6 +564,15 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       ]);
     }, [error, errorPosition]);
 
+    const activeTheme = useSafeTheme();
+    const monacoThemeName = activeTheme === 'sky' ? 'click-sky' : 'click-graphite';
+
+    useEffect(() => {
+      if (monacoRef.current) {
+        monacoRef.current.editor.setTheme(monacoThemeName);
+      }
+    }, [monacoThemeName]);
+
     const handleMount: OnMount = (editor, monaco) => {
       editorInstanceRef.current = editor;
       monacoRef.current = monaco;
@@ -547,7 +580,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       if (language === 'typescript') {
         updateMonacoPrismaTypes(monaco, schemaSource);
       }
-      monaco.editor.setTheme('click-dark');
+      monaco.editor.setTheme(monacoThemeName);
 
       // Command + Enter / Ctrl + Enter to run
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
@@ -610,7 +643,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
           value={value}
           onChange={(val) => onChange(val ?? '')}
           onMount={handleMount}
-          theme="click-dark"
+          theme={monacoThemeName}
           options={{
             readOnly,
             fontSize: 13,

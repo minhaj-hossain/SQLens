@@ -6,7 +6,7 @@ import { PracticeSkeleton } from '@/components/learn/PracticeSkeleton';
 
 export interface ClickSpinnerProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
-  variant?: 'sky' | 'white' | 'muted';
+  variant?: 'func' | 'sky' | 'white' | 'muted';
   className?: string;
   label?: string;
 }
@@ -17,7 +17,7 @@ export interface ClickSpinnerProps {
  */
 export const ClickSpinner: React.FC<ClickSpinnerProps> = ({
   size = 'md',
-  variant = 'sky',
+  variant = 'func',
   className = '',
   label = 'Loading',
 }) => {
@@ -29,6 +29,7 @@ export const ClickSpinner: React.FC<ClickSpinnerProps> = ({
   };
 
   const borderVariant = {
+    func: 'border-border-soft border-t-func',
     sky: 'border-[#1b2a47] border-t-[#38bdf8]',
     white: 'border-white/20 border-t-white',
     muted: 'border-[#1e293b] border-t-[#8a9bbd]',
@@ -51,7 +52,7 @@ export interface ClickPageLoaderProps {
 
 /**
  * ClickPageLoader — Full-page branded loading experience for top-level suspense.
- * Designed with dark blueprint tokens, ambient radial glow, and shimmer progress line.
+ * Adheres strictly to the active theme tokens (Graphite / Sky).
  */
 export const ClickPageLoader: React.FC<ClickPageLoaderProps> = ({
   message = 'Loading Click environment…',
@@ -60,7 +61,7 @@ export const ClickPageLoader: React.FC<ClickPageLoaderProps> = ({
 }) => {
   return (
     <main
-      className={`w-full flex items-center justify-center bg-[#060b16] text-[#e8eefb] select-none ${
+      className={`w-full flex items-center justify-center bg-ink text-text select-none ${
         fullscreen ? 'min-h-screen' : 'py-20'
       }`}
       aria-busy="true"
@@ -69,24 +70,24 @@ export const ClickPageLoader: React.FC<ClickPageLoaderProps> = ({
       <div className="relative flex flex-col items-center gap-5 px-6 text-center max-w-sm">
         {/* Soft radial backdrop aura */}
         <div
-          className="absolute -top-10 w-40 h-40 bg-[#38bdf8]/10 rounded-full blur-2xl pointer-events-none"
+          className="absolute -top-10 w-40 h-40 bg-func/10 rounded-full blur-2xl pointer-events-none"
           aria-hidden="true"
         />
 
         {/* Brand mark */}
-        <div className="relative flex items-center justify-center p-3.5 rounded-2xl bg-[#0a1222] border border-[#1b2a47] shadow-[0_0_24px_-4px_rgba(56,189,248,0.25)]">
+        <div className="relative flex items-center justify-center p-3.5 rounded-2xl bg-surface border border-border shadow-[0_0_24px_-4px_var(--accent-dim)]">
           <BrandLogo size="lg" showText={false} variant="click" />
         </div>
 
         {/* Text and dynamic progress bar */}
         <div className="flex flex-col items-center gap-1.5">
-          <h2 className="text-sm font-semibold tracking-wide text-[#e8eefb] font-display">
+          <h2 className="text-sm font-semibold tracking-wide text-text font-display">
             {message}
           </h2>
-          <p className="text-xs text-[#8a9bbd] font-mono">{subMessage}</p>
+          <p className="text-xs text-text-dim font-mono">{subMessage}</p>
 
-          <div className="mt-3 w-36 h-1 bg-[#121d33] rounded-full overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent animate-[shimmer_1.5s_infinite] -translate-x-full" />
+          <div className="mt-3 w-36 h-1 bg-surface-2 rounded-full overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-func to-transparent animate-[shimmer_1.5s_infinite] -translate-x-full" />
           </div>
         </div>
       </div>

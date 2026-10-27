@@ -37,7 +37,7 @@ export function ThemeToggle({ round = false, className = '' }: ThemeToggleProps)
         onClick={toggle}
         title={`Theme: ${THEME_LABEL[theme]} — click for ${THEME_LABEL[nextTheme]}`}
         aria-label={`Color theme: ${THEME_LABEL[theme]}. Switch to ${THEME_LABEL[nextTheme]}`}
-        className={`w-9 h-9 rounded-full border border-[#1b2a47] bg-[#0d1526] text-[#8a9bbd] hover:text-[#e8eefb] hover:border-[#38bdf8] flex items-center justify-center cursor-pointer transition-colors p-0 ${className}`}
+        className={`w-9 h-9 rounded-full border border-border bg-surface-2 text-text-dim hover:text-text hover:border-func flex items-center justify-center cursor-pointer transition-colors p-0 ${className}`}
       >
         <svg
           width="16"

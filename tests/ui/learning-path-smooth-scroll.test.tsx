@@ -77,8 +77,8 @@ vi.mock('../../src/components/learn/use-track', () => ({
   },
 }));
 
-describe('LearningPathView Smooth Scroll & Track Softness', () => {
-  it('renders SQL track with warm gold accents, scroll-mt-48 leaf anchors, and target rings', () => {
+describe('LearningPathView Smooth Scroll & Strict Theme Separation', () => {
+  it('renders SQL track with semantic theme tokens, scroll-mt-48 leaf anchors, and zero hardcoded color leaks', () => {
     currentMockTrack = 'sql';
     const userState = initialStateForTrack('sql');
 
@@ -100,18 +100,20 @@ describe('LearningPathView Smooth Scroll & Track Softness', () => {
     expect(html).toContain('id="stage-card-day-01"');
     expect(html).toContain('id="leaf-day-01"');
 
-    // SQL warm gold accents (#f4c430)
-    expect(html).toContain('bg-[#f4c430]');
-    expect(html).toContain('target:ring-[#f4c430]/60');
-    expect(html).toContain('border-[#f4c430]/35');
-    expect(html).toContain('shadow-[0_0_28px_rgba(244,196,48,0.08)]');
+    // Strict theme tokens for pure palette separation
+    expect(html).toContain('bg-func');
+    expect(html).toContain('text-ink');
+    expect(html).toContain('border-func');
+    expect(html).toContain('target:ring-(--accent-line)');
+    expect(html).toContain('border-func/35');
+    expect(html).toContain('shadow-[0_0_28px_var(--accent-dim)]');
 
-    // Should NOT contain Prisma sky blue accent (#38bdf8) in SQL track
-    expect(html).not.toContain('bg-[#38bdf8]');
-    expect(html).not.toContain('target:ring-[#38bdf8]/60');
+    // Neither theme palette colors should be hardcoded in the markup
+    expect(html).not.toContain('#f4c430');
+    expect(html).not.toContain('#38bdf8');
   });
 
-  it('renders Prisma track with electric sky accents, scroll-mt-48 leaf anchors, and target rings', () => {
+  it('renders Prisma track with semantic theme tokens, scroll-mt-48 leaf anchors, and zero hardcoded color leaks', () => {
     currentMockTrack = 'prisma';
     const userState = initialStateForTrack('prisma');
 
@@ -133,14 +135,16 @@ describe('LearningPathView Smooth Scroll & Track Softness', () => {
     expect(html).toContain('id="stage-card-prisma-01"');
     expect(html).toContain('id="leaf-prisma-01"');
 
-    // Prisma electric sky accents (#38bdf8)
-    expect(html).toContain('bg-[#38bdf8]');
-    expect(html).toContain('target:ring-[#38bdf8]/60');
-    expect(html).toContain('border-[#38bdf8]/35');
-    expect(html).toContain('shadow-[0_0_28px_rgba(56,189,248,0.08)]');
+    // Strict theme tokens for pure palette separation
+    expect(html).toContain('bg-func');
+    expect(html).toContain('text-ink');
+    expect(html).toContain('border-func');
+    expect(html).toContain('target:ring-(--accent-line)');
+    expect(html).toContain('border-func/35');
+    expect(html).toContain('shadow-[0_0_28px_var(--accent-dim)]');
 
-    // Should NOT contain SQL gold accent (#f4c430) in Prisma track
-    expect(html).not.toContain('bg-[#f4c430]');
-    expect(html).not.toContain('target:ring-[#f4c430]/60');
+    // Neither theme palette colors should be hardcoded in the markup
+    expect(html).not.toContain('#f4c430');
+    expect(html).not.toContain('#38bdf8');
   });
 });
