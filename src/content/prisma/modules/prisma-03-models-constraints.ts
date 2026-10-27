@@ -28,7 +28,7 @@ export const Prisma_03_MODULE: ModuleData = {
   completionLearnings: [
     'Distinguish between findUnique (unique indexed fields) and findFirst (arbitrary searches)',
     'Use comparison and collection operators (contains, in, gt, lt) inside where',
-    'Compose multi-clause queries using boolean operators (AND, OR, NOT)',
+    'Combine multiple criteria and exclusion filters using OR, NOT, and implicit AND',
     'Observe how Prisma transforms complex JavaScript query objects into clean parameterized SQL',
   ],
   concepts: [

@@ -232,6 +232,20 @@ export interface AdminSystemHealth {
     conceptsCount: number;
     practiceTasksCount: number;
     milestonesCount: number;
+    tracks?: {
+      sql: {
+        modulesCount: number;
+        conceptsCount: number;
+        practiceTasksCount: number;
+        milestonesCount: number;
+      };
+      prisma: {
+        modulesCount: number;
+        conceptsCount: number;
+        practiceTasksCount: number;
+        milestonesCount: number;
+      };
+    };
     status: string;
   };
 }

@@ -169,6 +169,58 @@ function whereFieldsOf(code: string): string[] | undefined {
   return found.length > 0 ? found : undefined;
 }
 
+const STOP_SHORT_MARKERS = [
+  '/*',
+  '//',
+  '...',
+  'TODO',
+  'your',
+  'Your',
+  'fill',
+  'replace',
+  'specify',
+  'set the',
+  'add the',
+];
+
+export function sanitizePrismaTier1(text: string): string {
+  return text.replace(/`/g, '');
+}
+
+export function sanitizePrismaTier3(
+  text: string,
+  solutionCode?: string,
+  snippets?: string[],
+): string {
+  let result = text;
+  const clean = (s: string) => s.replace(/\s+/g, ' ').trim();
+  const cSol = solutionCode ? clean(solutionCode) : '';
+
+  if (cSol && (clean(result) === cSol || clean(result).includes(cSol))) {
+    result = result.replace(/"npx prisma ([^"]+)"/, (_, args) => {
+      const parts = args.split(' ');
+      if (parts.length > 2) {
+        return `"npx prisma ${parts.slice(0, 2).join(' ')} ..."`;
+      }
+      return `"npx prisma ..."`;
+    });
+  }
+
+  if (snippets) {
+    for (const snip of snippets) {
+      if (clean(result) === clean(snip)) {
+        result = `Specify your snippet: ${result} // ...`;
+      }
+    }
+  }
+
+  if (!STOP_SHORT_MARKERS.some((m) => result.includes(m))) {
+    result = `Specify your implementation: ${result}`;
+  }
+
+  return result;
+}
+
 /**
  * Read-probe task: where+select on `users`; SQL lens is a single-table
  * SELECT. `initialSql` is a scaffold only, so the starter always fails.
@@ -216,9 +268,9 @@ export function prismaReadTask(t: PrismaReadTaskOptions): PracticeTask {
     solutionExplanation: t.why,
     hints: t.hintLadder
       ? [
-          { level: 1, text: t.hintLadder[0] },
+          { level: 1, text: sanitizePrismaTier1(t.hintLadder[0]) },
           { level: 2, text: t.hintLadder[1] },
-          { level: 3, text: t.hintLadder[2] },
+          { level: 3, text: sanitizePrismaTier3(t.hintLadder[2], t.code1, t.snippets) },
         ]
       : (t.hints ?? (t.hint ? [{ level: 1, text: t.hint }] : [])),
     validation: {
@@ -314,9 +366,9 @@ export function prismaSnippetTask(t: PrismaSnippetTaskOptions): PracticeTask {
     solutionExplanation: t.why,
     hints: t.hintLadder
       ? [
-          { level: 1, text: t.hintLadder[0] },
+          { level: 1, text: sanitizePrismaTier1(t.hintLadder[0]) },
           { level: 2, text: t.hintLadder[1] },
-          { level: 3, text: t.hintLadder[2] },
+          { level: 3, text: sanitizePrismaTier3(t.hintLadder[2], t.code1, t.need) },
         ]
       : (t.hints ?? (t.hint ? [{ level: 1, text: t.hint }] : [])),
     validation: {

@@ -29,7 +29,7 @@ export const Prisma_04_MODULE: ModuleData = {
     'Use select to restrict returned columns and narrow TypeScript types',
     'Sort results deterministically using orderBy (asc and desc)',
     'Implement offset pagination using take (LIMIT) and skip (OFFSET)',
-    'Understand why reliable pagination strictly requires deterministic sorting',
+    'Combine take, skip, and orderBy to navigate consecutive result pages without drift',
   ],
   concepts: [
     {

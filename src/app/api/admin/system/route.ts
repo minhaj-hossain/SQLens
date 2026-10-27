@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/authorize';
 import { db } from '@/lib/auth';
 import { ALL_MODULES } from '@/content/sql/curriculum-index';
+import { PRISMA_MODULES } from '@/content/prisma/prisma-curriculum-index';
 import { ROADMAP_MILESTONES } from '@/config/roadmap';
+import { PRISMA_ROADMAP_MILESTONES } from '@/content/prisma/prisma-roadmap';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,12 +29,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Curriculum statistics
-    const totalModules = ALL_MODULES.length;
-    const totalConcepts = ALL_MODULES.reduce(
+    const sqlModulesCount = ALL_MODULES.length;
+    const sqlConceptsCount = ALL_MODULES.reduce(
       (sum, m) => sum + (m.concepts?.length || 0),
       0,
     );
-    const totalPracticeTasks = ALL_MODULES.reduce(
+    const sqlPracticeTasksCount = ALL_MODULES.reduce(
       (sum, m) =>
         sum +
         (m.concepts?.reduce(
@@ -41,6 +43,27 @@ export async function GET(req: NextRequest) {
         ) || 0),
       0,
     );
+
+    const prismaModulesCount = PRISMA_MODULES.length;
+    const prismaConceptsCount = PRISMA_MODULES.reduce(
+      (sum, m) => sum + (m.concepts?.length || 0),
+      0,
+    );
+    const prismaPracticeTasksCount = PRISMA_MODULES.reduce(
+      (sum, m) =>
+        sum +
+        (m.concepts?.reduce(
+          (cSum, c) => cSum + (c.tasks?.length || 0),
+          0,
+        ) || 0) +
+        (m.challenge?.tasks?.length || 0),
+      0,
+    );
+
+    const totalModules = sqlModulesCount + prismaModulesCount;
+    const totalConcepts = sqlConceptsCount + prismaConceptsCount;
+    const totalPracticeTasks = sqlPracticeTasksCount + prismaPracticeTasksCount;
+    const totalMilestones = ROADMAP_MILESTONES.length + PRISMA_ROADMAP_MILESTONES.length;
 
     return NextResponse.json({
       system: {
@@ -64,7 +87,21 @@ export async function GET(req: NextRequest) {
           modulesCount: totalModules,
           conceptsCount: totalConcepts,
           practiceTasksCount: totalPracticeTasks,
-          milestonesCount: ROADMAP_MILESTONES.length,
+          milestonesCount: totalMilestones,
+          tracks: {
+            sql: {
+              modulesCount: sqlModulesCount,
+              conceptsCount: sqlConceptsCount,
+              practiceTasksCount: sqlPracticeTasksCount,
+              milestonesCount: ROADMAP_MILESTONES.length,
+            },
+            prisma: {
+              modulesCount: prismaModulesCount,
+              conceptsCount: prismaConceptsCount,
+              practiceTasksCount: prismaPracticeTasksCount,
+              milestonesCount: PRISMA_ROADMAP_MILESTONES.length,
+            },
+          },
           status: 'verified',
         },
       },
