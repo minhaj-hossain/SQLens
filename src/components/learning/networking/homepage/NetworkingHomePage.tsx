@@ -41,6 +41,12 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-06': 'Connect to an ISP provider router and external web server. Master 0.0.0.0/0 default routes and longest prefix matching.',
   'net-07': 'How devices find hardware MAC addresses using Address Resolution Protocol (ARP), broadcast requests, and the ARP cache.',
   'net-08': 'Discover how switches map physical ports to MAC hardware addresses, flood unknown unicasts, and selectively forward frames.',
+  'net-09': 'Explore broadcast domains, broadcast storms, and how routers isolate broadcast traffic at Layer 3 boundaries.',
+  'net-10': 'Segment a single physical switch into isolated logical networks with VLANs and access ports.',
+  'net-11': 'Carry multiple VLANs across a single cable using 802.1Q tagged trunks and understand the native VLAN.',
+  'net-12': 'Route traffic between isolated VLANs using Router-on-a-Stick and 802.1Q sub-interfaces.',
+  'net-13': 'Break Layer 2 loops and prevent broadcast storms using Spanning Tree Protocol (IEEE 802.1D) and BPDUs.',
+  'net-14': 'Deconstruct the IPv4 TTL field and ICMP (RFC 792) to understand how ping, traceroute, and PMTUD operate.',
 };
 
 export const NetworkingHomePage: React.FC = () => {

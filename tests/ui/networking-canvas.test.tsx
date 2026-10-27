@@ -704,5 +704,125 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlDay12).toContain('translate(560, 155)');
     expect(htmlDay12).toContain('translate(615, 230)');
   });
+
+  it('Day 14 renders 4-hop multi-router topology and progressive reveals for ICMP, TTL, Traceroute, and PMTUD', () => {
+    // Step 0: Initial ping exchange
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('ICMP &amp; TTL · LAYER 3 DIAGNOSTICS &amp; PATH DISCOVERY');
+    expect(htmlStep0).toContain('4-HOP MULTI-ROUTER TRANSIT PATH');
+    expect(htmlStep0).toContain('PC1');
+    expect(htmlStep0).toContain('192.168.1.10/24');
+    expect(htmlStep0).toContain('ROUTER R1 (GATEWAY)');
+    expect(htmlStep0).toContain('ROUTER R2 (TRANSIT)');
+    expect(htmlStep0).toContain('ROUTER ISP (UPSTREAM)');
+    expect(htmlStep0).toContain('Web Server');
+    expect(htmlStep0).toContain('198.51.100.10/24');
+    expect(htmlStep0).toContain('ICMP Type 8 (Echo Request) →');
+    expect(htmlStep0).toContain('← ICMP Type 0 (Echo Reply)');
+    expect(htmlStep0).toContain('ICMP PROTOCOL 1 (RFC 792) · ECHO');
+    expect(htmlStep0).toContain('ROUND-TRIP DIAGNOSTIC PACKET FLOW');
+
+    // Step 1: TTL decrementing at each hop
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('TTL = 64 (PC1)');
+    expect(htmlStep1).toContain('TTL: 64 → 63 (-1 hop)');
+    expect(htmlStep1).toContain('TTL: 63 → 62 (-1 hop)');
+    expect(htmlStep1).toContain('Server gets TTL=61');
+    expect(htmlStep1).toContain('IPv4 HEADER INSPECTOR (SHOW PACKET HEADER)');
+
+    // Step 2: TTL=0 dropped and ICMP Type 11 returned
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('✕ DROPPED AT R1: TTL EXPIRED (0)');
+    expect(htmlStep2).toContain('← ICMP Type 11 (Time Exceeded) from 192.168.1.1');
+    expect(htmlStep2).toContain('ROUTER TTL EXPIRATION BEHAVIOR');
+    expect(htmlStep2).toContain('ICMP TYPE 11 ERROR DIAGNOSTIC');
+
+    // Step 3: Traceroute algorithm with 4 sequential hops
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('Hop 1 · 192.168.1.1 (1.2ms)');
+    expect(htmlStep3).toContain('Hop 2 · 10.0.0.2 (4.8ms)');
+    expect(htmlStep3).toContain('Hop 3 · 203.0.113.2 (11.5ms)');
+    expect(htmlStep3).toContain('Hop 4 · 198.51.100.10 (18.2ms)');
+    expect(htmlStep3).toContain('THE TRACEROUTE ALGORITHM');
+    expect(htmlStep3).toContain('TRACEROUTE HOP DISCOVERY TABLE');
+    expect(htmlStep3).toContain('PATH TELEMETRY METRICS');
+
+    // Step 4: PMTUD and ICMP Type 3 Code 4 bottleneck
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('⚠ BOTTLENECK: MTU 1400 WAN LINK');
+    expect(htmlStep4).toContain('✕ DROPPED: 1500B EXCEEDS MTU 1400 (DF=1)');
+    expect(htmlStep4).toContain('← ICMP Type 3 Code 4 (Next-Hop MTU: 1400)');
+    expect(htmlStep4).toContain('PATH MTU DISCOVERY (RFC 1191)');
+    expect(htmlStep4).toContain('THE PMTUD BLACK HOLE DANGER');
+    expect(htmlStep4).toContain('PATH MTU SEGMENT ANALYSIS');
+
+    // Step 5: Recap
+    const htmlStep5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep5).toContain('ICMP MESSAGE TYPE CHEAT SHEET');
+    expect(htmlStep5).toContain('THE 4 CORE RULES OF ICMP &amp; TTL');
+    expect(htmlStep5).toContain('LAYER 3 PROTOCOL METRICS');
+  });
+
+  it('ensures Day 14 canvas coordinates strictly prevent component overlaps', () => {
+    const html = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    // Link labels cleared 60px above cables (y=190 vs cable y=250)
+    expect(html).toContain('translate(269, 190)');
+    expect(html).toContain('translate(613, 190)');
+    expect(html).toContain('translate(943, 190)');
+    expect(html).toContain('translate(1243, 190)');
+
+    // Hop discovery tags positioned above routers at y=145
+    expect(html).toContain('translate(443, 145)');
+    expect(html).toContain('translate(783, 145)');
+    expect(html).toContain('translate(1103, 145)');
+    expect(html).toContain('translate(1364, 145)');
+
+    // Bottom diagnostic HUD cards strictly clear the 94px device envelope (y=360 vs device y=220..314)
+    expect(html).toContain('translate(70, 360)');
+    expect(html).toContain('translate(380, 360)');
+    expect(html).toContain('translate(1040, 360)');
+  });
 });
 

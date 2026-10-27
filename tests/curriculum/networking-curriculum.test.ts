@@ -13,6 +13,7 @@ import {
   NET_11_MODULE,
   NET_12_MODULE,
   NET_13_MODULE,
+  NET_14_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -363,6 +364,49 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step6.title).toBe('The four rules of Spanning Tree Protocol');
   });
 
+  it('Day 14 module has exact title, 6 steps, and authentic ICMP/TTL commands', () => {
+    const mod = getNetworkingModule('net-14');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-14');
+    expect(mod?.title).toBe('Day 14 · ICMP and TTL: How Ping Works');
+    expect(mod?.steps).toHaveLength(6);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('ICMP: The network diagnostic companion');
+    expect(step1.cmd).toBe('ping 198.51.100.10 -c 1');
+    expect(step1.what).toContain('Protocol number 1');
+    expect(step1.what).toContain('Type 8 (Echo Request)');
+    expect(step1.what).toContain('Type 0 (Echo Reply)');
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('show packet header');
+    expect(step2.title).toBe('The loop killer: IPv4 Time-To-Live (TTL)');
+    expect(step2.what).toContain('8-bit Time-To-Live (TTL) field');
+    expect(step2.what).toContain('Router Invariant');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('ping 198.51.100.10 -t 1');
+    expect(step3.title).toBe('ICMP Type 11: Time Exceeded in Transit');
+    expect(step3.what).toContain('ICMP Type 11 Code 0');
+    expect(step3.what).toContain('Time to Live Exceeded in Transit');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('traceroute 198.51.100.10');
+    expect(step4.title).toBe('Mapping the Internet: The Traceroute Algorithm');
+    expect(step4.what).toContain('Van Jacobson');
+    expect(step4.what).toContain('Traceroute Algorithm');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBe('ping 198.51.100.10 -s 1472 -d');
+    expect(step5.title).toBe('ICMP Type 3 Code 4: Path MTU Discovery');
+    expect(step5.what).toContain('Path MTU Discovery');
+    expect(step5.what).toContain('Fragmentation Needed and DF Set');
+
+    const step6 = mod!.steps[5];
+    expect(step6.cmd).toBeNull();
+    expect(step6.title).toBe('The four rules of ICMP and TTL');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -384,6 +428,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(11)?.id).toBe('net-11');
     expect(getNetworkingModule(12)?.id).toBe('net-12');
     expect(getNetworkingModule(13)?.id).toBe('net-13');
+    expect(getNetworkingModule(14)?.id).toBe('net-14');
   });
 });
 

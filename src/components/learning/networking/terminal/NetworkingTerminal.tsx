@@ -139,6 +139,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: ping 192.168.20.20, show router interfaces, create subif eth0.10 10 192.168.10.1/24, create subif eth0.20 20 192.168.20.1/24, cls, clear, help';
       } else if (dayId === 'net-13') {
         helpMsg = 'Commands: test broadcast loop, show mac-flapping, enable stp, show spanning-tree, show spanning-tree ports, cls, clear, help';
+      } else if (dayId === 'net-14') {
+        helpMsg = 'Commands: ping 198.51.100.10 -c 1, show packet header, ping 198.51.100.10 -t 1, traceroute 198.51.100.10, ping 198.51.100.10 -s 1472 -d, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -639,6 +641,48 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
       ) {
         out =
           'Switch Port Spanning Tree Roles & States\n----------------------------------------------------\nSwitch  Port    Role        State       Cost  Designated Bridge\nSW1     Port 1  Designated  FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW1     Port 2  Designated  FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW2     Port 1  Root        FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW2     Port 2  Designated  FORWARDING  4     32768.AA:BB:CC:00:00:02\nSW3     Port 1  Root        FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW3     Port 2  Alternate   BLOCKING    4     32768.AA:BB:CC:00:00:02\n----------------------------------------------------\nLoop-Free Topology Confirmed: SW3 Port 2 is BLOCKING (Amber).';
+        isSuccess = true;
+      }
+    }
+
+    // Day 14 dynamic logic
+    if (dayId === 'net-14') {
+      if (
+        v === 'ping 198.51.100.10 -c 1' ||
+        v === 'ping 198.51.100.10 -c1' ||
+        v === 'ping 198.51.100.10'
+      ) {
+        out = staticResponses['ping 198.51.100.10 -c 1'];
+        isSuccess = true;
+      } else if (
+        v === 'show packet header' ||
+        v === 'show header' ||
+        v === 'show packet' ||
+        v === 'show ip header' ||
+        v === 'show ip packet'
+      ) {
+        out = staticResponses['show packet header'];
+        isSuccess = true;
+      } else if (
+        v === 'ping 198.51.100.10 -t 1' ||
+        v === 'ping 198.51.100.10 -t1' ||
+        v === 'ping 198.51.100.10 -ttl 1'
+      ) {
+        out = staticResponses['ping 198.51.100.10 -t 1'];
+        isSuccess = true;
+      } else if (
+        v === 'traceroute 198.51.100.10' ||
+        v === 'tracert 198.51.100.10' ||
+        v === 'traceroute'
+      ) {
+        out = staticResponses['traceroute 198.51.100.10'];
+        isSuccess = true;
+      } else if (
+        v === 'ping 198.51.100.10 -s 1472 -d' ||
+        v === 'ping 198.51.100.10 -s 1472' ||
+        v === 'ping 198.51.100.10 -d'
+      ) {
+        out = staticResponses['ping 198.51.100.10 -s 1472 -d'];
         isSuccess = true;
       }
     }

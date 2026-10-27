@@ -313,6 +313,48 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'show stp brief')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-14' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'ping 198.51.100.10 -c 1' ||
+          normalizedCmd === 'ping 198.51.100.10 -c1' ||
+          normalizedCmd === 'ping 198.51.100.10')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-14' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show packet header' ||
+          normalizedCmd === 'show header' ||
+          normalizedCmd === 'show packet' ||
+          normalizedCmd === 'show ip header' ||
+          normalizedCmd === 'show ip packet')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-14' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'ping 198.51.100.10 -t 1' ||
+          normalizedCmd === 'ping 198.51.100.10 -t1' ||
+          normalizedCmd === 'ping 198.51.100.10 -ttl 1')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-14' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'traceroute 198.51.100.10' ||
+          normalizedCmd === 'tracert 198.51.100.10' ||
+          normalizedCmd === 'traceroute')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-14' &&
+        activeStepIndex === 4 &&
+        (normalizedCmd === 'ping 198.51.100.10 -s 1472 -d' ||
+          normalizedCmd === 'ping 198.51.100.10 -s 1472' ||
+          normalizedCmd === 'ping 198.51.100.10 -d')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {
