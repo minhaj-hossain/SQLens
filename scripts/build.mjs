@@ -20,6 +20,11 @@ process.env.NODE_OPTIONS = existing.includes('--max-old-space-size')
   ? existing
   : `${existing} ${heapFlag}`.trim();
 
+process.env.BUILDING = 'true';
+if (!process.env.BETTER_AUTH_SECRET) {
+  process.env.BETTER_AUTH_SECRET = 'build-time-secret-placeholder-minimum-32-chars-long';
+}
+
 console.log(`[build] NODE_OPTIONS=${process.env.NODE_OPTIONS}`);
 
 // Milestone Monaco: Ensure Monaco assets are synced to public/monaco/vs before build
@@ -27,6 +32,7 @@ const copyMonaco = spawnSync('node', ['scripts/copy-monaco.mjs'], {
   cwd: rootDir,
   stdio: 'inherit',
   shell: process.platform === 'win32',
+  env: process.env,
 });
 if (copyMonaco.status !== 0) {
   console.error('[build] Failed to sync Monaco assets');
@@ -37,5 +43,6 @@ const child = spawnSync('npx', ['next', 'build'], {
   cwd: rootDir,
   stdio: 'inherit',
   shell: process.platform === 'win32',
+  env: process.env,
 });
 process.exit(child.status ?? 1);
