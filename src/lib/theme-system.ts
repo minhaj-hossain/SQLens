@@ -1,11 +1,11 @@
 /**
- * theme-system — the SQLens theme registry.
+ * theme-system — the Click theme registry.
  *
  * Two palettes exist, both defined in `src/app/globals.css` as CSS custom
  * properties (Tailwind v4 `@theme` mirrors included):
  *
  *   graphite (default) — monochrome grays + gold #f4c430 accent
- *   sky                — the ORIGINAL SQLens palette restored from git
+ *   sky                — the ORIGINAL Click palette restored from git
  *                        history (commit 902874c): dark navy surfaces,
  *                        sky-blue #38BDF8 accent, cyan SQL keywords,
  *                        gray identifiers/strings/numbers/comments.

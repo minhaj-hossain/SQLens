@@ -1,5 +1,5 @@
 /**
- * SQLens Simulated "Today"
+ * Click Simulated "Today"
  * ─────────────────────────────────────────────────────────────────────────────
  * The SQL engine anchors all date-sensitive functions (CURDATE(), and future
  * date-function work) to this fixed date instead of the real system clock.

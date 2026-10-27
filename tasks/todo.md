@@ -21,3 +21,15 @@
 ## Phase 4: Production Verification
 - [x] Task 4.1: Enforce strict TypeScript in next.config.ts (`ignoreBuildErrors: false`)
 - [x] Task 4.2: Run `npm run audit:all` and `npm run build`
+
+---
+
+## Networking Track — Stage 4: Switching Design
+### Day 10 · VLANs: Separating Networks on One Switch (`net-10`)
+- [ ] Task 10.1: Author `src/content/networking/modules/net-10.ts` with human-crafted, zero-metaphor steps and CLI static responses
+- [ ] Task 10.2: Register `NET_10_MODULE` in `src/content/networking/index.ts`
+- [ ] Task 10.3: Wire dynamic aliases and help commands in `NetworkingTerminal.tsx` and `NetworkingWorkspace.tsx`
+- [ ] Task 10.4: Implement split-VLAN topology and step-by-step gradual reveal in `NetworkingCanvas.tsx` (`1080x520`)
+- [ ] Task 10.5: Add unit tests in `tests/curriculum/networking-curriculum.test.ts` and UI tests in `tests/ui/networking-canvas.test.tsx`
+- [ ] Task 10.6: Run full Vitest regression and TypeScript check (`tsc --noEmit`)
+

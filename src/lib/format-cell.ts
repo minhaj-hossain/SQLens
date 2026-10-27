@@ -1,5 +1,5 @@
 /**
- * Type-aware cell formatting for SQLens data grids.
+ * Type-aware cell formatting for Click data grids.
  *
  * Kills the "every cell is identical tiny gray mono text" look:
  *  - numbers right-align + tabular-nums

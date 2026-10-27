@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 /* ============================================================
-   SQLENS DESIGN TOKENS — "execution plan" visual system
+   CLICK DESIGN TOKENS — "execution plan" visual system
    Monochrome grays carry structure & hierarchy. ONE warm gold
    accent (#f4c430) marks "you are here". Red is reserved for
    errors only. No other hues exist in the UI.

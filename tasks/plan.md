@@ -70,3 +70,41 @@ Remediates all identified security threats, broken tests, orphaned duplicate fil
 | Deleting duplicate Prisma files breaks external imports | High | Grepped codebase: only `prisma-submit-pipeline.test.ts` referenced them; retargeting to canonical Day 12 resolves it completely. |
 | Removing Pyodide breaks build | Low | Tested build without Pyodide; removing routes and package reduces build time and bundle size. |
 | Strict TS build reveals hidden errors | Medium | Run `tsc --noEmit` locally first before toggling `ignoreBuildErrors`. |
+
+---
+
+## Networking Track — Stage 4: Switching Design
+### Day 10 · VLANs: Separating Networks on One Switch (`net-10`)
+
+#### Architectural Overview & Goals
+- Launch Stage 4 ("Switching Design") by showing how a single physical Ethernet switch is sliced into isolated logical broadcast domains via 802.1Q VLAN IDs.
+- Strictly adhere to zero-metaphor doctrine: use real hardware terms (Access Ports, VLAN database, broadcast confinement, Layer 2 isolation barrier).
+- Maintain 5 atomic ideas + 1 recap structure; no cognitive overload.
+
+#### Task Breakdown
+- **Task 10.1: Module Content (`src/content/networking/modules/net-10.ts`)**
+  - Author human-crafted steps:
+    1. Default VLAN 1 (shared domain across all 4 ports)
+    2. Creating VLAN 10 and VLAN 20 (`vlan create 10 20`)
+    3. Assigning physical access ports (`vlan assign 1,2 to 10; vlan assign 3,4 to 20`)
+    4. Testing broadcast confinement (`broadcast from pc1` -> confined to Port 2)
+    5. Testing unicast isolation (`ping 192.168.20.30` -> dropped by L2 switch)
+    6. Recap: 4 Golden Rules of VLAN segmentation
+- **Task 10.2: Content Registry & Routing (`src/content/networking/index.ts`)**
+  - Register `NET_10_MODULE` in `NETWORKING_MODULES` and `getAllNetworkingModules()`.
+- **Task 10.3: Terminal & Workspace Wiring**
+  - Add help message and ghost autocomplete commands in `NetworkingTerminal.tsx`.
+  - Add command aliases (`show vlan`, `vlan create`, `vlan assign`, `broadcast`, `ping`) in `NetworkingWorkspace.tsx`.
+- **Task 10.4: Canvas Topology & Gradual Reveal (`NetworkingCanvas.tsx`)**
+  - Virtual bounds: `1080px` × `520px`.
+  - Step 0: Single gray boundary encompassing all 4 workstations.
+  - Step 1: VLAN table HUD reveals empty VLAN 10 and VLAN 20 entries.
+  - Step 2: Split boundary into Indigo container (VLAN 10) and Emerald container (VLAN 20). Port LEDs light up.
+  - Step 3: Broadcast pulse from PC1 flows only to PC2; Ports 3 & 4 show locked/silent icons.
+  - Step 4: Ping across VLAN boundary triggers glowing red barrier: `CROSS-VLAN BLOCKED ✕ (Layer 2 Isolation)`.
+  - Step 5: Recap summary card and Day 11 Trunk preview.
+- **Task 10.5: Test Coverage & Regression**
+  - Unit tests in `tests/curriculum/networking-curriculum.test.ts`.
+  - UI static markup tests in `tests/ui/networking-canvas.test.tsx`.
+  - Full Vitest suite run (all 101+ test files green).
+

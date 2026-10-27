@@ -190,8 +190,8 @@ function setupMonaco(monaco: Monaco) {
   monacoGlobalConfigured = true;
 
   // 1. Setup Theme: High-contrast Dark with vibrant, distinctive syntax tokens
-  monaco.editor.defineTheme('sqlens-dark', {
-    base: 'vs-dark',
+  const clickDarkTheme = {
+    base: 'vs-dark' as const,
     inherit: true,
     rules: [
       // Control flow & language keywords (await, return, const, let, function, async, export, import)
@@ -244,7 +244,9 @@ function setupMonaco(monaco: Monaco) {
       'editorBracketMatch.background': '#f4c43020',
       'editorBracketMatch.border': '#f4c43060',
     },
-  });
+  };
+  monaco.editor.defineTheme('click-dark', clickDarkTheme);
+  monaco.editor.defineTheme('sqlens-dark', clickDarkTheme);
 
   // 2. Setup TypeScript Compiler Options & Declarations
   const ts = monaco.languages.typescript.typescriptDefaults;
@@ -517,6 +519,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       if (!model) return;
 
       if (!error) {
+        monaco.editor.setModelMarkers(model, 'click', []);
         monaco.editor.setModelMarkers(model, 'sqlens', []);
         return;
       }
@@ -525,7 +528,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       const startCol = errorPosition?.column ?? 1;
       const endCol = startCol + (errorPosition?.length ?? 10);
 
-      monaco.editor.setModelMarkers(model, 'sqlens', [
+      monaco.editor.setModelMarkers(model, 'click', [
         {
           startLineNumber: line,
           startColumn: startCol,
@@ -544,7 +547,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
       if (language === 'typescript') {
         updateMonacoPrismaTypes(monaco, schemaSource);
       }
-      monaco.editor.setTheme('sqlens-dark');
+      monaco.editor.setTheme('click-dark');
 
       // Command + Enter / Ctrl + Enter to run
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
@@ -607,7 +610,7 @@ export const MonacoCodeEditor = forwardRef<MonacoCodeEditorHandle, MonacoCodeEdi
           value={value}
           onChange={(val) => onChange(val ?? '')}
           onMount={handleMount}
-          theme="sqlens-dark"
+          theme="click-dark"
           options={{
             readOnly,
             fontSize: 13,
