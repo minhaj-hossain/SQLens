@@ -134,6 +134,36 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
         normalizedCmd === 'clear mac'
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-09' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'show broadcast' || normalizedCmd === 'show domain')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-09' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show stats' || normalizedCmd === 'station stats')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-09' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'show router' || normalizedCmd === 'router broadcast')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-09' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'domains' || normalizedCmd === 'show domain')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-09' &&
+        activeStepIndex === 4 &&
+        (normalizedCmd === 'ping 192.168.1.255' || normalizedCmd.startsWith('ping 192.168.1.'))
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

@@ -39,7 +39,7 @@ export const MODULE_CURRICULUM_ORDER: Record<string, { curriculumOrder: number; 
   'day-30': { curriculumOrder: 30, displayLabel: 'Day 30' }, // Schema Design & Normalization
   'day-31': { curriculumOrder: 31, displayLabel: 'Day 31' }, // Concept Lab: Performance & Indexing
   'day-32': { curriculumOrder: 32, displayLabel: 'Day 32' }, // Security & Production Safety
-  'day-33': { curriculumOrder: 33, displayLabel: 'Day 33' }, // Capstone Project: SQLens Bookstore
+  'day-33': { curriculumOrder: 33, displayLabel: 'Day 33' }, // Capstone Project: Click Bookstore
   'day-34': { curriculumOrder: 34, displayLabel: 'Day 34' }, // Project: Backend API Queries
   'day-35': { curriculumOrder: 35, displayLabel: 'Day 35' }, // Project: Zero-State Hardening
   'day-36': { curriculumOrder: 36, displayLabel: 'Day 36' }, // Final Assessment

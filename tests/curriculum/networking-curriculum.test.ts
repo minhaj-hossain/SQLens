@@ -179,6 +179,38 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step6.cmd).toBeNull();
   });
 
+  it('Day 9 module has exact title, 6 steps, and broadcast domain commands', () => {
+    // @ts-expect-error - NET_09_MODULE imported dynamically or tested via getNetworkingModule
+    const mod = getNetworkingModule('net-09');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-09');
+    expect(mod?.title).toBe('Day 9 · Broadcast Domains');
+    expect(mod?.steps).toHaveLength(6);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('The broadcast address: reaching everyone');
+    expect(step1.cmd).toBe('show broadcast domain');
+    expect(step1.what).toContain('FF:FF:FF:FF:FF:FF');
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('show station stats');
+    expect(step2.what).toContain('hardware interrupt');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('show router broadcast');
+    expect(step3.what).toContain('routers physically do not forward Layer 2 broadcasts');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('show domains');
+    expect(step4.what).toContain('broadcast domain');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBe('ping 192.168.1.255');
+
+    const step6 = mod!.steps[5];
+    expect(step6.cmd).toBeNull();
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -195,5 +227,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(6)?.id).toBe('net-06');
     expect(getNetworkingModule(7)?.id).toBe('net-07');
     expect(getNetworkingModule(8)?.id).toBe('net-08');
+    expect(getNetworkingModule(9)?.id).toBe('net-09');
   });
 });
+

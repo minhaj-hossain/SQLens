@@ -230,6 +230,76 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('TABLE FLUSHED (0 ENTRIES)');
   });
 
+  it('Day 9 renders dual broadcast domains, flooding, CPU interrupts, and router barrier', () => {
+    // Step 0: Initial dual-subnet topology
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('LOCAL SUBNET 1 · 192.168.1.0/24 (BROADCAST DOMAIN 1)');
+    expect(htmlStep0).toContain('LOCAL SUBNET 2 · 192.168.2.0/24 (BROADCAST DOMAIN 2)');
+    expect(htmlStep0).toContain('ROUTER R1');
+    expect(htmlStep0).toContain('BROADCAST DA: FF:FF:FF:FF:FF:FF');
+
+    // Step 1: Replicate & Flood
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('REPLICATE &amp; FLOOD TO ALL PORTS');
+
+    // Step 2: CPU Interrupts
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('PC2: CPU INTERRUPT ⚡');
+    expect(htmlStep2).toContain('PC3: CPU INTERRUPT ⚡');
+    expect(htmlStep2).toContain('PC4: CPU INTERRUPT ⚡');
+
+    // Step 3: Router Barrier
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('ROUTER BROADCAST BARRIER ✕ (RFC 1812)');
+    expect(htmlStep3).toContain('Subnet 2: Silent (0 frames)');
+
+    // Step 4: Dual Domain Inventory
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('2 BROADCAST DOMAINS · ROUTER R1 ISOLATION');
+    expect(htmlStep4).toContain('PC2 Reply ✓');
+
+    // Step 5: Recap Rules
+    const htmlStep5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep5).toContain('THE 4 RULES OF BROADCAST DOMAINS');
+    expect(htmlStep5).toContain('Next Stage: Day 10 · VLANs');
+  });
+
   it('renders pan/zoom controls and navigation hints', () => {
     const html = renderToStaticMarkup(
       <NetworkingCanvas

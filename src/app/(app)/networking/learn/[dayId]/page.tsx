@@ -20,12 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!module) {
     return {
-      title: 'Module Not Found | SQLens Networking',
+      title: 'Module Not Found | Click Networking',
     };
   }
 
   return {
-    title: `${module.title} | SQLens Networking`,
+    title: `${module.title} | Click Networking`,
     description: module.steps[0]?.what || 'Interactive networking lesson on live canvas.',
   };
 }

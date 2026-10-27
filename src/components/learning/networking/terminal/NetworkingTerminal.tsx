@@ -129,6 +129,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: arp -a, debug arp on, ping 192.168.1.20, ping 192.168.3.10, ipconfig, link status, cls, clear, help';
       } else if (dayId === 'net-08') {
         helpMsg = 'Commands: show mac table, ping 192.168.1.20, show switch log, clear mac table, cls, clear, help';
+      } else if (dayId === 'net-09') {
+        helpMsg = 'Commands: show broadcast domain, show station stats, show router broadcast, show domains, ping 192.168.1.255, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);

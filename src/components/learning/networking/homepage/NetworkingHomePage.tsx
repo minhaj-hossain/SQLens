@@ -176,7 +176,7 @@ export const NetworkingHomePage: React.FC = () => {
             <div className="w-6 h-6 rounded-md bg-[#4ade80]/10 border border-[#4ade80]/30 grid place-items-center text-[#4ade80]">
               <Network size={14} />
             </div>
-            <span>SQLens</span>
+            <span>Click</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-5 text-[13.5px] text-[#8e98a8]">
@@ -651,7 +651,7 @@ export const NetworkingHomePage: React.FC = () => {
           </a>
         </div>
         <p className="m-0">
-          SQLens Networking Track · Hands-on interactive packet & routing simulation
+          Click Networking Track · Hands-on interactive packet & routing simulation
         </p>
       </footer>
     </div>
