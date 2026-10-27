@@ -22,7 +22,8 @@ When authoring or modifying any Networking Track module in SQLens, ALWAYS adhere
    - PC Workstations (`SvgWorkstation.tsx`) have an 88px wide x 94px high vertical envelope (chassis at y+48, IP pill at y+56..74, MAC pill at y+78..94). Elements positioned below a workstation MUST clear `y + 94`.
    - Metallic silver base chassis is EXCLUSIVE to PC workstations (never switches or routers).
    - In corridor topologies, central diagnostic cards must stay `width <= 280px` to clear diagonal link cables.
-   - Maintain 15–25px clearance between badges/labels and link cables.
+   - **Horizontal Cable Span Invariant**: In-flight packet badge width MUST satisfy `width <= (x_right_device_left - x_left_device_right) - 30px` to maintain 15px clearance on both sides and eliminate chassis penetration.
+   - **Same-Level Alert Staggering**: Stagger adjacent alerts/callouts vertically by >= 25px when horizontal distance is tight to eliminate alert collisions.
    - Audit progressive reveal across EVERY step so newly appearing HUD cards do not occlude static components or prior step badges.
 
 3. **Canvas Fullscreen / Workspace Expansion**:

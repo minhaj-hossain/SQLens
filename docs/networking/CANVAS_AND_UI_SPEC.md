@@ -65,7 +65,13 @@ Every module features dynamic progressive reveals (Step 1, Step 2, ... Step N). 
 2. **Link Badges & Port Marker Clearances**:
    - Maintain a minimum of `15px-25px` margin between link badges/tags and adjacent port markers or device edges.
    - On trunks (e.g. Day 11), active link badges should be horizontally centered and constrained (`width <= 220px`) to prevent occluding switch port markers `(TRUNK) P5`.
-3. **Progressive Reveal Audit Precedents**:
+3. **Horizontal Cable Span Invariant**:
+   - When placing an in-flight packet badge or error callout between two devices on a horizontal cable, verify the gap: `span = x_right_device_left - x_left_device_right`.
+   - The badge width MUST satisfy `width <= span - 30px` to guarantee at least 15px clearance on both sides. Never place a 210px or 230px badge in a 194px–214px span (which causes chassis penetration).
+4. **Same-Level Alert Staggering**:
+   - When multiple alerts or callout boxes appear in the same step above adjacent devices or links, they MUST NOT share the same `y` coordinate unless `x1 + width1/2 < x2 - width2/2 - 15px`.
+   - If their horizontal spans are close or overlapping, stagger them vertically by at least 25px–35px (e.g. `y=100` and `y=140`).
+5. **Progressive Reveal Audit Precedents**:
    - Day 7: ARP Cache HUD at `(60, 205)`, Reply callout at `(370, 295)` (clears HUD and PC2 at `(70, 320)`).
    - Day 8: MAC Table HUD at `(685, 25)`, Aging card & recap at `(685, 335..345)` (clears PC2 at `(780, 204)`).
    - Day 9: Step 5 Recap centered at `(643, 385)` beneath Router R1 (clears PC4 at `(258, 390)`).
@@ -73,6 +79,11 @@ Every module features dynamic progressive reveals (Step 1, Step 2, ... Step N). 
    - Day 11: Trunk Active Badge narrowed to `220px` at `(600, 240)` (clears SW1/SW2 port labels).
    - Day 12: Trunk Stick Badge raised to `(560, 155)` on upper stick (clears hairpin tags at `y=230`).
    - Day 13: Central cards compacted to `270px` and BPDU badges raised to `y=170` (clears diagonal links at `x=402.5` and `x=692.5`).
+   - Day 14:
+     - Echo Reply badge constrained to `width=154px` at `(943, 278)` (20px clearance from R2 and ISP).
+     - ICMP Type 11 badge constrained to `width=180px` at `(269, 275)` (21px clearance from PC1 and R1).
+     - Bottleneck Alert staggered to `y=100` at `(943, 100)` to eliminate 40px collision with Packet Drop Warning at `(783, 140)`.
+     - ICMP Type 3 Code 4 badge constrained to `width=174px` at `(613, 275)` (clears R1 at `x=506` and R2 at `x=720` by 20px, eliminating 8px chassis penetration on both sides).
 
 ### 2. Network Switch (`SvgSwitch.tsx`)
 - **Chassis**: Industrial dark enterprise chassis (`#090d15` fill, `#1e293b` border, `rounded-md`).

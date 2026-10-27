@@ -68,6 +68,7 @@ export const NetworkingHomePage: React.FC = () => {
 
   const availableModules = getAllNetworkingModules();
   const availableSet = new Set(availableModules.map((m) => m.id));
+  const latestModule = availableModules[availableModules.length - 1];
 
   const handleMouseEnter = (
     e: React.MouseEvent<HTMLElement>,
@@ -198,7 +199,7 @@ export const NetworkingHomePage: React.FC = () => {
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-mono bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/25">
             <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" />
-            6 Days Live
+            {availableModules.length} Days Live
           </span>
 
           <Link
@@ -241,19 +242,21 @@ export const NetworkingHomePage: React.FC = () => {
             <ArrowRight size={16} />
           </Link>
 
-          <Link
-            href="/networking/learn/net-08"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#121824] border border-[#26354d] text-[#e2e8f0] rounded-full px-5 py-3 font-medium text-[14px] hover:border-[#4ade80]/60 hover:text-[#4ade80] transition-colors"
-          >
-            <span>Latest: Day 8 · How a Switch Learns</span>
-            <ChevronRight size={15} />
-          </Link>
+          {latestModule && (
+            <Link
+              href={`/networking/learn/${latestModule.id}`}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#121824] border border-[#26354d] text-[#e2e8f0] rounded-full px-5 py-3 font-medium text-[14px] hover:border-[#4ade80]/60 hover:text-[#4ade80] transition-colors"
+            >
+              <span>Latest: Day {latestModule.dayNumber} · {latestModule.shortTitle || latestModule.title}</span>
+              <ChevronRight size={15} />
+            </Link>
+          )}
         </div>
 
         {/* Key Track Badges */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[12.5px] font-mono text-[#7b899e]">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-[#4ade80]" /> 8 Days Live
+            <CheckCircle2 size={13} className="text-[#4ade80]" /> {availableModules.length} Days Live
             Today
           </span>
           <span className="hidden sm:inline">·</span>

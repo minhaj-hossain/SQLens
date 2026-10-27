@@ -5038,9 +5038,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     {/* Echo Reply Badge on Return Path */}
                     <g transform="translate(943, 278)">
                       <rect
-                        x={-90}
+                        x={-77}
                         y={-9}
-                        width={180}
+                        width={154}
                         height={18}
                         rx={3}
                         fill="#1e1b4b"
@@ -5286,9 +5286,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     {/* Returning ICMP Type 11 Error Message on PC1-R1 Link */}
                     <g transform="translate(269, 275)">
                       <rect
-                        x={-105}
+                        x={-90}
                         y={-9}
-                        width={210}
+                        width={180}
                         height={18}
                         rx={3}
                         fill="#78350f"
@@ -5301,7 +5301,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={3.5}
                         textAnchor="middle"
                         fill="#fef08a"
-                        fontSize="7"
+                        fontSize="6.6"
                         fontWeight="700"
                         fontFamily="monospace"
                       >
@@ -5471,13 +5471,13 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                 {/* Step 4: Path MTU Discovery & ICMP Type 3 Code 4 */}
                 {activeStepIndex === 4 && (
                   <>
-                    {/* Bottleneck Alert on R2-ISP link */}
-                    <g transform="translate(943, 140)">
+                    {/* Bottleneck Alert on R2-ISP link - Staggered at y=100 to eliminate overlap with Drop Warning */}
+                    <g transform="translate(943, 100)">
                       <rect
-                        x={-95}
-                        y={-12}
-                        width={190}
-                        height={24}
+                        x={-90}
+                        y={-11}
+                        width={180}
+                        height={22}
                         rx={4}
                         fill="#450a0a"
                         stroke="#ef4444"
@@ -5486,10 +5486,10 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                       />
                       <text
                         x={0}
-                        y={4}
+                        y={3.5}
                         textAnchor="middle"
                         fill="#fca5a5"
-                        fontSize="7.5"
+                        fontSize="7"
                         fontWeight="700"
                         fontFamily="monospace"
                       >
@@ -5497,13 +5497,13 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                       </text>
                     </g>
 
-                    {/* Packet Drop Warning at R2 */}
+                    {/* Packet Drop Warning at R2 (y=140) */}
                     <g transform="translate(783, 140)">
                       <rect
-                        x={-105}
-                        y={-12}
-                        width={210}
-                        height={24}
+                        x={-100}
+                        y={-11}
+                        width={200}
+                        height={22}
                         rx={4}
                         fill="#450a0a"
                         stroke="#ef4444"
@@ -5512,7 +5512,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                       />
                       <text
                         x={0}
-                        y={4}
+                        y={3.5}
                         textAnchor="middle"
                         fill="#fca5a5"
                         fontSize="7"
@@ -5523,12 +5523,12 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                       </text>
                     </g>
 
-                    {/* Returning ICMP Type 3 Code 4 Error Message on R1-R2 Link */}
+                    {/* Returning ICMP Type 3 Code 4 Error Message on R1-R2 Link (clears R1 at x=506 and R2 at x=720 by 20px) */}
                     <g transform="translate(613, 275)">
                       <rect
-                        x={-115}
+                        x={-87}
                         y={-9}
-                        width={230}
+                        width={174}
                         height={18}
                         rx={3}
                         fill="#78350f"
@@ -5541,7 +5541,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={3.5}
                         textAnchor="middle"
                         fill="#fef08a"
-                        fontSize="7"
+                        fontSize="6.6"
                         fontWeight="700"
                         fontFamily="monospace"
                       >

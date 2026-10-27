@@ -823,6 +823,39 @@ describe('NetworkingCanvas Component', () => {
     expect(html).toContain('translate(70, 360)');
     expect(html).toContain('translate(380, 360)');
     expect(html).toContain('translate(1040, 360)');
+
+    // Step 4: Verify Bottleneck Alert is staggered at y=100 so it does not collide with Drop Warning at y=140
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('translate(943, 100)');
+    expect(htmlStep4).toContain('translate(783, 140)');
+    // ICMP Type 3 Code 4 badge constrained to 174px width to clear R1 (x=506) and R2 (x=720) by 20px
+    expect(htmlStep4).toContain('width="174"');
+
+    // Step 2: Verify ICMP Type 11 badge is constrained to 180px width for 21px clearance from PC1 and R1
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('width="180"');
+
+    // Step 0: Verify Echo Reply badge is constrained to 154px width for 20px clearance from R2 and ISP
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-14"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('width="154"');
   });
 });
 
