@@ -224,6 +224,48 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
         (normalizedCmd === 'ping 192.168.10.30' || normalizedCmd.startsWith('ping 192.168.10.'))
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-12' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'ping 192.168.20.20' || normalizedCmd.startsWith('ping 192.168.20.'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-12' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show router interfaces' ||
+          normalizedCmd === 'show ip interface brief' ||
+          normalizedCmd === 'show interfaces router' ||
+          normalizedCmd === 'show int router' ||
+          normalizedCmd === 'show subif')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-12' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'create subif eth0.10 10 192.168.10.1/24' ||
+          normalizedCmd === 'interface eth0.10' ||
+          normalizedCmd === 'int eth0.10' ||
+          normalizedCmd === 'create subif eth0.10' ||
+          normalizedCmd.includes('eth0.10'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-12' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'create subif eth0.20 20 192.168.20.1/24' ||
+          normalizedCmd === 'interface eth0.20' ||
+          normalizedCmd === 'int eth0.20' ||
+          normalizedCmd === 'create subif eth0.20' ||
+          normalizedCmd.includes('eth0.20'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-12' &&
+        activeStepIndex === 4 &&
+        (normalizedCmd === 'ping 192.168.20.20' || normalizedCmd.startsWith('ping 192.168.20.'))
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

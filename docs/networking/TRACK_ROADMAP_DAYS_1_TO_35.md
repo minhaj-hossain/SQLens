@@ -54,10 +54,10 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
 
 * **Day 10 · VLANs: Separating Networks on One Switch** (`net-10`) [COMPLETED]
   * *Concepts*: Virtual Local Area Networks (VLAN 10, VLAN 20); splitting one physical switch into multiple isolated broadcast domains without buying new hardware.
-* **Day 11 · Trunks: Carrying VLANs Between Switches** (`net-11`) [SPECIFIED]
+* **Day 11 · Trunks: Carrying VLANs Between Switches** (`net-11`) [COMPLETED]
   * *Concepts*: Access ports vs trunk ports; IEEE 802.1Q VLAN tagging; carrying traffic from multiple VLANs over a single link.
-* **Day 12 · Routing Between VLANs** (`net-12`) [PLANNED]
-  * *Concepts*: Inter-VLAN routing; Router-on-a-Stick (sub-interfaces `g0/0.10`, `g0/0.20`); moving packets between isolated VLANs.
+* **Day 12 · Routing Between VLANs** (`net-12`) [COMPLETED]
+  * *Concepts*: Inter-VLAN routing; Router-on-a-Stick (sub-interfaces `eth0.10`, `eth0.20`); moving packets between isolated VLANs.
 * **Day 13 · Loops and Spanning Tree** (`net-13`) [PLANNED]
   * *Concepts*: Redundant switch links; Layer 2 broadcast loops and broadcast storms; Spanning Tree Protocol (STP, 802.1D); blocking redundant ports to keep topology loop-free.
 

@@ -135,6 +135,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show vlan, vlan create 10 20, set port 1,2 vlan 10; set port 3,4 vlan 20, ping 192.168.10.255, ping 192.168.20.30, cls, clear, help';
       } else if (dayId === 'net-11') {
         helpMsg = 'Commands: show trunk, set port 5 trunk, show frame header, show trunk native, ping 192.168.10.30, cls, clear, help';
+      } else if (dayId === 'net-12') {
+        helpMsg = 'Commands: ping 192.168.20.20, show router interfaces, create subif eth0.10 10 192.168.10.1/24, create subif eth0.20 20 192.168.20.1/24, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -526,6 +528,64 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
       }
     }
 
+    // Day 12 dynamic logic
+    if (dayId === 'net-12') {
+      if (
+        v === 'show router interfaces' ||
+        v === 'show ip interface brief' ||
+        v === 'show interfaces router' ||
+        v === 'show int router' ||
+        v === 'show subif'
+      ) {
+        if (completedSteps.has(3) || activeStepIndex >= 4) {
+          out =
+            'Router R1 Interface Status\n----------------------------------------------------\nInterface  IP-Address         Status   Protocol  Description\neth0       unassigned         up       up        Trunk link to SW1:Port 4\neth0.10    192.168.10.1/24    up       up        Gateway for VLAN 10 (dot1q 10)\neth0.20    192.168.20.1/24    up       up        Gateway for VLAN 20 (dot1q 20)\n----------------------------------------------------\nSub-interfaces: 2 active (routing enabled between VLAN 10 & 20).';
+          isSuccess = true;
+        } else if (completedSteps.has(2) || activeStepIndex >= 3) {
+          out =
+            'Router R1 Interface Status\n----------------------------------------------------\nInterface  IP-Address         Status   Protocol  Description\neth0       unassigned         up       up        Trunk link to SW1:Port 4\neth0.10    192.168.10.1/24    up       up        Gateway for VLAN 10 (dot1q 10)\n----------------------------------------------------\nSub-interfaces: 1 active (awaiting VLAN 20 gateway).';
+          isSuccess = true;
+        } else {
+          out =
+            'Router R1 Interface Status\n----------------------------------------------------\nInterface  IP-Address         Status   Protocol  Description\neth0       unassigned         up       up        Trunk link to SW1:Port 4\n----------------------------------------------------\nSub-interfaces: None configured.';
+          isSuccess = true;
+        }
+      } else if (
+        v === 'create subif eth0.10 10 192.168.10.1/24' ||
+        v === 'interface eth0.10' ||
+        v === 'int eth0.10' ||
+        v === 'create subif eth0.10' ||
+        v === 'create subinterface eth0.10 10 192.168.10.1/24'
+      ) {
+        out =
+          'Router R1(config)# interface eth0.10\nRouter R1(config-subif)# encapsulation dot1q 10\nRouter R1(config-subif)# ip address 192.168.10.1 255.255.255.0\n\nSub-interface eth0.10 created.\nEncapsulation: IEEE 802.1Q · VLAN ID: 10\nIP Address: 192.168.10.1/24 (Gateway for VLAN 10).';
+        isSuccess = true;
+      } else if (
+        v === 'create subif eth0.20 20 192.168.20.1/24' ||
+        v === 'interface eth0.20' ||
+        v === 'int eth0.20' ||
+        v === 'create subif eth0.20' ||
+        v === 'create subinterface eth0.20 20 192.168.20.1/24'
+      ) {
+        out =
+          'Router R1(config)# interface eth0.20\nRouter R1(config-subif)# encapsulation dot1q 20\nRouter R1(config-subif)# ip address 192.168.20.1 255.255.255.0\n\nSub-interface eth0.20 created.\nEncapsulation: IEEE 802.1Q · VLAN ID: 20\nIP Address: 192.168.20.1/24 (Gateway for VLAN 20).\n\nRouting table updated: 2 connected subnets (192.168.10.0/24, 192.168.20.0/24).';
+        isSuccess = true;
+      } else if (
+        v === 'ping 192.168.20.20' ||
+        v.startsWith('ping 192.168.20.')
+      ) {
+        if (completedSteps.has(3) || activeStepIndex >= 4) {
+          out =
+            'Sending 4 64-byte ICMP Echos to 192.168.20.20 via gateway 192.168.10.1:\nReply from 192.168.20.20: bytes=64 time=1.8ms TTL=63\nReply from 192.168.20.20: bytes=64 time=1.6ms TTL=63\nReply from 192.168.20.20: bytes=64 time=1.7ms TTL=63\nReply from 192.168.20.20: bytes=64 time=1.7ms TTL=63\n\n--- 192.168.20.20 ping statistics ---\n4 packets transmitted, 4 received, 0% packet loss, time 3004ms\nRound-trip min/avg/max = 1.6/1.7/1.8 ms\n(Inter-VLAN route verified: hairpin traversal via R1 eth0.10 -> eth0.20 with TTL=63)';
+          isSuccess = true;
+        } else {
+          out =
+            'Sending 4 64-byte ICMP Echos to 192.168.20.20:\nRequest timed out.\nRequest timed out.\nRequest timed out.\nRequest timed out.\n\n--- 192.168.20.20 ping statistics ---\n4 packets transmitted, 0 received, 100% packet loss\n(Host unreachable: Switch SW1 will not forward between VLAN 10 and VLAN 20 at Layer 2)';
+          isSuccess = true;
+        }
+      }
+    }
+
     if (v === 'clear' || v === 'cls') {
       setLogs([]);
       setInputVal('');
@@ -549,6 +609,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         out = 'To inspect switch VLANs, use: show vlan';
       } else if (v === 'trunk' || v === 'trunks') {
         out = 'To inspect switch trunk interfaces, use: show trunk';
+      } else if (v === 'subif' || v === 'subinterface' || v === 'sub-interface') {
+        out = 'To configure router sub-interfaces, use: create subif eth0.10 10 192.168.10.1/24';
       } else if (v.startsWith('setip') && v.split(' ').length < 4) {
         out = 'Usage: setip <device> <address> <mask>\nExample: setip pc3 192.168.1.130 255.255.255.128';
       } else {

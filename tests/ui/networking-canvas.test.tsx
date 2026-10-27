@@ -450,6 +450,82 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep5).toContain('Next: Day 12 · Router-on-a-Stick');
   });
 
+  it('Day 12 progressively reveals Router-on-a-Stick, sub-interfaces, and hairpin routing', () => {
+    // Step 0: L2 Isolation Barrier
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('ROUTER-ON-A-STICK · INTER-VLAN ROUTING VIA 802.1Q SUB-INTERFACES');
+    expect(htmlStep0).toContain('VLAN 10 · ENGINEERING (192.168.10.0/24)');
+    expect(htmlStep0).toContain('VLAN 20 · FINANCE (192.168.20.0/24)');
+    expect(htmlStep0).toContain('CROSS-VLAN BLOCKED ✕ (Layer 2 Isolation)');
+    expect(htmlStep0).toContain('Dropped at SW1');
+    expect(htmlStep0).toContain('0 ROUTES');
+
+    // Step 1: The Stick Highlight
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('ONE PHYSICAL CABLE · &quot;THE STICK&quot;');
+    expect(htmlStep1).toContain('802.1Q TRUNK &quot;STICK&quot;');
+
+    // Step 2: eth0.10 Created
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('GATEWAY CREATED: eth0.10');
+    expect(htmlStep2).toContain('192.168.10.1/24');
+    expect(htmlStep2).toContain('1 ROUTE');
+
+    // Step 3: eth0.20 Created
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('GATEWAY CREATED: eth0.20');
+    expect(htmlStep3).toContain('192.168.20.1/24');
+    expect(htmlStep3).toContain('2 ROUTES');
+
+    // Step 4: Hairpin Traversal Active
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('HAIRPIN ROUTING SUCCESSFUL ✓ (TTL 64 → 63 · 0% LOSS)');
+    expect(htmlStep4).toContain('▲ Tag: VID=10');
+    expect(htmlStep4).toContain('▼ Tag: VID=20');
+    expect(htmlStep4).toContain('L3 ROUTE: eth0.10 ↷ eth0.20 (TTL: 63)');
+
+    // Step 5: Recap
+    const htmlStep5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep5).toContain('THE 4 RULES OF INTER-VLAN ROUTING');
+    expect(htmlStep5).toContain('Next: Day 13 · Spanning Tree Protocol (Preventing Loops)');
+  });
+
   it('renders pan/zoom controls and navigation hints', () => {
     const html = renderToStaticMarkup(
       <NetworkingCanvas
