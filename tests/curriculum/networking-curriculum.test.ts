@@ -15,6 +15,7 @@ import {
   NET_13_MODULE,
   NET_14_MODULE,
   NET_15_MODULE,
+  NET_16_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -448,6 +449,47 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step5.title).toBe('The four rules of traceroute and internet paths');
   });
 
+  it('Day 16 module has exact title, 5 steps, and authentic Layer 4 port commands', () => {
+    const mod = getNetworkingModule('net-16');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-16');
+    expect(mod?.title).toBe('Day 16 · Ports: Reaching the Right Program');
+    expect(mod?.steps).toHaveLength(5);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('Host-to-host vs process-to-process delivery');
+    expect(step1.cmd).toBe('ss -tlpn');
+    expect(step1.what).toContain('strictly a host-to-host delivery protocol');
+    expect(step1.what).toContain(
+      'Transport Layer (Layer 4) solves this problem by adding Port Numbers'
+    );
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('show ip-port-range');
+    expect(step2.title).toBe('Well-known, registered, and ephemeral ports');
+    expect(step2.what).toContain('RFC 6335');
+    expect(step2.what).toContain('Well-Known Ports (0 – 1023)');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('ss -t4 state established');
+    expect(step3.title).toBe(
+      'The socket 5-tuple: Demultiplexing concurrent streams'
+    );
+    expect(step3.what).toContain('5-Tuple');
+    expect(step3.what).toContain('Demultiplexing');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('nc -zv 198.51.100.10 80 81');
+    expect(step4.title).toBe('Header byte layout and closed port responses');
+    expect(step4.what).toContain('Bytes 0–1');
+    expect(step4.what).toContain('RST (Reset)');
+    expect(step4.what).toContain('ICMP Type 3 Code 3');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe('The four rules of ports and sockets');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -471,6 +513,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(13)?.id).toBe('net-13');
     expect(getNetworkingModule(14)?.id).toBe('net-14');
     expect(getNetworkingModule(15)?.id).toBe('net-15');
+    expect(getNetworkingModule(16)?.id).toBe('net-16');
   });
 });
 

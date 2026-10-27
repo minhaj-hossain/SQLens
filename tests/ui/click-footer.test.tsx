@@ -25,12 +25,14 @@ describe('ClickFooter Component', () => {
     expect(html).toContain('When concepts finally click.');
   });
 
-  it('renders the TRACKS column with links to /sql and /prisma', () => {
+  it('renders the TRACKS column with links to /sql, /prisma, and /networking', () => {
     expect(html).toContain('TRACKS');
     expect(html).toContain('href="/sql"');
     expect(html).toContain('SQL');
     expect(html).toContain('href="/prisma"');
     expect(html).toContain('Prisma');
+    expect(html).toContain('href="/networking"');
+    expect(html).toContain('Networking');
   });
 
   it('renders the PROJECT column with About and Feedback links', () => {

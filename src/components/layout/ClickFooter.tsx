@@ -41,6 +41,9 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
             <Link href="/prisma" className="flink text-sm">
               Prisma (14 Days)
             </Link>
+            <Link href="/networking" className="flink text-sm">
+              Networking (35 Days)
+            </Link>
             <Link href="/playground?from=/" className="flink text-sm flex items-center gap-1 text-[#38bdf8] hover:text-[#38bdf8]/80">
               <span>Playground</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30 font-mono">Live</span>
@@ -75,11 +78,11 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
       {/* Bottom copyright divider */}
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#121d33] pt-6 text-[13px] text-[#7b8db0]">
-          <span>© 2026 Click. Hands-on database learning runtime.</span>
+          <span>© 2026 Click. Hands-on learning runtime.</span>
           <div className="flex items-center gap-4 text-xs">
             <span className="inline-flex items-center gap-1.5 text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              SQLite WASM & Prisma Engine Ready
+              SQLite WASM, Prisma &amp; Network Simulation Ready
             </span>
           </div>
         </div>

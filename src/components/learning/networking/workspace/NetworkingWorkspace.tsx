@@ -390,6 +390,47 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'show asymmetric')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-16' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'ss -tlpn' ||
+          normalizedCmd === 'netstat -tlpn' ||
+          normalizedCmd === 'netstat -tuln' ||
+          normalizedCmd === 'ss -tuln' ||
+          normalizedCmd === 'ss -tln' ||
+          normalizedCmd === 'netstat -tln')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-16' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show ip-port-range' ||
+          normalizedCmd === 'show port range' ||
+          normalizedCmd === 'show port ranges' ||
+          normalizedCmd === 'cat /proc/sys/net/ipv4/ip_local_port_range' ||
+          normalizedCmd === 'show ports')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-16' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'ss -t4 state established' ||
+          normalizedCmd === 'ss -t state established' ||
+          normalizedCmd === 'netstat -an | grep 198.51.100.10' ||
+          normalizedCmd === 'ss -t4' ||
+          normalizedCmd === 'ss -t')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-16' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'nc -zv 198.51.100.10 80 81' ||
+          normalizedCmd === 'nc -zv 198.51.100.10 80' ||
+          normalizedCmd === 'nc -zv 198.51.100.10 81' ||
+          normalizedCmd === 'nmap -p 80,81 198.51.100.10' ||
+          normalizedCmd === 'nmap 198.51.100.10')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

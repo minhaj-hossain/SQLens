@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { SqlDiagramSvg, PrismaDiagramSvg } from './TrackDiagrams';
+import { SqlDiagramSvg, PrismaDiagramSvg, NetworkingDiagramSvg } from './TrackDiagrams';
 import { ClickFooter } from '@/components/layout/ClickFooter';
 
 export interface ClickHomepageProps {
@@ -46,6 +46,22 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
       hoverTitle: 'group-hover:text-[#38bdf8]',
       ctaText: 'text-[#38bdf8]',
       outlineRing: 'focus-visible:outline-[#38bdf8]',
+    },
+    {
+      id: 'networking',
+      title: 'Networking',
+      desc: 'Physical reality of packets, cables, routing tables & sockets',
+      meta: '35 days',
+      badge: 'Packet Simulation',
+      href: '/networking',
+      tags: ['Ethernet & MACs', 'Subnets & CIDR', 'L3 Routing & Gateways', 'VLANs & Trunks', 'TCP/UDP Sockets'],
+      diagram: <NetworkingDiagramSvg />,
+      hoverBorder: 'hover:border-[#4ade80]/60',
+      hoverShadow: 'hover:shadow-2xl hover:shadow-[#4ade80]/10',
+      badgeBorder: 'border-[#4ade80]/30 text-[#4ade80] bg-[#4ade80]/10',
+      hoverTitle: 'group-hover:text-[#4ade80]',
+      ctaText: 'text-[#4ade80]',
+      outlineRing: 'focus-visible:outline-[#4ade80]',
     },
   ];
 
@@ -134,7 +150,7 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span>Instant Query Feedback & Diffs</span>
+            <span>Interactive Packet Canvas</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -156,7 +172,7 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {cards.map((card) => (
             <Link
               key={card.id}

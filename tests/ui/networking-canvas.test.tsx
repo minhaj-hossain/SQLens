@@ -995,5 +995,160 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep3).toContain('translate(1040, 105)');
     expect(htmlStep3).toContain('translate(680, 105)');
   });
+
+  it('Day 16 renders 2-hop LAN/WAN transit topology and progressive reveals for Ports & Sockets', () => {
+    // Step 0: Host vs Process Delivery
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'LAYER 4 TRANSPORT MULTIPLEXING · PORTS &amp; SOCKETS'
+    );
+    expect(htmlStep0).toContain('PC1 (Client)');
+    expect(htmlStep0).toContain('192.168.1.10/24');
+    expect(htmlStep0).toContain('GATEWAY R1');
+    expect(htmlStep0).toContain('Web Server');
+    expect(htmlStep0).toContain('198.51.100.10/24');
+    expect(htmlStep0).toContain('LAN Access Link (Gigabit Ethernet)');
+    expect(htmlStep0).toContain('Datacenter Transit Link (10 GbE)');
+    expect(htmlStep0).toContain('Running Apps: Browser, SSH, Discord');
+    expect(htmlStep0).toContain('LISTENING PORTS (SS -TLPN)');
+    expect(htmlStep0).toContain('HOST VS PROCESS ADDRESSING');
+    expect(htmlStep0).toContain('ACTIVE LISTENING SOCKETS (SS -TLPN)');
+    expect(htmlStep0).toContain('THE BIND() &amp; LISTEN() SYSTEM CALLS');
+
+    // Step 1: Port Number Hierarchy (RFC 6335)
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain(
+      'RFC 6335 PORT NUMBER SPECTRUM (16-BIT INTEGER: 0 TO 65535)'
+    );
+    expect(htmlStep1).toContain('WELL-KNOWN: 0–1023');
+    expect(htmlStep1).toContain('REGISTERED: 1024–49151');
+    expect(htmlStep1).toContain('EPHEMERAL: 49152–65535');
+    expect(htmlStep1).toContain('PORT HIERARCHY RULES');
+    expect(htmlStep1).toContain(
+      'IANA PORT ALLOCATION TIERS (SHOW IP-PORT-RANGE)'
+    );
+    expect(htmlStep1).toContain('SECURITY &amp; CAP_NET_BIND_SERVICE');
+
+    // Step 2: The Socket 5-Tuple & Demultiplexing
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('Tab 1: 192.168.1.10:52101 → :443');
+    expect(htmlStep2).toContain('Tab 2: 192.168.1.10:52102 → :443');
+    expect(htmlStep2).toContain('Port 443 Demux: 2 Active Streams');
+    expect(htmlStep2).toContain(
+      'Tab 1: 192.168.1.10:52101 → 198.51.100.10:443 [TCP ACK]'
+    );
+    expect(htmlStep2).toContain('THE SOCKET 5-TUPLE');
+    expect(htmlStep2).toContain(
+      'CONCURRENT CONNECTION DEMULTIPLEXING (SS -T4)'
+    );
+    expect(htmlStep2).toContain('KERNEL SOCKET HASH TABLE');
+
+    // Step 3: Transport Header Anatomy & Closed Ports
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('TCP / UDP TRANSPORT HEADER (FIRST 4 BYTES)');
+    expect(htmlStep3).toContain('SOURCE PORT (16 BITS / 2 BYTES)');
+    expect(htmlStep3).toContain('DESTINATION PORT (16 BITS / 2 BYTES)');
+    expect(htmlStep3).toContain('Port 80 [HTTP]: OPEN → SYN-ACK');
+    expect(htmlStep3).toContain('Port 81 [TCP]: CLOSED → TCP RST');
+    expect(htmlStep3).toContain('OPEN VS CLOSED PORTS');
+    expect(htmlStep3).toContain(
+      'PORT PROBING TELEMETRY (NC -ZV 198.51.100.10 80 81)'
+    );
+    expect(htmlStep3).toContain('HOW PORT SCANNERS WORK (SYN VS RST)');
+
+    // Step 4: Recap
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('LAYER 4 CHEAT SHEET');
+    expect(htmlStep4).toContain(
+      'THE 4 CORE RULES OF PORTS, SOCKETS &amp; TRANSPORT MULTIPLEXING'
+    );
+    expect(htmlStep4).toContain('TRANSPORT METRICS');
+  });
+
+  it('ensures Day 16 canvas coordinates strictly prevent component overlaps', () => {
+    // Step 0: Initial layout
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    // Link labels cleared 60px above cables (y=190 vs cable y=250)
+    expect(htmlStep0).toContain('translate(454, 190)');
+    expect(htmlStep0).toContain('translate(1013, 190)');
+
+    // App and service badges above devices
+    expect(htmlStep0).toContain('translate(140, 130)');
+    expect(htmlStep0).toContain('translate(1220, 110)');
+
+    // Bottom diagnostic HUD cards strictly clear the 94px device envelope (y=360 vs device y=220..314)
+    expect(htmlStep0).toContain('translate(70, 360)');
+    expect(htmlStep0).toContain('translate(380, 360)');
+    expect(htmlStep0).toContain('translate(1040, 360)');
+
+    // Step 1: Overhead spectrum container position
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('translate(440, 65)');
+
+    // Step 2: In-flight packet badge width is constrained to 340px to ensure >=15px clearance on Cable 2 (span 806..1220)
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('translate(1013, 250)');
+    expect(htmlStep2).toContain('width="340"');
+
+    // Step 3: Overhead header layout card at translate(440, 65)
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-16"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('translate(440, 65)');
+    expect(htmlStep3).toContain('translate(1220, 115)');
+  });
 });
+
 

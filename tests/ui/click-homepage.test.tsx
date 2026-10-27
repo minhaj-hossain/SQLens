@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ClickHomepage } from '../../src/components/home/ClickHomepage';
-import { SqlDiagramSvg, PrismaDiagramSvg } from '../../src/components/home/TrackDiagrams';
+import { SqlDiagramSvg, PrismaDiagramSvg, NetworkingDiagramSvg } from '../../src/components/home/TrackDiagrams';
 
 describe('ClickHomepage Component', () => {
   const html = renderToStaticMarkup(<ClickHomepage />);
@@ -27,6 +27,14 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('Schema modeling and type-safe database access');
   });
 
+  it('renders the Networking track card with link, meta, and description', () => {
+    expect(html).toContain('href="/networking"');
+    expect(html).toContain('Networking');
+    expect(html).toContain('35 days');
+    expect(html).toContain('Physical reality of packets, cables, routing tables &amp; sockets');
+    expect(html).toContain('Packet Simulation');
+  });
+
   it('applies the design system styling classes (.tile, .bg-dot-grid, max-w-[1120px], bg-ink, text-text)', () => {
     expect(html).toContain('tile');
     expect(html).toContain('bg-dot-grid');
@@ -35,6 +43,8 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('text-text');
     expect(html).toContain('border-func/30');
     expect(html).toContain('text-func');
+    expect(html).toContain('border-[#4ade80]/30');
+    expect(html).toContain('text-[#4ade80]');
   });
 
   it('renders ClickFooter with brand tagline and copyright', () => {
@@ -79,5 +89,19 @@ describe('TrackDiagrams SVG components', () => {
     expect(prismaHtml).toContain('.user.');
     expect(prismaHtml).toContain('email');
     expect(prismaHtml).toContain('string');
+  });
+
+  it('renders NetworkingDiagramSvg with terminal ping, ICMP packet badge, and topology decoder', () => {
+    const netHtml = renderToStaticMarkup(<NetworkingDiagramSvg />);
+    expect(netHtml).toContain('terminal');
+    expect(netHtml).toContain('ping 192.168.1.1');
+    expect(netHtml).toContain('ttl=64');
+    expect(netHtml).toContain('ICMP');
+    expect(netHtml).toContain('topology');
+    expect(netHtml).toContain('PC1');
+    expect(netHtml).toContain('R1 GATEWAY');
+    expect(netHtml).toContain('192.168.1.10');
+    expect(netHtml).toContain('192.168.1.1');
+    expect(netHtml).toContain('LAYER 2/3 FRAME DECODE');
   });
 });

@@ -211,3 +211,114 @@ export const PrismaDiagramSvg: React.FC<{ className?: string }> = ({ className =
     </svg>
   );
 };
+
+/**
+ * Networking Architecture Diagram SVG
+ * Visualizes an interactive network terminal session on the left transmitting
+ * ICMP packets to a live device topology and decoded Layer 2/3 frame on the right.
+ */
+export const NetworkingDiagramSvg: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return (
+    <svg
+      viewBox="0 0 480 220"
+      width="100%"
+      className={`block max-w-[480px] select-none ${className}`}
+      role="img"
+      aria-label="A network terminal on the left transmits ICMP packets to a live device topology on the right"
+    >
+      {/* Left sub-window: terminal */}
+      <rect x="24" y="28" width="210" height="164" rx="12" fill="#070c14" stroke="#1b2a47" />
+      <circle cx="42" cy="44" r="3" fill="#223049" />
+      <circle cx="54" cy="44" r="3" fill="#223049" />
+      <circle cx="66" cy="44" r="3" fill="#223049" />
+      <text x="84" y="48" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#7b8db0">
+        terminal
+      </text>
+      <path d="M24 60H234" stroke="#1b2a47" />
+
+      {/* Terminal ping execution output */}
+      <text x="38" y="84" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#e8eefb">
+        <tspan fill="#4ade80" fontWeight="600">$</tspan> ping 192.168.1.1
+      </text>
+      <text x="38" y="106" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#8a9bbd">
+        PING 192.168.1.1: 56 data bytes
+      </text>
+      <text x="38" y="128" fontFamily="JetBrains Mono, monospace" fontSize="10.5" fill="#e8eefb">
+        64 bytes: icmp_seq=1 <tspan fill="#4ade80">ttl=64</tspan>
+      </text>
+      <text x="38" y="150" fontFamily="JetBrains Mono, monospace" fontSize="10.5" fill="#4ade80" fontWeight="600">
+        time=1.12 ms (direct link)
+      </text>
+      <text x="38" y="172" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#38bdf8">
+        1 packets transmitted · 0% loss
+      </text>
+
+      {/* Central directional link cable & packet badge */}
+      <path
+        d="M234 110H282M274 102L282 110L274 118"
+        fill="none"
+        stroke="#4ade80"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="240" y="87" width="36" height="14" rx="3" fill="#064e3b" stroke="#4ade80" strokeWidth="1" />
+      <text x="258" y="97.5" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7.5" fill="#6ee7b7" fontWeight="700">
+        ICMP
+      </text>
+
+      {/* Right sub-window: topology & packet frame */}
+      <rect x="282" y="28" width="174" height="164" rx="12" fill="#070c14" stroke="#1b2a47" />
+      <text x="298" y="48" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#7b8db0">
+        topology
+      </text>
+      <path d="M282 60H456" stroke="#1b2a47" />
+
+      {/* Device 1: PC1 */}
+      <rect x="296" y="74" width="58" height="34" rx="4" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+      <text x="325" y="88" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="8.5" fill="#f1f5f9" fontWeight="700">
+        PC1
+      </text>
+      <text x="325" y="100" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" fill="#60a5fa">
+        192.168.1.10
+      </text>
+
+      {/* Connecting cable between devices */}
+      <line x1="354" y1="91" x2="384" y2="91" stroke="#4ade80" strokeWidth="1.5" strokeDasharray="3 2" />
+
+      {/* Device 2: Router R1 (Gateway) */}
+      <rect x="384" y="74" width="58" height="34" rx="4" fill="#0f172a" stroke="#4ade80" strokeWidth="1.2" />
+      <text x="413" y="88" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="8" fill="#4ade80" fontWeight="700">
+        R1 GATEWAY
+      </text>
+      <text x="413" y="100" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" fill="#6ee7b7">
+        192.168.1.1
+      </text>
+
+      {/* Layer 2/3 Frame breakdown container */}
+      <rect
+        x="292"
+        y="118"
+        width="154"
+        height="62"
+        rx="6"
+        fill="#064e3b"
+        fillOpacity="0.16"
+        stroke="#4ade80"
+        strokeWidth="1"
+      />
+      <text x="300" y="132" fontFamily="JetBrains Mono, monospace" fontSize="8.5" fill="#4ade80" fontWeight="600">
+        LAYER 2/3 FRAME DECODE
+      </text>
+      <text x="300" y="148" fontFamily="JetBrains Mono, monospace" fontSize="8" fill="#cbd5e1">
+        Eth: PC1 MAC → Gateway MAC
+      </text>
+      <text x="300" y="162" fontFamily="JetBrains Mono, monospace" fontSize="8" fill="#cbd5e1">
+        IP:  192.168.1.10 → 192.168.1.1
+      </text>
+      <text x="300" y="174" fontFamily="JetBrains Mono, monospace" fontSize="7.5" fill="#6ee7b7">
+        ICMP Type 8 (Echo Request)
+      </text>
+    </svg>
+  );
+};

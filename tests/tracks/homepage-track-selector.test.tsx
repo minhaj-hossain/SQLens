@@ -48,10 +48,23 @@ describe('Click Homepage render via TrackSelector (Task 6.1)', () => {
     expect(html).toContain('.user.');
   });
 
+  it('renders Networking track card with terminal/topology diagram and link', () => {
+    expect(html).toContain('href="/networking"');
+    expect(html).toContain('Networking');
+    expect(html).toContain('35 days');
+    expect(html).toContain('Physical reality of packets, cables, routing tables &amp; sockets');
+    expect(html).toContain('terminal');
+    expect(html).toContain('ping 192.168.1.1');
+    expect(html).toContain('topology');
+    expect(html).toContain('PC1');
+    expect(html).toContain('R1 GATEWAY');
+  });
+
   it('renders the Click multi-column footer with copyright and links', () => {
     expect(html).toContain('data-testid="click-footer"');
     expect(html).toContain('When concepts finally click.');
     expect(html).toContain('TRACKS');
+    expect(html).toContain('href="/networking"');
     expect(html).toContain('PROJECT');
     expect(html).toContain('© 2026 Click');
   });

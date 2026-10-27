@@ -143,6 +143,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: ping 198.51.100.10 -c 1, show packet header, ping 198.51.100.10 -t 1, traceroute 198.51.100.10, ping 198.51.100.10 -s 1472 -d, cls, clear, help';
       } else if (dayId === 'net-15') {
         helpMsg = 'Commands: traceroute 198.51.100.10, show fiber links, traceroute 198.51.100.50, show return path, cls, clear, help';
+      } else if (dayId === 'net-16') {
+        helpMsg = 'Commands: ss -tlpn, show ip-port-range, ss -t4 state established, nc -zv 198.51.100.10 80 81, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -721,6 +723,48 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'show asymmetric'
       ) {
         out = staticResponses['show return path'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 16 dynamic logic
+    if (dayId === 'net-16') {
+      if (
+        v === 'ss -tlpn' ||
+        v === 'netstat -tlpn' ||
+        v === 'netstat -tuln' ||
+        v === 'ss -tuln' ||
+        v === 'ss -tln' ||
+        v === 'netstat -tln'
+      ) {
+        out = staticResponses['ss -tlpn'];
+        isSuccess = true;
+      } else if (
+        v === 'show ip-port-range' ||
+        v === 'show port range' ||
+        v === 'show port ranges' ||
+        v === 'cat /proc/sys/net/ipv4/ip_local_port_range' ||
+        v === 'show ports'
+      ) {
+        out = staticResponses['show ip-port-range'];
+        isSuccess = true;
+      } else if (
+        v === 'ss -t4 state established' ||
+        v === 'ss -t state established' ||
+        v === 'netstat -an | grep 198.51.100.10' ||
+        v === 'ss -t4' ||
+        v === 'ss -t'
+      ) {
+        out = staticResponses['ss -t4 state established'];
+        isSuccess = true;
+      } else if (
+        v === 'nc -zv 198.51.100.10 80 81' ||
+        v === 'nc -zv 198.51.100.10 80' ||
+        v === 'nc -zv 198.51.100.10 81' ||
+        v === 'nmap -p 80,81 198.51.100.10' ||
+        v === 'nmap 198.51.100.10'
+      ) {
+        out = staticResponses['nc -zv 198.51.100.10 80 81'];
         isSuccess = true;
       }
     }

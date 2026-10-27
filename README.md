@@ -2,13 +2,12 @@
 
 # 🎓 SQLens
 
-### Two Tracks, One Browser Tab — 57 Days of SQL + 14 Days of Prisma
+### Three Tracks, One Browser Tab — 57 Days of SQL + 14 Days of Prisma + 35 Days of Networking
 
-**An interactive, self-contained learning platform with a custom-built in-browser SQL engine.**
-Write real queries. Get real results. No database server required.
+**An interactive, self-contained learning platform with in-browser execution engines.**
+Write real queries, schema models, and network terminal commands. Get real results. Zero servers to configure.
 
-Learn **SQL** (57 modules) and **Prisma ORM** (14 days) through the same session engine: Prisma
-Client code is translated into real SQL and executed against the same in-browser database.
+Learn **SQL** (57 modules), **Prisma ORM** (14 days), and **Computer Networking** (35 days) through dedicated browser-native engines: SQL parsing and execution, Prisma Client translation, and an interactive packet topology canvas with terminal simulation.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
@@ -69,18 +68,18 @@ executes it on that very same engine.
 
 ## 🧭 Tracks at a Glance
 
-| | 🗄️ **SQL** | 🧬 **Prisma** |
-|---|---|---|
-| Route | `/sql` | `/prisma` |
-| Curriculum | 57 modules · 161 concepts · 424 tasks · 226 MCQs | 14 days · 4 milestones · 28 concepts · 70 tasks · 28 MCQs |
-| Task kinds | Executable queries graded against real results | 35 **executable** Prisma tasks · 35 **read-through** snippet labs |
-| Engine | SQL parser → executor → validator | Prisma Client AST proxy → SQL generator → *the same* SQL engine |
-| Grading entry point | `submitForTask` | `submitForTask` (one router, both tracks) |
-| Progress | `sql_mastery_progress_v1` (+ per-user keys) | `prismalens_progress_v1` (+ per-user keys) |
+| | 🗄️ **SQL** | 🧬 **Prisma** | 🌐 **Networking** |
+|---|---|---|---|
+| Route | `/sql` | `/prisma` | `/networking` |
+| Curriculum | 57 modules · 161 concepts · 424 tasks · 226 MCQs | 14 days · 4 milestones · 28 concepts · 70 tasks · 28 MCQs | 35 days · 9 stages · 175 interactive steps |
+| Task kinds | Executable queries graded against real results | 35 **executable** Prisma tasks · 35 **read-through** snippet labs | Interactive terminal CLI commands + live animated packet topology |
+| Engine | SQL parser → executor → validator | Prisma Client AST proxy → SQL generator → *the same* SQL engine | In-browser simulated network stack + SVG hardware & packet canvas |
+| Grading entry point | `submitForTask` | `submitForTask` (one router, both tracks) | Step progression & normalized terminal command matching |
+| Progress | `sql_mastery_progress_v1` (+ per-user keys) | `prismalens_progress_v1` (+ per-user keys) | `networking_mastery_progress_v1` |
 
-Tracks are namespaced end to end: routes, module ids (`day-NN` vs `prisma-NN`), roadmap
+Tracks are namespaced end to end: routes, module ids (`day-NN`, `prisma-NN`, `net-NN`), roadmap
 milestones, unlock state, and storage keys never overlap, so progress in one track can
-never disturb the other.
+never disturb the others.
 
 Every day of the course follows the same loop:
 
