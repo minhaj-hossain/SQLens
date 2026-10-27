@@ -27,6 +27,7 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
   const [r2Route, setR2Route] = useState(false);
   const [r1DefaultRoute, setR1DefaultRoute] = useState(false);
   const [r2DefaultRoute, setR2DefaultRoute] = useState(false);
+  const [isCanvasExpanded, setIsCanvasExpanded] = useState(false);
 
   const currentStep = module.steps[activeStepIndex];
   const recapIdx = module.steps.length - 1;
@@ -65,6 +66,8 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           e.preventDefault();
           setActiveStepIndex((prev) => Math.min(module.steps.length - 1, prev + 1));
         }
+      } else if (e.key === 'Escape') {
+        setIsCanvasExpanded(false);
       }
     };
 
@@ -377,10 +380,14 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
 
       {/* Main Workspace (Layout A: Top-left Canvas, Bottom-left Terminal, Right Sidebar) */}
       <main className="flex-1 min-h-0 p-[10px] grid gap-[10px] overflow-hidden md:grid-cols-[1fr_410px] md:grid-rows-[1fr_220px] max-md:flex max-md:flex-col max-md:overflow-y-auto">
-        {/* Canvas Area (Top-Left) */}
+        {/* Canvas Area (Top-Left or Fullscreen Overlay) */}
         <section
           id="canvas"
-          className="md:[grid-area:1/1] min-h-0 min-w-0 max-md:h-[270px] max-md:shrink-0"
+          className={
+            isCanvasExpanded
+              ? 'fixed inset-0 z-50 bg-[#07090e] p-2 flex flex-col'
+              : 'md:[grid-area:1/1] min-h-0 min-w-0 max-md:h-[270px] max-md:shrink-0'
+          }
         >
           <NetworkingCanvas
             dayId={module.id}
@@ -395,6 +402,8 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             r2Route={r2Route}
             r1DefaultRoute={r1DefaultRoute}
             r2DefaultRoute={r2DefaultRoute}
+            isExpanded={isCanvasExpanded}
+            onToggleExpand={() => setIsCanvasExpanded((prev) => !prev)}
           />
         </section>
 

@@ -5,7 +5,7 @@ import { SvgWorkstation } from './SvgWorkstation';
 import { SvgSwitch } from './SvgSwitch';
 import { SvgRouter } from './SvgRouter';
 import { SvgCable } from './SvgCable';
-import { ZoomIn, ZoomOut, Maximize2, Move } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Minimize2, Scan, Move } from 'lucide-react';
 
 interface NetworkingCanvasProps {
   dayId: string;
@@ -21,6 +21,8 @@ interface NetworkingCanvasProps {
   r2Route?: boolean;
   r1DefaultRoute?: boolean;
   r2DefaultRoute?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 // World coordinate dimensions tailored per module so networks can breathe
@@ -89,6 +91,8 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
   r2Route = false,
   r1DefaultRoute = false,
   r2DefaultRoute = false,
+  isExpanded = false,
+  onToggleExpand,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -173,10 +177,17 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
     setPan({ x: cx, y: cy });
   }, [spec.width, spec.height]);
 
-  // Fit automatically when dayId changes
+  // Fit automatically when dayId or expanded mode changes
   useEffect(() => {
     fitToView();
   }, [dayId, fitToView]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fitToView();
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [isExpanded, fitToView]);
 
   // Window resize observer
   useEffect(() => {
@@ -313,9 +324,28 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
           className="px-2 h-7 flex items-center gap-1.5 rounded hover:bg-[#1c2638] hover:text-[#4ade80] text-[11px] font-mono transition-colors"
           aria-label="Fit canvas to view"
         >
-          <Maximize2 size={12} />
+          <Scan size={12} />
           <span>Fit</span>
         </button>
+
+        {onToggleExpand && (
+          <>
+            <div className="w-[1px] h-4 bg-[#222d42] mx-0.5" />
+            <button
+              onClick={onToggleExpand}
+              title={isExpanded ? 'Exit full canvas (Esc)' : 'Expand canvas to full workspace'}
+              className={`px-2 h-7 flex items-center gap-1.5 rounded text-[11px] font-mono transition-colors ${
+                isExpanded
+                  ? 'bg-[#1e293b] text-[#38bdf8] hover:bg-[#283548]'
+                  : 'hover:bg-[#1c2638] hover:text-[#ececf0]'
+              }`}
+              aria-label={isExpanded ? 'Exit full canvas' : 'Expand canvas to full workspace'}
+            >
+              {isExpanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+              <span className="hidden sm:inline">{isExpanded ? 'Restore' : 'Expand'}</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* Navigation Hint Badge */}
@@ -1392,7 +1422,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
 
                 {/* Animated ARP Reply Callout (Step 2 / ping 192.168.1.20) */}
                 {(activeStepIndex === 2 || lastCommand === 'ping 192.168.1.20') && (
-                  <g transform="translate(180, 290)">
+                  <g transform="translate(370, 295)">
                     <rect
                       x={-100}
                       y={-14}
@@ -1859,8 +1889,8 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     </g>
 
                     {/* PC3 Drop Badge */}
-                    <g transform="translate(615, 60)">
-                      <rect x={-80} y={-11} width={160} height={22} rx={4} fill="#271010" stroke="#ef4444" strokeWidth={1} />
+                    <g transform="translate(585, 60)">
+                      <rect x={-75} y={-11} width={150} height={22} rx={4} fill="#271010" stroke="#ef4444" strokeWidth={1} />
                       <text x={0} y={4} textAnchor="middle" fill="#ef4444" fontSize="9" fontFamily="monospace" fontWeight="600">
                         PC3: DA Mismatch ➔ Discard ✕
                       </text>
@@ -1875,7 +1905,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     </g>
 
                     {/* PC2 Accept Badge */}
-                    <g transform="translate(780, 275)">
+                    <g transform="translate(818, 172)">
                       <rect x={-80} y={-11} width={160} height={22} rx={4} fill="#062e1e" stroke="#4ade80" strokeWidth={1} />
                       <text x={0} y={4} textAnchor="middle" fill="#4ade80" fontSize="9" fontFamily="monospace" fontWeight="600">
                         PC2: DA Matched ➔ Accept ✓
@@ -1927,7 +1957,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
 
                 {/* Step 4: Aging & Timer Info Callout */}
                 {activeStepIndex === 4 && (
-                  <g transform="translate(685, 205)">
+                  <g transform="translate(685, 345)">
                     <rect
                       width={330}
                       height={40}
@@ -1960,7 +1990,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
 
                 {/* Step 5 / Recap: Four Principles of Switching */}
                 {activeStepIndex === 5 && (
-                  <g transform="translate(685, 200)">
+                  <g transform="translate(685, 335)">
                     <rect
                       width={330}
                       height={130}
@@ -2417,7 +2447,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
 
                 {/* Step 5 / Recap: Four Rules & Stage 4 Preview */}
                 {activeStepIndex === 5 && (
-                  <g transform="translate(425, 385)">
+                  <g transform="translate(643, 385)">
                     <rect
                       x={-180}
                       y={-15}
@@ -2895,7 +2925,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     </g>
 
                     {/* VLAN 20 Filtered / Locked Badges on Ports 3 & 4 */}
-                    <g transform="translate(605, 260)">
+                    <g transform="translate(650, 260)">
                       <rect x={0} y={0} width={140} height={42} rx={6} fill="#1e293b" stroke="#ef4444" strokeWidth={1.2} />
                       <text x={70} y={16} textAnchor="middle" fill="#f87171" fontSize="8.5" fontFamily="monospace" fontWeight="700">
                         VLAN 20 FILTERED ✕
@@ -3240,9 +3270,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     {/* Trunk Active Badge */}
                     <g transform="translate(600, 240)">
                       <rect
-                        x={-140}
+                        x={-110}
                         y={-14}
-                        width={280}
+                        width={220}
                         height={26}
                         rx={6}
                         fill="#082f49"
@@ -3254,7 +3284,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={4}
                         textAnchor="middle"
                         fill="#7dd3fc"
-                        fontSize="9"
+                        fontSize="8"
                         fontWeight="700"
                         fontFamily="monospace"
                         letterSpacing="0.04em"
@@ -3603,7 +3633,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                 />
 
                 {/* Trunk Label Badge alongside the stick */}
-                <g transform="translate(560, 215)">
+                <g transform="translate(560, 155)">
                   <rect
                     x={0}
                     y={0}
@@ -4469,9 +4499,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     {/* Central Storm Alert Banner */}
                     <g transform="translate(545, 255)">
                       <rect
-                        x={-185}
+                        x={-135}
                         y={-22}
-                        width={370}
+                        width={270}
                         height={44}
                         rx={6}
                         fill="#450a0a"
@@ -4484,7 +4514,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={-3}
                         textAnchor="middle"
                         fill="#fca5a5"
-                        fontSize="9"
+                        fontSize="8.5"
                         fontWeight="700"
                         fontFamily="monospace"
                       >
@@ -4495,10 +4525,10 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={12}
                         textAnchor="middle"
                         fill="#fecaca"
-                        fontSize="7.5"
+                        fontSize="7"
                         fontFamily="monospace"
                       >
-                        Ethernet has no TTL · Broadcast circulating endlessly
+                        Ethernet has no TTL · Storm circulating
                       </text>
                     </g>
 
@@ -4514,34 +4544,34 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                 {activeStepIndex === 1 && (
                   <g transform="translate(545, 240)">
                     <rect
-                      x={-180}
+                      x={-135}
                       y={-50}
-                      width={360}
+                      width={270}
                       height={100}
                       rx={8}
                       fill="#070c14"
                       stroke="#ef4444"
                       strokeWidth={1.3}
                     />
-                    <rect x={-180} y={-50} width={360} height={22} rx={8} fill="#1c1917" />
+                    <rect x={-135} y={-50} width={270} height={22} rx={8} fill="#1c1917" />
                     <text
                       x={0}
                       y={-35}
                       textAnchor="middle"
                       fill="#fca5a5"
-                      fontSize="8"
+                      fontSize="7.5"
                       fontWeight="700"
                       fontFamily="monospace"
                     >
                       SWITCH SW1 · MAC TABLE FLAPPING LOG
                     </text>
-                    <g transform="translate(-165, -15)" fill="#e2e8f0" fontSize="7.5" fontFamily="monospace">
+                    <g transform="translate(-130, -15)" fill="#e2e8f0" fontSize="7" fontFamily="monospace">
                       <text x={0} y={0}>Target: AA:BB:CC:00:00:01 (PC1)</text>
                       <text x={0} y={15} fill="#f87171">
                         Oscillation: Port 1 ⇄ Port 2 every 1.4 ms
                       </text>
                       <text x={0} y={30} fill="#f87171">
-                        Status: Table Thrashing · 100% Bandwidth Saturation
+                        Table Thrashing · 100% Bandwidth Saturation
                       </text>
                       <text x={0} y={45} fill="#94a3b8">
                         Result: Switch CPU 100% · Unicast forwarding fails
@@ -4556,9 +4586,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     {/* BPDU Exchange Card */}
                     <g transform="translate(545, 240)">
                       <rect
-                        x={-175}
+                        x={-135}
                         y={-40}
-                        width={350}
+                        width={270}
                         height={80}
                         rx={8}
                         fill="#0c1929"
@@ -4570,29 +4600,29 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={-20}
                         textAnchor="middle"
                         fill="#38bdf8"
-                        fontSize="8.5"
+                        fontSize="8"
                         fontWeight="700"
                         fontFamily="monospace"
                       >
                         IEEE 802.1D BPDU EXCHANGE ACTIVE
                       </text>
-                      <g transform="translate(-160, -2)" fill="#bae6fd" fontSize="7.5" fontFamily="monospace">
-                        <text x={0} y={0}>Frame: Bridge Protocol Data Unit (BPDU)</text>
-                        <text x={0} y={14}>Destination: 01:80:C2:00:00:00 (Multicast)</text>
+                      <g transform="translate(-120, -2)" fill="#bae6fd" fontSize="7" fontFamily="monospace">
+                        <text x={0} y={0}>Frame: BPDU (802.1D Spanning Tree)</text>
+                        <text x={0} y={14}>Dest: 01:80:C2:00:00:00 (Multicast)</text>
                         <text x={0} y={28} fill="#4ade80">
-                          Interval: Every 2.0s · Discovery &amp; election in progress
+                          Interval: 2.0s · Discovery Active
                         </text>
                       </g>
                     </g>
 
-                    {/* BPDU Link Badges */}
-                    <g transform="translate(390, 220)">
+                    {/* BPDU Link Badges (Placed along links above central card) */}
+                    <g transform="translate(440, 170)">
                       <rect x={-35} y={-8} width={70} height={16} rx={3} fill="#0369a1" />
                       <text x={0} y={3} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="700" fontFamily="monospace">
                         BPDU 2s
                       </text>
                     </g>
-                    <g transform="translate(700, 220)">
+                    <g transform="translate(650, 170)">
                       <rect x={-35} y={-8} width={70} height={16} rx={3} fill="#0369a1" />
                       <text x={0} y={3} textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="700" fontFamily="monospace">
                         BPDU 2s
@@ -4605,9 +4635,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                 {activeStepIndex === 3 && (
                   <g transform="translate(545, 240)">
                     <rect
-                      x={-180}
+                      x={-135}
                       y={-45}
-                      width={360}
+                      width={270}
                       height={90}
                       rx={8}
                       fill="#070c14"
@@ -4619,19 +4649,19 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                       y={-25}
                       textAnchor="middle"
                       fill="#fef08a"
-                      fontSize="8.5"
+                      fontSize="8"
                       fontWeight="700"
                       fontFamily="monospace"
                     >
                       ROOT BRIDGE ELECTION CONVERGED
                     </text>
-                    <g transform="translate(-165, -5)" fill="#cbd5e1" fontSize="7.5" fontFamily="monospace">
-                      <text x={0} y={0}>All switches share default priority: 32768</text>
+                    <g transform="translate(-120, -5)" fill="#cbd5e1" fontSize="7" fontFamily="monospace">
+                      <text x={0} y={0}>Default Bridge Priority: 32768</text>
                       <text x={0} y={14} fill="#4ade80" fontWeight="600">
                         Winner: SW1 (Lowest MAC: AA:BB:CC:00:00:01)
                       </text>
-                      <text x={0} y={28}>SW2 Path Cost to Root: 4 (1 Gbps link)</text>
-                      <text x={0} y={42}>SW3 Path Cost to Root: 4 (1 Gbps link)</text>
+                      <text x={0} y={28}>SW2 Path Cost to Root: 4</text>
+                      <text x={0} y={42}>SW3 Path Cost to Root: 4</text>
                     </g>
                   </g>
                 )}
@@ -4642,9 +4672,9 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                     {/* Convergence Banner */}
                     <g transform="translate(545, 235)">
                       <rect
-                        x={-185}
+                        x={-135}
                         y={-20}
-                        width={370}
+                        width={270}
                         height={40}
                         rx={6}
                         fill="#062e1e"
@@ -4656,7 +4686,7 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={-2}
                         textAnchor="middle"
                         fill="#4ade80"
-                        fontSize="9"
+                        fontSize="8.5"
                         fontWeight="700"
                         fontFamily="monospace"
                       >
@@ -4667,10 +4697,10 @@ export const NetworkingCanvas: React.FC<NetworkingCanvasProps> = ({
                         y={12}
                         textAnchor="middle"
                         fill="#86efac"
-                        fontSize="7.5"
+                        fontSize="7"
                         fontFamily="monospace"
                       >
-                        SW3:P2 in BLOCKING state · Zero storm saturation
+                        SW3:P2 Blocked · 0 Saturation
                       </text>
                     </g>
 

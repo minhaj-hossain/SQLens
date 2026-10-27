@@ -26,9 +26,15 @@ The canvas container in the workspace is fixed at `100%` width and height, but c
 - **Wheel to Zoom**: Scrolling with the mouse over the canvas zooms in and out (`minScale: 0.55`, `maxScale: 1.85`).
 - **HUD Control Pill**: Floating HUD at the bottom center offers:
   - `-` (Zoom out)
-  - `Fit` (Resets zoom and centers the topology in the viewport)
+  - `Fit` (Resets zoom and centers the topology in the viewport, using the `Scan` icon)
   - `+` (Zoom in)
   - Current zoom percentage badge (e.g. `100%`)
+
+### Fullscreen / Workspace Expansion Feature
+- **Toggle Button**: Floating toolbar includes an Expand / Restore button (`Maximize2` / `Minimize2`).
+- **Workspace Integration**: Toggling expansion sets `isCanvasExpanded` in `NetworkingWorkspace.tsx`, expanding the `#canvas` container to `fixed inset-0 z-50 bg-[#07090e] p-2 flex flex-col`.
+- **Keyboard Shortcut**: Pressing `Esc` automatically exits full canvas mode.
+- **Adaptive Auto-Fit**: A debounced `useEffect` on `isExpanded` triggers `fitToView()` with a 50ms delay, ensuring topologies render sharply and proportionally across both regular split-screen and full-monitor viewports.
 
 ---
 
@@ -40,6 +46,33 @@ All SVG hardware devices must strictly adhere to the following aesthetics:
 - **Laptop Aesthetic**: Dark screen bezel (`#090d16` / `#0b101b`) with a glowing network display, activity LEDs, and an IP/MAC badge.
 - **Silver Base Line**: A thin metallic silver chassis line (`#d4d4d8`, 1.5px thick, subtle rounded base) along the bottom of the computer.
 - **Rule**: This silver base line is **exclusive to PC workstations** (never placed under Switches or Routers).
+- **Physical Bounding Box Envelope**:
+  - Screen lid: `76x48` px.
+  - Base chassis: `88x4` px at `y + 48`.
+  - IP badge: `y + 56..74` px.
+  - MAC badge: `y + 78..94` px.
+  - **Total Vertical Envelope: 94px**. Any callout, cable label, or HUD element placed below a workstation MUST start at or below `device.y + 96px` to prevent visual collision.
+
+---
+
+## 3. Canvas Component Anti-Overlap Doctrine
+
+Every module features dynamic progressive reveals (Step 1, Step 2, ... Step N). To guarantee an immaculate visual presentation:
+
+1. **Card & Cable Collision Prevention**:
+   - Status cards, diagnostic HUDs, and recap summaries must NEVER be placed directly over cables, workstations, routers, or switches.
+   - In topologies with diagonal link cables (e.g., triangle switch topologies like Day 13), central corridor diagnostic cards must have `width <= 280px` (or `width: 270px; transform: translateX(-135px)`) to fit between cables without touching.
+2. **Link Badges & Port Marker Clearances**:
+   - Maintain a minimum of `15px-25px` margin between link badges/tags and adjacent port markers or device edges.
+   - On trunks (e.g. Day 11), active link badges should be horizontally centered and constrained (`width <= 220px`) to prevent occluding switch port markers `(TRUNK) P5`.
+3. **Progressive Reveal Audit Precedents**:
+   - Day 7: ARP Cache HUD at `(60, 205)`, Reply callout at `(370, 295)` (clears HUD and PC2 at `(70, 320)`).
+   - Day 8: MAC Table HUD at `(685, 25)`, Aging card & recap at `(685, 335..345)` (clears PC2 at `(780, 204)`).
+   - Day 9: Step 5 Recap centered at `(643, 385)` beneath Router R1 (clears PC4 at `(258, 390)`).
+   - Day 10: Step 3 VLAN 20 Filtered Badge offset to `(650, 260)` (clears SW1 port labels).
+   - Day 11: Trunk Active Badge narrowed to `220px` at `(600, 240)` (clears SW1/SW2 port labels).
+   - Day 12: Trunk Stick Badge raised to `(560, 155)` on upper stick (clears hairpin tags at `y=230`).
+   - Day 13: Central cards compacted to `270px` and BPDU badges raised to `y=170` (clears diagonal links at `x=402.5` and `x=692.5`).
 
 ### 2. Network Switch (`SvgSwitch.tsx`)
 - **Chassis**: Industrial dark enterprise chassis (`#090d15` fill, `#1e293b` border, `rounded-md`).

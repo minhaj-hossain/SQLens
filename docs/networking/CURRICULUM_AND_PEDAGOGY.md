@@ -15,7 +15,16 @@ Students do not learn real-world networking by reading stories about mailmen, po
    * **Mandatory**: Use exact digital and physical terms: packets, frames, byte streams, IP addresses, MAC hardware addresses, routing tables, gateways, next hops, netmasks, broadcast addresses, and CIDR prefixes.
    * Explain *why* the technology works directly in terms of digital devices and electrical/logical networks.
 
-2. **Natural, Flexible Step Pacing (No Artificial Limits)**:
+2. **"Taught Before Tested" (Absolute Rule)**:
+   * No new acronym, protocol abbreviation, header field, or technical term is ever dropped without being explicitly motivated and defined first.
+   * Every concept tested in a terminal command or quiz question must have been taught and grounded in an earlier or active concept section.
+   * If a step requires the user to execute `ping -t` or `traceroute`, the flags and output columns must be explained prior to or directly within that step.
+
+3. **Human-Crafted Senior Engineer Tone**:
+   * Phrasing must read like thoughtful, human-crafted curriculum written by a staff infrastructure engineer—never robotic, AI-default, or generic filler.
+   * Treat the learner with technical respect; provide real engineering insight into why protocols evolved and RFC standards were authored.
+
+4. **Natural, Flexible Step Pacing (No Artificial Limits)**:
    * A module takes **as many steps as the topic genuinely needs** to be understood clearly (typically 4 to 8 steps, or more if a protocol warrants it).
    * **Never artificially pad or squeeze a lesson** into a fixed number. Simple topics stay concise; complex multi-stage protocols (like DHCP DORA, TCP handshakes, or STP convergence) take as many steps as required to explain each transition cleanly.
    * UI components (`NetworkingLessonSidebar`, progress bar, dot rail, Next/Back buttons) dynamically adapt to `steps.length`.

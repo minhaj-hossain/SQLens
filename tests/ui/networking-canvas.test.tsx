@@ -612,4 +612,97 @@ describe('NetworkingCanvas Component', () => {
     expect(html).toContain('Drag to Pan · Scroll to Zoom');
     expect(html).toContain('ROUTER CONNECTING TWO SUBNETS');
   });
+
+  it('renders expand/restore button in floating toolbar when onToggleExpand is provided', () => {
+    const handleToggle = () => {};
+    // Normal mode (collapsed)
+    const htmlCollapsed = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-04"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+        isExpanded={false}
+        onToggleExpand={handleToggle}
+      />
+    );
+    expect(htmlCollapsed).toContain('Expand canvas to full workspace');
+    expect(htmlCollapsed).toContain('Expand');
+
+    // Expanded mode
+    const htmlExpanded = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-04"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+        isExpanded={true}
+        onToggleExpand={handleToggle}
+      />
+    );
+    expect(htmlExpanded).toContain('Exit full canvas (Esc)');
+    expect(htmlExpanded).toContain('Restore');
+  });
+
+  it('ensures progressive reveal components across Days 7-13 maintain clear non-overlapping positioning', () => {
+    // Day 7: ARP Reply callout positioned clear of ARP Cache HUD
+    const htmlDay7 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-07"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlDay7).toContain('translate(370, 295)');
+    expect(htmlDay7).toContain('ARP CACHE · PC1');
+
+    // Day 8: Aging timer and recap positioned clear of PC2
+    const htmlDay8Step4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-08"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlDay8Step4).toContain('translate(685, 345)');
+
+    const htmlDay8Step5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-08"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlDay8Step5).toContain('translate(685, 335)');
+
+    // Day 9: Step 5 recap positioned centrally under Router R1, clear of PC4
+    const htmlDay9 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-09"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlDay9).toContain('translate(643, 385)');
+
+    // Day 10: VLAN 20 filtered badge cleared past switch port labels
+    const htmlDay10 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlDay10).toContain('translate(650, 260)');
+
+    // Day 12: Trunk stick badge raised to (560, 155), clearing the hairpin tags at y=230
+    const htmlDay12 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-12"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlDay12).toContain('translate(560, 155)');
+    expect(htmlDay12).toContain('translate(615, 230)');
+  });
 });
+
