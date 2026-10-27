@@ -67,21 +67,6 @@ export const Header: React.FC<HeaderProps> = ({
             <a href="#tracks" className="hover:text-[#e8eefb] transition-colors font-medium">
               Tracks
             </a>
-            <Link
-              href={pathname ? `/playground?from=${encodeURIComponent(pathname)}` : '/playground?from=/'}
-              className="hover:text-[#e8eefb] transition-colors font-medium flex items-center gap-1.5"
-            >
-              <span>Playground</span>
-              <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-[#38bdf8]/15 text-[#38bdf8] border border-[#38bdf8]/30">
-                Live
-              </span>
-            </Link>
-            <Link
-              href="/profile"
-              className="hover:text-[#e8eefb] transition-colors font-medium"
-            >
-              Progress
-            </Link>
           </nav>
         )}
 
