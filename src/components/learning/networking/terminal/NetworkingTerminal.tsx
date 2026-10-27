@@ -137,6 +137,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show trunk, set port 5 trunk, show frame header, show trunk native, ping 192.168.10.30, cls, clear, help';
       } else if (dayId === 'net-12') {
         helpMsg = 'Commands: ping 192.168.20.20, show router interfaces, create subif eth0.10 10 192.168.10.1/24, create subif eth0.20 20 192.168.20.1/24, cls, clear, help';
+      } else if (dayId === 'net-13') {
+        helpMsg = 'Commands: test broadcast loop, show mac-flapping, enable stp, show spanning-tree, show spanning-tree ports, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -586,6 +588,61 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
       }
     }
 
+    // Day 13 dynamic logic
+    if (dayId === 'net-13') {
+      if (
+        v === 'test broadcast loop' ||
+        v === 'test broadcast' ||
+        v === 'test loop' ||
+        v === 'ping 192.168.1.255'
+      ) {
+        if (completedSteps.has(2) || activeStepIndex >= 3) {
+          out =
+            'Transmitting 1 broadcast frame (FF:FF:FF:FF:FF:FF) from PC1 into SW2...\n\n[SW2] Received broadcast on Port 3. Forwarding to Port 1 (SW1).\n[SW2] Port 2 is in STP BLOCKING state (frame suppressed).\n[SW1] Received broadcast on Port 1. Forwarding to Port 2 (SW3).\n[SW3] Received broadcast on Port 1. Delivered to Port 3 (PC2).\n[SW3] Port 2 is in STP BLOCKING state (frame suppressed).\n\n*** ZERO LOOPS DETECTED ***\nSTP loop prevention active. 0% storm saturation. Network stable.';
+          isSuccess = true;
+        } else {
+          out =
+            'Transmitting 1 broadcast frame (FF:FF:FF:FF:FF:FF) from PC1 into SW2...\n\n[SW2] Received broadcast on Port 3. Flooding to Port 1 (SW1) and Port 2 (SW3).\n[SW1] Received broadcast on Port 1. Flooding to Port 2 (SW3).\n[SW3] Received broadcast on Port 1. Flooding to Port 2 (SW2).\n[SW2] Received duplicate broadcast on Port 2. Flooding to Port 1 (SW1)...\n\n*** LAYER 2 LOOP DETECTED ***\nCirculating frames: 4,096 / sec\nBandwidth utilization: 100% (Link saturated)\nSwitch CPU: 100% (Broadcast Storm in progress)';
+          isSuccess = true;
+        }
+      } else if (
+        v === 'show mac-flapping' ||
+        v === 'show flapping' ||
+        v === 'show mac table flapping' ||
+        v === 'show log'
+      ) {
+        out =
+          'Switch SW1 MAC Flapping Diagnostic Log\n----------------------------------------------------\nTime      MAC Address        Previous Port  Current Port  Delta\n14:02:01  AA:BB:CC:00:00:01  Port 1         Port 2        1.4ms\n14:02:01  AA:BB:CC:00:00:01  Port 2         Port 1        1.2ms\n14:02:01  AA:BB:CC:00:00:01  Port 1         Port 2        1.3ms\n14:02:01  AA:BB:CC:00:00:01  Port 2         Port 1        1.5ms\n----------------------------------------------------\nAlert: MAC table instability detected. Unicast forwarding corrupted.';
+        isSuccess = true;
+      } else if (
+        v === 'enable stp' ||
+        v === 'spanning-tree mode classic' ||
+        v === 'spanning-tree enable' ||
+        v === 'stp enable'
+      ) {
+        out =
+          'Switch SW1(config)# spanning-tree mode classic\nSwitch SW2(config)# spanning-tree mode classic\nSwitch SW3(config)# spanning-tree mode classic\n\nSTP IEEE 802.1D activated on all switches.\nTransmitting configuration BPDUs to multicast 01:80:C2:00:00:00 every 2s.\nRoot Bridge election in progress...';
+        isSuccess = true;
+      } else if (
+        v === 'show spanning-tree' ||
+        v === 'show stp' ||
+        v === 'show spanning tree'
+      ) {
+        out =
+          'VLAN 1 Spanning Tree Protocol (IEEE 802.1D)\n----------------------------------------------------\nRoot ID    Priority: 32768\n           Address:  AA:BB:CC:00:00:01 (Switch SW1)\n           Cost:     0 (This bridge is the root)\n           Hello:    2 sec  Max Age: 20 sec  Forward Delay: 15 sec\n\nBridge ID  Priority: 32768\n           Address:  AA:BB:CC:00:00:01\n           Aging:    300 sec\n----------------------------------------------------\nElection: SW1 elected Root Bridge (lowest Bridge ID: 32768.AA:BB:CC:00:00:01).';
+        isSuccess = true;
+      } else if (
+        v === 'show spanning-tree ports' ||
+        v === 'show spanning-tree blocked' ||
+        v === 'show stp ports' ||
+        v === 'show stp brief'
+      ) {
+        out =
+          'Switch Port Spanning Tree Roles & States\n----------------------------------------------------\nSwitch  Port    Role        State       Cost  Designated Bridge\nSW1     Port 1  Designated  FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW1     Port 2  Designated  FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW2     Port 1  Root        FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW2     Port 2  Designated  FORWARDING  4     32768.AA:BB:CC:00:00:02\nSW3     Port 1  Root        FORWARDING  4     32768.AA:BB:CC:00:00:01\nSW3     Port 2  Alternate   BLOCKING    4     32768.AA:BB:CC:00:00:02\n----------------------------------------------------\nLoop-Free Topology Confirmed: SW3 Port 2 is BLOCKING (Amber).';
+        isSuccess = true;
+      }
+    }
+
     if (v === 'clear' || v === 'cls') {
       setLogs([]);
       setInputVal('');
@@ -611,6 +668,10 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         out = 'To inspect switch trunk interfaces, use: show trunk';
       } else if (v === 'subif' || v === 'subinterface' || v === 'sub-interface') {
         out = 'To configure router sub-interfaces, use: create subif eth0.10 10 192.168.10.1/24';
+      } else if (v === 'stp' || v === 'spanning-tree' || v === 'spanning') {
+        out = 'To inspect or enable Spanning Tree Protocol, try: enable stp or show spanning-tree';
+      } else if (v === 'bpdu' || v === 'bpdus') {
+        out = 'BPDUs are Layer 2 STP control messages. Enable STP using: enable stp';
       } else if (v.startsWith('setip') && v.split(' ').length < 4) {
         out = 'Usage: setip <device> <address> <mask>\nExample: setip pc3 192.168.1.130 255.255.255.128';
       } else {

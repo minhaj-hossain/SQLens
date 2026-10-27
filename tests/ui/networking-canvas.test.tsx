@@ -526,6 +526,77 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep5).toContain('Next: Day 13 · Spanning Tree Protocol (Preventing Loops)');
   });
 
+  it('Day 13 progressively reveals loops, broadcast storms, BPDUs, Root Bridge, and blocked port', () => {
+    // Step 0: Loop and storm active
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-13"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('SPANNING TREE PROTOCOL (IEEE 802.1D) · REDUNDANT LINKS &amp; LOOP PREVENTION');
+    expect(htmlStep0).toContain('LAYER 2 LOOP DETECTED ⚠');
+    expect(htmlStep0).toContain('REDUNDANT LINK (ACTIVE LOOP)');
+
+    // Step 1: MAC Flapping
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-13"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('SWITCH SW1 · MAC TABLE FLAPPING LOG');
+    expect(htmlStep1).toContain('Table Thrashing · 100% Bandwidth Saturation');
+
+    // Step 2: BPDU Exchange
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-13"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('IEEE 802.1D BPDU EXCHANGE ACTIVE');
+    expect(htmlStep2).toContain('01:80:C2:00:00:00 (Multicast)');
+
+    // Step 3: Root Bridge Election
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-13"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('ROOT BRIDGE ELECTION CONVERGED');
+    expect(htmlStep3).toContain('★ ROOT BRIDGE ★ (Lowest BID)');
+    expect(htmlStep3).toContain('Winner: SW1 (Lowest MAC: AA:BB:CC:00:00:01)');
+
+    // Step 4: Blocked Port & Converged Tree
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-13"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('TOPOLOGY CONVERGED · LOOP BROKEN ✓');
+    expect(htmlStep4).toContain('✕ BLK');
+    expect(htmlStep4).toContain('STANDBY LINK (SW3:P2 BLOCKED)');
+
+    // Step 5: Recap
+    const htmlStep5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-13"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep5).toContain('THE 4 RULES OF SPANNING TREE PROTOCOL');
+    expect(htmlStep5).toContain('Next: Stage 5 · Day 14: ICMP and TTL (How Ping Works at Layer 3)');
+  });
+
   it('renders pan/zoom controls and navigation hints', () => {
     const html = renderToStaticMarkup(
       <NetworkingCanvas

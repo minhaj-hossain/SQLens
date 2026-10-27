@@ -12,6 +12,7 @@ import {
   NET_10_MODULE,
   NET_11_MODULE,
   NET_12_MODULE,
+  NET_13_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -322,6 +323,46 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step6.title).toBe('The four rules of Inter-VLAN routing');
   });
 
+  it('Day 13 module has exact title, 6 steps, and authentic Spanning Tree commands', () => {
+    const mod = getNetworkingModule('net-13');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-13');
+    expect(mod?.title).toBe('Day 13 · Loops and Spanning Tree: Preventing Broadcast Storms');
+    expect(mod?.steps).toHaveLength(6);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('Redundant links create Layer 2 loops');
+    expect(step1.cmd).toBe('test broadcast loop');
+    expect(step1.what).toContain('Layer 2 Ethernet headers contain no TTL');
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('show mac-flapping');
+    expect(step2.title).toBe('Broadcast storms and MAC table flapping');
+    expect(step2.what).toContain('Broadcast Storm');
+    expect(step2.what).toContain('MAC Table Flapping');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('enable stp');
+    expect(step3.title).toBe('Spanning Tree Protocol and BPDUs');
+    expect(step3.what).toContain('Bridge Protocol Data Units');
+    expect(step3.what).toContain('01:80:C2:00:00:00');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('show spanning-tree');
+    expect(step4.title).toBe('Bridge ID and the Root Bridge election');
+    expect(step4.what).toContain('Bridge ID');
+    expect(step4.what).toContain('Root Bridge');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBe('show spanning-tree ports');
+    expect(step5.title).toBe('Port roles: Root, Designated, and Blocking');
+    expect(step5.what).toContain('Blocking state');
+
+    const step6 = mod!.steps[5];
+    expect(step6.cmd).toBeNull();
+    expect(step6.title).toBe('The four rules of Spanning Tree Protocol');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -342,6 +383,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(10)?.id).toBe('net-10');
     expect(getNetworkingModule(11)?.id).toBe('net-11');
     expect(getNetworkingModule(12)?.id).toBe('net-12');
+    expect(getNetworkingModule(13)?.id).toBe('net-13');
   });
 });
 

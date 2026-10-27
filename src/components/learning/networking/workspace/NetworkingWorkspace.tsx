@@ -266,6 +266,50 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
         (normalizedCmd === 'ping 192.168.20.20' || normalizedCmd.startsWith('ping 192.168.20.'))
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-13' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'test broadcast loop' ||
+          normalizedCmd === 'test broadcast' ||
+          normalizedCmd === 'test loop' ||
+          normalizedCmd === 'ping 192.168.1.255')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-13' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show mac-flapping' ||
+          normalizedCmd === 'show flapping' ||
+          normalizedCmd === 'show mac table flapping' ||
+          normalizedCmd === 'show log')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-13' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'enable stp' ||
+          normalizedCmd === 'spanning-tree mode classic' ||
+          normalizedCmd === 'spanning-tree enable' ||
+          normalizedCmd === 'stp enable')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-13' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show spanning-tree' ||
+          normalizedCmd === 'show stp' ||
+          normalizedCmd === 'show spanning tree')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-13' &&
+        activeStepIndex === 4 &&
+        (normalizedCmd === 'show spanning-tree ports' ||
+          normalizedCmd === 'show spanning-tree blocked' ||
+          normalizedCmd === 'show stp ports' ||
+          normalizedCmd === 'show stp brief')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {
