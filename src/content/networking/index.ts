@@ -8,6 +8,8 @@ import { NET_06_MODULE } from './modules/net-06';
 import { NET_07_MODULE } from './modules/net-07';
 import { NET_08_MODULE } from './modules/net-08';
 import { NET_09_MODULE } from './modules/net-09';
+import { NET_10_MODULE } from './modules/net-10';
+import { NET_11_MODULE } from './modules/net-11';
 import { NETWORKING_ROADMAP_STAGES } from './roadmap';
 
 export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
@@ -20,6 +22,8 @@ export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
   'net-07': NET_07_MODULE,
   'net-08': NET_08_MODULE,
   'net-09': NET_09_MODULE,
+  'net-10': NET_10_MODULE,
+  'net-11': NET_11_MODULE,
 };
 
 export function getNetworkingModule(
@@ -51,6 +55,8 @@ export function getAllNetworkingModules(): NetworkingModule[] {
     NET_07_MODULE,
     NET_08_MODULE,
     NET_09_MODULE,
+    NET_10_MODULE,
+    NET_11_MODULE,
   ];
 }
 
@@ -64,6 +70,8 @@ export {
   NET_07_MODULE,
   NET_08_MODULE,
   NET_09_MODULE,
+  NET_10_MODULE,
+  NET_11_MODULE,
   NETWORKING_ROADMAP_STAGES,
 };
 

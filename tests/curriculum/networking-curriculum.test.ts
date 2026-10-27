@@ -8,6 +8,9 @@ import {
   NET_06_MODULE,
   NET_07_MODULE,
   NET_08_MODULE,
+  NET_09_MODULE,
+  NET_10_MODULE,
+  NET_11_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -211,6 +214,76 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step6.cmd).toBeNull();
   });
 
+  it('Day 10 module has exact title, 6 steps, and authentic VLAN commands', () => {
+    const mod = getNetworkingModule('net-10');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-10');
+    expect(mod?.title).toBe('Day 10 · VLANs: Separating Networks on One Switch');
+    expect(mod?.steps).toHaveLength(6);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('One physical switch, one big domain');
+    expect(step1.cmd).toBe('show vlan');
+    expect(step1.what).toContain('Virtual Local Area Network');
+    expect(step1.what).toContain('VLAN 1');
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('vlan create 10 20');
+    expect(step2.what).toContain('VLAN ID');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('set port 1,2 vlan 10; set port 3,4 vlan 20');
+    expect(step3.what).toContain('access port');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('ping 192.168.10.255');
+    expect(step4.what).toContain('broadcast frame');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBe('ping 192.168.20.30');
+    expect(step5.what).toContain('A Layer 2 switch will never pass frames between two different VLANs');
+
+    const step6 = mod!.steps[5];
+    expect(step6.cmd).toBeNull();
+    expect(step6.title).toBe('The four rules of VLAN segmentation');
+  });
+
+  it('Day 11 module has exact title, 6 steps, and authentic 802.1Q trunk commands', () => {
+    const mod = getNetworkingModule('net-11');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-11');
+    expect(mod?.title).toBe('Day 11 · Trunks: Carrying VLANs Between Switches');
+    expect(mod?.steps).toHaveLength(6);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('Connecting VLANs across multiple switches');
+    expect(step1.cmd).toBe('show trunk');
+    expect(step1.what).toContain('trunk port');
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('set port 5 trunk');
+    expect(step2.what).toContain('IEEE 802.1Q');
+    expect(step2.what).toContain('VLAN ID');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('show frame header');
+    expect(step3.title).toBe('Tagging and untagging: computers never see tags');
+    expect(step3.what).toContain('strips the 802.1Q tag off completely');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('show trunk native');
+    expect(step4.what).toContain('Native VLAN');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBe('ping 192.168.10.30');
+    expect(step5.title).toBe('Testing cross-switch communication');
+    expect(step5.what).toContain('192.168.10.30');
+
+    const step6 = mod!.steps[5];
+    expect(step6.cmd).toBeNull();
+    expect(step6.title).toBe('The four rules of VLAN trunks');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -228,6 +301,8 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(7)?.id).toBe('net-07');
     expect(getNetworkingModule(8)?.id).toBe('net-08');
     expect(getNetworkingModule(9)?.id).toBe('net-09');
+    expect(getNetworkingModule(10)?.id).toBe('net-10');
+    expect(getNetworkingModule(11)?.id).toBe('net-11');
   });
 });
 

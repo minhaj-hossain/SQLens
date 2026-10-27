@@ -300,6 +300,156 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep5).toContain('Next Stage: Day 10 · VLANs');
   });
 
+  it('Day 10 progressively reveals single-domain default state, VLAN containers, broadcast confinement, and cross-VLAN block', () => {
+    // Step 0: Factory Default Single Shared Domain
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('VLANS · LOGICAL SEGMENTATION ON A SINGLE SWITCH');
+    expect(htmlStep0).toContain('FACTORY DEFAULT SWITCH · ALL PORTS ASSIGNED TO VLAN 1');
+    expect(htmlStep0).toContain('1 Shared Broadcast Domain (Factory Default)');
+    expect(htmlStep0).toContain('PC1');
+    expect(htmlStep0).toContain('PC4');
+    expect(htmlStep0).toContain('192.168.10.10');
+    expect(htmlStep0).toContain('192.168.20.40');
+
+    // Step 1: VLANs Created (0 ports assigned)
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('VLANs Created · Awaiting Port Assignment');
+    expect(htmlStep1).toContain('Engineering');
+    expect(htmlStep1).toContain('Finance');
+
+    // Step 2: Access Port Assignment -> Split into Two Isolated Containers
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('VLAN 10 (ENGINEERING) · 192.168.10.0/24');
+    expect(htmlStep2).toContain('VLAN 20 (FINANCE) · 192.168.20.0/24');
+    expect(htmlStep2).toContain('ACCESS MODE');
+    expect(htmlStep2).toContain('Active Segmentation · 2 Isolated Broadcast Domains');
+
+    // Step 3: Broadcast Confinement (PC2 receives, Ports 3 & 4 silent)
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('PC2: Broadcast Received ✓');
+    expect(htmlStep3).toContain('VLAN 20 FILTERED ✕');
+    expect(htmlStep3).toContain('Ports 3 &amp; 4 Silent');
+
+    // Step 4: Unicast Cross-VLAN Dropped
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('CROSS-VLAN BLOCKED ✕ (Layer 2 Isolation)');
+    expect(htmlStep4).toContain('PC3: 100% Packet Loss');
+
+    // Step 5: Recap 4 Rules of VLANs
+    const htmlStep5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-10"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep5).toContain('THE 4 RULES OF VLAN SEGMENTATION');
+    expect(htmlStep5).toContain('Next: Day 11 · 802.1Q Trunks');
+  });
+
+  it('Day 11 progressively reveals untrunked link, 802.1Q trunk, frame dissection, native VLAN, and cross-switch ping', () => {
+    // Step 0: Untrunked access link
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-11"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('802.1Q TRUNKS · CARRYING MULTIPLE VLANS BETWEEN SWITCHES');
+    expect(htmlStep0).toContain('CAMPUS BUILDING 1 · SWITCH SW1');
+    expect(htmlStep0).toContain('CAMPUS BUILDING 2 · SWITCH SW2');
+    expect(htmlStep0).toContain('Port 5: Access Mode (Untrunked)');
+    expect(htmlStep0).toContain('PC1');
+    expect(htmlStep0).toContain('PC3');
+
+    // Step 1: 802.1Q Trunk active
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-11"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('IEEE 802.1Q TRUNK (VLAN 10 + 20)');
+
+    // Step 2: Frame Dissection
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-11"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('802.1Q FRAME DISSECTION (TRUNK WIRE)');
+    expect(htmlStep2).toContain('0x8100 (802.1Q)');
+    expect(htmlStep2).toContain('VID=10 (Engineering)');
+
+    // Step 3: Native VLAN Match Box
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-11"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('NATIVE VLAN: 1 (UNTAGGED TRANSIT)');
+    expect(htmlStep3).toContain('Matched on SW1 &amp; SW2 · Zero VLAN Leaking');
+
+    // Step 4: Cross-Switch Ping Active
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-11"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('PC3: Ping Reply Sent ✓');
+    expect(htmlStep4).toContain('PC2 (VLAN 20): Silent (0 frames)');
+    expect(htmlStep4).toContain('PC4 (VLAN 20): Silent (0 frames)');
+
+    // Step 5: Recap
+    const htmlStep5 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-11"
+        activeStepIndex={5}
+        completedSteps={new Set([0, 1, 2, 3, 4])}
+      />
+    );
+    expect(htmlStep5).toContain('THE 4 RULES OF VLAN TRUNKS');
+    expect(htmlStep5).toContain('Next: Day 12 · Router-on-a-Stick');
+  });
+
   it('renders pan/zoom controls and navigation hints', () => {
     const html = renderToStaticMarkup(
       <NetworkingCanvas

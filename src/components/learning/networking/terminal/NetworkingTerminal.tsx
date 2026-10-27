@@ -131,6 +131,10 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show mac table, ping 192.168.1.20, show switch log, clear mac table, cls, clear, help';
       } else if (dayId === 'net-09') {
         helpMsg = 'Commands: show broadcast domain, show station stats, show router broadcast, show domains, ping 192.168.1.255, cls, clear, help';
+      } else if (dayId === 'net-10') {
+        helpMsg = 'Commands: show vlan, vlan create 10 20, set port 1,2 vlan 10; set port 3,4 vlan 20, ping 192.168.10.255, ping 192.168.20.30, cls, clear, help';
+      } else if (dayId === 'net-11') {
+        helpMsg = 'Commands: show trunk, set port 5 trunk, show frame header, show trunk native, ping 192.168.10.30, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -446,6 +450,82 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
       }
     }
 
+    // Day 10 dynamic logic
+    if (dayId === 'net-10') {
+      if (v === 'show vlan' || v === 'show vlans' || v === 'vlan list') {
+        if (completedSteps.has(2) || activeStepIndex >= 3) {
+          out =
+            'Switch SW1 VLAN Database\n----------------------------------------------------\nVLAN  Name              Status    Ports\n1     default           active    none\n10    Engineering       active    Port 1, Port 2\n20    Finance           active    Port 3, Port 4\n----------------------------------------------------\nActive VLANs: 2 user-defined (access mode assigned)';
+          isSuccess = true;
+        } else if (completedSteps.has(1) || activeStepIndex >= 2) {
+          out =
+            'Switch SW1 VLAN Database\n----------------------------------------------------\nVLAN  Name              Status    Ports\n1     default           active    Port 1, Port 2, Port 3, Port 4\n10    Engineering       active    none\n20    Finance           active    none\n----------------------------------------------------\nActive VLANs: 3 (VLAN 10 and 20 created, 0 ports assigned)';
+          isSuccess = true;
+        } else {
+          out =
+            'Switch SW1 VLAN Database\n----------------------------------------------------\nVLAN  Name              Status    Ports\n1     default           active    Port 1, Port 2, Port 3, Port 4\n----------------------------------------------------\nTotal VLANs: 1 (factory default state: all ports share one broadcast domain)';
+          isSuccess = true;
+        }
+      } else if (
+        v === 'vlan create 10 20' ||
+        v === 'vlan 10 20' ||
+        v === 'create vlan 10 20'
+      ) {
+        out =
+          'Switch SW1(config)# vlan 10\nSwitch SW1(config-vlan)# name Engineering\nSwitch SW1(config)# vlan 20\nSwitch SW1(config-vlan)# name Finance\n\nVLAN 10 (Engineering) created.\nVLAN 20 (Finance) created.\nAssigned ports: none (empty VLANs).';
+        isSuccess = true;
+      } else if (
+        v === 'set port 1,2 vlan 10; set port 3,4 vlan 20' ||
+        v === 'set port 1,2 vlan 10 ; set port 3,4 vlan 20' ||
+        v === 'set port 1, 2 vlan 10; set port 3, 4 vlan 20' ||
+        v === 'set port 1,2 vlan 10 and set port 3,4 vlan 20'
+      ) {
+        out =
+          'Switch SW1(config)# interface range port 1 - 2\nSwitch SW1(config-if-range)# switchport mode access\nSwitch SW1(config-if-range)# switchport access vlan 10\nSwitch SW1(config)# interface range port 3 - 4\nSwitch SW1(config-if-range)# switchport mode access\nSwitch SW1(config-if-range)# switchport access vlan 20\n\nPort 1, Port 2 -> VLAN 10 (Engineering · Access Mode)\nPort 3, Port 4 -> VLAN 20 (Finance · Access Mode)';
+        isSuccess = true;
+      }
+    }
+
+    // Day 11 dynamic logic
+    if (dayId === 'net-11') {
+      if (v === 'show trunk' || v === 'show trunks' || v === 'show interfaces trunk') {
+        if (completedSteps.has(1) || activeStepIndex >= 1) {
+          out =
+            'Switch SW1 Trunk Interface Status\n----------------------------------------------------\nPort   Mode      Encapsulation   Status        Native VLAN\nPort 5 on        802.1q          trunking      1\n----------------------------------------------------\nTrunk Port 5: Active · Allowed VLANs: 1, 10, 20 · 802.1Q Tagging Enabled';
+          isSuccess = true;
+        } else {
+          out =
+            'Switch SW1 Trunk Interface Status\n----------------------------------------------------\nPort   Mode      Encapsulation   Status        Native VLAN\nPort 5 auto      802.1q          not-trunking  1\n----------------------------------------------------\nResult: Port 5 is operating in standard Access Mode (single VLAN only).';
+          isSuccess = true;
+        }
+      } else if (
+        v === 'set port 5 trunk' ||
+        v === 'switchport mode trunk' ||
+        v === 'port 5 trunk'
+      ) {
+        out =
+          'Switch SW1(config)# interface port 5\nSwitch SW1(config-if)# switchport mode trunk\nSwitch SW1(config-if)# switchport trunk allowed vlan 1,10,20\n\nSwitch SW2(config)# interface port 5\nSwitch SW2(config-if)# switchport mode trunk\nSwitch SW2(config-if)# switchport trunk allowed vlan 1,10,20\n\nTrunk link established on Port 5 between SW1 and SW2.\nEncapsulation: IEEE 802.1Q (Dot1q) · Allowed VLANs: 1, 10, 20.';
+        isSuccess = true;
+      } else if (
+        v === 'show frame header' ||
+        v === 'show header' ||
+        v === 'debug 802.1q' ||
+        v === 'show frame'
+      ) {
+        out =
+          'Captured Frame on Trunk Port 5 Link (SW1 -> SW2):\n----------------------------------------------------\n[Ethernet Header]\n  Destination MAC:  AA:BB:CC:10:00:03 (PC3)\n  Source MAC:       AA:BB:CC:10:00:01 (PC1)\n[IEEE 802.1Q Tag]\n  TPID (Tag Protocol Identifier): 0x8100\n  Priority (PCP):                 0 (Best Effort)\n  VLAN ID (VID):                  10 (Engineering)\n[Payload]\n  EtherType:        0x0800 (IPv4)\n  Source IP:        192.168.10.10\n  Destination IP:   192.168.10.30\n  Protocol:         ICMP Echo Request\n----------------------------------------------------\nAction at SW2: Tag 0x8100 stripped before egress on Port 1.';
+        isSuccess = true;
+      } else if (
+        v === 'show trunk native' ||
+        v === 'show native vlan' ||
+        v === 'show native'
+      ) {
+        out =
+          'Switch SW1 & SW2 Trunk Native VLAN Status\n----------------------------------------------------\nPort     Trunk Mode   Native VLAN   Status    VLAN Leaking\nSW1:P5   802.1Q       VLAN 1        MATCHED   Protected (None)\nSW2:P5   802.1Q       VLAN 1        MATCHED   Protected (None)\n----------------------------------------------------\nNative VLAN frames traverse Port 5 untagged with 0 byte overhead.';
+        isSuccess = true;
+      }
+    }
+
     if (v === 'clear' || v === 'cls') {
       setLogs([]);
       setInputVal('');
@@ -465,6 +545,10 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         out = 'To inspect switch MAC table, use: show mac table';
       } else if (v === 'link' || v === 'status') {
         out = 'To check physical cable state, use: link status';
+      } else if (v === 'vlan' || v === 'vlans') {
+        out = 'To inspect switch VLANs, use: show vlan';
+      } else if (v === 'trunk' || v === 'trunks') {
+        out = 'To inspect switch trunk interfaces, use: show trunk';
       } else if (v.startsWith('setip') && v.split(' ').length < 4) {
         out = 'Usage: setip <device> <address> <mask>\nExample: setip pc3 192.168.1.130 255.255.255.128';
       } else {

@@ -164,6 +164,66 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
         (normalizedCmd === 'ping 192.168.1.255' || normalizedCmd.startsWith('ping 192.168.1.'))
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-10' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'show vlan' || normalizedCmd === 'show vlans' || normalizedCmd === 'vlan')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-10' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'vlan create 10 20' || normalizedCmd === 'vlan 10 20' || normalizedCmd === 'create vlan 10 20')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-10' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd.includes('port 1,2 vlan 10') || normalizedCmd.includes('port 1, 2 vlan 10') || normalizedCmd.includes('set port'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-10' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'ping 192.168.10.255' || normalizedCmd.startsWith('ping 192.168.10.'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-10' &&
+        activeStepIndex === 4 &&
+        (normalizedCmd === 'ping 192.168.20.30' || normalizedCmd.startsWith('ping 192.168.20.'))
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-11' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'show trunk' || normalizedCmd === 'show trunks' || normalizedCmd === 'trunk' || normalizedCmd === 'show interfaces trunk')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-11' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'set port 5 trunk' || normalizedCmd === 'switchport mode trunk' || normalizedCmd === 'port 5 trunk')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-11' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'show frame header' || normalizedCmd === 'show header' || normalizedCmd === 'debug 802.1q' || normalizedCmd === 'show frame')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-11' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show trunk native' || normalizedCmd === 'show native vlan' || normalizedCmd === 'show native')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-11' &&
+        activeStepIndex === 4 &&
+        (normalizedCmd === 'ping 192.168.10.30' || normalizedCmd.startsWith('ping 192.168.10.'))
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

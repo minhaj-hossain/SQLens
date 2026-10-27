@@ -52,9 +52,9 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
 ## Stage 4: Switching Design (Days 10–13) · *VLANs, Trunks & Spanning Tree*
 *Goal*: Segment switches logically and prevent Layer 2 loop storms.
 
-* **Day 10 · VLANs: Separating Networks on One Switch** (`net-10`) [PLANNED]
+* **Day 10 · VLANs: Separating Networks on One Switch** (`net-10`) [COMPLETED]
   * *Concepts*: Virtual Local Area Networks (VLAN 10, VLAN 20); splitting one physical switch into multiple isolated broadcast domains without buying new hardware.
-* **Day 11 · Trunks: Carrying VLANs Between Switches** (`net-11`) [PLANNED]
+* **Day 11 · Trunks: Carrying VLANs Between Switches** (`net-11`) [SPECIFIED]
   * *Concepts*: Access ports vs trunk ports; IEEE 802.1Q VLAN tagging; carrying traffic from multiple VLANs over a single link.
 * **Day 12 · Routing Between VLANs** (`net-12`) [PLANNED]
   * *Concepts*: Inter-VLAN routing; Router-on-a-Stick (sub-interfaces `g0/0.10`, `g0/0.20`); moving packets between isolated VLANs.
