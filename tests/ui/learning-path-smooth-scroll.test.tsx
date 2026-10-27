@@ -108,6 +108,11 @@ describe('LearningPathView Smooth Scroll & Strict Theme Separation', () => {
     expect(html).toContain('border-func/35');
     expect(html).toContain('shadow-[0_0_28px_var(--accent-dim)]');
 
+    // Smooth floating circle popover card with theme tokens
+    expect(html).toContain('data-testid="circle-tooltip"');
+    expect(html).toContain('role="tooltip"');
+    expect(html).toContain('bg-surface-3');
+
     // Neither theme palette colors should be hardcoded in the markup
     expect(html).not.toContain('#f4c430');
     expect(html).not.toContain('#38bdf8');
@@ -142,6 +147,11 @@ describe('LearningPathView Smooth Scroll & Strict Theme Separation', () => {
     expect(html).toContain('target:ring-(--accent-line)');
     expect(html).toContain('border-func/35');
     expect(html).toContain('shadow-[0_0_28px_var(--accent-dim)]');
+
+    // Smooth floating circle popover card with theme tokens
+    expect(html).toContain('data-testid="circle-tooltip"');
+    expect(html).toContain('role="tooltip"');
+    expect(html).toContain('bg-surface-3');
 
     // Neither theme palette colors should be hardcoded in the markup
     expect(html).not.toContain('#f4c430');

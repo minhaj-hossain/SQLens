@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '@/components/ui/Icon';
 import { useTrackCurriculum } from '@/components/learn/use-track';
-import {
-  getModuleDisplayLabel,
-  getNextModule,
-} from '../../lib/curriculum/module-order';
-import { ModuleData } from '../../types/curriculum';
+import { getModuleDisplayLabel, getNextModule } from '../../lib/curriculum/module-order';
+import { ModuleData, MilestoneData } from '../../types/curriculum';
 import { UserLearningState } from '../../types/progress';
+
+export interface CircleTooltipInfo {
+  visible: boolean;
+  moduleId: string;
+  moduleNumber: string;
+  title: string;
+  stageName: string;
+  description: string;
+  status: 'completed' | 'current' | 'unlocked' | 'locked';
+  conceptsCount: number;
+  tasksCount: number;
+  x: number;
+  y: number;
+}
 import {
   getModuleUnlockStatus,
   getModuleProgressCounts,
@@ -54,6 +65,103 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
     title: string;
     message: string;
   } | null>(null);
+
+  const [circleTooltip, setCircleTooltip] = useState<CircleTooltipInfo>({
+    visible: false,
+    moduleId: '',
+    moduleNumber: '1',
+    title: '',
+    stageName: '',
+    description: '',
+    status: 'unlocked',
+    conceptsCount: 0,
+    tasksCount: 0,
+    x: 0,
+    y: 0,
+  });
+
+  const hideCircleTooltipTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleCircleMouseEnter = (
+    e: React.MouseEvent<HTMLElement>,
+    mod: ModuleData,
+    milestone: MilestoneData,
+    status: { isUnlocked: boolean },
+    isDone: boolean,
+    isCurrent: boolean,
+  ) => {
+    if (hideCircleTooltipTimeoutRef.current) {
+      clearTimeout(hideCircleTooltipTimeoutRef.current);
+      hideCircleTooltipTimeoutRef.current = null;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const moduleNum =
+      getModuleDisplayLabel(mod).replace(/^(?:Day|Module)\s*/i, '').trim() ||
+      String(mod.curriculumOrder ?? mod.day);
+
+    const taskCount =
+      mod.concepts.reduce((acc, c) => acc + (c.tasks?.length ?? 0), 0) +
+      (mod.challenge ? 1 : 0);
+
+    const teaser =
+      mod.description ||
+      mod.concepts.map((c) => c.title).slice(0, 3).join(' · ');
+
+    const nodeStatus: 'completed' | 'current' | 'unlocked' | 'locked' = isDone
+      ? 'completed'
+      : isCurrent
+      ? 'current'
+      : isDone || status.isUnlocked
+      ? 'unlocked'
+      : 'locked';
+
+    // Center horizontally above anchor and clamp inside viewport
+    const targetX = rect.left + rect.width / 2;
+    const clampedX = Math.max(160, Math.min(typeof window !== 'undefined' ? window.innerWidth - 160 : 600, targetX));
+    const targetY = rect.top - 12;
+
+    setCircleTooltip({
+      visible: true,
+      moduleId: mod.id,
+      moduleNumber: moduleNum,
+      title: mod.shortTitle || mod.title,
+      stageName: `STAGE ${milestone.number} · ${milestone.subtitle}`,
+      description: teaser,
+      status: nodeStatus,
+      conceptsCount: mod.concepts.length,
+      tasksCount: taskCount,
+      x: clampedX,
+      y: targetY,
+    });
+  };
+
+  const handleCircleMouseLeave = () => {
+    hideCircleTooltipTimeoutRef.current = setTimeout(() => {
+      setCircleTooltip((prev) => ({ ...prev, visible: false }));
+    }, 120);
+  };
+
+  const handleCircleTooltipMouseEnter = () => {
+    if (hideCircleTooltipTimeoutRef.current) {
+      clearTimeout(hideCircleTooltipTimeoutRef.current);
+      hideCircleTooltipTimeoutRef.current = null;
+    }
+  };
+
+  const handleCircleTooltipMouseLeave = () => {
+    hideCircleTooltipTimeoutRef.current = setTimeout(() => {
+      setCircleTooltip((prev) => ({ ...prev, visible: false }));
+    }, 100);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hideCircleTooltipTimeoutRef.current) {
+        clearTimeout(hideCircleTooltipTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const totalModules = ALL_MODULES.length;
   const completedCount = ALL_MODULES.filter((m) => isModuleFullyComplete(m, userState)).length;
@@ -378,7 +486,14 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
                         >
                           <button
                             id={`leaf-${mod.id}`}
-                            onClick={() => handleLeaf(mod)}
+                            onClick={() => {
+                              setCircleTooltip((prev) => ({ ...prev, visible: false }));
+                              handleLeaf(mod);
+                            }}
+                            onMouseEnter={(e) =>
+                              handleCircleMouseEnter(e, mod, milestone, status, isDone, isCurrent)
+                            }
+                            onMouseLeave={handleCircleMouseLeave}
                             disabled={!isUnlocked}
                             title={`${getModuleDisplayLabel(mod)} — ${mod.shortTitle}${isDone ? ' (complete)' : isCurrent ? ' (you are here)' : isUnlocked ? '' : ' (locked)'}`}
                             aria-label={`${getModuleDisplayLabel(mod)}: ${mod.shortTitle}`}
@@ -569,6 +684,105 @@ export const LearningPathView: React.FC<LearningPathViewProps> = ({
           </button>
         )}
       </footer>
+
+      {/* ============================================================
+          SMOOTH FLOATING CIRCLE POPOVER CARD
+          Animated with CSS opacity & scale without abrupt unmounting
+          ============================================================ */}
+      <div
+        data-testid="circle-tooltip"
+        onMouseEnter={handleCircleTooltipMouseEnter}
+        onMouseLeave={handleCircleTooltipMouseLeave}
+        style={{
+          left: `${circleTooltip.x}px`,
+          top: `${circleTooltip.y}px`,
+          transform: 'translate(-50%, -100%)',
+        }}
+        className={`fixed z-50 transition-all duration-200 ease-out max-w-[280px] w-full ${
+          circleTooltip.visible
+            ? 'opacity-100 scale-100 pointer-events-auto'
+            : 'opacity-0 scale-95 pointer-events-none'
+        }`}
+        role="tooltip"
+        aria-hidden={!circleTooltip.visible}
+      >
+        <div className="relative bg-surface-3/95 backdrop-blur-xl border border-border rounded-xl p-3.5 text-text shadow-[0_20px_40px_rgba(0,0,0,0.65),0_0_24px_var(--accent-dim)]">
+          {/* Header Row */}
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="text-[11px] font-mono font-medium text-text-dim truncate">
+              Day {circleTooltip.moduleNumber} · {circleTooltip.stageName.split('·')[0].trim()}
+            </span>
+
+            {circleTooltip.status === 'completed' ? (
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-func/15 text-func border border-func/30 font-semibold shrink-0">
+                <span>✓ Complete</span>
+              </span>
+            ) : circleTooltip.status === 'current' ? (
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-func text-ink font-bold shrink-0 shadow-[0_0_8px_var(--pulse-strong)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-ink animate-pulse" />
+                Active
+              </span>
+            ) : circleTooltip.status === 'unlocked' ? (
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-surface-2 text-text-dim border border-border shrink-0">
+                Unlocked
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-mono px-2 py-0.5 rounded-full bg-surface-2 text-text-faint border border-border-soft shrink-0">
+                <Icon name="lock" className="text-[10px]" /> Locked
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <h4 className="text-[14px] font-semibold text-text leading-tight mb-1.5">
+            {circleTooltip.title}
+          </h4>
+
+          {/* Description */}
+          <p className="text-[12px] text-text-dim leading-relaxed mb-3 line-clamp-2">
+            {circleTooltip.description}
+          </p>
+
+          {/* Action CTA inside popover */}
+          {circleTooltip.status !== 'locked' ? (
+            <button
+              onClick={() => {
+                const targetMod = getModuleById(circleTooltip.moduleId);
+                if (targetMod) {
+                  setCircleTooltip((prev) => ({ ...prev, visible: false }));
+                  handleLeaf(targetMod);
+                }
+              }}
+              className={`inline-flex w-full items-center justify-center gap-1.5 font-semibold text-[12.5px] py-1.5 px-3 rounded-lg transition-all cursor-pointer ${
+                circleTooltip.status === 'current'
+                  ? 'bg-func text-ink hover:brightness-110 shadow-[0_0_12px_var(--pulse-strong)]'
+                  : circleTooltip.status === 'completed'
+                  ? 'bg-surface-2 border border-func/40 text-func hover:bg-func/10 hover:border-func'
+                  : 'bg-func text-ink hover:brightness-110 shadow-[0_0_12px_var(--accent-dim)]'
+              }`}
+            >
+              <span>
+                {circleTooltip.status === 'completed'
+                  ? `Review Day ${circleTooltip.moduleNumber}`
+                  : circleTooltip.status === 'current'
+                  ? `Continue Day ${circleTooltip.moduleNumber}`
+                  : `Start Day ${circleTooltip.moduleNumber}`}
+              </span>
+              <span aria-hidden="true">→</span>
+            </button>
+          ) : (
+            <div className="text-[11px] font-mono text-text-faint text-center py-0.5">
+              Complete previous days to unlock
+            </div>
+          )}
+
+          {/* Downward triangle arrow indicator */}
+          <div
+            className="absolute left-1/2 -bottom-[6px] -translate-x-1/2 w-3 h-3 bg-surface-3 border-b border-r border-border rotate-45 pointer-events-none"
+            aria-hidden="true"
+          />
+        </div>
+      </div>
     </div>
   );
 };
