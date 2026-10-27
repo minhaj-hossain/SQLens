@@ -355,6 +355,41 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'ping 198.51.100.10 -d')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-15' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'traceroute 198.51.100.10' ||
+          normalizedCmd === 'tracert 198.51.100.10' ||
+          normalizedCmd === 'traceroute')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-15' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show fiber links' ||
+          normalizedCmd === 'show fiber' ||
+          normalizedCmd === 'show links' ||
+          normalizedCmd === 'show propagation' ||
+          normalizedCmd === 'show fiber telemetry')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-15' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'traceroute 198.51.100.50' ||
+          normalizedCmd === 'tracert 198.51.100.50')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-15' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show return path' ||
+          normalizedCmd === 'show return route' ||
+          normalizedCmd === 'show return' ||
+          normalizedCmd === 'show bgp path' ||
+          normalizedCmd === 'show asymmetric')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

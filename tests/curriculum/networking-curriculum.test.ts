@@ -14,6 +14,7 @@ import {
   NET_12_MODULE,
   NET_13_MODULE,
   NET_14_MODULE,
+  NET_15_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -407,6 +408,46 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step6.title).toBe('The four rules of ICMP and TTL');
   });
 
+  it('Day 15 module has exact title, 5 steps, and authentic Traceroute commands', () => {
+    const mod = getNetworkingModule('net-15');
+    expect(mod).toBeDefined();
+    expect(mod?.id).toBe('net-15');
+    expect(mod?.title).toBe(
+      'Day 15 · Traceroute: Following the Path Across the Internet'
+    );
+    expect(mod?.steps).toHaveLength(5);
+
+    const step1 = mod!.steps[0];
+    expect(step1.title).toBe('Why Traceroute sends three probes per hop');
+    expect(step1.cmd).toBe('traceroute 198.51.100.10');
+    expect(step1.what).toContain('three sequential probe packets');
+    expect(step1.what).toContain('starting at 33434');
+
+    const step2 = mod!.steps[1];
+    expect(step2.cmd).toBe('show fiber links');
+    expect(step2.title).toBe('RTT jumps: Optical fiber and propagation delay');
+    expect(step2.what).toContain('speed of light');
+    expect(step2.what).toContain('~5 microseconds per kilometer');
+
+    const step3 = mod!.steps[2];
+    expect(step3.cmd).toBe('traceroute 198.51.100.50');
+    expect(step3.title).toBe(
+      'The * * * mystery: Control Plane Policing (CoPP)'
+    );
+    expect(step3.what).toContain('Control Plane Policing (CoPP)');
+    expect(step3.what).toContain('ICMP Rate Limiting');
+
+    const step4 = mod!.steps[3];
+    expect(step4.cmd).toBe('show return path');
+    expect(step4.title).toBe('Asymmetric routing: The return path paradox');
+    expect(step4.what).toContain('Asymmetric Routing');
+    expect(step4.what).toContain('Border Gateway Protocol (BGP)');
+
+    const step5 = mod!.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe('The four rules of traceroute and internet paths');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -429,6 +470,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(12)?.id).toBe('net-12');
     expect(getNetworkingModule(13)?.id).toBe('net-13');
     expect(getNetworkingModule(14)?.id).toBe('net-14');
+    expect(getNetworkingModule(15)?.id).toBe('net-15');
   });
 });
 

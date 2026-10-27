@@ -47,6 +47,7 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-12': 'Route traffic between isolated VLANs using Router-on-a-Stick and 802.1Q sub-interfaces.',
   'net-13': 'Break Layer 2 loops and prevent broadcast storms using Spanning Tree Protocol (IEEE 802.1D) and BPDUs.',
   'net-14': 'Deconstruct the IPv4 TTL field and ICMP (RFC 792) to understand how ping, traceroute, and PMTUD operate.',
+  'net-15': 'Trace multi-hop internet routes across fiber links. Learn 3-probe telemetry, propagation delay physics, and CoPP rate limiting.',
 };
 
 export const NetworkingHomePage: React.FC = () => {

@@ -141,6 +141,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: test broadcast loop, show mac-flapping, enable stp, show spanning-tree, show spanning-tree ports, cls, clear, help';
       } else if (dayId === 'net-14') {
         helpMsg = 'Commands: ping 198.51.100.10 -c 1, show packet header, ping 198.51.100.10 -t 1, traceroute 198.51.100.10, ping 198.51.100.10 -s 1472 -d, cls, clear, help';
+      } else if (dayId === 'net-15') {
+        helpMsg = 'Commands: traceroute 198.51.100.10, show fiber links, traceroute 198.51.100.50, show return path, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -683,6 +685,42 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'ping 198.51.100.10 -d'
       ) {
         out = staticResponses['ping 198.51.100.10 -s 1472 -d'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 15 dynamic logic
+    if (dayId === 'net-15') {
+      if (
+        v === 'traceroute 198.51.100.10' ||
+        v === 'tracert 198.51.100.10' ||
+        v === 'traceroute'
+      ) {
+        out = staticResponses['traceroute 198.51.100.10'];
+        isSuccess = true;
+      } else if (
+        v === 'show fiber links' ||
+        v === 'show fiber' ||
+        v === 'show links' ||
+        v === 'show propagation' ||
+        v === 'show fiber telemetry'
+      ) {
+        out = staticResponses['show fiber links'];
+        isSuccess = true;
+      } else if (
+        v === 'traceroute 198.51.100.50' ||
+        v === 'tracert 198.51.100.50'
+      ) {
+        out = staticResponses['traceroute 198.51.100.50'];
+        isSuccess = true;
+      } else if (
+        v === 'show return path' ||
+        v === 'show return route' ||
+        v === 'show return' ||
+        v === 'show bgp path' ||
+        v === 'show asymmetric'
+      ) {
+        out = staticResponses['show return path'];
         isSuccess = true;
       }
     }

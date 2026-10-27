@@ -857,5 +857,143 @@ describe('NetworkingCanvas Component', () => {
     );
     expect(htmlStep0).toContain('width="154"');
   });
+
+  it('Day 15 renders 4-hop transcontinental/transatlantic topology and progressive reveals for Traceroute', () => {
+    // Step 0: Initial 3 probes per hop
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'TRANSCONTINENTAL &amp; SUBSEA PATH TRACE (SF ↔ DEN ↔ NYC ↔ FRA)'
+    );
+    expect(htmlStep0).toContain('PC1 (SF)');
+    expect(htmlStep0).toContain('192.168.1.10/24');
+    expect(htmlStep0).toContain('ROUTER R1 (SF GATEWAY)');
+    expect(htmlStep0).toContain('ROUTER R2 (DENVER HUB)');
+    expect(htmlStep0).toContain('ROUTER R3 (NYC BACKBONE)');
+    expect(htmlStep0).toContain('Web Server (Frankfurt)');
+    expect(htmlStep0).toContain('198.51.100.10/24');
+    expect(htmlStep0).toContain('Hop 1 · 1.182, 1.145, 1.198ms');
+    expect(htmlStep0).toContain('3-PROBE MECHANISM &amp; TELEMETRY');
+    expect(htmlStep0).toContain(
+      'MULTI-HOP 3-PROBE TELEMETRY TABLE (TRACEROUTE 198.51.100.10)'
+    );
+    expect(htmlStep0).toContain('PROBING PROTOCOL COMPARISON');
+
+    // Step 1: Fiber link telemetry and propagation delay
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('1,620 km Fiber (SF-Denver)');
+    expect(htmlStep1).toContain('2,850 km DWDM (Denver-NYC)');
+    expect(htmlStep1).toContain('5,800 km Subsea');
+    expect(htmlStep1).toContain('OPTICAL FIBER PROPAGATION LAWS');
+    expect(htmlStep1).toContain(
+      'FIBER DISTANCE &amp; LATENCY CORRELATION (SHOW FIBER LINKS)'
+    );
+    expect(htmlStep1).toContain('DIAGNOSTIC RULE OF THUMB');
+
+    // Step 2: CoPP and * * * rate limiting
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('⚠ COPP ICMP SUPPRESSION ACTIVE');
+    expect(htmlStep2).toContain('Hop 3 · * * * (CoPP)');
+    expect(htmlStep2).toContain('DATA PLANE VS CONTROL PLANE');
+    expect(htmlStep2).toContain(
+      'CONTROL PLANE POLICING (COPP) ANALYSIS (TRACEROUTE 198.51.100.50)'
+    );
+    expect(htmlStep2).toContain('WHY ROUTERS DROP ICMP');
+
+    // Step 3: Asymmetric routing reverse path
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('← AS64510 (Amsterdam)');
+    expect(htmlStep3).toContain('← AS64520 (Chicago)');
+    expect(htmlStep3).toContain('THE ASYMMETRIC PARADOX');
+    expect(htmlStep3).toContain(
+      'BGP ASYMMETRIC ROUTE INSPECTION (SHOW RETURN PATH)'
+    );
+    expect(htmlStep3).toContain('HOW TO MAP THE FULL PATH');
+
+    // Step 4: Recap
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('TRACEROUTE METRICS CHEAT SHEET');
+    expect(htmlStep4).toContain(
+      'THE 4 CORE RULES OF TRACEROUTE &amp; INTERNET PATHS'
+    );
+    expect(htmlStep4).toContain('GLOBAL PATH TELEMETRY');
+  });
+
+  it('ensures Day 15 canvas coordinates strictly prevent component overlaps', () => {
+    // Step 0: Hop discovery tags positioned above routers at y=145
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    // Link distance labels cleared 60px above cables (y=190 vs cable y=250)
+    expect(htmlStep0).toContain('translate(269, 190)');
+    expect(htmlStep0).toContain('translate(613, 190)');
+    expect(htmlStep0).toContain('translate(943, 190)');
+    expect(htmlStep0).toContain('translate(1243, 190)');
+
+    expect(htmlStep0).toContain('translate(443, 145)');
+    expect(htmlStep0).toContain('translate(783, 145)');
+    expect(htmlStep0).toContain('translate(1103, 145)');
+    expect(htmlStep0).toContain('translate(1364, 145)');
+
+    // Bottom diagnostic HUD cards strictly clear the 94px device envelope (y=360 vs device y=220..314)
+    expect(htmlStep0).toContain('translate(70, 360)');
+    expect(htmlStep0).toContain('translate(380, 360)');
+    expect(htmlStep0).toContain('translate(1040, 360)');
+
+    // Step 2: Verify CoPP alert is staggered at y=100 with 45px vertical clearance above Hop 3 tag at y=145
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('translate(1103, 100)');
+    expect(htmlStep2).toContain('translate(1103, 145)');
+
+    // Step 3: Verify reverse path badges are positioned along the overhead arc at y=105 strictly clearing all router chassis and port pills
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-15"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('translate(1040, 105)');
+    expect(htmlStep3).toContain('translate(680, 105)');
+  });
 });
 
