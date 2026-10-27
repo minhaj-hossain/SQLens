@@ -56,12 +56,12 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
       href: '/networking',
       tags: ['Ethernet & MACs', 'Subnets & CIDR', 'L3 Routing & Gateways', 'VLANs & Trunks', 'TCP/UDP Sockets'],
       diagram: <NetworkingDiagramSvg />,
-      hoverBorder: 'hover:border-[#4ade80]/60',
-      hoverShadow: 'hover:shadow-2xl hover:shadow-[#4ade80]/10',
-      badgeBorder: 'border-[#4ade80]/30 text-[#4ade80] bg-[#4ade80]/10',
-      hoverTitle: 'group-hover:text-[#4ade80]',
-      ctaText: 'text-[#4ade80]',
-      outlineRing: 'focus-visible:outline-[#4ade80]',
+      hoverBorder: 'hover:border-func/60',
+      hoverShadow: 'hover:shadow-2xl hover:shadow-func/10',
+      badgeBorder: 'border-func/30 text-func bg-func/10',
+      hoverTitle: 'group-hover:text-func',
+      ctaText: 'text-func',
+      outlineRing: 'focus-visible:outline-func',
     },
   ];
 

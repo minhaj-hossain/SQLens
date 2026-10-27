@@ -43,8 +43,8 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('text-text');
     expect(html).toContain('border-func/30');
     expect(html).toContain('text-func');
-    expect(html).toContain('border-[#4ade80]/30');
-    expect(html).toContain('text-[#4ade80]');
+    expect(html).toContain('border-[#38bdf8]/30');
+    expect(html).toContain('text-[#38bdf8]');
   });
 
   it('renders ClickFooter with brand tagline and copyright', () => {
@@ -91,17 +91,18 @@ describe('TrackDiagrams SVG components', () => {
     expect(prismaHtml).toContain('string');
   });
 
-  it('renders NetworkingDiagramSvg with terminal ping, ICMP packet badge, and topology decoder', () => {
+  it('renders NetworkingDiagramSvg with horizontal topology, nodes, and packet telemetry matching Click theme', () => {
     const netHtml = renderToStaticMarkup(<NetworkingDiagramSvg />);
-    expect(netHtml).toContain('terminal');
-    expect(netHtml).toContain('ping 192.168.1.1');
-    expect(netHtml).toContain('ttl=64');
-    expect(netHtml).toContain('ICMP');
-    expect(netHtml).toContain('topology');
+    expect(netHtml).toContain('topology.net');
     expect(netHtml).toContain('PC1');
+    expect(netHtml).toContain('SW1');
     expect(netHtml).toContain('R1 GATEWAY');
     expect(netHtml).toContain('192.168.1.10');
     expect(netHtml).toContain('192.168.1.1');
-    expect(netHtml).toContain('LAYER 2/3 FRAME DECODE');
+    expect(netHtml).toContain('ICMP');
+    expect(netHtml).toContain('TTL=64');
+    expect(netHtml).toContain('var(--func)');
+    expect(netHtml).toContain('var(--surface-2)');
+    expect(netHtml).toContain('var(--border)');
   });
 });
