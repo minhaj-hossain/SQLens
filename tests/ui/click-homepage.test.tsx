@@ -39,28 +39,10 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('© 2026 Click');
   });
 
-  it('renders returning learner resume card when progress exists', () => {
-    const resumeHtml = renderToStaticMarkup(
-      <ClickHomepage
-        initialProgress={{
-          track: 'sql',
-          trackLabel: 'SQL',
-          dayNumber: 5,
-          dayTitle: 'Filtering with WHERE',
-          totalDays: 57,
-          completedDays: 4,
-          percent: 7,
-          resumeUrl: '/sql/learn/day-05/practice/where-clause?task=1',
-        }}
-      />,
-    );
-    expect(resumeHtml).toContain('id="returning-learner-card"');
-    expect(resumeHtml).toContain('SQL Track');
-    expect(resumeHtml).toContain('Day 5 of 57');
-    expect(resumeHtml).toContain('Filtering with WHERE');
-    expect(resumeHtml).toContain('7% Completed');
-    expect(resumeHtml).toContain('href="/sql/learn/day-05/practice/where-clause?task=1"');
-    expect(resumeHtml).toContain('Resume Learning');
+  it('does not render progress or returning-learner-card on the landing homepage', () => {
+    expect(html).not.toContain('returning-learner-card');
+    expect(html).not.toContain('resume-learning-btn');
+    expect(html).not.toContain('returning-learner-section');
   });
 });
 

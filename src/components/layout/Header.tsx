@@ -76,6 +76,12 @@ export const Header: React.FC<HeaderProps> = ({
                 Live
               </span>
             </Link>
+            <Link
+              href="/profile"
+              className="hover:text-[#e8eefb] transition-colors font-medium"
+            >
+              Progress
+            </Link>
           </nav>
         )}
 
@@ -84,16 +90,17 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Streak Pill */}
           {!isMinimal && (
-            <div
-              className="flex items-center gap-1.5 sm:gap-2 bg-surface-2 border border-border px-2 sm:px-3 py-1 rounded-full font-mono text-[11px] sm:text-xs text-text-dim whitespace-nowrap"
-              title={`${completedCount} of ${totalModules} modules completed`}
-              aria-label={`Curriculum progress: ${completedCount} out of ${totalModules} ${meta.label} Days completed`}
+            <Link
+              href="/profile"
+              className="flex items-center gap-1.5 sm:gap-2 bg-surface-2 border border-border px-2 sm:px-3 py-1 rounded-full font-mono text-[11px] sm:text-xs text-text-dim whitespace-nowrap hover:border-func/40 hover:text-text transition-colors"
+              title={`${completedCount} of ${totalModules} modules completed — View profile & progress`}
+              aria-label={`Curriculum progress: ${completedCount} out of ${totalModules} ${meta.label} Days completed. View profile`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-func">
                 <path d="M12 2C12 2 6 9 6 14a6 6 0 0012 0c0-2-1-3.5-1-3.5s-.5 2-2 2c1-3-1-6-3-6.5 0 0 1 2.5-1 4.5-1.5 1-2 2.5-2 3.5" />
               </svg>
               <span><strong className="text-func font-semibold">{completedCount}/{totalModules}</strong><span className="hidden min-[380px]:inline"> days</span></span>
-            </div>
+            </Link>
           )}
 
           {/* Database Schema */}
@@ -234,6 +241,16 @@ export const Header: React.FC<HeaderProps> = ({
 
                       {/* Actions */}
                       <div className="border-t border-border/60 py-1">
+                        <Link
+                          id="header-profile-link"
+                          href="/profile"
+                          role="menuitem"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
+                        >
+                          <Icon name="person" className="text-[15px] text-func" />
+                          My Profile &amp; Progress
+                        </Link>
                         {user.role === 'admin' && (
                           <Link
                             href="/admin"

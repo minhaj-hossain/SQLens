@@ -228,11 +228,14 @@ describe('Phase 2 — namespaced track routing', () => {
     const practiceTaskSrc = readFileSync('src/components/learning/PracticeTaskView.tsx', 'utf8');
     const notFoundSrc = readFileSync('src/app/not-found.tsx', 'utf8');
     const homepageSrc = readFileSync('src/components/home/ClickHomepage.tsx', 'utf8');
+    const profileViewSrc = readFileSync('src/components/profile/UserProfileView.tsx', 'utf8');
+    const profileProgressSrc = readFileSync('src/lib/progress/profile-progress.ts', 'utf8');
 
-    // 6.1 & 6.2: Homepage returning learner card contract
-    expect(homepageSrc).toContain('returning-learner-card');
-    expect(homepageSrc).toContain('resume-learning-btn');
-    expect(homepageSrc).toContain('deriveLastPosition');
+    // 6.1 & 6.2: Clean homepage decoupling; progress contracts live on UserProfileView
+    expect(homepageSrc).not.toContain('returning-learner-card');
+    expect(profileViewSrc).toContain('profile-resume-sql-btn');
+    expect(profileViewSrc).toContain('profile-resume-prisma-btn');
+    expect(profileProgressSrc).toContain('deriveLastPosition');
 
     // 6.3: ConceptLessonView label polish when concept.tasks.length === 0
     expect(conceptLessonSrc).toContain("concept.tasks.length === 0 ? 'Complete Concept & Continue' : 'Continue to Practice'");
