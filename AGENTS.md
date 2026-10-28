@@ -35,12 +35,18 @@ When authoring or modifying any Networking Track module in SQLens, ALWAYS adhere
    - Command matching in `NetworkingWorkspace.tsx` normalizes whitespace (`.trim().toLowerCase().replace(/\s+/g, ' ')`) and checks `activeStepIndex` first before fallback searching.
    - On Step 1 (Idea 1), the `← Back` button is active and navigates to `/networking#day-${dayNumber}`.
 
-5. **7-File Blueprint for Any New Day**:
-   1. `docs/networking/DAY_XX_DETAILED_SPEC.md`
-   2. `src/content/networking/modules/net-XX.ts`
-   3. `src/content/networking/index.ts`
-   4. `src/components/learning/networking/canvas/NetworkingCanvas.tsx`
-   5. `src/components/learning/networking/workspace/NetworkingWorkspace.tsx`
-   6. `tests/curriculum/networking-curriculum.test.ts`
-   7. `tests/ui/networking-canvas.test.tsx`
-   Always run: `npm test -- tests/curriculum/networking- tests/ui/networking-canvas.test.tsx` and `npx tsc --noEmit`.
+5. **9-File Blueprint for Any New Day**:
+   1. `docs/networking/DAY_XX_DETAILED_SPEC.md` (Authoritative detailed technical spec).
+   2. `src/content/networking/modules/net-XX.ts` (Curriculum step content).
+   3. `src/content/networking/index.ts` (Register in `NETWORKING_MODULES`).
+   4. `src/components/learning/networking/homepage/NetworkingHomePage.tsx` (Add teaser to `MODULE_TEASERS`).
+   5. `src/components/learning/networking/canvas/NetworkingCanvas.tsx` (`DAY_WORLD_SPECS` + anti-overlap stage).
+   6. `src/components/learning/networking/workspace/NetworkingWorkspace.tsx` (Command triggers and aliases).
+   7. `src/components/learning/networking/terminal/NetworkingTerminal.tsx` (Help/command output synchronization).
+   8. `tests/curriculum/networking-curriculum.test.ts` (Curriculum schema validation test).
+   9. `tests/ui/networking-canvas.test.tsx` and `tests/ui/networking-homepage.test.tsx` (Canvas coordinates & live days count).
+
+6. **Standard Planning Protocol & Skill**:
+   - When asked to "plan module XX" or "build module XX", strictly follow `.agents/skills/networking-module-builder/SKILL.md`.
+   - Days 1–17 are completed and deployed. Day 18 (`net-18` TCP: Reliable Delivery) is the active next module.
+   - Always run: `npm test -- tests/curriculum/networking- tests/ui/networking-` and `npx tsc --noEmit`.

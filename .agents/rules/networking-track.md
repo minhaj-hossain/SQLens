@@ -91,37 +91,52 @@ When creating or modifying progressive canvas stages:
 
 ---
 
-## 5. Track Status & Implementation Blueprint for Day 14+
+## 5. Track Status & Implementation Blueprint for Day 18+
 
-### Completed & Deployed Modules (Days 1–14):
+### Completed & Deployed Modules (Days 1–17):
 * **Stage 1 (Days 1–3)**: Physical Link, Local Star Topology, Subnetting & CIDR.
 * **Stage 2 (Days 4–6)**: The Gateway Router, Multi-Router Static Routes, Default Route & Global Internet.
 * **Stage 3 (Days 7–9)**: ARP & Neighbor Discovery, Switch MAC Learning & Flooding, Broadcast Domains & Boundaries.
 * **Stage 4 (Days 10–13)**: Single-Switch VLANs, 802.1Q Trunks, Router-on-a-Stick, Spanning Tree Protocol (STP).
-* **Stage 5 (Day 14)**: ICMP & TTL · How Ping Works (RFC 792, Protocol 1, TTL loop prevention, Type 11 Time Exceeded, Traceroute algorithm, PMTUD Type 3 Code 4).
+* **Stage 5 (Days 14–17)**:
+  * **Day 14**: ICMP & TTL · How Ping Works (RFC 792, Protocol 1, TTL loop prevention, Type 11 Time Exceeded, PMTUD Type 3 Code 4).
+  * **Day 15**: Traceroute: Following the Path · RTT, Latency & Asymmetric Routes (3-probe RTT physics, CoPP rate limiting).
+  * **Day 16**: Ports: Reaching the Right Program (16-bit process demultiplexing, 5-tuple sockets, ephemeral ports, TCP RST).
+  * **Day 17**: TCP: Opening and Closing a Connection (3-way handshake SYN/ACK, 4-way teardown with CLOSE_WAIT, 2MSL TIME_WAIT timer).
 
-### Next Up: Stage 5 — Transport Layer & Core Internet Protocols (Days 15–19)
-* **Day 15**: **Traceroute: Following the Path · RTT, Latency & Asymmetric Routes**
-  * Concept 1: The full anatomy of traceroute probe packets (UDP high-port probes vs ICMP echo probes).
-  * Concept 2: Round-Trip Time (RTT) variance across router hops (measuring latency at each hop).
-  * Concept 3: Why intermediate router hops show `* * *` (rate limiting and ICMP deprioritization on router control planes).
-  * Concept 4: Asymmetric routing (the return path from server to client often traverses different routers than outbound).
-  * Concept 5: Recap: The 4 Core Rules of Traceroute & Internet Paths.
-
-### Checklist of Files Touched When Implementing a New Day:
-1. `src/content/networking/modules/net-XX.ts` (Curriculum step content adhering to strict zero-analogy and taught-before-tested rules).
-2. `src/content/networking/index.ts` (Export module and register in `NETWORKING_MODULES` array).
-3. `src/components/learning/networking/canvas/NetworkingCanvas.tsx` (Add `DAY_WORLD_SPECS`, SVG hardware devices, cables, HUD cards with anti-overlap bounds).
-4. `src/components/learning/networking/workspace/NetworkingWorkspace.tsx` (Add command aliases/state triggers for module commands).
-5. `tests/curriculum/networking-curriculum.test.ts` (Add curriculum validation test).
-6. `tests/ui/networking-canvas.test.tsx` (Add UI progressive reveal test).
-7. `docs/networking/DAY_XX_DETAILED_SPEC.md` (Document detailed technical spec before/during implementation).
+### Next Up: Stage 5 — Day 18
+* **Day 18**: **TCP: Reliable Delivery · Sequence Numbers, Retransmissions & Flow Control** (`net-18`)
+  * Step 1 (Idea 1): Byte-Stream Sequence Numbers & Cumulative ACKs (`seq = ISN + byte_offset`, `ack = seq + length`).
+  * Step 2 (Idea 2): Packet Loss, Dynamic RTO (Jacobson's SRTT/RTTVAR algorithm, RFC 6298) & Exponential Backoff.
+  * Step 3 (Idea 3): Fast Retransmit (3 Duplicate ACKs) & SACK (Selective Acknowledgment blocks, RFC 2018).
+  * Step 4 (Idea 4): Flow Control & The Receive Window (`win` field, buffer overflow protection, Zero-Window Probes).
+  * Step 5 (Recap): The 4 Core Invariants of TCP Reliable Delivery (`cmd: null`).
 
 ---
 
-## 6. Mandatory Verification Protocol
+## 6. Standard Module Planning Protocol (When Instructed to "Plan Module XX")
+
+Whenever instructed to "plan module XX" or "build module XX":
+1. **Consult the Skill**: Use `.agents/skills/networking-module-builder/SKILL.md` as the authoritative execution engine.
+2. **Review Roadmap**: Read `docs/networking/TRACK_ROADMAP_DAYS_1_TO_35.md` and the previous day's spec (`docs/networking/DAY_${XX-1}_DETAILED_SPEC.md`).
+3. **Step Structure**: Structure exactly 4 Ideas + 1 Recap (or natural step count) with `num, group, title, concept, why, pic, task, cmd, read, rem`.
+4. **Author Spec**: Create `docs/networking/DAY_XX_DETAILED_SPEC.md` using the standard 6-section template before writing code.
+5. **The 9-File Blueprint**:
+   1. `docs/networking/DAY_XX_DETAILED_SPEC.md` (Authoritative spec).
+   2. `src/content/networking/modules/net-XX.ts` (Curriculum step content).
+   3. `src/content/networking/index.ts` (Register in `NETWORKING_MODULES`).
+   4. `src/components/learning/networking/homepage/NetworkingHomePage.tsx` (Add teaser to `MODULE_TEASERS`).
+   5. `src/components/learning/networking/canvas/NetworkingCanvas.tsx` (`DAY_WORLD_SPECS` + anti-overlap stage).
+   6. `src/components/learning/networking/workspace/NetworkingWorkspace.tsx` (Command triggers and aliases).
+   7. `src/components/learning/networking/terminal/NetworkingTerminal.tsx` (Help/command output synchronization).
+   8. `tests/curriculum/networking-curriculum.test.ts` (Curriculum validation test).
+   9. `tests/ui/networking-canvas.test.tsx` and `tests/ui/networking-homepage.test.tsx` (Canvas coordinates & live days count).
+
+---
+
+## 7. Mandatory Verification Protocol
 Before marking any new day complete, you MUST:
 1. Run curriculum & progression tests: `npx vitest run tests/curriculum/networking-curriculum.test.ts tests/curriculum/networking-interactive-flow.test.tsx tests/curriculum/networking-step-progression.test.tsx`.
-2. Run canvas UI test suite: `npx vitest run tests/ui/networking-canvas.test.tsx`.
+2. Run canvas UI test suite: `npx vitest run tests/ui/networking-canvas.test.tsx tests/ui/networking-homepage.test.tsx`.
 3. Confirm TypeScript build passes: `npx tsc --noEmit`.
 4. Verify interactive command entry unlocks the Next button on every single step.
