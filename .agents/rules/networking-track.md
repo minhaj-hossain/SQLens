@@ -98,20 +98,21 @@ When creating or modifying progressive canvas stages:
 * **Stage 2 (Days 4–6)**: The Gateway Router, Multi-Router Static Routes, Default Route & Global Internet.
 * **Stage 3 (Days 7–9)**: ARP & Neighbor Discovery, Switch MAC Learning & Flooding, Broadcast Domains & Boundaries.
 * **Stage 4 (Days 10–13)**: Single-Switch VLANs, 802.1Q Trunks, Router-on-a-Stick, Spanning Tree Protocol (STP).
-* **Stage 5 (Days 14–18)**:
+* **Stage 5 (Days 14–19)**:
   * **Day 14**: ICMP & TTL · How Ping Works (RFC 792, Protocol 1, TTL loop prevention, Type 11 Time Exceeded, PMTUD Type 3 Code 4).
   * **Day 15**: Traceroute: Following the Path · RTT, Latency & Asymmetric Routes (3-probe RTT physics, CoPP rate limiting).
   * **Day 16**: Ports: Reaching the Right Program (16-bit process demultiplexing, 5-tuple sockets, ephemeral ports, TCP RST).
   * **Day 17**: TCP: Opening and Closing a Connection (3-way handshake SYN/ACK, 4-way teardown with CLOSE_WAIT, 2MSL TIME_WAIT timer).
   * **Day 18**: TCP: Reliable Delivery (32-bit sequence numbers, cumulative ACKs, dynamic RTO with Karn backoff, Fast Retransmit with SACK RFC 2018, receive window flow control).
+  * **Day 19**: UDP: Fast and Simple (RFC 768 8-byte header, 0-RTT latency, Head-of-Line blocking elimination, stateless UNCONN sockets, QUIC / HTTP/3 multi-streaming).
 
-### Next Up: Stage 5 — Day 19
-* **Day 19**: **UDP: Fast and Simple · Connectionless Transport & Minimal Overhead** (`net-19`)
-  * Step 1 (Idea 1): Connectionless datagram delivery & the lightweight 8-byte UDP header.
-  * Step 2 (Idea 2): Why real-time traffic (DNS, VoIP, gaming, live video) chooses UDP over TCP head-of-line blocking.
-  * Step 3 (Idea 3): Port multiplexing in UDP without connection state or handshakes.
-  * Step 4 (Idea 4): Handling packet loss in UDP at the application layer (FEC, QUIC).
-  * Step 5 (Recap): The 4 Core Invariants of UDP & Transport Layer Comparison (`cmd: null`).
+### Next Up: Stage 6 — Day 20
+* **Day 20**: **Why Dynamic Routing: Scalability Limits of Static Routes, Link Failure Recovery & Autonomous Systems** (`net-20`)
+  * Step 1 (Idea 1): The operational and scalability limits of static routing tables in large mesh topologies ($O(N^2)$ route explosion).
+  * Step 2 (Idea 2): Link and router failure in static topologies (black holes, silent traffic drops, manual administrator intervention).
+  * Step 3 (Idea 3): Automated topology discovery, route exchange, and dynamic neighbor peering.
+  * Step 4 (Idea 4): Interior Gateway Protocols (IGP: RIP, OSPF) vs Exterior Gateway Protocols (EGP: BGP) across Autonomous Systems (AS).
+  * Step 5 (Recap): The 4 Core Invariants of Dynamic Routing & Static vs Dynamic Routing Comparison (`cmd: null`).
 
 ---
 

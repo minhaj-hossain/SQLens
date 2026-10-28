@@ -76,7 +76,7 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
   * *Concepts*: Connection-oriented transport; Three-Way Handshake (SYN, SYN-ACK, ACK); Four-Way Teardown (FIN, ACK, FIN, ACK); connection states.
 * **Day 18 · TCP: Reliable Delivery** (`net-18`) [COMPLETED]
   * *Concepts*: Sequence numbers, cumulative acknowledgments (ACK numbers), lost segment detection, retransmission timers, and sliding window flow control.
-* **Day 19 · UDP: Fast and Simple** (`net-19`) [NEXT UP]
+* **Day 19 · UDP: Fast and Simple** (`net-19`) [COMPLETED]
   * *Concepts*: Connectionless transport; low overhead (8-byte header); lack of acknowledgments; real-time audio, video, DNS, and gaming use cases.
 
 ---
@@ -84,7 +84,7 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
 ## Stage 6: Dynamic Routing (Days 20–23) · *Sharing the Map & Convergence*
 *Goal*: Automate routing table creation across complex mesh networks.
 
-* **Day 20 · Why Dynamic Routing** (`net-20`) [PLANNED]
+* **Day 20 · Why Dynamic Routing** (`net-20`) [NEXT UP]
   * *Concepts*: Scalability limits of static routes; route failure recovery; interior vs exterior routing protocols (IGP vs EGP); autonomous systems (AS).
 * **Day 21 · RIP: Counting Hops** (`net-21`) [PLANNED]
   * *Concepts*: Distance-vector routing; hop count metric; 15-hop limit; periodic routing updates and count-to-infinity problem.
