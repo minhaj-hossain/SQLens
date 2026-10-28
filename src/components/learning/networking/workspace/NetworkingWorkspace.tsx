@@ -514,6 +514,50 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'ss -tan')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-19' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'udp send 198.51.100.53:53 "domain query"' ||
+          normalizedCmd === "udp send 198.51.100.53:53 'domain query'" ||
+          normalizedCmd === 'udp send 198.51.100.53:53 domain query' ||
+          normalizedCmd === 'udp send 198.51.100.53:53' ||
+          normalizedCmd === 'dig @198.51.100.53 example.com' ||
+          normalizedCmd === 'dig example.com' ||
+          normalizedCmd === 'nslookup example.com 198.51.100.53')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-19' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'udp stream --codec opus' ||
+          normalizedCmd === 'udp stream' ||
+          normalizedCmd === 'stream --codec opus' ||
+          normalizedCmd === 'udp stream audio' ||
+          normalizedCmd === 'test udp stream' ||
+          normalizedCmd === 'udp stream --codec')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-19' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'ss -uan' ||
+          normalizedCmd === 'ss -u -a -n' ||
+          normalizedCmd === 'ss -ua' ||
+          normalizedCmd === 'netstat -uan' ||
+          normalizedCmd === 'ss -u' ||
+          normalizedCmd === 'ss -au')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-19' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'quic probe 198.51.100.10:443' ||
+          normalizedCmd === 'quic probe 198.51.100.10' ||
+          normalizedCmd === 'curl --http3 https://198.51.100.10' ||
+          normalizedCmd === 'quic probe' ||
+          normalizedCmd === 'http3 probe')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

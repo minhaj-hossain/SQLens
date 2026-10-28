@@ -149,6 +149,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: tcp connect 198.51.100.10:80, ss -tan state established, tcp close 198.51.100.10:80, ss -tan state time-wait, cls, clear, help';
       } else if (dayId === 'net-18') {
         helpMsg = 'Commands: tcp send "GET /data HTTP/1.1", tcp drop-simulate --loss 100, ss -ti, ss -tan -o, cls, clear, help';
+      } else if (dayId === 'net-19') {
+        helpMsg = 'Commands: udp send 198.51.100.53:53 "domain query", udp stream --codec opus, ss -uan, quic probe 198.51.100.10:443, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -857,6 +859,51 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'ss -tan'
       ) {
         out = staticResponses['ss -tan -o'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 19 dynamic logic
+    if (dayId === 'net-19') {
+      if (
+        v === 'udp send 198.51.100.53:53 "domain query"' ||
+        v === "udp send 198.51.100.53:53 'domain query'" ||
+        v === 'udp send 198.51.100.53:53 domain query' ||
+        v === 'udp send 198.51.100.53:53' ||
+        v === 'dig @198.51.100.53 example.com' ||
+        v === 'dig example.com' ||
+        v === 'nslookup example.com 198.51.100.53'
+      ) {
+        out = staticResponses['udp send 198.51.100.53:53 "domain query"'];
+        isSuccess = true;
+      } else if (
+        v === 'udp stream --codec opus' ||
+        v === 'udp stream' ||
+        v === 'stream --codec opus' ||
+        v === 'udp stream audio' ||
+        v === 'test udp stream' ||
+        v === 'udp stream --codec'
+      ) {
+        out = staticResponses['udp stream --codec opus'];
+        isSuccess = true;
+      } else if (
+        v === 'ss -uan' ||
+        v === 'ss -u -a -n' ||
+        v === 'ss -ua' ||
+        v === 'netstat -uan' ||
+        v === 'ss -u' ||
+        v === 'ss -au'
+      ) {
+        out = staticResponses['ss -uan'];
+        isSuccess = true;
+      } else if (
+        v === 'quic probe 198.51.100.10:443' ||
+        v === 'quic probe 198.51.100.10' ||
+        v === 'curl --http3 https://198.51.100.10' ||
+        v === 'quic probe' ||
+        v === 'http3 probe'
+      ) {
+        out = staticResponses['quic probe 198.51.100.10:443'];
         isSuccess = true;
       }
     }

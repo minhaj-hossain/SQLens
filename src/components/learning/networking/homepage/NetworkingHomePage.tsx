@@ -51,6 +51,7 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-16': 'Deliver packets to application processes with 16-bit ports. Master socket 5-tuples, ephemeral allocation, and TCP RST signaling.',
   'net-17': 'Master the TCP state machine: 3-way handshake SYN synchronization, 4-way teardown with half-closed states, and the 2MSL TIME_WAIT safety timer.',
   'net-18': 'Deliver bytes reliably: 32-bit sequence numbers, cumulative ACKs, dynamic RTO with exponential backoff, Fast Retransmit with SACK, and sliding window flow control.',
+  'net-19': 'Lightweight connectionless transport: 8-byte header, zero head-of-line blocking, stateless port multiplexing, and modern QUIC/HTTP/3 over UDP.',
 };
 
 export const NetworkingHomePage: React.FC = () => {

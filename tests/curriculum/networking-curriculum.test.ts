@@ -18,6 +18,7 @@ import {
   NET_16_MODULE,
   NET_17_MODULE,
   NET_18_MODULE,
+  NET_19_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -582,6 +583,53 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step5.what).toContain('ordered, lossless byte stream');
   });
 
+  it('Day 19 module has exact title, 5 steps, and authentic UDP commands', () => {
+    expect(NET_19_MODULE.id).toBe('net-19');
+    expect(NET_19_MODULE.dayNumber).toBe(19);
+    expect(NET_19_MODULE.title).toBe('Day 19 · UDP: Fast and Simple');
+    expect(NET_19_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_19_MODULE.steps[0];
+    expect(step1.group).toBe('Idea 1 of 4 · The minimalist transport header');
+    expect(step1.cmd).toBe('udp send 198.51.100.53:53 "domain query"');
+    expect(step1.title).toBe(
+      'The User Datagram Protocol (UDP, RFC 768) and the 8-byte header'
+    );
+    expect(step1.what).toContain('8-Byte UDP Header Anatomy');
+    expect(step1.what).toContain('Datagram Boundaries vs Byte Streams');
+
+    const step2 = NET_19_MODULE.steps[1];
+    expect(step2.cmd).toBe('udp stream --codec opus');
+    expect(step2.title).toBe(
+      'Head-of-Line (HoL) blocking and why real-time systems choose packet loss over latency'
+    );
+    expect(step2.what).toContain('Head-of-Line (HoL) Blocking');
+    expect(step2.what).toContain('Packet Loss Concealment (PLC)');
+
+    const step3 = NET_19_MODULE.steps[2];
+    expect(step3.cmd).toBe('ss -uan');
+    expect(step3.title).toBe(
+      'Stateless sockets, socket buffers, and connected UDP sockets'
+    );
+    expect(step3.what).toContain('UDP is completely Stateless');
+    expect(step3.what).toContain('Connected UDP Sockets');
+
+    const step4 = NET_19_MODULE.steps[3];
+    expect(step4.cmd).toBe('quic probe 198.51.100.10:443');
+    expect(step4.title).toBe(
+      'Application-layer reliability, Forward Error Correction, and QUIC (HTTP/3)'
+    );
+    expect(step4.what).toContain('Forward Error Correction (FEC)');
+    expect(step4.what).toContain('QUIC (RFC 9000) & HTTP/3');
+
+    const step5 = NET_19_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe(
+      'The four core invariants of UDP & TCP vs UDP transport comparison'
+    );
+    expect(step5.what).toContain('UDP (Minimalist, Connectionless, Datagrams)');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -608,6 +656,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(16)?.id).toBe('net-16');
     expect(getNetworkingModule(17)?.id).toBe('net-17');
     expect(getNetworkingModule(18)?.id).toBe('net-18');
+    expect(getNetworkingModule(19)?.id).toBe('net-19');
   });
 });
 

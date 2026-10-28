@@ -1524,6 +1524,95 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('translate(380, 350)');
     expect(htmlStep4).toContain('translate(1130, 350)');
   });
+
+  it('Day 19 progressively reveals UDP 8-byte header, zero HoL blocking, stateless sockets, and QUIC over UDP', () => {
+    // Step 0: Minimalist 8-byte header & 0 RTT dispatch
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-19"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('UDP: FAST AND SIMPLE · CONNECTIONLESS TRANSPORT &amp; MINIMAL OVERHEAD');
+    expect(htmlStep0).toContain('PC1 (Client)');
+    expect(htmlStep0).toContain('GATEWAY R1');
+    expect(htmlStep0).toContain('Server (DNS/Media/QUIC)');
+
+    // Link labels 60px above cables (y=190 vs cable y=250)
+    expect(htmlStep0).toContain('translate(454, 190)');
+    expect(htmlStep0).toContain('translate(1013, 190)');
+
+    // State pills above devices
+    expect(htmlStep0).toContain('translate(140, 130)');
+    expect(htmlStep0).toContain('translate(1220, 130)');
+    expect(htmlStep0).toContain('UDP Port 52101');
+    expect(htmlStep0).toContain('PORT 53 (DNS)');
+
+    // Overhead 8-byte UDP header card at translate(460, 65)
+    expect(htmlStep0).toContain('translate(460, 65)');
+    expect(htmlStep0).toContain('THE 8-BYTE UDP HEADER');
+
+    // In-flight packet badge on Cable 1 (span 228..680, width 340 leaves 56px clearance on each side)
+    expect(htmlStep0).toContain('translate(454, 250)');
+    expect(htmlStep0).toContain('width="340"');
+
+    // Bottom diagnostic HUD cards strictly clear the 94px device envelope (y=350 vs device y=220..314)
+    expect(htmlStep0).toContain('translate(70, 350)');
+    expect(htmlStep0).toContain('translate(380, 350)');
+    expect(htmlStep0).toContain('translate(1040, 350)');
+
+    // Step 1: Head-of-Line blocking comparison at translate(460, 65)
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-19"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('translate(460, 65)');
+    expect(htmlStep1).toContain('HEAD-OF-LINE (HoL) BLOCKING COMPARISON');
+    // In-flight packet badge on Cable 2 (span 806..1220, width 340 leaves 37px clearance on each side)
+    expect(htmlStep1).toContain('translate(1013, 250)');
+    expect(htmlStep1).toContain('width="340"');
+
+    // Step 2: Stateless Socket multiplexing at translate(460, 65)
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-19"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('translate(460, 65)');
+    expect(htmlStep2).toContain('STATELESS SOCKET MULTIPLEXING');
+    expect(htmlStep2).toContain('translate(454, 250)');
+
+    // Step 3: QUIC over UDP multi-stream at translate(460, 65)
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-19"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('translate(460, 65)');
+    expect(htmlStep3).toContain('QUIC (RFC 9000 / HTTP/3) OVER UDP');
+    expect(htmlStep3).toContain('translate(1013, 250)');
+
+    // Step 4: Recap layout cards
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-19"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('translate(70, 350)');
+    expect(htmlStep4).toContain('translate(380, 350)');
+    expect(htmlStep4).toContain('translate(1130, 350)');
+    expect(htmlStep4).toContain('STAGE 5 COMPLETE');
+  });
 });
 
 
