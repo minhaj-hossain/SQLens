@@ -469,6 +469,51 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'netstat -tan | grep time_wait')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-18' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'tcp send "get /data http/1.1"' ||
+          normalizedCmd === "tcp send 'get /data http/1.1'" ||
+          normalizedCmd === 'tcp send get /data http/1.1' ||
+          normalizedCmd === 'tcp send get /data' ||
+          normalizedCmd === 'tcp send "get /data"' ||
+          normalizedCmd === 'curl http://198.51.100.10/data' ||
+          normalizedCmd === 'curl 198.51.100.10/data')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-18' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'tcp drop-simulate --loss 100' ||
+          normalizedCmd === 'tcp drop-simulate' ||
+          normalizedCmd === 'drop-simulate' ||
+          normalizedCmd === 'tcp simulate loss' ||
+          normalizedCmd === 'simulate drop' ||
+          normalizedCmd === 'tcp drop-simulate --loss')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-18' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'ss -ti' ||
+          normalizedCmd === 'ss -t -i' ||
+          normalizedCmd === 'ss -it' ||
+          normalizedCmd === 'ss -ti state established' ||
+          normalizedCmd === 'tcp fast-retransmit-test' ||
+          normalizedCmd === 'show sack' ||
+          normalizedCmd === 'ss -t')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-18' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'ss -tan -o' ||
+          normalizedCmd === 'ss -tano' ||
+          normalizedCmd === 'ss -to' ||
+          normalizedCmd === 'ss -tan --options' ||
+          normalizedCmd === 'ss -tan')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

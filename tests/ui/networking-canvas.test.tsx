@@ -1343,6 +1343,187 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('translate(380, 350)');
     expect(htmlStep4).toContain('translate(1130, 350)');
   });
+
+  it('Day 18 progressively reveals byte stream accounting, dynamic RTO backoff, Fast Retransmit/SACK, and flow control', () => {
+    // Step 0: Sequence numbers & Cumulative ACKs
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'TCP RELIABLE DELIVERY · SEQUENCE NUMBERS, ACKS, RTO &amp; FLOW CONTROL'
+    );
+    expect(htmlStep0).toContain('PC1 (Client)');
+    expect(htmlStep0).toContain('GATEWAY R1');
+    expect(htmlStep0).toContain('Web Server');
+    expect(htmlStep0).toContain('State: ESTABLISHED · Tx: seq=1001');
+    expect(htmlStep0).toContain('State: ESTABLISHED · Rx: ack=1025');
+    expect(htmlStep0).toContain(
+      'BYTE-STREAM ACCOUNTING &amp; CUMULATIVE ACK TRACKER'
+    );
+    expect(htmlStep0).toContain(
+      '[TCP PSH, ACK] seq=1001 len=24B (&quot;GET /data HTTP/1.1&quot;)'
+    );
+    expect(htmlStep0).toContain('BYTE STREAM VS PACKET COUNTING');
+    expect(htmlStep0).toContain('THE CUMULATIVE ACKNOWLEDGMENT INVARIANT');
+    expect(htmlStep0).toContain('OBSERVED PAYLOAD ADVANCE');
+
+    // Step 1: Packet Loss, Dynamic RTO & Karn's Backoff
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('RTO: 200ms → 400ms (Karn Backoff)');
+    expect(htmlStep1).toContain('⚠ Packet Dropped in Transit');
+    expect(htmlStep1).toContain('Awaiting Byte 1025');
+    expect(htmlStep1).toContain(
+      'JACOBSON&#x27;S DYNAMIC RTO &amp; KARN&#x27;S EXPONENTIAL BACKOFF'
+    );
+    expect(htmlStep1).toContain(
+      '[RETRANSMIT] seq=1025 len=50B (RTO Expired at t=200ms)'
+    );
+    expect(htmlStep1).toContain('WHY STATIC RTO FAILS');
+    expect(htmlStep1).toContain(
+      'JACOBSON&#x27;S ALGORITHM &amp; EXPONENTIAL BACKOFF (RFC 6298)'
+    );
+    expect(htmlStep1).toContain('KARN-PARTRIDGE INVARIANT');
+
+    // Step 2: Fast Retransmit & SACK Blocks
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('Fast Retransmit Active (3 Dup ACKs)');
+    expect(htmlStep2).toContain('SACK Blocks: [3000-5000] Buffered');
+    expect(htmlStep2).toContain(
+      'FAST RETRANSMIT (3 DUP ACKS) &amp; SACK BLOCKS (RFC 2018)'
+    );
+    expect(htmlStep2).toContain(
+      '[FAST RETRANSMIT] seq=2000..2999 (SACK Gap Repaired)'
+    );
+    expect(htmlStep2).toContain('THE 3 DUP ACKS THRESHOLD');
+    expect(htmlStep2).toContain('SELECTIVE ACKNOWLEDGMENT (RFC 2018)');
+    expect(htmlStep2).toContain('TELEMETRY FROM SS -TI');
+
+    // Step 3: Flow Control & The Advertised Receive Window
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('Sliding Window: win=65535');
+    expect(htmlStep3).toContain('RcvBuffer: 64KB Free Space');
+    expect(htmlStep3).toContain(
+      'FLOW CONTROL: SLIDING WINDOW &amp; ZERO-WINDOW PROBING'
+    );
+    expect(htmlStep3).toContain(
+      '[TCP ACK] win=65535 (Buffer Credit: 64 KB Available)'
+    );
+    expect(htmlStep3).toContain('RECEIVE BUFFER CONSTRAINTS');
+    expect(htmlStep3).toContain('ZERO WINDOW &amp; PERSIST TIMER DEADLOCK');
+    expect(htmlStep3).toContain('WINDOW SCALE OPTION (RFC 7323)');
+
+    // Step 4: Recap
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('LAYER 4 RELIABILITY CHEAT SHEET');
+    expect(htmlStep4).toContain(
+      'THE 4 CORE INVARIANTS OF TCP RELIABLE DELIVERY'
+    );
+    expect(htmlStep4).toContain('RELIABILITY METRICS');
+    expect(htmlStep4).toContain(
+      'Next: Day 19 · UDP: Fast, Simple and Connectionless →'
+    );
+  });
+
+  it('ensures Day 18 canvas coordinates strictly prevent component overlaps', () => {
+    // Step 0: Initial layout
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    // Link labels cleared 60px above cables (y=190 vs cable y=250)
+    expect(htmlStep0).toContain('translate(454, 190)');
+    expect(htmlStep0).toContain('translate(1013, 190)');
+
+    // State pills above devices
+    expect(htmlStep0).toContain('translate(140, 130)');
+    expect(htmlStep0).toContain('translate(1220, 130)');
+
+    // In-flight packet badge on Cable 1 (span 228..680, width 340 leaves 56px clearance on each side)
+    expect(htmlStep0).toContain('translate(454, 250)');
+    expect(htmlStep0).toContain('width="340"');
+
+    // Bottom diagnostic HUD cards strictly clear the 94px device envelope (y=350 vs device y=220..314)
+    expect(htmlStep0).toContain('translate(70, 350)');
+    expect(htmlStep0).toContain('translate(380, 350)');
+    expect(htmlStep0).toContain('translate(1040, 350)');
+
+    // Step 1: Overhead RTO calculation card at translate(460, 65)
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('translate(460, 65)');
+    // In-flight packet badge on Cable 2 (span 806..1220, width 340 leaves 37px clearance on each side)
+    expect(htmlStep1).toContain('translate(1013, 250)');
+    expect(htmlStep1).toContain('width="340"');
+
+    // Step 2: Overhead SACK ladder diagram at translate(460, 65)
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('translate(460, 65)');
+    expect(htmlStep2).toContain('translate(1013, 250)');
+
+    // Step 3: Overhead Sliding Window card at translate(460, 65)
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('translate(460, 65)');
+
+    // Step 4: Recap layout cards
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-18"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('translate(70, 350)');
+    expect(htmlStep4).toContain('translate(380, 350)');
+    expect(htmlStep4).toContain('translate(1130, 350)');
+  });
 });
 
 

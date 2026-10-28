@@ -53,11 +53,13 @@ describe('Click Homepage render via TrackSelector (Task 6.1)', () => {
     expect(html).toContain('Networking');
     expect(html).toContain('35 days');
     expect(html).toContain('Physical reality of packets, cables, routing tables &amp; sockets');
-    expect(html).toContain('terminal');
-    expect(html).toContain('ping 192.168.1.1');
-    expect(html).toContain('topology');
+    expect(html).toContain('topology.net');
     expect(html).toContain('PC1');
+    expect(html).toContain('SW1');
     expect(html).toContain('R1 GATEWAY');
+    expect(html).toContain('192.168.1.10');
+    expect(html).toContain('192.168.1.1');
+    expect(html).toContain('TTL=64');
   });
 
   it('renders the Click multi-column footer with copyright and links', () => {

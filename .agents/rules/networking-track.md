@@ -98,19 +98,20 @@ When creating or modifying progressive canvas stages:
 * **Stage 2 (Days 4–6)**: The Gateway Router, Multi-Router Static Routes, Default Route & Global Internet.
 * **Stage 3 (Days 7–9)**: ARP & Neighbor Discovery, Switch MAC Learning & Flooding, Broadcast Domains & Boundaries.
 * **Stage 4 (Days 10–13)**: Single-Switch VLANs, 802.1Q Trunks, Router-on-a-Stick, Spanning Tree Protocol (STP).
-* **Stage 5 (Days 14–17)**:
+* **Stage 5 (Days 14–18)**:
   * **Day 14**: ICMP & TTL · How Ping Works (RFC 792, Protocol 1, TTL loop prevention, Type 11 Time Exceeded, PMTUD Type 3 Code 4).
   * **Day 15**: Traceroute: Following the Path · RTT, Latency & Asymmetric Routes (3-probe RTT physics, CoPP rate limiting).
   * **Day 16**: Ports: Reaching the Right Program (16-bit process demultiplexing, 5-tuple sockets, ephemeral ports, TCP RST).
   * **Day 17**: TCP: Opening and Closing a Connection (3-way handshake SYN/ACK, 4-way teardown with CLOSE_WAIT, 2MSL TIME_WAIT timer).
+  * **Day 18**: TCP: Reliable Delivery (32-bit sequence numbers, cumulative ACKs, dynamic RTO with Karn backoff, Fast Retransmit with SACK RFC 2018, receive window flow control).
 
-### Next Up: Stage 5 — Day 18
-* **Day 18**: **TCP: Reliable Delivery · Sequence Numbers, Retransmissions & Flow Control** (`net-18`)
-  * Step 1 (Idea 1): Byte-Stream Sequence Numbers & Cumulative ACKs (`seq = ISN + byte_offset`, `ack = seq + length`).
-  * Step 2 (Idea 2): Packet Loss, Dynamic RTO (Jacobson's SRTT/RTTVAR algorithm, RFC 6298) & Exponential Backoff.
-  * Step 3 (Idea 3): Fast Retransmit (3 Duplicate ACKs) & SACK (Selective Acknowledgment blocks, RFC 2018).
-  * Step 4 (Idea 4): Flow Control & The Receive Window (`win` field, buffer overflow protection, Zero-Window Probes).
-  * Step 5 (Recap): The 4 Core Invariants of TCP Reliable Delivery (`cmd: null`).
+### Next Up: Stage 5 — Day 19
+* **Day 19**: **UDP: Fast and Simple · Connectionless Transport & Minimal Overhead** (`net-19`)
+  * Step 1 (Idea 1): Connectionless datagram delivery & the lightweight 8-byte UDP header.
+  * Step 2 (Idea 2): Why real-time traffic (DNS, VoIP, gaming, live video) chooses UDP over TCP head-of-line blocking.
+  * Step 3 (Idea 3): Port multiplexing in UDP without connection state or handshakes.
+  * Step 4 (Idea 4): Handling packet loss in UDP at the application layer (FEC, QUIC).
+  * Step 5 (Recap): The 4 Core Invariants of UDP & Transport Layer Comparison (`cmd: null`).
 
 ---
 

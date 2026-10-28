@@ -66,17 +66,17 @@ This document outlines the entire 35-day roadmap for the SQLens Networking Track
 ## Stage 5: Path and Transport (Days 14–19) · *Diagnostics, Ports & Reliability*
 *Goal*: Trace hops, demultiplex applications, and guarantee ordered delivery.
 
-* **Day 14 · ICMP and TTL: How Ping Works** (`net-14`) [PLANNED]
+* **Day 14 · ICMP and TTL: How Ping Works** (`net-14`) [COMPLETED]
   * *Concepts*: ICMP protocol; Type 8 (Echo Request) and Type 0 (Echo Reply); Time To Live (TTL) decrement at each router; TTL expired in transit.
-* **Day 15 · Traceroute: Following the Path** (`net-15`) [PLANNED]
+* **Day 15 · Traceroute: Following the Path** (`net-15`) [COMPLETED]
   * *Concepts*: Incrementing TTL (1, 2, 3...); receiving ICMP Time Exceeded from intermediate routers to map physical hops.
-* **Day 16 · Ports: Reaching the Right Program** (`net-16`) [PLANNED]
+* **Day 16 · Ports: Reaching the Right Program** (`net-16`) [COMPLETED]
   * *Concepts*: Layer 4 port numbers (0–65535); well-known ports (80, 443, 22, 53); sockets (IP:Port); demultiplexing multiple applications on a single machine.
-* **Day 17 · TCP: Opening and Closing a Connection** (`net-17`) [PLANNED]
+* **Day 17 · TCP: Opening and Closing a Connection** (`net-17`) [COMPLETED]
   * *Concepts*: Connection-oriented transport; Three-Way Handshake (SYN, SYN-ACK, ACK); Four-Way Teardown (FIN, ACK, FIN, ACK); connection states.
-* **Day 18 · TCP: Reliable Delivery** (`net-18`) [PLANNED]
+* **Day 18 · TCP: Reliable Delivery** (`net-18`) [COMPLETED]
   * *Concepts*: Sequence numbers, cumulative acknowledgments (ACK numbers), lost segment detection, retransmission timers, and sliding window flow control.
-* **Day 19 · UDP: Fast and Simple** (`net-19`) [PLANNED]
+* **Day 19 · UDP: Fast and Simple** (`net-19`) [NEXT UP]
   * *Concepts*: Connectionless transport; low overhead (8-byte header); lack of acknowledgments; real-time audio, video, DNS, and gaming use cases.
 
 ---

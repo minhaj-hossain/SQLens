@@ -50,6 +50,7 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-15': 'Trace multi-hop internet routes across fiber links. Learn 3-probe telemetry, propagation delay physics, and CoPP rate limiting.',
   'net-16': 'Deliver packets to application processes with 16-bit ports. Master socket 5-tuples, ephemeral allocation, and TCP RST signaling.',
   'net-17': 'Master the TCP state machine: 3-way handshake SYN synchronization, 4-way teardown with half-closed states, and the 2MSL TIME_WAIT safety timer.',
+  'net-18': 'Deliver bytes reliably: 32-bit sequence numbers, cumulative ACKs, dynamic RTO with exponential backoff, Fast Retransmit with SACK, and sliding window flow control.',
 };
 
 export const NetworkingHomePage: React.FC = () => {

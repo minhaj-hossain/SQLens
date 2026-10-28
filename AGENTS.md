@@ -48,5 +48,5 @@ When authoring or modifying any Networking Track module in SQLens, ALWAYS adhere
 
 6. **Standard Planning Protocol & Skill**:
    - When asked to "plan module XX" or "build module XX", strictly follow `.agents/skills/networking-module-builder/SKILL.md`.
-   - Days 1–17 are completed and deployed. Day 18 (`net-18` TCP: Reliable Delivery) is the active next module.
+   - Days 1–18 are completed and deployed. Day 19 (`net-19` UDP: Fast and Simple) is the active next module.
    - Always run: `npm test -- tests/curriculum/networking- tests/ui/networking-` and `npx tsc --noEmit`.

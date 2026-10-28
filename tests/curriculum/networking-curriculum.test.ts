@@ -17,6 +17,7 @@ import {
   NET_15_MODULE,
   NET_16_MODULE,
   NET_17_MODULE,
+  NET_18_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -537,6 +538,50 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step5.what).toContain('TCP provides ordered, full-duplex reliability');
   });
 
+  it('Day 18 module has exact title, 5 steps, and authentic TCP reliable delivery commands', () => {
+    expect(NET_18_MODULE).toBeDefined();
+    expect(NET_18_MODULE.id).toBe('net-18');
+    expect(NET_18_MODULE.title).toBe('Day 18 · TCP: Reliable Delivery');
+    expect(NET_18_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_18_MODULE.steps[0];
+    expect(step1.title).toBe(
+      'Byte-stream sequence numbers and cumulative acknowledgments'
+    );
+    expect(step1.cmd).toBe('tcp send "GET /data HTTP/1.1"');
+    expect(step1.what).toContain('Cumulative');
+    expect(step1.what).toContain('ISN');
+
+    const step2 = NET_18_MODULE.steps[1];
+    expect(step2.cmd).toBe('tcp drop-simulate --loss 100');
+    expect(step2.title).toBe(
+      "Packet loss detection: Jacobson's dynamic RTO and Karn's backoff"
+    );
+    expect(step2.what).toContain('Smoothed RTT');
+    expect(step2.what).toContain('Exponential Backoff');
+
+    const step3 = NET_18_MODULE.steps[2];
+    expect(step3.cmd).toBe('ss -ti');
+    expect(step3.title).toBe(
+      'Fast Retransmit (3 Duplicate ACKs) and Selective Acknowledgment (SACK)'
+    );
+    expect(step3.what).toContain('3 Duplicate ACKs');
+    expect(step3.what).toContain('SACK');
+
+    const step4 = NET_18_MODULE.steps[3];
+    expect(step4.cmd).toBe('ss -tan -o');
+    expect(step4.title).toBe(
+      'Flow control, the Advertised Receive Window (win), and Zero-Window Probes'
+    );
+    expect(step4.what).toContain('Advertised Receive Window');
+    expect(step4.what).toContain('Zero-Window Probe');
+
+    const step5 = NET_18_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe('The four core invariants of TCP reliable delivery');
+    expect(step5.what).toContain('ordered, lossless byte stream');
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -562,6 +607,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(15)?.id).toBe('net-15');
     expect(getNetworkingModule(16)?.id).toBe('net-16');
     expect(getNetworkingModule(17)?.id).toBe('net-17');
+    expect(getNetworkingModule(18)?.id).toBe('net-18');
   });
 });
 

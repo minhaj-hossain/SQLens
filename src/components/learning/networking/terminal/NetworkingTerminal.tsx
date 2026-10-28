@@ -147,6 +147,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: ss -tlpn, show ip-port-range, ss -t4 state established, nc -zv 198.51.100.10 80 81, cls, clear, help';
       } else if (dayId === 'net-17') {
         helpMsg = 'Commands: tcp connect 198.51.100.10:80, ss -tan state established, tcp close 198.51.100.10:80, ss -tan state time-wait, cls, clear, help';
+      } else if (dayId === 'net-18') {
+        helpMsg = 'Commands: tcp send "GET /data HTTP/1.1", tcp drop-simulate --loss 100, ss -ti, ss -tan -o, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -809,6 +811,52 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'netstat -tan | grep TIME_WAIT'
       ) {
         out = staticResponses['ss -tan state time-wait'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 18 dynamic logic
+    if (dayId === 'net-18') {
+      if (
+        v === 'tcp send "get /data http/1.1"' ||
+        v === "tcp send 'get /data http/1.1'" ||
+        v === 'tcp send get /data http/1.1' ||
+        v === 'tcp send get /data' ||
+        v === 'tcp send "get /data"' ||
+        v === 'curl http://198.51.100.10/data' ||
+        v === 'curl 198.51.100.10/data'
+      ) {
+        out = staticResponses['tcp send "GET /data HTTP/1.1"'];
+        isSuccess = true;
+      } else if (
+        v === 'tcp drop-simulate --loss 100' ||
+        v === 'tcp drop-simulate' ||
+        v === 'drop-simulate' ||
+        v === 'tcp simulate loss' ||
+        v === 'simulate drop' ||
+        v === 'tcp drop-simulate --loss'
+      ) {
+        out = staticResponses['tcp drop-simulate --loss 100'];
+        isSuccess = true;
+      } else if (
+        v === 'ss -ti' ||
+        v === 'ss -t -i' ||
+        v === 'ss -it' ||
+        v === 'ss -ti state established' ||
+        v === 'tcp fast-retransmit-test' ||
+        v === 'show sack' ||
+        v === 'ss -t'
+      ) {
+        out = staticResponses['ss -ti'];
+        isSuccess = true;
+      } else if (
+        v === 'ss -tan -o' ||
+        v === 'ss -tano' ||
+        v === 'ss -to' ||
+        v === 'ss -tan --options' ||
+        v === 'ss -tan'
+      ) {
+        out = staticResponses['ss -tan -o'];
         isSuccess = true;
       }
     }
