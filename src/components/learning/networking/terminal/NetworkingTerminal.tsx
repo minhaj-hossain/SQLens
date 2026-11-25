@@ -157,6 +157,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show ip rip, traceroute 10.21.0.10, rip debug loop, show ip rip loops, cls, clear, help';
       } else if (dayId === 'net-22') {
         helpMsg = 'Commands: show ip ospf neighbor, show ip ospf database, show ip ospf cost, traceroute 10.22.0.10, cls, clear, help';
+      } else if (dayId === 'net-23') {
+        helpMsg = 'Commands: link cut r3-r4, show ip ospf spf, traceroute 10.23.0.10, show bfd neighbors, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -1029,6 +1031,43 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'show ip route ospf'
       ) {
         out = staticResponses['traceroute 10.22.0.10'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 23 dynamic logic
+    if (dayId === 'net-23') {
+      if (
+        v === 'link cut r3-r4' ||
+        v === 'link cut' ||
+        v === 'cut r3-r4' ||
+        v === 'shutdown r3-r4'
+      ) {
+        out = staticResponses['link cut r3-r4'];
+        isSuccess = true;
+      } else if (
+        v === 'show ip ospf spf' ||
+        v === 'show ospf spf' ||
+        v === 'show ip ospf database' ||
+        v === 'ospf spf'
+      ) {
+        out = staticResponses['show ip ospf spf'];
+        isSuccess = true;
+      } else if (
+        v === 'traceroute 10.23.0.10' ||
+        v === 'traceroute' ||
+        v === 'trace 10.23.0.10' ||
+        v === 'show ip route ospf'
+      ) {
+        out = staticResponses['traceroute 10.23.0.10'];
+        isSuccess = true;
+      } else if (
+        v === 'show bfd neighbors' ||
+        v === 'show bfd' ||
+        v === 'bfd neighbors' ||
+        v === 'bfd'
+      ) {
+        out = staticResponses['show bfd neighbors'];
         isSuccess = true;
       }
     }

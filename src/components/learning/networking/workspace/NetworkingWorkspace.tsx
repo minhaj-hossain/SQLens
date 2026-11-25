@@ -727,6 +727,42 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'show ip route ospf')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-23' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'link cut r3-r4' ||
+          normalizedCmd === 'link cut' ||
+          normalizedCmd === 'cut r3-r4' ||
+          normalizedCmd === 'shutdown r3-r4')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-23' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show ip ospf spf' ||
+          normalizedCmd === 'show ospf spf' ||
+          normalizedCmd === 'show ip ospf database' ||
+          normalizedCmd === 'ospf spf')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-23' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'traceroute 10.23.0.10' ||
+          normalizedCmd === 'traceroute' ||
+          normalizedCmd === 'trace 10.23.0.10' ||
+          normalizedCmd === 'show ip route ospf')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-23' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show bfd neighbors' ||
+          normalizedCmd === 'show bfd' ||
+          normalizedCmd === 'bfd neighbors' ||
+          normalizedCmd === 'bfd')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

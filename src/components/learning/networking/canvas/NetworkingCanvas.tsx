@@ -23,6 +23,7 @@ import { Day19Canvas } from './days/Day19Canvas';
 import { Day20Canvas } from './days/Day20Canvas';
 import { Day21Canvas } from './days/Day21Canvas';
 import { Day22Canvas } from './days/Day22Canvas';
+import { Day23Canvas } from './days/Day23Canvas';
 
 const DAY_CANVAS_MAP: Record<string, React.FC<DayCanvasProps>> = {
   'net-01': Day01To03Canvas,
@@ -47,6 +48,7 @@ const DAY_CANVAS_MAP: Record<string, React.FC<DayCanvasProps>> = {
   'net-20': Day20Canvas,
   'net-21': Day21Canvas,
   'net-22': Day22Canvas,
+  'net-23': Day23Canvas,
 };
 
 interface NetworkingCanvasProps {
@@ -161,6 +163,11 @@ const DAY_WORLD_SPECS: Record<
     width: 1480,
     height: 620,
     title: 'OSPF: SHARING THE MAP · LINK-STATE, AREA 0, COST & DIJKSTRA SPF',
+  },
+  'net-23': {
+    width: 1480,
+    height: 620,
+    title: 'FAILOVER AND CONVERGENCE · LSA RE-FLOOD, SPF RERUN & BFD (15ms)',
   },
 };
 

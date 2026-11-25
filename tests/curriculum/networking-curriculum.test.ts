@@ -22,6 +22,7 @@ import {
   NET_20_MODULE,
   NET_21_MODULE,
   NET_22_MODULE,
+  NET_23_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -732,6 +733,38 @@ describe('Networking Curriculum Content Modules', () => {
     );
   });
 
+  it('Day 23 module has exact title, 5 steps, and authentic failover/BFD commands', () => {
+    expect(NET_23_MODULE.id).toBe('net-23');
+    expect(NET_23_MODULE.dayNumber).toBe(23);
+    expect(NET_23_MODULE.title).toBe('Day 23 · Failover and Convergence');
+    expect(NET_23_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_23_MODULE.steps[0];
+    expect(step1.group).toBe('Idea 1 of 4 · Link failure detection & Dead timers');
+    expect(step1.cmd).toBe('link cut r3-r4');
+    expect(step1.what).toContain('NO-CARRIER');
+    expect(step1.what).toContain('40 seconds');
+
+    const step2 = NET_23_MODULE.steps[1];
+    expect(step2.cmd).toBe('show ip ospf spf');
+    expect(step2.what).toContain('0x80000006');
+
+    const step3 = NET_23_MODULE.steps[2];
+    expect(step3.cmd).toBe('traceroute 10.23.0.10');
+    expect(step3.what).toContain('Convergence Time');
+
+    const step4 = NET_23_MODULE.steps[3];
+    expect(step4.cmd).toBe('show bfd neighbors');
+    expect(step4.what).toContain('UDP port 3784');
+    expect(step4.what).toContain('15 ms');
+
+    const step5 = NET_23_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe(
+      'From static blackholes to sub-100 ms OSPF + BFD convergence'
+    );
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -762,6 +795,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(20)?.id).toBe('net-20');
     expect(getNetworkingModule(21)?.id).toBe('net-21');
     expect(getNetworkingModule(22)?.id).toBe('net-22');
+    expect(getNetworkingModule(23)?.id).toBe('net-23');
   });
 });
 

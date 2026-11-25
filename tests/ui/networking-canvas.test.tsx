@@ -1807,6 +1807,61 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('DAY 22 COMPLETE · OSPFv2 LINK-STATE SUMMARY');
     expect(htmlStep4).toContain('NEXT: DAY 23 · FAILOVER AND CONVERGENCE');
   });
+
+  it('renders Day 23 failover & BFD topology with anti-overlap geometry and progressive steps', () => {
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-23"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'FAILOVER AND CONVERGENCE · LSA RE-FLOOD, SPF RERUN &amp; BFD (15ms)'
+    );
+    expect(htmlStep0).toContain('LINK CUT (NO-CARRIER)');
+    expect(htmlStep0).toContain('width="130"');
+    expect(htmlStep0).toContain('translate(70, 395)');
+    expect(htmlStep0).toContain('translate(780, 395)');
+
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-23"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('LSA SEQ 0x80000006');
+    expect(htmlStep1).toContain('SPF: R1→R2→R5 (COST 2000)');
+
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-23"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('CONVERGED IN ~85 ms');
+
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-23"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('BFD UDP:3784 (5ms × 3 = 15ms)');
+
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-23"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('STAGE 6 COMPLETE · DYNAMIC ROUTING (DAYS 20–23)');
+    expect(htmlStep4).toContain('NEXT: STAGE 7 · DAY 24 · DHCP AUTOMATIC ADDRESSING');
+  });
 });
 
 
