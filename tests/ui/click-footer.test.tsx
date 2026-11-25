@@ -10,7 +10,7 @@ describe('ClickFooter Component', () => {
     expect(html).toContain('<footer');
     expect(html).toContain('data-testid="click-footer"');
     expect(html).toContain('border-t');
-    expect(html).toContain('border-[#121d33]');
+    expect(html).toContain('border-border-soft');
   });
 
   it('renders Click brand logo and wordmark linked to /', () => {
@@ -45,7 +45,7 @@ describe('ClickFooter Component', () => {
 
   it('renders the copyright notice and border separator', () => {
     expect(html).toContain('© 2026 Click');
-    expect(html).toContain('border-t border-[#121d33]');
+    expect(html).toContain('border-t border-border-soft');
   });
 
   it('applies the .flink transition class to navigation links', () => {

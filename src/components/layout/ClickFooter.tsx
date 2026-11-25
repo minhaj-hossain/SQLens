@@ -58,7 +58,7 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
               About
             </a>
             <a
-              href="https://github.com"
+              href="https://github.com/minhaj-hossain/SQLens"
               target="_blank"
               rel="noopener noreferrer"
               className="flink text-sm"

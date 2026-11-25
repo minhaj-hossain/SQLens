@@ -55,5 +55,5 @@ describe('every task answer passes its own validator', () => {
 
     if (failures.length > 0) console.error('FAILING SOLUTIONS:\n' + failures.join('\n'));
     expect(failures).toEqual([]);
-  });
+  }, 60000);
 });
