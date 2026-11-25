@@ -48,6 +48,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  experimental: {
+    agentUpgrade: 'security',
+  },
   // Phase 2: the SQL track moved under /sql. Every pre-existing bookmark,
   // shared link and indexed URL keeps working (temporary redirect: the old
   // shape may be reused later, so we must not burn a 308 into browsers).
