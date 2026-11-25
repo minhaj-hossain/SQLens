@@ -3,7 +3,7 @@ import { ALL_MODULES } from '../content/sql/curriculum-index';
 import { PRISMA_MODULES } from '../content/prisma/prisma-curriculum-index';
 import { TRACK_META } from '../types/track';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://click-academy.vercel.app';
 
 /**
  * Phase 2 — both tracks are now first-class, namespaced surfaces:

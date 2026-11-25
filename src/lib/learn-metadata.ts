@@ -8,7 +8,7 @@ import { getTrackModuleById } from '@/tracks/registry';
 import { TRACK_META, type TrackId } from '@/types/track';
 import type { LearnStage } from './learn-routes';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://click-academy.vercel.app';
 
 interface LearnMetadataInput {
   dayId: string;

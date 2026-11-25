@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://click-academy.vercel.app';
 const TITLE = 'Click — When concepts finally click. Hands-on database learning runtime.';
 const DESCRIPTION =
   'Master SQL & Prisma through visual mental models, an interactive in-browser engine, guided practice tasks and independent challenges. No setup required.';

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sqlens-ruddy.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://click-academy.vercel.app';
 
 export const metadata: Metadata = {
   title: 'SQL Playground',
