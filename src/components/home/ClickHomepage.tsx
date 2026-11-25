@@ -40,12 +40,12 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
       href: '/prisma',
       tags: ['Schema DSL', '1:1, 1:N & M:N Relations', 'Migrations Workflow', 'Query Optimization', 'REST API Capstone'],
       diagram: <PrismaDiagramSvg />,
-      hoverBorder: 'hover:border-[#38bdf8]/60',
-      hoverShadow: 'hover:shadow-2xl hover:shadow-[#38bdf8]/10',
-      badgeBorder: 'border-[#38bdf8]/30 text-[#38bdf8] bg-[#38bdf8]/10',
-      hoverTitle: 'group-hover:text-[#38bdf8]',
-      ctaText: 'text-[#38bdf8]',
-      outlineRing: 'focus-visible:outline-[#38bdf8]',
+      hoverBorder: 'hover:border-func/60',
+      hoverShadow: 'hover:shadow-2xl hover:shadow-func/10',
+      badgeBorder: 'border-func/30 text-func bg-func/10',
+      hoverTitle: 'group-hover:text-func',
+      ctaText: 'text-func',
+      outlineRing: 'focus-visible:outline-func',
     },
     {
       id: 'networking',
@@ -141,19 +141,19 @@ export const ClickHomepage: React.FC<ClickHomepageProps> = ({
         {/* Capability Trust Badges */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-4 border-t border-border-soft text-xs text-text-dim">
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--success-text)]" />
             <span>SQLite WASM Engine</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--success-text)]" />
             <span>Prisma Client Runtime</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--success-text)]" />
             <span>Interactive Packet Canvas</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--success-text)]" />
             <span>Zero Setup Required</span>
           </div>
         </div>

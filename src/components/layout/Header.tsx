@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
   const progressPct = Math.round((completedCount / totalModules) * 100);
 
   return (
-    <header className={`sticky top-0 w-full z-50 pt-safe border-b transition-colors ${isMinimal ? 'bg-[#060b16]/95 border-[#121d33]' : 'bg-ink/95 border-border-soft'}`}>
+    <header className="sticky top-0 w-full z-50 pt-safe border-b border-border-soft bg-ink/95 transition-colors">
       <div className={`flex items-center justify-between mx-auto w-full ${isMinimal ? 'h-16 px-4 sm:px-6 max-w-[1120px] gap-3' : 'h-14 px-3 sm:px-6 max-w-5xl gap-2 sm:gap-4'}`}>
 
         {/* Left: brand dot + wordmark + current-route label (links home) */}
@@ -63,8 +63,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center: Homepage Quick Nav */}
         {isMinimal && (
-          <nav aria-label="Homepage navigation" className="hidden sm:flex items-center gap-6 text-sm text-[#8a9bbd]">
-            <a href="#tracks" className="hover:text-[#e8eefb] transition-colors font-medium">
+          <nav aria-label="Homepage navigation" className="hidden sm:flex items-center gap-6 text-sm text-text-dim">
+            <a href="#tracks" className="hover:text-text transition-colors font-medium">
               Tracks
             </a>
           </nav>
@@ -158,111 +158,111 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => setUserMenuOpen((v) => !v)}
                   aria-label={`Signed in as ${user.name ?? user.email}. Open account menu`}
                   aria-expanded={userMenuOpen}
-                  className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none ${isMinimal ? 'bg-[#0d1526] border border-[#38bdf8]' : 'bg-surface-2 border border-border'}`}
+                  className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer focus:outline-none ${isMinimal ? 'bg-surface-2 border border-func/60' : 'bg-surface-2 border border-border'}`}
                 >
-                {/* Rotating conic ring - GPU-composited CSS animation (zero JS overhead) */}
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-full animate-conic-spin"
-                  style={{
-                    background:
-                      'conic-gradient(from 140deg, var(--border), var(--border-strong), var(--border), var(--border-soft), var(--border))',
-                  }}
-                />
-                {/* Soft gap between ring and disc */}
-                <span className="absolute inset-[2px] rounded-full bg-ink" />
-                {/* Inner disc with initial */}
-                <span className="absolute inset-[3px] rounded-full bg-surface-2 flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <span className="font-display font-bold text-text text-xs sm:text-sm select-none">
-                    {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
+                  {/* Rotating conic ring - GPU-composited CSS animation (zero JS overhead) */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-full animate-conic-spin"
+                    style={{
+                      background:
+                        'conic-gradient(from 140deg, var(--border), var(--border-strong), var(--border), var(--border-soft), var(--border))',
+                    }}
+                  />
+                  {/* Soft gap between ring and disc */}
+                  <span className="absolute inset-[2px] rounded-full bg-ink" />
+                  {/* Inner disc with initial */}
+                  <span className="absolute inset-[3px] rounded-full bg-surface-2 flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <span className="font-display font-bold text-text text-xs sm:text-sm select-none">
+                      {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
+                    </span>
                   </span>
-                </span>
-                {/* Gentle breathing glow - GPU-composited CSS animation */}
-                <span
-                  aria-hidden="true"
-                  className="absolute -inset-0.5 rounded-full bg-func/15 blur-[5px] animate-glow-pulse"
-                />
-              </button>
-              {/* Profile popover — opens on hover/tap */}
-              <AnimatePresence>
-                {userMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setUserMenuOpen(false)}
-                      aria-hidden="true"
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: -6, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -4, scale: 0.96 }}
-                      transition={{ duration: 0.16, ease: 'easeOut' }}
-                      role="menu"
-                      aria-label="Account menu"
-                      className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-surface-2 shadow-2xl z-50 origin-top-right overflow-hidden"
-                    >
-                      {/* Identity header */}
-                      <div className="flex items-start gap-2.5 px-3.5 pt-3.5 pb-3">
-                        <span className="shrink-0 mt-0.5 flex items-center justify-center w-8 h-8 rounded-full bg-func/10 border border-func/25 text-func text-sm font-bold font-display shadow-[0_0_10px_rgba(56,189,248,0.2)]">
-                          {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-text font-display truncate">
-                            {user.name || 'Learner'}
-                          </p>
-                          <p
-                            className="font-mono text-[10px] text-text-dim truncate"
-                            title={user.email ?? ''}
-                          >
-                            {user.email}
-                          </p>
-                          {user.role === 'admin' && (
-                            <span className="mt-1 inline-block bg-func/15 text-func border border-func/30 font-mono text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider">
-                              Admin
-                            </span>
-                          )}
+                  {/* Gentle breathing glow - GPU-composited CSS animation */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute -inset-0.5 rounded-full bg-func/15 blur-[5px] animate-glow-pulse"
+                  />
+                </button>
+                {/* Profile popover — opens on hover/tap */}
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setUserMenuOpen(false)}
+                        aria-hidden="true"
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                        transition={{ duration: 0.16, ease: 'easeOut' }}
+                        role="menu"
+                        aria-label="Account menu"
+                        className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-surface-2 shadow-2xl z-50 origin-top-right overflow-hidden"
+                      >
+                        {/* Identity header */}
+                        <div className="flex items-start gap-2.5 px-3.5 pt-3.5 pb-3">
+                          <span className="shrink-0 mt-0.5 flex items-center justify-center w-8 h-8 rounded-full bg-func/10 border border-func/25 text-func text-sm font-bold font-display shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                            {(user.name ?? user.email ?? '?').trim().charAt(0).toUpperCase()}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-text font-display truncate">
+                              {user.name || 'Learner'}
+                            </p>
+                            <p
+                              className="font-mono text-[10px] text-text-dim truncate"
+                              title={user.email ?? ''}
+                            >
+                              {user.email}
+                            </p>
+                            {user.role === 'admin' && (
+                              <span className="mt-1 inline-block bg-func/15 text-func border border-func/30 font-mono text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                Admin
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Actions */}
-                      <div className="border-t border-border/60 py-1">
-                        <Link
-                          id="header-profile-link"
-                          href="/profile"
-                          role="menuitem"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
-                        >
-                          <Icon name="person" className="text-[15px] text-func" />
-                          My Profile &amp; Progress
-                        </Link>
-                        {user.role === 'admin' && (
+                        {/* Actions */}
+                        <div className="border-t border-border/60 py-1">
                           <Link
-                            href="/admin"
+                            id="header-profile-link"
+                            href="/profile"
                             role="menuitem"
                             onClick={() => setUserMenuOpen(false)}
-                            className="sm:hidden flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
+                            className="flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
                           >
-                            <Icon name="shield_person" className="text-[15px] text-func" />
-                            Admin dashboard
+                            <Icon name="person" className="text-[15px] text-func" />
+                            My Profile &amp; Progress
                           </Link>
-                        )}
-                        <button
-                          role="menuitem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            onSignOut?.();
-                          }}
-                          className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
-                        >
-                          <Icon name="logout" className="text-[15px]" />
-                          Sign out
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+                          {user.role === 'admin' && (
+                            <Link
+                              href="/admin"
+                              role="menuitem"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="sm:hidden flex items-center gap-2 px-3.5 py-2 text-xs text-text-dim hover:text-text hover:bg-surface transition-colors cursor-pointer"
+                            >
+                              <Icon name="shield_person" className="text-[15px] text-func" />
+                              Admin dashboard
+                            </Link>
+                          )}
+                          <button
+                            role="menuitem"
+                            onClick={() => {
+                              setUserMenuOpen(false);
+                              onSignOut?.();
+                            }}
+                            className="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-text-dim hover:text-error hover:bg-error/5 transition-colors cursor-pointer"
+                          >
+                            <Icon name="logout" className="text-[15px]" />
+                            Sign out
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           ) : (
@@ -271,7 +271,7 @@ export const Header: React.FC<HeaderProps> = ({
               href={pathname && pathname !== '/' ? `/signin?from=${encodeURIComponent(pathname)}` : '/signin'}
               title="Sign in"
               aria-label="Sign in"
-              className={`flex items-center justify-center px-3 sm:px-4 py-1.5 rounded-full font-semibold hover:brightness-110 transition-all duration-150 font-mono text-[12px] whitespace-nowrap ${isMinimal ? 'bg-[#0d1526] border border-[#38bdf8] text-[#38bdf8] hover:bg-[#38bdf8]/10' : 'bg-func text-ink rounded-lg text-[11px] sm:text-xs'}`}
+              className={`flex items-center justify-center px-3 sm:px-4 py-1.5 font-semibold hover:brightness-110 transition-all duration-150 font-mono whitespace-nowrap ${isMinimal ? 'rounded-full text-[12px] bg-surface-2 border border-func/60 text-func hover:bg-func/10' : 'bg-func text-ink rounded-lg text-[11px] sm:text-xs'}`}
             >
               Sign In
             </Link>

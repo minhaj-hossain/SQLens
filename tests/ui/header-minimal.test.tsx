@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('../../src/components/providers/AuthProvider', () => ({
-  useAuth: () => ({ user: null, isAuthPending: false, signOut: async () => {} }),
+  useAuth: () => ({ user: null, isAuthPending: false, signOut: async () => { } }),
 }));
 
 vi.mock('../../src/components/providers/ThemeProvider', () => ({
@@ -45,8 +45,8 @@ const guestState = initialStateForTrack('sql');
 
 const baseProps = {
   userState: guestState,
-  onResetProgress: async () => {},
-  onOpenSchemaModal: () => {},
+  onResetProgress: async () => { },
+  onOpenSchemaModal: () => { },
   user: null,
   isAuthPending: false,
 };
@@ -68,7 +68,8 @@ describe('Header — minimal mode (homepage /)', () => {
   });
 
   it('uses Click homepage background and border colors', () => {
-    expect(html).toContain('border-[#121d33]');
+    expect(html).toContain('bg-ink/95');
+    expect(html).toContain('border-border-soft');
   });
 
   it('renders the circular palette theme button', () => {
@@ -77,10 +78,10 @@ describe('Header — minimal mode (homepage /)', () => {
     expect(html).toContain('cx="12" cy="12" r="9"');
   });
 
-  it('renders the Sign In button with Click styling (border-[#38bdf8])', () => {
+  it('renders the Sign In button with Click theme styling', () => {
     expect(html).toContain('Sign In');
-    expect(html).toContain('border-[#38bdf8]');
-    expect(html).toContain('text-[#38bdf8]');
+    expect(html).toContain('border-func/60');
+    expect(html).toContain('text-func');
   });
 
   it('does NOT render the progress pill, playground, or schema modal controls', () => {

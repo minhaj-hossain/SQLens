@@ -12,7 +12,7 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
   return (
     <footer
       data-testid="click-footer"
-      className={`w-full border-t border-[#121d33] bg-[#060b16] text-[#e8eefb] ${className}`}
+      className={`w-full border-t border-border-soft bg-ink text-text ${className}`}
     >
       <div className="mx-auto flex w-full max-w-[1120px] flex-wrap justify-between gap-x-16 gap-y-10 px-6 pt-12 pb-8">
         {/* Brand identity column */}
@@ -20,11 +20,11 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
           <Link
             href="/"
             aria-label="Click Homepage"
-            className="inline-flex w-fit items-center rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#38bdf8]"
+            className="inline-flex w-fit items-center rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-func"
           >
             <BrandLogo variant="click" size="md" />
           </Link>
-          <p className="m-0 text-sm leading-[1.55] text-[#8a9bbd]">
+          <p className="m-0 text-sm leading-[1.55] text-text-dim">
             When concepts finally click.
           </p>
         </div>
@@ -32,7 +32,7 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
         {/* Navigation links columns */}
         <div className="flex flex-wrap gap-x-16 gap-y-10">
           <div className="flex min-w-[120px] flex-col gap-3">
-            <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#7b8db0] uppercase">
+            <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-text-faint uppercase">
               TRACKS
             </span>
             <Link href="/sql" className="flink text-sm">
@@ -44,14 +44,14 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
             <Link href="/networking" className="flink text-sm">
               Networking (35 Days)
             </Link>
-            <Link href="/playground?from=/" className="flink text-sm flex items-center gap-1 text-[#38bdf8] hover:text-[#38bdf8]/80">
+            <Link href="/playground?from=/" className="flink text-sm flex items-center gap-1 text-func hover:brightness-110">
               <span>Playground</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#38bdf8]/10 border border-[#38bdf8]/30 font-mono">Live</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-func/10 border border-func/30 font-mono">Live</span>
             </Link>
           </div>
 
           <div className="flex min-w-[120px] flex-col gap-3">
-            <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-[#7b8db0] uppercase">
+            <span className="font-mono text-[11px] font-semibold tracking-[0.14em] text-text-faint uppercase">
               PROJECT
             </span>
             <a href="#about" className="flink text-sm">
@@ -77,11 +77,11 @@ export const ClickFooter: React.FC<ClickFooterProps> = ({ className = '' }) => {
 
       {/* Bottom copyright divider */}
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#121d33] pt-6 text-[13px] text-[#7b8db0]">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border-soft pt-6 text-[13px] text-text-faint">
           <span>© 2026 Click. Hands-on learning runtime.</span>
           <div className="flex items-center gap-4 text-xs">
-            <span className="inline-flex items-center gap-1.5 text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 text-[var(--success-text)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--success-text)] animate-pulse" />
               SQLite WASM, Prisma &amp; Network Simulation Ready
             </span>
           </div>

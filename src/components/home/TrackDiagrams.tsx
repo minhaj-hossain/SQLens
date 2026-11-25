@@ -118,39 +118,39 @@ export const PrismaDiagramSvg: React.FC<{ className?: string }> = ({ className =
       aria-label="A Prisma schema on the left powers type-safe autocomplete in code on the right"
     >
       {/* Left sub-window: schema.prisma */}
-      <rect x="24" y="28" width="210" height="164" rx="12" fill="#0d1526" stroke="#1b2a47" />
-      <circle cx="42" cy="44" r="3" fill="#2a3d63" />
-      <circle cx="54" cy="44" r="3" fill="#2a3d63" />
-      <circle cx="66" cy="44" r="3" fill="#2a3d63" />
-      <text x="84" y="48" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#7b8db0">
+      <rect x="24" y="28" width="210" height="164" rx="12" fill="var(--surface-2)" stroke="var(--border)" />
+      <circle cx="42" cy="44" r="3" fill="var(--border-strong)" />
+      <circle cx="54" cy="44" r="3" fill="var(--border-strong)" />
+      <circle cx="66" cy="44" r="3" fill="var(--border-strong)" />
+      <text x="84" y="48" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="var(--text-faint)">
         schema.prisma
       </text>
-      <path d="M24 60H234" stroke="#1b2a47" />
-      <text x="40" y="86" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#e8eefb">
-        <tspan fill="#38bdf8">model</tspan> User &#123;
+      <path d="M24 60H234" stroke="var(--border)" />
+      <text x="40" y="86" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text)">
+        <tspan fill="var(--func)" fontWeight="600">model</tspan> User &#123;
       </text>
-      <text x="56" y="108" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#e8eefb">
+      <text x="56" y="108" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text)">
         id
       </text>
-      <text x="108" y="108" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#8a9bbd">
+      <text x="108" y="108" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text-dim)">
         Int
       </text>
-      <text x="150" y="108" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#38bdf8">
+      <text x="150" y="108" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--func)">
         @id
       </text>
-      <text x="56" y="130" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#e8eefb">
+      <text x="56" y="130" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text)">
         email
       </text>
-      <text x="108" y="130" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#8a9bbd">
+      <text x="108" y="130" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text-dim)">
         String
       </text>
-      <text x="56" y="152" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#e8eefb">
+      <text x="56" y="152" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text)">
         posts
       </text>
-      <text x="108" y="152" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#8a9bbd">
+      <text x="108" y="152" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text-dim)">
         Post[]
       </text>
-      <text x="40" y="176" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#e8eefb">
+      <text x="40" y="176" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text)">
         &#125;
       </text>
 
@@ -158,30 +158,30 @@ export const PrismaDiagramSvg: React.FC<{ className?: string }> = ({ className =
       <path
         d="M242 110H270M262 102L270 110L262 118"
         fill="none"
-        stroke="#38bdf8"
+        stroke="var(--func)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
       {/* Right sub-window: app.ts */}
-      <rect x="282" y="28" width="174" height="164" rx="12" fill="#0d1526" stroke="#1b2a47" />
-      <text x="298" y="48" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#7b8db0">
+      <rect x="282" y="28" width="174" height="164" rx="12" fill="var(--surface-2)" stroke="var(--border)" />
+      <text x="298" y="48" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="var(--text-faint)">
         app.ts
       </text>
-      <path d="M282 60H456" stroke="#1b2a47" />
-      <text x="298" y="84" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="#e8eefb">
-        <tspan fill="#38bdf8">prisma</tspan>.user.
+      <path d="M282 60H456" stroke="var(--border)" />
+      <text x="298" y="84" fontFamily="JetBrains Mono, monospace" fontSize="12" fill="var(--text)">
+        <tspan fill="var(--func)" fontWeight="600">prisma</tspan>.user.
       </text>
       {/* Blinking typing caret */}
-      <rect x="385" y="72" width="2" height="14" fill="#38bdf8" />
+      <rect x="385" y="72" width="2" height="14" fill="var(--func)" />
 
       {/* Autocomplete dropdown box */}
-      <rect x="298" y="96" width="146" height="82" rx="8" fill="#111c33" stroke="#2a3d63" />
-      <text x="310" y="114" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#e8eefb">
+      <rect x="298" y="96" width="146" height="82" rx="8" fill="var(--surface-3)" stroke="var(--border-strong)" />
+      <text x="310" y="114" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="var(--text)">
         id
       </text>
-      <text x="376" y="114" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#7b8db0">
+      <text x="376" y="114" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="var(--text-faint)">
         number
       </text>
 
@@ -192,20 +192,20 @@ export const PrismaDiagramSvg: React.FC<{ className?: string }> = ({ className =
         width="138"
         height="20"
         rx="5"
-        fill="#38bdf8"
+        fill="var(--func)"
         fillOpacity="0.16"
       />
-      <text x="310" y="136" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#38bdf8">
+      <text x="310" y="136" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="var(--func)" fontWeight="600">
         email
       </text>
-      <text x="376" y="136" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#38bdf8">
+      <text x="376" y="136" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="var(--func)">
         string
       </text>
 
-      <text x="310" y="162" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="#e8eefb">
+      <text x="310" y="162" fontFamily="JetBrains Mono, monospace" fontSize="11" fill="var(--text)">
         posts
       </text>
-      <text x="376" y="162" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="#7b8db0">
+      <text x="376" y="162" fontFamily="JetBrains Mono, monospace" fontSize="10" fill="var(--text-faint)">
         Post[]
       </text>
     </svg>
@@ -229,7 +229,7 @@ export const NetworkingDiagramSvg: React.FC<{ className?: string }> = ({ classNa
     >
       {/* Outer Window Container */}
       <rect x="24" y="28" width="432" height="164" rx="12" fill="var(--surface-2)" stroke="var(--border)" />
-      
+
       {/* Window Header Dots & Title */}
       <circle cx="42" cy="44" r="3" fill="var(--border-strong)" />
       <circle cx="54" cy="44" r="3" fill="var(--border-strong)" />
@@ -299,7 +299,7 @@ export const NetworkingDiagramSvg: React.FC<{ className?: string }> = ({ classNa
 
       {/* Bottom Packet & Route Telemetry Tray */}
       <rect x="44" y="138" width="392" height="40" rx="8" fill="var(--surface)" fillOpacity="0.8" stroke="var(--border)" />
-      
+
       {/* TTL Pill */}
       <rect x="54" y="146" width="62" height="24" rx="5" fill="var(--func)" fillOpacity="0.14" stroke="var(--func)" strokeOpacity="0.35" />
       <text x="85" y="161.5" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9.5" fontWeight="700" fill="var(--func)">

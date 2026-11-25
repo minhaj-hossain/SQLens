@@ -43,8 +43,7 @@ describe('ClickHomepage Component', () => {
     expect(html).toContain('text-text');
     expect(html).toContain('border-func/30');
     expect(html).toContain('text-func');
-    expect(html).toContain('border-[#38bdf8]/30');
-    expect(html).toContain('text-[#38bdf8]');
+    expect(html).not.toContain('bg-[#060b16]');
   });
 
   it('renders ClickFooter with brand tagline and copyright', () => {
