@@ -229,7 +229,7 @@ export const NetworkingDiagramSvg: React.FC<{ className?: string }> = ({ classNa
     >
       {/* Outer Window Container */}
       <rect x="24" y="28" width="432" height="164" rx="12" fill="var(--surface-2)" stroke="var(--border)" />
-
+      
       {/* Window Header Dots & Title */}
       <circle cx="42" cy="44" r="3" fill="var(--border-strong)" />
       <circle cx="54" cy="44" r="3" fill="var(--border-strong)" />
@@ -299,7 +299,7 @@ export const NetworkingDiagramSvg: React.FC<{ className?: string }> = ({ classNa
 
       {/* Bottom Packet & Route Telemetry Tray */}
       <rect x="44" y="138" width="392" height="40" rx="8" fill="var(--surface)" fillOpacity="0.8" stroke="var(--border)" />
-
+      
       {/* TTL Pill */}
       <rect x="54" y="146" width="62" height="24" rx="5" fill="var(--func)" fillOpacity="0.14" stroke="var(--func)" strokeOpacity="0.35" />
       <text x="85" y="161.5" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9.5" fontWeight="700" fill="var(--func)">

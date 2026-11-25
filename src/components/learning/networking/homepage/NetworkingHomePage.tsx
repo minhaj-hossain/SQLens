@@ -57,6 +57,9 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-17': 'Master the TCP state machine: 3-way handshake SYN synchronization, 4-way teardown with half-closed states, and the 2MSL TIME_WAIT safety timer.',
   'net-18': 'Deliver bytes reliably: 32-bit sequence numbers, cumulative ACKs, dynamic RTO with exponential backoff, Fast Retransmit with SACK, and sliding window flow control.',
   'net-19': 'Lightweight connectionless transport: 8-byte header, zero head-of-line blocking, stateless port multiplexing, and modern QUIC/HTTP/3 over UDP.',
+  'net-20': 'Automate routing tables across large networks: static scaling limits, blackhole failure recovery, Autonomous Systems (AS), and IGP vs EGP.',
+  'net-21': 'Master RIPv2 (RFC 2453) distance-vector routing: UDP 520 updates, hop count blindness, the 15-hop ceiling, count-to-infinity, and loop prevention.',
+  'net-22': 'Build a synchronized Area 0 topology map with OSPFv2 (RFC 2328): IP protocol 89 Hellos, Type-1 LSAs, bandwidth-aware Cost, and Dijkstra SPF.',
 };
 
 export const NetworkingHomePage: React.FC = () => {

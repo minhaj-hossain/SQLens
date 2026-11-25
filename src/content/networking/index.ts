@@ -18,6 +18,9 @@ import { NET_16_MODULE } from './modules/net-16';
 import { NET_17_MODULE } from './modules/net-17';
 import { NET_18_MODULE } from './modules/net-18';
 import { NET_19_MODULE } from './modules/net-19';
+import { NET_20_MODULE } from './modules/net-20';
+import { NET_21_MODULE } from './modules/net-21';
+import { NET_22_MODULE } from './modules/net-22';
 import { NETWORKING_ROADMAP_STAGES } from './roadmap';
 
 export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
@@ -40,6 +43,9 @@ export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
   'net-17': NET_17_MODULE,
   'net-18': NET_18_MODULE,
   'net-19': NET_19_MODULE,
+  'net-20': NET_20_MODULE,
+  'net-21': NET_21_MODULE,
+  'net-22': NET_22_MODULE,
 };
 
 export function getNetworkingModule(
@@ -81,6 +87,9 @@ export function getAllNetworkingModules(): NetworkingModule[] {
     NET_17_MODULE,
     NET_18_MODULE,
     NET_19_MODULE,
+    NET_20_MODULE,
+    NET_21_MODULE,
+    NET_22_MODULE,
   ];
 }
 
@@ -104,6 +113,9 @@ export {
   NET_17_MODULE,
   NET_18_MODULE,
   NET_19_MODULE,
+  NET_20_MODULE,
+  NET_21_MODULE,
+  NET_22_MODULE,
   NETWORKING_ROADMAP_STAGES,
 };
 

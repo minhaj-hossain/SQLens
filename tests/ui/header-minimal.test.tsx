@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('../../src/components/providers/AuthProvider', () => ({
-  useAuth: () => ({ user: null, isAuthPending: false, signOut: async () => { } }),
+  useAuth: () => ({ user: null, isAuthPending: false, signOut: async () => {} }),
 }));
 
 vi.mock('../../src/components/providers/ThemeProvider', () => ({
@@ -45,8 +45,8 @@ const guestState = initialStateForTrack('sql');
 
 const baseProps = {
   userState: guestState,
-  onResetProgress: async () => { },
-  onOpenSchemaModal: () => { },
+  onResetProgress: async () => {},
+  onOpenSchemaModal: () => {},
   user: null,
   isAuthPending: false,
 };

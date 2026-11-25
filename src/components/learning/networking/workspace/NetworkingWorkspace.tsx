@@ -611,6 +611,122 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'http3 probe')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-20' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'ip route show' ||
+          normalizedCmd === 'ip route' ||
+          normalizedCmd === 'ip r' ||
+          normalizedCmd === 'show ip route' ||
+          normalizedCmd === 'route -n')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-20' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'traceroute 10.20.0.10' ||
+          normalizedCmd === 'traceroute -n 10.20.0.10' ||
+          normalizedCmd === 'tracert 10.20.0.10' ||
+          normalizedCmd === 'traceroute r4')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-20' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'as inspect 64512' ||
+          normalizedCmd === 'as inspect as64512' ||
+          normalizedCmd === 'whois as64512' ||
+          normalizedCmd === 'show bgp summary' ||
+          normalizedCmd === 'as inspect')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-20' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show route-protocols' ||
+          normalizedCmd === 'show ip protocols' ||
+          normalizedCmd === 'route-protocols' ||
+          normalizedCmd === 'ip route summary' ||
+          normalizedCmd === 'show protocols')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-21' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'show ip rip' ||
+          normalizedCmd === 'show rip' ||
+          normalizedCmd === 'ip rip' ||
+          normalizedCmd === 'rip' ||
+          normalizedCmd === 'show route rip' ||
+          normalizedCmd === 'ip route show rip')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-21' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'traceroute 10.21.0.10' ||
+          normalizedCmd === 'traceroute' ||
+          normalizedCmd === 'trace 10.21.0.10' ||
+          normalizedCmd === 'mtr 10.21.0.10' ||
+          normalizedCmd === 'traceroute 10.21.0.0')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-21' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'rip debug loop' ||
+          normalizedCmd === 'debug ip rip' ||
+          normalizedCmd === 'debug rip' ||
+          normalizedCmd === 'rip loop' ||
+          normalizedCmd === 'count to infinity')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-21' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show ip rip loops' ||
+          normalizedCmd === 'show rip loops' ||
+          normalizedCmd === 'split horizon' ||
+          normalizedCmd === 'poison reverse' ||
+          normalizedCmd === 'show ip rip database')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-22' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'show ip ospf neighbor' ||
+          normalizedCmd === 'show ospf neighbor' ||
+          normalizedCmd === 'ospf neighbor' ||
+          normalizedCmd === 'show ip ospf')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-22' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'show ip ospf database' ||
+          normalizedCmd === 'show ospf database' ||
+          normalizedCmd === 'ospf database' ||
+          normalizedCmd === 'show lsdb')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-22' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'show ip ospf cost' ||
+          normalizedCmd === 'show ospf cost' ||
+          normalizedCmd === 'show ip ospf interface' ||
+          normalizedCmd === 'ospf cost')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-22' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'traceroute 10.22.0.10' ||
+          normalizedCmd === 'traceroute' ||
+          normalizedCmd === 'trace 10.22.0.10' ||
+          normalizedCmd === 'show ip route ospf')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

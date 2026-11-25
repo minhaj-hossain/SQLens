@@ -19,6 +19,9 @@ import {
   NET_17_MODULE,
   NET_18_MODULE,
   NET_19_MODULE,
+  NET_20_MODULE,
+  NET_21_MODULE,
+  NET_22_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -630,6 +633,105 @@ describe('Networking Curriculum Content Modules', () => {
     expect(step5.what).toContain('UDP (Minimalist, Connectionless, Datagrams)');
   });
 
+  it('Day 20 module has exact title, 5 steps, and authentic dynamic routing commands', () => {
+    expect(NET_20_MODULE.id).toBe('net-20');
+    expect(NET_20_MODULE.dayNumber).toBe(20);
+    expect(NET_20_MODULE.title).toBe('Day 20 · Why Dynamic Routing');
+    expect(NET_20_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_20_MODULE.steps[0];
+    expect(step1.group).toBe('Idea 1 of 4 · Static route scaling limits');
+    expect(step1.cmd).toBe('ip route show');
+    expect(step1.what).toContain('Routing Information Base (RIB)');
+    expect(step1.what).toContain('O(R × S)');
+
+    const step2 = NET_20_MODULE.steps[1];
+    expect(step2.cmd).toBe('traceroute 10.20.0.10');
+    expect(step2.what).toContain('NO-CARRIER');
+    expect(step2.what).toContain('Blackhole Forwarding');
+
+    const step3 = NET_20_MODULE.steps[2];
+    expect(step3.cmd).toBe('as inspect 64512');
+    expect(step3.what).toContain('Autonomous Systems (AS)');
+    expect(step3.what).toContain('64512–65534');
+
+    const step4 = NET_20_MODULE.steps[3];
+    expect(step4.cmd).toBe('show route-protocols');
+    expect(step4.what).toContain('Interior Gateway Protocols (IGPs)');
+    expect(step4.what).toContain('Administrative Distance (AD)');
+
+    const step5 = NET_20_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe(
+      'The four core rules of dynamic routing & AS architecture'
+    );
+  });
+
+  it('Day 21 module has exact title, 5 steps, and authentic RIPv2 commands', () => {
+    expect(NET_21_MODULE.id).toBe('net-21');
+    expect(NET_21_MODULE.dayNumber).toBe(21);
+    expect(NET_21_MODULE.title).toBe('Day 21 · RIP: Counting Hops');
+    expect(NET_21_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_21_MODULE.steps[0];
+    expect(step1.group).toBe('Idea 1 of 4 · Distance-vector & RIPv2 updates');
+    expect(step1.cmd).toBe('show ip rip');
+    expect(step1.what).toContain('UDP port 520');
+    expect(step1.what).toContain('224.0.0.9');
+
+    const step2 = NET_21_MODULE.steps[1];
+    expect(step2.cmd).toBe('traceroute 10.21.0.10');
+    expect(step2.what).toContain('15-Hop Ceiling');
+    expect(step2.what).toContain('metric 16');
+
+    const step3 = NET_21_MODULE.steps[2];
+    expect(step3.cmd).toBe('rip debug loop');
+    expect(step3.what).toContain('Count-to-Infinity');
+
+    const step4 = NET_21_MODULE.steps[3];
+    expect(step4.cmd).toBe('show ip rip loops');
+    expect(step4.what).toContain('Split Horizon');
+    expect(step4.what).toContain('Poison Reverse');
+
+    const step5 = NET_21_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe(
+      'RIPv2: Hop-count simplicity, 15-hop ceiling, and loop prevention'
+    );
+  });
+
+  it('Day 22 module has exact title, 5 steps, and authentic OSPF commands', () => {
+    expect(NET_22_MODULE.id).toBe('net-22');
+    expect(NET_22_MODULE.dayNumber).toBe(22);
+    expect(NET_22_MODULE.title).toBe('Day 22 · OSPF: Sharing the Map');
+    expect(NET_22_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_22_MODULE.steps[0];
+    expect(step1.group).toBe('Idea 1 of 4 · Link-state & Area 0 adjacency');
+    expect(step1.cmd).toBe('show ip ospf neighbor');
+    expect(step1.what).toContain('IP Protocol 89');
+    expect(step1.what).toContain('Area 0');
+
+    const step2 = NET_22_MODULE.steps[1];
+    expect(step2.cmd).toBe('show ip ospf database');
+    expect(step2.what).toContain('Type-1 Router LSA');
+    expect(step2.what).toContain('Link-State Database (LSDB)');
+
+    const step3 = NET_22_MODULE.steps[2];
+    expect(step3.cmd).toBe('show ip ospf cost');
+    expect(step3.what).toContain('Reference Bandwidth / Interface Bandwidth');
+
+    const step4 = NET_22_MODULE.steps[3];
+    expect(step4.cmd).toBe('traceroute 10.22.0.10');
+    expect(step4.what).toContain("Dijkstra's Shortest Path First (SPF)");
+
+    const step5 = NET_22_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe(
+      'OSPFv2: Synchronized LSDB, bandwidth cost, and Dijkstra SPF'
+    );
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -657,6 +759,9 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(17)?.id).toBe('net-17');
     expect(getNetworkingModule(18)?.id).toBe('net-18');
     expect(getNetworkingModule(19)?.id).toBe('net-19');
+    expect(getNetworkingModule(20)?.id).toBe('net-20');
+    expect(getNetworkingModule(21)?.id).toBe('net-21');
+    expect(getNetworkingModule(22)?.id).toBe('net-22');
   });
 });
 

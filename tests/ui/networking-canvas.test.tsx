@@ -1613,6 +1613,200 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('translate(1130, 350)');
     expect(htmlStep4).toContain('STAGE 5 COMPLETE');
   });
+
+  it('Day 20 progressively reveals static scaling, blackhole failure, AS boundaries, and IGP vs EGP with anti-overlap geometry', () => {
+    // Step 0: Static route scaling & RIB/FIB
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-20"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain('WHY DYNAMIC ROUTING · SCALABILITY, FAILOVER &amp; IGP VS EGP');
+    expect(htmlStep0).toContain('AS 64512 · ENTERPRISE CORE (IGP DOMAIN)');
+    expect(htmlStep0).toContain('AS 64513 · UPSTREAM ISP (EXTERNAL AS)');
+    expect(htmlStep0).toContain('STATIC: O(R × S)');
+    expect(htmlStep0).toContain('RIB: 24 STATIC ROUTES');
+    // Badge width 130 <= (320 - 156 - 30) = 134
+    expect(htmlStep0).toContain('width="130"');
+    // Bottom HUD cards at y=395 strictly clear R3+ports (~368px) and PC1/S1 (314px)
+    expect(htmlStep0).toContain('translate(70, 395)');
+    expect(htmlStep0).toContain('translate(420, 395)');
+    expect(htmlStep0).toContain('translate(1090, 395)');
+
+    // Step 1: Link failure & blackholing with staggered alerts (y=155 vs y=325 -> 170px >= 25px)
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-20"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('translate(798, 155)');
+    expect(htmlStep1).toContain('DOWN / NO-CARRIER · BLACKHOLE');
+    expect(htmlStep1).toContain('translate(798, 325)');
+    expect(htmlStep1).toContain('HEALTHY BACKUP (UNUSED STATIC)');
+
+    // Step 2: Autonomous System boundaries
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-20"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('AS64512 ↔ AS64513');
+    expect(htmlStep2).toContain('translate(1078, 250)');
+
+    // Step 3: IGP vs EGP & Administrative Distance
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-20"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('EGP: BGP-4 (AD 20)');
+    expect(htmlStep3).toContain('ADMINISTRATIVE DISTANCE (AD)');
+
+    // Step 4: Recap
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-20"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('DAY 20 COMPLETE');
+    expect(htmlStep4).toContain('Next: Day 21 · RIP: Counting Hops');
+  });
+
+  it('renders Day 21 RIPv2 topology with anti-overlap geometry and progressive steps', () => {
+    // Step 0: Distance-vector & UDP 520 updates
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-21"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'RIP: COUNTING HOPS · DISTANCE-VECTOR, 15-HOP LIMIT &amp; LOOP PREVENTION'
+    );
+    expect(htmlStep0).toContain('UDP:520 · 224.0.0.9');
+    expect(htmlStep0).toContain('10.21.0.0/24 LAN');
+    // Badge width 130 <= (890 - 586 - 30) = 274
+    expect(htmlStep0).toContain('width="130"');
+    // Bottom HUD cards at y=395 strictly clear R3/R4 port pills (y=348)
+    expect(htmlStep0).toContain('translate(70, 395)');
+    expect(htmlStep0).toContain('translate(780, 395)');
+
+    // Step 1: Hop count blindness
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-21"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('BANDWIDTH BLINDNESS (HOP COUNT ONLY)');
+    expect(htmlStep1).toContain('THE 15-HOP CEILING (INFINITY = 16)');
+
+    // Step 2: Count-to-infinity staggered alerts (y=108 vs y=158 -> 50px >= 25px)
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-21"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('translate(950, 118)');
+    expect(htmlStep2).toContain('LINK DOWN (NO-CARRIER)');
+    expect(htmlStep2).toContain('translate(330, 108)');
+    expect(htmlStep2).toContain('translate(435, 158)');
+
+    // Step 3: Split horizon & poison reverse staggered alerts (y=118 vs y=148 -> 30px >= 25px)
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-21"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('translate(105, 148)');
+    expect(htmlStep3).toContain('SPLIT HORIZON: eth0 blocked');
+    expect(htmlStep3).toContain('translate(365, 118)');
+    expect(htmlStep3).toContain('POISON: 10.21.0.0/24 = 16');
+
+    // Step 4: Recap
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-21"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('DAY 21 COMPLETE · RIPv2 DISTANCE-VECTOR SUMMARY');
+    expect(htmlStep4).toContain('NEXT: DAY 22 · OSPF: SHARING THE MAP');
+  });
+
+  it('renders Day 22 OSPF Area 0 topology with anti-overlap geometry and progressive steps', () => {
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-22"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'OSPF: SHARING THE MAP · LINK-STATE, AREA 0, COST &amp; DIJKSTRA SPF'
+    );
+    expect(htmlStep0).toContain('AREA 0.0.0.0 · OSPF BACKBONE');
+    expect(htmlStep0).toContain('PROTO 89 · HELLO');
+    expect(htmlStep0).toContain('width="130"');
+    expect(htmlStep0).toContain('translate(70, 395)');
+    expect(htmlStep0).toContain('translate(780, 395)');
+
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-22"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('TYPE-1 LSA SYNC');
+    expect(htmlStep1).toContain('SYNCHRONIZED LSDB (IDENTICAL 5-NODE GRAPH)');
+
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-22"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('TOTAL COST = 3');
+    expect(htmlStep2).toContain('UPPER: 10M · COST 1000');
+
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-22"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('SPF: COST 3 (AD 110)');
+
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-22"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('DAY 22 COMPLETE · OSPFv2 LINK-STATE SUMMARY');
+    expect(htmlStep4).toContain('NEXT: DAY 23 · FAILOVER AND CONVERGENCE');
+  });
 });
 
 

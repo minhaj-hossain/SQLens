@@ -20,6 +20,9 @@ import { Day16Canvas } from './days/Day16Canvas';
 import { Day17Canvas } from './days/Day17Canvas';
 import { Day18Canvas } from './days/Day18Canvas';
 import { Day19Canvas } from './days/Day19Canvas';
+import { Day20Canvas } from './days/Day20Canvas';
+import { Day21Canvas } from './days/Day21Canvas';
+import { Day22Canvas } from './days/Day22Canvas';
 
 const DAY_CANVAS_MAP: Record<string, React.FC<DayCanvasProps>> = {
   'net-01': Day01To03Canvas,
@@ -41,6 +44,9 @@ const DAY_CANVAS_MAP: Record<string, React.FC<DayCanvasProps>> = {
   'net-17': Day17Canvas,
   'net-18': Day18Canvas,
   'net-19': Day19Canvas,
+  'net-20': Day20Canvas,
+  'net-21': Day21Canvas,
+  'net-22': Day22Canvas,
 };
 
 interface NetworkingCanvasProps {
@@ -140,6 +146,21 @@ const DAY_WORLD_SPECS: Record<
     width: 1480,
     height: 620,
     title: 'UDP: FAST AND SIMPLE · CONNECTIONLESS TRANSPORT & MINIMAL OVERHEAD',
+  },
+  'net-20': {
+    width: 1480,
+    height: 620,
+    title: 'WHY DYNAMIC ROUTING · SCALABILITY, FAILOVER & IGP VS EGP',
+  },
+  'net-21': {
+    width: 1480,
+    height: 620,
+    title: 'RIP: COUNTING HOPS · DISTANCE-VECTOR, 15-HOP LIMIT & LOOP PREVENTION',
+  },
+  'net-22': {
+    width: 1480,
+    height: 620,
+    title: 'OSPF: SHARING THE MAP · LINK-STATE, AREA 0, COST & DIJKSTRA SPF',
   },
 };
 

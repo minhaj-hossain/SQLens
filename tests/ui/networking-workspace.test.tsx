@@ -217,7 +217,7 @@ describe('NetworkingWorkspace Component', () => {
     expect(htmlDay6).not.toContain('(tap it to fill the terminal).');
   });
 
-  it('renders Day N+1 transition link on recap step for Days 1..18 and Back to Roadmap on Day 19', () => {
+  it('renders Day N+1 transition link on recap step for Days 1..19 and Back to Roadmap on Day 20', () => {
     const modules = getAllNetworkingModules();
     for (let i = 0; i < modules.length; i++) {
       const mod = modules[i];

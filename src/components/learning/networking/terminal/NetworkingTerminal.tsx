@@ -151,6 +151,12 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: tcp send "GET /data HTTP/1.1", tcp drop-simulate --loss 100, ss -ti, ss -tan -o, cls, clear, help';
       } else if (dayId === 'net-19') {
         helpMsg = 'Commands: udp send 198.51.100.53:53 "domain query", udp stream --codec opus, ss -uan, quic probe 198.51.100.10:443, cls, clear, help';
+      } else if (dayId === 'net-20') {
+        helpMsg = 'Commands: ip route show, traceroute 10.20.0.10, as inspect 64512, show route-protocols, cls, clear, help';
+      } else if (dayId === 'net-21') {
+        helpMsg = 'Commands: show ip rip, traceroute 10.21.0.10, rip debug loop, show ip rip loops, cls, clear, help';
+      } else if (dayId === 'net-22') {
+        helpMsg = 'Commands: show ip ospf neighbor, show ip ospf database, show ip ospf cost, traceroute 10.22.0.10, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -904,6 +910,125 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'http3 probe'
       ) {
         out = staticResponses['quic probe 198.51.100.10:443'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 20 dynamic logic
+    if (dayId === 'net-20') {
+      if (
+        v === 'ip route show' ||
+        v === 'ip route' ||
+        v === 'ip r' ||
+        v === 'show ip route' ||
+        v === 'route -n'
+      ) {
+        out = staticResponses['ip route show'];
+        isSuccess = true;
+      } else if (
+        v === 'traceroute 10.20.0.10' ||
+        v === 'traceroute -n 10.20.0.10' ||
+        v === 'tracert 10.20.0.10' ||
+        v === 'traceroute r4'
+      ) {
+        out = staticResponses['traceroute 10.20.0.10'];
+        isSuccess = true;
+      } else if (
+        v === 'as inspect 64512' ||
+        v === 'as inspect as64512' ||
+        v === 'whois as64512' ||
+        v === 'show bgp summary' ||
+        v === 'as inspect'
+      ) {
+        out = staticResponses['as inspect 64512'];
+        isSuccess = true;
+      } else if (
+        v === 'show route-protocols' ||
+        v === 'show ip protocols' ||
+        v === 'route-protocols' ||
+        v === 'ip route summary' ||
+        v === 'show protocols'
+      ) {
+        out = staticResponses['show route-protocols'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 21 dynamic logic
+    if (dayId === 'net-21') {
+      if (
+        v === 'show ip rip' ||
+        v === 'show rip' ||
+        v === 'ip rip' ||
+        v === 'rip' ||
+        v === 'show route rip' ||
+        v === 'ip route show rip'
+      ) {
+        out = staticResponses['show ip rip'];
+        isSuccess = true;
+      } else if (
+        v === 'traceroute 10.21.0.10' ||
+        v === 'traceroute' ||
+        v === 'trace 10.21.0.10' ||
+        v === 'mtr 10.21.0.10' ||
+        v === 'traceroute 10.21.0.0'
+      ) {
+        out = staticResponses['traceroute 10.21.0.10'];
+        isSuccess = true;
+      } else if (
+        v === 'rip debug loop' ||
+        v === 'debug ip rip' ||
+        v === 'debug rip' ||
+        v === 'rip loop' ||
+        v === 'count to infinity'
+      ) {
+        out = staticResponses['rip debug loop'];
+        isSuccess = true;
+      } else if (
+        v === 'show ip rip loops' ||
+        v === 'show rip loops' ||
+        v === 'split horizon' ||
+        v === 'poison reverse' ||
+        v === 'show ip rip database'
+      ) {
+        out = staticResponses['show ip rip loops'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 22 dynamic logic
+    if (dayId === 'net-22') {
+      if (
+        v === 'show ip ospf neighbor' ||
+        v === 'show ospf neighbor' ||
+        v === 'ospf neighbor' ||
+        v === 'show ip ospf'
+      ) {
+        out = staticResponses['show ip ospf neighbor'];
+        isSuccess = true;
+      } else if (
+        v === 'show ip ospf database' ||
+        v === 'show ospf database' ||
+        v === 'ospf database' ||
+        v === 'show lsdb'
+      ) {
+        out = staticResponses['show ip ospf database'];
+        isSuccess = true;
+      } else if (
+        v === 'show ip ospf cost' ||
+        v === 'show ospf cost' ||
+        v === 'show ip ospf interface' ||
+        v === 'ospf cost'
+      ) {
+        out = staticResponses['show ip ospf cost'];
+        isSuccess = true;
+      } else if (
+        v === 'traceroute 10.22.0.10' ||
+        v === 'traceroute' ||
+        v === 'trace 10.22.0.10' ||
+        v === 'show ip route ospf'
+      ) {
+        out = staticResponses['traceroute 10.22.0.10'];
         isSuccess = true;
       }
     }
