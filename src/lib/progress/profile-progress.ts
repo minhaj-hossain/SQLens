@@ -5,6 +5,11 @@ import { trackLearnUrl, trackRoadmapUrl } from '@/lib/track-routes';
 import { TRACK_IDS, TRACK_META, TrackId } from '@/types/track';
 import { UserLearningState } from '@/types/progress';
 import { getAllNetworkingModules } from '@/content/networking';
+import {
+  getNextIncompleteNetworkingDay,
+  hasNetworkingProgressData,
+  loadNetworkingProgress,
+} from '@/lib/progress/networking-progress';
 import type { AuthUser } from '@/components/providers/AuthProvider';
 
 export interface TrackProgressSummary {
@@ -181,8 +186,15 @@ export function getTrackSummary(trackId: TrackId, userState: UserLearningState):
 /**
  * Calculates networking track progress summary.
  */
-export function getNetworkingSummary(): NetworkingProgressSummary {
+export function getNetworkingSummary(userId?: string | null): NetworkingProgressSummary {
   const modules = getAllNetworkingModules();
+  const progress = loadNetworkingProgress(userId);
+  const completedCount = Object.keys(progress.completedModules ?? {}).length;
+  const percent =
+    modules.length > 0 ? Math.min(100, Math.round((completedCount / modules.length) * 100)) : 0;
+  const next = getNextIncompleteNetworkingDay(progress);
+  const isStarted = hasNetworkingProgressData(progress);
+
   return {
     track: 'networking',
     label: 'Networking',
@@ -190,13 +202,13 @@ export function getNetworkingSummary(): NetworkingProgressSummary {
     tagline: 'Interactive packet & routing simulation on live canvas with a zero-analogy terminal.',
     basePath: '/networking',
     totalModules: modules.length,
-    completedModules: 0,
-    percent: 0,
-    currentDayNumber: 1,
-    currentDayTitle: modules[0]?.title ?? 'Direct Link & Physical Layer',
-    resumeUrl: '/networking/learn/net-01',
+    completedModules: completedCount,
+    percent,
+    currentDayNumber: next.dayNumber,
+    currentDayTitle: next.title,
+    resumeUrl: `/networking/learn/${next.dayId}`,
     roadmapUrl: '/networking',
-    isStarted: false,
+    isStarted,
   };
 }
 
@@ -230,7 +242,7 @@ export function getProfileLearningSummary(
 
   const sqlSummary = getTrackSummary('sql', sqlState);
   const prismaSummary = getTrackSummary('prisma', prismaState);
-  const networkingSummary = getNetworkingSummary();
+  const networkingSummary = getNetworkingSummary(userId);
 
   const totalDaysCompleted = sqlSummary.completedModules + prismaSummary.completedModules + networkingSummary.completedModules;
   const totalDaysAvailable = sqlSummary.totalModules + prismaSummary.totalModules + networkingSummary.totalModules;

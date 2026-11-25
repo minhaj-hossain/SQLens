@@ -10,7 +10,7 @@ import {
   trackResetFragment,
   trackSetFragment,
 } from '@/lib/progress/track-cloud';
-import type { TrackId } from '@/types/track';
+import type { CloudTrackId } from '@/types/track';
 
 /**
  * Server-side persistence for per-user learning progress (Phase 2).
@@ -58,7 +58,7 @@ function ensureIndexes(): Promise<void> {
  */
 export async function getProgress(
   userId: string,
-  track: TrackId = 'sql',
+  track: CloudTrackId = 'sql',
 ): Promise<{ progress: CloudProgress | null; version: number; updatedAt: string | null; resetEpoch: number; resetAt: string | null }> {
   await ensureIndexes();
   const doc = await db.collection('user_progress').findOne({ userId });
@@ -84,7 +84,7 @@ export async function getProgress(
 export async function saveProgress(
   userId: string,
   progress: CloudProgress,
-  track: TrackId = 'sql',
+  track: CloudTrackId = 'sql',
 ): Promise<{ ok: true; version: number; updatedAt: string; resetEpoch: number } | { ok: false; stale: true; storedEpoch: number; version: number; updatedAt: string | null }> {
   await ensureIndexes();
   const clientEpoch = getResetEpoch(progress);
@@ -119,7 +119,7 @@ export async function saveProgress(
  */
 export async function resetProgress(
   userId: string,
-  track: TrackId = 'sql',
+  track: CloudTrackId = 'sql',
 ): Promise<{ version: number; updatedAt: string; resetEpoch: number; resetAt: string }> {
   await ensureIndexes();
   const existing = await db.collection('user_progress').findOne({ userId }, { projection: TRACK_PROJECTION });

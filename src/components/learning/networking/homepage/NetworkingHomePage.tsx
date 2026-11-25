@@ -6,6 +6,11 @@ import {
   NETWORKING_ROADMAP_STAGES,
   getAllNetworkingModules,
 } from '@/content/networking';
+import { useOptionalAuth } from '@/components/providers/AuthProvider';
+import {
+  loadNetworkingProgress,
+  syncNetworkingProgressWithCloud,
+} from '@/lib/progress/networking-progress';
 import {
   ArrowRight,
   Terminal,
@@ -68,6 +73,26 @@ export const NetworkingHomePage: React.FC = () => {
     x: 0,
     y: 0,
   });
+
+  const auth = useOptionalAuth();
+  const userId = auth?.user?.id ?? null;
+  const [completedDayIds, setCompletedDayIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    const local = loadNetworkingProgress(userId);
+    setCompletedDayIds(new Set(Object.keys(local.completedModules ?? {})));
+    if (userId) {
+      syncNetworkingProgressWithCloud(userId).then((merged) => {
+        if (!cancelled) {
+          setCompletedDayIds(new Set(Object.keys(merged.completedModules ?? {})));
+        }
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -286,7 +311,7 @@ export const NetworkingHomePage: React.FC = () => {
               <span>Curriculum Roadmap & Modules</span>
             </h2>
             <p className="text-[13px] text-[#64748b] mt-0.5">
-              Select any live module (Days 1–6) to enter its interactive workspace.
+              Select any live module (Days 1–{availableModules.length}) to enter its interactive workspace.
             </p>
           </div>
 
@@ -372,6 +397,7 @@ export const NetworkingHomePage: React.FC = () => {
 
                       {stage.days.map((day) => {
                         const isAvailable = availableSet.has(day.id);
+                        const isCompleted = completedDayIds.has(day.id);
                         const isFirst = day.dayNumber === 1;
 
                         return (
@@ -417,6 +443,14 @@ export const NetworkingHomePage: React.FC = () => {
                               })`}
                             >
                               <span>{day.dayNumber}</span>
+
+                              {isCompleted && (
+                                <CheckCircle2
+                                  size={13}
+                                  className="absolute -top-1 -right-1 text-[#4ade80] bg-[#07090e] rounded-full"
+                                  aria-label={`Day ${day.dayNumber} completed`}
+                                />
+                              )}
 
                               {!isAvailable && (
                                 <Lock

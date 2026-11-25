@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { authorize } from '@/lib/authorize';
 import { getProgress, saveProgress, resetProgress, deleteProgress } from '@/lib/server/progress-store';
 import { getResetEpoch, type CloudProgress } from '@/lib/progress/merge';
-import { isTrackId, type TrackId } from '@/types/track';
+import { isCloudTrackId, type CloudTrackId } from '@/types/track';
 import {
   RATE_LIMITS,
   bucketedKey,
@@ -23,9 +23,9 @@ import {
  * slot; a missing or unknown value falls back to `'sql'`, so every
  * pre-Phase-3 client keeps reading and writing SQL exactly as before.
  */
-function trackFrom(req: NextRequest): TrackId {
+function trackFrom(req: NextRequest): CloudTrackId {
   const raw = req.nextUrl.searchParams.get('track');
-  return isTrackId(raw) ? raw : 'sql';
+  return isCloudTrackId(raw) ? raw : 'sql';
 }
 
 export async function GET(req: NextRequest) {

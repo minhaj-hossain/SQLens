@@ -939,6 +939,15 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         out = 'BPDUs are Layer 2 STP control messages. Enable STP using: enable stp';
       } else if (v.startsWith('setip') && v.split(' ').length < 4) {
         out = 'Usage: setip <device> <address> <mask>\nExample: setip pc3 192.168.1.130 255.255.255.128';
+      } else if (expectedCmd) {
+        const expectedNorm = expectedCmd.trim().toLowerCase().replace(/\s+/g, ' ');
+        const expectedVerb = expectedNorm.split(' ')[0] || '';
+        const inputVerb = v.split(' ')[0] || '';
+        if (inputVerb === expectedVerb || expectedNorm.startsWith(inputVerb)) {
+          out = `Almost there — check your arguments or flags.\nExpected: ${expectedCmd}\nTip: Press [Tab] or tap the hint above to autocomplete.`;
+        } else {
+          out = `Not quite — for this step, try: ${expectedCmd}\nTip: Press [Tab] to autocomplete or type "help" to see all commands.`;
+        }
       } else {
         out = 'Unknown command. Type help to see commands or tap the green code chip in the lesson.';
       }
@@ -1006,14 +1015,23 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
           <Terminal size={12} className="text-[#4ade80]" />
           <span>Terminal · PC1</span>
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-[#62626d]">
+        <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-[#62626d] min-w-0">
           {expectedCmd && (
-            <span className="hidden sm:inline text-[#60a5fa]/80">
-              hint: <span className="text-[#ececf0]">{expectedCmd}</span> [Tab]
-            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setInputVal(expectedCmd);
+                inputRef.current?.focus();
+              }}
+              title="Tap to fill command (or press Tab)"
+              className="text-[#60a5fa]/90 hover:text-[#4ade80] transition-colors truncate max-w-[180px] sm:max-w-[280px] cursor-pointer text-left"
+            >
+              hint: <span className="text-[#ececf0] underline decoration-[#60a5fa]/40">{expectedCmd}</span>{' '}
+              <span className="hidden sm:inline">[Tab]</span>
+            </button>
           )}
           <span className="hidden md:inline text-[#71717a]">[Ctrl+L] / cls clear</span>
-          <span>type help</span>
+          <span className="shrink-0">type help</span>
         </div>
       </div>
 

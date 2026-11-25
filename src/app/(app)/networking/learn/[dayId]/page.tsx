@@ -38,5 +38,5 @@ export default async function NetworkingLearnDayPage({ params }: Props) {
     notFound();
   }
 
-  return <NetworkingWorkspace module={module} />;
+  return <NetworkingWorkspace key={module.id} module={module} />;
 }

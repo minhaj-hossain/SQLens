@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { NetworkingWorkspace } from '@/components/learning/networking/workspace/NetworkingWorkspace';
 import { NetworkingLessonSidebar } from '@/components/learning/networking/sidebar/NetworkingLessonSidebar';
 import {
+  getAllNetworkingModules,
   NET_01_MODULE,
   NET_02_MODULE,
   NET_03_MODULE,
@@ -214,5 +215,33 @@ describe('NetworkingWorkspace Component', () => {
       />
     );
     expect(htmlDay6).not.toContain('(tap it to fill the terminal).');
+  });
+
+  it('renders Day N+1 transition link on recap step for Days 1..18 and Back to Roadmap on Day 19', () => {
+    const modules = getAllNetworkingModules();
+    for (let i = 0; i < modules.length; i++) {
+      const mod = modules[i];
+      const recapIdx = mod.steps.length - 1;
+      const completedAll = new Set(mod.steps.map((_, idx) => idx));
+      const html = renderToStaticMarkup(
+        <NetworkingLessonSidebar
+          steps={mod.steps}
+          activeStepIndex={recapIdx}
+          setActiveStepIndex={() => {}}
+          completedSteps={completedAll}
+          onCodeClick={() => {}}
+          dayNumber={mod.dayNumber}
+        />
+      );
+
+      if (i < modules.length - 1) {
+        const nextMod = modules[i + 1];
+        expect(html).toContain(`href="/networking/learn/${nextMod.id}"`);
+        expect(html).toContain(`Day ${nextMod.dayNumber} →`);
+      } else {
+        expect(html).toContain(`href="/networking#day-${mod.dayNumber}"`);
+        expect(html).toContain('Back to Roadmap ✓');
+      }
+    }
   });
 });

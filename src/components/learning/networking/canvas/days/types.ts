@@ -1,0 +1,30 @@
+export interface DayCanvasProps {
+  dayId: string;
+  activeStepIndex: number;
+  completedSteps: Set<number>;
+  lastCommand: string;
+  isPinging: boolean;
+  pc3Ip: string;
+  pc4Ip: string;
+  isLinkUp: boolean;
+  gateway: string;
+  r1Route: boolean;
+  r2Route: boolean;
+  r1DefaultRoute: boolean;
+  r2DefaultRoute: boolean;
+  isDay1: boolean;
+  isDay2: boolean;
+  isDay3: boolean;
+  showDay1DirectWire: boolean;
+  showSwitch: boolean;
+  showPC3: boolean;
+  showPC4: boolean;
+  showIps: boolean;
+  showMacs: boolean;
+  showSubnetLegend: boolean;
+  wireGlow: boolean;
+  isDirectPinging: boolean;
+  isSwitchPinging: boolean;
+  isPc3Subnet2: boolean;
+  pc3Color: 'green' | 'blue';
+}

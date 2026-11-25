@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { NetworkingStep } from '@/types/networking';
-import { getAllNetworkingModules } from '@/content/networking';
-import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { getAllNetworkingModules, getNetworkingModule } from '@/content/networking';
+import { Check, ArrowLeft, ArrowRight, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface NetworkingLessonSidebarProps {
   steps: NetworkingStep[];
@@ -24,7 +24,12 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
   dayNumber,
 }) => {
   const currentStep = steps[activeStepIndex];
+  const [showSimpleHelp, setShowSimpleHelp] = useState(false);
   const maxLiveDay = React.useMemo(() => getAllNetworkingModules().length, []);
+  const nextModule = React.useMemo(
+    () => (dayNumber ? getNetworkingModule(dayNumber + 1) : undefined),
+    [dayNumber]
+  );
   if (!currentStep) return null;
 
   const isCurrentStepDone = !currentStep.cmd || completedSteps.has(activeStepIndex);
@@ -110,12 +115,43 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
 
         {/* What is it / Big picture */}
         <div>
-          <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa] mb-1">
-            {currentStep.cmd ? 'What is it?' : 'The big picture'}
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-[#60a5fa]">
+              {currentStep.cmd ? 'What is it?' : 'The big picture'}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSimpleHelp((prev) => !prev)}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9a9aa5] hover:text-[#4ade80] transition-colors cursor-pointer"
+              aria-expanded={showSimpleHelp}
+            >
+              <HelpCircle size={12} />
+              <span>{showSimpleHelp ? 'Hide quick guide' : 'Explain simply'}</span>
+              {showSimpleHelp ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
           </div>
-          <p className="text-[#ececf0] text-[15px] leading-[1.6] m-0">
+          <p className="text-[#ececf0] text-[15px] leading-[1.65] m-0 whitespace-pre-line">
             {currentStep.what}
           </p>
+
+          {showSimpleHelp && (
+            <div className="mt-2.5 rounded-[10px] border border-[#60a5fa]/30 bg-[#60a5fa]/[0.07] p-3 text-[13.5px] leading-[1.55] text-[#dbeafe] space-y-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#60a5fa]">
+                In Plain Terms
+              </div>
+              <p className="m-0 text-[#ececf0]">{currentStep.rem}</p>
+              {currentStep.read.length > 0 && (
+                <div className="pt-1 border-t border-[#60a5fa]/20 space-y-1">
+                  {currentStep.read.map(([k, v], idx) => (
+                    <div key={idx} className="text-[12.5px]">
+                      <span className="font-mono text-[#4ade80] font-semibold">{k}:</span>{' '}
+                      <span className="text-[#cbd5e1]">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Why does it matter + Canvas visual hint */}
@@ -163,7 +199,12 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
                   </span>
                 </>
               ) : (
-                '.'
+                <>
+                  .{' '}
+                  <span className="text-[#71717a] text-[12px]">
+                    (tap command to fill)
+                  </span>
+                </>
               )}
             </p>
 
@@ -278,13 +319,13 @@ export const NetworkingLessonSidebar: React.FC<NetworkingLessonSidebarProps> = (
         )}
 
         {activeStepIndex === steps.length - 1 ? (
-          dayNumber && dayNumber < maxLiveDay ? (
+          nextModule ? (
             <Link
-              href={`/networking/learn/net-${String(dayNumber + 1).padStart(2, '0')}`}
-              title={`Proceed to Day ${dayNumber + 1}`}
+              href={`/networking/learn/${nextModule.id}`}
+              title={`Proceed to Day ${nextModule.dayNumber}`}
               className="rounded-[8px] px-[14px] py-[6px] text-[15px] cursor-pointer transition-all duration-300 flex items-center gap-1.5 bg-[#4ade80]/15 border border-[#4ade80]/80 text-[#4ade80] shadow-[0_0_14px_rgba(74,222,128,0.3)] hover:bg-[#4ade80]/25 hover:border-[#4ade80]"
             >
-              <span>Day {dayNumber + 1} →</span>
+              <span>Day {nextModule.dayNumber} →</span>
             </Link>
           ) : (
             <Link

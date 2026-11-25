@@ -1,11 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { NetworkingModule } from '@/types/networking';
 import { NetworkingCanvas } from '../canvas/NetworkingCanvas';
 import { NetworkingTerminal } from '../terminal/NetworkingTerminal';
 import { NetworkingLessonSidebar } from '../sidebar/NetworkingLessonSidebar';
+import { useOptionalAuth } from '@/components/providers/AuthProvider';
+import {
+  getCompletedStepsForDay,
+  loadNetworkingProgress,
+  pushNetworkingProgressToCloud,
+  recordNetworkingStepCompletion,
+  syncNetworkingProgressWithCloud,
+} from '@/lib/progress/networking-progress';
 import { ArrowLeft, Map, CheckCircle2 } from 'lucide-react';
 
 interface NetworkingWorkspaceProps {
@@ -15,8 +23,51 @@ interface NetworkingWorkspaceProps {
 export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
   module,
 }) => {
+  const auth = useOptionalAuth();
+  const userId = auth?.user?.id ?? null;
+  const hasHydratedRef = useRef(false);
+
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+
+  // Hydrate saved step progress (guest localStorage or signed-in cloud merge)
+  useEffect(() => {
+    let cancelled = false;
+    const local = loadNetworkingProgress(userId);
+    const localSteps = getCompletedStepsForDay(local, module.id);
+    if (localSteps.length > 0) {
+      setCompletedSteps((prev) => new Set([...prev, ...localSteps]));
+    }
+    hasHydratedRef.current = true;
+
+    if (userId) {
+      syncNetworkingProgressWithCloud(userId).then((merged) => {
+        if (cancelled) return;
+        const mergedSteps = getCompletedStepsForDay(merged, module.id);
+        if (mergedSteps.length > 0) {
+          setCompletedSteps((prev) => new Set([...prev, ...mergedSteps]));
+        }
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [module.id, userId]);
+
+  // Persist step completion locally and sync to cloud when signed in
+  useEffect(() => {
+    if (!hasHydratedRef.current || completedSteps.size === 0) return;
+    const nextState = recordNetworkingStepCompletion(
+      module.id,
+      Array.from(completedSteps),
+      module.steps.length,
+      userId,
+    );
+    if (userId) {
+      void pushNetworkingProgressToCloud(nextState);
+    }
+  }, [completedSteps, module.id, module.steps.length, userId]);
   const [lastCommand, setLastCommand] = useState('');
   const [isPinging, setIsPinging] = useState(false);
   const [pc3Ip, setPc3Ip] = useState('192.168.1.30');
@@ -34,12 +85,14 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
 
   // Auto-complete recap step if all preceding commands are done
   useEffect(() => {
-    if (activeStepIndex === recapIdx) {
+    if (activeStepIndex === recapIdx && !completedSteps.has(recapIdx)) {
       const allPriorDone = Array.from({ length: recapIdx }, (_, idx) => idx).every(
         (k) => completedSteps.has(k)
       );
       if (allPriorDone) {
-        setCompletedSteps((prev) => new Set([...prev, recapIdx]));
+        setCompletedSteps((prev) =>
+          prev.has(recapIdx) ? prev : new Set([...prev, recapIdx])
+        );
       }
     }
   }, [activeStepIndex, completedSteps, recapIdx]);
@@ -605,7 +658,9 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
             <CheckCircle2
               size={14}
               className={
-                completedSteps.size >= 5 ? 'text-[#4ade80]' : 'text-[#62626d]'
+                completedSteps.size >= module.steps.length
+                  ? 'text-[#4ade80]'
+                  : 'text-[#62626d]'
               }
             />
             <span>

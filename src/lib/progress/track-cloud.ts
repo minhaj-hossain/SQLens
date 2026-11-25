@@ -18,7 +18,7 @@
  */
 
 import { getResetEpoch, type CloudProgress } from './merge';
-import { TRACK_META, type TrackId } from '../../types/track';
+import { TRACK_META, type CloudTrackId } from '../../types/track';
 
 /** Fields `writeTrack*` merge into a `$set`, plus the shared projection. */
 export const TRACK_PROJECTION = {
@@ -31,7 +31,7 @@ export const TRACK_PROJECTION = {
 } as const;
 
 /** True when the track stores its state in the document's top-level fields. */
-export function usesTopLevelSlot(track: TrackId): boolean {
+export function usesTopLevelSlot(track: CloudTrackId): boolean {
   return track === 'sql';
 }
 
@@ -56,7 +56,7 @@ function normalizeEpoch(value: unknown): number | null {
  * The raw node holding a track's progress, or null when the track has never
  * been written. SQL → the document root; others → `doc.tracks[track]`.
  */
-function trackNodeOf(doc: unknown, track: TrackId): Record<string, unknown> | null {
+function trackNodeOf(doc: unknown, track: CloudTrackId): Record<string, unknown> | null {
   const root = asRecord(doc);
   if (!root) return null;
   if (usesTopLevelSlot(track)) return root;
@@ -64,7 +64,7 @@ function trackNodeOf(doc: unknown, track: TrackId): Record<string, unknown> | nu
 }
 
 /** Track progress + epoch + resetAt, or null when the track has no cloud state. */
-export function readTrackSlice(doc: unknown, track: TrackId): TrackCloudSlice | null {
+export function readTrackSlice(doc: unknown, track: CloudTrackId): TrackCloudSlice | null {
   const node = trackNodeOf(doc, track);
   if (!node) return null;
   const progress = asRecord(node.progress) as CloudProgress | null;
@@ -82,7 +82,7 @@ export function readTrackSlice(doc: unknown, track: TrackId): TrackCloudSlice | 
  * epoch carried inside the progress body (or 0) — identical to the pre-Phase-3
  * behaviour for SQL, and 0 for a track with no doc yet.
  */
-export function readTrackEpoch(doc: unknown, track: TrackId): number {
+export function readTrackEpoch(doc: unknown, track: CloudTrackId): number {
   const node = trackNodeOf(doc, track);
   if (!node) return 0;
   const epoch = normalizeEpoch(node.resetEpoch);
@@ -95,7 +95,7 @@ export function readTrackEpoch(doc: unknown, track: TrackId): number {
  * Phase 2 — same three fields, same document shape.
  */
 export function trackSetFragment(
-  track: TrackId,
+  track: CloudTrackId,
   progress: CloudProgress,
   epoch: number,
   now: string,
@@ -109,7 +109,7 @@ export function trackSetFragment(
 
 /** `$set` fragment for an authoritative (epoch-bumped) reset tombstone. */
 export function trackResetFragment(
-  track: TrackId,
+  track: CloudTrackId,
   tombstone: CloudProgress,
   epoch: number,
   now: string,
@@ -124,8 +124,8 @@ export function trackResetFragment(
  * Empty started-state tombstone for a track: only the track's FIRST module is
  * unlocked. SQL yields exactly the pre-Phase-3 `day-01` tombstone.
  */
-export function emptyTombstone(track: TrackId, now: string, nextEpoch: number): CloudProgress {
-  const initialModuleId = TRACK_META[track].initialModuleId;
+export function emptyTombstone(track: CloudTrackId, now: string, nextEpoch: number): CloudProgress {
+  const initialModuleId = track === 'networking' ? 'net-01' : TRACK_META[track].initialModuleId;
   return {
     currentModuleId: initialModuleId,
     currentConceptId: null,

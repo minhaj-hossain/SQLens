@@ -33,8 +33,15 @@ export type BuiltinTrackId = (typeof TRACK_IDS)[number];
  */
 export type TrackId = BuiltinTrackId;
 
+/** Track ids supported by cloud & profile persistence (includes Networking). */
+export type CloudTrackId = TrackId | 'networking';
+
 export function isTrackId(value: unknown): value is TrackId {
   return typeof value === 'string' && (TRACK_IDS as readonly string[]).includes(value);
+}
+
+export function isCloudTrackId(value: unknown): value is CloudTrackId {
+  return isTrackId(value) || value === 'networking';
 }
 
 /** Display metadata for the track selector (Phase 2 `/` page). */
