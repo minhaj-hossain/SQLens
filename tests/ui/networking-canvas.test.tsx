@@ -1862,6 +1862,62 @@ describe('NetworkingCanvas Component', () => {
     expect(htmlStep4).toContain('STAGE 6 COMPLETE · DYNAMIC ROUTING (DAYS 20–23)');
     expect(htmlStep4).toContain('NEXT: STAGE 7 · DAY 24 · DHCP AUTOMATIC ADDRESSING');
   });
+
+  it('renders Day 24 DHCP DORA topology with anti-overlap geometry and progressive steps', () => {
+    const htmlStep0 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-24"
+        activeStepIndex={0}
+        completedSteps={new Set()}
+      />
+    );
+    expect(htmlStep0).toContain(
+      'DHCP: AUTOMATIC ADDRESSING · DORA, POOLS, OPTIONS &amp; LEASE TIMERS'
+    );
+    expect(htmlStep0).toContain('192.168.24.0/24 · LAYER 2 BROADCAST DOMAIN');
+    expect(htmlStep0).toContain('0.0.0.0:68 → :67');
+    expect(htmlStep0).toContain('width="130"');
+    expect(htmlStep0).toContain('translate(70, 395)');
+    expect(htmlStep0).toContain('translate(780, 395)');
+
+    const htmlStep1 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-24"
+        activeStepIndex={1}
+        completedSteps={new Set([0])}
+      />
+    );
+    expect(htmlStep1).toContain('DISCOVER / REQUEST');
+    expect(htmlStep1).toContain('OFFER / ACK (.101)');
+
+    const htmlStep2 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-24"
+        activeStepIndex={2}
+        completedSteps={new Set([0, 1])}
+      />
+    );
+    expect(htmlStep2).toContain('POOL: .100 – .200');
+
+    const htmlStep3 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-24"
+        activeStepIndex={3}
+        completedSteps={new Set([0, 1, 2])}
+      />
+    );
+    expect(htmlStep3).toContain('T1 (50%) UNICAST');
+
+    const htmlStep4 = renderToStaticMarkup(
+      <NetworkingCanvas
+        dayId="net-24"
+        activeStepIndex={4}
+        completedSteps={new Set([0, 1, 2, 3])}
+      />
+    );
+    expect(htmlStep4).toContain('DAY 24 COMPLETE · DHCP (RFC 2131) SUMMARY');
+    expect(htmlStep4).toContain('NEXT: DAY 25 · DHCP IN LARGER NETWORKS');
+  });
 });
 
 

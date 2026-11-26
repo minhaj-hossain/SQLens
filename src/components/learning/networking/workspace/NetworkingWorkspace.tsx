@@ -763,6 +763,42 @@ export const NetworkingWorkspace: React.FC<NetworkingWorkspaceProps> = ({
           normalizedCmd === 'bfd')
       ) {
         isAlternateMatch = true;
+      } else if (
+        module.id === 'net-24' &&
+        activeStepIndex === 0 &&
+        (normalizedCmd === 'ip addr show' ||
+          normalizedCmd === 'ip addr' ||
+          normalizedCmd === 'ip a' ||
+          normalizedCmd === 'ifconfig')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-24' &&
+        activeStepIndex === 1 &&
+        (normalizedCmd === 'dhclient eth0' ||
+          normalizedCmd === 'dhclient' ||
+          normalizedCmd === 'dhcp discover' ||
+          normalizedCmd === 'ipconfig /renew')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-24' &&
+        activeStepIndex === 2 &&
+        (normalizedCmd === 'show dhcp pool' ||
+          normalizedCmd === 'show ip dhcp pool' ||
+          normalizedCmd === 'dhcp pool' ||
+          normalizedCmd === 'show ip dhcp binding')
+      ) {
+        isAlternateMatch = true;
+      } else if (
+        module.id === 'net-24' &&
+        activeStepIndex === 3 &&
+        (normalizedCmd === 'show dhcp lease' ||
+          normalizedCmd === 'show ip dhcp lease' ||
+          normalizedCmd === 'dhcp lease' ||
+          normalizedCmd === 'cat /var/lib/dhcp/dhclient.leases')
+      ) {
+        isAlternateMatch = true;
       }
 
       if (isAlternateMatch) {

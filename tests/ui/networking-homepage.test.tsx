@@ -10,9 +10,9 @@ describe('NetworkingHomePage Component', () => {
     // Check Hero and Track branding
     expect(html).toContain('Learn networking by');
     expect(html).toContain('building it.');
-    expect(html).toContain('23 Days Live');
+    expect(html).toContain('24 Days Live');
 
-    // Modules 1 to 23 MUST have valid accessible hrefs
+    // Modules 1 to 24 MUST have valid accessible hrefs
     expect(html).toContain('href="/networking/learn/net-01"');
     expect(html).toContain('href="/networking/learn/net-02"');
     expect(html).toContain('href="/networking/learn/net-03"');
@@ -29,6 +29,7 @@ describe('NetworkingHomePage Component', () => {
     expect(html).toContain('href="/networking/learn/net-21"');
     expect(html).toContain('href="/networking/learn/net-22"');
     expect(html).toContain('href="/networking/learn/net-23"');
+    expect(html).toContain('href="/networking/learn/net-24"');
 
     // Stage names must be present
     expect(html).toContain('Foundations');

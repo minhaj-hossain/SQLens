@@ -23,6 +23,7 @@ import {
   NET_21_MODULE,
   NET_22_MODULE,
   NET_23_MODULE,
+  NET_24_MODULE,
   NETWORKING_ROADMAP_STAGES,
   getNetworkingModule,
 } from '@/content/networking';
@@ -765,6 +766,40 @@ describe('Networking Curriculum Content Modules', () => {
     );
   });
 
+  it('Day 24 module has exact title, 5 steps, and authentic DHCP commands', () => {
+    expect(NET_24_MODULE.id).toBe('net-24');
+    expect(NET_24_MODULE.dayNumber).toBe(24);
+    expect(NET_24_MODULE.title).toBe('Day 24 · DHCP: Automatic Addressing');
+    expect(NET_24_MODULE.steps).toHaveLength(5);
+
+    const step1 = NET_24_MODULE.steps[0];
+    expect(step1.group).toBe('Idea 1 of 4 · Unconfigured bootstrap & UDP 67/68');
+    expect(step1.cmd).toBe('ip addr show');
+    expect(step1.what).toContain('0.0.0.0');
+    expect(step1.what).toContain('UDP port 68');
+
+    const step2 = NET_24_MODULE.steps[1];
+    expect(step2.cmd).toBe('dhclient eth0');
+    expect(step2.what).toContain('DHCPDISCOVER');
+    expect(step2.what).toContain('Option 54');
+
+    const step3 = NET_24_MODULE.steps[2];
+    expect(step3.cmd).toBe('show dhcp pool');
+    expect(step3.what).toContain('Option 1');
+    expect(step3.what).toContain('Option 51');
+
+    const step4 = NET_24_MODULE.steps[3];
+    expect(step4.cmd).toBe('show dhcp lease');
+    expect(step4.what).toContain('T1 Renewal Timer');
+    expect(step4.what).toContain('T2 Rebinding Timer');
+
+    const step5 = NET_24_MODULE.steps[4];
+    expect(step5.cmd).toBeNull();
+    expect(step5.title).toBe(
+      'DHCP (RFC 2131): DORA bootstrap, pools, options, and lease timers'
+    );
+  });
+
   it('Roadmap contains 9 stages and 35 total days', () => {
     expect(NETWORKING_ROADMAP_STAGES).toHaveLength(9);
     const totalDays = NETWORKING_ROADMAP_STAGES.reduce(
@@ -796,6 +831,7 @@ describe('Networking Curriculum Content Modules', () => {
     expect(getNetworkingModule(21)?.id).toBe('net-21');
     expect(getNetworkingModule(22)?.id).toBe('net-22');
     expect(getNetworkingModule(23)?.id).toBe('net-23');
+    expect(getNetworkingModule(24)?.id).toBe('net-24');
   });
 });
 

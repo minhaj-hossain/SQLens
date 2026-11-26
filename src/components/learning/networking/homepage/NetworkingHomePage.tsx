@@ -61,6 +61,7 @@ const MODULE_TEASERS: Record<string, string> = {
   'net-21': 'Master RIPv2 (RFC 2453) distance-vector routing: UDP 520 updates, hop count blindness, the 15-hop ceiling, count-to-infinity, and loop prevention.',
   'net-22': 'Build a synchronized Area 0 topology map with OSPFv2 (RFC 2328): IP protocol 89 Hellos, Type-1 LSAs, bandwidth-aware Cost, and Dijkstra SPF.',
   'net-23': 'Measure OSPF failover and convergence under a live fiber cut: NO-CARRIER vs 40s Dead timers, LSA re-flooding, SPF rerun, and 15 ms BFD (RFC 5880).',
+  'net-24': 'Automate IPv4 host configuration with DHCP (RFC 2131): 0.0.0.0 bootstrap over UDP 67/68, DORA handshake, address pools, Options, and T1/T2 lease timers.',
 };
 
 export const NetworkingHomePage: React.FC = () => {

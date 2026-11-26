@@ -22,6 +22,7 @@ import { NET_20_MODULE } from './modules/net-20';
 import { NET_21_MODULE } from './modules/net-21';
 import { NET_22_MODULE } from './modules/net-22';
 import { NET_23_MODULE } from './modules/net-23';
+import { NET_24_MODULE } from './modules/net-24';
 import { NETWORKING_ROADMAP_STAGES } from './roadmap';
 
 export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
@@ -48,6 +49,7 @@ export const NETWORKING_MODULES: Record<string, NetworkingModule> = {
   'net-21': NET_21_MODULE,
   'net-22': NET_22_MODULE,
   'net-23': NET_23_MODULE,
+  'net-24': NET_24_MODULE,
 };
 
 export function getNetworkingModule(
@@ -93,6 +95,7 @@ export function getAllNetworkingModules(): NetworkingModule[] {
     NET_21_MODULE,
     NET_22_MODULE,
     NET_23_MODULE,
+    NET_24_MODULE,
   ];
 }
 
@@ -120,6 +123,7 @@ export {
   NET_21_MODULE,
   NET_22_MODULE,
   NET_23_MODULE,
+  NET_24_MODULE,
   NETWORKING_ROADMAP_STAGES,
 };
 

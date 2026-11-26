@@ -159,6 +159,8 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         helpMsg = 'Commands: show ip ospf neighbor, show ip ospf database, show ip ospf cost, traceroute 10.22.0.10, cls, clear, help';
       } else if (dayId === 'net-23') {
         helpMsg = 'Commands: link cut r3-r4, show ip ospf spf, traceroute 10.23.0.10, show bfd neighbors, cls, clear, help';
+      } else if (dayId === 'net-24') {
+        helpMsg = 'Commands: ip addr show, dhclient eth0, show dhcp pool, show dhcp lease, cls, clear, help';
       }
       newLogs.push({ type: 'output', text: helpMsg });
       setLogs(newLogs);
@@ -1068,6 +1070,43 @@ export const NetworkingTerminal: React.FC<NetworkingTerminalProps> = ({
         v === 'bfd'
       ) {
         out = staticResponses['show bfd neighbors'];
+        isSuccess = true;
+      }
+    }
+
+    // Day 24 dynamic logic
+    if (dayId === 'net-24') {
+      if (
+        v === 'ip addr show' ||
+        v === 'ip addr' ||
+        v === 'ip a' ||
+        v === 'ifconfig'
+      ) {
+        out = staticResponses['ip addr show'];
+        isSuccess = true;
+      } else if (
+        v === 'dhclient eth0' ||
+        v === 'dhclient' ||
+        v === 'dhcp discover' ||
+        v === 'ipconfig /renew'
+      ) {
+        out = staticResponses['dhclient eth0'];
+        isSuccess = true;
+      } else if (
+        v === 'show dhcp pool' ||
+        v === 'show ip dhcp pool' ||
+        v === 'dhcp pool' ||
+        v === 'show ip dhcp binding'
+      ) {
+        out = staticResponses['show dhcp pool'];
+        isSuccess = true;
+      } else if (
+        v === 'show dhcp lease' ||
+        v === 'show ip dhcp lease' ||
+        v === 'dhcp lease' ||
+        v === 'cat /var/lib/dhcp/dhclient.leases'
+      ) {
+        out = staticResponses['show dhcp lease'];
         isSuccess = true;
       }
     }
